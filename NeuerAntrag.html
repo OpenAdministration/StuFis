@@ -14,7 +14,7 @@
     <meta name="author" content="">
 
 
-    <title>FVS</title>
+    <title>FVS - Neuer Interner Antrag</title>
 
     <link href="main.css" rel="stylesheet">
   </head>
@@ -57,7 +57,7 @@
             <input type="text" class="form-control projekt" id="projekt-titel">
 
             <div class="row">
-              <div class="col-xs-4">
+              <div class="col-xs-5">
                 <label for="von-pick">Projekt von:</label>
                 <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" id="von-pick" multiple >
                   <optgroup label="Fachschaftsräte">
@@ -78,7 +78,7 @@
                   </optgroup>
                 </select>
               </div>
-              <div class="col-xs-5">
+              <div class="col-xs-7">
                 <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
                 <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
               </div>
@@ -87,12 +87,12 @@
             <input type="text" class="form-control projekt" id="projekt-titel">
 
             <div class="row">
-              <div class="col-xs-2">
-                <label for="projekt-titel">Projektbeginn</label>
+              <div class="col-xs-3">
+                <label for="projekt-titel">Projektbeginn:</label>
                 <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
               </div>
-              <div class="col-xs-2">
-                <label for="projekt-titel">Projektende</label>
+              <div class="col-xs-3">
+                <label for="projekt-titel">Projektende:</label>
                 <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
               </div>
             </div>
@@ -117,11 +117,13 @@
           <tfoot>
             <tr class="dontCount">
               <th colspan="2"><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
-              <th class="in">You should not see this</th>
-              <th class="out">You should not see this</th>
+              <th class="in">You should not see this o.O</th>
+              <th class="out">You should not see this o.O</th>
             </tr>
           </tfoot>
          </table>
+         <label for="comment">Projektbeschreibung:</label>
+         <textarea class="form-control" rows="5" id="comment"></textarea>
        </div> <!-- close form group -->
 
         <button type="button" class='btn btn-success pull-right'>Absenden</button>
@@ -222,24 +224,28 @@
      );
      i++;
     }
-    addRow()
+    addRow();
     $(".addRowBtn").on('click',addRow);
 
-    $(document).ready(function(){
-        var $dataRows=$("#table1 tr:not('.dontCount')");
+    var sumFunction = function(){
+        var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
         var sumIn = 0;
         var sumOut = 0;
-
         $dataRows.each(function() {
-          var inEuro = $(this).find('.in');
-          var outEuro = $(this).find('.out');
-          sumIn += parseFloat(inEuro.html());
-          sumOut += parseFloat(outEuro.html());
+          var inEuro = $(this).find('.in').val();
+          var outEuro = $(this).find('.out').val();
+          sumIn  += parseFloat(inEuro);
+          sumOut += parseFloat(outEuro);
         });
-        $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn + " €");
-        $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut + " €");
+        $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
+        $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
+    };
 
-    });
+    sumFunction(); //erstes Mal durchrechnen
+
+    $(".in").focusout(sumFunction);
+    $(".out").focusout(sumFunction);
+
 </script>
 
   </body>
