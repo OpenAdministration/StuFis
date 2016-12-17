@@ -83,10 +83,23 @@
                 <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
               </div>
             </div>
-            <label for="projekt-titel">Projektbeschluss (wiki Direkt-Link):</label>
-            <input type="text" class="form-control projekt" id="projekt-titel">
-
+            <label for="projekt-beschluss">Projektbeschluss (wiki Direkt-Link):</label>
+            <input type="text" class="form-control projekt" id="projekt_beschluss">
+beschluss
             <div class="row">
+
+
+          <table class="table" id="table-aufstellung">
+          <thead>
+            <tr class="dontCount">
+              <th>Nr.</th>
+              <th>Aus/Eingabengruppe</th>
+              <th>Einnahmen</th>
+              <th>Ausgaben</th>
+            </tr>
+          </thead>
+          <tbody>
+
               <div class="col-xs-3">
                 <label for="projekt-titel">Projektbeginn:</label>
                 <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
@@ -124,9 +137,11 @@
          </table>
          <label for="comment">Projektbeschreibung:</label>
          <textarea class="form-control" rows="5" id="comment"></textarea>
+
+         <button type="button" class='btn btn-success pull-right' action="sendNewAntrag.php" method="POST">Absenden</button>
        </div> <!-- close form group -->
 
-        <button type="button" class='btn btn-success pull-right'>Absenden</button>
+
       </div> <!-- close container -->
 
 
