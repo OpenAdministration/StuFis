@@ -62,6 +62,13 @@
 
             <label for="projekt-titel">Projektbeschluss (wiki Direkt-Link):</label>
             <input type="text" class="form-control projekt" id="projekt-titel">
+
+            <label for="projekt-titel">Projektbeginn</label>
+            <input type="text" class="form-control datepicker"></p>
+
+            <label for="projekt-titel">Projektbeginn</label>
+            <input type="text" class="form-control datepicker"></p>
+
           </div>
           <table class="table" id="table-aufstellung">
           <thead>
@@ -95,8 +102,15 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
     <!--- script für die neue Zeile in der Tabelle --->
+
+    <script>
+    $( function() {
+      $( ".datepicker" ).datepicker();
+    } );
+    </script>
 
     <script>
       var i=1;
