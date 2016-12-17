@@ -5,12 +5,12 @@ mysqli_select_db($link,"finanzen_intern");
 if(isset($_REQUEST['submit']))
 {
 $errorMessage = "";
-$projekt_titel=$_POST['projekt-titel'];
+$projekt_titel = $_POST['projekt-titel'];
 $projekt_institution = $_POST['von-pick'];
 $projekt_verantwortlich = $_POST['projekt-verantwortlich'];
-$projekt_beschluss=$_POST['projekt-beschluss']
-$date_von=$_POST['date-von'];
-$date_bis=$_POST['date-bis'];
+$projekt_beschluss = $_POST['projekt-beschluss'];
+$date_von = $_POST['date-von'];
+$date_bis = $_POST['date-bis'];
 $beschreibung=$_POST['comment'];
 
 // Validation will be added here

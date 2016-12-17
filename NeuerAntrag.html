@@ -54,12 +54,12 @@
             <label for="header-data"> Meta-Daten </label>
             <div class="well" id="header-data">
               <label for="projekt-titel">Projekttitel:</label>
-              <input type="text" class="form-control projekt" name="projekt-titel" id="projekt-titel">
+              <input type="text" class="form-control projekt" name="projekt-titel">
 
               <div class="row">
                 <div class="col-xs-5">
                   <label for="von-pick">Projekt von:</label>
-                  <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" id="von-pick" multiple >
+                  <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple >
                     <optgroup label="Fachschaftsräte">
                       <option>FSR EI</option>
                       <option>FSR IA</option>
@@ -80,23 +80,23 @@
                 </div>
                 <div class="col-xs-7">
                   <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
-                  <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
+                  <input type="text" class="form-control projekt" name="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
                 </div>
               </div>
               <label for="projekt-beschluss">Projektbeschluss (wiki Direkt-Link):</label>
-              <input type="text" class="form-control projekt" id="projekt_beschluss">
+              <input type="text" class="form-control projekt" name="projekt_beschluss">
               <div class="row">
                 <div class="col-xs-3">
                   <label for="projekt-titel">Projektbeginn:</label>
-                  <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
+                  <input type="text" class="form-control datepicker projekt" name="date-von" data-date-format="dd.mm.yyyy"></p>
                 </div>
                 <div class="col-xs-3">
                   <label for="projekt-titel">Projektende:</label>
-                  <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
+                  <input type="text" class="form-control datepicker projekt" name="date-bis" data-date-format="dd.mm.yyyy"></p>
                 </div>
               </div>
             </div>
-            <table class="table" id="table-aufstellung">
+            <table class="table" name="table-aufstellung">
             <thead>
               <tr class="dontCount">
                 <th>Nr.</th>
@@ -117,7 +117,7 @@
             </tfoot>
            </table>
            <label for="comment">Projektbeschreibung:</label>
-           <textarea class="form-control" rows="5" id="comment"></textarea>
+           <textarea class="form-control" rows="5" name="comment"></textarea>
 
            <button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
          </form> <!-- close form group -->
