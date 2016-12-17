@@ -2,9 +2,9 @@
 <html lang="de">
   <head>
     <!-- Das neueste kompilierte und minimierte CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <!-- Latest compiled and minified CSS from  https://silviomoreto.github.io/bootstrap-select/-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,7 +59,24 @@
             <div class="row">
               <div class="form-group col-xs-4">
                 <label for="projekt-institution">Projekt von:</label>
-                <input type="text" class="form-control projekt" id="projekt-institution">
+                <select class="selectpicker" data-live-search="true" title="Institution wählen" multiple >
+                  <optgroup label="Fachschaftsräte">
+                    <option>FSR EI</option>
+                    <option>FSR IA</option>
+                    <option>FSR MB</option>
+                    <option>FSR MN</option>
+                    <option>FSR WM</option>
+                  </optgroup>
+                  <optgroup label="Referate">
+                    <option>Ref Soz</option>
+                    <option>Ref Int</option>
+                    <option title="Ref IT" data-icon="glyphicon-heart">Ref IT</option>
+                  </optgroup>
+                  <optgroup label="AGs">
+                    <option>AG Interclub</option>
+                    <option>AG Umbau</option>
+                  </optgroup>
+                </select>
               </div>
               <div class="form-group col-xs-8">
                 <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
@@ -79,11 +96,9 @@
                 <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
               </div>
             </div>
-            <select class="selectpicker">
-              <option>Mustard</option>
-              <option>Ketchup</option>
-              <option>Relish</option>
-            </select>
+
+
+
           </div>
 
 
@@ -121,10 +136,10 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-
-
-    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Latest compiled and minified JavaScript from bootstrap-select-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+
     <script>
       $(document).ready(function() {
         $('.selectpicker').selectpicker({

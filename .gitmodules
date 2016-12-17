@@ -1,1 +1,4 @@
 
+[submodule "bootstrap-select"]
+	path = bootstrap-select
+	url = https://github.com/silviomoreto/bootstrap-select.git
