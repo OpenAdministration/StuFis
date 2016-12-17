@@ -1,267 +1,248 @@
-<!DOCTYPE html>
-<html lang="de">
-  <head>
-    <!-- Das neueste kompilierte und minimierte CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <!DOCTYPE html>
+  <html lang="de">
+    <head>
+      <!-- Das neueste kompilierte und minimierte CSS -->
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-    <meta name="description" content="">
-    <meta name="author" content="">
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-    <title>FVS - Neuer Interner Antrag</title>
-
-    <link href="main.css" rel="stylesheet">
-  </head>
-
-  <body>
-
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <form class="navbar-form navbar-right">
-            <div class="form-group">
-              <input type="text" placeholder="Email" class="form-control">
-            </div>
-            <div class="form-group">
-              <input type="password" placeholder="Password" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-success">Login</button>
-          </form>
-        </div><!--/.navbar-collapse -->
-      </div>
-    </nav>
+      <meta name="description" content="">
+      <meta name="author" content="">
 
 
+      <title>FVS - Neuer Interner Antrag</title>
 
-    <div class="container">
+      <link href="main.css" rel="stylesheet">
+    </head>
 
-        <div class="form-group">
-          <label for="header-data"> Meta-Daten </label>
-          <div class="well" id="header-data">
-            <label for="projekt-titel">Projekttitel:</label>
-            <input type="text" class="form-control projekt" id="projekt-titel">
+    <body>
 
-            <div class="row">
-              <div class="col-xs-5">
-                <label for="von-pick">Projekt von:</label>
-                <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" id="von-pick" multiple >
-                  <optgroup label="Fachschaftsräte">
-                    <option>FSR EI</option>
-                    <option>FSR IA</option>
-                    <option>FSR MB</option>
-                    <option>FSR MN</option>
-                    <option>FSR WM</option>
-                  </optgroup>
-                  <optgroup label="Referate">
-                    <option>Ref Soz</option>
-                    <option>Ref Int</option>
-                    <option title="Ref IT" data-icon="glyphicon-heart">Ref IT</option>
-                  </optgroup>
-                  <optgroup label="AGs">
-                    <option>AG Interclub</option>
-                    <option>AG Umbau</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div class="col-xs-7">
-                <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
-                <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
-              </div>
-            </div>
-            <label for="projekt-beschluss">Projektbeschluss (wiki Direkt-Link):</label>
-            <input type="text" class="form-control projekt" id="projekt_beschluss">
-beschluss
-            <div class="row">
-
-
-          <table class="table" id="table-aufstellung">
-          <thead>
-            <tr class="dontCount">
-              <th>Nr.</th>
-              <th>Aus/Eingabengruppe</th>
-              <th>Einnahmen</th>
-              <th>Ausgaben</th>
-            </tr>
-          </thead>
-          <tbody>
-
-              <div class="col-xs-3">
-                <label for="projekt-titel">Projektbeginn:</label>
-                <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
-              </div>
-              <div class="col-xs-3">
-                <label for="projekt-titel">Projektende:</label>
-                <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
-              </div>
-            </div>
-
-
-
+      <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a>
           </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <form class="navbar-form navbar-right">
+              <div class="form-group">
+                <input type="text" placeholder="Email" class="form-control">
+              </div>
+              <div class="form-group">
+                <input type="password" placeholder="Password" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-success">Login</button>
+            </form>
+          </div><!--/.navbar-collapse -->
+        </div>
+      </nav>
 
 
-          <table class="table" id="table-aufstellung">
-          <thead>
-            <tr class="dontCount">
-              <th>Nr.</th>
-              <th>Aus/Eingabengruppe</th>
-              <th>Einnahmen</th>
-              <th>Ausgaben</th>
-            </tr>
-          </thead>
-          <tbody>
 
-          </tbody>
-          <tfoot>
-            <tr class="dontCount">
-              <th colspan="2"><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
-              <th class="in">You should not see this o.O</th>
-              <th class="out">You should not see this o.O</th>
-            </tr>
-          </tfoot>
-         </table>
-         <label for="comment">Projektbeschreibung:</label>
-         <textarea class="form-control" rows="5" id="comment"></textarea>
+      <div class="container">
+
+          <div class="form-group">
+            <label for="header-data"> Meta-Daten </label>
+            <div class="well" id="header-data">
+              <label for="projekt-titel">Projekttitel:</label>
+              <input type="text" class="form-control projekt" id="projekt-titel">
+
+              <div class="row">
+                <div class="col-xs-5">
+                  <label for="von-pick">Projekt von:</label>
+                  <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" id="von-pick" multiple >
+                    <optgroup label="Fachschaftsräte">
+                      <option>FSR EI</option>
+                      <option>FSR IA</option>
+                      <option>FSR MB</option>
+                      <option>FSR MN</option>
+                      <option>FSR WM</option>
+                    </optgroup>
+                    <optgroup label="Referate">
+                      <option>Ref Soz</option>
+                      <option>Ref Int</option>
+                      <option title="Ref IT" data-icon="glyphicon-heart">Ref IT</option>
+                    </optgroup>
+                    <optgroup label="AGs">
+                      <option>AG Interclub</option>
+                      <option>AG Umbau</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="col-xs-7">
+                  <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
+                  <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
+                </div>
+              </div>
+              <label for="projekt-beschluss">Projektbeschluss (wiki Direkt-Link):</label>
+              <input type="text" class="form-control projekt" id="projekt_beschluss">
+              <div class="row">
+                <div class="col-xs-3">
+                  <label for="projekt-titel">Projektbeginn:</label>
+                  <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
+                </div>
+                <div class="col-xs-3">
+                  <label for="projekt-titel">Projektende:</label>
+                  <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
+                </div>
+              </div>
+            </div>
+            <table class="table" id="table-aufstellung">
+            <thead>
+              <tr class="dontCount">
+                <th>Nr.</th>
+                <th>Aus/Eingabengruppe</th>
+                <th>Einnahmen</th>
+                <th>Ausgaben</th>
+              </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+            <tfoot>
+              <tr class="dontCount">
+                <th colspan="2"><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
+                <th class="in">You should not see this o.O</th>
+                <th class="out">You should not see this o.O</th>
+              </tr>
+            </tfoot>
+           </table>
+           <label for="comment">Projektbeschreibung:</label>
+           <textarea class="form-control" rows="5" id="comment"></textarea>
+
+
+         </div> <!-- close form group -->
 
          <button type="button" class='btn btn-success pull-right' action="sendNewAntrag.php" method="POST">Absenden</button>
-       </div> <!-- close form group -->
-
-
-      </div> <!-- close container -->
+        </div> <!-- close container -->
 
 
 
 
 
 
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <!-- Latest compiled and minified JavaScript from bootstrap-select-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
-
-    <script>
-      $(document).ready(function() {
-        $('.selectpicker').selectpicker({
-          style: 'btn-default',
-          size: false
+      <!-- Bootstrap core JavaScript
+      ================================================== -->
+      <!-- Placed at the end of the document so the pages load faster -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+      <!-- Latest compiled and minified JavaScript from bootstrap-select-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+<!--
+      <script>
+        $(document).ready(function() {
+          $('.selectpicker').selectpicker({
+            style: 'btn-default',
+            size: false
+          });
         });
-      });
-    </script>
-    <!--- script für die neue Zeile in der Tabelle --->
-    <script src="datepicker/js/bootstrap-datepicker.js"></script>
-    <link rel="stylesheet" href="datepicker/css/datepicker.css">
-    <script>
-    var nowTemp = new Date();
-    var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+      </script>
 
-    var pick_von = $('#date-von').datepicker({
-      onRender: function(date) {
-        return date.valueOf() < now.valueOf() ? 'disabled' : '';
-      }
-    }).on('changeDate', function(ev) {
-      if (ev.date.valueOf() > pick_bis.date.valueOf()) {
-        var newDate = new Date(ev.date)
-        newDate.setDate(newDate.getDate());
-        pick_bis.setValue(newDate);
-      }
-      pick_von.hide();
-      $('#date-bis')[0].focus();
-    }).data('datepicker');
-    var pick_bis = $('#date-bis').datepicker({
-      onRender: function(date) {
-        return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
-      }
-    }).on('changeDate', function(ev) {
-      pick_bis.hide();
-    }).data('datepicker');
-    </script>
+      <script src="datepicker/js/bootstrap-datepicker.js"></script>
+      <link rel="stylesheet" href="datepicker/css/datepicker.css">
+      <script>
+      var nowTemp = new Date();
+      var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
 
-    <script>
-      var i=1;
-      var addRow  = function(){
-        $("#table-aufstellung").find('tbody')
-        .append($('<tr>')
-          .append($('<td>').attr('class', 'col-md-1').append(i))
+      var pick_von = $('#date-von').datepicker({
+        onRender: function(date) {
+          return date.valueOf() < now.valueOf() ? 'disabled' : '';
+        }
+      }).on('changeDate', function(ev) {
+        if (ev.date.valueOf() > pick_bis.date.valueOf()) {
+          var newDate = new Date(ev.date)
+          newDate.setDate(newDate.getDate());
+          pick_bis.setValue(newDate);
+        }
+        pick_von.hide();
+        $('#date-bis')[0].focus();
+      }).data('datepicker');
+      var pick_bis = $('#date-bis').datepicker({
+        onRender: function(date) {
+          return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
+        }
+      }).on('changeDate', function(ev) {
+        pick_bis.hide();
+      }).data('datepicker');
+      </script>
+
+      <script>
+        var i=1;
+        var addRow  = function(){
+          $("#table-aufstellung").find('tbody')
+          .append($('<tr>')
+            .append($('<td>').attr('class', 'col-md-1').append(i))
+            .append($('<td>')
+              .attr('class', 'col-md-6')
+              .append($('<input>')
+                  .attr('type', 'text')
+                  .attr('class', 'form-control')
+                  .attr('id', 'titel' + i)
+              )
+            )
           .append($('<td>')
-            .attr('class', 'col-md-6')
-            .append($('<input>')
-                .attr('type', 'text')
-                .attr('class', 'form-control')
-                .attr('id', 'titel' + i)
+            .attr('class', 'col-md-1')
+            .append($('<div>')
+              .attr('class', 'input-group')
+              .append($('<input>')
+                  .attr('type', 'text')
+                  .attr('class', 'form-control in')
+                  .attr('value', '0.00')
+                  .attr('id', 'in' + i)
+              )
+              .append($('<span>').attr('class', 'input-group-addon').text('€'))
             )
-          )
-        .append($('<td>')
-          .attr('class', 'col-md-1')
-          .append($('<div>')
-            .attr('class', 'input-group')
-            .append($('<input>')
-                .attr('type', 'text')
-                .attr('class', 'form-control in')
-                .attr('value', '0.00')
-                .attr('id', 'in' + i)
+
+         )
+          .append($('<td>')
+            .attr('class', 'col-md-1')
+            .append($('<div>')
+              .attr('class', 'input-group bfh-number')
+              .append($('<input>')
+                  .attr('type', 'text')
+                  .attr('class', 'form-control out')
+                  .attr('value', '0.00')
+                  .attr('id', 'out' + i)
+              )
+              .append($('<span>').attr('class', 'input-group-addon').text('€'))
             )
-            .append($('<span>').attr('class', 'input-group-addon').text('€'))
-          )
 
-       )
-        .append($('<td>')
-          .attr('class', 'col-md-1')
-          .append($('<div>')
-            .attr('class', 'input-group bfh-number')
-            .append($('<input>')
-                .attr('type', 'text')
-                .attr('class', 'form-control out')
-                .attr('value', '0.00')
-                .attr('id', 'out' + i)
-            )
-            .append($('<span>').attr('class', 'input-group-addon').text('€'))
-          )
+         )
+       );
+       i++;
+      }
+      addRow();
+      $(".addRowBtn").on('click',addRow);
 
-       )
-     );
-     i++;
-    }
-    addRow();
-    $(".addRowBtn").on('click',addRow);
+      var sumFunction = function(){
+          var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
+          var sumIn = 0;
+          var sumOut = 0;
+          $dataRows.each(function() {
+            var inEuro = $(this).find('.in').val();
+            var outEuro = $(this).find('.out').val();
+            sumIn  += parseFloat(inEuro);
+            sumOut += parseFloat(outEuro);
+          });
+          $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
+          $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
+      };
 
-    var sumFunction = function(){
-        var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
-        var sumIn = 0;
-        var sumOut = 0;
-        $dataRows.each(function() {
-          var inEuro = $(this).find('.in').val();
-          var outEuro = $(this).find('.out').val();
-          sumIn  += parseFloat(inEuro);
-          sumOut += parseFloat(outEuro);
-        });
-        $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
-        $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
-    };
+      sumFunction(); //erstes Mal durchrechnen
 
-    sumFunction(); //erstes Mal durchrechnen
+      $(".in").focusout(sumFunction);
+      $(".out").focusout(sumFunction);
 
-    $(".in").focusout(sumFunction);
-    $(".out").focusout(sumFunction);
-
-</script>
-
-  </body>
-</html>
+  </script>
+-->
+    </body>
+  </html>
