@@ -1,3 +1,6 @@
 [submodule "moment"]
 	path = moment
 	url = https://github.com/moment/moment.git
+[submodule "bootstrap-select"]
+	path = bootstrap-select
+	url = https://github.com/silviomoreto/bootstrap-select.git
