@@ -50,7 +50,7 @@
 
       <div class="container">
 
-          <div class="form-group">
+          <form id="form_antrag" role= "form" action="sendNewAntrag.php" method="POST">
             <label for="header-data"> Meta-Daten </label>
             <div class="well" id="header-data">
               <label for="projekt-titel">Projekttitel:</label>
@@ -119,9 +119,8 @@
            <label for="comment">Projektbeschreibung:</label>
            <textarea class="form-control" rows="5" id="comment"></textarea>
 
-           <button type="button" class='btn btn-success pull-right' action="sendNewAntrag.php" method="POST">Absenden</button>
-         </div> <!-- close form group -->
-
+           <button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
+         </form> <!-- close form group -->
 
         </div> <!-- close container -->
 
