@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Das neueste kompilierte und minimierte CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+
+    <title>FVS</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../../dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="navbar-static-top.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="../../assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link href="main.css" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <form class="navbar-form navbar-right">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">Login</button>
+          </form>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+
+
+    <div class="container">
+
+        <div class="form-group">
+          <label for="header-data"> Meta-Daten </label>
+          <div class="well" id="header-data">
+            <label for="projekt-titel">Projekttitel:</label>
+            <input type="text" class="form-control projekt" id="projekt-titel">
+
+            <label for="projekt-verantwortlich">Projektverantwortlich:</label>
+            <input type="text" class="form-control projekt" id="projekt-verantwortlich">
+
+            <label for="projekt-institution">Projekt von:</label>
+            <input type="text" class="form-control projekt" id="projekt-institution">
+
+            <label for="projekt-titel">Projektbeschluss (wiki Direkt-Link):</label>
+            <input type="text" class="form-control projekt" id="projekt-titel">
+          </div>
+          <table class="table" id="table-aufstellung">
+          <thead>
+            <tr class="dontCount">
+              <th> Nr. </th>
+              <th>Aus/Eingabengruppe</th>
+              <th>Einnahmen</th>
+              <th>Ausgaben</th>
+            </tr>
+          </thead>
+          <tbody>
+
+          </tbody>
+          <tfoot>
+            <tr class="dontCount">
+              <th><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
+              <th></th>
+              <th class="in">You should not see this</th>
+              <th class="out">You should not see this</th>
+            </tr>
+          </tfoot>
+         </table>
+       </div> <!-- close form group -->
+
+        <button type="button" class='btn btn-success pull-right'>Absenden</button>
+      </div> <!-- close container -->
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+
+    <!--- script für die neue Zeile in der Tabelle --->
+
+    <script>
+      var i=1;
+      var addRow  = function(){
+        $("#table-aufstellung").find('tbody')
+        .append($('<tr>')
+          .append($('<td>').attr('class', 'col-md-1').append(i))
+          .append($('<td>')
+            .attr('class', 'col-md-6')
+            .append($('<input>')
+                .attr('type', 'text')
+                .attr('class', 'form-control')
+                .attr('id', 'titel' + i)
+            )
+          )
+        .append($('<td>')
+          .attr('class', 'col-md-1')
+          .append($('<div>')
+            .attr('class', 'input-group')
+            .append($('<input>')
+                .attr('type', 'text')
+                .attr('class', 'form-control in')
+                .attr('value', '0.00')
+                .attr('id', 'in' + i)
+            )
+            .append($('<span>').attr('class', 'input-group-addon').text('€'))
+          )
+
+       )
+        .append($('<td>')
+          .attr('class', 'col-md-1')
+          .append($('<div>')
+            .attr('class', 'input-group bfh-number')
+            .append($('<input>')
+                .attr('type', 'text')
+                .attr('class', 'form-control out')
+                .attr('value', '0.00')
+                .attr('id', 'out' + i)
+            )
+            .append($('<span>').attr('class', 'input-group-addon').text('€'))
+          )
+
+       )
+     );
+     i++;
+    }
+    addRow()
+    $(".addRowBtn").on('click',addRow);
+
+    $(document).ready(function(){
+        var $dataRows=$("#table1 tr:not('.dontCount')");
+        var sumIn = 0;
+        var sumOut = 0;
+
+        $dataRows.each(function() {
+          var inEuro = $(this).find('.in');
+          var outEuro = $(this).find('.out');
+          sumIn += parseFloat(inEuro.html());
+          sumOut += parseFloat(outEuro.html());
+        });
+        $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn + " €");
+        $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut + " €");
+
+    });
+</script>
+
+  </body>
+</html>

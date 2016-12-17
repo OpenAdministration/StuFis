@@ -1,0 +1,21 @@
+
+body {
+    padding-top: 80px;
+}
+
+/*€ Zeichen */
+.input-group-addon
+{
+    /*background-color:#FFF;*/
+}
+
+.projekt {
+  margin-bottom: 15px;
+}
+.inline {
+    display: inline;
+}
+.block{
+    width: 100%;
+    display: block;
+}
