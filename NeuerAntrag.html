@@ -60,8 +60,8 @@
                 <input type="text" class="form-control projekt" id="projekt-institution">
               </div>
               <div class="form-group col-xs-8">
-                <label for="projekt-verantwortlich">Projektverantwortlich:</label>
-                <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname Nachname">
+                <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
+                <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
               </div>
             </div>
             <label for="projekt-titel">Projektbeschluss (wiki Direkt-Link):</label>
@@ -70,11 +70,11 @@
             <div class="row">
               <div class="form-group col-xs-3">
                 <label for="projekt-titel">Projektbeginn</label>
-                <input type="text" class="form-control datepicker projekt" id="date-von"></p>
+                <input type="text" class="form-control datepicker projekt" id="date-von" data-date-format="dd.mm.yyyy"></p>
               </div>
               <div class="form-group col-xs-3">
                 <label for="projekt-titel">Projektende</label>
-                <input type="text" class="form-control datepicker projekt" id="date-bis"></p>
+                <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
               </div>
             </div>
           </div>
@@ -117,11 +117,30 @@
     <!--- script für die neue Zeile in der Tabelle --->
     <script src="datepicker/js/bootstrap-datepicker.js"></script>
     <link rel="stylesheet" href="datepicker/css/datepicker.css">
-
     <script>
-    $('.datepicker').datepicker({
-    format: 'dd.mm.yyyy'
-    });
+    var nowTemp = new Date();
+    var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+
+    var pick_von = $('#date-von').datepicker({
+      onRender: function(date) {
+        return date.valueOf() < now.valueOf() ? 'disabled' : '';
+      }
+    }).on('changeDate', function(ev) {
+      if (ev.date.valueOf() > pick_bis.date.valueOf()) {
+        var newDate = new Date(ev.date)
+        newDate.setDate(newDate.getDate() + 1);
+        pick_bis.setValue(newDate);
+      }
+      pick_von.hide();
+      $('#date-bis')[0].focus();
+    }).data('datepicker');
+    var pick_bis = $('#date-bis').datepicker({
+      onRender: function(date) {
+        return date.valueOf() <= pick_von.date.valueOf() ? 'disabled' : '';
+      }
+    }).on('changeDate', function(ev) {
+      pick_bis.hide();
+    }).data('datepicker');
     </script>
 
     <script>
