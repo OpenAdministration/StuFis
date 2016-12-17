@@ -54,21 +54,29 @@
             <label for="projekt-titel">Projekttitel:</label>
             <input type="text" class="form-control projekt" id="projekt-titel">
 
-            <label for="projekt-verantwortlich">Projektverantwortlich:</label>
-            <input type="text" class="form-control projekt" id="projekt-verantwortlich">
-
-            <label for="projekt-institution">Projekt von:</label>
-            <input type="text" class="form-control projekt" id="projekt-institution">
-
+            <div class="row">
+              <div class="form-group col-xs-4">
+                <label for="projekt-institution">Projekt von:</label>
+                <input type="text" class="form-control projekt" id="projekt-institution">
+              </div>
+              <div class="form-group col-xs-8">
+                <label for="projekt-verantwortlich">Projektverantwortlich:</label>
+                <input type="text" class="form-control projekt" id="projekt-verantwortlich" placeholder="Vorname Nachname">
+              </div>
+            </div>
             <label for="projekt-titel">Projektbeschluss (wiki Direkt-Link):</label>
             <input type="text" class="form-control projekt" id="projekt-titel">
 
-            <label for="projekt-titel">Projektbeginn</label>
-            <input type="text" class="form-control datepicker"></p>
-
-            <label for="projekt-titel">Projektbeginn</label>
-            <input type="text" class="form-control datepicker"></p>
-
+            <div class="row">
+              <div class="form-group col-xs-3">
+                <label for="projekt-titel">Projektbeginn</label>
+                <input type="text" class="form-control datepicker projekt" id="date-von"></p>
+              </div>
+              <div class="form-group col-xs-3">
+                <label for="projekt-titel">Projektende</label>
+                <input type="text" class="form-control datepicker projekt" id="date-bis"></p>
+              </div>
+            </div>
           </div>
           <table class="table" id="table-aufstellung">
           <thead>
@@ -84,8 +92,7 @@
           </tbody>
           <tfoot>
             <tr class="dontCount">
-              <th><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
-              <th></th>
+              <th colspan="2"><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
               <th class="in">You should not see this</th>
               <th class="out">You should not see this</th>
             </tr>
@@ -98,18 +105,23 @@
 
 
 
+
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+    <!--<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    -->
     <!--- script für die neue Zeile in der Tabelle --->
+    <script src="datepicker/js/bootstrap-datepicker.js"></script>
+    <link rel="stylesheet" href="datepicker/css/datepicker.css">
 
     <script>
-    $( function() {
-      $( ".datepicker" ).datepicker();
-    } );
+    $('.datepicker').datepicker({
+    format: 'dd.mm.yyyy'
+    });
     </script>
 
     <script>
