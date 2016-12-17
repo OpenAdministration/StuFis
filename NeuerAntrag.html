@@ -3,6 +3,8 @@
   <head>
     <!-- Das neueste kompilierte und minimierte CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <!-- Latest compiled and minified CSS from  https://silviomoreto.github.io/bootstrap-select/-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -77,7 +79,14 @@
                 <input type="text" class="form-control datepicker projekt" id="date-bis" data-date-format="dd.mm.yyyy"></p>
               </div>
             </div>
+            <select class="selectpicker">
+              <option>Mustard</option>
+              <option>Ketchup</option>
+              <option>Relish</option>
+            </select>
           </div>
+
+
           <table class="table" id="table-aufstellung">
           <thead>
             <tr class="dontCount">
@@ -107,13 +116,23 @@
 
 
 
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!--<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.selectpicker').selectpicker({
+          style: 'btn-default',
+          size: false
+        });
+      });
+    </script>
     <!--- script für die neue Zeile in der Tabelle --->
     <script src="datepicker/js/bootstrap-datepicker.js"></script>
     <link rel="stylesheet" href="datepicker/css/datepicker.css">
@@ -128,7 +147,7 @@
     }).on('changeDate', function(ev) {
       if (ev.date.valueOf() > pick_bis.date.valueOf()) {
         var newDate = new Date(ev.date)
-        newDate.setDate(newDate.getDate() + 1);
+        newDate.setDate(newDate.getDate());
         pick_bis.setValue(newDate);
       }
       pick_von.hide();
@@ -136,7 +155,7 @@
     }).data('datepicker');
     var pick_bis = $('#date-bis').datepicker({
       onRender: function(date) {
-        return date.valueOf() <= pick_von.date.valueOf() ? 'disabled' : '';
+        return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
       }
     }).on('changeDate', function(ev) {
       pick_bis.hide();
