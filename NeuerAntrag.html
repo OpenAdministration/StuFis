@@ -58,7 +58,7 @@
 
               <div class="form-group has-feedback">
                 <label for="projekt-titel">Projekttitel:</label>
-                <input type="text" class="form-control projekt" name="projekt-titel" maxlength="150" required>
+                <input type="text" class="form-control projekt" name="projekt-titel" minlength="10" maxlength="150" required>
                 <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                 <div class="help-block with-errors"></div>
               </div>
@@ -67,7 +67,7 @@
               <div class="row">
                 <div class="col-xs-5 from-group">
                   <label for="von-pick" class="control-label">Projekt von:</label>
-                  <select class="selectpicker form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple>
+                  <select class="selectpicker form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple required>
                     <optgroup label="Fachschaftsräte">
                       <option>FSR EI</option>
                       <option>FSR IA</option>
@@ -85,6 +85,7 @@
                       <option>AG Umbau</option>
                     </optgroup>
                   </select>
+                    <div class="help-block with-errors"></div>
                 </div>
                 <div class="col-xs-7 form-group">
                     <label for="projekt-verantwortlich" class="control-label">Projektverantwortlich (Mail):</label>
@@ -125,7 +126,10 @@
             </tbody>
             <tfoot>
               <tr class="dontCount">
-                <th colspan="2"><button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button></th>
+                <th colspan="2">
+										<button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button>
+										<button type="button" class='delRowBtn btn btn-warning'>Lösche Letzte Zeile</button>
+								</th>
                 <th class="in">You should not see this o.O</th>
                 <th class="out">You should not see this o.O</th>
               </tr>
@@ -200,6 +204,7 @@
         var addRow  = function(){
           $("#table-aufstellung").find('tbody')
           .append($('<tr>')
+            .attr('id','zeile-'+i)
             .append($('<td>').attr('class', 'col-md-1').append(i))
             .append($('<td>')
               .attr('class', 'col-md-6')
@@ -218,6 +223,10 @@
                   .attr('class', 'form-control in')
                   .attr('value', '0.00')
                   .attr('id', 'in' + i)
+									.focusout(function(){
+															$(this).val(parseFloat($(this).val()).toFixed(2));
+															sumFunction();
+															})
               )
               .append($('<span>').attr('class', 'input-group-addon').text('€'))
             )
@@ -232,6 +241,10 @@
                   .attr('class', 'form-control out')
                   .attr('value', '0.00')
                   .attr('id', 'out' + i)
+									.focusout(function(){
+															$(this).val(parseFloat($(this).val()).toFixed(2));
+															sumFunction();
+      												})
               )
               .append($('<span>').attr('class', 'input-group-addon').text('€'))
             )
@@ -241,7 +254,14 @@
        i++;
       }
       addRow();
+
+      var removeRow = function(){
+          $("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
+          i = i==1 ? 1:i-1;
+      }
+
       $(".addRowBtn").on('click',addRow);
+      $(".delRowBtn").on('click',removeRow);
 
       var sumFunction = function(){
           var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
@@ -258,9 +278,6 @@
       };
 
       sumFunction(); //erstes Mal durchrechnen
-
-      $(".in").focusout(sumFunction);
-      $(".out").focusout(sumFunction);
 
   </script>
 
