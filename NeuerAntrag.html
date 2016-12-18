@@ -5,6 +5,7 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
+
       <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -50,16 +51,23 @@
 
       <div class="container">
 
-          <form id="form_antrag" role= "form" action="sendNewAntrag.php" method="POST">
+          <form id="form_antrag" role= "form" action="sendNewAntrag.php" method="POST" data-toggle="validator">
+
             <label for="header-data"> Meta-Daten </label>
             <div class="well" id="header-data">
-              <label for="projekt-titel">Projekttitel:</label>
-              <input type="text" class="form-control projekt" name="projekt-titel">
+
+              <div class="form-group has-feedback">
+                <label for="projekt-titel">Projekttitel:</label>
+                <input type="text" class="form-control projekt" name="projekt-titel" maxlength="150" required>
+                <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                <div class="help-block with-errors"></div>
+              </div>
+
 
               <div class="row">
-                <div class="col-xs-5">
-                  <label for="von-pick">Projekt von:</label>
-                  <select class="selectpicker projekt form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple >
+                <div class="col-xs-5 from-group">
+                  <label for="von-pick" class="control-label">Projekt von:</label>
+                  <select class="selectpicker form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple>
                     <optgroup label="Fachschaftsräte">
                       <option>FSR EI</option>
                       <option>FSR IA</option>
@@ -78,24 +86,31 @@
                     </optgroup>
                   </select>
                 </div>
-                <div class="col-xs-7">
-                  <label for="projekt-verantwortlich">Projektverantwortlich (Mail):</label>
-                  <input type="text" class="form-control projekt" name="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
-                </div>
+                <div class="col-xs-7 form-group">
+                    <label for="projekt-verantwortlich" class="control-label">Projektverantwortlich (Mail):</label>
+                    <input type="email" class="form-control" id="projekt-verantwortlich" data-error="Keine gültige E-Mail Adresse!" required name="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
+                    <div class="help-block with-errors"></div>
+                  </div>
               </div>
-              <label for="projekt-beschluss">Projektbeschluss (wiki Direkt-Link):</label>
-              <input type="text" class="form-control projekt" name="projekt_beschluss">
-              <div class="row">
-                <div class="col-xs-3">
-                  <label for="projekt-titel">Projektbeginn:</label>
-                  <input type="text" class="form-control datepicker projekt" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd"></p>
+              <div class="form-group">
+                <label for="projekt-beschluss" class="control-label">Projektbeschluss (wiki Direkt-Link mit http):</label>
+                <input type="url" class="form-control" name="projekt_beschluss" id="projekt-beschluss" placeholder="https://www.wiki.stura.tu-ilmenau.de/..." required>
+                <div class="help-block with-errors"></div>
+              </div>
+              <div class="row form-group">
+                <div class="col-xs-4">
+                  <label for="projekt-titel" class="control-label">Projektbeginn:</label>
+                  <input type="text" class="form-control datepicker" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd" required></p>
                 </div>
-                <div class="col-xs-3">
-                  <label for="projekt-titel">Projektende:</label>
-                  <input type="text" class="form-control datepicker projekt" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd"></p>
+                <div class="col-xs-4">
+                  <label for="projekt-titel" class="control-label">Projektende:</label>
+                  <input type="text" class="form-control datepicker" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd" required></p>
                 </div>
               </div>
             </div>
+
+
+
             <table class="table" id="table-aufstellung">
             <thead>
               <tr class="dontCount">
@@ -116,11 +131,14 @@
               </tr>
             </tfoot>
            </table>
-           <label for="comment">Projektbeschreibung:</label>
-           <textarea class="form-control" rows="5" name="comment"></textarea>
+           <div class="form-group">
+             <label for="comment" class="control-label">Projektbeschreibung:</label>
+             <textarea class="form-control" rows="7" name="comment" minlength="100" maxlength="750" required></textarea>
+             <div class="help-block with-errors"></div>
+           </div>
 
            <button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
-         </form> <!-- close form group -->
+         </form> <!-- close form -->
 
         </div> <!-- close container -->
 
@@ -134,8 +152,10 @@
       <!-- Placed at the end of the document so the pages load faster -->
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-      <!-- Latest compiled and minified JavaScript from bootstrap-select-->
+      <!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
+
 
       <script>
         $(document).ready(function() {
@@ -174,6 +194,7 @@
       }).data('datepicker');
       </script>
 
+      <!-- $(...).validator('update') für dynmaische Validierung (neue Felder)-->
       <script>
         var i=1;
         var addRow  = function(){

@@ -8,19 +8,3 @@ body {
 {
     /*background-color:#FFF;*/
 }
-
-.projekt {
-  margin-bottom: 15px;
-}
-.inline {
-    display: inline;
-}
-.block{
-    width: 100%;
-    display: block;
-}
-.form-control:focus {
-	border-color: #fff176;
-	outline: 0;
-	background-color: #fff176;
-}

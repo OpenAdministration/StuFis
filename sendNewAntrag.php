@@ -15,6 +15,7 @@ $beschreibung=$_POST['comment'];
 
 // Validation will be added here
 
+
 if ($errorMessage != "" ) {
 echo "<p class='message'>" .$errorMessage. "</p>" ;
 }
