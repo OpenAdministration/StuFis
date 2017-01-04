@@ -40,7 +40,7 @@ if(isset($_REQUEST['submit']))
 							//more validation here
 							$insStmt = $dbh->prepare("INSERT INTO `posten` (`proj-id`, `nr`, `beschreibung`, `einnahme`, `ausgabe`) VALUES (?,?,?,?,?)");
 							$insStmt->execute($proj_id, $i, $titel, $in, $out);
-							i++;
+							$i++;
 					}
 
       } catch (PDOException $e) {
