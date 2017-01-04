@@ -33,10 +33,10 @@ if(isset($_REQUEST['submit']))
           $proj_id = $dbh->lastInsertId();
           //post rest of the data in other table
           $i = 1;
-          while(isset($_POST['titel-'+i]) && isset($_POST['in-'+i]) && isset($_POST['out-'+i])){
-							$titel = $_POST['titel-'+i];
-							$in = $_POST['in-'+i];
-							$out = $_POST['out-'+i];
+          while(isset($_POST['titel-'. $i]) && isset($_POST['in-'. $i]) && isset($_POST['out-'. $i])){
+							$titel = $_POST['titel-'. $i];
+							$in = $_POST['in-'. $i];
+							$out = $_POST['out-'. $i];
 							//more validation here
 							$insStmt = $dbh->prepare("INSERT INTO `posten` (`proj-id`, `nr`, `beschreibung`, `einnahme`, `ausgabe`) VALUES (?,?,?,?,?)");
 							$insStmt->execute($proj_id, $i, $titel, $in, $out);
