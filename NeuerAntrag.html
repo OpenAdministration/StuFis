@@ -1,285 +1,285 @@
-  <!DOCTYPE html>
-  <html lang="de">
-    <head>
-      <!-- Das neueste kompilierte und minimierte CSS -->
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<!DOCTYPE html>
+<html lang="de">
+		<head>
+				<!-- Das neueste kompilierte und minimierte CSS -->
+				<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
+				<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
 
-      <meta charset="utf-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
+				<meta charset="utf-8">
+				<meta http-equiv="X-UA-Compatible" content="IE=edge">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
 
 
-      <meta name="description" content="">
-      <meta name="author" content="">
+				<meta name="description" content="">
+				<meta name="author" content="">
 
 
-      <title>FVS - Neuer Interner Antrag</title>
+				<title>FVS - Neuer Interner Antrag</title>
 
-      <link href="main.css" rel="stylesheet">
-    </head>
+				<link href="main.css" rel="stylesheet">
+		</head>
 
-    <body>
+		<body>
 
-      <nav class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-              <span class="sr-only">Toggle navigation</span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a>
-          </div>
-          <div id="navbar" class="navbar-collapse collapse">
-            <form class="navbar-form navbar-right">
-              <div class="form-group">
-                <input type="text" placeholder="Email" class="form-control">
-              </div>
-              <div class="form-group">
-                <input type="password" placeholder="Password" class="form-control">
-              </div>
-              <button type="submit" class="btn btn-success">Login</button>
-            </form>
-          </div><!--/.navbar-collapse -->
-        </div>
-      </nav>
-
-
-
-      <div class="container">
-
-          <form id="form_antrag" role= "form" action="sendNewAntrag.php" method="POST" data-toggle="validator">
-
-            <label for="header-data"> Meta-Daten </label>
-            <div class="well" id="header-data">
-
-              <div class="form-group has-feedback">
-                <label for="projekt-titel">Projekttitel:</label>
-                <input type="text" class="form-control projekt" name="projekt-titel" minlength="10" maxlength="150" required>
-                <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                <div class="help-block with-errors"></div>
-              </div>
-
-
-              <div class="row">
-                <div class="col-xs-5 from-group">
-                  <label for="von-pick" class="control-label">Projekt von:</label>
-                  <select class="selectpicker form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple required>
-                    <optgroup label="Fachschaftsräte">
-                      <option>FSR EI</option>
-                      <option>FSR IA</option>
-                      <option>FSR MB</option>
-                      <option>FSR MN</option>
-                      <option>FSR WM</option>
-                    </optgroup>
-                    <optgroup label="Referate">
-                      <option>Ref Soz</option>
-                      <option>Ref Int</option>
-                      <option title="Ref IT" data-icon="glyphicon-heart">Ref IT</option>
-                    </optgroup>
-                    <optgroup label="AGs">
-                      <option>AG Interclub</option>
-                      <option>AG Umbau</option>
-                    </optgroup>
-                  </select>
-                    <div class="help-block with-errors"></div>
-                </div>
-                <div class="col-xs-7 form-group">
-                    <label for="projekt-verantwortlich" class="control-label">Projektverantwortlich (Mail):</label>
-                    <input type="email" class="form-control" id="projekt-verantwortlich" data-error="Keine gültige E-Mail Adresse!" required name="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
-                    <div class="help-block with-errors"></div>
-                  </div>
-              </div>
-              <div class="form-group">
-                <label for="projekt-beschluss" class="control-label">Projektbeschluss (wiki Direkt-Link mit http):</label>
-                <input type="url" class="form-control" name="projekt_beschluss" id="projekt-beschluss" placeholder="https://www.wiki.stura.tu-ilmenau.de/..." required>
-                <div class="help-block with-errors"></div>
-              </div>
-              <div class="row form-group">
-                <div class="col-xs-4">
-                  <label for="projekt-titel" class="control-label">Projektbeginn:</label>
-                  <input type="text" class="form-control datepicker" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd" required></p>
-                </div>
-                <div class="col-xs-4">
-                  <label for="projekt-titel" class="control-label">Projektende:</label>
-                  <input type="text" class="form-control datepicker" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd" required></p>
-                </div>
-              </div>
-            </div>
+				<nav class="navbar navbar-inverse navbar-fixed-top">
+						<div class="container">
+								<div class="navbar-header">
+										<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+												<span class="sr-only">Toggle navigation</span>
+												<span class="icon-bar"></span>
+												<span class="icon-bar"></span>
+												<span class="icon-bar"></span>
+										</button>
+										<a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a>
+								</div>
+								<div id="navbar" class="navbar-collapse collapse">
+										<form class="navbar-form navbar-right">
+												<div class="form-group">
+														<input type="text" placeholder="Email" class="form-control">
+												</div>
+												<div class="form-group">
+														<input type="password" placeholder="Password" class="form-control">
+												</div>
+												<button type="submit" class="btn btn-success">Login</button>
+										</form>
+								</div><!--/.navbar-collapse -->
+						</div>
+				</nav>
 
 
 
-            <table class="table" id="table-aufstellung">
-            <thead>
-              <tr class="dontCount">
-                <th>Nr.</th>
-                <th>Aus/Eingabengruppe</th>
-                <th>Einnahmen</th>
-                <th>Ausgaben</th>
-              </tr>
-            </thead>
-            <tbody>
+				<div class="container">
 
-            </tbody>
-            <tfoot>
-              <tr class="dontCount">
-                <th colspan="2">
-										<button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button>
-										<button type="button" class='delRowBtn btn btn-warning'>Lösche Letzte Zeile</button>
-								</th>
-                <th class="in">You should not see this o.O</th>
-                <th class="out">You should not see this o.O</th>
-              </tr>
-            </tfoot>
-           </table>
-           <div class="form-group">
-             <label for="comment" class="control-label">Projektbeschreibung:</label>
-             <textarea class="form-control" rows="7" name="comment" minlength="100" maxlength="750" required></textarea>
-             <div class="help-block with-errors"></div>
-           </div>
+						<form id="form_antrag" role= "form" action="sendNewAntrag.php" method="POST" data-toggle="validator">
 
-           <button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
-         </form> <!-- close form -->
+								<label for="header-data"> Meta-Daten </label>
+								<div class="well" id="header-data">
 
-        </div> <!-- close container -->
+										<div class="form-group has-feedback">
+												<label for="projekt-titel">Projekttitel:</label>
+												<input type="text" class="form-control projekt" name="projekt-titel" minlength="10" maxlength="150" required>
+												<span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+												<div class="help-block with-errors"></div>
+										</div>
 
 
+										<div class="row">
+												<div class="col-xs-5 from-group">
+														<label for="von-pick" class="control-label">Projekt von:</label>
+														<select class="selectpicker form-control" data-live-search="true" title="Institution wählen" name="von-pick" multiple required>
+																<optgroup label="Fachschaftsräte">
+																		<option>FSR EI</option>
+																		<option>FSR IA</option>
+																		<option>FSR MB</option>
+																		<option>FSR MN</option>
+																		<option>FSR WM</option>
+																</optgroup>
+																<optgroup label="Referate">
+																		<option>Ref Soz</option>
+																		<option>Ref Int</option>
+																		<option title="Ref IT" data-icon="glyphicon-heart">Ref IT</option>
+																</optgroup>
+																<optgroup label="AGs">
+																		<option>AG Interclub</option>
+																		<option>AG Umbau</option>
+																</optgroup>
+														</select>
+														<div class="help-block with-errors"></div>
+												</div>
+												<div class="col-xs-7 form-group">
+														<label for="projekt-verantwortlich" class="control-label">Projektverantwortlich (Mail):</label>
+														<input type="email" class="form-control" id="projekt-verantwortlich" data-error="Keine gültige E-Mail Adresse!" required name="projekt-verantwortlich" placeholder="Vorname.Nachname@tu-ilmenau.de">
+														<div class="help-block with-errors"></div>
+												</div>
+										</div>
+										<div class="form-group">
+												<label for="projekt-beschluss" class="control-label">Projektbeschluss (wiki Direkt-Link mit http):</label>
+												<input type="url" class="form-control" name="projekt_beschluss" id="projekt-beschluss" placeholder="https://www.wiki.stura.tu-ilmenau.de/..." required>
+												<div class="help-block with-errors"></div>
+										</div>
+										<div class="row form-group">
+												<div class="col-xs-4">
+														<label for="projekt-titel" class="control-label">Projektbeginn:</label>
+														<input type="text" class="form-control datepicker" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd" required></p>
+										</div>
+										<div class="col-xs-4">
+												<label for="projekt-titel" class="control-label">Projektende:</label>
+												<input type="text" class="form-control datepicker" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd" required></p>
+								</div>
+								</div>
+				</div>
+
+
+
+				<table class="table" id="table-aufstellung">
+						<thead>
+								<tr class="dontCount">
+										<th>Nr.</th>
+										<th>Aus/Eingabengruppe</th>
+										<th>Einnahmen</th>
+										<th>Ausgaben</th>
+								</tr>
+						</thead>
+						<tbody>
+
+						</tbody>
+						<tfoot>
+								<tr class="dontCount">
+										<th colspan="2">
+												<button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button>
+												<button type="button" class='delRowBtn btn btn-warning'>Lösche Letzte Zeile</button>
+										</th>
+										<th class="in">You should not see this o.O</th>
+										<th class="out">You should not see this o.O</th>
+								</tr>
+						</tfoot>
+				</table>
+				<div class="form-group">
+						<label for="comment" class="control-label">Projektbeschreibung:</label>
+						<textarea class="form-control" rows="7" name="comment" minlength="100" maxlength="750" required></textarea>
+						<div class="help-block with-errors"></div>
+				</div>
+
+				<button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
+				</form> <!-- close form -->
+
+		</div> <!-- close container -->
 
 
 
 
-      <!-- Bootstrap core JavaScript
-      ================================================== -->
-      <!-- Placed at the end of the document so the pages load faster -->
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-      <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-      <!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
 
 
-      <script>
-        $(document).ready(function() {
-          $('.selectpicker').selectpicker({
-            style: 'btn-default',
-            size: false
-          });
-        });
-      </script>
-      <!-- Summenbildung -->
-      <script src="datepicker/js/bootstrap-datepicker.js"></script>
-      <link rel="stylesheet" href="datepicker/css/datepicker.css">
-      <script>
-      var nowTemp = new Date();
-      var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
 
-      var pick_von = $('#date-von').datepicker({
-        onRender: function(date) {
-          return date.valueOf() < now.valueOf() ? 'disabled' : '';
-        }
-      }).on('changeDate', function(ev) {
-        if (ev.date.valueOf() > pick_bis.date.valueOf()) {
-          var newDate = new Date(ev.date)
-          newDate.setDate(newDate.getDate());
-          pick_bis.setValue(newDate);
-        }
-        pick_von.hide();
-        $('#date-bis')[0].focus();
-      }).data('datepicker');
-      var pick_bis = $('#date-bis').datepicker({
-        onRender: function(date) {
-          return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
-        }
-      }).on('changeDate', function(ev) {
-        pick_bis.hide();
-      }).data('datepicker');
-      </script>
 
-      <!-- $(...).validator('update') für dynmaische Validierung (neue Felder)-->
-      <script>
-        var i=1;
-        var addRow  = function(){
-          $("#table-aufstellung").find('tbody')
-          .append($('<tr>')
-            .attr('id','zeile-'+i)
-            .append($('<td>').attr('class', 'col-md-1').append(i))
-            .append($('<td>')
-              .attr('class', 'col-md-6')
-              .append($('<input>')
-                  .attr('type', 'text')
-                  .attr('class', 'form-control')
-                  .attr('id', 'titel' + i)
-              )
-            )
-          .append($('<td>')
-            .attr('class', 'col-md-1')
-            .append($('<div>')
-              .attr('class', 'input-group')
-              .append($('<input>')
-                  .attr('type', 'text')
-                  .attr('class', 'form-control in')
-                  .attr('value', '0.00')
-                  .attr('id', 'in' + i)
-									.focusout(function(){
-															$(this).val(parseFloat($(this).val()).toFixed(2));
-															sumFunction();
-															})
-              )
-              .append($('<span>').attr('class', 'input-group-addon').text('€'))
-            )
+<script>
+		$(document).ready(function() {
+				$('.selectpicker').selectpicker({
+						style: 'btn-default',
+						size: false
+				});
+		});
+</script>
+<!-- Summenbildung -->
+<script src="datepicker/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="datepicker/css/datepicker.css">
+<script>
+		var nowTemp = new Date();
+		var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
 
-         )
-          .append($('<td>')
-            .attr('class', 'col-md-1')
-            .append($('<div>')
-              .attr('class', 'input-group bfh-number')
-              .append($('<input>')
-                  .attr('type', 'text')
-                  .attr('class', 'form-control out')
-                  .attr('value', '0.00')
-                  .attr('id', 'out' + i)
-									.focusout(function(){
-															$(this).val(parseFloat($(this).val()).toFixed(2));
-															sumFunction();
-      												})
-              )
-              .append($('<span>').attr('class', 'input-group-addon').text('€'))
-            )
+		var pick_von = $('#date-von').datepicker({
+				onRender: function(date) {
+						return date.valueOf() < now.valueOf() ? 'disabled' : '';
+				}
+		}).on('changeDate', function(ev) {
+				if (ev.date.valueOf() > pick_bis.date.valueOf()) {
+						var newDate = new Date(ev.date)
+						newDate.setDate(newDate.getDate());
+						pick_bis.setValue(newDate);
+				}
+				pick_von.hide();
+				$('#date-bis')[0].focus();
+		}).data('datepicker');
+		var pick_bis = $('#date-bis').datepicker({
+				onRender: function(date) {
+						return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
+				}
+		}).on('changeDate', function(ev) {
+				pick_bis.hide();
+		}).data('datepicker');
+</script>
 
-         )
-       );
-       i++;
-      }
-      addRow();
+<!-- $(...).validator('update') für dynmaische Validierung (neue Felder)-->
+<script>
+		var i=1;
+		var addRow  = function(){
+				$("#table-aufstellung").find('tbody')
+						.append($('<tr>')
+										.attr('id','zeile-'+i)
+										.append($('<td>').attr('class', 'col-md-1').append(i))
+										.append($('<td>')
+														.attr('class', 'col-md-6')
+														.append($('<input>')
+																		.attr('type', 'text')
+																		.attr('class', 'form-control')
+																		.attr('name', 'titel-' + i)
+																	 )
+													 )
+										.append($('<td>')
+														.attr('class', 'col-md-1')
+														.append($('<div>')
+																		.attr('class', 'input-group')
+																		.append($('<input>')
+																						.attr('type', 'text')
+																						.attr('class', 'form-control in')
+																						.attr('value', '0.00')
+																						.attr('name', 'in-' + i)
+																						.focusout(function(){
+						$(this).val(parseFloat($(this).val()).toFixed(2));
+						sumFunction();
+				})
+																					 )
+																		.append($('<span>').attr('class', 'input-group-addon').text('€'))
+																	 )
 
-      var removeRow = function(){
-          $("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
-          i = i==1 ? 1:i-1;
-      }
+													 )
+										.append($('<td>')
+														.attr('class', 'col-md-1')
+														.append($('<div>')
+																		.attr('class', 'input-group bfh-number')
+																		.append($('<input>')
+																						.attr('type', 'text')
+																						.attr('class', 'form-control out')
+																						.attr('value', '0.00')
+																						.attr('name', 'out-' + i)
+																						.focusout(function(){
+						$(this).val(parseFloat($(this).val()).toFixed(2));
+						sumFunction();
+				})
+																					 )
+																		.append($('<span>').attr('class', 'input-group-addon').text('€'))
+																	 )
 
-      $(".addRowBtn").on('click',addRow);
-      $(".delRowBtn").on('click',removeRow);
+													 )
+									 );
+				i++;
+		}
+		addRow();
 
-      var sumFunction = function(){
-          var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
-          var sumIn = 0;
-          var sumOut = 0;
-          $dataRows.each(function() {
-            var inEuro = $(this).find('.in').val();
-            var outEuro = $(this).find('.out').val();
-            sumIn  += parseFloat(inEuro);
-            sumOut += parseFloat(outEuro);
-          });
-          $("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
-          $("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
-      };
+		var removeRow = function(){
+				$("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
+				i = i==1 ? 1:i-1;
+		}
 
-      sumFunction(); //erstes Mal durchrechnen
+		$(".addRowBtn").on('click',addRow);
+		$(".delRowBtn").on('click',removeRow);
 
-  </script>
+		var sumFunction = function(){
+				var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
+				var sumIn = 0;
+				var sumOut = 0;
+				$dataRows.each(function() {
+						var inEuro = $(this).find('.in').val();
+						var outEuro = $(this).find('.out').val();
+						sumIn  += parseFloat(inEuro);
+						sumOut += parseFloat(outEuro);
+				});
+				$("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
+				$("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
+		};
 
-    </body>
-  </html>
+		sumFunction(); //erstes Mal durchrechnen
+
+</script>
+
+</body>
+</html>

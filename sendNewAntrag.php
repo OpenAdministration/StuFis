@@ -26,14 +26,27 @@ if(isset($_REQUEST['submit']))
       die("<p class='message'>" .$errorMessage. "</p>" );
     } else{
       //Inserting record in table using INSERT query
-      print("Hallo Welt1");
       try {
           $insStmt = $dbh->prepare("INSERT INTO `antraege` (`titel`, `orga`, `mail`, `link`, `begin`, `ende`, `beschreibung`) VALUES ( ?, ?, ?, ?, ?, ?, ?)");
           $insStmt->execute($projekt_titel, $projekt_institution, $projekt_verantwortlich, $projekt_beschluss, $date_von, $date_bis, $beschreibung);
+          // get autoincrement id from dataset
+          $proj_id = $dbh->lastInsertId();
+          //post rest of the data in other table
+          $i = 1;
+          while(isset($_POST['titel-'+i]) && isset($_POST['in-'+i]) && isset($_POST['out-'+i])){
+							$titel = $_POST['titel-'+i];
+							$in = $_POST['in-'+i];
+							$out = $_POST['out-'+i];
+							//more validation here
+							$insStmt = $dbh->prepare("INSERT INTO `posten` (`proj-id`, `nr`, `beschreibung`, `einnahme`, `ausgabe`) VALUES (?,?,?,?,?)");
+							$insStmt->execute($proj_id, $i, $titel, $in, $out);
+							i++;
+					}
+
       } catch (PDOException $e) {
           die('Query failed: ' . $e->getMessage());
       }
    }
-   print("Hallo Welt2");
+
 }
-print("Hallo Welt3");
+
