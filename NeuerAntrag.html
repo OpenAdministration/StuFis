@@ -95,7 +95,7 @@
 										</div>
 										<div class="form-group">
 												<label for="projekt-beschluss" class="control-label">Projektbeschluss (wiki Direkt-Link mit http):</label>
-												<input type="url" class="form-control" name="projekt_beschluss" id="projekt-beschluss" placeholder="https://www.wiki.stura.tu-ilmenau.de/..." required>
+												<input type="url" class="form-control" name="projekt-beschluss" id="projekt-beschluss" placeholder="https://www.wiki.stura.tu-ilmenau.de/..." required>
 												<div class="help-block with-errors"></div>
 										</div>
 										<div class="row form-group">
@@ -258,6 +258,7 @@
 		var removeRow = function(){
 				$("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
 				i = i==1 ? 1:i-1;
+				sumFunction();
 		}
 
 		$(".addRowBtn").on('click',addRow);

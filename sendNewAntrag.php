@@ -50,7 +50,7 @@ if(isset($_REQUEST['submit']))
 					}
 
       } catch (PDOException $e) {
-	  echo "DEAD";
+	  			echo "DEAD";
           die('Query failed: ' . $e->getMessage());
       }
    }
