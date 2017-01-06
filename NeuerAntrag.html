@@ -101,186 +101,184 @@
 										<div class="row form-group">
 												<div class="col-xs-4">
 														<label for="projekt-titel" class="control-label">Projektbeginn:</label>
-														<input type="text" class="form-control datepicker" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd"></p>
+														<input type="text" class="form-control datepicker" name="date-von"  id="date-von" data-date-format="yyyy-mm-dd">
+												</div>
+												<div class="col-xs-4">
+														<label for="projekt-titel" class="control-label">Projektende:</label>
+														<input type="text" class="form-control datepicker" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd">
+												</div>
 										</div>
-										<div class="col-xs-4">
-												<label for="projekt-titel" class="control-label">Projektende:</label>
-												<input type="text" class="form-control datepicker" name="date-bis" id="date-bis" data-date-format="yyyy-mm-dd"></p>
 								</div>
+
+
+
+								<table class="table" id="table-aufstellung">
+										<thead>
+												<tr class="dontCount">
+														<th>Nr.</th>
+														<th>Aus/Eingabengruppe</th>
+														<th>Einnahmen</th>
+														<th>Ausgaben</th>
+												</tr>
+										</thead>
+										<tbody>
+
+										</tbody>
+										<tfoot>
+												<tr class="dontCount">
+														<th colspan="2">
+																<button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button>
+																<button type="button" class='delRowBtn btn btn-warning'>Lösche Letzte Zeile</button>
+														</th>
+														<th class="in">You should not see this o.O</th>
+														<th class="out">You should not see this o.O</th>
+												</tr>
+										</tfoot>
+								</table>
+								<div class="form-group">
+										<label for="comment" class="control-label">Projektbeschreibung:</label>
+										<textarea class="form-control" rows="7" name="comment" minlength="100" maxlength="750" required></textarea>
+										<div class="help-block with-errors"></div>
 								</div>
-				</div>
 
+								<button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
+						</form> <!-- close form -->
 
-
-				<table class="table" id="table-aufstellung">
-						<thead>
-								<tr class="dontCount">
-										<th>Nr.</th>
-										<th>Aus/Eingabengruppe</th>
-										<th>Einnahmen</th>
-										<th>Ausgaben</th>
-								</tr>
-						</thead>
-						<tbody>
-
-						</tbody>
-						<tfoot>
-								<tr class="dontCount">
-										<th colspan="2">
-												<button type="button" class='addRowBtn btn btn-primary'>Neue Zeile</button>
-												<button type="button" class='delRowBtn btn btn-warning'>Lösche Letzte Zeile</button>
-										</th>
-										<th class="in">You should not see this o.O</th>
-										<th class="out">You should not see this o.O</th>
-								</tr>
-						</tfoot>
-				</table>
-				<div class="form-group">
-						<label for="comment" class="control-label">Projektbeschreibung:</label>
-						<textarea class="form-control" rows="7" name="comment" minlength="100" maxlength="750" required></textarea>
-						<div class="help-block with-errors"></div>
-				</div>
-
-				<button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
-				</form> <!-- close form -->
-
-		</div> <!-- close container -->
+				</div> <!-- close container -->
 
 
 
 
 
 
-<!-- Bootstrap core JavaScript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
+				<!-- Bootstrap core JavaScript ================================================== -->
+				<!-- Placed at the end of the document so the pages load faster -->
+				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+				<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+				<!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
+				<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
+				<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
 
 
-<script>
-		$(document).ready(function() {
-				$('.selectpicker').selectpicker({
-						style: 'btn-default',
-						size: false
-				});
-		});
-</script>
-<!-- Summenbildung -->
-<script src="datepicker/js/bootstrap-datepicker.js"></script>
-<link rel="stylesheet" href="datepicker/css/datepicker.css">
-<script>
-		var nowTemp = new Date();
-		var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+				<script>
+						$(document).ready(function() {
+								$('.selectpicker').selectpicker({
+										style: 'btn-default',
+										size: false
+								});
+						});
+				</script>
+				<script src="datepicker/js/bootstrap-datepicker.js"></script>
+				<link rel="stylesheet" href="datepicker/css/datepicker.css">
+				<script>
+						var nowTemp = new Date();
+						var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
 
-		var pick_von = $('#date-von').datepicker({
-				onRender: function(date) {
-						return date.valueOf() < now.valueOf() ? 'disabled' : '';
-				}
-		}).on('changeDate', function(ev) {
-				if (ev.date.valueOf() > pick_bis.date.valueOf()) {
-						var newDate = new Date(ev.date)
-						newDate.setDate(newDate.getDate());
-						pick_bis.setValue(newDate);
-				}
-				pick_von.hide();
-				$('#date-bis')[0].focus();
-		}).data('datepicker');
-		var pick_bis = $('#date-bis').datepicker({
-				onRender: function(date) {
-						return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
-				}
-		}).on('changeDate', function(ev) {
-				pick_bis.hide();
-		}).data('datepicker');
-</script>
+						var pick_von = $('#date-von').datepicker({
+								onRender: function(date) {
+										return date.valueOf() < now.valueOf() ? 'disabled' : '';
+								}
+						}).on('changeDate', function(ev) {
+								if (ev.date.valueOf() > pick_bis.date.valueOf()) {
+										var newDate = new Date(ev.date)
+										newDate.setDate(newDate.getDate());
+										pick_bis.setValue(newDate);
+								}
+								pick_von.hide();
+								$('#date-bis')[0].focus();
+						}).data('datepicker');
+						var pick_bis = $('#date-bis').datepicker({
+								onRender: function(date) {
+										return date.valueOf() < pick_von.date.valueOf() ? 'disabled' : '';
+								}
+						}).on('changeDate', function(ev) {
+								pick_bis.hide();
+						}).data('datepicker');
+				</script>
 
-<!-- $(...).validator('update') für dynmaische Validierung (neue Felder)-->
-<script>
-		var i=1;
-		var addRow  = function(){
-				$("#table-aufstellung").find('tbody')
-						.append($('<tr>')
-										.attr('id','zeile-'+i)
-										.append($('<td>').attr('class', 'col-md-1').append(i))
-										.append($('<td>')
-														.attr('class', 'col-md-6')
-														.append($('<input>')
-																		.attr('type', 'text')
-																		.attr('class', 'form-control')
-																		.attr('name', 'titel-' + i)
-																	 )
-													 )
-										.append($('<td>')
-														.attr('class', 'col-md-1')
-														.append($('<div>')
-																		.attr('class', 'input-group')
+				<!-- $(...).validator('update') für dynmaische Validierung (neue Felder)-->
+				<script>
+						var i=1;
+						var addRow  = function(){
+								$("#table-aufstellung").find('tbody')
+										.append($('<tr>')
+														.attr('id','zeile-'+i)
+														.append($('<td>').attr('class', 'col-md-1').append(i))
+														.append($('<td>')
+																		.attr('class', 'col-md-6')
 																		.append($('<input>')
 																						.attr('type', 'text')
-																						.attr('class', 'form-control in')
-																						.attr('value', '0.00')
-																						.attr('name', 'in-' + i)
-																						.focusout(function(){
-						$(this).val(parseFloat($(this).val()).toFixed(2));
-						sumFunction();
-				})
+																						.attr('class', 'form-control')
+																						.attr('name', 'titel-' + i)
 																					 )
-																		.append($('<span>').attr('class', 'input-group-addon').text('€'))
 																	 )
-
-													 )
-										.append($('<td>')
-														.attr('class', 'col-md-1')
-														.append($('<div>')
-																		.attr('class', 'input-group bfh-number')
-																		.append($('<input>')
-																						.attr('type', 'text')
-																						.attr('class', 'form-control out')
-																						.attr('value', '0.00')
-																						.attr('name', 'out-' + i)
-																						.focusout(function(){
-						$(this).val(parseFloat($(this).val()).toFixed(2));
-						sumFunction();
-				})
+														.append($('<td>')
+																		.attr('class', 'col-md-1')
+																		.append($('<div>')
+																						.attr('class', 'input-group')
+																						.append($('<input>')
+																										.attr('type', 'text')
+																										.attr('class', 'form-control in')
+																										.attr('value', '0.00')
+																										.attr('name', 'in-' + i)
+																										.focusout(function(){
+										$(this).val(parseFloat($(this).val()).toFixed(2));
+										sumFunction();
+								})
+																									 )
+																						.append($('<span>').attr('class', 'input-group-addon').text('€'))
 																					 )
-																		.append($('<span>').attr('class', 'input-group-addon').text('€'))
+
 																	 )
+														.append($('<td>')
+																		.attr('class', 'col-md-1')
+																		.append($('<div>')
+																						.attr('class', 'input-group bfh-number')
+																						.append($('<input>')
+																										.attr('type', 'text')
+																										.attr('class', 'form-control out')
+																										.attr('value', '0.00')
+																										.attr('name', 'out-' + i)
+																										.focusout(function(){
+										$(this).val(parseFloat($(this).val()).toFixed(2));
+										sumFunction();
+								})
+																									 )
+																						.append($('<span>').attr('class', 'input-group-addon').text('€'))
+																					 )
 
-													 )
-									 );
-				i++;
-		}
-		addRow();
+																	 )
+													 );
+								i++;
+						}
+						addRow();
 
-		var removeRow = function(){
-				$("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
-				i = i==1 ? 1:i-1;
-				sumFunction();
-		}
+						var removeRow = function(){
+								$("#table-aufstellung").find('tbody').find('#zeile-'+(i-1)).remove();
+								i = i==1 ? 1:i-1;
+								sumFunction();
+						}
 
-		$(".addRowBtn").on('click',addRow);
-		$(".delRowBtn").on('click',removeRow);
+						$(".addRowBtn").on('click',addRow);
+						$(".delRowBtn").on('click',removeRow);
 
-		var sumFunction = function(){
-				var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
-				var sumIn = 0;
-				var sumOut = 0;
-				$dataRows.each(function() {
-						var inEuro = $(this).find('.in').val();
-						var outEuro = $(this).find('.out').val();
-						sumIn  += parseFloat(inEuro);
-						sumOut += parseFloat(outEuro);
-				});
-				$("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
-				$("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
-		};
+						var sumFunction = function(){
+								var $dataRows = $("#table-aufstellung tr:not('.dontCount')");
+								var sumIn = 0;
+								var sumOut = 0;
+								$dataRows.each(function() {
+										var inEuro = $(this).find('.in').val();
+										var outEuro = $(this).find('.out').val();
+										sumIn  += parseFloat(inEuro);
+										sumOut += parseFloat(outEuro);
+								});
+								$("#table-aufstellung").find('tfoot').find('.in').text("Σ " + sumIn.toFixed(2) + " €");
+								$("#table-aufstellung").find('tfoot').find('.out').text("Σ " + sumOut.toFixed(2) + " €");
+						};
 
-		sumFunction(); //erstes Mal durchrechnen
+						sumFunction(); //erstes Mal durchrechnen
 
-</script>
+				</script>
 
-</body>
+		</body>
 </html>
