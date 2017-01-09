@@ -163,7 +163,7 @@
 					if ( $target.closest("td").attr("colspan") > 1 ) {
 						$target.closest("td").slideUp('slow');
 					} else {
-						$target.closest("tr").next().find("td").slideDown('slow');
+						$target.closest("tr").next().find("td").slideToggle('slow');
 					}
 
 				});
