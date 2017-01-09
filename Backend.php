@@ -138,7 +138,7 @@
 						$('.table tr').not('.header').css('display', 'none');
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
-						$('.table tr').css('display', 'none').fadeIn('slow');
+						$('.table tr').not('.header').css('display', 'none').fadeIn('slow');
 					}
 				});
 			});
