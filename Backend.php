@@ -56,20 +56,18 @@
 		<div class="container">
 			<div class="btn-group" data-toggle="buttons">
 				<label class="btn">
-					<input type="radio" name="options" id="option1" autocomplete="off"> Alle
+					<input type="radio" name="options" id="all" autocomplete="off"> Alle
 				</label>
 				<label class="btn btn-danger">
-					<input type="radio" name="options" id="option1" autocomplete="off"> Neu
+					<input type="radio" name="options" id="0" autocomplete="off"> Neu
 				</label>
 				<label class="btn btn-warning">
-					<input type="radio" name="options" id="option2" autocomplete="off"> WIP
+					<input type="radio" name="options" id="1" autocomplete="off"> WIP
 				</label>
 				<label class="btn btn-success">
-					<input type="radio" name="options" id="option3" autocomplete="off"> DONE
+					<input type="radio" name="options" id="2" autocomplete="off"> DONE
 				</label>
 			</div>
-
-
 
 			<table class="table">
 				<thead>
@@ -84,7 +82,7 @@
 					<?php
 					error_reporting(E_ALL);
 					ini_set('display_errors', 1);
-
+					//Get Data from DB
 					try {
 						$dbh = new PDO("mysql:dbname=finanzen_intern;host=localhost","fvs","dkURw8yL5xx9f2na");
 						$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -113,7 +111,7 @@
 							$einnahme = $posten['einnahme'];
 							$ausgabe = $posten['ausgabe'];
 						}
-						echo "<tr>"; // neue Zeile
+						echo "<tr data-status='$status'>"; // neue Zeile
 						//Neue Zellen
 						echo "<td>$id</td>";
 						echo "<td>$titel</td>";
@@ -121,7 +119,7 @@
 						echo "<td>$begin</td>";
 						echo "<td>$ende</td>";
 						echo "<td>$status</td>";
-
+						//Zeilenende
 						echo "</tr>";
 					}
 					?>
