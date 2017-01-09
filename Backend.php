@@ -74,6 +74,7 @@
 			<table class="table">
 				<thead>
 					<th>Nr</th>
+					<th>Titel</th>
 					<th>von</th>
 					<th>Beginn</th>
 					<th>Ende</th>
@@ -115,6 +116,7 @@
 						echo "<tr>"; // neue Zeile
 						//Neue Zellen
 						echo "<td>$id</td>";
+						echo "<td>$titel</td>";
 						echo "<td>$org</td>";
 						echo "<td>$begin</td>";
 						echo "<td>$ende</td>";
