@@ -141,11 +141,12 @@
 
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
+					$('.content').hide();
 					if ($target != 'all') {
-						$('.table tr').not('.header').css('display', 'none');
+						$('.table tr').not('.header').hide();
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
-						$('.table tr').not('.header').css('display', 'none').fadeIn('slow');
+						$('.table tr').not('.header').hide().fadeIn('slow');
 					}
 				});
 
