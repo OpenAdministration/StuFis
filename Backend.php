@@ -134,6 +134,7 @@
 					var $target = $(this).data('target');
 					if ($target != 'all') {
 						$('.table tr').css('display', 'none');
+						$('.table th').css('display', 'none').fadeIn('slow');
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
 						$('.table tr').css('display', 'none').fadeIn('slow');
