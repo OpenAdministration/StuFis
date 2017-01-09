@@ -121,11 +121,11 @@
 						// Ausgeklappter Content
 						echo "<tr>";
 						echo "<td colspan=6>";
-						echo "<div class='container'>"
-							echo "TESTETST"
-							echo "</div>"
-							echo "</td>"//End Zelle
-							echo "</tr>"; //End Zeile
+						echo "<div class='container'>";
+						echo "TESTETST";
+						echo "</div>";
+						echo "</td>";//End Zelle
+						echo "</tr>"; //End Zeile
 					}
 					?>
 				</tbody>
