@@ -119,7 +119,7 @@
 						//Zeilenende
 						echo "</tr>";
 						// Ausgeklappter Content
-						echo "<tr>";
+						echo "<tr class='.content'>";
 						echo "<td colspan=6>";
 						echo "<div class='container'>";
 						echo "TESTETST";
@@ -141,10 +141,10 @@
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
 					if ($target != 'all') {
-						$('.table tr').not('.header').css('display', 'none');
+						$('.table tr').not('.header').not('.content').css('display', 'none');
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
-						$('.table tr').not('.header').css('display', 'none').fadeIn('slow');
+						$('.table tr').not('.header').not('.content').css('display', 'none').fadeIn('slow');
 					}
 				});
 
