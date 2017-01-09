@@ -122,7 +122,7 @@
 						// Ausgeklappter Content
 						echo "<tr class='content'>";
 						echo "<td colspan=6>";
-
+						// Inhalt des Ausklappbaren
 						echo "TESTETST";
 
 						echo "</td>";//End Zelle
