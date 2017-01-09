@@ -116,10 +116,16 @@
 						echo "<td>$begin</td>";
 						echo "<td>$ende</td>";
 						echo "<td>$status</td>";
-						// Ausgeklappter Content
-						echo "<div>TestTest</div>";
 						//Zeilenende
 						echo "</tr>";
+						// Ausgeklappter Content
+						echo "<tr>";
+						echo "<td colspan=6>";
+						echo "<div class='container'>"
+							echo "TESTETST"
+							echo "</div>"
+							echo "</td>"//End Zelle
+							echo "</tr>"; //End Zeile
 					}
 					?>
 				</tbody>
@@ -143,8 +149,26 @@
 				});
 
 				$( '.table tr' ).not('.header').click(function() {
-  				$( "p" ).slideToggle( "slow" );
+					$( "p" ).slideToggle( "slow" );
 				});
+
+				// Initially hide toggleable content
+				$("td[colspan=6]").find("div").hide();
+
+				$("table").click(function(event) {
+					// No bubbling up
+					event.stopPropagation();
+
+					var $target = $(event.target);
+
+					// Open and close the appropriate thing
+					if ( $target.closest("td").attr("colspan") > 1 ) {
+						$target.slideUp();
+					} else {
+						$target.closest("tr").next().find("p").slideToggle();
+					}
+				});
+
 			});
 		</script>
 	</body>
