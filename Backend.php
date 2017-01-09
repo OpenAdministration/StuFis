@@ -16,12 +16,12 @@
 
 
 		<title>FVS - Neuer Interner Antrag</title>
-
+		<!--
 		<link href="main.css" rel="stylesheet">
-		<!--https://datatables.net/download/index -->
+		<!--https://datatables.net/download/index
 		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.css"/>
 
-		<script type="text/javascript" src="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.js"></script>
+		<script type="text/javascript" src="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.js"></script>-->
 
 
 
