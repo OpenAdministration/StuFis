@@ -71,9 +71,10 @@
 						<th>Nr</th>
 						<th>Titel</th>
 						<th>von</th>
-						<th>Beginn</th>
-						<th>Ende</th>
+						<th>Proj-Beginn</th>
+						<th>Proj-Ende</th>
 						<th>Status</th>
+						<th>Eingegangen</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -117,11 +118,12 @@
 						echo "<td>$begin</td>";
 						echo "<td>$ende</td>";
 						echo "<td>$status</td>";
+						echo "<td>$eingang</td>";
 						//Zeilenende
 						echo "</tr>";
 						// Ausgeklappter Content
 						echo "<tr>";
-						echo "<td class='content' colspan=6>";
+						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
 						echo "TESTETST";
 
