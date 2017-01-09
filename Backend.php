@@ -120,7 +120,7 @@
 						//Zeilenende
 						echo "</tr>";
 						// Ausgeklappter Content
-						echo "<tr class='.content'>";
+						echo "<tr class='content'>";
 						echo "<td colspan=6>";
 
 						echo "TESTETST";
@@ -141,7 +141,7 @@
 
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
-					$('.content').hide();
+
 					if ($target != 'all') {
 						$('.table tr').not('.header').hide();
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
