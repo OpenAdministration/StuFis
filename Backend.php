@@ -109,7 +109,7 @@
 							$einnahme = $posten['einnahme'];
 							$ausgabe = $posten['ausgabe'];
 						}
-						echo "<tr data-status='$status'>"; // neue Zeile
+						echo "<tr class='head-row' data-status='$status'>"; // neue Zeile
 						//Neue Zellen
 						echo "<td>$id</td>";
 						echo "<td>$titel</td>";
@@ -143,10 +143,10 @@
 					var $target = $(this).data('target');
 					$('.content').find('td').hide();
 					if ($target != 'all') {
-						$('.table tr').not('.header').hide();
-						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
+						$('.head-row').hide();
+						$('.head-row [data-status="' + $target + '"]').fadeIn('slow');
 					} else {
-						$('.table tr').not('.header').hide().fadeIn('slow');
+						$('.head-row').hide().fadeIn('slow');
 					}
 				});
 
