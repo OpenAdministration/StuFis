@@ -117,7 +117,7 @@
 						echo "<td>$ende</td>";
 						echo "<td>$status</td>";
 						// Ausgeklappter Content
-						echo "<div>TestTest</div>"
+						echo "<div>TestTest</div>";
 						//Zeilenende
 						echo "</tr>";
 					}
