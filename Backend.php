@@ -161,10 +161,11 @@
 
 					// Open and close the appropriate thing
 					if ( $target.closest("td").attr("colspan") > 1 ) {
-						$target.slideUp();
+						$target.closest("tr").slideUp();
 					} else {
-						$target.closest("tr").next().find("p").slideToggle();
+						$target.closest("tr").next().slideUp();
 					}
+
 				});
 
 			});
