@@ -149,27 +149,23 @@
 					}
 				});
 
-				$( '.table tr' ).not('.header').click(function() {
-					$( "div" ).slideToggle( "slow" );
-				});
-
 				// Initially hide toggleable content
 				$("td[colspan=6]").hide();
 
 				$("table").click(function(event) {
 
-          // No bubbling up
-        event.stopPropagation();
+					// No bubbling up
+					event.stopPropagation();
 
-        var $target = $(event.target);
+					var $target = $(event.target);
 
-          // Open and close the appropriate thing
-        if ( $target.closest("td").attr("colspan") > 1 ) {
-            $target.slideUp();
-        } else {
-            $target.closest("tr").next().find("p").slideToggle();
-        }
-    });
+					// Open and close the appropriate thing
+					if ( $target.closest("td").attr("colspan") > 1 ) {
+						$target.slideUp();
+					} else {
+						$target.closest("tr").next().find("p").slideToggle();
+					}
+				});
 
 			});
 		</script>
