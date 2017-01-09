@@ -32,7 +32,6 @@ if(isset($_REQUEST['submit']))
 	  echo "4";
           $insStmt = $dbh->prepare("INSERT INTO `antraege` (`titel`, `orga`, `mail`, `link`, `begin`, `ende`, `beschreibung`) VALUES ( ?, ?, ?, ?, ?, ?, ?);");
           $insStmt->execute(array($projekt_titel, $projekt_institution, $projekt_verantwortlich, $projekt_beschluss, $date_von, $date_bis, $beschreibung));
-          echo $insStmt->errorInfo()[2];
 	  // get autoincrement id from dataset
           $proj_id = $dbh->lastInsertId();
           //post rest of the data in other table
