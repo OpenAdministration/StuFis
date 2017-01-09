@@ -57,10 +57,11 @@
 		<div class="container">
 			<div class="pull-right">
 				<div class="btn-group">
+					<button type="button" class="btn btn-default btn-filter" data-target="all">ALL</button>
 					<button type="button" class="btn btn-danger btn-filter" data-target="0">NEW</button>
 					<button type="button" class="btn btn-warning btn-filter" data-target="1">WIP</button>
 					<button type="button" class="btn btn-success btn-filter" data-target="2">DONE</button>
-					<button type="button" class="btn btn-default btn-filter" data-target="all">ALL</button>
+
 				</div>
 			</div>
 
@@ -141,19 +142,19 @@
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
 					if ($target != 'all') {
-						$('.table tr').not('.header').not('.content').css('display', 'none');
+						$('.table tr').not('.header').css('display', 'none');
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
-						$('.table tr').not('.header').not('.content').css('display', 'none').fadeIn('slow');
+						$('.table tr').not('.header').css('display', 'none').fadeIn('slow');
 					}
 				});
 
 				$( '.table tr' ).not('.header').click(function() {
-					$( "p" ).slideToggle( "slow" );
+					$( "div" ).slideToggle( "slow" );
 				});
 
 				// Initially hide toggleable content
-				$("td[colspan=6]").find("div").hide();
+				$("td[colspan=6]").hide();
 
 				$("table").click(function(event) {
 					// No bubbling up
@@ -162,10 +163,10 @@
 					var $target = $(event.target);
 
 					// Open and close the appropriate thing
-					if ( $target.closest("td").attr("colspan") > 1 ) {
+					if ( $target.closest("tr").attr("colspan") > 1 ) {
 						$target.slideUp();
 					} else {
-						$target.closest("tr").next().find("p").slideToggle();
+						$target.closest("tr").next().slideToggle();
 					}
 				});
 
