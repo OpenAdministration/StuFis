@@ -103,7 +103,7 @@
 						$beschreibung = $row['beschreibung'];
 						$eingang = $row['eingang'];
 						$status = $row['status'];
-						$antragStm = dbh->prepare("SELECT * FROM `posten` WHERE `proj-id`=?");
+						$antragStm = $dbh->prepare("SELECT * FROM `posten` WHERE `proj-id`=?");
 						$antragStm->execute();
 						foreach ($antragStm->fetchAll(PDO::FETCH_ASSOC) as $posten){
 							$nr = $posten['nr'];
