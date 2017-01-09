@@ -92,11 +92,33 @@
 					}
 					$insStmt = $dbh->prepare("SELECT * FROM `antraege`");//may filter here
 					$insStmt->execute();
-					foreach ($insStmt->fetchAll() as $row){
-						echo "<tr>";
-						for($i = 1; $i <= count($row); $i++){
-							echo "<td>$row[$i]</td>";
+					foreach ($insStmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+						$id = $row['id'];
+						$titel = $row['titel'];
+						$org = $row['orga'];
+						$mail = $row['mail'];
+						$link = $row['link'];
+						$begin = $row['begin'];
+						$ende = $row['ende'];
+						$beschreibung = $row['beschreibung'];
+						$eingang = $row['eingang'];
+						$status = $row['status'];
+						$antragStm = dbh->prepare("SELECT * FROM `posten` WHERE `proj-id`=?");
+						$antragStm->execute();
+						foreach ($antragStm->fetchAll(PDO::FETCH_ASSOC) as $posten){
+							$nr = $posten['nr'];
+							$postenbeschreibung = $posten['beschreibung'];
+							$einnahme = $posten['einnahme'];
+							$ausgabe = $posten['ausgabe'];
 						}
+						echo "<tr>"; // neue Zeile
+						//Neue Zellen
+						echo "<td>$id</td>";
+						echo "<td>$org</td>";
+						echo "<td>$begin</td>";
+						echo "<td>$ende</td>";
+						echo "<td>$status</td>";
+
 						echo "</tr>";
 					}
 					?>
