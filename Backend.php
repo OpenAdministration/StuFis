@@ -20,9 +20,9 @@
 		<link href="main.css" rel="stylesheet">
 
 		<!--https://datatables.net/download/index
-		<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.css"/>
 
-		<script type="text/javascript" src="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.js"></script>-->
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.js"></script>-->
 
 
 
@@ -66,12 +66,14 @@
 
 			<table class="table">
 				<thead>
-					<th>Nr</th>
-					<th>Titel</th>
-					<th>von</th>
-					<th>Beginn</th>
-					<th>Ende</th>
-					<th>Status</th>
+					<tr class="header">
+						<th>Nr</th>
+						<th>Titel</th>
+						<th>von</th>
+						<th>Beginn</th>
+						<th>Ende</th>
+						<th>Status</th>
+					</tr>
 				</thead>
 				<tbody>
 					<?php
@@ -133,8 +135,7 @@
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
 					if ($target != 'all') {
-						$('.table tr').css('display', 'none');
-						$('.table th').css('display', 'none').fadeIn('slow');
+						$('.table tr').not('.header').css('display', 'none');
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
 						$('.table tr').css('display', 'none').fadeIn('slow');
