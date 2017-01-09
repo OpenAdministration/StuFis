@@ -120,8 +120,8 @@
 						//Zeilenende
 						echo "</tr>";
 						// Ausgeklappter Content
-						echo "<tr class='content'>";
-						echo "<td colspan=6>";
+						echo "<tr>";
+						echo "<td class='content' colspan=6>";
 						// Inhalt des Ausklappbaren
 						echo "TESTETST";
 
@@ -141,7 +141,7 @@
 
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
-					$('.content').find('td').hide();
+					$('.content').hide();
 					if ($target != 'all') {
 						$('.head-row').hide();
 						$('.head-row[data-status="' + $target + '"]').fadeIn('slow');
@@ -168,7 +168,7 @@
 				});
 
 				// Initially hide toggleable content
-				$('.content').find('td').hide();
+				$('.content').hide();
 
 			});
 		</script>
