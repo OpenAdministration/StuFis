@@ -149,8 +149,6 @@
 					}
 				});
 
-				// Initially hide toggleable content
-				$("td[colspan=6]").closest('tr').hide();
 
 				$("table").click(function(event) {
 
@@ -167,6 +165,9 @@
 					}
 
 				});
+
+				// Initially hide toggleable content
+				$("td[colspan=6]").closest('tr').hide();
 
 			});
 		</script>
