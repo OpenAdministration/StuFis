@@ -150,7 +150,7 @@
 				});
 
 				// Initially hide toggleable content
-				$("td[colspan=6]").hide();
+				$("td[colspan=6]").closest('tr').hide();
 
 				$("table").click(function(event) {
 
