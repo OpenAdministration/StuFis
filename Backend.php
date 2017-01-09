@@ -141,7 +141,7 @@
 
 				$('.btn-filter').on('click', function () {
 					var $target = $(this).data('target');
-
+					$('.content').find('td').hide();
 					if ($target != 'all') {
 						$('.table tr').not('.header').hide();
 						$('.table tr[data-status="' + $target + '"]').fadeIn('slow');
@@ -168,7 +168,7 @@
 				});
 
 				// Initially hide toggleable content
-				$("td[colspan=6]").closest('tr').hide();
+				$('.content').find('td').hide();
 
 			});
 		</script>
