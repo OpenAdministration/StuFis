@@ -122,9 +122,9 @@
 						// Ausgeklappter Content
 						echo "<tr class='.content'>";
 						echo "<td colspan=6>";
-						echo "<div class='container'>";
+
 						echo "TESTETST";
-						echo "</div>";
+
 						echo "</td>";//End Zelle
 						echo "</tr>"; //End Zeile
 					}
@@ -157,18 +157,19 @@
 				$("td[colspan=6]").hide();
 
 				$("table").click(function(event) {
-					// No bubbling up
-					event.stopPropagation();
 
-					var $target = $(event.target);
+          // No bubbling up
+        event.stopPropagation();
 
-					// Open and close the appropriate thing
-					if ( $target.closest("tr").attr("colspan") > 1 ) {
-						$target.slideUp();
-					} else {
-						$target.closest("tr").next().slideToggle();
-					}
-				});
+        var $target = $(event.target);
+
+          // Open and close the appropriate thing
+        if ( $target.closest("td").attr("colspan") > 1 ) {
+            $target.slideUp();
+        } else {
+            $target.closest("tr").next().find("p").slideToggle();
+        }
+    });
 
 			});
 		</script>
