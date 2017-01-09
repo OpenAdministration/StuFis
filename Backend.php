@@ -116,6 +116,8 @@
 						echo "<td>$begin</td>";
 						echo "<td>$ende</td>";
 						echo "<td>$status</td>";
+						// Ausgeklappter Content
+						echo "<div>TestTest</div>"
 						//Zeilenende
 						echo "</tr>";
 					}
@@ -123,8 +125,6 @@
 				</tbody>
 			</table>
 		</div>
-
-
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -141,12 +141,12 @@
 						$('.table tr').not('.header').css('display', 'none').fadeIn('slow');
 					}
 				});
+
+				$( '.table tr' ).not('.header').click(function() {
+  				$( "p" ).slideToggle( "slow" );
+				});
 			});
 		</script>
 	</body>
-
-
-
-
 
 </html>
