@@ -144,7 +144,7 @@
 					$('.content').find('td').hide();
 					if ($target != 'all') {
 						$('.head-row').hide();
-						$('.head-row [data-status="' + $target + '"]').fadeIn('slow');
+						$('.head-row[data-status="' + $target + '"]').fadeIn('slow');
 					} else {
 						$('.head-row').hide().fadeIn('slow');
 					}
