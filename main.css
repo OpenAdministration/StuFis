@@ -13,3 +13,7 @@ td .content
 {
 	border: none;
 }
+
+tr [data-status=0]{
+	background: red;
+}

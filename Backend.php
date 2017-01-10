@@ -71,9 +71,6 @@
 						<th>Nr</th>
 						<th>Titel</th>
 						<th>von</th>
-						<th>Proj-Beginn</th>
-						<th>Proj-Ende</th>
-						<th>Status</th>
 						<th>Eingegangen</th>
 					</tr>
 				</thead>
@@ -110,14 +107,14 @@
 							$einnahme = $posten['einnahme'];
 							$ausgabe = $posten['ausgabe'];
 						}
+
+						$name = explode("@",str_replace(".", " ", $mail))[0];
+
 						echo "<tr class='head-row' data-status='$status'>"; // neue Zeile
 						//Neue Zellen
 						echo "<td>$id</td>";
 						echo "<td>$titel</td>";
 						echo "<td>$org</td>";
-						echo "<td>$begin</td>";
-						echo "<td>$ende</td>";
-						echo "<td>$status</td>";
 						echo "<td>$eingang</td>";
 						//Zeilenende
 						echo "</tr>";
@@ -126,13 +123,12 @@
 						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
 						echo "<div class='containter'";
-						echo '<ul class="list-group">
-    					<li class="list-group-item">Von: $mail</li>
-							<li class="list-group-item">Beschluss: $link</li>
-							<li class="list-group-item">Morbi leo risus</li>
-							<li class="list-group-item">Porta ac consectetur ac</li>
-							<li class="list-group-item">Vestibulum at eros</li>
-						</ul>';
+						echo "<ul class="list-group">
+    					<li class='list-group-item'>Projektverantwortlich: <a href='mailto:$mail'>$name</a></li>
+							<li class='list-group-item'>Beschluss: <a href='$link'>$link</a></li>
+							<li class='list-group-item'>Projektdauer von $begin bis $ende </li>
+							<li class='list-group-item'>Projektbeschreibung: $beschreibung</li>
+						</ul>";
 
 						echo "</div>";
 
