@@ -132,6 +132,7 @@
 
 						echo "<div class='row'>
 										<div class='input-group col-md-4'>
+											<label> Inhaltliche Richtigkeit</label>
 											<span class='input-group-btn'>
 												<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id='beschluss-pick-$id'>
 													<option>HV</option>
