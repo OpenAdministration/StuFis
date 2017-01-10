@@ -123,7 +123,7 @@
 						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
 						echo "<div class='containter'";
-						echo "<ul class="list-group">
+						echo "<ul class='list-group'>
     					<li class='list-group-item'>Projektverantwortlich: <a href='mailto:$mail'>$name</a></li>
 							<li class='list-group-item'>Beschluss: <a href='$link'>$link</a></li>
 							<li class='list-group-item'>Projektdauer von $begin bis $ende </li>
