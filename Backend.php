@@ -129,11 +129,11 @@
 						// Inhalt des Ausklappbaren
 						echo "<div class='containter'";
 						echo "<ul class='list-group'>
-    					<li class='list-group-item'>Projektverantwortlich: <a href='mailto:$mail'>$name</a></li>
-							<li class='list-group-item'>Beschluss: <a href='$link' target='
+    					<li class='list-group-item'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
+							<li class='list-group-item'><b>Beschluss</b> <a href='$link' target='
 							'_blank'>$link</a></li>
-							<li class='list-group-item'>Projektdauer von $begin bis $ende </li>
-							<li class='list-group-item'>Projektbeschreibung: $beschreibung</li>
+							<li class='list-group-item'><b>Projektdauer</b> von $begin bis $ende </li>
+							<li class='list-group-item'><b>Projektbeschreibung</b> $beschreibung</li>
 						</ul>";
 						for($i = 0; $i < count($nr); $i++){
 							echo $nr[$i];
