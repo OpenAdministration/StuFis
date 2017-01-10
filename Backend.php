@@ -131,7 +131,7 @@
 						echo "<div class='containter'>";
 
 						echo "<div class='row'>
-										<div class='input-group col-md-4'>
+										<div class='input-group col-md-6'>
 											<label> Inhaltliche Richtigkeit</label>
 											<span class='input-group-btn'>
 												<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id='beschluss-pick-$id'>
@@ -142,7 +142,7 @@
 											<input type='text' class='form-control'>
 										</div>
 
-										<div class='input-group col-md-4'>
+										<div class='input-group col-md-6'>
 											<label from='hhp-pick-$id'>HHP-Titel</label>
 											<select class='selectpicker form-control' class='hhp-pick' id='hhp-pick-$id'>
 												<option> TITEL </option>
