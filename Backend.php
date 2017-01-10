@@ -136,7 +136,7 @@
 							<li class='list-group-item'>Projektbeschreibung: $beschreibung</li>
 						</ul>";
 						for($i = 1; $i <= count($nr); $i++){
-							echo $nr[i];
+							echo $nr[$i];
 						}
 
 						echo "</div>";
