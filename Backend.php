@@ -132,11 +132,15 @@
 						echo "<ul class='list-group row'>
 							<li class='list-group-item col-md-4'>
 								<div class='row'>
-									<select class='col-md-4 selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
-										<option>Haushaltsverantwortlicher</option>
-										<option>StuRa Beschluss vom</option>
-									</select>
-      						<input type='text' class=' col-md-8 form-control'>
+									<div class='input-group'>
+      							<span class='input-group-btn'>
+        							<select class='col-md-4 selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
+												<option>Haushaltsverantwortlicher</option>
+												<option>StuRa Beschluss vom</option>
+											</select>
+      							</span>
+      							<input type='text' class='col-md-8 form-control'>
+    							</div>
     						</div>
 							</li>
 							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
