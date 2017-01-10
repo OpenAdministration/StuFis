@@ -190,7 +190,7 @@
 				});
 
 
-				$("table").click(function(event) {
+				$("table .head-row").click(function(event) {
 
 					// No bubbling up
 					event.stopPropagation();
