@@ -136,13 +136,10 @@
 						echo "<ul class='list-group row'>
 							<li class='list-group-item col-md-4'>
 								<div class='input-group'>
-      						<span class='input-group-addon'><input type='checkbox'></span>
-									<span class='input-group-addon'>
-										<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
-												<option>Haushaltsverantwortlicher</option>
-												<option>StuRa Beschluss vom</option>
-										</select>
-									</span>
+									<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
+										<option>Haushaltsverantwortlicher</option>
+										<option>StuRa Beschluss vom</option>
+									</select>
       						<input type='text' class='form-control'>
     						</div>
 							</li>
