@@ -134,8 +134,8 @@
 							<li class='list-group-item col-md-4'><b>Projektdauer</b> von $begin bis $ende </li>
 							<li class='list-group-item col-md-12'><b>Projektbeschreibung</b> $beschreibung</li>
 							<li class='list-group-item col-md-4'>
-								<div class="checkbox">
-									<label><input type="checkbox" class='hv-check' id='hv-check-$id'>Genehmigt HV</label>
+								<div class='checkbox'>
+									<label><input type='checkbox' class='hv-check' id='hv-check-$id'>Genehmigt HV</label>
 								</div>
 							</li>
 							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
