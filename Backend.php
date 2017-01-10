@@ -102,10 +102,10 @@
 
 						$antragStm->execute([$id]);
 						foreach ($antragStm->fetchAll(PDO::FETCH_ASSOC) as $posten){
-							$nr = $posten['nr'];
-							$postenbeschreibung = $posten['beschreibung'];
-							$einnahme = $posten['einnahme'];
-							$ausgabe = $posten['ausgabe'];
+							$nr[] = $posten['nr'];
+							$postenbeschreibung[] = $posten['beschreibung'];
+							$einnahme[] = $posten['einnahme'];
+							$ausgabe[] = $posten['ausgabe'];
 						}
 
 						$name = explode("@",str_replace(".", " ", $mail))[0];
@@ -125,10 +125,13 @@
 						echo "<div class='containter'";
 						echo "<ul class='list-group'>
     					<li class='list-group-item'>Projektverantwortlich: <a href='mailto:$mail'>$name</a></li>
-							<li class='list-group-item'>Beschluss: <a href='$link'>$link</a></li>
+							<li class='list-group-item'>Beschluss: <a href='$link' target="_blank">$link</a></li>
 							<li class='list-group-item'>Projektdauer von $begin bis $ende </li>
 							<li class='list-group-item'>Projektbeschreibung: $beschreibung</li>
 						</ul>";
+						for($i = 1; $i <= $nr.length; i++){
+							echo $nr[i];
+						}
 
 						echo "</div>";
 
