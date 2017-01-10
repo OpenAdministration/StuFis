@@ -128,15 +128,17 @@
 						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
 						echo "<div class='containter'";
-						echo "<ul class='list-group'>
-    					<li class='list-group-item'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
-							<li class='list-group-item'><b>Beschluss</b> <a href='$link' target='
-							'_blank'>$link</a></li>
-							<li class='list-group-item'><b>Projektdauer</b> von $begin bis $ende </li>
-							<li class='list-group-item'><b>Projektbeschreibung</b> $beschreibung</li>
+						echo "<ul class='list-group row'>
+    					<li class='list-group-item col-md-6'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
+							<li class='list-group-item col-md-6'><b>Beschluss</b> <a href='$link' target='_blank'>$link</a></li>
+							<li class='list-group-item col-md-6'><b>Projektdauer</b> von $begin bis $ende </li>
+							<li class='list-group-item col-md-6'><b>Projektbeschreibung</b> $beschreibung</li>
 						</ul>";
 						for($i = 0; $i < count($nr); $i++){
 							echo $nr[$i];
+							echo $postenbeschreibung[$i];
+							echo $einnahme[$i];
+							echo $ausgabe[$i];
 						}
 
 						echo "</div>";
