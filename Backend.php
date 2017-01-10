@@ -128,29 +128,46 @@
 						echo "<tr>";
 						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
-						echo "<div class='containter'";
-						echo "<ul class='list-group row'>
-							<li class='list-group-item col-md-4'>
-								<div class='row'>
-									<div class='input-group'>
-      							<span class='input-group-btn'>
-        							<select class='col-md-4 selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
-												<option>Haushaltsverantwortlicher</option>
-												<option>StuRa Beschluss vom</option>
-											</select>
-      							</span>
-      							<input type='text' class='col-md-8 form-control'>
-    							</div>
-    						</div>
-							</li>
-							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
-							<li class='list-group-item col-md-4'><b>Genehmigt KV</b> </li>
-    					<li class='list-group-item col-md-4'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
-							<li class='list-group-item col-md-4'><b>Beschluss</b> <a href='$link' target='_blank'>$link</a></li>
-							<li class='list-group-item col-md-4'><b>Projektdauer</b> von $begin bis $ende </li>
-							<li class='list-group-item col-md-12'><b>Projektbeschreibung</b> $beschreibung</li>
+						echo "<div class='containter'>";
 
-						</ul>";
+						echo "<div class='row'>
+										<div class='input-group col-md-4'>
+											<span class='input-group-btn'>
+												<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id='beschluss-pick-$id'>
+													<option>HV</option>
+													<option>StuRa Beschluss vom</option>
+												</select>
+											</span>
+											<input type='text' class='form-control'>
+										</div>
+
+										<div class='input-group col-md-4'>
+											<label from='hhp-pick-$id'>HHP-Titel</label>
+											<select class='selectpicker form-control' class='hhp-pick' id='hhp-pick-$id'>
+												<option> TITEL </option>
+												<option> TITEL </option>
+											</select>
+										</div>
+									</div>
+
+									<div class='row'>
+										<div class='input group col-md-4'>
+											<label>Projektverantwortlich</label>
+											<a href='mailto:$mail'>$name</a>
+										</div>
+										<div class='input group col-md-4'>
+											<label>Beschluss</label>
+											<a href='$link' target='_blank'>$link</a>
+										</div>
+										<div class='input group col-md-4'>
+											<label>Projektdauer </label>
+											von $begin bis $ende </li>
+										</div>
+									</div>
+									<label> Beschreibung</label>
+									$beschreibung
+
+									";
 						for($i = 0; $i < count($nr); $i++){
 							echo $nr[$i];
 							echo $postenbeschreibung[$i];
@@ -158,7 +175,7 @@
 							echo $ausgabe[$i];
 						}
 
-						echo "</div>";
+						echo "</div>"; // end Container
 
 						echo "</td>";//End Zelle
 						echo "</tr>"; //End Zeile
