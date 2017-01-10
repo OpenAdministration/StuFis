@@ -125,7 +125,16 @@
 						echo "<tr>";
 						echo "<td class='content' colspan=42>"; //>> max. Anzahl
 						// Inhalt des Ausklappbaren
-						echo "TESTETST";
+						echo "<div class='containter'";
+						echo '<ul class="list-group">
+    					<li class="list-group-item">Von: $mail</li>
+							<li class="list-group-item">Beschluss: $link</li>
+							<li class="list-group-item">Morbi leo risus</li>
+							<li class="list-group-item">Porta ac consectetur ac</li>
+							<li class="list-group-item">Vestibulum at eros</li>
+						</ul>';
+
+						echo "</div>";
 
 						echo "</td>";//End Zelle
 						echo "</tr>"; //End Zeile
