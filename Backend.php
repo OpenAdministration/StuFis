@@ -131,16 +131,13 @@
 						echo "<ul class='list-group row'>
 							<li class='list-group-item col-md-4'>
 								<div class='input-group'>
-      						<span class='input-group-addon'>
-        						<input type='radio'>
-									</span>
-      					<input type="text" class="form-control">
+      						<span class='input-group-addon'><input type='radio'></span>
+									<span class='input-group-addon'>StuRa Beschluss Nr</span>
+      						<input type='text' class='form-control'>
     						</div>
 								<div class='input-group'>
-      						<span class='input-group-addon'>
-        						<input type='radio'>
-									</span>
-      					<input type="text" class="form-control">
+      						<span class='input-group-addon'><input type='radio'></span>
+      						Beschlossen durch HV
     						</div>
 							</li>
 							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
