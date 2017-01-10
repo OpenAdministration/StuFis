@@ -54,11 +54,6 @@
 			</div>
 		</nav>
 
-		<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
-			<option>Haushaltsverantwortlicher</option>
-			<option>StuRa Beschluss vom</option>
-		</select>
-
 		<div class="container">
 			<div class="pull-right">
 				<div class="btn-group">
@@ -173,6 +168,7 @@
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
 		<!-- http://bootsnipp.com/snippets/featured/easy-table-filter-->
 		<script>
 			$(document).ready(function () {
