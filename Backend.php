@@ -135,7 +135,7 @@
 							<li class='list-group-item'>Projektdauer von $begin bis $ende </li>
 							<li class='list-group-item'>Projektbeschreibung: $beschreibung</li>
 						</ul>";
-						for($i = 1; $i <= count($nr); $i++){
+						for($i = 0; $i < count($nr); $i++){
 							echo $nr[$i];
 						}
 
