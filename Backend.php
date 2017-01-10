@@ -131,13 +131,14 @@
 						echo "<ul class='list-group row'>
 							<li class='list-group-item col-md-4'>
 								<div class='input-group'>
-      						<span class='input-group-addon'><input type='radio'></span>
-									<span class='input-group-addon'>StuRa Beschluss Nr</span>
+      						<span class='input-group-addon'><input type='checkbox'></span>
+									<span class='input-group-addon'>
+										<select class='selectpicker form-control' title='Beschlossen durch' name='von-pick'>
+												<option>Haushaltsverantwortlicher</option>
+												<option>StuRa Beschluss vom</option>
+										</select>
+									</span>
       						<input type='text' class='form-control'>
-    						</div>
-								<div class='input-group'>
-      						<span class='input-group-addon'><input type='radio'></span>
-      						Beschlossen durch HV
     						</div>
 							</li>
 							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
@@ -192,7 +193,7 @@
 
 					// Open and close the appropriate thing
 					if ( $target.closest("td").attr("colspan") > 1 ) {
-						$target.closest("td").slideUp('slow');
+						//$target.closest("td").slideUp('slow');
 					} else {
 						$target.closest("tr").next().find("td").slideToggle('slow');
 					}
