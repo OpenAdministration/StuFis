@@ -54,6 +54,11 @@
 			</div>
 		</nav>
 
+		<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
+			<option>Haushaltsverantwortlicher</option>
+			<option>StuRa Beschluss vom</option>
+		</select>
+
 		<div class="container">
 			<div class="pull-right">
 				<div class="btn-group">
@@ -133,7 +138,7 @@
 								<div class='input-group'>
       						<span class='input-group-addon'><input type='checkbox'></span>
 									<span class='input-group-addon'>
-										<select class='selectpicker form-control' title='Beschlossen durch' name='von-pick'>
+										<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id ='beschluss-pick-$id'>
 												<option>Haushaltsverantwortlicher</option>
 												<option>StuRa Beschluss vom</option>
 										</select>
