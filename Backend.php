@@ -131,7 +131,7 @@
 						echo "<div class='containter'>";
 
 						echo "<div class='row'>
-										<div class='col-md-6'>
+										<div class='input-group col-md-6'>
 											<label> Inhaltliche Richtigkeit</label>
 											<span class='input-group-btn'>
 												<select class='selectpicker form-control' title='Beschlossen durch' class='beschluss-pick' id='beschluss-pick-$id'>
