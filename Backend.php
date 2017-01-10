@@ -124,9 +124,7 @@
 						echo "<td>$org</td>";
 						echo "<td>$eingang</td>";
 						echo "<td>" .
-										($status == 2) ? "<span data-status='2' class='label label-success'>DONE</span>"
-										: (($status == 1)"<span data-status='1' class='label label-warning'>WIP</span>":
-										"<span data-status='0' class='label label-danger'>TODO</span>")
+										($status == 2) ? "<span data-status='2' class='label label-success'>DONE</span>": (($status == 1)"<span data-status='1' class='label label-warning'>WIP</span>":"<span data-status='0' class='label label-danger'>TODO</span>")
 									. "</td>";
 						//Zeilenende
 						echo "</tr>";
