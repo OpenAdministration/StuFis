@@ -129,10 +129,17 @@
 						// Inhalt des Ausklappbaren
 						echo "<div class='containter'";
 						echo "<ul class='list-group row'>
-    					<li class='list-group-item col-md-6'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
-							<li class='list-group-item col-md-6'><b>Beschluss</b> <a href='$link' target='_blank'>$link</a></li>
-							<li class='list-group-item col-md-6'><b>Projektdauer</b> von $begin bis $ende </li>
-							<li class='list-group-item col-md-6'><b>Projektbeschreibung</b> $beschreibung</li>
+    					<li class='list-group-item col-md-4'><b>Projektverantwortlich</b> <a href='mailto:$mail'>$name</a></li>
+							<li class='list-group-item col-md-4'><b>Beschluss</b> <a href='$link' target='_blank'>$link</a></li>
+							<li class='list-group-item col-md-4'><b>Projektdauer</b> von $begin bis $ende </li>
+							<li class='list-group-item col-md-12'><b>Projektbeschreibung</b> $beschreibung</li>
+							<li class='list-group-item col-md-4'>
+								<div class="checkbox">
+									<label><input type="checkbox" class='hv-check' id='hv-check-$id'>Genehmigt HV</label>
+								</div>
+							</li>
+							<li class='list-group-item col-md-4'><b>HHP-Titel</b> </li>
+							<li class='list-group-item col-md-4'><b>Genehmigt KV</b> </li>
 						</ul>";
 						for($i = 0; $i < count($nr); $i++){
 							echo $nr[$i];
