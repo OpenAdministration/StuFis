@@ -19,8 +19,11 @@
 
     		<script src="js/validator.min.js"></script>
 
-        <script src="js/bootstrap-datepicker.js"></script>
-        <link rel="stylesheet" href="css/datepicker.css">
+        <script src="js/bootstrap-datepicker.min.js"></script>
+        <script src="js/bootstrap-datepicker.de.min.js"></script>
+        <link rel="stylesheet" href="css/bootstrap-datepicker.css">
+
+        <link rel="stylesheet" href="css/font-awesome.min.css">
 
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>

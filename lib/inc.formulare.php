@@ -90,6 +90,9 @@ function renderFormItem($meta,$ctrl = false) {
     case "date":
       renderFormItemDate($meta,$ctrl);
       break;
+    case "daterange":
+      renderFormItemDateRange($meta,$ctrl);
+      break;
     case "table":
       renderFormItemTable($meta,$ctrl);
       break;
@@ -172,9 +175,61 @@ function renderFormItemSelect($meta, $ctrl) {
   echo "</select>";
 }
 
+function renderFormItemDateRange($meta, $ctrl) {
+?>
+    <div class="input-daterange input-group"
+         data-provide="datepicker"
+         data-date-format="yyyy-mm-dd"
+         data-date-calendar-weeks="true"
+<?php
+  if (in_array("not-before-creation", $meta["opts"])) {
+?>
+         data-date-start-date="today"
+<?php
+  }
+?>
+    >
+        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" />
+        <div class="input-group-addon" style="border-top-right-radius: 4px; border-bottom-right-radius: 4px;">
+          <span class="glyphicon glyphicon-th"></span>
+        </div>
+        <div class="input-group-addon" style="background-color: transparent; border: none;">
+          bis
+        </div>
+        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" style="border-top-left-radius: 4px; border-bottom-left-radius: 4px;"/>
+        <div class="input-group-addon">
+          <span class="glyphicon glyphicon-th"></span>
+        </div>
+    </div>
+<?php
+
+}
+
+
 function renderFormItemDate($meta, $ctrl) {
-  echo "<input type=\"text\" class=\"form-control datepicker\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" data-date-format=\"yyyy-mm-dd\">";
+
+?>
+<div class="input-group date"
+     data-provide="datepicker"
+     data-date-format="yyyy-mm-dd"
+     data-date-calendar-weeks="true"
+<?php
+  if (in_array("not-before-creation", $meta["opts"])) {
+?>
+     data-date-start-date="today"
+<?php
+  }
+?>
+>
+    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>">
+    <div class="input-group-addon">
+        <span class="glyphicon glyphicon-th"></span>
+    </div>
+</div>
+<?php
+
 /*
+
      [ "id" => "start",       "name" => "Projektbeginn",                      "type" => "date",   "width" => 6,  "opts" => ["not-before-creation"], "not-after" => "field:ende" ],
      [ "id" => "ende",        "name" => "Projektende",                        "type" => "date",   "width" => 6,  "opts" => ["not-before-creation"], "not-before" => "field:start" ],
 */
@@ -217,7 +272,7 @@ function renderFormItemTable($meta, $ctrl) {
           echo "</td>";
         }
         echo "<td>";
-        echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i> DEL</a>";
+        echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
