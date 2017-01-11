@@ -36,6 +36,11 @@ $(document).ready(function() {
      enableNewRowClock($tr, $tbody, $tfoot);
      $tr.find('a.delete-row').hide();
    }); /* each table */
+
+  $( "form.ajax" ).submit(function (ev) {
+    handleSubmitForm($(this));
+    return false;
+  });
 });
 
 function enableNewRowClock($tr, $tbody, $tfoot) {
@@ -86,5 +91,76 @@ function updateColumnSum(colId) {
     sum += parseFloat($(this).val());
   });
   $e.text("Σ " + sum.toFixed(2) + " €");
+}
+
+//moment.locale('de');
+
+function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
+      $("#waitDialog").modal("hide");
+      alert(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
+};
+
+function doSubmitForm(formid) {
+  handleSubmitForm($("#"+formid));
+  return false;
+}
+
+function handleSubmitForm($form) {
+  var action = $form.attr("action");
+  if ($form.find("input[name=action]").length + $form.find("select[name=action]").length == 0) { return true; }
+  var data = new FormData($form[0]);
+  data.append("ajax", 1);
+  $("#waitDialog").modal("show");
+  $.ajax({
+    url: action,
+    data: data,
+    cache: false,
+    contentType: false,
+    processData: false,
+    type: "POST"
+  })
+  .success(function (values, status, req) {
+     $("#waitDialog").modal("hide");
+     if (typeof(values) == "string") {
+       alert(values);
+       return;
+     }
+     var txt;
+     if (values.ret) {
+       txt = "";
+     } else {
+       txt = "Die Daten konnten nicht gespeichert werden.";
+     }
+     if (values.msgs && values.msgs.length > 0) {
+         txt = values.msgs.join("\n")+"\n"+txt;
+     }
+     if (values.ret) {
+      if (txt != "") {
+        txt = txt + "\n\nFenster schließen?";
+        cls = confirm(txt);
+        if (self.opener) {
+         self.opener.location.reload();
+        }
+       } else {
+         cls = true;
+       }
+     } else {
+      alert(txt);
+     }
+     if (values.ret && !values.target && cls) {
+      if (self.opener) {
+       self.opener.focus();
+      }
+      self.close();
+     }
+     if (values.ret && values.target) {
+      if (cls) {
+       self.location.href = values.target;
+      } else {
+       window.open(values.target);
+      }
+     }
+   })
+  .error(xpAjaxErrorHandler);
 }
 

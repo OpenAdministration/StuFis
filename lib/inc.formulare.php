@@ -54,9 +54,9 @@ function renderFormItem($meta,$ctrl = false) {
   echo "<$wrapper class=\"".implode(" ", $classes)."\">";
 
   $ctrl["id"] = $meta["id"];
-  $ctrl["name"] = $meta["id"];
+  $ctrl["name"] = "formdata[{$meta["id"]}]";
   if (isset($ctrl["suffix"])) {
-    $ctrl["name"] = $meta["id"]."[]";
+    $ctrl["name"] .= "[]";
   }
   if (isset($ctrl["suffix"]) && $ctrl["suffix"]) {
     $ctrl["id"] = $meta["id"]."-".$ctrl["suffix"];

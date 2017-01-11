@@ -28,19 +28,18 @@ if (isset($_POST["action"])) {
   }
 
   switch ($_POST["action"]):
-#    case "antrag.create":
-#      $_REQUEST["unirzusername"] = getUsername();
-#      $_REQUEST["state"] = "WAIT_STUDENT";
-#      $_REQUEST["updatetoken"] = $token = substr(sha1(sha1(mt_rand())),0,16);
-#      $_REQUEST["createdat"] = date("Y-m-d H:i:s");
-#      $_REQUEST["lastupdated"] = date("Y-m-d H:i:s");
-#      $ret = dbInsert("antrag", $_REQUEST);
-##      $msgs[] = "Umfage wurde erstellt.";
-#      if ($ret !== false) {
-#        $target = str_replace("//","/",$URIBASE."/").rawurlencode($token)."/anhang";
-#        $antrag_id = (int) $ret;
-#      }
-#      break;
+    case "antrag.create":
+      $_REQUEST["creator"] = getUsername();
+      $_REQUEST["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+      $_REQUEST["createdat"] = date("Y-m-d H:i:s");
+      $_REQUEST["lastupdated"] = date("Y-m-d H:i:s");
+      $ret = dbInsert("antrag", $_REQUEST);
+#      $msgs[] = "Umfage wurde erstellt.";
+      if ($ret !== false) {
+        $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
+        $antrag_id = (int) $ret;
+      }
+      break;
 #    case "antrag.update":
 #      $antrag = getAntrag();
 #
