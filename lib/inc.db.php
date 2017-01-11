@@ -13,6 +13,7 @@ $scheme["antrag"] = [
   "creator" => "VARCHAR(256) NOT NULL",
   "createdat" => "DATETIME NOT NULL",
   "lastupdated" => "DATETIME NOT NULL",
+  "token" => "VARCHAR(32) NOT NULL",
  ];
 
 $scheme["inhalt"] = [
@@ -59,8 +60,7 @@ if ($r === false) {
   $pdo->query( "CREATE TABLE {$DB_PREFIX}antrag (" .
                 buildColDef($scheme["antrag"])."
                 PRIMARY KEY (id),
-                INDEX (matrikelnr),
-                INDEX (updatetoken)
+                UNIQUE (token)
                ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(),true));
 }
 
@@ -82,16 +82,6 @@ if ($r === false) {
                ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(),true));
 }
 
-
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}unizahlungen");
-if ($r === false) {
-  $pdo->query("CREATE TABLE {$DB_PREFIX}unizahlungen (".
-                buildColDef($scheme["unizahlungen"])."
-                PRIMARY KEY (id),
-                INDEX (matrikelnr)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(),true));
-
-}
 
 $r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}comments");
 if ($r === false) {
@@ -182,7 +172,7 @@ function dbInsert($table, $fields) {
 function dbUpdate($table, $filter, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFilterFields = ["id","updatetoken","antrag_id","unirzusername"];
+   $validFilterFields = ["id","token","antrag_id"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
    $fields = array_diff_key(array_intersect_key($fields, $scheme[$table]), array_flip($validFilterFields)); # do not update filter fields
 
@@ -209,7 +199,7 @@ function dbUpdate($table, $filter, $fields) {
 function dbDelete($table, $filter) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFilterFields = ["id","updatetoken","antrag_id","question_id","username"];
+   $validFilterFields = ["id","token","antrag_id"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
 
    if (count($filter) == 0) die("No filter fields given.");
@@ -230,7 +220,7 @@ function dbDelete($table, $filter) {
 function dbGet($table, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFields = ["id","updatetoken","antrag_id","question_id","username"];
+   $validFields = ["id","token","antrag_id"];
    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields)); # only fetch using id and url
 
    if (count($fields) == 0) die("No fields given.");

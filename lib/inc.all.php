@@ -11,6 +11,7 @@ require_once SYSBASE.'/lib/inc.header.php';
 require_once SYSBASE.'/lib/inc.seo.php';
 require_once SYSBASE.'/lib/inc.helper.php';
 require_once SYSBASE.'/lib/inc.mail.php';
+require_once SYSBASE.'/lib/inc.formulare.php';
 
 // Mail
 require_once 'Mail.php';

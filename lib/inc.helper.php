@@ -16,3 +16,14 @@ function human_filesize($bytes, $decimals = 2) {
     return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
 }
 
+function escapeMe($d, $row) {
+  return htmlspecialchars($d);
+}
+function trimMe($d) {
+  if (is_array($d)) {
+    return array_map("trimMe", $d);
+  } else {
+    return trim($d);
+  }
+}
+
