@@ -181,6 +181,7 @@ function renderFormItemDateRange($meta, $ctrl) {
          data-provide="datepicker"
          data-date-format="yyyy-mm-dd"
          data-date-calendar-weeks="true"
+         data-date-language="de"
 <?php
   if (in_array("not-before-creation", $meta["opts"])) {
 ?>
@@ -213,6 +214,7 @@ function renderFormItemDate($meta, $ctrl) {
      data-provide="datepicker"
      data-date-format="yyyy-mm-dd"
      data-date-calendar-weeks="true"
+     data-date-language="de"
 <?php
   if (in_array("not-before-creation", $meta["opts"])) {
 ?>
