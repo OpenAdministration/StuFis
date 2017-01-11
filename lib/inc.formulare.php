@@ -217,7 +217,7 @@ function renderFormItemTable($meta, $ctrl) {
           echo "</td>";
         }
         echo "<td>";
-        echo "<a href=\"\" onClick=\"deleteRow();\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+        echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i> DEL</a>";
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
