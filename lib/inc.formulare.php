@@ -53,12 +53,13 @@ function renderFormItem($meta,$ctrl = false) {
 
   echo "<$wrapper class=\"".implode(" ", $classes)."\">";
 
+  $ctrl["id"] = $meta["id"];
+  $ctrl["name"] = $meta["id"];
   if (isset($ctrl["suffix"])) {
-    $ctrl["id"] = $meta["id"]."-".$ctrl["suffix"];
     $ctrl["name"] = $meta["id"]."[]";
-  } else {
-    $ctrl["id"] = $meta["id"];
-    $ctrl["name"] = $meta["id"];
+  }
+  if (isset($ctrl["suffix"]) && $ctrl["suffix"]) {
+    $ctrl["id"] = $meta["id"]."-".$ctrl["suffix"];
   }
 
   echo "<div class=\"form-group\">";
@@ -220,7 +221,7 @@ function renderFormItemTable($meta, $ctrl) {
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
-          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => "$i", "class" => [ "{$ctrl["id"]}-col-$i" ] ]));
+          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => false, "class" => [ "{$ctrl["id"]}-col-$i" ] ]));
         }
 ?>
        </tr>
