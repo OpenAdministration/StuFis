@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+<?php
+
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
+
+require_once "../lib/inc.all.php";
+requireAuth();
+#requireGroup($ADMINGROUP);
+
+?><!DOCTYPE html>
 <html lang="en">
   <head>
     <title>FVS</title>

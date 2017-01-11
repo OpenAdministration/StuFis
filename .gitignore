@@ -1,0 +1,14 @@
+TODO
+tmp
+PHP_errors.log
+config/config.php
+config/ca.pem
+lib/inc.db.gremium.php
+lib/inc.db.gruppe.php
+lib/inc.db.gruppe-rolle.php
+lib/inc.db.mailingliste.php
+lib/inc.db.mitgliedschaft.php
+lib/inc.db.person.php
+lib/inc.db.rolle-mailingliste.php
+lib/inc.db.rolle.php
+lib/Gremienbesetzung Studierende.csv
