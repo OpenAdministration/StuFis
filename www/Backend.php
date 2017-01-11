@@ -1,31 +1,13 @@
 <!DOCTYPE html>
 <html lang="de">
 	<head>
-		<!-- Das neueste kompilierte und minimierte CSS -->
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
-
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-		<meta name="description" content="">
-		<meta name="author" content="">
-
-
 		<title>FVS - Neuer Interner Antrag</title>
-
-		<link href="main.css" rel="stylesheet">
+<?php   include("../template/head.tpl"); ?>
 
 		<!--https://datatables.net/download/index
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.css"/>
 
 <script type="text/javascript" src="https://cdn.datatables.net/v/bs/pdfmake-0.1.18/dt-1.10.13/b-colvis-1.2.4/fh-3.1.2/datatables.min.js"></script>-->
-
-
-
 	</head>
 	<body>
 
@@ -188,9 +170,6 @@
 			</table>
 		</div>
 
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
 		<!-- http://bootsnipp.com/snippets/featured/easy-table-filter-->
 		<script>
 			$(document).ready(function () {

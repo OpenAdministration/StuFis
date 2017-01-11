@@ -1,23 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 		<head>
-				<!-- Das neueste kompilierte und minimierte CSS -->
-				<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/css/bootstrap-select.min.css">
-				<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
-
-				<meta charset="utf-8">
-				<meta http-equiv="X-UA-Compatible" content="IE=edge">
-				<meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-				<meta name="description" content="">
-				<meta name="author" content="">
-
-
 				<title>FVS - Neuer Interner Antrag</title>
-
-				<link href="main.css" rel="stylesheet">
+<?php   include("../template/head.tpl"); ?>
 		</head>
 
 		<body>
@@ -147,27 +132,6 @@
 				</div> <!-- close container -->
 
 
-
-
-				<!-- Bootstrap core JavaScript ================================================== -->
-				<!-- Placed at the end of the document so the pages load faster -->
-				<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-				<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-				<!-- Latest compiled and minified JavaScript from bootstrap-select and validator-->
-				<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.1/js/bootstrap-select.min.js"></script>
-				<script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.8/validator.min.js"></script>
-
-
-				<script>
-						$(document).ready(function() {
-								$('.selectpicker').selectpicker({
-										style: 'btn-default',
-										size: false
-								});
-						});
-				</script>
-				<script src="datepicker/js/bootstrap-datepicker.js"></script>
-				<link rel="stylesheet" href="datepicker/css/datepicker.css">
 				<script>
 						var nowTemp = new Date();
 						var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
