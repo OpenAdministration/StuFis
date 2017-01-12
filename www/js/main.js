@@ -106,7 +106,13 @@ function updateColumnSum(colId) {
 
 function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
       $("#please-wait-dlg").modal("hide");
-      alert(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
+
+      $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+      var $smc = $("#server-message-content");
+      $smc.empty();
+      $("#server-message-content").empty();
+      var $smcp = $('<pre>').appendTo( $smc ).text(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
+      $("#server-message-dlg").modal("show");
 };
 
 function doSubmitForm(formid) {
@@ -131,43 +137,78 @@ function handleSubmitForm($form) {
   .done(function (values, status, req) {
      $("#please-wait-dlg").modal("hide");
      if (typeof(values) == "string") {
-       alert(values);
+       $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+       var $smc = $("#server-message-content");
+       $smc.empty();
+       $("#server-message-content").empty();
+       var $smcp = $('<pre>').appendTo( $smc ).text(values);
+       $("#server-message-dlg").modal("show");
        return;
      }
      var txt;
+     var txtHeadline;
      if (values.ret) {
        txt = "";
+       txtHeadline = "Die Daten wurden erfolgreich gespeichert.";
      } else {
        txt = "Die Daten konnten nicht gespeichert werden.";
+       txtHeadline = "Die Daten konnten nicht gespeichert werden.";
      }
      if (values.msgs && values.msgs.length > 0) {
          txt = values.msgs.join("\n")+"\n"+txt;
      }
-     if (values.ret) {
-      if (txt != "") {
-        txt = txt + "\n\nFenster schließen?";
-        cls = confirm(txt);
-        if (self.opener) {
+     if (values.ret && txt != "") {
+       if (self.opener) {
          self.opener.location.reload();
-        }
-       } else {
-         cls = true;
        }
-     } else {
-      alert(txt);
-     }
-     if (values.ret && !values.target && cls) {
-      if (self.opener) {
-       self.opener.focus();
+       $("#server-question-label").text(txtHeadline);
+       var $smc = $("#server-question-content");
+       $smc.empty();
+       $("#server-question-content").empty();
+       var $smcu = $('<ul/>').appendTo( $smc );
+       for (i = 0; i < values.msgs.length; i++) {
+         var msg = (values.msgs[i]);
+         console.log(msg);
+         $('<li/>').text(msg).appendTo( $smcu );
+       }
+       $("#server-question-close-window").on("click", function(evt) {
+         if (!values.target) {
+           if (self.opener) {
+             self.opener.focus();
+           }
+           self.close();
+         } else {
+           self.location.href = values.target;
+         }
+       });
+       $("#server-question-dlg").on('hidden.bs.modal', function (e) {
+         if (values.target) {
+           window.open(values.target);
+         }
+       });
+       $("#server-question-dlg").modal("show");
+
+     } else if (values.ret) { // txt is empty
+       if (!values.target) {
+         if (self.opener) {
+           self.opener.focus();
+         }
+         self.close();
+       } else { // values.target
+         self.location.href = values.target;
+       }
+     } else { // !values.ret
+      $("#server-message-label").text(txtHeadline);
+      var $smc = $("#server-message-content");
+      $smc.empty();
+      $("#server-message-content").empty();
+      var $smcu = $('<ul/>').appendTo( $smc );
+      for (i = 0; i < values.msgs.length; i++) {
+          var msg = (values.msgs[i]);
+          console.log(msg);
+          $('<li/>').text(msg).appendTo( $smcu );
       }
-      self.close();
-     }
-     if (values.ret && values.target) {
-      if (cls) {
-       self.location.href = values.target;
-      } else {
-       window.open(values.target);
-      }
+      $("#server-message-dlg").modal("show");
      }
    })
   .fail(xpAjaxErrorHandler);

@@ -63,6 +63,7 @@ function renderFormItem($meta,$ctrl = false) {
   }
 
   echo "<div class=\"form-group\">";
+  echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
 
   if (isset($meta["title"]) && isset($meta["id"]))
     echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($meta["title"])."</label>";

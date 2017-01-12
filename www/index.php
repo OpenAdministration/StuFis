@@ -1,13 +1,12 @@
 <?php
-
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $formconfig;
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $formid;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 requireAuth();
 #requireGroup($ADMINGROUP);
 
-$formconfig = $formulare["projekt-intern"]["v1"];
+$formid = ["projekt-intern","v1"];
 
 if (isset($_POST["action"])) {
  $msgs = Array();
@@ -29,17 +28,67 @@ if (isset($_POST["action"])) {
 
   switch ($_POST["action"]):
     case "antrag.create":
-      $_REQUEST["creator"] = getUsername();
-      $_REQUEST["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
-      $_REQUEST["createdat"] = date("Y-m-d H:i:s");
-      $_REQUEST["lastupdated"] = date("Y-m-d H:i:s");
-      $ret = dbInsert("antrag", $_REQUEST);
-      $msgs[] = "Antrag wurde erstellt.";
-$ret = false;
+      $formconfig = $formulare[$formid[0]][$formid[1]];
+
+      $antrag = [];
+      $antrag["type"] = $formid[0];
+      $antrag["revision"] = $formid[1];
+      $antrag["creator"] = getUsername();
+      $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+      $antrag["createdat"] = date("Y-m-d H:i:s");
+      $antrag["lastupdated"] = date("Y-m-d H:i:s");
+      $ret = dbInsert("antrag", $antrag);
       if ($ret !== false) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
         $antrag_id = (int) $ret;
-      }
+        $msgs[] = "Antrag wurde erstellt.";
+
+        # write formdata
+        if (!isset($_REQUEST["formdata"]))
+          $_REQUEST["formdata"] = [];
+
+        function storeInhalt($inhalt) {
+          if (is_array($inhalt["value"])) {
+            $fieldname = $inhalt["fieldname"];
+            $ret = true;
+            foreach ($inhalt["value"] as $i => $value) {
+              $inhalt["fieldname"] = $fieldname . "[{$i}]";
+              $inhalt["value"] = $value;
+              $ret1 = storeInhalt($inhalt);
+              $ret = $ret && $ret1;
+            }
+            return $ret;
+          }
+          if (is_object($inhalt["value"])) {
+            $fieldname = $inhalt["fieldname"];
+            $ret = true;
+            foreach (get_object_vars($inhalt["value"]) as $i => $value) {
+              $inhalt["fieldname"] = $fieldname . "[{$i}]";
+              $inhalt["value"] = $value;
+              $ret1 = storeInhalt($inhalt);
+              $ret = $ret && $ret1;
+            }
+            return $ret;
+          }
+          $ret = dbInsert("inhalt", $inhalt);
+          if (!$ret) {
+            $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
+          }
+          return $ret;
+        }
+
+        foreach($_REQUEST["formdata"] as $fieldname => $value) {
+          $inhalt = [];
+          $inhalt["antrag_id"] = $antrag_id;
+          $inhalt["contenttype"] = $_REQUEST["formtype"][$fieldname];
+          $inhalt["fieldname"] = $fieldname;
+          $inhalt["value"] = $value;
+          $ret1 = storeInhalt($inhalt);
+          $ret = $ret && $ret1;
+        } /* formdata */
+
+      } /* dbInsert(antrag) -> $ret !== false */
+
       break;
 #    case "antrag.update":
 #      $antrag = getAntrag();
@@ -151,6 +200,7 @@ $ret = false;
  $result["ret"] = ($ret !== false);
  if ($target !== false)
    $result["target"] = $target;
+ $result["_REQUEST"] = $_REQUEST;
 
  header("Content-Type: text/json; charset=UTF-8");
  echo json_encode($result);

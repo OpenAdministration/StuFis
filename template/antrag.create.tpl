@@ -1,7 +1,9 @@
 <?php
-
-global $formconfig;
 # vim: set syntax=php:
+
+global $formid;
+$formconfig = $formulare[$formid[0]][$formid[1]];
+
 ?>
 
 <form id="newantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">

@@ -11,3 +11,9 @@ td .content
 tr [data-status="0"]{
 	background: red;
 }
+
+pre {
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
