@@ -14,7 +14,8 @@ global $formconfig;
 
 ?>
 
-  <button type="submit" class='btn btn-success pull-right' name="submit" id="submit">Absenden</button>
+  <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->
+  <button type="submit" class='btn btn-success pull-right' name="absenden" id="absenden">Absenden</button>
 
 </form>
 

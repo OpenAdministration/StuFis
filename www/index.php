@@ -34,7 +34,8 @@ if (isset($_POST["action"])) {
       $_REQUEST["createdat"] = date("Y-m-d H:i:s");
       $_REQUEST["lastupdated"] = date("Y-m-d H:i:s");
       $ret = dbInsert("antrag", $_REQUEST);
-#      $msgs[] = "Umfage wurde erstellt.";
+      $msgs[] = "Antrag wurde erstellt.";
+$ret = false;
       if ($ret !== false) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
         $antrag_id = (int) $ret;

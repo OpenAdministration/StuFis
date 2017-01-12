@@ -16,10 +16,15 @@ $(document).ready(function() {
         $e.addClass(colId);
         $tbody.children('tr').children('.'+colId).find('input').each(function() {
           $(this).on('change.column-sum', null, colId, function (evt) {
-            var val= parseFloat($(this).val());
+            var val = $(this).val();
+            val = parseFloat(val);
+            if (isNaN(val)) {
+              val = 0;
+            }
             $(this).val(val.toFixed(2));
             updateColumnSum(evt.data);
           });
+          $(this).trigger('change');
         });
         updateColumnSum(colId);
       });
@@ -31,15 +36,19 @@ $(document).ready(function() {
        var id = $e.attr('id');
        if (!id) { return; }
        $e.data('orig-id', id);
-       $e.attr('id',id+'-'+rowCount);
+       var newId = id+'-'+rowCount;
+       $e.attr('id',newId);
+       if ("defaultValue" in document.getElementById(newId)) {
+         $e.val(document.getElementById(newId).defaultValue);
+         $e.trigger("change");
+       }
      });
      enableNewRowClock($tr, $tbody, $tfoot);
      $tr.find('a.delete-row').hide();
    }); /* each table */
 
   $( "form.ajax" ).submit(function (ev) {
-    handleSubmitForm($(this));
-    return false;
+    return handleSubmitForm($(this));
   });
 });
 
@@ -96,7 +105,7 @@ function updateColumnSum(colId) {
 //moment.locale('de');
 
 function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
-      $("#waitDialog").modal("hide");
+      $("#please-wait-dlg").modal("hide");
       alert(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
 };
 
@@ -110,8 +119,8 @@ function handleSubmitForm($form) {
   if ($form.find("input[name=action]").length + $form.find("select[name=action]").length == 0) { return true; }
   var data = new FormData($form[0]);
   data.append("ajax", 1);
-  $("#waitDialog").modal("show");
-  $.ajax({
+  $("#please-wait-dlg").modal("show");
+  jQuery.ajax({
     url: action,
     data: data,
     cache: false,
@@ -119,8 +128,8 @@ function handleSubmitForm($form) {
     processData: false,
     type: "POST"
   })
-  .success(function (values, status, req) {
-     $("#waitDialog").modal("hide");
+  .done(function (values, status, req) {
+     $("#please-wait-dlg").modal("hide");
      if (typeof(values) == "string") {
        alert(values);
        return;
@@ -161,6 +170,7 @@ function handleSubmitForm($form) {
       }
      }
    })
-  .error(xpAjaxErrorHandler);
+  .fail(xpAjaxErrorHandler);
+  return false;
 }
 
