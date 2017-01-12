@@ -9,6 +9,7 @@ $(document).ready(function() {
       var $table = $(table);
       var $tbody = $table.children("tbody");
       var $tfoot = $table.children("tfoot");
+      var tableId = $table.attr('id');
 
       $tfoot.find('.column-sum').each(function (i, e) {
         var $e = $(e);
@@ -22,20 +23,30 @@ $(document).ready(function() {
               val = 0;
             }
             $(this).val(val.toFixed(2));
-            updateColumnSum(evt.data);
+            updateColumnSum(evt.data, $(this).parents(".dynamic-table").first());
           });
           $(this).trigger('change');
         });
-        updateColumnSum(colId);
+        updateColumnSum(colId, $table);
       });
 
-     var $tr = $tbody.find('tr.new-table-row').last();
-     $tr.find("*").each(function(i,e) {
+     var $tr = $tbody.children('tr.new-table-row').last();
+     $tr.find("*[name]").each(function(i,e) {
+       var rowCount = 0;
+       var $e = $(e);
+       var name = $e.attr('name');
+       if (name.substr(-2) == '[]') {
+         name = name.substr(0, name.length - 2);
+       }
+       $e.attr('orig-name-'+tableId, name);
+       var newName = name+'['+rowCount+']';
+       $e.attr('name',newName);
+     });
+     $tr.find("*[id]").each(function(i,e) {
        var rowCount = 0;
        var $e = $(e);
        var id = $e.attr('id');
-       if (!id) { return; }
-       $e.data('orig-id', id);
+       $e.attr('orig-id-'+tableId, id);
        var newId = id+'-'+rowCount;
        $e.attr('id',newId);
        if ("defaultValue" in document.getElementById(newId)) {
@@ -43,8 +54,8 @@ $(document).ready(function() {
          $e.trigger("change");
        }
      });
-     enableNewRowClock($tr, $tbody, $tfoot);
-     $tr.find('a.delete-row').hide();
+     enableNewRowClick($tr, $tbody, $tfoot, tableId);
+     $tr.children("td.delete-row").find('a.delete-row').hide();
    }); /* each table */
 
   $( "form.ajax" ).submit(function (ev) {
@@ -52,51 +63,111 @@ $(document).ready(function() {
   });
 });
 
-function enableNewRowClock($tr, $tbody, $tfoot) {
-  $tr.find("*").on('focus.dynamic-table', function (evt) {
-    onClickNewRow($tr, $tbody, $tfoot);
+function enableNewRowClick($tr, $tbody, $tfoot, tableId) {
+  $tr.find("*").off('focus.dynamic-table'+tableId);
+  $tr.find("*").on('focus.dynamic-table'+tableId, function (evt) {
+    onClickNewRow($tr, $tbody, $tfoot, tableId);
+  });
+  $tfoot.parent().off('cloned.dynamic-table'+tableId);
+  $tfoot.parent().on('cloned.dynamic-table'+tableId, function (evt) {
+    var $table = $(this);
+    var $tbody = $table.children("tbody");
+    var $tfoot = $table.children("tfoot");
+
+    var oldTableId = tableId;
+    var newTableId = $table.attr('id');
+    $table.off('cloned.dynamic-table'+oldTableId);
+
+    $table.children("tbody").children("tr").find("*[id]").attr('orig-id-'+oldTableId, null);
+    $table.children("tbody").children("tr").find("*[name]").attr('orig-name-'+oldTableId, null);
+    var rowCount = 0;
+    $tbody.children("tr").each(function(i,tr) {
+      $(tr).find("*[id]").each(function(i, e) {
+        var $e = $(e);
+        var id = $e.attr('id');
+        $e.attr('orig-id-' + newTableId, id);
+        $e.attr('id',id+'-'+rowCount);
+      });
+      $(tr).find("*[name]").each(function(i,e) {
+        var $e = $(e);
+        var name = $e.attr('name');
+        if (name.substr(-2) == '[]') {
+          name = name.substr(0, name.length - 2);
+        }
+        $e.attr('orig-name-'+newTableId, name);
+        var newName = name+'['+rowCount+']';
+        $e.attr('name',newName);
+      });
+      rowCount++;
+    });
+
+    $table.children("tbody").children("tr.new-table-row").each(function (i,e) {
+      var $ntr = $(e);
+      $ntr.find("*").off('focus.dynamic-table'+oldTableId);
+      enableNewRowClick($ntr, $tbody, $tfoot, newTableId);
+    });
   });
 }
 
-function onClickNewRow($tr, $tbody, $tfoot) {
-  $tr.find("*").off('focus.dynamic-table');
+function onClickNewRow($tr, $tbody, $tfoot, tableId) {
+  $tr.find("*").off('focus.dynamic-table'+tableId);
   var $ntr = $tr.clone(true);
   var rowCount = $tbody.children("tr").length;
+  var $table = $tr.parent();
 
-  var $adr = $tr.find('a.delete-row');
+  $tr.removeClass("new-table-row");
+  var $adr = $tr.children("td.delete-row").find('a.delete-row');
   $adr.show();
   $adr.on('click', function(evt) {
     evt.stopPropagation();
     $tr.remove();
     var rowCount = 0;
-    $tbody.find("tr").each(function(i,e) {
+    $tbody.children("tr").each(function(i,tr) {
+      var $tr = $(tr);
+      $tr.children("td.row-number").text(rowCount+".");
+      $tr.find("*[id]").each(function(i, e) {
+        var $e = $(e);
+        var id = $e.attr('orig-id-' + tableId);
+        $e.attr('id',id+'-'+rowCount);
+      });
+      $tr.find("*[name]").each(function(i, e) {
+        var $e = $(e);
+        var name = $e.attr('orig-name-' + tableId);
+        $e.attr('name',name+'['+rowCount+']');
+      });
       rowCount++;
-      $(e).find(".row-number").text(rowCount+".");
     });
     $tfoot.find('.column-sum').each(function (i, e) {
        var $e = $(e);
        var colId = $e.data('col-id');
-       updateColumnSum(colId);
+       updateColumnSum(colId, $table);
+    });
+    $tbody.find("*[id]").each(function (i, e) {
+      $(e).triggerHandler("cloned");
     });
     return false;
   });
 
-  $ntr.find(".row-number").text((rowCount+1)+".");
-  $ntr.find("*").each(function(i,e) {
+  $ntr.children("td.row-number").text((rowCount+1)+".");
+  $ntr.find("*[id]").each(function(i,e) {
     var $e = $(e);
-    var id = $e.data('orig-id');
-    if (!id) { return; }
+    var id = $e.attr('orig-id-' + tableId);
     $e.attr('id',id+'-'+rowCount);
   }); /* update id attribute of new row */
+  $ntr.find("*[name]").each(function(i,e) {
+    var $e = $(e);
+    var name = $e.attr('orig-name-' + tableId);
+    $e.attr('name',name+'['+rowCount+']');
+  }); /* update name attribute of new row */
   $ntr.appendTo($tbody);
-  enableNewRowClock($ntr, $tbody, $tfoot);
-  $ntr.trigger("cloned");
+  enableNewRowClick($ntr, $tbody, $tfoot, tableId);
+  $ntr.find("*").each(function (i, e) { $(e).triggerHandler("cloned"); });
 }
 
-function updateColumnSum(colId) {
-  var $e = $('.column-sum.'+colId);
+function updateColumnSum(colId, $table) {
+  var $e = $table.children("tfoot").find('.column-sum.'+colId);
   var sum = 0;
-  $('.'+colId+' input').each(function() {
+  $table.find('.'+colId+' input').each(function() {
     sum += parseFloat($(this).val());
   });
   $e.text(sum.toFixed(2));
@@ -168,7 +239,6 @@ function handleSubmitForm($form) {
        var $smcu = $('<ul/>').appendTo( $smc );
        for (i = 0; i < values.msgs.length; i++) {
          var msg = (values.msgs[i]);
-         console.log(msg);
          $('<li/>').text(msg).appendTo( $smcu );
        }
        $("#server-question-close-window").on("click", function(evt) {
@@ -205,7 +275,6 @@ function handleSubmitForm($form) {
       var $smcu = $('<ul/>').appendTo( $smc );
       for (i = 0; i < values.msgs.length; i++) {
           var msg = (values.msgs[i]);
-          console.log(msg);
           $('<li/>').text(msg).appendTo( $smcu );
       }
       $("#server-message-dlg").modal("show");

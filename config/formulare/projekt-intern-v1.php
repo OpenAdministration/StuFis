@@ -28,9 +28,19 @@ $formulare["projekt-intern"]["v1"] = [
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 8, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
+     [
+       "type" => "table", /* renderer */
+       "id" => "finanzgruppenanlagen",
+       "opts" => [],
+       "width" => 4,
+       "name" => "Anhänge",
+       "columns" => [
+         [ "id" => "geld.anlage",  "name" => "Anhänge",                            "type" => "text",   "width" => 8, ],
+       ],
+     ],
    ],
  ],
 

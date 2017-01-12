@@ -161,7 +161,7 @@ function renderFormItemSelect($meta, $ctrl) {
   echo "<select class=\"selectpicker form-control\" data-live-search=\"true\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
-  if (in_array("required", $meta["multiple"]))
+  if (in_array("multiple", $meta["opts"]))
     echo " multiple";
   if (in_array("required", $meta["opts"]))
     echo " required=\"required\"";
@@ -276,11 +276,9 @@ function renderFormItemTable($meta, $ctrl) {
        <tr class="new-table-row">
 <?php
         if ($withRowNumber) {
-          echo "<td>";
-          echo "<span class=\"row-number\">1.</span>";
-          echo "</td>";
+          echo "<td class=\"row-number\">1.</td>";
         }
-        echo "<td>";
+        echo "<td class=\"delete-row\">";
         echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
         echo "</td>";
 
