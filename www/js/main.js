@@ -90,7 +90,7 @@ function updateColumnSum(colId) {
   $('.'+colId+' input').each(function() {
     sum += parseFloat($(this).val());
   });
-  $e.text("Σ " + sum.toFixed(2) + " €");
+  $e.text(sum.toFixed(2));
 }
 
 //moment.locale('de');

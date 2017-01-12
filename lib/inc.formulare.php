@@ -126,6 +126,8 @@ function renderFormItemText($meta, $ctrl) {
   echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
+  if (in_array("required", $meta["opts"]))
+    echo " required=\"required\"";
   if (isset($meta["prefill"])) {
     $value = "";
     if ($meta["prefill"] == "user:mail")
@@ -138,8 +140,8 @@ function renderFormItemText($meta, $ctrl) {
 
 function renderFormItemMoney($meta, $ctrl) {
   echo "<div class=\"input-group\">";
-  echo "<input type=\"text\" class=\"form-control\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\">";
-  echo "<span class=\"input-group-addon\">€</span>";
+  echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
+  echo "<span class=\"input-group-addon\">".htmlspecialchars($meta["currency"])."</span>";
   echo "</div>";
 }
 
@@ -147,6 +149,8 @@ function renderFormItemTextarea($meta, $ctrl) {
   echo "<textarea class=\"form-control\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["min-rows"]))
     echo " rows=".htmlspecialchars($meta["min-rows"]);
+  if (in_array("required", $meta["opts"]))
+    echo " required=\"required\"";
   echo ">";
   echo "</textarea>";
 }
@@ -156,8 +160,10 @@ function renderFormItemSelect($meta, $ctrl) {
   echo "<select class=\"selectpicker form-control\" data-live-search=\"true\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
-  if (isset($meta["multiple"]))
+  if (in_array("required", $meta["multiple"]))
     echo " multiple";
+  if (in_array("required", $meta["opts"]))
+    echo " required=\"required\"";
   echo ">";
 
   if ($meta["data-source"] == "own-orgs") {
@@ -190,14 +196,14 @@ function renderFormItemDateRange($meta, $ctrl) {
   }
 ?>
     >
-        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" />
+        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
         <div class="input-group-addon" style="border-top-right-radius: 4px; border-bottom-right-radius: 4px;">
           <span class="glyphicon glyphicon-th"></span>
         </div>
         <div class="input-group-addon" style="background-color: transparent; border: none;">
           bis
         </div>
-        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" style="border-top-left-radius: 4px; border-bottom-left-radius: 4px;"/>
+        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" style="border-top-left-radius: 4px; border-bottom-left-radius: 4px;" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
         <div class="input-group-addon">
           <span class="glyphicon glyphicon-th"></span>
         </div>
@@ -223,7 +229,7 @@ function renderFormItemDate($meta, $ctrl) {
   }
 ?>
 >
-    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>">
+    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
     <div class="input-group-addon">
         <span class="glyphicon glyphicon-th"></span>
     </div>
@@ -296,7 +302,11 @@ function renderFormItemTable($meta, $ctrl) {
         <th>
 <?php
           if (in_array("sum-over-table-bottom", $col["opts"])) {
-            echo "<div class=\"column-sum\" style=\"text-align:right;\" data-col-id=\"{$ctrl["id"]}-col-$i\">You should not see this o.O</span>";
+            echo "<div class=\"input-group\">";
+            echo "<span class=\"input-group-addon\">Σ</span>";
+            echo "<div class=\"column-sum text-right form-control\" data-col-id=\"{$ctrl["id"]}-col-$i\">You should not see this o.O</div>";
+            echo "<span class=\"input-group-addon\">".htmlspecialchars($col["currency"])."</span>";
+            echo "</div>";
           }
 ?>
         </th>
