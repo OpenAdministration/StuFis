@@ -87,6 +87,61 @@ if (isset($_POST["action"])) {
           $ret = $ret && $ret1;
         } /* formdata */
 
+        global $msgs;
+        function storeAnhang($anhang, $names, $types, $tmp_names, $errors, $sizes) {
+          global $STORAGE, $msgs;
+
+          if (is_array($names)) {
+            $fieldname = $anhang["fieldname"];
+            $ret = true;
+            foreach (array_keys($names) as $key) {
+              $anhang["fieldname"] = "${fieldname}.${key}";
+              $ret1 = storeAnhang($anhang, $names[$key], $types[$key], $tmp_names[$key], $errors[$key], $sizes[$key]);
+              $ret = $ret && $ret1;
+            }
+            return $ret;
+          }
+          if ($errors == UPLOAD_ERR_NO_FILE) return true;
+          if ($errors != UPLOAD_ERR_OK) {
+            $msgs[] = uploadCodeToMessage($errors);
+            return false;
+          }
+          $anhang["size"] = $sizes;
+          $anhang["mimetype"] = $types;
+          $anhang["md5sum"] = md5_file($tmp_names);
+          $anhang["state"] = "active";
+          $anhang["filename"] = $names;
+
+          $path = $STORAGE."/".$anhang["antrag_id"]."/".uniqid().".".pathinfo($names, PATHINFO_EXTENSION);
+          if (!is_dir(dirname($path)))
+            mkdir(dirname($path),0777,true);
+          $anhang["path"] = $path;
+
+          $ret = move_uploaded_file($tmp_names, $path);
+          $ret = $ret && dbInsert("anhang", $anhang);
+          if (!$ret) {
+            $msgs[]="failed $names";
+          }
+
+          return $ret;
+        }
+        if (isset($_FILES["formdata"])) {
+          $anhang = [];
+          $anhang["antrag_id"] = $antrag_id;
+          $fd = $_FILES["formdata"];
+          foreach (array_keys($fd["name"]) as $key) {
+            $anhang["fieldname"] = $key;
+            $fieldtype = $_REQUEST["formtype"][$key];
+            if ($fieldtype != "file") {
+              $msgs[] = "Invalid field type: $fieldtype";
+              $ret = false;
+              continue;
+            }
+            $ret1 = storeAnhang($anhang, $fd["name"][$key], $fd["type"][$key], $fd["tmp_name"][$key], $fd["error"][$key], $fd["size"][$key]);
+            $ret = $ret && $ret1;
+          }
+        }
+
       } /* dbInsert(antrag) -> $ret !== false */
 
       break;
@@ -201,6 +256,7 @@ if (isset($_POST["action"])) {
  if ($target !== false)
    $result["target"] = $target;
  $result["_REQUEST"] = $_REQUEST;
+ $result["_FILES"] = $_FILES;
 
  header("Content-Type: text/json; charset=UTF-8");
  echo json_encode($result);
