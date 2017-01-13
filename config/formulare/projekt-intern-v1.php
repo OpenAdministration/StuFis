@@ -38,10 +38,7 @@ $formulare["projekt-intern"]["v1"] = [
        "width" => 4,
        "name" => "Nachweise",
        "columns" => [
-         [ "id" => "geld.anhang1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
-         [ "id" => "geld.anhang2",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
-         [ "id" => "geld.anhang3",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
-         [ "id" => "geld.ausgaben1",    "name" => "Ausgaben",                           "type" => "money",  "width" => 3, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
+         [ "id" => "geld.anhang",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "anhaenge"],
        ],
      ],
    ],
@@ -67,7 +64,5 @@ $formulare["projekt-intern"]["v1"] = [
      [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, ],
    ],
  ],
-
- [ "id" => "testdatei",        "name" => "Datei",                    "type" => "file",   "width" => 12, "title" => "Testdatei" ],
 
 ];
