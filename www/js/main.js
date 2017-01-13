@@ -5,19 +5,13 @@ $(document).ready(function() {
       size: false
   });
 
-  $(".single-file-container").on("clonedsource.single-file", function(evt) {
-    if ($(this).parents(".new-table-row").length == 0) {
-      $(this).off("clonedsource.single-file");
-      $(this).find(".single-file-toggle").remove();
-      $(this).find(".single-file").show();
-      $(this).find(".single-file").fileinput({'showUpload':false, 'showPreview':false, 'language': 'de', 'theme': 'gly'});
-    } else if ($(this).find(".single-file-toggle").length == 0) {
-      $(this).find(".single-file-toggle").remove();
-      $(this).find(".single-file").hide();
-      $('<input/>').attr('type','text').attr('placeholder','Klicken für Dateiupload').addClass('form-control').addClass('single-file-toggle').appendTo($(this));
-    }
+  $(".single-file-container").on("clone-post.single-file cloned.single-file", function(evt) {
+    $(this).find(".single-file").fileinput({'showUpload':false, 'showPreview':false, 'language': 'de', 'theme': 'gly'});
   });
-  $(".single-file-container").each(function(i,e) { $(e).triggerHandler("clonedsource"); });
+  $(".single-file-container").on("clone-pre.single-file", function(evt) {
+    $(this).find(".single-file").fileinput('destroy');
+  });
+  $(".single-file-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
   $(".dynamic-table .single-file").on("name-changed.single-file", function(evt) {
     var d = $(this).data('fileinput');
     if (!d) return;
@@ -116,7 +110,8 @@ $(document).ready(function() {
       }
     });
     $tr.find("*").off('focus.dynamic-table'+tableId);
-    $tr.find("*").on('focus.dynamic-table'+tableId, function (evt) {
+    $tr.find("*").off('mousedown.dynamic-table'+tableId);
+    $tr.find("*").on('focus.dynamic-table'+tableId+' mousedown.dynamic-table'+tableId, function (evt) {
       var $tr = $(this).parents("tr[dynamic-table-id="+tableId+"]");
       var $table = $(this).parents("table[orig-id="+tableId+"]");
       if ($tr.length != 1 || $table.length != 1) {
@@ -158,6 +153,7 @@ $(document).ready(function() {
 function onClickNewRow($tr, $table, tableId) {
 
   if (!$tr.is(".new-table-row")) return;
+  $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-pre"); });
 
   var $ntr = $tr.clone(true);
   var $tbody = $table.children("tbody");
@@ -179,7 +175,7 @@ function onClickNewRow($tr, $table, tableId) {
   $ntr.triggerHandler("row-number-changed");
 
   $ntr.find("*").each(function (i, e) { $(e).triggerHandler("cloned"); });
-  $tr.find("*").each(function (i, e) { $(e).triggerHandler("clonedsource"); });
+  $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-post"); });
 }
 
 function updateColumnSum(colId, $table) {
