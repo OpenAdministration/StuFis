@@ -101,6 +101,9 @@ function renderFormItem($meta,$ctrl = false) {
     case "file":
       renderFormItemFile($meta,$ctrl);
       break;
+    case "multifile":
+      renderFormItemMultiFile($meta,$ctrl);
+      break;
     case "ref":
       renderFormItemText($meta,$ctrl);
       break;
@@ -149,6 +152,21 @@ function renderFormItemText($meta, $ctrl) {
 function renderFormItemFile($meta, $ctrl) {
   echo "<div class=\"single-file-container\">";
   echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
+  echo "</div>";
+}
+
+function renderFormItemMultiFile($meta, $ctrl) {
+/*
+  5 1. Upload Area für mehrere Dateien (auch Ordner)
+  6 2. Die dann andere File-Felder (Tabelle) ersetzt (dort sind weiterhin File-Felder erlaubt und drinnen, damit man dort zusätzlich hochladen kann)
+  7 D.h. es braucht immer eine Tabelle.
+  8 3. Ggf. aktualisierung von ref-Feldern bezogen auf diese Tabelle
+  9 4. Vodoo für Cloned-Upload-Felder
+ 10 5. AjaxUpload
+ 11 6. Folder Option
+*/
+  echo "<div class=\"multi-file-container\">";
+  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" id=\"".htmlspecialchars($ctrl["id"])."\" multiple webkitdirectory/>";
   echo "</div>";
 }
 

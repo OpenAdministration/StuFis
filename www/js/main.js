@@ -5,14 +5,17 @@ $(document).ready(function() {
       size: false
   });
 
-  $(".single-file-container").on("clone-post.single-file cloned.single-file", function(evt) {
+  $(".single-file-container").on("clone-post.single-file cloned.file", function(evt) {
     $(this).find(".single-file").fileinput({'showUpload':false, 'showPreview':false, 'language': 'de', 'theme': 'gly'});
   });
-  $(".single-file-container").on("clone-pre.single-file", function(evt) {
-    $(this).find(".single-file").fileinput('destroy');
+  $(".multi-file-container").on("clone-post.multi-file cloned.file", function(evt) {
+    $(this).find(".multi-file").fileinput({'showUpload':false, 'showUploadedThumbs': false, 'showPreview':true, 'language': 'de', 'theme': 'gly', 'uploadUrl' : 'stuffme', 'uploadExtraData': {'action':'antrag.anhang'}});
   });
-  $(".single-file-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
-  $(".dynamic-table .single-file").on("name-changed.single-file", function(evt) {
+  $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
+    $(this).find(".single-file,.multi-file").fileinput('destroy');
+  });
+  $(".single-file-container,.multi-file-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
+  $(".dynamic-table .multi-file,.dynamic-table .multi-file").on("name-changed.file", function(evt) {
     var d = $(this).data('fileinput');
     if (!d) return;
     d.uploadFileAttr = $(this).attr("name");
