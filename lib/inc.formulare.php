@@ -61,6 +61,7 @@ function renderFormItem($meta,$ctrl = false) {
   if (isset($ctrl["suffix"]) && $ctrl["suffix"]) {
     $ctrl["id"] = $meta["id"]."-".$ctrl["suffix"];
   }
+  $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
 
   echo "<div class=\"form-group\">";
   echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
@@ -96,6 +97,12 @@ function renderFormItem($meta,$ctrl = false) {
       break;
     case "table":
       renderFormItemTable($meta,$ctrl);
+      break;
+    case "file":
+      renderFormItemFile($meta,$ctrl);
+      break;
+    case "ref":
+      renderFormItemText($meta,$ctrl);
       break;
     default:
       echo "<pre>"; print_r($meta); echo "</pre>";
@@ -137,6 +144,12 @@ function renderFormItemText($meta, $ctrl) {
     echo " value=\"".htmlspecialchars($value)."\"";
   }
   echo "/>";
+}
+
+function renderFormItemFile($meta, $ctrl) {
+  echo "<div class=\"single-file-container\">";
+  echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
+  echo "</div>";
 }
 
 function renderFormItemMoney($meta, $ctrl) {
@@ -292,8 +305,12 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
     <tfoot>
       <tr>
-        <th colspan="2">
-        </th>
+<?php
+        if ($withRowNumber) {
+          echo "<th></th>";
+        }
+?>
+        <th></th>
 <?php
         foreach ($meta["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];

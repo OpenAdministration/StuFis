@@ -33,8 +33,7 @@ $scheme["anhang"] = [
   "size" => "INT NOT NULL",
   "md5sum" => "VARCHAR(128) NOT NULL",
   "state" => "ENUM('active','revoked') DEFAULT 'active' NOT NULL",
-  "name" => "VARCHAR(256) NOT NULL",
-  "description" => "VARCHAR(256) NOT NULL",
+  "filename" => "VARCHAR(256) NOT NULL",
 ];
 
 $scheme["comments"] = [

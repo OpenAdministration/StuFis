@@ -17,3 +17,7 @@ pre {
   word-break: normal;
 }
 
+.dynamic-table > tbody > tr.new-table-row > td.delete-row a.delete-row {
+  display: none;
+}
+

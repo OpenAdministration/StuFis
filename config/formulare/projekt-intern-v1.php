@@ -36,9 +36,12 @@ $formulare["projekt-intern"]["v1"] = [
        "id" => "finanzgruppenanlagen",
        "opts" => [],
        "width" => 4,
-       "name" => "Anhänge",
+       "name" => "Nachweise",
        "columns" => [
-         [ "id" => "geld.anlage",  "name" => "Anhänge",                            "type" => "text",   "width" => 8, ],
+         [ "id" => "geld.anhang1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
+         [ "id" => "geld.anhang2",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
+         [ "id" => "geld.anhang3",  "name" => "Anhänge",                            "type" => "ref",   "width" => 3, "references" => "anhaenge"],
+         [ "id" => "geld.ausgaben1",    "name" => "Ausgaben",                           "type" => "money",  "width" => 3, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
        ],
      ],
    ],
@@ -52,5 +55,19 @@ $formulare["projekt-intern"]["v1"] = [
    "min-rows" => 10,
    "opts" => ["required"]
  ],
+
+ [
+   "type" => "table", /* renderer */
+   "title" => "Anhänge",
+   "id" => "anhaenge",
+   "opts" => ["with-row-number","with-headline"],
+   "width" => 12,
+   "columns" => [
+     [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, ],
+     [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, ],
+   ],
+ ],
+
+ [ "id" => "testdatei",        "name" => "Datei",                    "type" => "file",   "width" => 12, "title" => "Testdatei" ],
 
 ];

@@ -1,167 +1,185 @@
 
 $(document).ready(function() {
-    $('.selectpicker').selectpicker({
-        style: 'btn-default',
-        size: false
+  $('.selectpicker').selectpicker({
+      style: 'btn-default',
+      size: false
+  });
+
+  $(".single-file-container").on("clonedsource.single-file", function(evt) {
+    if ($(this).parents(".new-table-row").length == 0) {
+      $(this).off("clonedsource.single-file");
+      $(this).find(".single-file-toggle").remove();
+      $(this).find(".single-file").show();
+      $(this).find(".single-file").fileinput({'showUpload':false, 'showPreview':false, 'language': 'de', 'theme': 'gly'});
+    } else if ($(this).find(".single-file-toggle").length == 0) {
+      $(this).find(".single-file-toggle").remove();
+      $(this).find(".single-file").hide();
+      $('<input/>').attr('type','text').attr('placeholder','Klicken für Dateiupload').addClass('form-control').addClass('single-file-toggle').appendTo($(this));
+    }
+  });
+  $(".single-file-container").each(function(i,e) { $(e).triggerHandler("clonedsource"); });
+  $(".dynamic-table .single-file").on("name-changed.single-file", function(evt) {
+    var d = $(this).data('fileinput');
+    if (!d) return;
+    d.uploadFileAttr = $(this).attr("name");
+  });
+
+  $(".dynamic-table *[name]").each(function(i,e) {
+    var $e = $(e);
+    var name = $e.attr('name');
+    if (name.substr(-2) == '[]') {
+      name = name.substr(0, name.length - 2);
+    }
+    $e.attr('orig-name', name);
+  });
+  $(".dynamic-table *[name][name^=formdata]").on("name-suffix-changed.dynamic-table", function(evt) {
+    var $e = $(this);
+    var name = $e.attr('orig-name');
+    var suffix = "";
+    $e.parents("*[name-suffix]").each(function (i,p) {
+      suffix = $(p).attr('name-suffix') + suffix;
     });
 
-    $('.dynamic-table').each(function (i, table) {
-      var $table = $(table);
-      var $tbody = $table.children("tbody");
-      var $tfoot = $table.children("tfoot");
-      var tableId = $table.attr('id');
+    $e.attr('name',name + suffix);
+    $e.triggerHandler("name-changed");
+  });
+  $(".dynamic-table > tbody > tr").on("row-number-changed.dynamic-table", function (evt) {
+    var $tr = $(this);
+    var rowNumber = $tr.attr('dynamic-table-row-number');
+    $tr.attr('name-suffix','['+rowNumber+']');
 
-      $tfoot.find('.column-sum').each(function (i, e) {
-        var $e = $(e);
-        var colId = $e.data('col-id');
-        $e.addClass(colId);
-        $tbody.children('tr').children('.'+colId).find('input').each(function() {
-          $(this).on('change.column-sum', null, colId, function (evt) {
-            var val = $(this).val();
-            val = parseFloat(val);
-            if (isNaN(val)) {
-              val = 0;
-            }
-            $(this).val(val.toFixed(2));
-            updateColumnSum(evt.data, $(this).parents(".dynamic-table").first());
-          });
-          $(this).trigger('change');
+    $tr.find("*[name]").each(function(i, e) {
+       $(e).triggerHandler("name-suffix-changed");
+    });
+
+    $tr.children("td.row-number").text(rowNumber+".");
+  });
+
+  $("*[id]").each(function(i,e) {
+    var $e = $(e);
+    var id = $e.attr('id');
+    $e.attr('orig-id', id);
+  });
+  $(".dynamic-table *[id]").on("id-suffix-changed.dynamic-table", function(evt) {
+    var $e = $(this);
+    var id = $e.attr('orig-id');
+    var suffix = "";
+    $e.parents("*[id-suffix]").each(function (i,p) {
+      suffix = $(p).attr('id-suffix') + suffix;
+    });
+
+    $e.attr('id',id + suffix);
+  });
+
+  $('.dynamic-table').each(function (i, table) {
+    var $table = $(table);
+    var $tbody = $table.children("tbody");
+    var $tfoot = $table.children("tfoot");
+    var tableId = $table.attr('orig-id');
+    $table.attr('dynamic-table-id-ctr', 0);
+
+    $tfoot.find('.column-sum').each(function (i, e) {
+      var $e = $(e);
+      var colId = $e.data('col-id');
+      $e.addClass(colId);
+      $tbody.children('tr').children('.'+colId).find('input').each(function() {
+        $(this).on('change.column-sum', null, colId, function (evt) {
+          var val = $(this).val();
+          val = parseFloat(val);
+          if (isNaN(val)) {
+            val = 0;
+          }
+          $(this).val(val.toFixed(2));
+          updateColumnSum(evt.data, $(this).parents(".dynamic-table").first());
         });
-        updateColumnSum(colId, $table);
+        $(this).trigger('change');
       });
+      updateColumnSum(colId, $table);
+    });
 
-     var $tr = $tbody.children('tr.new-table-row').last();
-     $tr.find("*[name]").each(function(i,e) {
-       var rowCount = 0;
-       var $e = $(e);
-       var name = $e.attr('name');
-       if (name.substr(-2) == '[]') {
-         name = name.substr(0, name.length - 2);
-       }
-       $e.attr('orig-name-'+tableId, name);
-       var newName = name+'['+rowCount+']';
-       $e.attr('name',newName);
-     });
-     $tr.find("*[id]").each(function(i,e) {
-       var rowCount = 0;
-       var $e = $(e);
-       var id = $e.attr('id');
-       $e.attr('orig-id-'+tableId, id);
-       var newId = id+'-'+rowCount;
-       $e.attr('id',newId);
-       if ("defaultValue" in document.getElementById(newId)) {
-         $e.val(document.getElementById(newId).defaultValue);
-         $e.trigger("change");
-       }
-     });
-     enableNewRowClick($tr, $tbody, $tfoot, tableId);
-     $tr.children("td.delete-row").find('a.delete-row').hide();
-   }); /* each table */
+    var $tr = $tbody.children('tr.new-table-row').last();
+
+    $tr.attr('dynamic-table-id', tableId);
+
+    $tr.attr('dynamic-table-row-number', 0);
+    $tr.triggerHandler("row-number-changed");
+
+    $tr.attr('id-suffix', '-0');
+    $tr.find("*[id]").each(function(i,e) {
+      $(this).triggerHandler("id-suffix-changed");
+    });
+    $tr.find("*[id]").each(function(i,e) {
+      if ("defaultValue" in e) {
+        var $e = $(e);
+        $e.val(e.defaultValue);
+        $e.trigger("change");
+      }
+    });
+    $tr.find("*").off('focus.dynamic-table'+tableId);
+    $tr.find("*").on('focus.dynamic-table'+tableId, function (evt) {
+      var $tr = $(this).parents("tr[dynamic-table-id="+tableId+"]");
+      var $table = $(this).parents("table[orig-id="+tableId+"]");
+      if ($tr.length != 1 || $table.length != 1) {
+        console.log(tableId);
+        console.log(this);
+        console.log($tr);
+        console.log($table);
+        alert('error dynamic row handling');
+      }
+      onClickNewRow($tr, $table, tableId);
+    });
+    $tr.children("td.delete-row").find('a.delete-row')
+      .on('click', function(evt) {
+        evt.stopPropagation();
+        var $tr = $(this).parents("tr").first();
+        var $tbody = $tr.parents("tbody").first();
+        $tr.remove();
+        $tbody.children("tr").each(function(rowNumber,tr) {
+          var $tr = $(tr);
+          $tr.attr('dynamic-table-row-number', rowNumber);
+          $tr.triggerHandler("row-number-changed");
+        });
+        $tfoot.find('.column-sum').each(function (i, e) {
+          var $e = $(e);
+          var colId = $e.data('col-id');
+          updateColumnSum(colId, $table);
+        });
+        return false;
+      });
+    /*  */
+  }); /* each table */
 
   $( "form.ajax" ).submit(function (ev) {
     return handleSubmitForm($(this));
   });
+
 });
 
-function enableNewRowClick($tr, $tbody, $tfoot, tableId) {
-  $tr.find("*").off('focus.dynamic-table'+tableId);
-  $tr.find("*").on('focus.dynamic-table'+tableId, function (evt) {
-    onClickNewRow($tr, $tbody, $tfoot, tableId);
-  });
-  $tfoot.parent().off('cloned.dynamic-table'+tableId);
-  $tfoot.parent().on('cloned.dynamic-table'+tableId, function (evt) {
-    var $table = $(this);
-    var $tbody = $table.children("tbody");
-    var $tfoot = $table.children("tfoot");
+function onClickNewRow($tr, $table, tableId) {
 
-    var oldTableId = tableId;
-    var newTableId = $table.attr('id');
-    $table.off('cloned.dynamic-table'+oldTableId);
+  if (!$tr.is(".new-table-row")) return;
 
-    $table.children("tbody").children("tr").find("*[id]").attr('orig-id-'+oldTableId, null);
-    $table.children("tbody").children("tr").find("*[name]").attr('orig-name-'+oldTableId, null);
-    var rowCount = 0;
-    $tbody.children("tr").each(function(i,tr) {
-      $(tr).find("*[id]").each(function(i, e) {
-        var $e = $(e);
-        var id = $e.attr('id');
-        $e.attr('orig-id-' + newTableId, id);
-        $e.attr('id',id+'-'+rowCount);
-      });
-      $(tr).find("*[name]").each(function(i,e) {
-        var $e = $(e);
-        var name = $e.attr('name');
-        if (name.substr(-2) == '[]') {
-          name = name.substr(0, name.length - 2);
-        }
-        $e.attr('orig-name-'+newTableId, name);
-        var newName = name+'['+rowCount+']';
-        $e.attr('name',newName);
-      });
-      rowCount++;
-    });
-
-    $table.children("tbody").children("tr.new-table-row").each(function (i,e) {
-      var $ntr = $(e);
-      $ntr.find("*").off('focus.dynamic-table'+oldTableId);
-      enableNewRowClick($ntr, $tbody, $tfoot, newTableId);
-    });
-  });
-}
-
-function onClickNewRow($tr, $tbody, $tfoot, tableId) {
-  $tr.find("*").off('focus.dynamic-table'+tableId);
   var $ntr = $tr.clone(true);
-  var rowCount = $tbody.children("tr").length;
-  var $table = $tr.parent();
+  var $tbody = $table.children("tbody");
+  var rowNumber = $tbody.children("tr").length;
 
   $tr.removeClass("new-table-row");
-  var $adr = $tr.children("td.delete-row").find('a.delete-row');
-  $adr.show();
-  $adr.on('click', function(evt) {
-    evt.stopPropagation();
-    $tr.remove();
-    var rowCount = 0;
-    $tbody.children("tr").each(function(i,tr) {
-      var $tr = $(tr);
-      $tr.children("td.row-number").text(rowCount+".");
-      $tr.find("*[id]").each(function(i, e) {
-        var $e = $(e);
-        var id = $e.attr('orig-id-' + tableId);
-        $e.attr('id',id+'-'+rowCount);
-      });
-      $tr.find("*[name]").each(function(i, e) {
-        var $e = $(e);
-        var name = $e.attr('orig-name-' + tableId);
-        $e.attr('name',name+'['+rowCount+']');
-      });
-      rowCount++;
-    });
-    $tfoot.find('.column-sum').each(function (i, e) {
-       var $e = $(e);
-       var colId = $e.data('col-id');
-       updateColumnSum(colId, $table);
-    });
-    $tbody.find("*[id]").each(function (i, e) {
-      $(e).triggerHandler("cloned");
-    });
-    return false;
+
+  var ctr = $table.attr('dynamic-table-id-ctr');
+  ctr++;
+  $table.attr('dynamic-table-id-ctr', ctr);
+
+  $ntr.appendTo($tbody); /* insert first so suffix can be found */
+  $ntr.attr('id-suffix', '-' + ctr);
+  $ntr.find("*[id]").each(function(i,e) {
+    $(this).triggerHandler("id-suffix-changed");
   });
 
-  $ntr.children("td.row-number").text((rowCount+1)+".");
-  $ntr.find("*[id]").each(function(i,e) {
-    var $e = $(e);
-    var id = $e.attr('orig-id-' + tableId);
-    $e.attr('id',id+'-'+rowCount);
-  }); /* update id attribute of new row */
-  $ntr.find("*[name]").each(function(i,e) {
-    var $e = $(e);
-    var name = $e.attr('orig-name-' + tableId);
-    $e.attr('name',name+'['+rowCount+']');
-  }); /* update name attribute of new row */
-  $ntr.appendTo($tbody);
-  enableNewRowClick($ntr, $tbody, $tfoot, tableId);
+  $ntr.attr('dynamic-table-row-number', rowNumber);
+  $ntr.triggerHandler("row-number-changed");
+
   $ntr.find("*").each(function (i, e) { $(e).triggerHandler("cloned"); });
+  $tr.find("*").each(function (i, e) { $(e).triggerHandler("clonedsource"); });
 }
 
 function updateColumnSum(colId, $table) {
