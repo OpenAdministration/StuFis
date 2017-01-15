@@ -6,10 +6,53 @@ $(document).ready(function() {
   });
 
   $(".single-file-container").on("clone-post.single-file cloned.file", function(evt) {
-    $(this).find(".single-file").fileinput({'showUpload':false, 'showPreview':false, 'language': 'de', 'theme': 'gly'});
+    var cfg = {
+      'fileActionSettings': {
+        'showUpload':false,
+        'showZoom': false
+      },
+     'showPreview':false,
+     'language': 'de',
+     'theme': 'gly',
+    };
+    $(this).find(".single-file").fileinput(cfg);
   });
   $(".multi-file-container").on("clone-post.multi-file cloned.file", function(evt) {
-    $(this).find(".multi-file").fileinput({'showUpload':false, 'showUploadedThumbs': false, 'showPreview':true, 'language': 'de', 'theme': 'gly', 'uploadUrl' : 'stuffme', 'uploadExtraData': {'action':'antrag.anhang'}});
+    var cfg = {
+      'fileActionSettings': {
+        'showUpload':false,
+        'showZoom': false
+      },
+     'showPreview':true,
+     'allowedPreviewTypes': false,
+     'language': 'de',
+     'theme': 'gly',
+     'uploadUrl' : 'stuffme',
+     'uploadExtraData': {
+       'action':'antrag.anhang'
+     },
+    };
+    $(this).find(".multi-file").fileinput(cfg);
+    $(this).find(".multi-file").on("filereset.multi-input", function(evt) {
+      console.log("filereset");
+      console.log(evt);
+    });
+    $(this).find(".multi-file").on("change.multi-input", function(evt) {
+      console.log("change");
+      console.log(evt);
+    });
+    $(this).find(".multi-file").on("filecleared.multi-input", function(evt) {
+      console.log("filecleared");
+      console.log(evt);
+    });
+    $(this).find(".multi-file").on("fileloaded.multi-input", function(evt, file, previewId, index, reader) {
+      console.log("fileloaded");
+      console.log(evt, file, previewId, index, reader);
+    });
+    $(this).find(".multi-file").on("filedeleted.multi-input", function(evt, key) {
+      console.log("filedeleted");
+      console.log(evt, key);
+    });
   });
   $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
     $(this).find(".single-file,.multi-file").fileinput('destroy');
