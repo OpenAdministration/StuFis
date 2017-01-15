@@ -37,10 +37,6 @@ $(document).ready(function() {
       console.log("filereset");
       console.log(evt);
     });
-    $(this).find(".multi-file").on("change.multi-input", function(evt) {
-      console.log("change");
-      console.log(evt);
-    });
     $(this).find(".multi-file").on("filecleared.multi-input", function(evt) {
       console.log("filecleared");
       console.log(evt);
@@ -49,9 +45,9 @@ $(document).ready(function() {
       console.log("fileloaded");
       console.log(evt, file, previewId, index, reader);
     });
-    $(this).find(".multi-file").on("filedeleted.multi-input", function(evt, key) {
-      console.log("filedeleted");
-      console.log(evt, key);
+    $(this).find(".multi-file").on("fileremoved.multi-input", function(evt, id, idx) {
+      console.log("fileremoved");
+      console.log(evt, id, idx);
     });
   });
   $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
