@@ -31,7 +31,7 @@ $(document).ready(function() {
     var $finput = $(this).find(".multi-file");
     $finput.fileinput(cfg);
 
-    $finput.on("fileloaded.multi-input", function(evt, file, previewId, index, reader) {
+    $finput.on("fileloaded.multi-file", function(evt, file, previewId, index, reader) {
       console.log("fileloaded");
 
       //setTimeout(function() { $finput.fileinput("clear"); }, 1000);
@@ -105,7 +105,9 @@ $(document).ready(function() {
     $(this).find(".multi-file").fileinput(cfg);
   });
   $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
-    $(this).find(".single-file,.multi-file").fileinput('destroy');
+    var $finputs = $(this).find(".single-file,.multi-file");
+    $finputs.fileinput('destroy');
+    $finputs.off("fileloaded.multi-file");
   });
   $(".single-file-container,.multi-file-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
   $(".dynamic-table .single-file,.dynamic-table .multi-file").on("name-changed.file", function(evt) {
@@ -142,6 +144,7 @@ $(document).ready(function() {
        $(e).triggerHandler("name-suffix-changed");
     });
 
+    rowNumber++;
     $tr.children("td.row-number").text(rowNumber+".");
   });
 
