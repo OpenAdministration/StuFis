@@ -165,10 +165,13 @@ function renderFormItemMultiFile($meta, $ctrl) {
  10 5. AjaxUpload
  11 6. Folder Option
 */
-  echo "<div class=\"multi-file-container\"";
+  echo "<div";
   if (isset($meta["destination"])) {
+    echo " class=\"multi-file-container multi-file-container-with-destination\"";
     $meta["destination"] = str_replace(".", "-", $meta["destination"]);
     echo " data-destination=\"".htmlspecialchars($meta["destination"])."\"";
+  } else {
+    echo " class=\"multi-file-container multi-file-container-without-destination\"";
   }
   echo ">";
   echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" id=\"".htmlspecialchars($ctrl["id"])."\" multiple";

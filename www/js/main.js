@@ -16,35 +16,27 @@ $(document).ready(function() {
      'theme': 'gly',
     };
     $(this).find(".single-file").fileinput(cfg);
+    $(this).attr("name", $(this).find(".single-file").attr("name"));
   });
-  $(".multi-file-container").on("clone-post.multi-file cloned.file", function(evt) {
+  $(".multi-file-container-with-destination").on("clone-post.multi-file cloned.file", function(evt) {
     var cfg = {
-      'fileActionSettings': {
-        'showUpload':false,
-        'showZoom': false
-      },
-     'showPreview':true,
+     'showPreview':false,
      'allowedPreviewTypes': false,
      'language': 'de',
      'theme': 'gly',
      'uploadUrl' : 'stuffme',
      'uploadExtraData': {
-       'action':'antrag.anhang'
      },
     };
+    var $finput = $(this).find(".multi-file");
+    $finput.fileinput(cfg);
 
-    $(this).find(".multi-file").fileinput(cfg);
-
-    if ($(this).data("destination") == null) {
-      $(this).addClass("without-destination");
-      return;
-    }
-    $(this).addClass("with-destination");
-
-    $(this).find(".multi-file").on("fileloaded.multi-input", function(evt, file, previewId, index, reader) {
+    $finput.on("fileloaded.multi-input", function(evt, file, previewId, index, reader) {
       console.log("fileloaded");
 
-      var $container = $(this).parents(".multi-file-container").first();
+      //setTimeout(function() { $finput.fileinput("clear"); }, 1000);
+      var $mfinput = $(this);
+      var $container = $mfinput.closest(".multi-file-container");
       var destination = $container.data("destination");
       // check for dynamic row
       var $destination = null;
@@ -70,7 +62,6 @@ $(document).ready(function() {
         return;
       }
       // create new table row and replace file element
-      // FIXME handle remove of row!
       var $table = $destination;
       var tableId = $table.attr('orig-id');
       var $tbody = $table.children("tbody");
@@ -83,30 +74,41 @@ $(document).ready(function() {
         alert('error dynamic row handling');
       }
       onClickNewRow($tr, $table, tableId);
-      $tr.find("[orig-id="+destination+"]").closest(".single-file-container").remove();
-      console.log("ok");
-      console.log(evt);
-      console.log(file);
-      console.log(previewId);
-      console.log(index);
-      console.log(reader);
+      var $sfc = $tr.find("[orig-id="+destination+"]").closest(".single-file-container");
+      var $sfcinput = $sfc.find(".multi-file");
+      $sfc.empty();
+      $sfc.addClass("form-files");
+      $("<span/>").text(file.name).appendTo($sfc);
+      $("<span>&nbsp;</span>").appendTo($sfc);
+      $("<small/>").text(getSizeText(file.size)).appendTo($sfc);
+      $sfc.data("file", file);
+      $tr.on("pre-row-delete.multi-file-with-destination", function (evt) {
+        $mfinput.fileinput('clear');
+      });
     });
-    $(this).find(".multi-file").on("fileremoved.multi-input", function(evt, id, idx) {
-      var $container = $(this).parents(".multi-file-container").first();
-      console.log("fileremoved");
-      console.log(evt, id, idx);
-    });
-    $(this).find(".multi-file").on("filecleared.multi-input", function(evt) {
-      var $container = $(this).parents(".multi-file-container").first();
-      console.log("filecleared");
-      console.log(evt);
-    });
+  });
+  $(".multi-file-container-without-destination").on("clone-post.multi-file cloned.file", function(evt) {
+    var cfg = {
+      'fileActionSettings': {
+        'showUpload':false,
+        'showZoom': false
+      },
+     'showPreview':true,
+     'allowedPreviewTypes': false,
+     'language': 'de',
+     'theme': 'gly',
+     'uploadUrl' : 'stuffme',
+     'uploadExtraData': {
+     },
+    };
+
+    $(this).find(".multi-file").fileinput(cfg);
   });
   $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
     $(this).find(".single-file,.multi-file").fileinput('destroy');
   });
   $(".single-file-container,.multi-file-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
-  $(".dynamic-table .multi-file,.dynamic-table .multi-file").on("name-changed.file", function(evt) {
+  $(".dynamic-table .single-file,.dynamic-table .multi-file").on("name-changed.file", function(evt) {
     var d = $(this).data('fileinput');
     if (!d) return;
     d.uploadFileAttr = $(this).attr("name");
@@ -178,7 +180,7 @@ $(document).ready(function() {
             val = 0;
           }
           $(this).val(val.toFixed(2));
-          updateColumnSum(evt.data, $(this).parents(".dynamic-table").first());
+          updateColumnSum(evt.data, $(this).closest(".dynamic-table"));
         });
         $(this).trigger('change');
       });
@@ -220,8 +222,9 @@ $(document).ready(function() {
     $tr.children("td.delete-row").find('a.delete-row')
       .on('click', function(evt) {
         evt.stopPropagation();
-        var $tr = $(this).parents("tr").first();
-        var $tbody = $tr.parents("tbody").first();
+        var $tr = $(this).closest("tr");
+        var $tbody = $tr.closest("tbody");
+        $tr.triggerHandler("pre-row-delete");
         $tr.remove();
         $tbody.children("tr").each(function(rowNumber,tr) {
           var $tr = $(tr);
@@ -304,6 +307,50 @@ function handleSubmitForm($form) {
   if ($form.find("input[name=action]").length + $form.find("select[name=action]").length == 0) { return true; }
   var data = new FormData($form[0]);
   data.append("ajax", 1);
+  $('.new-table-row *[name]').each(function (i,e) {
+    var $e = $(e);
+    var name = $e.attr("name");
+    if (name.substr(0, 8) == "formdata" && name.indexOf("[]") == -1) {
+      data.delete(name);
+    }
+  });
+  $form.find(".multi-file-container-with-destination .multi-file").each(function (i, mf) {
+    var $mf = $(mf);
+    if (!$mf.data("fileinput")) return;
+    var name = $mf.attr("name");
+    if (data.has(name)) {
+      console.log("remove "+name);
+      data.delete(name);
+    }
+  });
+  $form.find(".multi-file-container-without-destination .multi-file").each(function (i, mf) {
+    var $mf = $(mf);
+    if (!$mf.data("fileinput")) return;
+    var fileList = $mf.fileinput("getFileStack");
+    var name = $mf.attr("name");
+    if (data.has(name)) {
+      console.log("remove "+name);
+      data.delete(name);
+    }
+    console.log(fileList);
+    for (i = 0; i < fileList.length; i++) {
+      console.log("add["+i+"] "+name);
+      var newName = name;
+      if (newName.substr(newName.length-2) == "[]") {
+        newName = newName.substr(0, newName.length-2);
+      }
+      newName = newName + "["+i+"]";
+      data.append(newName, fileList[i]);
+    }
+  });
+  $form.find(".form-files").each(function (i, sf) {
+    var $sf = $(sf);
+    var name = $sf.attr("name");
+    var file = $sf.data("file");
+    if (!file) { return; }
+    data.append(name, file);
+    console.log("add sf "+name);
+  });
   $("#please-wait-dlg").modal("show");
   jQuery.ajax({
     url: action,
@@ -390,5 +437,12 @@ function handleSubmitForm($form) {
    })
   .fail(xpAjaxErrorHandler);
   return false;
+}
+
+function getSizeText(size) {
+  i = Math.floor(Math.log(size) / Math.log(1024));
+  sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  out = (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + sizes[i];
+  return out;
 }
 

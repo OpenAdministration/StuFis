@@ -132,8 +132,8 @@ if (isset($_POST["action"])) {
           foreach (array_keys($fd["name"]) as $key) {
             $anhang["fieldname"] = $key;
             $fieldtype = $_REQUEST["formtype"][$key];
-            if ($fieldtype != "file") {
-              $msgs[] = "Invalid field type: $fieldtype";
+            if ($fieldtype != "file" && $fieldtype != "multifile") {
+              $msgs[] = "Invalid field type: \"$fieldtype\" for \"$key\"";
               $ret = false;
               continue;
             }
