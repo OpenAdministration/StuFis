@@ -165,8 +165,12 @@ function renderFormItemMultiFile($meta, $ctrl) {
 */
   echo "<div";
   if (isset($meta["destination"])) {
-    echo " class=\"multi-file-container multi-file-container-with-destination\"";
+    $cls = ["multi-file-container", "multi-file-container-with-destination"];
+    if (in_array("update-ref", $meta["opts"]))
+      $cls[] = "multi-file-container-update-ref";
     $meta["destination"] = str_replace(".", "-", $meta["destination"]);
+
+    echo " class=\"".implode(" ", $cls)."\"";
     echo " data-destination=\"".htmlspecialchars($meta["destination"])."\"";
   } else {
     echo " class=\"multi-file-container multi-file-container-without-destination\"";

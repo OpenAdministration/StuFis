@@ -68,6 +68,7 @@ $(document).ready(function() {
       //setTimeout(function() { $finput.fileinput("clear"); }, 1000);
       var $mfinput = $(this);
       var $container = $mfinput.closest(".multi-file-container");
+      var isUpdateRef = $container.is(".multi-file-container-update-ref");
       var destination = $container.data("destination");
       // check for dynamic row
       var $destination = null;
@@ -104,7 +105,7 @@ $(document).ready(function() {
         console.log($table);
         alert('error dynamic row handling');
       }
-      onClickNewRow($tr, $table, tableId);
+      onClickNewRow($tr, $table, tableId, isUpdateRef);
       var $sfc = $tr.find("[orig-id="+destination+"]").closest(".single-file-container");
       var $sfcinput = $sfc.find(".multi-file");
       $sfc.empty();
@@ -234,7 +235,7 @@ $(document).ready(function() {
         console.log("actual orig-id="+$table.attr("orig-id"));
         alert('error dynamic row handling');
       }
-      onClickNewRow($tr, $table, tableId);
+      onClickNewRow($tr, $table, tableId, false);
     });
   });
   $('.dynamic-table').each(function (i, table) {
@@ -311,7 +312,7 @@ $(document).ready(function() {
 
 });
 
-function onClickNewRow($tr, $table, tableId) {
+function onClickNewRow($tr, $table, tableId, isUpdateRef) {
 
   if (!$tr.is(".new-table-row")) return;
   $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-pre"); });
@@ -347,6 +348,7 @@ function onClickNewRow($tr, $table, tableId) {
       return;
     }
 
+    refTables = []
     $ref.each(function(i, sel) {
       var $sel = $(sel);
       var $opt = $("<option/>");
@@ -357,7 +359,10 @@ function onClickNewRow($tr, $table, tableId) {
       if ($sel.is(".selectpicker")) {
         $sel.selectpicker("refresh");
       }
+      var $refTable = $sel.closest(".dynamic-table");
+      refTables.push($refTable[0]);
     });
+    refTables = $.uniqueSort(refTables);
 
     $tr.find("td.dynamic-table-column-title input").off("change.row-title");
     $tr.find("td.dynamic-table-column-title input").each(function (i, e) {
@@ -427,6 +432,23 @@ function onClickNewRow($tr, $table, tableId) {
       });
     });
     $tr.triggerHandler("row-changed");
+
+    for(i=0; i < refTables.length && isUpdateRef; i++) {
+      var $refTable = $(refTables[i]);
+      var refTableId = $refTable.attr('orig-id');
+      var $refTBody = $refTable.children("tbody");
+      var $refTr = $refTBody.children('tr.new-table-row').last();
+      var selValue = $table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]";
+      onClickNewRow($refTr, $refTable, refTableId, false);
+      $refTr.find('select[data-references='+tableId+']').each(function (i, sel) {
+        var $sel = $(sel);
+        if ($sel.is(".selectpicker")) {
+          $sel.selectpicker("val", selValue);
+        } else { /* not selectpicker */
+          $sel.val(selValue);
+        }
+      });
+    }
 
     return false;
   });
