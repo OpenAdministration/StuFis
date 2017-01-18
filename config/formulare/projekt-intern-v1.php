@@ -32,13 +32,29 @@ $formulare["projekt-intern"]["v1"] = [
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [
-       "type" => "table", /* renderer */
-       "id" => "finanzgruppentblanlagen",
-       "opts" => [],
-       "width" => 2,
+       "type" => "group", /* renderer */
        "name" => "Nachweise",
-       "columns" => [
-         [ "id" => "geld.anhang.1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "anhaenge"],
+       "width" => 2,
+       "opts" => ["well"],
+       "id" => "group2",
+       "children" => [
+         [
+           "type" => "table", /* renderer */
+           "id" => "finanzgruppentblanlagen",
+           "width" => 12,
+           "name" => "Nachweise",
+           "columns" => [
+             [ "id" => "geld.anhang.1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "geld.anhang.2"],
+           ],
+         ],
+         [
+           "type" => "multifile", /* renderer */
+           "id" => "upload",
+           "title" => "Anhänge hochladen",
+           "width" => 12,
+           "destination" => "geld.anhang.2.datei",
+           "opts" => ["update-ref"],
+         ],
        ],
      ],
      [
@@ -46,17 +62,17 @@ $formulare["projekt-intern"]["v1"] = [
        "name" => "Anhänge #1",
        "width" => 2,
        "opts" => ["well"],
-       "id" => "group1",
+       "id" => "group3",
        "children" => [
          [
            "type" => "table", /* renderer */
            "title" => "Anhänge",
-           "id" => "anhaenge",
+           "id" => "geld.anhang.2",
            "opts" => ["with-row-number","with-headline"],
            "width" => 12,
            "columns" => [
-             [ "id" => "geld.anhang.2.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, ],
-             [ "id" => "geld.anhang.2.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, ],
+             [ "id" => "geld.anhang.2.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, "opts" => ["title"] ],
+             [ "id" => "geld.anhang.2.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
            ],
          ],
          [

@@ -207,8 +207,10 @@ function renderFormItemSelect($meta, $ctrl) {
     echo " multiple";
   if (in_array("required", $meta["opts"]))
     echo " required=\"required\"";
-  if ($meta["type"] == "ref")
+  if ($meta["type"] == "ref") {
+    $meta["references"] = str_replace(".", "-", $meta["references"]);
     echo " data-references=\"".htmlspecialchars($meta["references"])."\"";
+  }
   echo ">";
 
   if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs") {

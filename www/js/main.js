@@ -111,7 +111,7 @@ $(document).ready(function() {
       $sfc.addClass("form-files");
       $("<span/>").text(file.name).appendTo($sfc);
       $("<span>&nbsp;</span>").appendTo($sfc);
-      $("<small/>").text(getSizeText(file.size)).appendTo($sfc);
+      $("<small/>").append($("<nobr/>").text(getSizeText(file.size))).appendTo($sfc);
       $sfc.data("file", file);
       $sfc.closest("td").data("display-text", file.name);
       $tr.on("pre-row-delete.multi-file-with-destination", function (evt) {
