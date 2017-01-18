@@ -222,6 +222,8 @@ function renderFormItemSelect($meta, $ctrl) {
       echo "<option>".htmlspecialchars($gremium)."</option>";
     }
   }
+  if ($meta["type"] == "ref")
+      echo "<option value=\"\">Bitte auswählen</option>";
 
   echo "</select>";
   echo "</div>";
