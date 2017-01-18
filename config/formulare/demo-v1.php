@@ -3,7 +3,7 @@
 global $formulare;
 
 /* formname , formrevision */
-$formulare["projekt-intern"]["v1"] = [
+$formulare["demo"]["v1"] = [
 
  [
    "type" => "group", /* renderer */
@@ -28,13 +28,14 @@ $formulare["projekt-intern"]["v1"] = [
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [
        "type" => "group", /* renderer */
        "name" => "Nachweise",
-       "width" => 4,
+       "width" => 2,
+       "opts" => ["well"],
        "id" => "group2",
        "children" => [
          [
@@ -43,8 +44,7 @@ $formulare["projekt-intern"]["v1"] = [
            "width" => 12,
            "name" => "Nachweise",
            "columns" => [
-             [ "id" => "geld.anhang.file",    "name" => "Anhänge",             "type" => "ref",   "width" => 6, "references" => "anhaenge"],
-             [ "id" => "geld.anhang.comment", "name" => "Hinweis",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
+             [ "id" => "geld.anhang.1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "geld.anhang.2"],
            ],
          ],
          [
@@ -52,10 +52,44 @@ $formulare["projekt-intern"]["v1"] = [
            "id" => "upload",
            "title" => "Anhänge hochladen",
            "width" => 12,
-           "destination" => "anhang.datei",
+           "destination" => "geld.anhang.2.datei",
            "opts" => ["update-ref"],
          ],
        ],
+     ],
+     [
+       "type" => "group", /* renderer */
+       "name" => "Anhänge #1",
+       "width" => 2,
+       "opts" => ["well"],
+       "id" => "group3",
+       "children" => [
+         [
+           "type" => "table", /* renderer */
+           "title" => "Anhänge",
+           "id" => "geld.anhang.2",
+           "opts" => ["with-row-number","with-headline"],
+           "width" => 12,
+           "columns" => [
+             [ "id" => "geld.anhang.2.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, "opts" => ["title"] ],
+             [ "id" => "geld.anhang.2.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
+           ],
+         ],
+         [
+           "type" => "multifile", /* renderer */
+           "id" => "upload",
+           "title" => "Anhänge hochladen",
+           "width" => 12,
+           "destination" => "geld.anhang.2.datei",
+         ],
+       ],
+     ],
+     [
+       "type" => "multifile", /* renderer */
+       "id" => "geld.anhang.3",
+       "name" => "Anhänge #2",
+       "width" => 2,
+       "opts" => ["dir"],
      ],
    ], // finanzgruppentbl
  ],
@@ -77,8 +111,25 @@ $formulare["projekt-intern"]["v1"] = [
    "width" => 12,
    "columns" => [
      [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, "opts" => ["title"] ],
-     [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
+     [ "id" => "anhang.beschreibung", "name" => "Beschreibung 1",             "type" => "text",   "width" => 3, "opts" => ["title"] ],
+     [ "id" => "anhang.beschreibung", "name" => "Beschreibung 2",             "type" => "text",   "width" => 3, ],
    ],
+ ],
+
+ [
+   "type" => "multifile", /* renderer */
+   "id" => "upload",
+   "title" => "Anhänge hochladen",
+   "width" => 12,
+   "destination" => "anhang.datei",
+ ],
+
+ [
+   "type" => "multifile", /* renderer */
+   "id" => "upload2",
+   "title" => "Anhänge hochladen (no-table)",
+   "width" => 12,
+   "opts" => ["dir"],
  ],
 
 ];

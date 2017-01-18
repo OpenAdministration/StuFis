@@ -105,7 +105,8 @@ $(document).ready(function() {
         console.log($table);
         alert('error dynamic row handling');
       }
-      onClickNewRow($tr, $table, tableId, isUpdateRef);
+      onClickNewRow($tr, $table, tableId);
+
       var $sfc = $tr.find("[orig-id="+destination+"]").closest(".single-file-container");
       var $sfcinput = $sfc.find(".multi-file");
       $sfc.empty();
@@ -119,6 +120,41 @@ $(document).ready(function() {
         $mfinput.fileinput('clear');
       });
       $tr.triggerHandler("row-changed");
+
+      $mfinput.parents().each(function (i, p) {
+        var $ref = $(p).find('select[data-references='+tableId+']');
+        if ($ref.length == 0) {
+          return;
+        }
+
+        refTables = []
+        $ref.each(function(i, sel) {
+          var $sel = $(sel);
+          var $refTable = $sel.closest(".dynamic-table");
+          refTables.push($refTable[0]);
+        });
+        refTables = $.uniqueSort(refTables);
+
+        for(i=0; i < refTables.length && isUpdateRef; i++) {
+          var $refTable = $(refTables[i]);
+          var refTableId = $refTable.attr('orig-id');
+          var $refTBody = $refTable.children("tbody");
+          var $refTr = $refTBody.children('tr.new-table-row').last();
+          var selValue = $table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]";
+          onClickNewRow($refTr, $refTable, refTableId);
+          $refTr.find('select[data-references='+tableId+']').each(function (i, sel) {
+            var $sel = $(sel);
+            if ($sel.is(".selectpicker")) {
+              $sel.selectpicker("val", selValue);
+            } else { /* not selectpicker */
+              $sel.val(selValue);
+            }
+          });
+        }
+
+        return false; // completed, no not traverse parents() further
+      });
+
     });
   });
   $(".multi-file-container-without-destination").on("clone-post.multi-file cloned.file", function(evt) {
@@ -235,7 +271,7 @@ $(document).ready(function() {
         console.log("actual orig-id="+$table.attr("orig-id"));
         alert('error dynamic row handling');
       }
-      onClickNewRow($tr, $table, tableId, false);
+      onClickNewRow($tr, $table, tableId);
     });
   });
   $('.dynamic-table').each(function (i, table) {
@@ -312,7 +348,7 @@ $(document).ready(function() {
 
 });
 
-function onClickNewRow($tr, $table, tableId, isUpdateRef) {
+function onClickNewRow($tr, $table, tableId) {
 
   if (!$tr.is(".new-table-row")) return;
   $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-pre"); });
@@ -348,7 +384,6 @@ function onClickNewRow($tr, $table, tableId, isUpdateRef) {
       return;
     }
 
-    refTables = []
     $ref.each(function(i, sel) {
       var $sel = $(sel);
       var $opt = $("<option/>");
@@ -359,10 +394,7 @@ function onClickNewRow($tr, $table, tableId, isUpdateRef) {
       if ($sel.is(".selectpicker")) {
         $sel.selectpicker("refresh");
       }
-      var $refTable = $sel.closest(".dynamic-table");
-      refTables.push($refTable[0]);
     });
-    refTables = $.uniqueSort(refTables);
 
     $tr.find("td.dynamic-table-column-title input").off("change.row-title");
     $tr.find("td.dynamic-table-column-title input").each(function (i, e) {
@@ -432,23 +464,6 @@ function onClickNewRow($tr, $table, tableId, isUpdateRef) {
       });
     });
     $tr.triggerHandler("row-changed");
-
-    for(i=0; i < refTables.length && isUpdateRef; i++) {
-      var $refTable = $(refTables[i]);
-      var refTableId = $refTable.attr('orig-id');
-      var $refTBody = $refTable.children("tbody");
-      var $refTr = $refTBody.children('tr.new-table-row').last();
-      var selValue = $table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]";
-      onClickNewRow($refTr, $refTable, refTableId, false);
-      $refTr.find('select[data-references='+tableId+']').each(function (i, sel) {
-        var $sel = $(sel);
-        if ($sel.is(".selectpicker")) {
-          $sel.selectpicker("val", selValue);
-        } else { /* not selectpicker */
-          $sel.val(selValue);
-        }
-      });
-    }
 
     return false;
   });
