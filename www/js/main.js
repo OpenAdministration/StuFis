@@ -119,7 +119,7 @@ $(document).ready(function() {
   $(".dynamic-table *[name]").each(function(i,e) {
     var $e = $(e);
     var name = $e.attr('name');
-    if (name.substr(-2) == '[]') {
+    while (name.substr(-2) == '[]') {
       name = name.substr(0, name.length - 2);
     }
     $e.attr('orig-name', name);
