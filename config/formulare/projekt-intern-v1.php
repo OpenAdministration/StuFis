@@ -24,24 +24,58 @@ $formulare["projekt-intern"]["v1"] = [
 
  [
    "type" => "table", /* renderer */
-   "id" => "finanzgruppen",
+   "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [
        "type" => "table", /* renderer */
-       "id" => "finanzgruppenanlagen",
+       "id" => "finanzgruppentblanlagen",
        "opts" => [],
-       "width" => 4,
+       "width" => 2,
        "name" => "Nachweise",
        "columns" => [
-         [ "id" => "geld.anhang",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "anhaenge"],
+         [ "id" => "geld.anhang.1",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "anhaenge"],
        ],
      ],
-   ],
+     [
+       "type" => "group", /* renderer */
+       "name" => "Anhänge #1",
+       "width" => 2,
+       "opts" => ["well"],
+       "id" => "group1",
+       "children" => [
+         [
+           "type" => "table", /* renderer */
+           "title" => "Anhänge",
+           "id" => "anhaenge",
+           "opts" => ["with-row-number","with-headline"],
+           "width" => 12,
+           "columns" => [
+             [ "id" => "geld.anhang.2.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, ],
+             [ "id" => "geld.anhang.2.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, ],
+           ],
+         ],
+         [
+           "type" => "multifile", /* renderer */
+           "id" => "upload",
+           "title" => "Anhänge hochladen",
+           "width" => 12,
+           "destination" => "geld.anhang.2.datei",
+         ],
+       ],
+     ],
+     [
+       "type" => "multifile", /* renderer */
+       "id" => "geld.anhang.3",
+       "name" => "Anhänge #2",
+       "width" => 2,
+       "opts" => ["dir"],
+     ],
+   ], // finanzgruppentbl
  ],
 
  [

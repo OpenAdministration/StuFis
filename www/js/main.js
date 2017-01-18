@@ -201,6 +201,8 @@ $(document).ready(function() {
     $tr.find("*[id]").each(function(i,e) {
       if ("defaultValue" in e) {
         var $e = $(e);
+        var type = $(e).attr("type");
+        if (type == "file") { return; }
         $e.val(e.defaultValue);
         $e.trigger("change");
       }
