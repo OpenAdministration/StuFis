@@ -94,8 +94,9 @@ $formulare["projekt-intern"]["v1"] = [
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
    "columns" => [
-     [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, ],
-     [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, ],
+     [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, "opts" => ["title"] ],
+     [ "id" => "anhang.beschreibung", "name" => "Beschreibung 1",             "type" => "text",   "width" => 3, "opts" => ["title"] ],
+     [ "id" => "anhang.beschreibung", "name" => "Beschreibung 2",             "type" => "text",   "width" => 3, ],
    ],
  ],
 

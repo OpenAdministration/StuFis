@@ -87,6 +87,7 @@ function renderFormItem($meta,$ctrl = false) {
       renderFormItemTextarea($meta,$ctrl);
       break;
     case "select":
+    case "ref":
       renderFormItemSelect($meta,$ctrl);
       break;
     case "date":
@@ -103,9 +104,6 @@ function renderFormItem($meta,$ctrl = false) {
       break;
     case "multifile":
       renderFormItemMultiFile($meta,$ctrl);
-      break;
-    case "ref":
-      renderFormItemText($meta,$ctrl);
       break;
     default:
       echo "<pre>"; print_r($meta); echo "</pre>";
@@ -201,6 +199,7 @@ function renderFormItemTextarea($meta, $ctrl) {
 
 function renderFormItemSelect($meta, $ctrl) {
   global $attributes, $GremiumPrefix;
+  echo "<div class=\"select-picker-container\">";
   echo "<select class=\"selectpicker form-control\" data-live-search=\"true\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
@@ -208,9 +207,11 @@ function renderFormItemSelect($meta, $ctrl) {
     echo " multiple";
   if (in_array("required", $meta["opts"]))
     echo " required=\"required\"";
+  if ($meta["type"] == "ref")
+    echo " data-references=\"".htmlspecialchars($meta["references"])."\"";
   echo ">";
 
-  if ($meta["data-source"] == "own-orgs") {
+  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs") {
     sort($attributes["gremien"]);
     foreach ($attributes["gremien"] as $gremium) {
       $found = (count($GremiumPrefix) == 0);
@@ -223,6 +224,7 @@ function renderFormItemSelect($meta, $ctrl) {
   }
 
   echo "</select>";
+  echo "</div>";
 }
 
 function renderFormItemDateRange($meta, $ctrl) {
@@ -291,7 +293,7 @@ function renderFormItemTable($meta, $ctrl) {
   $withRowNumber = in_array("with-row-number", $meta["opts"]);
 
 ?>
-  <table class="table table-striped dynamic-table" id="<?php echo htmlspecialchars($ctrl["id"]); ?>">
+  <table class="table table-striped dynamic-table" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["id"]); ?>">
 <?php
 
   if (in_array("with-headline", $meta["opts"])) {
@@ -326,7 +328,11 @@ function renderFormItemTable($meta, $ctrl) {
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
-          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => false, "class" => [ "{$ctrl["id"]}-col-$i" ] ]));
+          if (isset($col["opts"]) && in_array("title", $col["opts"]))
+            $clsTitle = "dynamic-table-column-title";
+          else
+            $clsTitle = "dynamic-table-column-no-title";
+          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => false, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ]));
         }
 ?>
        </tr>
