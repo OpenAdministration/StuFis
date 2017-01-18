@@ -160,7 +160,7 @@ $(document).ready(function() {
     d.uploadFileAttr = $(this).attr("name");
   });
 
-  $(".dynamic-table *[name]").each(function(i,e) {
+  $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
     var $e = $(e);
     var name = $e.attr('name');
     while (name.substr(-2) == '[]') {
@@ -168,7 +168,14 @@ $(document).ready(function() {
     }
     $e.attr('orig-name', name);
   });
-  $(".dynamic-table *[name][name^=formdata]").on("name-suffix-changed.dynamic-table", function(evt) {
+  $(".dynamic-table").on("name-changed.ref-field", function(evt) {
+    var $tbody = $(this).children("tbody");
+    $tbody.children("td").each(function(i, td) {
+      var $td = $(td);
+      $td.triggerHandler("name-changed");
+    });
+  });
+  $(".dynamic-table *[name][name^=formdata],.dynamic-table").on("name-suffix-changed.dynamic-table", function(evt) {
     var $e = $(this);
     var name = $e.attr('orig-name');
     var suffix = "";
@@ -376,7 +383,7 @@ function onClickNewRow($tr, $table, tableId) {
       });
     });
 
-    $tr.on("row-changed.ref-field row-number-changed.ref-field", function(evt) {
+    $tr.on("row-changed.ref-field row-number-changed.ref-field name-changed.ref-field", function(evt) {
       var $tr = $(this);
       var trId = $tr.attr('id');
       var $opts = $("option[data-references="+trId+"]");
