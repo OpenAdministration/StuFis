@@ -73,4 +73,12 @@ $formulare["projekt-intern"]["v1"] = [
    "destination" => "anhang.datei",
  ],
 
+ [
+   "type" => "multifile", /* renderer */
+   "id" => "upload2",
+   "title" => "Anhänge hochladen (no-table)",
+   "width" => 12,
+   "opts" => ["dir"],
+ ],
+
 ];

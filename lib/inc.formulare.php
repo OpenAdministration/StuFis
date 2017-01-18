@@ -165,8 +165,17 @@ function renderFormItemMultiFile($meta, $ctrl) {
  10 5. AjaxUpload
  11 6. Folder Option
 */
-  echo "<div class=\"multi-file-container\">";
-  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" id=\"".htmlspecialchars($ctrl["id"])."\" multiple webkitdirectory/>";
+  echo "<div class=\"multi-file-container\"";
+  if (isset($meta["destination"])) {
+    $meta["destination"] = str_replace(".", "-", $meta["destination"]);
+    echo " data-destination=\"".htmlspecialchars($meta["destination"])."\"";
+  }
+  echo ">";
+  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
+  if (in_array("dir", $meta["opts"])) {
+    echo " webkitdirectory";
+  }
+  echo "/>";
   echo "</div>";
 }
 
@@ -304,7 +313,7 @@ function renderFormItemTable($meta, $ctrl) {
 
 ?>
     <tbody>
-       <tr class="new-table-row">
+       <tr class="new-table-row dynamic-table-row">
 <?php
         if ($withRowNumber) {
           echo "<td class=\"row-number\">1.</td>";

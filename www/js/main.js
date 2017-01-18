@@ -32,22 +32,74 @@ $(document).ready(function() {
        'action':'antrag.anhang'
      },
     };
+
     $(this).find(".multi-file").fileinput(cfg);
-    $(this).find(".multi-file").on("filereset.multi-input", function(evt) {
-      console.log("filereset");
-      console.log(evt);
-    });
-    $(this).find(".multi-file").on("filecleared.multi-input", function(evt) {
-      console.log("filecleared");
-      console.log(evt);
-    });
+
+    if ($(this).data("destination") == null) {
+      $(this).addClass("without-destination");
+      return;
+    }
+    $(this).addClass("with-destination");
+
     $(this).find(".multi-file").on("fileloaded.multi-input", function(evt, file, previewId, index, reader) {
       console.log("fileloaded");
-      console.log(evt, file, previewId, index, reader);
+
+      var $container = $(this).parents(".multi-file-container").first();
+      var destination = $container.data("destination");
+      // check for dynamic row
+      var $destination = null;
+      $container.parents().each(function(i,tr) {
+        tables = [];
+        $(tr).find("[orig-id="+destination+"]").each(function (i, e) {
+          var $table = $(e).closest(".dynamic-table");
+          tables.push($table[0]);
+        });
+        if (tables.length == 0) {
+          return;
+        }
+        tables = $.uniqueSort(tables);
+        if (tables.length != 1) {
+          return;
+        }
+        $destination = $(tables[0]);
+        return false; // break loop
+      });
+      if ($destination == null) {
+        console.log("fileloaded - destination not found");
+        console.log(destination);
+        return;
+      }
+      // create new table row and replace file element
+      // FIXME handle remove of row!
+      var $table = $destination;
+      var tableId = $table.attr('orig-id');
+      var $tbody = $table.children("tbody");
+      var $tr = $tbody.children('tr.new-table-row').last();
+      if ($tr.length != 1 || $table.length != 1) {
+        console.log("dynamic table has no new-table-row");
+        console.log(tableId);
+        console.log($tr);
+        console.log($table);
+        alert('error dynamic row handling');
+      }
+      onClickNewRow($tr, $table, tableId);
+      $tr.find("[orig-id="+destination+"]").closest(".single-file-container").remove();
+      console.log("ok");
+      console.log(evt);
+      console.log(file);
+      console.log(previewId);
+      console.log(index);
+      console.log(reader);
     });
     $(this).find(".multi-file").on("fileremoved.multi-input", function(evt, id, idx) {
+      var $container = $(this).parents(".multi-file-container").first();
       console.log("fileremoved");
       console.log(evt, id, idx);
+    });
+    $(this).find(".multi-file").on("filecleared.multi-input", function(evt) {
+      var $container = $(this).parents(".multi-file-container").first();
+      console.log("filecleared");
+      console.log(evt);
     });
   });
   $(".single-file-container,.multi-file-container").on("clone-pre.file", function(evt) {
