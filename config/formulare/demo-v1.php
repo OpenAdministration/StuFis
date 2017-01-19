@@ -117,6 +117,37 @@ $formulare["demo"]["v1"] = [
  ],
 
  [
+   "type" => "table", /* renderer */
+   "title" => "Anhänge2",
+   "id" => "anhaenge2",
+   "opts" => ["with-row-number","with-headline"],
+   "width" => 12,
+   "columns" => [
+     [ "id" => "anhang2.beschreibung", "name" => "Beschreibung 3",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
+     [
+       "type" => "table", /* renderer */
+       "name" => "Anhänge3",
+       "id" => "anhaenge3",
+       "opts" => ["with-row-number","with-headline"],
+       "width" => 6,
+       "columns" => [
+         [ "id" => "anhang3.beschreibung", "name" => "Beschreibung 4",             "type" => "text",   "width" => 12, "opts" => ["title"] ],
+       ],
+     ],
+   ],
+ ],
+
+ [
+   "type" => "table", /* renderer */
+   "id" => "refanhaenge3",
+   "width" => 12,
+   "title" => "Verweise",
+   "columns" => [
+     [ "id" => "refanhang3",  "name" => "Anhänge",                            "type" => "ref",   "width" => 12, "references" => "anhaenge3"],
+   ],
+ ],
+
+ [
    "type" => "multifile", /* renderer */
    "id" => "upload",
    "title" => "Anhänge hochladen",

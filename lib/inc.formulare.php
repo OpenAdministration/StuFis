@@ -16,10 +16,55 @@ function loadForms() {
 
 }
 
-function renderForm($meta) {
+function getFormConfig($type, $revision) {
+  global $formulare;
+
+  if (!isset($formulare[$type])) return false;
+  if (!isset($formulare[$type][$revision])) return false;
+
+  return $formulare[$type][$revision];
+}
+
+function getFormValue($name, $type, $values, $defaultValue = false) {
+  $matches = [];
+  if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
+    $name = $matches[1].$matches[2];
+  } else {
+    return $defaultValue;
+  }
+
+  foreach($values as $row) {
+    if ($row["fieldname"] != $name)
+      continue;
+    if ($row["contenttype"] != $type) {
+      add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
+      continue;
+    }
+    return $row["value"];
+  }
+  return $defaultValue;
+}
+
+function getFormFile($name, $values, $defaultValue = false) {
+  $matches = [];
+  if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
+    $name = $matches[1].$matches[2];
+  } else {
+    return $defaultValue;
+  }
+
+  foreach($values as $row) {
+    if ($row["fieldname"] != $name)
+      continue;
+    return $row;
+  }
+  return $defaultValue;
+}
+
+function renderForm($meta, $ctrl = false) {
 
   foreach ($meta as $item) {
-    renderFormItem($item);
+    renderFormItem($item, $ctrl);
   }
 
 }
@@ -42,6 +87,8 @@ function renderFormItem($meta,$ctrl = false) {
     $wrapper = $ctrl["wrapper"];
     unset($ctrl["wrapper"]);
   }
+  if (!isset($ctrl["render"]))
+   $ctrl["render"] = [];
 
   if (isset($ctrl["class"]))
     $classes = $ctrl["class"];
@@ -55,11 +102,14 @@ function renderFormItem($meta,$ctrl = false) {
 
   $ctrl["id"] = $meta["id"];
   $ctrl["name"] = "formdata[{$meta["id"]}]";
-  if (isset($ctrl["suffix"])) {
-    $ctrl["name"] .= "[]";
-  }
-  if (isset($ctrl["suffix"]) && $ctrl["suffix"]) {
-    $ctrl["id"] = $meta["id"]."-".$ctrl["suffix"];
+
+  if (!isset($ctrl["suffix"]))
+   $ctrl["suffix"] = [];
+  foreach($ctrl["suffix"] as $suffix) {
+    $ctrl["name"] .= "[{$suffix}]";
+    if ($suffix !== false) {
+      $ctrl["id"] .= $suffix;
+    }
   }
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
 
@@ -165,6 +215,25 @@ function renderFormItemGroup($meta, $ctrl) {
 function renderFormItemText($meta, $ctrl) {
   global $nonce, $URIBASE;
 
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control\">";
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    }
+    if ($meta["type"] == "email" && !empty($value))
+      echo "<a href=\"mailto:".htmlspecialchars($value)."\">";
+    if ($meta["type"] == "url" && !empty($value))
+      echo "<a href=\"".htmlspecialchars($value)."\" target=\"_blank\">";
+    echo htmlspecialchars($value);
+    if ($meta["type"] == "email" && !empty($value))
+      echo "</a>";
+    if ($meta["type"] == "url" && !empty($value))
+      echo "</a>";
+    echo "</div>";
+    return;
+  }
+
   echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
@@ -195,21 +264,33 @@ function renderFormItemText($meta, $ctrl) {
 }
 
 function renderFormItemFile($meta, $ctrl) {
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control\">";
+    $file = false;
+    if (isset($ctrl["_values"])) {
+      $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
+    }
+    echo htmlspecialchars($file["filename"]);
+    echo "</div>";
+    return;
+  }
   echo "<div class=\"single-file-container\">";
   echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
   echo "</div>";
 }
 
 function renderFormItemMultiFile($meta, $ctrl) {
-/*
-  5 1. Upload Area für mehrere Dateien (auch Ordner)
-  6 2. Die dann andere File-Felder (Tabelle) ersetzt (dort sind weiterhin File-Felder erlaubt und drinnen, damit man dort zusätzlich hochladen kann)
-  7 D.h. es braucht immer eine Tabelle.
-  8 3. Ggf. aktualisierung von ref-Feldern bezogen auf diese Tabelle
-  9 4. Vodoo für Cloned-Upload-Felder
- 10 5. AjaxUpload
- 11 6. Folder Option
-*/
+// FIXME multi-value
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control\">";
+    $file = false;
+    if (isset($ctrl["_values"])) {
+      $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
+    }
+    echo htmlspecialchars($file["filename"]);
+    echo "</div>";
+    return;
+  }
   echo "<div";
   if (isset($meta["destination"])) {
     $cls = ["multi-file-container", "multi-file-container-with-destination"];
@@ -233,12 +314,33 @@ function renderFormItemMultiFile($meta, $ctrl) {
 
 function renderFormItemMoney($meta, $ctrl) {
   echo "<div class=\"input-group\">";
-  echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control text-right\">";
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    }
+    echo htmlspecialchars($value);
+    echo "</div>";
+  } else {
+    echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
+  }
   echo "<span class=\"input-group-addon\">".htmlspecialchars($meta["currency"])."</span>";
   echo "</div>";
 }
 
 function renderFormItemTextarea($meta, $ctrl) {
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div>";
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    }
+    echo implode("<br/>",explode("\n",htmlspecialchars($value)));
+    echo "</div>";
+    return;
+  }
+
   echo "<textarea class=\"form-control\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["min-rows"]))
     echo " rows=".htmlspecialchars($meta["min-rows"]);
@@ -250,6 +352,23 @@ function renderFormItemTextarea($meta, $ctrl) {
 
 function renderFormItemSelect($meta, $ctrl) {
   global $attributes, $GremiumPrefix;
+
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control\">";
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    }
+    if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
+      echo htmlspecialchars($value);
+    }
+    if ($meta["type"] == "ref") {
+      echo "FIXME: ".htmlspecialchars($value);
+    }
+    echo "</div>";
+    return;
+  }
+
   $liveSearch = true;
   if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs")
     $liveSearch = false;
@@ -273,9 +392,8 @@ function renderFormItemSelect($meta, $ctrl) {
   }
   echo ">";
 
-  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs") {
+  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
     sort($attributes["gremien"]);
-    sort($GremiumPrefix);
     foreach ($GremiumPrefix as $prefix) {
       echo "<optgroup label=\"".htmlspecialchars($prefix)."\">";
       foreach ($attributes["gremien"] as $gremium) {
@@ -293,6 +411,22 @@ function renderFormItemSelect($meta, $ctrl) {
 }
 
 function renderFormItemDateRange($meta, $ctrl) {
+  if (in_array("no-form", $ctrl["render"])) {
+    $valueStart = "";
+    $valueEnd = "";
+    if (isset($ctrl["_values"])) {
+      $valueStart = getFormValue($ctrl["name"]."[start]", $meta["type"], $ctrl["_values"]["_inhalt"], $valueStart);
+      $valueEnd = getFormValue($ctrl["name"]."[end]", $meta["type"], $ctrl["_values"]["_inhalt"], $valueEnd);
+    }
+    echo '<div class="input-daterange input-group">';
+    echo '<div class="input-group-addon" style="background-color: transparent; border: none;">von</div>';
+    echo "<div class=\"form-control\">".htmlspecialchars($valueStart)."</div>";
+    echo '<div class="input-group-addon" style="background-color: transparent; border: none;">bis</div>';
+    echo "<div class=\"form-control\">".htmlspecialchars($valueEnd)."</div>";
+    echo "</div>";
+    return;
+  }
+
 ?>
     <div class="input-daterange input-group"
          data-provide="datepicker"
@@ -332,6 +466,16 @@ function renderFormItemDateRange($meta, $ctrl) {
 
 
 function renderFormItemDate($meta, $ctrl) {
+  if (in_array("no-form", $ctrl["render"])) {
+    echo "<div class=\"form-control\">";
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    }
+    echo htmlspecialchars($value);
+    echo "</div>";
+    return;
+  }
 
 ?>
 <div class="input-group date"
@@ -363,10 +507,22 @@ function renderFormItemDate($meta, $ctrl) {
 
 function renderFormItemTable($meta, $ctrl) {
   $withRowNumber = in_array("with-row-number", $meta["opts"]);
-
+  $cls = ["table", "table-striped"];
+  $noForm = in_array("no-form", $ctrl["render"]);
+  if (!$noForm)
+    $cls[] = "dynamic-table";
+  if ($noForm) {
+    $rowCount = 0;
+    if (isset($ctrl["_values"])) {
+      $rowCount = (int) getFormValue($ctrl["name"]."[rowCount]", $meta["type"], $ctrl["_values"]["_inhalt"], $rowCount);
+    }
+  } else {
+    $rowCount = 1; // js and php code depends on this!
+  }
 ?>
-  <table class="table table-striped dynamic-table" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["id"]); ?>">
+  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["id"]); ?>">
 <?php
+  echo "<input type=\"hidden\" value=\"0\" name=\"".htmlspecialchars($ctrl["name"])."[rowCount]\" class=\"store-row-count\"/>";
 
   if (in_array("with-headline", $meta["opts"])) {
 
@@ -390,13 +546,25 @@ function renderFormItemTable($meta, $ctrl) {
 
 ?>
     <tbody>
-       <tr class="new-table-row dynamic-table-row">
+<?php
+     for ($rowNumber = 0; $rowNumber < $rowCount; $rowNumber++) {
+       $cls = ["dynamic-table-row"];
+       if (!$noForm)
+         $cls[] = "new-table-row";
+       $newSuffix = $ctrl["suffix"];
+       if (!$noForm)
+         $newSuffix[] = false;
+       else
+         $newSuffix[] = $rowNumber;
+?>
+       <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
         if ($withRowNumber) {
-          echo "<td class=\"row-number\">1.</td>";
+          echo "<td class=\"row-number\">".($rowNumber+1)."</td>";
         }
         echo "<td class=\"delete-row\">";
-        echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+        if (!$noForm)
+          echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
@@ -404,10 +572,13 @@ function renderFormItemTable($meta, $ctrl) {
             $clsTitle = "dynamic-table-column-title";
           else
             $clsTitle = "dynamic-table-column-no-title";
-          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => false, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ]));
+          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => $newSuffix, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ]));
         }
 ?>
        </tr>
+<?php
+     }
+?>
     </tbody>
 <?php
 ?>

@@ -1,12 +1,20 @@
 <?php
 
 function getAntrag() {
-  $antrag = dbGet("antrag", ["updatetoken" => $_REQUEST["updatetoken"]]);
+  $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
   if ($antrag === false) die("Unknown antrag.");
-  if ($antrag["unirzusername"] != getUsername() && !hasGroup("admin"))
+  $readPermitted = hasGroup("admin");
+  $readPermitted |= hasGroup("ref-finanzen");
+  $readPermitted |= ($antrag["creator"] == getUsername());
+  if (!$readPermitted)
 		die("Permission denied");
-  if (strtolower($antrag["state"]) != "wait_student")
-		die("Permission denied - Antrag wird bereits bearbeitet.");
+
+  $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+  $antrag["_inhalt"] = $inhalt;
+
+  $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
+  $antrag["_anhang"] = $anhang;
+
   return $antrag;
 }
 

@@ -29,11 +29,14 @@ if (isset($_REQUEST["action"])) {
 
   switch ($_POST["action"]):
     case "antrag.create":
-      $formconfig = $formulare[$formid[0]][$formid[1]];
+      $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
+      if ($formconfig === false) die("Unbekannte Formularversion");
+      if ($_REQUEST["type"] != $formid[0]) die("Unerlaubter Typ");
+      if ($_REQUEST["revision"] != $formid[1]) die("Unerlaubte Version");
 
       $antrag = [];
-      $antrag["type"] = $formid[0];
-      $antrag["revision"] = $formid[1];
+      $antrag["type"] = $_REQUEST["type"];
+      $antrag["revision"] = $_REQUEST["revision"];
       $antrag["creator"] = getUsername();
       $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
       $antrag["createdat"] = date("Y-m-d H:i:s");
@@ -271,10 +274,10 @@ if (!isset($_REQUEST["tab"])) {
 }
 
 switch($_REQUEST["tab"]) {
-#  case "antrag":
-#    $antrag = getAntrag();
-#    require "../template/antrag.tpl";
-#  break;
+  case "antrag":
+    $antrag = getAntrag();
+    require "../template/antrag.tpl";
+  break;
   case "antrag.create":
     require "../template/antrag.create.tpl";
   break;
