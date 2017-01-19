@@ -4,10 +4,14 @@ global $formulare;
 
 /* formname , formrevision */
 $formulare["projekt-intern"]["v1"] = [
+ [
+   "type" => "h2", /* renderer */
+   "id" => "head1",
+   "value" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
+ ],
 
  [
    "type" => "group", /* renderer */
-   "title" => "Meta-Daten",
    "width" => 12,
    "opts" => ["well"],
    "id" => "group1",
@@ -79,6 +83,14 @@ $formulare["projekt-intern"]["v1"] = [
      [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 6, "opts" => ["title"] ],
      [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 6, "opts" => ["title"] ],
    ],
+ ],
+
+ [
+   "type" => "plaintext", /* renderer */
+   "title" => "Erläuterung",
+   "id" => "info",
+   "width" => 12,
+   "value" => "Der Projektantrag muss rechtzeitig vor Projektbeginn eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
  ],
 
 ];

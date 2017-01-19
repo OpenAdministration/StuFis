@@ -75,6 +75,15 @@ function renderFormItem($meta,$ctrl = false) {
     echo "<label class=\"control-label\">".htmlspecialchars($meta["title"])."</label>";
 
   switch ($meta["type"]) {
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+    case "plaintext":
+      renderFormItemPlainText($meta,$ctrl);
+      break;
     case "group":
       renderFormItemGroup($meta,$ctrl);
       break;
@@ -121,6 +130,25 @@ function renderFormItem($meta,$ctrl = false) {
   else
     echo "</$wrapper>";
 
+}
+
+function renderFormItemPlainText($meta, $ctrl) {
+  $value = $meta["value"];
+  $value = htmlspecialchars($value);
+  $value = implode("<br/>", explode("\n", $value));
+  switch ($meta["type"]) {
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      $elem = $meta["type"];
+      break;
+    default:
+      $elem = "div";
+  }
+  echo "<${elem}>{$value}</${elem}>";
 }
 
 function renderFormItemGroup($meta, $ctrl) {
