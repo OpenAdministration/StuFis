@@ -387,9 +387,43 @@ function renderFormItemSelect($meta, $ctrl) {
         $ctrl["_returnValue"]->value = $value;
     }
     if ($meta["type"] == "ref") {
-      echo htmlspecialchars($value);
-      if (isset($ctrl["_returnValue"]))
-        $ctrl["_returnValue"]->value = "FIXME: $value";
+     $matches = [];
+     $rowIdxs = [];
+     $tableNames = [];
+     $txtTr = "";
+
+     while (preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
+       $value = $matches[1];
+       array_unshift($rowIdxs, (int) $matches[2]);
+     }
+     $tableNames[] = $value;
+
+     if (count($rowIdxs) == 0) {
+       echo "miss row idx: ";
+       echo htmlspecialchars($value);
+     }
+
+     /* prepend parent tables */
+     for ($i = count($tableNames); $i < count($rowIdxs); $i++) {
+       // FIXME
+       array_unshift($tableNames, "");
+     }
+
+     $suffix = "";
+     foreach ($rowIdxs as $i => $rowIdx) {
+       $tableName = $tableNames[$i];
+       $txtTr .= "[{$rowIdx}] $tableName";
+       /* get column title for $tableName cols -> form element suffix is $suffix */
+       // FIXME
+       /* new suffix for next nesting */
+       $suffix .= "[$i]";
+     }
+
+     if (isset($ctrl["_returnValue"]))
+       $ctrl["_returnValue"]->value = $txtTr;
+
+     echo htmlspecialchars($txtTr);
+
     }
     echo "</div>";
     return;
