@@ -116,14 +116,7 @@ function renderFormItem($meta,$ctrl = false) {
   $cls = ["form-group"];
   if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
 
-  echo "<div class=\"".join(" ", $cls)."\">";
-  echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
-
-  if (isset($meta["title"]) && isset($meta["id"]))
-    echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($meta["title"])."</label>";
-  elseif (isset($meta["title"]))
-    echo "<label class=\"control-label\">".htmlspecialchars($meta["title"])."</label>";
-
+  ob_start();
   switch ($meta["type"]) {
     case "h1":
     case "h2":
@@ -132,48 +125,64 @@ function renderFormItem($meta,$ctrl = false) {
     case "h5":
     case "h6":
     case "plaintext":
-      renderFormItemPlainText($meta,$ctrl);
+      $isEmpty = renderFormItemPlainText($meta,$ctrl);
       break;
     case "group":
-      renderFormItemGroup($meta,$ctrl);
+      $isEmpty = renderFormItemGroup($meta,$ctrl);
       break;
     case "text":
     case "email":
     case "url":
-      renderFormItemText($meta,$ctrl);
+      $isEmpty = renderFormItemText($meta,$ctrl);
       break;
     case "money":
-      renderFormItemMoney($meta,$ctrl);
+      $isEmpty = renderFormItemMoney($meta,$ctrl);
       break;
     case "textarea":
-      renderFormItemTextarea($meta,$ctrl);
+      $isEmpty = renderFormItemTextarea($meta,$ctrl);
       break;
     case "select":
     case "ref":
-      renderFormItemSelect($meta,$ctrl);
+      $isEmpty = renderFormItemSelect($meta,$ctrl);
       break;
     case "date":
-      renderFormItemDate($meta,$ctrl);
+      $isEmpty = renderFormItemDate($meta,$ctrl);
       break;
     case "daterange":
-      renderFormItemDateRange($meta,$ctrl);
+      $isEmpty = renderFormItemDateRange($meta,$ctrl);
       break;
     case "table":
-      renderFormItemTable($meta,$ctrl);
+      $isEmpty = renderFormItemTable($meta,$ctrl);
       break;
     case "file":
-      renderFormItemFile($meta,$ctrl);
+      $isEmpty = renderFormItemFile($meta,$ctrl);
       break;
     case "multifile":
-      renderFormItemMultiFile($meta,$ctrl);
+      $isEmpty = renderFormItemMultiFile($meta,$ctrl);
       break;
     default:
+      ob_end_flush();
       echo "<pre>"; print_r($meta); echo "</pre>";
       die("Unkown form element meta type: ".$meta["type"]);
   }
+  $txt = ob_get_contents();
+  ob_end_clean();
 
-  echo '<div class="help-block with-errors"></div>';
-  echo "</div>";
+  if ($isEmpty !== false) {
+    echo "<div class=\"".join(" ", $cls)."\">";
+    echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
+
+    if (isset($meta["title"]) && isset($meta["id"]))
+      echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($meta["title"])."</label>";
+    elseif (isset($meta["title"]))
+      echo "<label class=\"control-label\">".htmlspecialchars($meta["title"])."</label>";
+
+    echo $txt;
+
+    if (!in_array("no-form", $ctrl["render"]))
+      echo '<div class="help-block with-errors"></div>';
+    echo "</div>";
+  }
 
   if (isset($meta["width"]))
     echo "</$wrapper>";
@@ -231,6 +240,8 @@ function renderFormItemText($meta, $ctrl) {
     if ($meta["type"] == "url" && !empty($value))
       echo "</a>";
     echo "</div>";
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = $value;
     return;
   }
 
@@ -270,8 +281,11 @@ function renderFormItemFile($meta, $ctrl) {
     if (isset($ctrl["_values"])) {
       $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
     }
-    echo htmlspecialchars($file["filename"]);
+    if ($file)
+      echo htmlspecialchars($file["filename"]);
     echo "</div>";
+    if (isset($ctrl["_returnValue"]) && $file)
+      $ctrl["_returnValue"]->value = $file["filename"];
     return;
   }
   echo "<div class=\"single-file-container\">";
@@ -280,14 +294,18 @@ function renderFormItemFile($meta, $ctrl) {
 }
 
 function renderFormItemMultiFile($meta, $ctrl) {
-// FIXME multi-value
   if (in_array("no-form", $ctrl["render"])) {
+    if (isset($meta["destination"])) return false; // no data here
+
     echo "<div class=\"form-control\">";
     $file = false;
     if (isset($ctrl["_values"])) {
+// FIXME multi-value
       $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
     }
     echo htmlspecialchars($file["filename"]);
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = $file["filename"];
     echo "</div>";
     return;
   }
@@ -321,6 +339,8 @@ function renderFormItemMoney($meta, $ctrl) {
       $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
     }
     echo htmlspecialchars($value);
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = $value;
     echo "</div>";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
@@ -338,6 +358,8 @@ function renderFormItemTextarea($meta, $ctrl) {
     }
     echo implode("<br/>",explode("\n",htmlspecialchars($value)));
     echo "</div>";
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = $value;
     return;
   }
 
@@ -361,9 +383,13 @@ function renderFormItemSelect($meta, $ctrl) {
     }
     if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
       echo htmlspecialchars($value);
+      if (isset($ctrl["_returnValue"]))
+        $ctrl["_returnValue"]->value = $value;
     }
     if ($meta["type"] == "ref") {
-      echo "FIXME: ".htmlspecialchars($value);
+      echo htmlspecialchars($value);
+      if (isset($ctrl["_returnValue"]))
+        $ctrl["_returnValue"]->value = "FIXME: $value";
     }
     echo "</div>";
     return;
@@ -424,6 +450,8 @@ function renderFormItemDateRange($meta, $ctrl) {
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">bis</div>';
     echo "<div class=\"form-control\">".htmlspecialchars($valueEnd)."</div>";
     echo "</div>";
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = "$valueStart - $valueEnd";
     return;
   }
 
@@ -474,6 +502,8 @@ function renderFormItemDate($meta, $ctrl) {
     }
     echo htmlspecialchars($value);
     echo "</div>";
+    if (isset($ctrl["_returnValue"]))
+      $ctrl["_returnValue"]->value = $value;
     return;
   }
 
@@ -519,8 +549,9 @@ function renderFormItemTable($meta, $ctrl) {
   } else {
     $rowCount = 1; // js and php code depends on this!
   }
+  if ($rowCount == 0) return false; //empty table
 ?>
-  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["id"]); ?>">
+  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
 <?php
   echo "<input type=\"hidden\" value=\"0\" name=\"".htmlspecialchars($ctrl["name"])."[rowCount]\" class=\"store-row-count\"/>";
 
@@ -547,6 +578,7 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
     <tbody>
 <?php
+     $columnSums = [];
      for ($rowNumber = 0; $rowNumber < $rowCount; $rowNumber++) {
        $cls = ["dynamic-table-row"];
        if (!$noForm)
@@ -556,6 +588,8 @@ function renderFormItemTable($meta, $ctrl) {
          $newSuffix[] = false;
        else
          $newSuffix[] = $rowNumber;
+       if ($noForm && isset($ctrl["_returnValue"]))
+            $ctrl["_returnValue"]->value = false;
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
@@ -568,11 +602,27 @@ function renderFormItemTable($meta, $ctrl) {
         echo "</td>";
 
         foreach ($meta["columns"] as $i => $col) {
-          if (isset($col["opts"]) && in_array("title", $col["opts"]))
+          if (!isset($col["opts"]))
+            $col["opts"] = [];
+
+          if (in_array("title", $col["opts"]))
             $clsTitle = "dynamic-table-column-title";
           else
             $clsTitle = "dynamic-table-column-no-title";
-          renderFormItem($col,array_merge($ctrl, ["wrapper"=> "td", "suffix" => $newSuffix, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ]));
+
+          $newCtrl = ["wrapper"=> "td", "suffix" => $newSuffix, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ];
+          if ($noForm)
+            $newCtrl["_returnValue"] = new stdClass();
+          $newCtrl = array_merge($ctrl, $newCtrl);
+
+          renderFormItem($col, $newCtrl);
+
+          if (in_array("sum-over-table-bottom", $col["opts"])) {
+            if (!isset($columnSums[$i]))
+              $columnSums[$i] = floatval("0");
+            if (isset($newCtrl["_returnValue"]))
+              $columnSums[$i] += floatval($newCtrl["_returnValue"]->value);
+          }
         }
 ?>
        </tr>
@@ -581,6 +631,7 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
     </tbody>
 <?php
+    if (count($columnSums) > 0) {
 ?>
     <tfoot>
       <tr>
@@ -597,9 +648,11 @@ function renderFormItemTable($meta, $ctrl) {
         <th>
 <?php
           if (in_array("sum-over-table-bottom", $col["opts"])) {
+            $value = $columnSums[$i];
+            $value = number_format($value, 2, ".", "");
             echo "<div class=\"input-group\">";
             echo "<span class=\"input-group-addon\">Σ</span>";
-            echo "<div class=\"column-sum text-right form-control\" data-col-id=\"{$ctrl["id"]}-col-$i\">You should not see this o.O</div>";
+            echo "<div class=\"column-sum text-right form-control\" data-col-id=\"{$ctrl["id"]}-col-$i\">$value</div>";
             echo "<span class=\"input-group-addon\">".htmlspecialchars($col["currency"])."</span>";
             echo "</div>";
           }
@@ -610,6 +663,9 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
       </tr>
     </tfoot>
+<?php
+    } /* has column sums */
+?>
   </table>
 <?
 

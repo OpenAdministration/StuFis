@@ -1,6 +1,8 @@
+/*
 String.prototype.replaceAll = function(target, replacement) {
   return this.split(target).join(replacement);
 };
+*/
 
 $(document).ready(function() {
   $('.selectpicker').each(function (i,e) {
@@ -154,7 +156,7 @@ $(document).ready(function() {
           var refTableId = $refTable.attr('orig-id');
           var $refTBody = $refTable.children("tbody");
           var $refTr = $refTBody.children('tr.new-table-row').last();
-          var selValue = $table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]";
+          var selValue = extractFieldName($table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]");
           onClickNewRow($refTr, $refTable, refTableId);
           $refTr.find('select[data-references='+tableId+']').each(function (i, sel) {
             var $sel = $(sel);
@@ -214,7 +216,6 @@ $(document).ready(function() {
   $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
     var $e = $(e);
     var name = $e.attr('name');
-    name = name.replaceAll("[]", "");
     $e.attr('orig-name', name);
   });
   $(".dynamic-table").on("name-changed.ref-field", function(evt) {
@@ -226,13 +227,13 @@ $(document).ready(function() {
   });
   $(".dynamic-table *[name][name^=formdata],.dynamic-table").on("name-suffix-changed.dynamic-table", function(evt) {
     var $e = $(this);
-    var name = $e.attr('orig-name');
+    var name = $e.attr('orig-name').split("[]");
     var suffix = "";
     $e.parents("*[name-suffix]").each(function (i,p) {
-      suffix = $(p).attr('name-suffix') + suffix;
+      name[name.length - 2 - i] += $(p).attr('name-suffix');
     });
 
-    $e.attr('name',name + suffix);
+    $e.attr('name',name.join(""));
     $e.triggerHandler("name-changed");
   });
   $(".dynamic-table > tbody > tr").on("row-number-changed.dynamic-table", function (evt) {
@@ -457,7 +458,7 @@ function onClickNewRow($tr, $table, tableId) {
       var $opts = $("option[data-references="+trId+"]");
       var $table = $tr.closest("table");
       var rowIdx = $tr.attr('dynamic-table-row-number');
-      var newValue = $table.attr("name") + "["+rowIdx+"]";
+      var newValue = extractFieldName( $table.attr("name") + "["+rowIdx+"]" );
       var trText = "";
 
       var trList = [ $tr ];
@@ -465,9 +466,7 @@ function onClickNewRow($tr, $table, tableId) {
         trList.unshift($(tr));
       });
 
-console.log("trText");
       $.each( trList, function (i, $ptr) {
-console.log($ptr.closest("table").attr("id"));
         if (trText.length > 0)
           trText = trText + " ";
 
@@ -488,7 +487,6 @@ console.log($ptr.closest("table").attr("id"));
           trText = trText + txt;
         });
       });
-console.log("trText="+trText);
 
       $opts.each(function(i, opt) {
         var $opt = $(opt);
@@ -677,5 +675,13 @@ function getSizeText(size) {
   sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   out = (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + sizes[i];
   return out;
+}
+
+function extractFieldName(name) {
+  var re = /^formdata\[([^\]]*)\](.*)/;
+  var m = name.match(re);
+  if (!m)
+    return false;
+  return m[1]+m[2];
 }
 

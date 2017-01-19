@@ -99,7 +99,7 @@ if (isset($_REQUEST["action"])) {
             $fieldname = $anhang["fieldname"];
             $ret = true;
             foreach (array_keys($names) as $key) {
-              $anhang["fieldname"] = "${fieldname}.${key}";
+              $anhang["fieldname"] = "${fieldname}[${key}]";
               $ret1 = storeAnhang($anhang, $names[$key], $types[$key], $tmp_names[$key], $errors[$key], $sizes[$key]);
               $ret = $ret && $ret1;
             }
