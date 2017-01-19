@@ -342,8 +342,9 @@ $(document).ready(function() {
     /*  */
   }); /* each table */
 
-  $( "form.ajax" ).submit(function (ev) {
-    return handleSubmitForm($(this));
+  $( "form.ajax" ).validator().on("submit", function(e) {
+    if (e.isDefaultPrevented()) return; // validator said no
+    return handleSubmitForm($(this), e);
   });
 
 });
@@ -492,12 +493,7 @@ function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
       $("#server-message-dlg").modal("show");
 };
 
-function doSubmitForm(formid) {
-  handleSubmitForm($("#"+formid));
-  return false;
-}
-
-function handleSubmitForm($form) {
+function handleSubmitForm($form, evt) {
   var action = $form.attr("action");
   if ($form.find("input[name=action]").length + $form.find("select[name=action]").length == 0) { return true; }
   var data = new FormData($form[0]);
@@ -626,6 +622,7 @@ function handleSubmitForm($form) {
      }
    })
   .fail(xpAjaxErrorHandler);
+  evt.preventDefault();
   return false;
 }
 

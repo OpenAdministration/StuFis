@@ -63,7 +63,10 @@ function renderFormItem($meta,$ctrl = false) {
   }
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
 
-  echo "<div class=\"form-group\">";
+  $cls = ["form-group"];
+  if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
+
+  echo "<div class=\"".join(" ", $cls)."\">";
   echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
 
   if (isset($meta["title"]) && isset($meta["id"]))
@@ -110,6 +113,7 @@ function renderFormItem($meta,$ctrl = false) {
       die("Unkown form element meta type: ".$meta["type"]);
   }
 
+  echo '<div class="help-block with-errors"></div>';
   echo "</div>";
 
   if (isset($meta["width"]))
@@ -131,12 +135,25 @@ function renderFormItemGroup($meta, $ctrl) {
 }
 
 function renderFormItemText($meta, $ctrl) {
+  global $nonce, $URIBASE;
 
   echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
   if (in_array("required", $meta["opts"]))
     echo " required=\"required\"";
+  if (isset($meta["minLength"]))
+    echo " data-minlength=\"".htmlspecialchars($meta["minLength"])."\"";
+  if (isset($meta["maxLength"]))
+    echo " maxlength=\"".htmlspecialchars($meta["maxLength"])."\"";
+  if (isset($meta["pattern"]))
+    echo " pattern=\"".htmlspecialchars($meta["pattern"])."\"";
+  if (isset($meta["pattern-error"]))
+    echo " data-pattern-error=\"".htmlspecialchars($meta["pattern-error"])."\"";
+  if ($meta["type"] == "email") {
+    echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.email&nonce=".urlencode($nonce))."\"";
+    echo " data-remote-error=\"Ungültige eMail-Adresse\"";
+  }
   if (isset($meta["prefill"])) {
     $value = "";
     if ($meta["prefill"] == "user:mail")
@@ -145,6 +162,8 @@ function renderFormItemText($meta, $ctrl) {
     echo " value=\"".htmlspecialchars($value)."\"";
   }
   echo "/>";
+  if (in_array("hasFeedback", $meta["opts"]))
+    echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
 }
 
 function renderFormItemFile($meta, $ctrl) {
@@ -203,8 +222,17 @@ function renderFormItemTextarea($meta, $ctrl) {
 
 function renderFormItemSelect($meta, $ctrl) {
   global $attributes, $GremiumPrefix;
-  echo "<div class=\"select-picker-container\">";
-  echo "<select class=\"selectpicker form-control\" data-live-search=\"true\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+  $liveSearch = true;
+  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs")
+    $liveSearch = false;
+
+  $cls = ["select-picker-container"];
+  if (in_array("hasFeedback", $meta["opts"]))
+    $cls[] = "hasFeedback";
+  echo "<div class=\"".implode(" ", $cls)."\">";
+  if (in_array("hasFeedback", $meta["opts"]))
+    echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
+  echo "<select class=\"selectpicker form-control\" data-live-search=\"".($liveSearch ? "true" : "false")."\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
   if (in_array("multiple", $meta["opts"]))
@@ -251,16 +279,23 @@ function renderFormItemDateRange($meta, $ctrl) {
   }
 ?>
     >
-        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
-        <div class="input-group-addon" style="border-top-right-radius: 4px; border-bottom-right-radius: 4px;">
-          <span class="glyphicon glyphicon-th"></span>
+        <div class="input-group-addon" style="background-color: transparent; border: none;">
+          von
+        </div>
+        <div class="input-group">
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
+          <div class="input-group-addon">
+            <span class="glyphicon glyphicon-th"></span>
+          </div>
         </div>
         <div class="input-group-addon" style="background-color: transparent; border: none;">
           bis
         </div>
-        <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" style="border-top-left-radius: 4px; border-bottom-left-radius: 4px;" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
-        <div class="input-group-addon">
-          <span class="glyphicon glyphicon-th"></span>
+        <div class="input-group">
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?>/>
+          <div class="input-group-addon">
+            <span class="glyphicon glyphicon-th"></span>
+          </div>
         </div>
     </div>
 <?php

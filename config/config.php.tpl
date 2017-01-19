@@ -16,5 +16,6 @@ $URIBASE = "/FinanzAntragUI/";
 $STORAGE = dirname(dirname(__FILE__))."/storage";
 $ANTRAGMAILTO = "FIXME@tu-ilmenau.de";
 $GremiumPrefix = [];
+define("MAILFROM", "ref-it@tu-ilmenau.");
 
 // :vim:set syntax=php:

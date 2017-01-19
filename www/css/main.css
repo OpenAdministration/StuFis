@@ -21,3 +21,24 @@ pre {
   display: none;
 }
 
+/* Adjust feedback icon position */
+
+.select-picker-container.hasFeedback {
+  padding-right: 20px;
+  position: relative;
+}
+
+.select-picker-container .form-control-feedback {
+  right: -15px;
+  position: absolute;
+}
+
+/* green border for bootstrap-select */
+
+.form-group.has-success > .select-picker-container > .btn-group.bootstrap-select > .btn.btn-default {
+  border-color: #3c763d;
+}
+
+.form-group.has-error > .select-picker-container > .btn-group.bootstrap-select > .btn.btn-default {
+  border-color: #a94442;
+

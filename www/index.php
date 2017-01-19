@@ -9,7 +9,7 @@ requireAuth();
 $formid = ["projekt-intern","v1"];
 #$formid = ["demo","v1"];
 
-if (isset($_POST["action"])) {
+if (isset($_REQUEST["action"])) {
  $msgs = Array();
  $ret = false;
  $target = false;

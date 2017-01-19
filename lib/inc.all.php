@@ -3,6 +3,7 @@
 define('SYSBASE', dirname(dirname(__FILE__)));
 
 require_once SYSBASE.'/config/config.php';
+require_once(SYSBASE.'/lib/class.validateEmail.php');
 require_once SYSBASE.'/lib/inc.error.php';
 require_once SYSBASE.'/lib/inc.simplesaml.php';
 require_once SYSBASE.'/lib/inc.db.php';

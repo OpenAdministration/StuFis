@@ -1,5 +1,14 @@
 <?php
 
+function verify_mail($email) {
+  if (!preg_match('/^([a-z0-9_\\-\\.]+)@([a-z0-9_\\-\\.]+)\\.([a-z]{2,5})$/i',$email)) {
+    return false;
+  }
+  $SMTP_Validator = new SMTP_validateEmail();
+  $results = $SMTP_Validator->validate(array($email), MAILFROM);
+  return $results[$email];
+}
+
 function sendAntrag($antrag, $ahs, $msg) {
   global $ANTRAGMAILTO, $mail_object;
 

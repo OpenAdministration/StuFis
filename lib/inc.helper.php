@@ -19,11 +19,17 @@ function human_filesize($bytes, $decimals = 2) {
 function escapeMe($d, $row) {
   return htmlspecialchars($d);
 }
+
 function trimMe($d) {
   if (is_array($d)) {
     return array_map("trimMe", $d);
   } else {
     return trim($d);
   }
+}
+
+function add_message($msg) {
+  global $msgs;
+  $msgs[] = $msg;
 }
 
