@@ -7,6 +7,7 @@ requireAuth();
 #requireGroup($ADMINGROUP);
 
 $formid = ["projekt-intern","v1"];
+#$formid = ["demo","v1"];
 
 if (isset($_POST["action"])) {
  $msgs = Array();
