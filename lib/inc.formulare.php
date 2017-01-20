@@ -73,7 +73,7 @@ function renderForm($meta, $ctrl = false) {
 
   $ctrl["_render"] = new stdClass();
   $ctrl["_render"]->displayValue = false;
-  $ctrl["_render"]->formValue = false;
+  $ctrl["_render"]->inputValue = false;
   $ctrl["_render"]->templates = [];
   $ctrl["_render"]->parentMap = []; /* map currentName => parentName */
   $ctrl["_render"]->currentParent = false;
@@ -272,8 +272,8 @@ function renderFormItemText($meta, $ctrl) {
     if ($meta["type"] == "url" && !empty($value))
       echo "</a>";
     echo "</div>";
-    $ctrl["_render"]->formValue = $value;
-    $ctrl["_render"]->displayValue = $value;
+    $ctrl["_render"]->inputValue = $value;
+    $ctrl["_render"]->displayValue = htmlspecialchars($value);
     return;
   }
 
@@ -318,7 +318,7 @@ function renderFormItemFile($meta, $ctrl) {
     }
     echo "</div>";
     if ($file)
-      $ctrl["_render"]->displayValue = $file["filename"];
+      $ctrl["_render"]->displayValue = htmlspecialchars($file["filename"]);
     else
       $ctrl["_render"]->displayValue = "";
     return;
@@ -340,7 +340,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
     }
     if ($file) {
       echo newTemplatePattern($ctrl, htmlspecialchars($file["filename"]));
-      $ctrl["_render"]->displayValue = $file["filename"];
+      $ctrl["_render"]->displayValue = htmlspecialchars($file["filename"]);
     } else {
       $ctrl["_render"]->displayValue = "";
     }
@@ -377,8 +377,8 @@ function renderFormItemMoney($meta, $ctrl) {
       $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
     }
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
-    $ctrl["_render"]->formValue = $value;
-    $ctrl["_render"]->displayValue = $value;
+    $ctrl["_render"]->inputValue = $value;
+    $ctrl["_render"]->displayValue = htmlspecialchars($value);
     echo "</div>";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
@@ -396,7 +396,7 @@ function renderFormItemTextarea($meta, $ctrl) {
     }
     echo newTemplatePattern($ctrl, implode("<br/>",explode("\n",htmlspecialchars($value))));
     echo "</div>";
-    $ctrl["_render"]->displayValue = $value;
+    $ctrl["_render"]->displayValue = htmlspecialchars($value);
     return;
   }
 
@@ -420,7 +420,7 @@ function renderFormItemSelect($meta, $ctrl) {
     }
     if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
-      $ctrl["_render"]->displayValue = $value;
+      $ctrl["_render"]->displayValue = htmlspecialchars($value);
     } else if ($meta["type"] == "ref") {
       $tPattern = "<{ref:".$value."}>";
       echo $tPattern;
@@ -444,7 +444,7 @@ function renderFormItemSelect($meta, $ctrl) {
           $txtTr = "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"] . $txtTr;
         }
 
-        $ctrl["_render"]->templates[$tPattern] = htmlspecialchars($txtTr);
+        $ctrl["_render"]->templates[$tPattern] = $txtTr; // rowTxt is from displayValue and thus already escaped
       };
     }
     echo "</div>";
@@ -508,7 +508,7 @@ function renderFormItemDateRange($meta, $ctrl) {
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">bis</div>';
     echo "<div class=\"form-control\">{$tPatternEnd}</div>";
     echo "</div>";
-    $ctrl["_render"]->displayValue = "$valueStart - $valueEnd";
+    $ctrl["_render"]->displayValue = htmlspecialchars("$valueStart - $valueEnd");
     return;
   }
 
@@ -559,7 +559,7 @@ function renderFormItemDate($meta, $ctrl) {
     }
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
     echo "</div>";
-    $ctrl["_render"]->displayValue = $value;
+    $ctrl["_render"]->displayValue = htmlspecialchars($value);
     return;
   }
 
@@ -647,7 +647,7 @@ function renderFormItemTable($meta, $ctrl) {
          $newSuffix[] = false;
        else
          $newSuffix[] = $rowNumber;
-       $ctrl["_render"]->formValue = false;
+       $ctrl["_render"]->inputValue = false;
        $ctrl["_render"]->displayValue = false;
        $rowTxt = [];
 ?>
@@ -682,8 +682,8 @@ function renderFormItemTable($meta, $ctrl) {
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             if (!isset($columnSums[$i]))
               $columnSums[$i] = floatval("0");
-            if ($noForm && $ctrl["_render"]->displayValue !== false)
-              $columnSums[$i] += floatval($ctrl["_render"]->displayValue);
+            if ($noForm && $ctrl["_render"]->inputValue !== false)
+              $columnSums[$i] += floatval($ctrl["_render"]->inputValue);
           }
         }
 
@@ -732,7 +732,7 @@ function renderFormItemTable($meta, $ctrl) {
 <?php
     } /* has column sums */
 
-    $ctrl["_render"]->formValue = false;
+    $ctrl["_render"]->inputValue = false;
     $ctrl["_render"]->displayValue = false;
 ?>
   </table>
