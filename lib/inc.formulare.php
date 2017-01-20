@@ -197,6 +197,9 @@ function renderFormItem($meta,$ctrl = false) {
     case "multifile":
       $isEmpty = renderFormItemMultiFile($meta,$ctrl);
       break;
+    case "invref":
+      $isEmpty = renderFormItemInvRef($meta,$ctrl);
+      break;
     default:
       ob_end_flush();
       echo "<pre>"; print_r($meta); echo "</pre>";
@@ -717,12 +720,16 @@ function renderFormItemTable($meta, $ctrl) {
           if (!isset($col["opts"]))
             $col["opts"] = [];
 
+          $tdClass = [ "{$ctrl["id"]}-col-$i" ];
           if (in_array("title", $col["opts"]))
-            $clsTitle = "dynamic-table-column-title";
+            $tdClass[] = "dynamic-table-column-title";
           else
-            $clsTitle = "dynamic-table-column-no-title";
+            $tdClass[] = "dynamic-table-column-no-title";
 
-          $newCtrl = ["wrapper"=> "td", "suffix" => $newSuffix, "class" => [ "{$ctrl["id"]}-col-$i", $clsTitle ] ];
+          if ($col["type"] == "invref")
+            $tdClass[] = "dynamic-table-invref";
+
+          $newCtrl = ["wrapper"=> "td", "suffix" => $newSuffix, "class" => $tdClass ];
           if ($noForm)
             $ctrl["_render"]->displayValue = false;
 
@@ -790,4 +797,9 @@ function renderFormItemTable($meta, $ctrl) {
   $ctrl["_render"]->displayValue = false;
   $ctrl["_render"]->currentParent = $myParent;
 
+}
+
+function renderFormItemInvRef($meta,$ctrl) {
+  // FIXME no-form case
+  echo "<div class=\"invref\"></div>";
 }

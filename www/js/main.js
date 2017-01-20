@@ -26,6 +26,23 @@ $(document).ready(function() {
     $fselect.on("hidden.bs.select",function (e) {
       $fselect.removeClass("select-picker-open");
     });
+    if ($fselect.is("[data-references]")) {
+
+      $fselect.parents("tr").off("pre-row-delete.ref-field-inv");
+      $fselect.parents("tr").on("pre-row-delete.ref-field-inv", function(evt) {
+        $(this).find("select.selectpicker[data-references]").each(function (i, sel) {
+          var $sel = $(sel);
+          var targetTableId = $sel.attr("data-references");
+          updateInvRef(targetTableId, $sel.attr("id"), false);
+        });
+      });
+
+      $fselect.off("change.ref-field-inv");
+      $fselect.on("change.ref-field-inv",function (e) {
+        var targetTableId = $fselect.attr("data-references");
+        updateInvRef(targetTableId, $fselect.attr("id"), $(this).selectpicker('val'));
+      });
+    }
     var isOpen = $fselect.is(".select-picker-open");
     if (isOpen) {
       $fselect.selectpicker('toggle');
@@ -160,6 +177,7 @@ $(document).ready(function() {
             var $sel = $(sel);
             if ($sel.is(".selectpicker")) {
               $sel.selectpicker("val", selValue);
+              $sel.triggerHandler("change");
             } else { /* not selectpicker */
               $sel.val(selValue);
             }
@@ -506,6 +524,7 @@ function onClickNewRow($tr, $table, tableId) {
         if ($sel.is(".selectpicker")) {
           $sel.selectpicker("refresh");
           $sel.selectpicker("val", selValue);
+          $sel.triggerHandler("change");
         } else { /* not selectpicker */
           $sel.val(selValue);
         }
@@ -688,3 +707,48 @@ function extractFieldName(name) {
   return m[1]+m[2];
 }
 
+function getFormdataName(fieldname) {
+  var re = /^([^\[\]]*)(\[.*)?$/;
+  var m = fieldname.match(re);
+  if (!m)
+    return false;
+  var name = "formdata["+m[1]+"]";
+  if (m[2]) {
+    name += m[2];
+  }
+  return name;
+}
+
+function updateInvRef(targetTableId, selId, newRef) {
+
+  if (newRef === false || newRef === "")
+    return;
+
+//  var selValue = extractFieldName($table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]");
+  var re = /^(.*)\[([0-9]*)\]$/;
+  var m = newRef.match(re);
+  if (!m) {
+    console.log("reference invalid: "+newRef);
+    return; // invalid reference
+  }
+  tableName = m[1];
+  rowNumber = m[2];
+
+  var $table = $("table[name]").filter(function() { return extractFieldName($(this).attr("name")) == tableName; });
+  if ($table.length != 1) {
+    console.log("cannot find table instance referenced");
+    return;
+  }
+  var $tr = $table.children("tbody").children("tr[dynamic-table-row-number]").filter(function() { return $(this).attr("dynamic-table-row-number") == rowNumber; });
+  var $td = $tr.children("td.dynamic-table-invref");
+
+  console.log($td);
+  console.log($tr);
+  console.log($table);
+  console.log(tableName);
+  console.log(rowNumber);
+  console.log(targetTableId);
+  console.log(selId);
+  console.log(newRef);
+
+}

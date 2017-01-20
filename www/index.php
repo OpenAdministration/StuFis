@@ -8,6 +8,7 @@ requireAuth();
 
 $formid = ["projekt-intern","v1"];
 #$formid = ["demo","v1"];
+$formid = ["demo","v2"];
 
 if (isset($_REQUEST["action"])) {
  $msgs = Array();
