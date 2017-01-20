@@ -14,10 +14,13 @@
 <!--										<a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
 										<a class="navbar-brand" href="#">StuRa-Finanzformulare</a>
                     <ul class="nav navbar-nav navbar-right">
-                      <li><a href="<?php echo $logoutUrl; ?>">Logout</a></li>
+                      <li><a href="<?php echo htmlspecialchars($logoutUrl); ?>">Logout</a></li>
                     </ul>
 								</div>
 						</div>
 				</nav>
 
 				<div class="container">
+
+<?php
+# vim: set syntax=php:

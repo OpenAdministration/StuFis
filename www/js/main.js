@@ -1,8 +1,6 @@
-/*
 String.prototype.replaceAll = function(target, replacement) {
   return this.split(target).join(replacement);
 };
-*/
 
 $(document).ready(function() {
   $('.selectpicker').each(function (i,e) {
@@ -229,9 +227,12 @@ $(document).ready(function() {
     var $e = $(this);
     var name = $e.attr('orig-name').split("[]");
     var suffix = "";
-    $e.parents("*[name-suffix]").each(function (i,p) {
-      name[name.length - 2 - i] += $(p).attr('name-suffix');
+    var $ns = $e.parents("*[name-suffix]");
+    $ns.each(function (i,p) {
+      name[$ns.length - 1 - i] += $(p).attr('name-suffix');
     });
+    for (i = $ns.length; i < name.length - 1; i++)
+      name[i] += "[]";
 
     $e.attr('name',name.join(""));
     $e.triggerHandler("name-changed");

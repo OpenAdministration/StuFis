@@ -126,6 +126,8 @@ function renderFormItem($meta,$ctrl = false) {
     $wrapper = $ctrl["wrapper"];
     unset($ctrl["wrapper"]);
   }
+  if (!isset($ctrl["render"]))
+    $ctrl["render"] = [];
 
   if (isset($ctrl["class"]))
     $classes = $ctrl["class"];
