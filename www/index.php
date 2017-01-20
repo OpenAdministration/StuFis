@@ -267,11 +267,80 @@ if (isset($_REQUEST["action"])) {
  exit;
 }
 
-require "../template/header.tpl";
-
 if (!isset($_REQUEST["tab"])) {
   $_REQUEST["tab"] = "antrag.create";
 }
+
+switch($_REQUEST["tab"]) {
+  case "antrag.anhang":
+    if (count($_REQUEST["__args"]) == 0)
+      break;
+
+    $antrag = getAntrag();
+    $f = ["antrag_id" => $antrag["id"], "id" => $_REQUEST["__args"][0]];
+    $ah = dbGet("anhang", $f);
+    if ($ah === false) die("Antrag nicht gefunden.");
+    header("Content-Type: ".$ah["mimetype"]);
+    header('Content-Disposition: attachment; filename="' . $antrag["id"]."-".$ah["id"]." ".$ah["filename"]. '"');
+    header('Content-Transfer-Encoding: binary');
+    header('Accept-Ranges: bytes');
+    header('Cache-Control: private');
+    header('Pragma: private');
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+
+    $fileSize = $ah["size"];
+    $filePath = $ah["path"];
+
+    // Multipart-Download and Download Resuming Support
+    if(isset($_SERVER['HTTP_RANGE'])) {
+      list($a, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+      list($range) = explode(',', $range, 2);
+      list($range, $rangeEnd) = explode('-', $range);
+
+      $range = intval($range);
+
+      if(!$rangeEnd) {
+        $rangeEnd = $fileSize - 1;
+      }
+      else {
+        $rangeEnd = intval($rangeEnd);
+      }
+
+      $newLength = $rangeEnd - $range + 1;
+
+      // Send Headers
+      header('HTTP/1.1 206 Partial Content');
+      header('Content-Length: ' . $newLength);
+      header("Content-Range: bytes $range-$rangeEnd/$fileSize");
+    }
+    else {
+      $range = 0;
+      $newLength = $fileSize;
+      header('Content-Length: ' . $fileSize);
+    }
+
+    // Output File
+    $chunkSize = 1 * (1024*1024);
+    $bytesSend = 0;
+
+    if($file = fopen($filePath, 'r')) {
+      if(isset($_SERVER['HTTP_RANGE']))
+        fseek($file, $range);
+
+      while(!feof($file) && !connection_aborted() && $bytesSend < $newLength) {
+        $buffer = fread($file, $chunkSize);
+        echo $buffer;
+        flush();
+          $bytesSend += strlen($buffer);
+      }
+
+      fclose($file);
+    }
+
+    exit;
+}
+
+require "../template/header.tpl";
 
 switch($_REQUEST["tab"]) {
   case "antrag":
@@ -288,76 +357,8 @@ switch($_REQUEST["tab"]) {
 #  case "antrag.submitted":
 #    require "../template/antrag.submitted.tpl";
 #  break;
-#  case "antrag.anhang":
-#    $antrag = getAntrag();
-#    if (count($_REQUEST["__args"]) > 0) {
-#      $f = ["antrag_id" => $antrag["id"], "id" => $_REQUEST["__args"][0]];
-#      $ah = dbGet("anhang", $f);
-#      if ($ah === false) die("Antrag nicht gefunden.");
-#      header("Content-Type: ".$ah["mimetype"]);
-#      header('Content-Disposition: attachment; filename="' . $antrag["id"]."-".$ah["id"]." ".$ah["name"]. '"');
-#      header('Content-Transfer-Encoding: binary');
-#      header('Accept-Ranges: bytes');
-#      header('Cache-Control: private');
-#      header('Pragma: private');
-#      header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-#
-#      $fileSize = $ah["size"];
-#      $filePath = $ah["path"];
-#
-#      // Multipart-Download and Download Resuming Support
-#      if(isset($_SERVER['HTTP_RANGE'])) {
-#        list($a, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
-#        list($range) = explode(',', $range, 2);
-#        list($range, $rangeEnd) = explode('-', $range);
-#
-#        $range = intval($range);
-#
-#        if(!$rangeEnd) {
-#          $rangeEnd = $fileSize - 1;
-#        }
-#        else {
-#          $rangeEnd = intval($rangeEnd);
-#        }
-#
-#        $newLength = $rangeEnd - $range + 1;
-#
-#        // Send Headers
-#        header('HTTP/1.1 206 Partial Content');
-#        header('Content-Length: ' . $newLength);
-#        header("Content-Range: bytes $range-$rangeEnd/$fileSize");
-#      }
-#      else {
-#        $range = 0;
-#        $newLength = $fileSize;
-#        header('Content-Length: ' . $fileSize);
-#      }
-#
-#      // Output File
-#      $chunkSize = 1 * (1024*1024);
-#      $bytesSend = 0;
-#
-#      if($file = fopen($filePath, 'r')) {
-#        if(isset($_SERVER['HTTP_RANGE'])) {
-#          fseek($file, $range);
-#
-#          while(!feof($file) && !connection_aborted() && $bytesSend < $newLength) {
-#            $buffer = fread($file, $chunkSize);
-#            echo $buffer;
-#            flush();
-#            $bytesSend += strlen($buffer);
-#          }
-#
-#          fclose($file);
-#        }
-#      }
-#
-#    } else {
-#      require "../template/antrag.anhang.tpl";
-#    }
-#  break;
   default:
-    die("invalid tab name: ".htmlspecialchars($_REQUEST["tab"]));
+    echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
 }
 
 require "../template/footer.tpl";

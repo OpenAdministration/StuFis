@@ -45,6 +45,7 @@
         <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
         <button type="button" class="btn btn-primary" id="server-question-close-window">Fenster schließen</button>
       </div>
+    </div>
   </div>
 </div>
 		</body>

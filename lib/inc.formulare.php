@@ -50,17 +50,31 @@ function getFormValue($name, $type, $values, $defaultValue = false) {
   return $defaultValue;
 }
 
-function getFormFile($name, $values, $defaultValue = false) {
+function getFormFile($name, $values) {
   $name = getFormName($name);
   if ($name === false)
-    return $defaultValue;
+    return false;
 
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
       continue;
     return $row;
   }
-  return $defaultValue;
+  return false;
+}
+
+function getFormFiles($name, $values) {
+  $name = getFormName($name);
+  if ($name === false)
+    return false;
+
+  $ret = [];
+  foreach($values as $row) {
+    if (substr($row["fieldname"], 0, strlen($name)) != $name)
+      continue;
+    $ret[] = $row;
+  }
+  return $ret;
 }
 
 function newTemplatePattern($ctrl, $value) {
@@ -306,21 +320,27 @@ function renderFormItemText($meta, $ctrl) {
     echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
 }
 
+function getFileLink($file, $antrag) {
+  global $URIBASE;
+  $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/anhang/".$file["id"];
+  return "<a href=\"".htmlspecialchars($target)."\">".htmlspecialchars($file["filename"])."</a>";
+}
+
 function renderFormItemFile($meta, $ctrl) {
   if (in_array("no-form", $ctrl["render"])) {
     echo "<div class=\"form-control\">";
     $file = false;
     if (isset($ctrl["_values"])) {
-      $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
+      $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"]);
     }
     if ($file) {
-      echo newTemplatePattern($ctrl, htmlspecialchars($file["filename"]));
+      $html = getFileLink($file, $ctrl["_values"]);
+      echo newTemplatePattern($ctrl, $html);
+      $ctrl["_render"]->displayValue = $html;
+    } else {
+      $ctrl["_render"]->displayValue = "";
     }
     echo "</div>";
-    if ($file)
-      $ctrl["_render"]->displayValue = htmlspecialchars($file["filename"]);
-    else
-      $ctrl["_render"]->displayValue = "";
     return;
   }
   echo "<div class=\"single-file-container\">";
@@ -333,16 +353,19 @@ function renderFormItemMultiFile($meta, $ctrl) {
     if (isset($meta["destination"])) return false; // no data here
 
     echo "<div class=\"form-control\">";
-    $file = false;
+    $files = false;
     if (isset($ctrl["_values"])) {
-// FIXME multi-value
-      $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"], $file);
+      $files = getFormFiles($ctrl["name"], $ctrl["_values"]["_anhang"]);
     }
-    if ($file) {
-      echo newTemplatePattern($ctrl, htmlspecialchars($file["filename"]));
-      $ctrl["_render"]->displayValue = htmlspecialchars($file["filename"]);
-    } else {
-      $ctrl["_render"]->displayValue = "";
+    $ctrl["_render"]->displayValue = "";
+    if (is_array($files)) {
+      $html = [];
+      foreach($files as $file) {
+        $html[] = getFileLink($file, $ctrl["_values"]);
+      }
+      $html = implode(", ", $html);
+      $ctrl["_render"]->displayValue = $html;
+      echo newTemplatePattern($ctrl, $html);
     }
     echo "</div>";
     return;
