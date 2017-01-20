@@ -153,11 +153,6 @@ function renderFormItem($meta,$ctrl = false) {
   $cls = ["form-group"];
   if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
 
-  $myParent = $ctrl["_render"]->currentParent;
-  if ($myParent !== false)
-    $ctrl["_render"]->parentMap[$ctrl["name"]] = $myParent;
-  $ctrl["_render"]->currentParent = $ctrl["name"];
-
   ob_start();
   switch ($meta["type"]) {
     case "h1":
@@ -209,8 +204,6 @@ function renderFormItem($meta,$ctrl = false) {
   }
   $txt = ob_get_contents();
   ob_end_clean();
-
-  $ctrl["_render"]->currentParent = $myParent;
 
   echo "<$wrapper class=\"".implode(" ", $classes)."\">";
 
@@ -330,7 +323,7 @@ function getFileLink($file, $antrag) {
 
 function renderFormItemFile($meta, $ctrl) {
   if (in_array("no-form", $ctrl["render"])) {
-    echo "<div class=\"form-control\">";
+    echo "<div>";
     $file = false;
     if (isset($ctrl["_values"])) {
       $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"]);
@@ -354,7 +347,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
   if (in_array("no-form", $ctrl["render"])) {
     if (isset($meta["destination"])) return false; // no data here
 
-    echo "<div class=\"form-control\">";
+    echo "<div>";
     $files = false;
     if (isset($ctrl["_values"])) {
       $files = getFormFiles($ctrl["name"], $ctrl["_values"]["_anhang"]);
@@ -365,9 +358,10 @@ function renderFormItemMultiFile($meta, $ctrl) {
       foreach($files as $file) {
         $html[] = getFileLink($file, $ctrl["_values"]);
       }
-      $html = implode(", ", $html);
-      $ctrl["_render"]->displayValue = $html;
-      echo newTemplatePattern($ctrl, $html);
+      $ctrl["_render"]->displayValue = implode(", ",$html);
+      if (count($html) > 0) {
+        echo newTemplatePattern($ctrl, "<ul><li>".implode("</li><li>",$html)."</li></ul>");;
+      }
     }
     echo "</div>";
     return;
@@ -438,20 +432,24 @@ function renderFormItemSelect($meta, $ctrl) {
   global $attributes, $GremiumPrefix;
 
   if (in_array("no-form", $ctrl["render"])) {
-    echo "<div class=\"form-control\">";
     $value = "";
     if (isset($ctrl["_values"])) {
       $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
     }
     if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
+      echo "<div class=\"form-control\">";
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
+      echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
     } else if ($meta["type"] == "ref") {
       $tPattern = "<{ref:".$value."}>";
+      echo "<div>";
       echo $tPattern;
+      echo "</div>";
       $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}");
       $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
         $matches = [];
+        $origValue = $value;
 
         if (!preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
           $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("miss row idx: ".$value);
@@ -461,18 +459,31 @@ function renderFormItemSelect($meta, $ctrl) {
         $currentTable = $matches[1];
         $value = $matches[1];
         $currentRow = (int) $matches[2];
-        $txtTr = "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"];
+        $txtTr = [ "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"] ];
         while (preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
+          if (!isset($ctrl["_render"]->parentMap[$currentTable])) {
+            echo "$origValue evaluated to $currentTable which has no parent<br/>\n";
+            echo "<pre>";print_r($ctrl["_render"]->parentMap); echo"</pre>\n";
+            break;
+          }
           $currentTable = $ctrl["_render"]->parentMap[$currentTable];
           $currentRow = (int) $matches[2];
           $value = $matches[1];
-          $txtTr = "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"] . $txtTr;
+          if (!isset($ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"])) {
+            echo "$origValue evaluated to $currentTable and $currentRow which has no text<br/>\n";
+            echo "<pre>";print_r($ctrl["_render"]->templates); echo"</pre>\n";
+          } else { /* might not be a table */
+            array_unshift($txtTr, "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"]);
+          }
         }
 
-        $ctrl["_render"]->templates[$tPattern] = $txtTr; // rowTxt is from displayValue and thus already escaped
+        $ctrl["_render"]->templates[$tPattern] = implode(" ",$txtTr); // rowTxt is from displayValue and thus already escaped
       };
+    } else {
+      echo "<div class=\"form-control\">";
+      echo "**not implemented**";
+      echo "</div>";
     }
-    echo "</div>";
     return;
   }
 
@@ -631,6 +642,12 @@ function renderFormItemTable($meta, $ctrl) {
     $rowCount = 1; // js and php code depends on this!
   }
   if ($rowCount == 0) return false; //empty table
+
+  $myParent = $ctrl["_render"]->currentParent;
+  if ($myParent !== false)
+    $ctrl["_render"]->parentMap[getFormName($ctrl["name"])] = $myParent;
+  $ctrl["_render"]->currentParent = getFormName($ctrl["name"]);
+
 ?>
 
   <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
@@ -755,12 +772,12 @@ function renderFormItemTable($meta, $ctrl) {
       </tr>
     </tfoot>
 <?php
-    } /* has column sums */
-
-    $ctrl["_render"]->inputValue = false;
-    $ctrl["_render"]->displayValue = false;
+    } /* if has column sums */
 ?>
   </table>
 <?
+  $ctrl["_render"]->inputValue = false;
+  $ctrl["_render"]->displayValue = false;
+  $ctrl["_render"]->currentParent = $myParent;
 
 }

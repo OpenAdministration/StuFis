@@ -627,6 +627,7 @@ function handleSubmitForm($form, evt) {
          var msg = (values.msgs[i]);
          $('<li/>').text(msg).appendTo( $smcu );
        }
+       $("#server-question-close-window").off("click");
        $("#server-question-close-window").on("click", function(evt) {
          if (!values.target) {
            if (self.opener) {
@@ -637,6 +638,7 @@ function handleSubmitForm($form, evt) {
            self.location.href = values.target;
          }
        });
+       $("#server-question-dlg").off('hidden.bs.modal');
        $("#server-question-dlg").on('hidden.bs.modal', function (e) {
          if (values.target) {
            window.open(values.target);
