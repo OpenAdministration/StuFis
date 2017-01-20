@@ -31,6 +31,7 @@ $formulare["projekt-intern"]["v1"] = [
    "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
+   "rowCountField" => "numgrp",
    "columns" => [
      [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],

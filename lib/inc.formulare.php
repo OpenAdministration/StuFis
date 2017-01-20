@@ -145,7 +145,7 @@ function renderFormItem($meta,$ctrl = false) {
   foreach($ctrl["suffix"] as $suffix) {
     $ctrl["name"] .= "[{$suffix}]";
     if ($suffix !== false) {
-      $ctrl["id"] .= $suffix;
+      $ctrl["id"] .= "-".$suffix;
     }
   }
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
@@ -629,14 +629,22 @@ function renderFormItemDate($meta, $ctrl) {
 
 function renderFormItemTable($meta, $ctrl) {
   $withRowNumber = in_array("with-row-number", $meta["opts"]);
-  $cls = ["table", "table-striped"];
   $noForm = in_array("no-form", $ctrl["render"]);
+
+  $cls = ["table", "table-striped"];
   if (!$noForm)
     $cls[] = "dynamic-table";
+
+  $rowCountFieldName = (isset($meta["rowCountField"]) ? "formdata[{$meta["rowCountField"]}]" : "formdata[{$meta["id"]}][rowCount]");
+  $rowCountFieldTypeName = (isset($meta["rowCountField"]) ? "formtype[{$meta["rowCountField"]}]" : "formtype[{$meta["id"]}]");
+  foreach($ctrl["suffix"] as $suffix) {
+    $rowCountFieldName .= "[{$suffix}]";
+  }
+
   if ($noForm) {
     $rowCount = 0;
     if (isset($ctrl["_values"])) {
-      $rowCount = (int) getFormValue($ctrl["name"]."[rowCount]", $meta["type"], $ctrl["_values"]["_inhalt"], $rowCount);
+      $rowCount = (int) getFormValue($rowCountFieldName, $meta["type"], $ctrl["_values"]["_inhalt"], $rowCount);
     }
   } else {
     $rowCount = 1; // js and php code depends on this!
@@ -648,12 +656,14 @@ function renderFormItemTable($meta, $ctrl) {
     $ctrl["_render"]->parentMap[getFormName($ctrl["name"])] = $myParent;
   $ctrl["_render"]->currentParent = getFormName($ctrl["name"]);
 
+
 ?>
 
   <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
 
 <?php
-  echo "<input type=\"hidden\" value=\"0\" name=\"".htmlspecialchars($ctrl["name"])."[rowCount]\" class=\"store-row-count\"/>";
+  echo "<input type=\"hidden\" value=\"0\" name=\"".htmlspecialchars($rowCountFieldName)."\" class=\"store-row-count\"/>";
+  echo "<input type=\"hidden\" value=\"".htmlspecialchars($meta["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
 
   if (in_array("with-headline", $meta["opts"])) {
 
