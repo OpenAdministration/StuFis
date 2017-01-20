@@ -25,13 +25,18 @@ function getFormConfig($type, $revision) {
   return $formulare[$type][$revision];
 }
 
-function getFormValue($name, $type, $values, $defaultValue = false) {
+function getFormName($name) {
   $matches = [];
   if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
-    $name = $matches[1].$matches[2];
-  } else {
-    return $defaultValue;
+    return $matches[1].$matches[2];
   }
+  return false;
+}
+
+function getFormValue($name, $type, $values, $defaultValue = false) {
+  $name = getFormName($name);
+  if ($name === false)
+    return $defaultValue;
 
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
@@ -46,12 +51,9 @@ function getFormValue($name, $type, $values, $defaultValue = false) {
 }
 
 function getFormFile($name, $values, $defaultValue = false) {
-  $matches = [];
-  if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
-    $name = $matches[1].$matches[2];
-  } else {
+  $name = getFormName($name);
+  if ($name === false)
     return $defaultValue;
-  }
 
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
@@ -73,6 +75,9 @@ function renderForm($meta, $ctrl = false) {
   $ctrl["_render"]->displayValue = false;
   $ctrl["_render"]->formValue = false;
   $ctrl["_render"]->templates = [];
+  $ctrl["_render"]->parentMap = []; /* map currentName => parentName */
+  $ctrl["_render"]->currentParent = false;
+  $ctrl["_render"]->postHooks = []; /* e.g. ref-field */
 
   ob_start();
   foreach ($meta as $item) {
@@ -80,6 +85,10 @@ function renderForm($meta, $ctrl = false) {
   }
   $txt = ob_get_contents();
   ob_end_clean();
+
+  foreach($ctrl["_render"]->postHooks as $hook) {
+    $hook($ctrl);
+  }
 
   $txt = str_replace(array_keys($ctrl["_render"]->templates), array_values($ctrl["_render"]->templates), $txt);
 
@@ -127,6 +136,11 @@ function renderFormItem($meta,$ctrl = false) {
 
   $cls = ["form-group"];
   if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
+
+  $myParent = $ctrl["_render"]->currentParent;
+  if ($myParent !== false)
+    $ctrl["_render"]->parentMap[$ctrl["name"]] = $myParent;
+  $ctrl["_render"]->currentParent = $ctrl["name"];
 
   ob_start();
   switch ($meta["type"]) {
@@ -179,6 +193,8 @@ function renderFormItem($meta,$ctrl = false) {
   }
   $txt = ob_get_contents();
   ob_end_clean();
+
+  $ctrl["_render"]->currentParent = $myParent;
 
   echo "<$wrapper class=\"".implode(" ", $classes)."\">";
 
@@ -406,42 +422,30 @@ function renderFormItemSelect($meta, $ctrl) {
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
       $ctrl["_render"]->displayValue = $value;
     } else if ($meta["type"] == "ref") {
-      $matches = [];
-      $rowIdxs = [];
-      $tableNames = [];
-      $txtTr = "";
+      $tPattern = "<{ref:".$value."}>";
+      echo $tPattern;
+      $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}");
+      $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
+        $matches = [];
 
-      while (preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
+        if (!preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
+          $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("miss row idx: ".$value);
+          return;
+        }
+
+        $currentTable = $matches[1];
         $value = $matches[1];
-        array_unshift($rowIdxs, (int) $matches[2]);
-      }
-      $tableNames[] = $value;
+        $currentRow = (int) $matches[2];
+        $txtTr = "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"];
+        while (preg_match('/^(.*)\[([0-9]+)\]$/', $value, $matches)) {
+          $currentTable = $ctrl["_render"]->parentMap[$currentTable];
+          $currentRow = (int) $matches[2];
+          $value = $matches[1];
+          $txtTr = "[$currentRow] ".$ctrl["_render"]->templates["<{rowTxt:".$currentTable."[".$currentRow."]}>"] . $txtTr;
+        }
 
-      if (count($rowIdxs) == 0) {
-        echo "miss row idx: ";
-        echo htmlspecialchars($value);
-      }
-
-      /* prepend parent tables */
-      for ($i = count($tableNames); $i < count($rowIdxs); $i++) {
-        // FIXME
-        array_unshift($tableNames, "");
-      }
-
-      $suffix = "";
-      foreach ($rowIdxs as $i => $rowIdx) {
-        $tableName = $tableNames[$i];
-        $txtTr .= "[{$rowIdx}] $tableName";
-        /* get column title for $tableName cols -> form element suffix is $suffix */
-        // FIXME
-        /* new suffix for next nesting */
-        $suffix .= "[$i]";
-      }
-
-      $ctrl["_render"]->formValue = $txtTr;
-
-      echo htmlspecialchars($txtTr);
-
+        $ctrl["_render"]->templates[$tPattern] = htmlspecialchars($txtTr);
+      };
     }
     echo "</div>";
     return;
@@ -603,13 +607,16 @@ function renderFormItemTable($meta, $ctrl) {
   }
   if ($rowCount == 0) return false; //empty table
 ?>
+
   <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
+
 <?php
   echo "<input type=\"hidden\" value=\"0\" name=\"".htmlspecialchars($ctrl["name"])."[rowCount]\" class=\"store-row-count\"/>";
 
   if (in_array("with-headline", $meta["opts"])) {
 
 ?>
+
     <thead>
       <tr>
 <?php
@@ -642,6 +649,7 @@ function renderFormItemTable($meta, $ctrl) {
          $newSuffix[] = $rowNumber;
        $ctrl["_render"]->formValue = false;
        $ctrl["_render"]->displayValue = false;
+       $rowTxt = [];
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
@@ -668,6 +676,9 @@ function renderFormItemTable($meta, $ctrl) {
 
           renderFormItem($col, array_merge($ctrl, $newCtrl));
 
+          if (in_array("title", $col["opts"]))
+            $rowTxt[] = $ctrl["_render"]->displayValue;
+
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             if (!isset($columnSums[$i]))
               $columnSums[$i] = floatval("0");
@@ -675,6 +686,10 @@ function renderFormItemTable($meta, $ctrl) {
               $columnSums[$i] += floatval($ctrl["_render"]->displayValue);
           }
         }
+
+        $refname = getFormName($ctrl["name"]);
+        $ctrl["_render"]->templates["<{rowTxt:".$refname."[".$rowNumber."]}>"] = implode(", ", $rowTxt);
+
 ?>
        </tr>
 <?php
