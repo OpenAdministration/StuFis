@@ -92,6 +92,8 @@ function renderForm($meta, $ctrl = false) {
   $ctrl["_render"]->parentMap = []; /* map currentName => parentName */
   $ctrl["_render"]->currentParent = false;
   $ctrl["_render"]->postHooks = []; /* e.g. ref-field */
+  $ctrl["_render"]->addToSumMeta = [];
+  $ctrl["_render"]->addToSumValue = [];
 
   ob_start();
   foreach ($meta as $item) {
@@ -286,10 +288,19 @@ function renderFormItemText($meta, $ctrl) {
     echo "</div>";
     $ctrl["_render"]->inputValue = $value;
     $ctrl["_render"]->displayValue = htmlspecialchars($value);
+    if (isset($meta["addToSum"])) {
+      foreach ($meta["addToSum"] as $addToSumId) {
+        $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+        $ctrl["_render"]->addToSumValue[$addToSumId][] = $value;
+      }
+    }
     return;
   }
 
   echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+  if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+  }
   if (isset($meta["placeholder"]))
     echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
   if (in_array("required", $meta["opts"]))
@@ -401,9 +412,21 @@ function renderFormItemMoney($meta, $ctrl) {
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
     $ctrl["_render"]->inputValue = $value;
     $ctrl["_render"]->displayValue = htmlspecialchars($value);
+    if (isset($meta["addToSum"])) {
+      foreach ($meta["addToSum"] as $addToSumId) {
+        $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+        $ctrl["_render"]->addToSumValue[$addToSumId][] = $value;
+      }
+    }
     echo "</div>";
   } else {
-    echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" ".(in_array("required", $meta["opts"]) ? "required=\"required\"": "").">";
+    echo "<input type=\"text\" class=\"form-control text-right\" value=\"0.00\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    if (in_array("required", $meta["opts"]))
+      echo " required=\"required\"";
+    if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+      echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+    }
+    echo "/>";
   }
   echo "<span class=\"input-group-addon\">".htmlspecialchars($meta["currency"])."</span>";
   echo "</div>";

@@ -49,7 +49,7 @@ $formulare["demo"]["v2"] = [
            "name" => "Nachweise",
            "columns" => [
              [ "id" => "geld.anhang.file",    "name" => "Anhänge",             "type" => "ref",   "width" => 6, "references" => "anhaenge"],
-             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 2, "opts" => ["title","sum-over-table-bottom"], "currency" => "€" ],
+             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 2, "opts" => ["title","sum-over-table-bottom"], "currency" => "€", "addToSum" => [ "geld.anhang.betrag" ] ],
              [ "id" => "geld.anhang.comment", "name" => "Hinweis",             "type" => "text",  "width" => 4, "opts" => ["title"] ],
            ],
          ],
@@ -84,7 +84,7 @@ $formulare["demo"]["v2"] = [
    "columns" => [
      [ "id" => "anhang.datei",        "name" => "Datei",                    "type" => "file",   "width" => 4, "opts" => ["title"] ],
      [ "id" => "anhang.beschreibung", "name" => "Beschreibung",             "type" => "text",   "width" => 4, "opts" => ["title"] ],
-     [ "id" => "anhang.invref",       "name" => "Verwendung",               "type" => "invref", "width" => 4 ],
+     [ "id" => "anhang.invref",       "name" => "Verwendung",               "type" => "invref", "width" => 4, "printSum" => [ "geld.anhang.betrag" ] ],
    ],
  ],
 
