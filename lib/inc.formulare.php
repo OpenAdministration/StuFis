@@ -444,8 +444,11 @@ function renderFormItemFile($meta, $ctrl) {
     $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"]);
   }
   $html = "";
-  if ($file)
+  $fileName = "";
+  if ($file) {
+    $fileName = $file["filename"];
     $html = getFileLink($file, $ctrl["_values"]);
+  }
   $ctrl["_render"]->displayValue = $html;
   $tPattern = newTemplatePattern($ctrl, $html);
 
@@ -454,7 +457,7 @@ function renderFormItemFile($meta, $ctrl) {
     echo $tPattern;
     echo "</div>";
   } elseif ($file) { // FIXME DELETE FILE FIXME REPLACE FILE FIXME RENAME FILE
-    echo "<div class=\"single-file-container\">";
+    echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\">";
     echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" value=\"delete\"/>";
     echo "&nbsp;";
     echo "<label for=\"".htmlspecialchars($ctrl["id"])."\">";

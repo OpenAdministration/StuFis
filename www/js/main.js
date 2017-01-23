@@ -86,7 +86,14 @@ $(document).ready(function() {
      'language': 'de',
      'theme': 'gly',
     };
-    var $finput = $(this).find(".single-file");
+    var $sfc = $(this);
+    if ($sfc.is("[display-text]")) {
+      var $td = $sfc.closest("td");
+      $td.data("display-text", $sfc.attr("display-text"));
+      $td.closest("tr").triggerHandler("row-changed");
+    }
+
+    var $finput = $sfc.find(".single-file");
     $finput.fileinput(cfg);
     $(this).attr("name", $finput.attr("name"));
     $finput.on("fileloaded.multi-file fileremoved.multi-file filecleared.multi-file init-display-text.multi-file", function() {
@@ -390,13 +397,21 @@ $(document).ready(function() {
     var $tbody = $table.children("tbody");
     var $tfoot = $table.children("tfoot");
     var tableId = $table.attr('orig-id');
-    $table.attr('dynamic-table-id-ctr', 0);
+
+    $tbody.children('tr:not(.new-table-row)').each(function (i, tr) {
+      var $tr = $(tr);
+      var trId = 'dynamic-table-row-'+$table.attr("id")+'-'+i;
+      $tr.attr('id', trId);
+      $tr.attr('dynamic-table-row-number', i);
+      initDynamicRow($tr, $table, tableId);
+    });
 
     var $tr = $tbody.children('tr.new-table-row').last();
 
     $tr.attr('dynamic-table-id', tableId);
 
     var numOldRows = $tbody.children("tr:not(.new-table-row)").length;
+    $table.attr('dynamic-table-id-ctr', numOldRows);
     $tr.attr('dynamic-table-row-number', numOldRows);
     $tr.triggerHandler("row-number-changed");
     $table.children(".store-row-count").val(numOldRows);
@@ -469,6 +484,12 @@ function onClickNewRow($tr, $table, tableId) {
 
   $ntr.find("*").each(function (i, e) { $(e).triggerHandler("cloned"); });
   $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-post"); });
+
+  initDynamicRow($tr, $table, tableId);
+}
+
+function initDynamicRow($tr, $table, tableId) {
+  var trId = $tr.attr('id');
 
   $tr.find("td.dynamic-table-column-title input").off("change.row-title");
   $tr.find("td.dynamic-table-column-title input").each(function (i, e) {
@@ -800,7 +821,7 @@ function updateInvRef(targetTableId, $sel, newRef) {
   });
 
 
-  if (newRef === false || newRef === "")
+  if (newRef === false || newRef === "" || newRef === null)
     return;
 
 //  var selValue = extractFieldName($table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]");
