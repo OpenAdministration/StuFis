@@ -348,6 +348,10 @@ switch($_REQUEST["tab"]) {
     $antrag = getAntrag();
     require "../template/antrag.tpl";
   break;
+  case "antrag.edit":
+    $antrag = getAntrag();
+    require "../template/antrag.edit.tpl";
+  break;
   case "antrag.create":
     require "../template/antrag.create.tpl";
   break;
