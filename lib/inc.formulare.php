@@ -271,6 +271,9 @@ function renderFormItemText($meta, $ctrl) {
 
   if (in_array("no-form", $ctrl["render"])) {
     echo "<div class=\"form-control\"";
+    if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+      echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+    }
     if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
       echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
     }
@@ -417,6 +420,9 @@ function renderFormItemMoney($meta, $ctrl) {
   echo "<div class=\"input-group\">";
   if (in_array("no-form", $ctrl["render"])) {
     echo "<div class=\"form-control text-right\"";
+    if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+      echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+    }
     if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
       echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
     }
@@ -862,7 +868,7 @@ function renderFormItemInvRef($meta,$ctrl) {
     foreach ($printSum as $psId) {
       if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
         $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-        unset($newMeta["addToSum"]);
+        $newMeta["addToSum"] = [ "invref-".$meta["id"]."-".$psId ];
         $newMeta["printSum"] = [ $psId ];
 
         $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "invref-has-printSum" ] ]);
@@ -876,12 +882,38 @@ function renderFormItemInvRef($meta,$ctrl) {
       } else {
         $myOut .= "    <td class=\"invref-has-printSum\">";
           $myOut .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
-        $myOut .= "    </td>\n"; /* Spalte: Quelle */
+        $myOut .= "    </td>\n";
       }
     }
 
     $myOut .= "    </tr>\n";
     $myOut .= "  </tbody>\n";
+    $myOut .= "  <tfoot>\n";
+    $myOut .= "    <tr>\n";
+    $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
+    foreach ($printSum as $psId) {
+      if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+        $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+        unset($newMeta["addToSum"]);
+        $newMeta["printSum"] = [ "invref-".$meta["id"]."-".$psId ];
+
+        $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "invref-has-printSum" ] ]);
+        $newCtrl["suffix"][] = "print-foot";
+        $newCtrl["suffix"][] = $meta["id"];
+        $newCtrl["render"][] = "no-form";
+        ob_start();
+        renderFormItem($newMeta, $newCtrl);
+        $myOut .= ob_get_contents();
+        ob_end_clean();
+      } else {
+        $myOut .= "    <td class=\"invref-has-printSum\">";
+          $myOut .= "    <div>no meta data for ".htmlspecialchars($psId)."</div>";
+        $myOut .= "    </td>\n"; /* Spalte: Quelle */
+      }
+    }
+
+    $myOut .= "    </tr>\n";
+    $myOut .= "  </tfoot>\n";
     $myOut .= "</table>\n";
     $out = str_replace($tPattern, $myOut, $out);
   };

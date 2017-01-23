@@ -257,31 +257,50 @@ $(document).ready(function() {
   $("*[data-printSum]").on("update-print-sum.compute", function(evt) {
     var $out = $(this);
     $out.empty();
-console.log("update print sum");
-console.log($out);
 		var printId = $out.attr("data-printSum");
 
     var $region = $out.data("print-sum-region-"+printId);
-console.log($region);
     if (!$region)
       $region = $out.data("print-sum-region");
-console.log($region);
     if (!$region)
       return;
-console.log("comptue");
 
     var sum = 0.00;
     $region.find("*[data-addToSum~=\""+printId+"\"]").each(function (k, e) {
-      var val = $(this).val();
+      var val;
+      var $e = $(this);
+      if ($e.is(":input")) {
+        val = $e.val();
+      } else {
+        val = $e.text();
+      }
       val = parseFloat(val);
       if (isNaN(val)) {
         val = 0;
       }
       sum += val;
     });
-console.log(sum);
     $out.text(sum.toFixed(2));
+    $out.triggerHandler("change");
   });
+  $("table.invref").off("update-invref-table.sum");
+  $("table.invref").on("update-invref-table.sum", function(evt) {
+    var $table = $(this);
+    var $tbody = $table.children("tbody");
+    var $tfoot = $table.children("tfoot");
+    if ($table.children("tbody").children("tr:not(.invref-template)").length == 0) {
+      $tfoot.hide();
+      return;
+    } else {
+      $tfoot.show();
+    }
+    $tfoot.children("tr").children("td.invref-has-printSum").find("*[data-printSum]").each(function (i, e) {
+      var $e = $(e);
+      $e.data("print-sum-region", $table);
+      $e.triggerHandler("update-print-sum");
+    });
+  });
+  $("table.invref").trigger("update-invref-table");
 
   $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
     var $e = $(e);
@@ -784,7 +803,13 @@ function getFormdataName(fieldname) {
 }
 
 function updateInvRef(targetTableId, $sel, newRef) {
-  $("tr[invref-sel-id="+ $sel.attr("id")).remove();
+  $("tr[invref-sel-id="+ $sel.attr("id")).each(function (i,tr) {
+    var $tr = $(tr);
+    var $table = $tr.closest("table");
+    $tr.remove();
+    $table.triggerHandler("update-invref-table");
+  });
+
 
   if (newRef === false || newRef === "")
     return;
@@ -817,13 +842,12 @@ function updateInvRef(targetTableId, $sel, newRef) {
 
   $ntr.attr("invref-sel-id", $sel.attr("id"));
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
-  console.log("trigger update print sum");
   $ntr.children("td.invref-has-printSum").find("*[data-printSum]").each(function (i, e) {
     var $e = $(e);
-    console.log($e);
     $e.data("print-sum-region", $selTr);
     $e.triggerHandler("update-print-sum");
   });
-  console.log("trigger update print sum done");
+
+  $invrefTable.triggerHandler("update-invref-table");
 
 }
