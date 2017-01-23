@@ -727,7 +727,7 @@ function renderFormItemTable($meta, $ctrl) {
   $withRowNumber = in_array("with-row-number", $meta["opts"]);
   $noForm = in_array("no-form", $ctrl["render"]);
 
-  $cls = ["table", "table-striped"];
+  $cls = ["table", "table-striped", "summing-table"];
   if (!$noForm)
     $cls[] = "dynamic-table";
 
@@ -753,6 +753,7 @@ function renderFormItemTable($meta, $ctrl) {
     $ctrl["_render"]->parentMap[getFormName($ctrl["name"])] = $myParent;
   $ctrl["_render"]->currentParent = getFormName($ctrl["name"]);
 
+  $hasPrintSumFooter = false;
 
 ?>
 
@@ -786,7 +787,7 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
     <tbody>
 <?php
-     $columnSums = [];
+     $addToSumValueBeforeTable = $ctrl["_render"]->addToSumValue;
      for ($rowNumber = 0; $rowNumber < $rowCount; $rowNumber++) {
        $cls = ["dynamic-table-row"];
        if (!$noForm)
@@ -799,7 +800,7 @@ function renderFormItemTable($meta, $ctrl) {
        $ctrl["_render"]->inputValue = false;
        $ctrl["_render"]->displayValue = false;
        $ctrl["_render"]->currentParentRow = $rowNumber;
-       $addToSumValueBefore = $ctrl["_render"]->addToSumValue;
+       $addToSumValueBeforeRow = $ctrl["_render"]->addToSumValue;
        $rowTxt = [];
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
@@ -821,6 +822,12 @@ function renderFormItemTable($meta, $ctrl) {
             $tdClass[] = "dynamic-table-column-title";
           else
             $tdClass[] = "dynamic-table-column-no-title";
+          if (in_array("sum-over-table-bottom", $col["opts"])) {
+            $col["addToSum"][] = "col-sum-".$meta["id"]."-".$i;
+            $hasPrintSumFooter |= true;
+          }
+          if (!empty($col["printSumFooter"]))
+            $hasPrintSumFooter |= true;
 
           $newCtrl = ["wrapper"=> "td", "suffix" => $newSuffix, "class" => $tdClass ];
           if ($noForm)
@@ -830,13 +837,6 @@ function renderFormItemTable($meta, $ctrl) {
 
           if (in_array("title", $col["opts"]))
             $rowTxt[] = $ctrl["_render"]->displayValue;
-
-          if (in_array("sum-over-table-bottom", $col["opts"])) {
-            if (!isset($columnSums[$i]))
-              $columnSums[$i] = floatval("0");
-            if ($noForm && $ctrl["_render"]->inputValue !== false)
-              $columnSums[$i] += floatval($ctrl["_render"]->inputValue);
-          }
         }
 
         $refname = getFormName($ctrl["name"]);
@@ -844,8 +844,8 @@ function renderFormItemTable($meta, $ctrl) {
 
         $addToSumDifference = [];
         foreach($ctrl["_render"]->addToSumValue as $addToSumId => $sum) {
-          if (isset($addToSumValueBefore[$addToSumId]))
-            $before = $addToSumValueBefore[$addToSumId];
+          if (isset($addToSumValueBeforeRow[$addToSumId]))
+            $before = $addToSumValueBeforeRow[$addToSumId];
           else
             $before = 0.00;
           $addToSumDifference[$addToSumId] = $sum - $before;
@@ -859,7 +859,15 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
     </tbody>
 <?php
-    if (count($columnSums) > 0) {
+    if ($hasPrintSumFooter) {
+        $addToSumDifference = [];
+        foreach($ctrl["_render"]->addToSumValue as $addToSumId => $sum) {
+          if (isset($addToSumValueBeforeTable[$addToSumId]))
+            $before = $addToSumValueBeforeTable[$addToSumId];
+          else
+            $before = 0.00;
+          $addToSumDifference[$addToSumId] = $sum - $before;
+        }
 ?>
     <tfoot>
       <tr>
@@ -872,17 +880,40 @@ function renderFormItemTable($meta, $ctrl) {
 <?php
         foreach ($meta["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
+          if (in_array("sum-over-table-bottom", $col["opts"])) {
+            $col["printSumFooter"][] = "col-sum-".$meta["id"]."-".$i;
+          }
+          if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0) {
+?>
+        <th class="cell-has-printSum">
+<?php
+            foreach ($col["printSumFooter"] as $psId) {
+              if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+                $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+              } else {
+                $newMeta = $col;
+              }
+              unset($newMeta["addToSum"]);
+              if (isset($addToSumDifference[$psId]))
+                $value = $addToSumDifference[$psId];
+              else
+                $value = 0.00;
+              $value = number_format($value, 2, ".", "");
+              $newMeta["value"] = $value;
+              $newMeta["opts"][] = "is-sum";
+              $newMeta["printSum"] = [ $psId ];
+
+              $newCtrl = $ctrl;
+              $newCtrl["suffix"][] = "print-foot";
+              $newCtrl["suffix"][] = $meta["id"];
+              $newCtrl["render"][] = "no-form";
+              unset($newCtrl["_values"]);
+              renderFormItem($newMeta, $newCtrl);
+            }
+          } else {
 ?>
         <th>
 <?php
-          if (in_array("sum-over-table-bottom", $col["opts"])) {
-            $value = $columnSums[$i];
-            $value = number_format($value, 2, ".", "");
-            echo "<div class=\"input-group\">";
-            echo "<span class=\"input-group-addon\">Σ</span>";
-            echo "<div class=\"column-sum text-right form-control\" data-col-id=\"{$ctrl["id"]}-col-$i\">$value</div>";
-            echo "<span class=\"input-group-addon\">".htmlspecialchars($col["currency"])."</span>";
-            echo "</div>";
           }
 ?>
         </th>
@@ -915,7 +946,7 @@ function renderFormItemInvRef($meta,$ctrl) {
     else
       $printSum = [];
 
-    $myOut = "<table class=\"table table-striped invref\">\n";
+    $myOut = "<table class=\"table table-striped invref summing-table\">\n";
     $myOut .= "  <tbody>\n";
 
     if ($noForm) {
@@ -946,7 +977,7 @@ function renderFormItemInvRef($meta,$ctrl) {
               $columnSum[ $psId ] = 0.00;
             $columnSum[ $psId ] += (float) $value;
 
-            $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "invref-has-printSum" ] ]);
+            $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
             $newCtrl["suffix"][] = "print";
             $newCtrl["suffix"][] = $meta["id"];
             $newCtrl["render"][] = "no-form";
@@ -956,7 +987,7 @@ function renderFormItemInvRef($meta,$ctrl) {
             $myOut .= ob_get_contents();
             ob_end_clean();
           } else {
-            $myOut .= "    <td class=\"invref-has-printSum\">";
+            $myOut .= "    <td class=\"cell-has-printSum\">";
             $myOut .= "      <div data-printSum=\"".htmlspecialchars($psId)."\">".htmlspecialchars($value)."</div>";
             $myOut .= "    </td>\n";
           }
@@ -964,7 +995,7 @@ function renderFormItemInvRef($meta,$ctrl) {
         $myOut .= "    </tr>\n";
       }
     } else {
-      $myOut .= "    <tr class=\"invref-template\">\n";
+      $myOut .= "    <tr class=\"invref-template summing-skip\">\n";
       $myOut .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
 
       foreach ($printSum as $psId) {
@@ -973,7 +1004,7 @@ function renderFormItemInvRef($meta,$ctrl) {
           $newMeta["addToSum"] = [ "invref-".$meta["id"]."-".$psId ];
           $newMeta["printSum"] = [ $psId ];
 
-          $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "invref-has-printSum" ] ]);
+          $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
           $newCtrl["suffix"][] = "print";
           $newCtrl["suffix"][] = $meta["id"];
           $newCtrl["render"][] = "no-form";
@@ -983,7 +1014,7 @@ function renderFormItemInvRef($meta,$ctrl) {
           $myOut .= ob_get_contents();
           ob_end_clean();
         } else {
-          $myOut .= "    <td class=\"invref-has-printSum\">";
+          $myOut .= "    <td class=\"cell-has-printSum\">";
             $myOut .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
           $myOut .= "    </td>\n";
         }
@@ -1006,7 +1037,7 @@ function renderFormItemInvRef($meta,$ctrl) {
         $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
         $newMeta["opts"][] = "is-sum";
 
-        $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "invref-has-printSum" ] ]);
+        $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "cell-has-printSum" ] ]);
         $newCtrl["suffix"][] = "print-foot";
         $newCtrl["suffix"][] = $meta["id"];
         $newCtrl["render"][] = "no-form";
@@ -1016,8 +1047,8 @@ function renderFormItemInvRef($meta,$ctrl) {
         $myOut .= ob_get_contents();
         ob_end_clean();
       } else {
-        $myOut .= "    <td class=\"invref-has-printSum\">";
-          $myOut .= "    <div>no meta data for ".htmlspecialchars($psId)."</div>";
+        $myOut .= "    <td class=\"cell-has-printSum\">";
+          $myOut .= "    <div printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
         $myOut .= "    </td>\n"; /* Spalte: Quelle */
       }
     }

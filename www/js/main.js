@@ -247,6 +247,12 @@ $(document).ready(function() {
     d.uploadFileAttr = $(this).attr("name");
   });
   $("*[data-addToSum]").on("change.compute", function(evt) {
+    var $i = $(this);
+    if ($i.is(":input")) {
+      var val = $i.val();
+      val = parseFloat(val);
+      $i.val(val.toFixed(2));
+    }
 		var ids = $(this).attr("data-addToSum").split(" ");
     for (j = 0; j < ids.length; j++) {
       $("*[data-printSum~=\""+ ids[j] + "\"]").each(function (i, e) {
@@ -256,16 +262,13 @@ $(document).ready(function() {
   });
   $("*[data-printSum]").on("update-print-sum.compute", function(evt) {
     var $out = $(this);
-    $out.empty();
-		var printId = $out.attr("data-printSum");
 
-    var $region = $out.data("print-sum-region-"+printId);
-    if (!$region)
-      $region = $out.data("print-sum-region");
+    $region = $out.data("print-sum-region");
     if (!$region)
       return;
 
     var sum = 0.00;
+		var printId = $out.attr("data-printSum");
     $region.find("*[data-addToSum~=\""+printId+"\"]").each(function (k, e) {
       var val;
       var $e = $(this);
@@ -283,24 +286,24 @@ $(document).ready(function() {
     $out.text(sum.toFixed(2));
     $out.triggerHandler("change");
   });
-  $("table.invref").off("update-invref-table.sum");
-  $("table.invref").on("update-invref-table.sum", function(evt) {
+  $("table.summing-table").off("update-summing-table.sum");
+  $("table.summing-table").on("update-summing-table.sum", function(evt) {
     var $table = $(this);
     var $tbody = $table.children("tbody");
     var $tfoot = $table.children("tfoot");
-    if ($table.children("tbody").children("tr:not(.invref-template)").length == 0) {
+    if ($table.children("tbody").children("tr:not(.summing-skip)").length == 0) {
       $tfoot.hide();
       return;
     } else {
       $tfoot.show();
     }
-    $tfoot.children("tr").children("td.invref-has-printSum").find("*[data-printSum]").each(function (i, e) {
+    $tfoot.children("tr").children(".cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
       var $e = $(e);
       $e.data("print-sum-region", $table);
       $e.triggerHandler("update-print-sum");
     });
   });
-  $("table.invref").trigger("update-invref-table");
+  $("table.summing-table").trigger("update-summing-table");
 
   $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
     var $e = $(e);
@@ -386,25 +389,6 @@ $(document).ready(function() {
     var tableId = $table.attr('orig-id');
     $table.attr('dynamic-table-id-ctr', 0);
 
-    $tfoot.find('.column-sum').each(function (i, e) {
-      var $e = $(e);
-      var colId = $e.data('col-id');
-      $e.addClass(colId);
-      $tbody.children('tr').children('.'+colId).find('input[name^=formdata]').each(function() {
-        $(this).on('change.column-sum', null, colId, function (evt) {
-          var val = $(this).val();
-          val = parseFloat(val);
-          if (isNaN(val)) {
-            val = 0;
-          }
-          $(this).val(val.toFixed(2));
-          updateColumnSum(evt.data, $(this).closest(".dynamic-table"));
-        });
-        $(this).trigger('change');
-      });
-      updateColumnSum(colId, $table);
-    });
-
     var $tr = $tbody.children('tr.new-table-row').last();
 
     $tr.attr('dynamic-table-id', tableId);
@@ -439,11 +423,7 @@ $(document).ready(function() {
           $tr.triggerHandler("row-number-changed");
         });
         $table.children(".store-row-count").val($tbody.children("tr:not(.new-table-row)").length);
-        $tfoot.find('.column-sum').each(function (i, e) {
-          var $e = $(e);
-          var colId = $e.data('col-id');
-          updateColumnSum(colId, $table);
-        });
+        $table.triggerHandler("update-summing-table.sum");
         return false;
       });
     /*  */
@@ -619,15 +599,6 @@ function getTrText($tr) {
 
 }
 
-
-function updateColumnSum(colId, $table) {
-  var $e = $table.children("tfoot").find('.column-sum.'+colId);
-  var sum = 0;
-  $table.find('.'+colId+' input[name^=formdata]').each(function() {
-    sum += parseFloat($(this).val());
-  });
-  $e.text(sum.toFixed(2));
-}
 
 //moment.locale('de');
 
@@ -836,13 +807,14 @@ function updateInvRef(targetTableId, $sel, newRef) {
   var $ntr = $templateRow.clone(true);
 
   $ntr.removeClass("invref-template");
+  $ntr.removeClass("summing-skip");
   $ntr.insertBefore($templateRow);
 
   $selTr = $sel.closest("tr.dynamic-table-row");
 
   $ntr.attr("invref-sel-id", $sel.attr("id"));
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
-  $ntr.children("td.invref-has-printSum").find("*[data-printSum]").each(function (i, e) {
+  $ntr.children("td.cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
     var $e = $(e);
     $e.data("print-sum-region", $selTr);
     $e.triggerHandler("update-print-sum");
