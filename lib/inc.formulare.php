@@ -103,7 +103,7 @@ function renderForm($meta, $ctrl = false) {
   ob_end_clean();
 
   foreach($ctrl["_render"]->postHooks as $hook) {
-    $hook($ctrl);
+    $hook($ctrl, $txt);
   }
 
   $txt = str_replace(array_keys($ctrl["_render"]->templates), array_values($ctrl["_render"]->templates), $txt);
@@ -210,7 +210,7 @@ function renderFormItem($meta,$ctrl = false) {
   $txt = ob_get_contents();
   ob_end_clean();
 
-  echo "<$wrapper class=\"".implode(" ", $classes)."\">";
+  echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\">";
 
   if ($isEmpty !== false) {
     echo "<div class=\"".join(" ", $cls)."\">";
@@ -473,7 +473,7 @@ function renderFormItemSelect($meta, $ctrl) {
       echo $tPattern;
       echo "</div>";
       $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}");
-      $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
+      $ctrl["_render"]->postHooks[] = function($ctrl, &$out) use ($tPattern, $value) {
         $matches = [];
         $origValue = $value;
 
@@ -749,9 +749,6 @@ function renderFormItemTable($meta, $ctrl) {
           else
             $tdClass[] = "dynamic-table-column-no-title";
 
-          if ($col["type"] == "invref")
-            $tdClass[] = "dynamic-table-invref";
-
           $newCtrl = ["wrapper"=> "td", "suffix" => $newSuffix, "class" => $tdClass ];
           if ($noForm)
             $ctrl["_render"]->displayValue = false;
@@ -824,5 +821,27 @@ function renderFormItemTable($meta, $ctrl) {
 
 function renderFormItemInvRef($meta,$ctrl) {
   // FIXME no-form case
-  echo "<div class=\"invref\"></div>";
+  $tPattern = "<{invref:".uniqid()."}/>";
+  echo $tPattern;
+  $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
+  $ctrl["_render"]->postHooks[] = function($ctrl, &$out) use ($tPattern, $meta) {
+    if (isset($meta["printSum"]))
+      $printSum = $meta["printSum"];
+    else
+      $printSum = [];
+
+    $myOut = "<table class=\"table table-striped invref\">\n";
+    $myOut .= "  <tbody>\n";
+    $myOut .= "    <tr class=\"invref-template\">\n";
+    $myOut .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
+
+    foreach ($printSum as $printSumId) {
+      $myOut .= "      <td data-printSum=\"".htmlspecialchars($printSumId)."\"></td>\n"; /* Spalte: Quelle */
+    }
+
+    $myOut .= "    </tr>\n";
+    $myOut .= "  </tbody>\n";
+    $myOut .= "</table>\n";
+    $out = str_replace($tPattern, $myOut, $out);
+  };
 }

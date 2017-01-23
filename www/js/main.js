@@ -33,14 +33,14 @@ $(document).ready(function() {
         $(this).find("select.selectpicker[data-references]").each(function (i, sel) {
           var $sel = $(sel);
           var targetTableId = $sel.attr("data-references");
-          updateInvRef(targetTableId, $sel.attr("id"), false);
+          updateInvRef(targetTableId, $sel, false);
         });
       });
 
       $fselect.off("change.ref-field-inv");
       $fselect.on("change.ref-field-inv",function (e) {
         var targetTableId = $fselect.attr("data-references");
-        updateInvRef(targetTableId, $fselect.attr("id"), $(this).selectpicker('val'));
+        updateInvRef(targetTableId, $fselect, $(this).selectpicker('val'));
       });
     }
     var isOpen = $fselect.is(".select-picker-open");
@@ -478,34 +478,7 @@ function onClickNewRow($tr, $table, tableId) {
       var $table = $tr.closest("table");
       var rowIdx = $tr.attr('dynamic-table-row-number');
       var newValue = extractFieldName( $table.attr("name") + "["+rowIdx+"]" );
-      var trText = "";
-
-      var trList = [ $tr ];
-      $table.parents("tr[dynamic-table-row-number]").each(function (i, tr) {
-        trList.unshift($(tr));
-      });
-
-      $.each( trList, function (i, $ptr) {
-        if (trText.length > 0)
-          trText = trText + " ";
-
-        var rowNumber = $ptr.attr('dynamic-table-row-number');
-        rowNumber++;
-        trText = trText + "["+rowNumber+"]";
-
-        $ptr.children("td.dynamic-table-column-title").each(function (j, td) {
-          var $td = $(td);
-          if (i > 0) {
-            trText = trText + ",";
-          }
-          trText = trText + " ";
-          var txt = $td.data("display-text");
-          if (txt == null) {
-            txt = $td.text();
-          }
-          trText = trText + txt;
-        });
-      });
+      var trText = getTrText($tr);
 
       $opts.each(function(i, opt) {
         var $opt = $(opt);
@@ -536,6 +509,42 @@ function onClickNewRow($tr, $table, tableId) {
   });
 
 }
+
+function getTrText($tr) {
+  var $table = $tr.closest("table.dynamic-table");
+
+  var trList = [ $tr ];
+  $table.parents("tr[dynamic-table-row-number]").each(function (i, tr) {
+    trList.unshift($(tr));
+  });
+
+  var trText = "";
+  $.each( trList, function (i, $ptr) {
+    if (trText.length > 0)
+      trText = trText + " ";
+
+    var rowNumber = $ptr.attr('dynamic-table-row-number');
+    rowNumber++;
+    trText = trText + "["+rowNumber+"]";
+
+    $ptr.children("td.dynamic-table-column-title").each(function (j, td) {
+      var $td = $(td);
+      if (j > 0) {
+        trText = trText + ",";
+      }
+      trText = trText + " ";
+      var txt = $td.data("display-text");
+      if (txt == null) {
+        txt = $td.text();
+      }
+      trText = trText + txt;
+    });
+  });
+
+  return trText;
+
+}
+
 
 function updateColumnSum(colId, $table) {
   var $e = $table.children("tfoot").find('.column-sum.'+colId);
@@ -719,7 +728,7 @@ function getFormdataName(fieldname) {
   return name;
 }
 
-function updateInvRef(targetTableId, selId, newRef) {
+function updateInvRef(targetTableId, $sel, newRef) {
 
   if (newRef === false || newRef === "")
     return;
@@ -740,15 +749,26 @@ function updateInvRef(targetTableId, selId, newRef) {
     return;
   }
   var $tr = $table.children("tbody").children("tr[dynamic-table-row-number]").filter(function() { return $(this).attr("dynamic-table-row-number") == rowNumber; });
-  var $td = $tr.children("td.dynamic-table-invref");
+  var $invrefTable = $tr.children("td[data-formItemType=invref]").find("table.invref");
 
-  console.log($td);
+  var $templateRow = $invrefTable.children("tbody").children("tr.invref-template");
+  var $ntr = $templateRow.clone();
+
+  $ntr.removeClass("invref-template");
+  $ntr.insertBefore($templateRow);
+
+  $selTr = $sel.closest("tr.dynamic-table-row");
+
+  $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
+
+  console.log("updateInvRef");
+  console.log($invrefTable);
   console.log($tr);
   console.log($table);
   console.log(tableName);
   console.log(rowNumber);
   console.log(targetTableId);
-  console.log(selId);
+  console.log($sel);
   console.log(newRef);
 
 }

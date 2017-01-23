@@ -41,4 +41,11 @@ pre {
 
 .form-group.has-error > .select-picker-container > .btn-group.bootstrap-select > .btn.btn-default {
   border-color: #a94442;
+}
+
+/* invref */
+
+table.invref > tbody > tr.invref-remplate {
+  display: none;
+}
 

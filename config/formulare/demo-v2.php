@@ -33,7 +33,7 @@ $formulare["demo"]["v2"] = [
    "width" => 12,
    "rowCountField" => "numgrp",
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, "opts" => ["title"] ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [
@@ -49,7 +49,7 @@ $formulare["demo"]["v2"] = [
            "name" => "Nachweise",
            "columns" => [
              [ "id" => "geld.anhang.file",    "name" => "Anhänge",             "type" => "ref",   "width" => 6, "references" => "anhaenge"],
-             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 2, "opts" => ["title","sum-over-table-bottom"], "currency" => "€", "addToSum" => [ "geld.anhang.betrag" ] ],
+             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 2, "opts" => ["sum-over-table-bottom"], "currency" => "€", "addToSum" => [ "geld.anhang.betrag" ] ],
              [ "id" => "geld.anhang.comment", "name" => "Hinweis",             "type" => "text",  "width" => 4, "opts" => ["title"] ],
            ],
          ],
