@@ -19,6 +19,9 @@ $(document).ready(function() {
     };
     var $fselect = $(this).find(".selectpicker");
     $fselect.selectpicker(cfg);
+    if ($fselect.data("value") !== null) {
+      $fselect.selectpicker('val', $fselect.data("value"));
+    }
     $fselect.on("show.bs.select",function (e) {
       $fselect.addClass("select-picker-open");
       setTimeout(function() { $fselect.triggerHandler("focus"); }, 1);
@@ -393,11 +396,12 @@ $(document).ready(function() {
 
     $tr.attr('dynamic-table-id', tableId);
 
-    $tr.attr('dynamic-table-row-number', 0);
+    var numOldRows = $tbody.children("tr:not(.new-table-row)").length;
+    $tr.attr('dynamic-table-row-number', numOldRows);
     $tr.triggerHandler("row-number-changed");
-    $table.children(".store-row-count").val($tbody.children("tr:not(.new-table-row)").length);
+    $table.children(".store-row-count").val(numOldRows);
 
-    $tr.attr('id-suffix', '-0');
+    $tr.attr('id-suffix', '-' + numOldRows);
     $tr.find("*[id]").each(function(i,e) {
       $(this).triggerHandler("id-suffix-changed");
     });
@@ -510,9 +514,23 @@ function onClickNewRow($tr, $table, tableId) {
       $opts.each(function(i, opt) {
         var $opt = $(opt);
         var $sel = $opt.closest("select");
+        var selValue;
+        if ($sel.is(".selectpicker")) {
+          selValue = $sel.selectpicker("val");
+        } else {
+          selValue = $sel.val();
+        }
+        var wasSelected = ($opt.attr("value") == selValue);
         $opt.remove();
         if ($sel.is(".selectpicker")) {
           $sel.selectpicker("refresh");
+        }
+        if (wasSelected) {
+          if ($sel.is(".selectpicker")) {
+            $sel.selectpicker("val", null);
+          } else {
+            $sel.val("");
+          }
         }
       });
     });
