@@ -42,6 +42,24 @@ $(document).ready(function() {
         var targetTableId = $fselect.attr("data-references");
         updateInvRef(targetTableId, $fselect, $(this).selectpicker('val'));
       });
+
+      $fselect.parents("tr").off("row-changed.ref-field-cascade row-number-changed.ref-field-cascade");
+      $fselect.parents("tr").on("row-changed.ref-field-cascade row-number-changed.ref-field-cascade", function(evt) {
+        var $tr = $(this);
+        $tr.find("tr").each(function (i, tr) {
+          $(tr).triggerHandler("row-changed");
+        });
+       });
+
+      $fselect.parents("tr").first().off("row-changed.ref-field-inv");
+      $fselect.parents("tr").first().on("row-changed.ref-field-inv", function(evt) {
+        var $tr = $(this);
+        $tr.find("select.selectpicker[data-references]").each(function (i, sel) {
+          var $sel = $(sel);
+          var targetTableId = $sel.attr("data-references");
+          updateInvRef(targetTableId, $sel, $(this).selectpicker('val'));
+        });
+      });
     }
     var isOpen = $fselect.is(".select-picker-open");
     if (isOpen) {
@@ -227,6 +245,42 @@ $(document).ready(function() {
     var d = $(this).data('fileinput');
     if (!d) return;
     d.uploadFileAttr = $(this).attr("name");
+  });
+  $("*[data-addToSum]").on("change.compute", function(evt) {
+		var ids = $(this).attr("data-addToSum").split(" ");
+    for (j = 0; j < ids.length; j++) {
+      $("*[data-printSum~=\""+ ids[j] + "\"]").each(function (i, e) {
+        $(e).triggerHandler("update-print-sum");
+      });
+    }
+  });
+  $("*[data-printSum]").on("update-print-sum.compute", function(evt) {
+    var $out = $(this);
+    $out.empty();
+console.log("update print sum");
+console.log($out);
+		var printId = $out.attr("data-printSum");
+
+    var $region = $out.data("print-sum-region-"+printId);
+console.log($region);
+    if (!$region)
+      $region = $out.data("print-sum-region");
+console.log($region);
+    if (!$region)
+      return;
+console.log("comptue");
+
+    var sum = 0.00;
+    $region.find("*[data-addToSum~=\""+printId+"\"]").each(function (k, e) {
+      var val = $(this).val();
+      val = parseFloat(val);
+      if (isNaN(val)) {
+        val = 0;
+      }
+      sum += val;
+    });
+console.log(sum);
+    $out.text(sum.toFixed(2));
   });
 
   $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
@@ -464,7 +518,8 @@ function onClickNewRow($tr, $table, tableId) {
       });
     });
 
-    $tr.parents("tr").on("row-changed.ref-field-extra row-number-changed.ref-field-extra", function(evt) {
+    $tr.parents("tr").off("row-changed.ref-field-cascade row-number-changed.ref-field-cascade");
+    $tr.parents("tr").on("row-changed.ref-field-cascade row-number-changed.ref-field-cascade", function(evt) {
       var $tr = $(this);
       $tr.find("tr").each(function (i, tr) {
         $(tr).triggerHandler("row-changed");
@@ -729,6 +784,7 @@ function getFormdataName(fieldname) {
 }
 
 function updateInvRef(targetTableId, $sel, newRef) {
+  $("tr[invref-sel-id="+ $sel.attr("id")).remove();
 
   if (newRef === false || newRef === "")
     return;
@@ -752,23 +808,22 @@ function updateInvRef(targetTableId, $sel, newRef) {
   var $invrefTable = $tr.children("td[data-formItemType=invref]").find("table.invref");
 
   var $templateRow = $invrefTable.children("tbody").children("tr.invref-template");
-  var $ntr = $templateRow.clone();
+  var $ntr = $templateRow.clone(true);
 
   $ntr.removeClass("invref-template");
   $ntr.insertBefore($templateRow);
 
   $selTr = $sel.closest("tr.dynamic-table-row");
 
+  $ntr.attr("invref-sel-id", $sel.attr("id"));
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
-
-  console.log("updateInvRef");
-  console.log($invrefTable);
-  console.log($tr);
-  console.log($table);
-  console.log(tableName);
-  console.log(rowNumber);
-  console.log(targetTableId);
-  console.log($sel);
-  console.log(newRef);
+  console.log("trigger update print sum");
+  $ntr.children("td.invref-has-printSum").find("*[data-printSum]").each(function (i, e) {
+    var $e = $(e);
+    console.log($e);
+    $e.data("print-sum-region", $selTr);
+    $e.triggerHandler("update-print-sum");
+  });
+  console.log("trigger update print sum done");
 
 }

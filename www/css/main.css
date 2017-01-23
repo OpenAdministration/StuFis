@@ -45,7 +45,7 @@ pre {
 
 /* invref */
 
-table.invref > tbody > tr.invref-remplate {
+table.invref > tbody > tr.invref-template {
   display: none;
 }
 

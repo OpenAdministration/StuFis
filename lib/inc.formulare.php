@@ -270,7 +270,11 @@ function renderFormItemText($meta, $ctrl) {
   global $nonce, $URIBASE;
 
   if (in_array("no-form", $ctrl["render"])) {
-    echo "<div class=\"form-control\">";
+    echo "<div class=\"form-control\"";
+    if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+      echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+    }
+    echo ">";
     $value = "";
     if (isset($ctrl["_values"])) {
       $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -301,6 +305,9 @@ function renderFormItemText($meta, $ctrl) {
   if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
     echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
   }
+  if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+    echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+  }
   if (isset($meta["placeholder"]))
     echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
   if (in_array("required", $meta["opts"]))
@@ -327,6 +334,11 @@ function renderFormItemText($meta, $ctrl) {
   echo "/>";
   if (in_array("hasFeedback", $meta["opts"]))
     echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
+  if (isset($meta["addToSum"])) {
+    foreach ($meta["addToSum"] as $addToSumId) {
+      $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+    }
+  }
 }
 
 function getFileLink($file, $antrag) {
@@ -404,7 +416,11 @@ function renderFormItemMultiFile($meta, $ctrl) {
 function renderFormItemMoney($meta, $ctrl) {
   echo "<div class=\"input-group\">";
   if (in_array("no-form", $ctrl["render"])) {
-    echo "<div class=\"form-control text-right\">";
+    echo "<div class=\"form-control text-right\"";
+    if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+      echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+    }
+    echo ">";
     $value = "";
     if (isset($ctrl["_values"])) {
       $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -426,7 +442,15 @@ function renderFormItemMoney($meta, $ctrl) {
     if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
       echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
     }
+    if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+      echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+    }
     echo "/>";
+    if (isset($meta["addToSum"])) {
+      foreach ($meta["addToSum"] as $addToSumId) {
+        $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+      }
+    }
   }
   echo "<span class=\"input-group-addon\">".htmlspecialchars($meta["currency"])."</span>";
   echo "</div>";
@@ -835,8 +859,25 @@ function renderFormItemInvRef($meta,$ctrl) {
     $myOut .= "    <tr class=\"invref-template\">\n";
     $myOut .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
 
-    foreach ($printSum as $printSumId) {
-      $myOut .= "      <td data-printSum=\"".htmlspecialchars($printSumId)."\"></td>\n"; /* Spalte: Quelle */
+    foreach ($printSum as $psId) {
+      if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+        $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+        unset($newMeta["addToSum"]);
+        $newMeta["printSum"] = [ $psId ];
+
+        $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "invref-has-printSum" ] ]);
+        $newCtrl["suffix"][] = "print";
+        $newCtrl["suffix"][] = $meta["id"];
+        $newCtrl["render"][] = "no-form";
+        ob_start();
+        renderFormItem($newMeta, $newCtrl);
+        $myOut .= ob_get_contents();
+        ob_end_clean();
+      } else {
+        $myOut .= "    <td class=\"invref-has-printSum\">";
+          $myOut .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
+        $myOut .= "    </td>\n"; /* Spalte: Quelle */
+      }
     }
 
     $myOut .= "    </tr>\n";
