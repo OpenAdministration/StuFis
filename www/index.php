@@ -339,6 +339,12 @@ switch($_REQUEST["tab"]) {
     }
 
     exit;
+  case "antrag.print":
+    require "../template/header-print.tpl";
+    $antrag = getAntrag();
+    require "../template/antrag.tpl";
+    require "../template/footer-print.tpl";
+    exit;
 }
 
 require "../template/header.tpl";

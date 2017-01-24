@@ -163,6 +163,8 @@ function renderFormItem($meta,$ctrl = false) {
   $cls = ["form-group"];
   if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
 
+  $noForm = in_array("no-form", $ctrl["render"]);
+
   ob_start();
   switch ($meta["type"]) {
     case "h1":
@@ -222,7 +224,8 @@ function renderFormItem($meta,$ctrl = false) {
 
   if ($isEmpty !== false) {
     echo "<div class=\"".join(" ", $cls)."\">";
-    echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
+    if (!$noForm)
+      echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
 
     if (isset($meta["title"]) && isset($meta["id"]))
       echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($meta["title"])."</label>";
@@ -780,8 +783,10 @@ function renderFormItemTable($meta, $ctrl) {
   <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
 
 <?php
-  echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" class=\"store-row-count\"/>";
-  echo "<input type=\"hidden\" value=\"".htmlspecialchars($meta["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
+  if (!$noForm) {
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" class=\"store-row-count\"/>";
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($meta["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
+  }
 
   if (in_array("with-headline", $meta["opts"])) {
 

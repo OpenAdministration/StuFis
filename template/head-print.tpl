@@ -1,6 +1,5 @@
             <meta charset="utf-8">
 
-<?php include "head-script.tpl"; ?>
 <?php include "head-css.tpl"; ?>
 
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
