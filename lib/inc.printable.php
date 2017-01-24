@@ -21,7 +21,7 @@ function loadCSS($fileName) {
     }
     $data = file_get_contents($file);
     $mime = mime_content_type($file);
-    return "data:{$mime};charset=utf-8;base64,".base64_encode($data);
+    return "url(data:{$mime};charset=utf-8;base64,".base64_encode($data).")";
   }, $css);
 
   $out .= $css;
