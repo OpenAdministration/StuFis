@@ -531,9 +531,11 @@ function getTrText($trName, $ctrl) {
   $matches = [];
   $origValue = $trName;
 
+  if ($trName == "")
+    return "";
+
   if (!preg_match('/^(.*)\[([0-9]+)\]$/', $trName, $matches)) {
-    $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("miss row idx: ".$trName);
-    return false;
+    return newTemplatePattern($ctrl, htmlspecialchars("miss row idx: ".$trName));
   }
 
   $currentTable = $matches[1];
@@ -586,9 +588,6 @@ function renderFormItemSelect($meta, $ctrl) {
       }
       $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
         $txtTr = getTrText($value, $ctrl);
-        if ($txtTr === false)
-          return;
-
         $ctrl["_render"]->templates[$tPattern] = processTemplates($txtTr, $ctrl); // rowTxt is from displayValue and thus already escaped
       };
     } else {
@@ -809,7 +808,12 @@ function renderFormItemTable($meta, $ctrl) {
     <tbody>
 <?php
      $addToSumValueBeforeTable = $ctrl["_render"]->addToSumValue;
-     for ($rowNumber = 0; $rowNumber <= $rowCount; $rowNumber++) { # this prints $rowCount +1 rows --> extra template row
+     if (!$noForm)
+       $rowCountPrint = $rowCount+1;
+     else
+       $rowCountPrint = $rowCount;
+
+     for ($rowNumber = 0; $rowNumber < $rowCountPrint; $rowNumber++) { # this prints $rowCount +1 rows --> extra template row
        $cls = ["dynamic-table-row"];
        if ($rowNumber == $rowCount)
          $cls[] = "new-table-row";
@@ -978,8 +982,6 @@ function renderFormItemInvRef($meta,$ctrl) {
 
       foreach ($referencingMe as $referencingRow) {
         $txtTr = getTrText($referencingRow, $ctrl);
-        if ($txtTr === false)
-          return;
 
         $myOut .= "    <tr>\n";
         $myOut .= "      <td class=\"invref-txtTr\">{$txtTr}</td>\n"; /* Spalte: Quelle */
