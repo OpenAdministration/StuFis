@@ -6,7 +6,7 @@ function loadCSS($fileName) {
 
   $fullFileName = SYSBASE."/www/css/".$fileName;
   if (!$inlineCSS || !file_exists($fullFileName)) {
-    return "<link href=\"{$URIBASE}/css/bootstrap.min.css\" rel=\"stylesheet\">";
+    return "<link href=\"{$URIBASE}/css/{$fileName}\" rel=\"stylesheet\">\n";
   }
 
   $out = "<style type=\"text/css\">";
