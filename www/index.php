@@ -29,6 +29,21 @@ if (isset($_REQUEST["action"])) {
   }
 
   switch ($_POST["action"]):
+    case "antrag.update":
+      $antrag = getAntrag();
+      // check antrag type and revision, token cannot be altered
+      // beginTx
+      // update last-modified timestamp
+      // clear all old values (tbl inhalt)
+      // add new values
+      // delete files (tbl anhang)
+      // rename files (tbl anhang)
+      // add new files (tbl anhang) and write files to disk
+      // commitTx
+      // delete files from disk after successfull commit
+      $ret = true;
+      $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+      break;
     case "antrag.create":
       $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
       if ($formconfig === false) die("Unbekannte Formularversion");
