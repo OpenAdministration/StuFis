@@ -10,6 +10,54 @@ $formid = ["projekt-intern","v1"];
 #$formid = ["demo","v1"];
 $formid = ["demo","v2"];
 
+function writeFormdata($antrag_id) {
+  if (!isset($_REQUEST["formdata"]))
+    $_REQUEST["formdata"] = [];
+
+  function storeInhalt($inhalt) {
+    if (is_array($inhalt["value"])) {
+      $fieldname = $inhalt["fieldname"];
+      $ret = true;
+      foreach ($inhalt["value"] as $i => $value) {
+        $inhalt["fieldname"] = $fieldname . "[{$i}]";
+        $inhalt["value"] = $value;
+        $ret1 = storeInhalt($inhalt);
+        $ret = $ret && $ret1;
+      }
+      return $ret;
+    }
+    if (is_object($inhalt["value"])) {
+      $fieldname = $inhalt["fieldname"];
+      $ret = true;
+      foreach (get_object_vars($inhalt["value"]) as $i => $value) {
+        $inhalt["fieldname"] = $fieldname . "[{$i}]";
+        $inhalt["value"] = $value;
+        $ret1 = storeInhalt($inhalt);
+        $ret = $ret && $ret1;
+      }
+      return $ret;
+    }
+    $ret = dbInsert("inhalt", $inhalt);
+    if (!$ret) {
+      $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
+    }
+    return $ret;
+  }
+
+  $ret = true;
+  foreach($_REQUEST["formdata"] as $fieldname => $value) {
+    $inhalt = [];
+    $inhalt["antrag_id"] = $antrag_id;
+    $inhalt["contenttype"] = $_REQUEST["formtype"][$fieldname];
+    $inhalt["fieldname"] = $fieldname;
+    $inhalt["value"] = $value;
+    $ret1 = storeInhalt($inhalt);
+    $ret = $ret && $ret1;
+  } /* formdata */
+
+  return $ret;
+}
+
 if (isset($_REQUEST["action"])) {
  $msgs = Array();
  $ret = false;
@@ -31,16 +79,23 @@ if (isset($_REQUEST["action"])) {
   switch ($_POST["action"]):
     case "antrag.update":
       $antrag = getAntrag();
-      // check antrag editability (state == DRAFT or alike)
+      // check antrag editability (state == DRAFT or alike) FIXME
       // check antrag type and revision, token cannot be altered
+      if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
+      if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
       // beginTx
+      if (!dbBegin()) die("Cannot start DB transaction");
       // update last-modified timestamp
+      dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s") ]);
       // clear all old values (tbl inhalt)
+      dbDelete("inhalt", [ "antrag_id" => $antrag["id"] ]);
       // add new values
+      $ret = writeFormdata($antrag["id"]);
       // delete files (tbl anhang)
       // rename files (tbl anhang)
       // add new files (tbl anhang) and write files to disk
       // commitTx
+      dbCommit();
       // delete files from disk after successfull commit
       $ret = true;
       $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
@@ -48,8 +103,8 @@ if (isset($_REQUEST["action"])) {
     case "antrag.create":
       $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
       if ($formconfig === false) die("Unbekannte Formularversion");
-      if ($_REQUEST["type"] != $formid[0]) die("Unerlaubter Typ");
-      if ($_REQUEST["revision"] != $formid[1]) die("Unerlaubte Version");
+      if ($_REQUEST["type"] !== $formid[0]) die("Unerlaubter Typ");
+      if ($_REQUEST["revision"] !== $formid[1]) die("Unerlaubte Version");
 
       $antrag = [];
       $antrag["type"] = $_REQUEST["type"];
@@ -65,48 +120,7 @@ if (isset($_REQUEST["action"])) {
         $msgs[] = "Antrag wurde erstellt.";
 
         # write formdata
-        if (!isset($_REQUEST["formdata"]))
-          $_REQUEST["formdata"] = [];
-
-        function storeInhalt($inhalt) {
-          if (is_array($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach ($inhalt["value"] as $i => $value) {
-              $inhalt["fieldname"] = $fieldname . "[{$i}]";
-              $inhalt["value"] = $value;
-              $ret1 = storeInhalt($inhalt);
-              $ret = $ret && $ret1;
-            }
-            return $ret;
-          }
-          if (is_object($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach (get_object_vars($inhalt["value"]) as $i => $value) {
-              $inhalt["fieldname"] = $fieldname . "[{$i}]";
-              $inhalt["value"] = $value;
-              $ret1 = storeInhalt($inhalt);
-              $ret = $ret && $ret1;
-            }
-            return $ret;
-          }
-          $ret = dbInsert("inhalt", $inhalt);
-          if (!$ret) {
-            $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
-          }
-          return $ret;
-        }
-
-        foreach($_REQUEST["formdata"] as $fieldname => $value) {
-          $inhalt = [];
-          $inhalt["antrag_id"] = $antrag_id;
-          $inhalt["contenttype"] = $_REQUEST["formtype"][$fieldname];
-          $inhalt["fieldname"] = $fieldname;
-          $inhalt["value"] = $value;
-          $ret1 = storeInhalt($inhalt);
-          $ret = $ret && $ret1;
-        } /* formdata */
+        $ret = writeFormdata($antrag_id);
 
         global $msgs;
         function storeAnhang($anhang, $names, $types, $tmp_names, $errors, $sizes) {
@@ -285,7 +299,7 @@ if (isset($_REQUEST["action"])) {
 }
 
 if (!isset($_REQUEST["tab"])) {
-  $_REQUEST["tab"] = "antrag.create";
+  $_REQUEST["tab"] = "antrag.listing";
 }
 
 switch($_REQUEST["tab"]) {
@@ -368,6 +382,21 @@ switch($_REQUEST["tab"]) {
 require "../template/header.tpl";
 
 switch($_REQUEST["tab"]) {
+  case "antrag.listing":
+    $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
+    $antraege = [];
+    foreach ($tmp as $t) {
+      $antraege[$t["type"]][$t["revision"]][$t["id"]] = $t;
+    }
+    // FIXME extended permission checking
+    foreach ($antraege as $type => $l0) {
+      foreach ($l0 as $revision => $l1) {
+        if (false === getFormConfig($type,$revision))
+          unset($antraege[$type][$revision]);
+      }
+    }
+    require "../template/antrag.list.tpl";
+  break;
   case "antrag":
     $antrag = getAntrag();
     require "../template/antrag.menu.tpl";

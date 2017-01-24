@@ -151,6 +151,21 @@ function logAppend($logId, $key, $value) {
   $query->execute(Array($logId, $key, $value)) or httperror(print_r($query->errorInfo(),true));
 }
 
+function dbBegin() {
+  global $pdo;
+  return $pdo->beginTransaction();
+}
+
+function dbCommit() {
+  global $pdo;
+  return $pdo->commit();
+}
+
+function dbRollBack() {
+  global $pdo;
+  return $pdo->rollBack();
+}
+
 function dbInsert($table, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
