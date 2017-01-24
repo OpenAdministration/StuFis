@@ -340,6 +340,8 @@ switch($_REQUEST["tab"]) {
 
     exit;
   case "antrag.print":
+    global $inlineCSS;
+    $inlineCSS = true;
     require "../template/header-print.tpl";
     $antrag = getAntrag();
     require "../template/antrag.tpl";

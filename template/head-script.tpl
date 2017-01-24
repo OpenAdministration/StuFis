@@ -19,3 +19,5 @@
               <script src="<?php echo $URIBASE; ?>/js/respond.min.js"></script>
             <![endif]-->
             <script src="<?php echo $URIBASE; ?>/js/main.js"></script>
+    <?php
+    # vim: set syntax=php:
