@@ -35,15 +35,13 @@ $(document).ready(function() {
       $fselect.parents("tr").on("pre-row-delete.ref-field-inv", function(evt) {
         $(this).find("select.selectpicker[data-references]").each(function (i, sel) {
           var $sel = $(sel);
-          var targetTableId = $sel.attr("data-references");
-          updateInvRef(targetTableId, $sel, false);
+          updateInvRef($sel, false);
         });
       });
 
       $fselect.off("change.ref-field-inv");
       $fselect.on("change.ref-field-inv",function (e) {
-        var targetTableId = $fselect.attr("data-references");
-        updateInvRef(targetTableId, $fselect, $(this).selectpicker('val'));
+        updateInvRef($fselect, $(this).selectpicker('val'));
       });
 
       $fselect.parents("tr").off("row-changed.ref-field-cascade row-number-changed.ref-field-cascade");
@@ -59,8 +57,7 @@ $(document).ready(function() {
         var $tr = $(this);
         $tr.find("select.selectpicker[data-references]").each(function (i, sel) {
           var $sel = $(sel);
-          var targetTableId = $sel.attr("data-references");
-          updateInvRef(targetTableId, $sel, $(this).selectpicker('val'));
+          updateInvRef($sel, $(this).selectpicker('val'));
         });
       });
     }
@@ -277,7 +274,9 @@ $(document).ready(function() {
     if (!$region) {
       return;
     }
-    $region = $region($out);
+    if ($.isFunction($region)) {
+      $region = $region($out);
+    }
 
     var sum = 0.00;
 		var printId = $out.attr("data-printSum");
@@ -814,52 +813,70 @@ function getFormdataName(fieldname) {
   return name;
 }
 
-function updateInvRef(targetTableId, $sel, newRef) {
-  $("tr[invref-sel-id="+ $sel.attr("id")).each(function (i,tr) {
-    var $tr = $(tr);
-    var $table = $tr.closest("table");
-    $tr.remove();
-    $table.triggerHandler("update-summing-table");
-  });
+function updateInvRef($sel, newRef) {
+  var oldRef = $sel.data("oldRef");
+  var oldRefEmpty = (oldRef === false || oldRef === "" || oldRef === null);
+  var newRefEmpty = (newRef === false || newRef === "" || newRef === null);
+  $sel.data("oldRef", newRef);
 
+  if (!oldRefEmpty && (newRefEmpty || oldRef != newRef)) {
+    $("tr[invref-sel-id="+ $sel.attr("id")).each(function (i,tr) {
+      var $tr = $(tr);
+      var $table = $tr.closest("table");
+      $tr.remove();
+      $table.triggerHandler("update-summing-table");
+    });
+  }
 
-  if (newRef === false || newRef === "" || newRef === null)
+  if (newRefEmpty)
     return;
 
-//  var selValue = extractFieldName($table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]");
-  var re = /^(.*)\[([0-9]*)\]$/;
-  var m = newRef.match(re);
-  if (!m) {
-    console.log("reference invalid: "+newRef);
-    return; // invalid reference
+  var $ntr, $invrefTable;
+  var $selTr = $sel.closest("tr.dynamic-table-row");
+
+  if (oldRefEmpty || (oldRef != newRef)) {
+    var re = /^(.*)\[([0-9]*)\]$/;
+    var m = newRef.match(re);
+    if (!m) {
+      console.log("reference invalid: "+newRef);
+      return; // invalid reference
+    }
+    tableName = m[1];
+    rowNumber = m[2];
+
+    var $table = $("table[name]").filter(function() { return extractFieldName($(this).attr("name")) == tableName; });
+    if ($table.length != 1) {
+      console.log("cannot find table instance referenced");
+      return;
+    }
+    var $tr = $table.children("tbody").children("tr[dynamic-table-row-number]").filter(function() { return $(this).attr("dynamic-table-row-number") == rowNumber; });
+    $invrefTable = $tr.children("td[data-formItemType=invref]").find("table.invref");
+
+    var $templateRow = $invrefTable.children("tbody").children("tr.invref-template");
+    $ntr = $templateRow.clone(true);
+
+    $ntr.removeClass("invref-template");
+    $ntr.removeClass("summing-skip");
+    $ntr.insertBefore($templateRow);
+
+    var ctr = $invrefTable.attr("invref-row-count");
+    if (!ctr) { ctr = -1; }
+    ctr++;
+    $invrefTable.attr("invref-row-count", ctr);
+    $ntr.attr("id",$invrefTable.attr("id")+"-invref-"+ctr);
+
+    $ntr.attr("invref-sel-id", $sel.attr("id"));
+    $ntr.children("td.cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
+      var $e = $(e);
+      $e.data("print-sum-region", function($out) { return $selTr; });
+      $e.triggerHandler("update-print-sum");
+    });
+  } else {
+    $ntr = $("tr[invref-sel-id="+ $sel.attr("id"));
+    $invrefTable = $ntr.closest("table");
   }
-  tableName = m[1];
-  rowNumber = m[2];
 
-  var $table = $("table[name]").filter(function() { return extractFieldName($(this).attr("name")) == tableName; });
-  if ($table.length != 1) {
-    console.log("cannot find table instance referenced");
-    return;
-  }
-  var $tr = $table.children("tbody").children("tr[dynamic-table-row-number]").filter(function() { return $(this).attr("dynamic-table-row-number") == rowNumber; });
-  var $invrefTable = $tr.children("td[data-formItemType=invref]").find("table.invref");
-
-  var $templateRow = $invrefTable.children("tbody").children("tr.invref-template");
-  var $ntr = $templateRow.clone(true);
-
-  $ntr.removeClass("invref-template");
-  $ntr.removeClass("summing-skip");
-  $ntr.insertBefore($templateRow);
-
-  $selTr = $sel.closest("tr.dynamic-table-row");
-
-  $ntr.attr("invref-sel-id", $sel.attr("id"));
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
-  $ntr.children("td.cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
-    var $e = $(e);
-    $e.data("print-sum-region", function ($out) { return $selTr; });
-  });
-
   $invrefTable.triggerHandler("update-summing-table");
 
 }

@@ -958,14 +958,14 @@ function renderFormItemInvRef($meta,$ctrl) {
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
-  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $meta, $refId) {
+  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $meta, $refId, $ctrl) {
     $noForm = in_array("no-form", $ctrl["render"]);
     if (isset($meta["printSum"]))
       $printSum = $meta["printSum"];
     else
       $printSum = [];
 
-    $myOut = "<table class=\"table table-striped invref summing-table\">\n";
+    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\">\n";
     $myOut .= "  <tbody>\n";
 
     if ($noForm) {
