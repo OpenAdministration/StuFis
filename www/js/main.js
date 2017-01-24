@@ -99,7 +99,7 @@ $(document).ready(function() {
     $finput.on("fileloaded.multi-file fileremoved.multi-file filecleared.multi-file init-display-text.multi-file", function() {
       var files = $(this).fileinput('getFileStack');
       var txt = [];
-      for(i = 0; i < files.length; i++) {
+      for(var i = 0; i < files.length; i++) {
         txt.push(files[i].name);
       }
       var $td = $(this).closest("td");
@@ -194,7 +194,7 @@ $(document).ready(function() {
         });
         refTables = $.uniqueSort(refTables);
 
-        for(i=0; i < refTables.length && isUpdateRef; i++) {
+        for(var i=0; i < refTables.length && isUpdateRef; i++) {
           var $refTable = $(refTables[i]);
           var refTableId = $refTable.attr('orig-id');
           var $refTBody = $refTable.children("tbody");
@@ -237,7 +237,7 @@ $(document).ready(function() {
     $finput.on("fileloaded.multi-file fileremoved.multi-file filecleared.multi-file init-display-text.multi-file", function() {
       var files = $(this).fileinput('getFileStack');
       var txt = [];
-      for(i = 0; files.length; i++) {
+      for(var i = 0; files.length; i++) {
         txt.push(files[i].name);
       }
       var $td = $(this).closest("td");
@@ -263,9 +263,9 @@ $(document).ready(function() {
       val = parseFloat(val);
       $i.val(val.toFixed(2));
     }
-		var ids = $(this).attr("data-addToSum").split(" ");
-    for (j = 0; j < ids.length; j++) {
-      $("*[data-printSum~=\""+ ids[j] + "\"]").each(function (i, e) {
+		var ids = $i.attr("data-addToSum").split(" ");
+    for (var j = 0; j < ids.length; j++) {
+      $("*[data-printSum~=\""+ ids[j] + "\"]").each(function (k, e) {
         $(e).triggerHandler("update-print-sum");
       });
     }
@@ -274,8 +274,10 @@ $(document).ready(function() {
     var $out = $(this);
 
     $region = $out.data("print-sum-region");
-    if (!$region)
+    if (!$region) {
       return;
+    }
+    $region = $region($out);
 
     var sum = 0.00;
 		var printId = $out.attr("data-printSum");
@@ -309,7 +311,7 @@ $(document).ready(function() {
     }
     $tfoot.children("tr").children(".cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
       var $e = $(e);
-      $e.data("print-sum-region", $table);
+      $e.data("print-sum-region", function ($out) { return $out.closest("table"); });
       $e.triggerHandler("update-print-sum");
     });
   });
@@ -335,7 +337,7 @@ $(document).ready(function() {
     $ns.each(function (i,p) {
       name[$ns.length - 1 - i] += $(p).attr('name-suffix');
     });
-    for (i = $ns.length; i < name.length - 1; i++)
+    for (var i = $ns.length; i < name.length - 1; i++)
       name[i] += "[]";
 
     $e.attr('name',name.join(""));
@@ -680,7 +682,7 @@ function handleSubmitForm($form, evt) {
     if (data.has(name)) {
       data.delete(name);
     }
-    for (i = 0; i < fileList.length; i++) {
+    for (var i = 0; i < fileList.length; i++) {
       var newName = name;
       newName = newName.replaceAll("[]", "");
       newName = newName + "["+i+"]";
@@ -735,7 +737,7 @@ function handleSubmitForm($form, evt) {
        $smc.empty();
        $("#server-question-content").empty();
        var $smcu = $('<ul/>').appendTo( $smc );
-       for (i = 0; i < values.msgs.length; i++) {
+       for (var i = 0; i < values.msgs.length; i++) {
          var msg = (values.msgs[i]);
          $('<li/>').text(msg).appendTo( $smcu );
        }
@@ -773,7 +775,7 @@ function handleSubmitForm($form, evt) {
       $smc.empty();
       $("#server-message-content").empty();
       var $smcu = $('<ul/>').appendTo( $smc );
-      for (i = 0; i < values.msgs.length; i++) {
+      for (var i = 0; i < values.msgs.length; i++) {
           var msg = (values.msgs[i]);
           $('<li/>').text(msg).appendTo( $smcu );
       }
@@ -817,7 +819,7 @@ function updateInvRef(targetTableId, $sel, newRef) {
     var $tr = $(tr);
     var $table = $tr.closest("table");
     $tr.remove();
-    $table.triggerHandler("update-invref-table");
+    $table.triggerHandler("update-summing-table");
   });
 
 
@@ -855,10 +857,9 @@ function updateInvRef(targetTableId, $sel, newRef) {
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
   $ntr.children("td.cell-has-printSum").find("*[data-printSum]").each(function (i, e) {
     var $e = $(e);
-    $e.data("print-sum-region", $selTr);
-    $e.triggerHandler("update-print-sum");
+    $e.data("print-sum-region", function ($out) { return $selTr; });
   });
 
-  $invrefTable.triggerHandler("update-invref-table");
+  $invrefTable.triggerHandler("update-summing-table");
 
 }

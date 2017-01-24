@@ -405,7 +405,7 @@ function renderFormItemMoney($meta, $ctrl) {
 function renderFormItemTextarea($meta, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
 
-  $value = "0.00";
+  $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
   } elseif (isset($meta["value"])) {
@@ -639,6 +639,8 @@ function renderFormItemSelect($meta, $ctrl) {
       echo "</optgroup>";
     }
   }
+  if ($meta["type"] == "ref")
+    echo "<option value=\"\">Bitte auswählen</option>";
 
   echo "</select>";
   echo "</div>";
