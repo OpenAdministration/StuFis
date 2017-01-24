@@ -220,7 +220,14 @@ function renderFormItem($meta,$ctrl = false) {
   $txt = ob_get_contents();
   ob_end_clean();
 
-  echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\">";
+  echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\"";
+  echo " style=\"";
+  if (isset($meta["max-width"]))
+    echo "max-width: {$meta["max-width"]};";
+  if (isset($meta["min-width"]))
+    echo "min-width: {$meta["min-width"]};";
+  echo "\"";
+  echo ">";
 
   if ($isEmpty !== false) {
     echo "<div class=\"".join(" ", $cls)."\">";
@@ -757,6 +764,8 @@ function renderFormItemTable($meta, $ctrl) {
   $cls = ["table", "table-striped", "summing-table"];
   if (!$noForm)
     $cls[] = "dynamic-table";
+  if (in_array("fixed-width-table", $meta["opts"]))
+    $cls[] = "fixed-width-table";
 
   $rowCountFieldName = (isset($meta["rowCountField"]) ? "formdata[{$meta["rowCountField"]}]" : "formdata[{$meta["id"]}][rowCount]");
   $rowCountFieldTypeName = (isset($meta["rowCountField"]) ? "formtype[{$meta["rowCountField"]}]" : "formtype[{$meta["id"]}]");

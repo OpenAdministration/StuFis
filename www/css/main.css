@@ -49,3 +49,6 @@ table.invref > tbody > tr.invref-template {
   display: none;
 }
 
+.fixed-width-table {
+  table-layout: fixed;
+}

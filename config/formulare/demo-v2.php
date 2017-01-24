@@ -48,9 +48,9 @@ $formulare["demo"]["v2"] = [
            "width" => 12,
            "name" => "Nachweise",
            "columns" => [
-             [ "id" => "geld.anhang.file",    "name" => "Anhänge",             "type" => "ref",   "width" => 6, "references" => "anhaenge"],
-             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 2, "opts" => ["sum-over-table-bottom"], "currency" => "€", "addToSum" => [ "geld.anhang.betrag" ] ],
-             [ "id" => "geld.anhang.comment", "name" => "Hinweis",             "type" => "text",  "width" => 4, "opts" => ["title"] ],
+             [ "id" => "geld.anhang.file",    "name" => "Anhänge",             "type" => "ref",   "width" => 6, "references" => "anhaenge", "max-width" => "250px"],
+             [ "id" => "geld.anhang.amount",  "name" => "Betrag",              "type" => "money", "width" => 3, "opts" => ["sum-over-table-bottom"], "currency" => "€", "addToSum" => [ "geld.anhang.betrag" ], "min-width" => "100px", ],
+             [ "id" => "geld.anhang.comment", "name" => "Hinweis",             "type" => "text",  "width" => 3, "opts" => ["title"], "min-width" => "100px" ],
            ],
          ],
          [

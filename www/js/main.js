@@ -125,7 +125,6 @@ $(document).ready(function() {
     $finput.on("fileloaded.multi-file", function(evt, file, previewId, index, reader) {
       console.log("fileloaded");
 
-      //setTimeout(function() { $finput.fileinput("clear"); }, 1000);
       var $mfinput = $(this);
       var $container = $mfinput.closest(".multi-file-container");
       var isUpdateRef = $container.is(".multi-file-container-update-ref");
@@ -455,6 +454,17 @@ $(document).ready(function() {
     /*  */
   }); /* each table */
 
+  $( "select[data-value]" ).each(function (i, e) {
+    var $e = $(e);
+    var val = $e.attr("data-value");
+    if ($e.is(".selectpicker")) {
+      $e.selectpicker("val", val);
+      $e.triggerHandler("change");
+    } else {
+      $e.val(val);
+    }
+  });
+
   $( "form.ajax" ).validator().on("submit", function(e) {
     if (e.isDefaultPrevented()) return; // validator said no
     return handleSubmitForm($(this), e);
@@ -559,6 +569,7 @@ function initDynamicRow($tr, $table, tableId) {
         if (wasSelected) {
           if ($sel.is(".selectpicker")) {
             $sel.selectpicker("val", null);
+            $sel.triggerHandler("change");
           } else {
             $sel.val("");
           }
