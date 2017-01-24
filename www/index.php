@@ -354,6 +354,7 @@ require "../template/header.tpl";
 switch($_REQUEST["tab"]) {
   case "antrag":
     $antrag = getAntrag();
+    require "../template/antrag.menu.tpl";
     require "../template/antrag.tpl";
   break;
   case "antrag.edit":
