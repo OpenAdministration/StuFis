@@ -84,6 +84,8 @@ $(document).ready(function() {
      'theme': 'gly',
     };
     var $sfc = $(this);
+    $sfc.find("input").addClass("no-display-text");
+
     if ($sfc.is("[display-text]")) {
       var $td = $sfc.closest("td");
       $td.data("display-text", $sfc.attr("display-text"));
@@ -92,7 +94,7 @@ $(document).ready(function() {
 
     var $finput = $sfc.find(".single-file");
     $finput.fileinput(cfg);
-    $(this).attr("name", $finput.attr("name"));
+    $sfc.attr("name", $finput.attr("name"));
     $finput.on("fileloaded.multi-file fileremoved.multi-file filecleared.multi-file init-display-text.multi-file", function() {
       var files = $(this).fileinput('getFileStack');
       var txt = [];
@@ -114,9 +116,11 @@ $(document).ready(function() {
      'uploadExtraData': {
      },
     };
-    var $finput = $(this).find(".multi-file");
+    var $mfc = $(this);
+    $mfc.find("input").addClass("no-display-text");
+    var $finput = $mfc.find(".multi-file");
     $finput.fileinput(cfg);
-    $(this).closest("td").data("display-text", "[file-selector]");
+    $mfc.closest("td").data("display-text", "[file-selector]");
 
     $finput.on("fileloaded.multi-file", function(evt, file, previewId, index, reader) {
       console.log("fileloaded");
@@ -229,7 +233,9 @@ $(document).ready(function() {
      },
     };
 
-    var $finput = $(this).find(".multi-file");
+    var $mfc = $(this);
+    $mfc.find("input").addClass("no-display-text");
+    var $finput = $mfc.find(".multi-file");
     $finput.fileinput(cfg);
     $finput.on("fileloaded.multi-file fileremoved.multi-file filecleared.multi-file init-display-text.multi-file", function() {
       var files = $(this).fileinput('getFileStack');
@@ -494,8 +500,11 @@ function initDynamicRow($tr, $table, tableId) {
 
   $tr.find("td.dynamic-table-column-title input").off("change.row-title");
   $tr.find("td.dynamic-table-column-title input").each(function (i, e) {
-    if ($(e).attr("type") == "file") { return; }
-    $(e).on("change.row-title init-display-text", function(evt) {
+    var $e = $(e);
+    if ($e.is(".no-display-text")) { return; }
+    if ($e.attr("type") == "hidden") { return; }
+    if ($e.attr("type") == "file") { return; }
+    $e.on("change.row-title init-display-text", function(evt) {
       var $td = $(this).closest("td");
       var $tr = $td.closest("tr");
       $td.data("display-text", $(this).val());
