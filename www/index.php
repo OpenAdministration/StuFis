@@ -31,6 +31,7 @@ if (isset($_REQUEST["action"])) {
   switch ($_POST["action"]):
     case "antrag.update":
       $antrag = getAntrag();
+      // check antrag editability (state == DRAFT or alike)
       // check antrag type and revision, token cannot be altered
       // beginTx
       // update last-modified timestamp
