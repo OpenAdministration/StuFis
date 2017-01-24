@@ -1,4 +1,5 @@
             <meta charset="utf-8">
+             <base href="<?php echo $URIBASEREF.$URIBASE; ?>">
 
 <?php include "head-css.tpl"; ?>
 
