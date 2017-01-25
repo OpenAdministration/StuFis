@@ -342,8 +342,8 @@ outAntragUpdate:
       }
       break;
     case "antrag.create":
-      $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
-      if ($formconfig === false) die("Unbekannte Formularversion");
+      $formlayout = getFormLayout($_REQUEST["type"], $_REQUEST["revision"]);
+      if ($formlayout === false) die("Unbekannte Formularversion");
       // FIXME check perm
 
       if (!dbBegin()) {
@@ -508,7 +508,7 @@ switch($_REQUEST["tab"]) {
     // FIXME extended permission checking
     foreach ($antraege as $type => $l0) {
       foreach ($l0 as $revision => $l1) {
-        if (false === getFormConfig($type,$revision))
+        if (false === getFormLayout($type,$revision))
           unset($antraege[$type][$revision]);
       }
     }
@@ -528,8 +528,8 @@ switch($_REQUEST["tab"]) {
       header("Location: $URIBASE");
       exit;
     }
-    $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
-    if ($formconfig === false) die("Unbekannter Formulartyp oder keine Berechtigung");
+    $formlayout = getFormLayout($_REQUEST["type"], $_REQUEST["revision"]);
+    if ($formlayout === false) die("Unbekannter Formulartyp oder keine Berechtigung");
     require "../template/antrag.create.tpl";
   break;
 #  case "antrag.submit":

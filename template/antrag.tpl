@@ -1,8 +1,8 @@
 <?php
 # vim: set syntax=php:
 
-$formconfig = getFormConfig($antrag["type"],$antrag["revision"]);
-if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+$formlayout = getFormLayout($antrag["type"],$antrag["revision"]);
+if ($formlayout === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
-renderForm($formconfig, ["_values" => $antrag, "render" => ["no-form"]] );
+renderForm($formlayout, ["_values" => $antrag, "render" => ["no-form"]] );
 

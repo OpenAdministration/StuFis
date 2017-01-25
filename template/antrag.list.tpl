@@ -31,7 +31,7 @@
 
 <thead>
 
-<tr><th>ID</th><th>Ersteller</th><th>Status</th><th>letztes Update</th><th>Token</th></tr>
+<tr><th>ID</th><th>Bezeichnung</th><th>Ersteller</th><th>Status</th><th>letztes Update</th></tr>
 
 </thead>
 <tbody>
@@ -40,14 +40,43 @@
 
 foreach ($antraege as $type => $l0) {
   foreach ($l0 as $revision => $l1) {
-    echo "<tr><th colspan=\"4\">".htmlspecialchars("{$type} - {$revision}")."</th></tr>\n";
-    foreach ($l1 as $antrag) {
+    $config = getFormConfig($type, $revision);
+    if ($config === false) continue;
+    if (isset($config["title"]))
+      $title = "[{$type}] {$config["title"]} - {$revision}";
+    else
+      $title = "{$type} - {$revision}";
+    if (!isset($config["caption-field"]))
+      $config["caption-field"] = [];
+    if (!is_array($config["caption-field"]))
+      $config["caption-field"] = [ $config["caption-field"] ];
+    echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
+    foreach ($l1 as $i => $antrag) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";
+      $caption = [ htmlspecialchars($antrag["token"]) ];
+      if (count($config["caption-field"]) > 0) {
+        if (!isset($antrag["_inhalt"])) {
+          $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
+          $antraege[$type][$revision][$i] = $antrag;
+        }
+        foreach ($config["caption-field"] as $j => $fname) {
+          $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
+          $row = count($rows) > 0 ? $rows[0] : false;
+          if ($row !== false) {
+            ob_start();
+            $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
+            renderForm($formlayout, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+            $val = ob_get_contents();
+            ob_end_clean();
+            $caption[$j] = $val;
+          }
+        }
+      }
+      echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".implode(" ", $caption)."</a></td>";
       echo "<td>".htmlspecialchars($antrag["creator"])."</td>";
       echo "<td>".htmlspecialchars($antrag["state"])."</td>";
       echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
-      echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".htmlspecialchars($antrag["token"])."</a></td>";
       echo "</tr>";
     }
   }

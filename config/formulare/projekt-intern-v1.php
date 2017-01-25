@@ -1,13 +1,15 @@
 <?php
 
-global $formulare;
+$config = [
+  "title" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
+  "caption-field" => [ "projekt.name", "projekt.zeitraum" ],
+];
 
-/* formname , formrevision */
-$formulare["projekt-intern"]["v1"] = [
+$layout = [
  [
    "type" => "h2", /* renderer */
    "id" => "head1",
-   "value" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
+   "value" => $config["title"],
  ],
 
  [
@@ -95,3 +97,7 @@ $formulare["projekt-intern"]["v1"] = [
  ],
 
 ];
+
+/* formname , formrevision */
+registerForm( "projekt-intern", "v1", $layout, $config );
+

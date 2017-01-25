@@ -2,6 +2,13 @@
 
 loadForms();
 
+function registerForm( $type, $revision, $layout, $config ) {
+  global $formulare;
+
+  if (isset($formulare[$type][$revision])) die("duplicate form-id $type:$revision");
+  $formulare[$type][$revision] = ["layout" => $layout, "config" => $config];
+}
+
 function loadForms() {
   global $formulare;
 
@@ -16,13 +23,22 @@ function loadForms() {
 
 }
 
+function getFormLayout($type, $revision) {
+  global $formulare;
+
+  if (!isset($formulare[$type])) return false;
+  if (!isset($formulare[$type][$revision])) return false;
+
+  return $formulare[$type][$revision]["layout"];
+}
+
 function getFormConfig($type, $revision) {
   global $formulare;
 
   if (!isset($formulare[$type])) return false;
   if (!isset($formulare[$type][$revision])) return false;
 
-  return $formulare[$type][$revision];
+  return $formulare[$type][$revision]["config"];
 }
 
 function getFormName($name) {
@@ -37,17 +53,47 @@ function getFormValue($name, $type, $values, $defaultValue = false) {
   $name = getFormName($name);
   if ($name === false)
     return $defaultValue;
+  return getFormValueInt($name, $type, $values, $defaultValue);
+}
 
+function getFormValueInt($name, $type, $values, $defaultValue = false) {
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
       continue;
-    if ($row["contenttype"] != $type) {
+    if ($type !== null && $row["contenttype"] != $type) {
       add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
       continue;
     }
     return $row["value"];
   }
   return $defaultValue;
+}
+
+function getFormEntry($name, $type, $values) {
+  foreach($values as $row) {
+    if ($row["fieldname"] != $name)
+      continue;
+    if ($type !== null && $row["contenttype"] != $type) {
+      add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
+      continue;
+    }
+    return $row;
+  }
+  return false;
+}
+
+function getFormEntries($name, $type, $values) {
+  $ret = [];
+  foreach($values as $row) {
+    if ($row["fieldname"] != $name && (substr($row["fieldname"], 0, strlen($name."[")) != $name."["))
+      continue;
+    if ($type !== null && $row["contenttype"] != $type) {
+      add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
+      continue;
+    }
+    $ret[] = $row;
+  }
+  return $ret;
 }
 
 function getFormFile($name, $values) {
@@ -166,6 +212,7 @@ function renderFormItem($meta,$ctrl = false) {
   if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
 
   $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   ob_start();
   switch ($meta["type"]) {
@@ -222,17 +269,20 @@ function renderFormItem($meta,$ctrl = false) {
   $txt = ob_get_contents();
   ob_end_clean();
 
-  echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\"";
-  echo " style=\"";
-  if (isset($meta["max-width"]))
-    echo "max-width: {$meta["max-width"]};";
-  if (isset($meta["min-width"]))
-    echo "min-width: {$meta["min-width"]};";
-  echo "\"";
-  echo ">";
+  if (!$noFormMarkup) {
+    echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\"";
+    echo " style=\"";
+    if (isset($meta["max-width"]))
+      echo "max-width: {$meta["max-width"]};";
+    if (isset($meta["min-width"]))
+      echo "min-width: {$meta["min-width"]};";
+    echo "\"";
+    echo ">";
+  }
 
   if ($isEmpty !== false) {
-    echo "<div class=\"".join(" ", $cls)."\">";
+    if (!$noFormMarkup)
+      echo "<div class=\"".join(" ", $cls)."\">";
     if (!$noForm)
       echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
 
@@ -245,13 +295,16 @@ function renderFormItem($meta,$ctrl = false) {
 
     if (!in_array("no-form", $ctrl["render"]))
       echo '<div class="help-block with-errors"></div>';
-    echo "</div>";
+    if (!$noFormMarkup)
+      echo "</div>";
   }
 
-  if (isset($meta["width"]))
-    echo "</$wrapper>";
-  else
-    echo "</$wrapper>";
+  if (!$noFormMarkup) {
+    if (isset($meta["width"]))
+      echo "</$wrapper>";
+    else
+      echo "</$wrapper>";
+  }
 
 }
 
@@ -290,6 +343,7 @@ function renderFormItemText($meta, $ctrl) {
   global $nonce, $URIBASE;
 
   $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -311,9 +365,9 @@ function renderFormItemText($meta, $ctrl) {
     }
   }
 
-  if ($noForm) {
+  if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
-  } else {
+  } elseif (!$noForm) {
     echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
@@ -325,7 +379,9 @@ function renderFormItemText($meta, $ctrl) {
   }
 
   if ($noForm) {
-    echo ">";
+    if (!$noFormMarkup) {
+      echo ">";
+    }
     if ($meta["type"] == "email" && !empty($value))
       echo "<a href=\"mailto:{$tPattern}\">";
     if ($meta["type"] == "url" && !empty($value))
@@ -335,7 +391,9 @@ function renderFormItemText($meta, $ctrl) {
       echo "</a>";
     if ($meta["type"] == "url" && !empty($value))
       echo "</a>";
-    echo "</div>";
+    if (!$noFormMarkup) {
+      echo "</div>";
+    }
   } else {
     if (isset($meta["placeholder"]))
       echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
@@ -362,6 +420,7 @@ function renderFormItemText($meta, $ctrl) {
 
 function renderFormItemMoney($meta, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "0.00";
   if (isset($ctrl["_values"])) {
@@ -386,7 +445,9 @@ function renderFormItemMoney($meta, $ctrl) {
   if (in_array("is-sum", $meta["opts"]))
     echo "<span class=\"input-group-addon\">Σ</span>";
 
-  if ($noForm) {
+  if ($noForm && $noFormMarkup) {
+    echo "<div class=\"text-right visible-inline\"";
+  } else if ($noForm && !$noFormMarkup) {
     echo "<div class=\"form-control text-right\"";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
@@ -416,6 +477,7 @@ function renderFormItemMoney($meta, $ctrl) {
 
 function renderFormItemTextarea($meta, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -521,8 +583,6 @@ function renderFormItemMultiFile($meta, $ctrl) {
     }
   }
   $ctrl["_render"]->displayValue = implode(", ",$html);
-
-  // FIXME DELETE AND ADD FILES
 
   if ($noForm) {
     if (isset($meta["destination"])) return false; // no data here
@@ -634,6 +694,8 @@ function renderFormItemSelect($meta, $ctrl) {
   global $attributes, $GremiumPrefix;
 
   $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -641,7 +703,10 @@ function renderFormItemSelect($meta, $ctrl) {
 
   if ($noForm) {
     if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
-      echo "<div class=\"form-control\">";
+      if ($noFormMarkup)
+        echo "<div class=\"visible-inline\">";
+      else
+        echo "<div class=\"form-control\">";
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
       echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
@@ -716,6 +781,9 @@ function renderFormItemSelect($meta, $ctrl) {
 }
 
 function renderFormItemDateRange($meta, $ctrl) {
+  $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+
   $valueStart = "";
   $valueEnd = "";
   if (isset($ctrl["_values"])) {
@@ -724,15 +792,27 @@ function renderFormItemDateRange($meta, $ctrl) {
   }
   $tPatternStart = newTemplatePattern($ctrl, htmlspecialchars($valueStart));
   $tPatternEnd =  newTemplatePattern($ctrl, htmlspecialchars($valueEnd));
+  $ctrl["_render"]->displayValue = htmlspecialchars("$valueStart - $valueEnd");
 
-  if (in_array("no-form", $ctrl["render"])) {
+  if ($noForm && !$noFormMarkup) {
     echo '<div class="input-daterange input-group">';
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">von</div>';
     echo "<div class=\"form-control\">{$tPatternStart}</div>";
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">bis</div>';
     echo "<div class=\"form-control\">{$tPatternEnd}</div>";
     echo "</div>";
-    $ctrl["_render"]->displayValue = htmlspecialchars("$valueStart - $valueEnd");
+    return;
+  } else if ($noForm && $noFormMarkup) {
+    echo "<div class=\"visible-inline\">";
+    if ($valueStart != "") {
+      echo ' von ';
+      echo "{$tPatternStart}";
+    }
+    if ($valueEnd != "") {
+      echo ' bis ';
+      echo "{$tPatternEnd}";
+    }
+    echo "</div>";
     return;
   }
 
@@ -775,6 +855,9 @@ function renderFormItemDateRange($meta, $ctrl) {
 
 
 function renderFormItemDate($meta, $ctrl) {
+  $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -782,8 +865,13 @@ function renderFormItemDate($meta, $ctrl) {
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
 
-  if (in_array("no-form", $ctrl["render"])) {
-    echo "<div class=\"form-control\">";
+  if ($noForm) {
+    $cls = [];
+    if (!$noFormMarkup)
+      $cls[] = "form-control";
+    else
+      $cls[] = "visible-inline";
+    echo "<div class=\"".htmlspecialchars(implode(" ", $cls))."\">";
     echo $tPattern;
     echo "</div>";
     return;

@@ -1,9 +1,6 @@
 <?php
 
-global $formulare;
-
-/* formname , formrevision */
-$formulare["demo"]["v1"] = [
+$layout = [
 
  [
    "type" => "group", /* renderer */
@@ -165,3 +162,9 @@ $formulare["demo"]["v1"] = [
  ],
 
 ];
+
+$config = [];
+
+/* formname , formrevision */
+registerForm( "demo", "v1", $layout, $config );
+

@@ -3,8 +3,8 @@
 
 if ($antrag["state"] != "draft") die("Antrag ist nicht editierbar");
 
-$formconfig = getFormConfig($antrag["type"],$antrag["revision"]);
-if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+$formlayout = getFormLayout($antrag["type"],$antrag["revision"]);
+if ($formlayout === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
 ?>
 
@@ -17,7 +17,7 @@ if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht da
 
 <?php
 
-renderForm($formconfig, ["_values" => $antrag] );
+renderForm($formlayout, ["_values" => $antrag] );
 
 ?>
   <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->

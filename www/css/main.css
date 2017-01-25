@@ -52,3 +52,12 @@ table.invref > tbody > tr.invref-template {
 .fixed-width-table {
   table-layout: fixed;
 }
+
+.visible-inline-block {
+ display: inline-block;
+}
+
+.visible-inline {
+ display: inline;
+}
+
