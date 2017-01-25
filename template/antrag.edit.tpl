@@ -1,7 +1,6 @@
 <?php
 # vim: set syntax=php:
 
-global $formid;
 $formconfig = getFormConfig($antrag["type"],$antrag["revision"]);
 if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
@@ -10,8 +9,8 @@ if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht da
 <form id="editantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">
   <input type="hidden" name="action" value="antrag.update"/>
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-  <input type="hidden" name="type" value="<?php echo $formid[0]; ?>"/>
-  <input type="hidden" name="revision" value="<?php echo $formid[1]; ?>"/>
+  <input type="hidden" name="type" value="<?php echo $antrag["type"]; ?>"/>
+  <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
 
 <?php
 

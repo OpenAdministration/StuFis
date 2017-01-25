@@ -1,14 +1,10 @@
 <?php
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $formid;
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 requireAuth();
 #requireGroup($ADMINGROUP);
-
-$formid = ["projekt-intern","v1"];
-#$formid = ["demo","v1"];
-$formid = ["demo","v2"];
 
 function writeFormdata($antrag_id) {
   if (!isset($_REQUEST["formdata"]))
@@ -103,8 +99,7 @@ if (isset($_REQUEST["action"])) {
     case "antrag.create":
       $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
       if ($formconfig === false) die("Unbekannte Formularversion");
-      if ($_REQUEST["type"] !== $formid[0]) die("Unerlaubter Typ");
-      if ($_REQUEST["revision"] !== $formid[1]) die("Unerlaubte Version");
+      // FIXME check perm
 
       $antrag = [];
       $antrag["type"] = $_REQUEST["type"];
@@ -407,6 +402,7 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.edit.tpl";
   break;
   case "antrag.create":
+    $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
     require "../template/antrag.create.tpl";
   break;
 #  case "antrag.submit":

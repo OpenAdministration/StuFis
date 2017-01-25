@@ -1,16 +1,13 @@
 <?php
 # vim: set syntax=php:
 
-global $formid;
-$formconfig = getFormConfig($formid[0],$formid[1]);
-
 ?>
 
 <form id="newantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">
   <input type="hidden" name="action" value="antrag.create"/>
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-  <input type="hidden" name="type" value="<?php echo $formid[0]; ?>"/>
-  <input type="hidden" name="revision" value="<?php echo $formid[1]; ?>"/>
+  <input type="hidden" name="type" value="<?php echo htmlspecialchars($_REQUEST["type"]); ?>"/>
+  <input type="hidden" name="revision" value="<?php echo htmlspecialchars($_REQUEST["revision"]); ?>"/>
 
 <?php
 

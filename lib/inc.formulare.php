@@ -149,11 +149,13 @@ function renderFormItem($meta,$ctrl = false) {
 
   $ctrl["id"] = $meta["id"];
   $ctrl["name"] = "formdata[{$meta["id"]}]";
+  $ctrl["orig-name"] = $ctrl["name"];
 
   if (!isset($ctrl["suffix"]))
    $ctrl["suffix"] = [];
   foreach($ctrl["suffix"] as $suffix) {
     $ctrl["name"] .= "[{$suffix}]";
+    $ctrl["orig-name"] .= "[]";
     if ($suffix !== false) {
       $ctrl["id"] .= "-".$suffix;
     }
@@ -312,7 +314,7 @@ function renderFormItemText($meta, $ctrl) {
   if ($noForm) {
     echo "<div class=\"form-control\"";
   } else {
-    echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
   if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
@@ -387,7 +389,7 @@ function renderFormItemMoney($meta, $ctrl) {
   if ($noForm) {
     echo "<div class=\"form-control text-right\"";
   } else {
-    echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
   if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
@@ -429,7 +431,7 @@ function renderFormItemTextarea($meta, $ctrl) {
     echo newTemplatePattern($ctrl, implode("<br/>",explode("\n",htmlspecialchars($value))));
     echo "</div>";
   } else {
-    echo "<textarea class=\"form-control\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo "<textarea class=\"form-control\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
     if (isset($meta["min-rows"]))
       echo " rows=".htmlspecialchars($meta["min-rows"]);
     if (in_array("required", $meta["opts"]))
@@ -468,7 +470,7 @@ function renderFormItemFile($meta, $ctrl) {
     echo "</div>";
   } elseif ($file) { // FIXME DELETE FILE FIXME REPLACE FILE FIXME RENAME FILE
     echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\">";
-    echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" value=\"delete\"/>";
+    echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" value=\"delete\"/>";
     echo "&nbsp;";
     echo "<label for=\"".htmlspecialchars($ctrl["id"])."\">";
     echo "$tPattern löschen";
@@ -476,7 +478,7 @@ function renderFormItemFile($meta, $ctrl) {
     echo "</div>";
   } else {
     echo "<div class=\"single-file-container\">";
-    echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
+    echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
     echo "</div>";
   }
 }
@@ -529,7 +531,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
     echo " class=\"multi-file-container multi-file-container-without-destination\"";
   }
   echo ">";
-  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
+  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\"[] id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
   if (in_array("dir", $meta["opts"])) {
     echo " webkitdirectory";
   }
@@ -618,7 +620,7 @@ function renderFormItemSelect($meta, $ctrl) {
   echo "<div class=\"".implode(" ", $cls)."\">";
   if (in_array("hasFeedback", $meta["opts"]))
     echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
-  echo "<select class=\"selectpicker form-control\" data-live-search=\"".($liveSearch ? "true" : "false")."\" name=\"".htmlspecialchars($ctrl["name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+  echo "<select class=\"selectpicker form-control\" data-live-search=\"".($liveSearch ? "true" : "false")."\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (isset($meta["placeholder"]))
     echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
   elseif ($meta["type"] == "ref")
@@ -694,7 +696,7 @@ function renderFormItemDateRange($meta, $ctrl) {
           von
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternStart; ?>"/>
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternStart; ?>"/>
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -703,7 +705,7 @@ function renderFormItemDateRange($meta, $ctrl) {
           bis
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternEnd; ?>"/>
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternEnd; ?>"/>
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -743,7 +745,7 @@ function renderFormItemDate($meta, $ctrl) {
   }
 ?>
 >
-    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"/>
+    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"/>
     <div class="input-group-addon">
         <span class="glyphicon glyphicon-th"></span>
     </div>
@@ -768,9 +770,11 @@ function renderFormItemTable($meta, $ctrl) {
     $cls[] = "fixed-width-table";
 
   $rowCountFieldName = (isset($meta["rowCountField"]) ? "formdata[{$meta["rowCountField"]}]" : "formdata[{$meta["id"]}][rowCount]");
+  $rowCountFieldNameOrig = $rowCountFieldName;
   $rowCountFieldTypeName = (isset($meta["rowCountField"]) ? "formtype[{$meta["rowCountField"]}]" : "formtype[{$meta["id"]}]");
   foreach($ctrl["suffix"] as $suffix) {
     $rowCountFieldName .= "[{$suffix}]";
+    $rowCountFieldNameOrig .= "[]";
   }
 
   $rowCount = 0;
@@ -789,11 +793,11 @@ function renderFormItemTable($meta, $ctrl) {
 
 ?>
 
-  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>">
+  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>">
 
 <?php
   if (!$noForm) {
-    echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" class=\"store-row-count\"/>";
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" orig-name=\"".htmlspecialchars($rowCountFieldNameOrig)."\" class=\"store-row-count\"/>";
     echo "<input type=\"hidden\" value=\"".htmlspecialchars($meta["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
   }
 
@@ -983,7 +987,7 @@ function renderFormItemInvRef($meta,$ctrl) {
     else
       $printSum = [];
 
-    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\">\n";
+    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\"  orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\">\n";
     $myOut .= "  <tbody>\n";
 
     if ($noForm) {

@@ -1,5 +1,5 @@
 <?php
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $formid;
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";

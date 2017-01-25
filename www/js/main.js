@@ -324,6 +324,7 @@ $(document).ready(function() {
   $(".dynamic-table *[name],.dynamic-table").each(function(i,e) {
     var $e = $(e);
     var name = $e.attr('name');
+    if ($e.attr('orig-name') != null) return;
     $e.attr('orig-name', name);
   });
   $(".dynamic-table").on("name-changed.ref-field", function(evt) {
@@ -398,6 +399,22 @@ $(document).ready(function() {
       onClickNewRow($tr, $table, tableId);
     });
   });
+  $(".dynamic-table > tbody > tr > td.delete-row").find('a.delete-row').on('click', function(evt) {
+    evt.stopPropagation();
+    var $tr = $(this).closest("tr");
+    var $tbody = $tr.closest("tbody");
+    var $table = $tbody.closest("table");
+    $tr.triggerHandler("pre-row-delete");
+    $tr.remove();
+    $tbody.children("tr").each(function(rowNumber,tr) {
+      var $tr = $(tr);
+      $tr.attr('dynamic-table-row-number', rowNumber);
+      $tr.triggerHandler("row-number-changed");
+    });
+    $table.children(".store-row-count").val($tbody.children("tr:not(.new-table-row)").length);
+    $table.triggerHandler("update-summing-table.sum");
+    return false;
+  });
   $('.dynamic-table').each(function (i, table) {
     var $table = $(table);
     var $tbody = $table.children("tbody");
@@ -409,6 +426,7 @@ $(document).ready(function() {
       var trId = 'dynamic-table-row-'+$table.attr("id")+'-'+i;
       $tr.attr('id', trId);
       $tr.attr('dynamic-table-row-number', i);
+      $tr.attr('name-suffix','['+i+']');
       initDynamicRow($tr, $table, tableId);
     });
 
@@ -435,24 +453,35 @@ $(document).ready(function() {
         $e.trigger("change");
       }
     });
-    $tr.children("td.delete-row").find('a.delete-row')
-      .on('click', function(evt) {
-        evt.stopPropagation();
-        var $tr = $(this).closest("tr");
-        var $tbody = $tr.closest("tbody");
-        $tr.triggerHandler("pre-row-delete");
-        $tr.remove();
-        $tbody.children("tr").each(function(rowNumber,tr) {
-          var $tr = $(tr);
-          $tr.attr('dynamic-table-row-number', rowNumber);
-          $tr.triggerHandler("row-number-changed");
-        });
-        $table.children(".store-row-count").val($tbody.children("tr:not(.new-table-row)").length);
-        $table.triggerHandler("update-summing-table.sum");
-        return false;
-      });
-    /*  */
   }); /* each table */
+
+  $(".selectpicker[data-dep]").each(function(i, sel) {
+    var $sel = $(sel);
+    var $dep = $(document.getElementById($sel.attr("data-dep")));
+    $dep.empty();
+    $sel.on("changed.bs.select.dep", function (evt) {
+      var $sel = $(this);
+      var $dep = $(document.getElementById($sel.attr("data-dep")));
+      var val = $sel.selectpicker("val");
+      var $opt = $sel.find("option[value=\""+val+"\"]");
+      var newOpt = $opt.data("dep");
+      if (newOpt == null) return;
+      for (var j = 0; j < newOpt.length; j++) {
+       $("<option/>").attr("value", newOpt[j]).text(newOpt[j]).appendTo($dep);
+      }
+      if ($dep.is(".selectpicker")) {
+        $dep.selectpicker("refresh");
+      }
+      if (newOpt.length == 1) {
+        if ($dep.is(".selectpicker")) {
+          $dep.selectpicker("val", newOpt[0]);
+        } else {
+          $dep.val(newOpt[0]);
+        }
+      }
+    });
+    $sel.triggerHandler("changed.bs.select");
+  });
 
   $( "select[data-value]" ).each(function (i, e) {
     var $e = $(e);
