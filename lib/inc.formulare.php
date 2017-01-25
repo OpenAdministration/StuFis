@@ -70,7 +70,7 @@ function getFormFiles($name, $values) {
 
   $ret = [];
   foreach($values as $row) {
-    if (substr($row["fieldname"], 0, strlen($name)) != $name)
+    if ($row["fieldname"] != $name && (substr($row["fieldname"], 0, strlen($name."[")) != $name."["))
       continue;
     $ret[] = $row;
   }
@@ -489,7 +489,7 @@ function renderFormItemFile($meta, $ctrl) {
         $renameFileFieldNameOrig .= "[]";
       }
 
-      echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\" data-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-old-html=\"".htmlspecialchars($myOut)."\">";
+      echo "<div class=\"single-file-container\" data-display-text=\"".newTemplatePattern($ctrl, $fileName)."\" data-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-old-html=\"".htmlspecialchars($myOut)."\">";
       echo "<span>".$tPattern."</span>";
       echo "<span>&nbsp;</span>";
       echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
@@ -535,10 +535,6 @@ function renderFormItemMultiFile($meta, $ctrl) {
     return;
   }
 
-  if (count($html) > 0) {
-    echo newTemplatePattern($ctrl, "<ul><li>".implode("</li><li>",$html)."</li></ul>");;
-  }
-
   echo "<div";
   if (isset($meta["destination"])) {
     $cls = ["multi-file-container", "multi-file-container-with-destination"];
@@ -552,6 +548,44 @@ function renderFormItemMultiFile($meta, $ctrl) {
     echo " class=\"multi-file-container multi-file-container-without-destination\"";
   }
   echo ">";
+
+  if (count($html) > 0) {
+    echo "<ul>";
+    foreach($files as $i => $file) {
+      $oldFieldNameFieldName = "formdata[{$meta["id"]}][oldFieldName]";
+      $oldFieldNameFieldNameOrig = $oldFieldNameFieldName;
+      foreach($ctrl["suffix"] as $suffix) {
+        $oldFieldNameFieldName .= "[{$suffix}]";
+        $oldFieldNameFieldNameOrig .= "[]";
+      }
+      $oldFieldNameFieldName .= "[]";
+      $oldFieldNameFieldNameOrig .= "[]";
+      $oldFieldName = "<input type=\"hidden\" name=\"".htmlspecialchars($oldFieldNameFieldName)."\" orig-name=\"".htmlspecialchars($oldFieldNameFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-oldFieldName\" value=\"".htmlspecialchars($file["fieldname"])."\"/>";
+
+      $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
+      $renameFileFieldNameOrig = $renameFileFieldName;
+      foreach($ctrl["suffix"] as $suffix) {
+        $renameFileFieldName .= "[{$suffix}]";
+        $renameFileFieldNameOrig .= "[]";
+      }
+      $renameFileFieldName .= "[]";
+      $renameFileFieldNameOrig .= "[]";
+
+      $fileName = $file["filename"];
+
+      echo "<li class=\"multi-file-container-olddata-singlefile\" data-display-text=\"".newTemplatePattern($ctrl, $fileName)."\" data-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\">";
+      echo "<span>".newTemplatePattern($ctrl, $html[$i])."</span>";
+      echo "<span>&nbsp;</span>";
+      echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
+      echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+      echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
+      echo $oldFieldName;
+      echo "</li>";
+    }
+    echo "</ul>";
+  }
+
   echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\"[] id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
   if (in_array("dir", $meta["opts"])) {
     echo " webkitdirectory";
