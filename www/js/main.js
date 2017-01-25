@@ -951,11 +951,14 @@ function onClickRenameFile(evt) {
   $("#rename-file-newname").val($sfc.attr("filename"));
   $("#rename-file-ok").off("click");
   $("#rename-file-ok").on("click.rename-file", function (evt) {
-    var newFileName = $("#rename-file-newname").val();
+    var newFileName = $("#rename-file-newname").val().trim();
     if (newFileName.length == 0) return;
     $sfc.attr("filename", newFileName);
     $sfc.find(".form-file-name").val(newFileName);
     $sfc.find(".show-file-name").text(newFileName);
+    var $td = $sfc.closest("td");
+    $td.data("display-text", newFileName);
+    $td.closest("tr").triggerHandler("row-changed");
     $("#rename-file-dlg").modal("hide");
   });
   $("#rename-file-dlg").modal("show");
