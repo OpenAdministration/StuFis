@@ -14,6 +14,8 @@ $scheme["antrag"] = [
   "createdat" => "DATETIME NOT NULL",
   "lastupdated" => "DATETIME NOT NULL",
   "token" => "VARCHAR(32) NOT NULL",
+  "version" => "BIGINT NOT NULL DEFAULT 0",
+  "state" => "VARCHAR(32) NOT NULL",
  ];
 
 $scheme["inhalt"] = [
@@ -45,6 +47,8 @@ $scheme["comments"] = [
   "adminonly" => "BOOLEAN NOT NULL DEFAULT FALSE",
 ];
 
+#foreach(array_reverse(array_keys($scheme)) as $k)
+#  $pdo->query("DROP TABLE {$DB_PREFIX}{$k}") or httperror(print_r($pdo->errorInfo(),true));
 
 function buildColDef($fields) {
   $r = "";

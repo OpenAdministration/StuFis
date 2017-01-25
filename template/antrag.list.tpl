@@ -24,7 +24,7 @@
 
 <thead>
 
-<tr><th>ID</th><th>Ersteller</th><th>letztes Update</th><th>Token</th></tr>
+<tr><th>ID</th><th>Ersteller</th><th>Status</th><th>letztes Update</th><th>Token</th></tr>
 
 </thead>
 <tbody>
@@ -38,6 +38,7 @@ foreach ($antraege as $type => $l0) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";
       echo "<td>".htmlspecialchars($antrag["creator"])."</td>";
+      echo "<td>".htmlspecialchars($antrag["state"])."</td>";
       echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
       echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".htmlspecialchars($antrag["token"])."</a></td>";
       echo "</tr>";

@@ -468,26 +468,39 @@ function renderFormItemFile($meta, $ctrl) {
     echo "<div>";
     echo $tPattern;
     echo "</div>";
-  } elseif ($file) { // FIXME DELETE FILE FIXME REPLACE FILE FIXME RENAME FILE
-    $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
-    $renameFileFieldNameOrig = $renameFileFieldName;
-    foreach($ctrl["suffix"] as $suffix) {
-      $renameFileFieldName .= "[{$suffix}]";
-      $renameFileFieldNameOrig .= "[]";
-    }
-
-    echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\" filename=\"".newTemplatePattern($ctrl, $fileName)."\" orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\">";
-    echo "<span>".$tPattern."</span>";
-    echo "<span>&nbsp;</span>";
-    echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
-    echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
-    echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
-    echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
-    echo "</div>";
   } else {
-    echo "<div class=\"single-file-container\">";
-    echo "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
-    echo "</div>";
+    $oldFieldNameFieldName = "formdata[{$meta["id"]}][oldFieldName]";
+    $oldFieldNameFieldNameOrig = $oldFieldNameFieldName;
+    foreach($ctrl["suffix"] as $suffix) {
+      $oldFieldNameFieldName .= "[{$suffix}]";
+      $oldFieldNameFieldNameOrig .= "[]";
+    }
+    $oldFieldName = "<input type=\"hidden\" name=\"".htmlspecialchars($oldFieldNameFieldName)."\" orig-name=\"".htmlspecialchars($oldFieldNameFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-oldFieldName\" value=\"".htmlspecialchars(getFormName($ctrl["name"]))."\"/>";
+
+    $myOut = "<div class=\"single-file-container\">";
+    $myOut .= "<input class=\"form-control single-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"/>";
+    $myOut .= $oldFieldName;
+    $myOut .= "</div>";
+    if ($file) {
+      $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
+      $renameFileFieldNameOrig = $renameFileFieldName;
+      foreach($ctrl["suffix"] as $suffix) {
+        $renameFileFieldName .= "[{$suffix}]";
+        $renameFileFieldNameOrig .= "[]";
+      }
+
+      echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\" data-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\" data-old-html=\"".htmlspecialchars($myOut)."\">";
+      echo "<span>".$tPattern."</span>";
+      echo "<span>&nbsp;</span>";
+      echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
+      echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+      echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
+      echo $oldFieldName;
+      echo "</div>";
+    } else {
+      echo $myOut;
+    }
   }
 }
 

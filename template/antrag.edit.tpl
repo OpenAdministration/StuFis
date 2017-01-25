@@ -1,6 +1,8 @@
 <?php
 # vim: set syntax=php:
 
+if ($antrag["state"] != "draft") die("Antrag ist nicht editierbar");
+
 $formconfig = getFormConfig($antrag["type"],$antrag["revision"]);
 if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
@@ -11,6 +13,7 @@ if ($formconfig === false) die("Unbekannter Formulartyp/-revision, kann nicht da
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
   <input type="hidden" name="type" value="<?php echo $antrag["type"]; ?>"/>
   <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
+  <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
 
 <?php
 

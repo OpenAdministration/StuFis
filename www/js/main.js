@@ -178,8 +178,8 @@ $(document).ready(function() {
       $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-pencil")).appendTo($sfc).on("click.mfcdest", onClickRenameFile);
       $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-trash")).appendTo($sfc).on("click.mfcdest", onClickTrashFile);
       $sfc.data("file", file);
-      $sfc.attr("orig-filename", file.name);
-      $sfc.attr("filename", file.name);
+      $sfc.data("orig-filename", file.name);
+      $sfc.data("filename", file.name);
       $sfc.closest("td").data("display-text", file.name);
       $tr.on("pre-row-delete.multi-file-with-destination", function (evt) {
         $mfinput.fileinput('clear');
@@ -753,7 +753,7 @@ function handleSubmitForm($form, evt) {
     var $sf = $(sf);
     var name = $sf.attr("name");
     var file = $sf.data("file");
-    var filename = $sf.attr("filename");
+    var filename = $sf.data("filename");
     if (!file) { return; }
     if (!filename) { filename = file.name; }
     data.append(name, file, filename);
@@ -947,13 +947,13 @@ function updateInvRef($sel, newRef) {
 function onClickRenameFile(evt) {
   evt.preventDefault();
   var $sfc = $(this).closest(".single-file-container");
-  $("#rename-file-oldname").val($sfc.attr("orig-filename"));
-  $("#rename-file-newname").val($sfc.attr("filename"));
+  $("#rename-file-oldname").val($sfc.data("orig-filename"));
+  $("#rename-file-newname").val($sfc.data("filename"));
   $("#rename-file-ok").off("click");
   $("#rename-file-ok").on("click.rename-file", function (evt) {
     var newFileName = $("#rename-file-newname").val().trim();
     if (newFileName.length == 0) return;
-    $sfc.attr("filename", newFileName);
+    $sfc.data("filename", newFileName);
     $sfc.find(".form-file-name").val(newFileName);
     $sfc.find(".show-file-name").text(newFileName);
     var $td = $sfc.closest("td");
@@ -973,7 +973,7 @@ function onClickTrashFile(evt) {
   $("#delete-file-ok").on("click.delete-file", function (evt) {
     $sfc.empty();
     $sfc.removeClass("form-files");
-    $sfc.attr("filename", null);
+    $sfc.data("filename", null);
     $sfc.data("file", false);
     var html = $sfc.data("old-html");
     $sfc.html(html);
