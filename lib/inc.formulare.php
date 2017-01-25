@@ -695,10 +695,13 @@ function renderFormItemSelect($meta, $ctrl) {
   echo ">";
 
   if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
-    sort($attributes["gremien"]);
+    $gremien = $attributes["gremien"];
+    if ($value != "" && !in_array($value, $attributes["gremien"]))
+      $gremien[] = $value;
+    sort($gremien);
     foreach ($GremiumPrefix as $prefix) {
       echo "<optgroup label=\"".htmlspecialchars($prefix)."\">";
-      foreach ($attributes["gremien"] as $gremium) {
+      foreach ($gremien as $gremium) {
         if (substr($gremium, 0, strlen($prefix)) != $prefix) continue;
         echo "<option>".htmlspecialchars($gremium)."</option>";
       }
