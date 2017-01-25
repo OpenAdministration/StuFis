@@ -12,7 +12,7 @@
 						<div class="container">
 								<div class="navbar-header">
 <!--										<a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
-										<a class="navbar-brand" href="#">StuRa-Finanzformulare</a>
+										<a class="navbar-brand" href="<?php echo htmlspecialchars($URIBASE); ?>">StuRa-Finanzformulare</a>
                     <ul class="nav navbar-nav navbar-right">
                       <li><a href="<?php echo htmlspecialchars($logoutUrl); ?>">Logout</a></li>
                     </ul>

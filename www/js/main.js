@@ -167,13 +167,18 @@ $(document).ready(function() {
       onClickNewRow($tr, $table, tableId);
 
       var $sfc = $tr.find("[orig-id="+destination+"]").closest(".single-file-container");
-      var $sfcinput = $sfc.find(".multi-file");
+      $sfc.triggerHandler("clone-pre");
+      var html = $sfc.html();
+      $sfc.data("old-html", html);
       $sfc.empty();
       $sfc.addClass("form-files");
-      $("<span/>").text(file.name).appendTo($sfc);
+      $("<span/>").addClass("show-file-name").text(file.name).appendTo($sfc);
       $("<span>&nbsp;</span>").appendTo($sfc);
-      $("<small/>").append($("<nobr/>").text(getSizeText(file.size))).appendTo($sfc);
+      $("<small/>").append($("<nobr/>").addClass("show-file-size").text(getSizeText(file.size))).appendTo($sfc);
+      $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-pencil")).appendTo($sfc).on("click.mfcdest", onClickRenameFile);
+      $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-trash")).appendTo($sfc).on("click.mfcdest", onClickTrashFile);
       $sfc.data("file", file);
+      $sfc.data("filename", file.name);
       $sfc.closest("td").data("display-text", file.name);
       $tr.on("pre-row-delete.multi-file-with-destination", function (evt) {
         $mfinput.fileinput('clear');
@@ -741,8 +746,10 @@ function handleSubmitForm($form, evt) {
     var $sf = $(sf);
     var name = $sf.attr("name");
     var file = $sf.data("file");
+    var filename = $sf.data("filename");
     if (!file) { return; }
-    data.append(name, file);
+    if (!filename) { filename = file.name; }
+    data.append(name, file, filename);
   });
   $("#please-wait-dlg").modal("show");
   jQuery.ajax({
@@ -928,4 +935,40 @@ function updateInvRef($sel, newRef) {
   $ntr.children("td.invref-rowTxt").text(getTrText($selTr));
   $invrefTable.triggerHandler("update-summing-table");
 
+}
+
+function onClickRenameFile(evt) {
+  evt.preventDefault();
+  var $sfc = $(this).closest(".single-file-container");
+  $("#rename-file-oldname").val($sfc.data("file").name);
+  $("#rename-file-newname").val($sfc.data("filename"));
+  $("#rename-file-ok").off("click");
+  $("#rename-file-ok").on("click.rename-file", function (evt) {
+    $sfc.data("filename", $("#rename-file-newname").val());
+    $sfc.find(".show-file-name").text($sfc.data("filename"));
+    $("#rename-file-dlg").modal("hide");
+  });
+  $("#rename-file-dlg").modal("show");
+}
+
+function onClickTrashFile(evt) {
+  evt.preventDefault();
+  var $sfc = $(this).closest(".single-file-container");
+  $("#delete-file-name").val($sfc.find(".show-file-name").text());
+  $("#delete-file-size").val($sfc.find(".show-file-size").text());
+  $("#delete-file-ok").off("click");
+  $("#delete-file-ok").on("click.delete-file", function (evt) {
+    $sfc.empty();
+    $sfc.removeClass("form-files");
+    $sfc.data("filename", false);
+    $sfc.data("file", false);
+    var html = $sfc.data("old-html");
+    $sfc.html(html);
+    $sfc.triggerHandler("clone-post");
+    var $tr = $sfc.closest("tr");
+    $tr.triggerHandler("row-changed");
+    $tr.triggerHandler("row-number-changed");
+    $("#delete-file-dlg").modal("hide");
+  });
+  $("#delete-file-dlg").modal("show");
 }
