@@ -3,6 +3,8 @@ String.prototype.replaceAll = function(target, replacement) {
 };
 
 $(document).ready(function() {
+  $.fn.validator.Constructor.FOCUS_OFFSET = 100;
+
   $('.selectpicker').each(function (i,e) {
     var $e = $(e);
     if ($e.closest(".select-picker-container").length > 0) { return; }
@@ -490,6 +492,7 @@ $(document).ready(function() {
         } else {
           $dep.val(newOpt[0]);
         }
+        $dep.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
       }
     });
     $sel.triggerHandler("changed.bs.select");
@@ -501,6 +504,7 @@ $(document).ready(function() {
     if ($e.is(".selectpicker")) {
       $e.selectpicker("val", val);
       $e.triggerHandler("change");
+      $e.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
     } else {
       $e.val(val);
     }
@@ -508,7 +512,7 @@ $(document).ready(function() {
 
   $( "form.ajax" ).validator().on("submit", function(e) {
     if (e.isDefaultPrevented()) return; // validator said no
-    return handleSubmitForm($(this), e);
+    return handleSubmitForm($(this), e, false);
   });
 
 });
@@ -714,9 +718,19 @@ function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
       $("#server-message-dlg").modal("show");
 };
 
-function handleSubmitForm($form, evt) {
+function handleSubmitForm($form, evt, isConfirmed) {
   var action = $form.attr("action");
-  if ($form.find("input[name=action]").length + $form.find("select[name=action]").length == 0) { return true; }
+  if ($form.find(":input[name=action]").length == 0) { return true; }
+  if (!isConfirmed && $form.find(":input[name=action]").val().substr(-6) == "delete") {
+    evt.preventDefault();
+    $("#confirm-delete-btn").off("click");
+    $("#confirm-delete-btn").on("click.dosubmit", function (evt) {
+      $("#confirm-delete-dlg").modal("hide");
+      handleSubmitForm($form, evt, true);
+    });
+    $("#confirm-delete-dlg").modal("show");
+    return false;
+  }
   var data = new FormData($form[0]);
   data.append("ajax", 1);
   $('.new-table-row *[name]').each(function (i,e) {
@@ -854,7 +868,8 @@ function handleSubmitForm($form, evt) {
      }
    })
   .fail(xpAjaxErrorHandler);
-  evt.preventDefault();
+  if (evt)
+    evt.preventDefault();
   return false;
 }
 

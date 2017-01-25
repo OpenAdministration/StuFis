@@ -151,6 +151,61 @@ if (isset($_REQUEST["action"])) {
   }
 
   switch ($_POST["action"]):
+    case "antrag.delete":
+      $antrag = getAntrag();
+      // check antrag editability (state == DRAFT or alike) FIXME
+      if ("draft" !== $antrag["state"]) die("Antrag ist nicht editierbar");
+      // check antrag type and revision, token cannot be altered
+      if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
+      if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
+      if ($_REQUEST["version"] !== $antrag["version"]) {
+        $ret = false;
+        $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
+      } else {
+        $ret = true;
+      }
+      // beginTx
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        goto outAntragDelete;
+      }
+      $filesCreated = []; $filesRemoved = [];
+
+      $anhaenge = dbFetchAll("anhang", [ "antrag_id" => $antrag["id"] ]);
+      foreach($anhaenge as $anhang) {
+        $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
+        $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
+        $ret = $ret && ($ret1 === 1);
+        $filesRemoved[] = $anhang["path"];
+      }
+      dbDelete("inhalt", [ "antrag_id" => $antrag["id"] ]);
+      dbDelete("comments", [ "antrag_id" => $antrag["id"] ]);
+      dbDelete("anhang", [ "antrag_id" => $antrag["id"] ]);
+      dbDelete("antrag", [ "id" => $antrag["id"] ]);
+
+      if (count($filesCreated) > 0) die("ups files created during antrag.delete");
+      // commitTx
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret) {
+        dbRollBack();
+        foreach ($filesCreated as $f) {
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      } else {
+        // delete files from disk after successfull commit
+        foreach ($filesRemoved as $f) {
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      }
+outAntragDelete:
+      if ($ret) {
+        if (@rmdir($STORAGE."/".$antrag["id"]) === false) $msgs[] = "Kann Order nicht löschen: {$antrag["id"]}";
+        $forceClose = true;
+        $target = $URIBASE;
+      }
+      break;
     case "antrag.update":
       $antrag = getAntrag();
       // check antrag editability (state == DRAFT or alike) FIXME
@@ -272,12 +327,12 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          unlink($STORAGE."/".$f);
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         // delete files from disk after successfull commit
         foreach ($filesRemoved as $f) {
-          unlink($STORAGE."/".$f);
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
 outAntragUpdate:
@@ -325,11 +380,11 @@ outAntragUpdate:
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          unlink($f);
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         foreach ($filesRemoved as $f) {
-          unlink($f);
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
 outAntragCreate:
@@ -469,7 +524,12 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.edit.tpl";
   break;
   case "antrag.create":
+    if (!isset($_REQUEST["type"]) || !isset($_REQUEST["revision"])) {
+      header("Location: $URIBASE");
+      exit;
+    }
     $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
+    if ($formconfig === false) die("Unbekannter Formulartyp oder keine Berechtigung");
     require "../template/antrag.create.tpl";
   break;
 #  case "antrag.submit":

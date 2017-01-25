@@ -101,5 +101,24 @@
   </div>
 </div>
 
+<!-- Modal -->
+<div class="modal fade" id="confirm-delete-dlg" tabindex="-1" role="dialog" aria-labelledby="confirm-delete-label">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="confirm-delete-label">Soll dieses Formular wirklich gelöscht werden?</h4>
+      </div>
+      <div class="modal-body" id="confirm-delete-content">
+        Wollen Sie dieses Formular wirklich löschen?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Abbruch</button>
+        <button type="button" class="btn btn-danger" id="confirm-delete-btn">Formular löschen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 		</body>
 </html>
