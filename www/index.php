@@ -42,6 +42,8 @@ function writeFormdata($antrag_id) {
 
   $ret = true;
   foreach($_REQUEST["formdata"] as $fieldname => $value) {
+    $fieldtype = $_REQUEST["formtype"][$fieldname];
+    if ($fieldtype == "file" || $fieldtype == "multifile") continue;
     $inhalt = [];
     $inhalt["antrag_id"] = $antrag_id;
     $inhalt["contenttype"] = $_REQUEST["formtype"][$fieldname];
@@ -89,12 +91,52 @@ if (isset($_REQUEST["action"])) {
       $ret = writeFormdata($antrag["id"]);
       // delete files (tbl anhang)
       // rename files (tbl anhang)
+      global $msgs;
+      function renameAnhang($antrag_id, $fieldname, $formdata) {
+        global $msgs;
+
+        if (is_array($formdata)) {
+          $ret = true;
+          foreach (array_keys($formdata) as $key) {
+            $ret1 = renameAnhang($antrag_id, "${fieldname}[${key}]", $formdata[$key]);
+            $ret = $ret && $ret1;
+          }
+          return $ret;
+        }
+
+        if ($formdata == "") return true; // no empty name
+
+        $anhang = dbGet("anhang", [ "antrag_id" => $antrag_id, "fieldname" => $fieldname ]);
+        if ($anhang === false) {
+          $msgs[] = "Anhang $fieldname not found for rename.";
+          return false;
+        }
+
+        $ret = dbUpdate("anhang", [ "antrag_id" => $antrag_id, "id" => $anhang["id"] ], [ "filename" => $formdata ] );
+        $ret = ($ret === 1);
+        if (!$ret) {
+          $msgs[]="failed field $fieldname => filename $formdata";
+        }
+
+        return $ret;
+      }
+      foreach($_REQUEST["formdata"] as $fieldname => $value) {
+        $fieldtype = $_REQUEST["formtype"][$fieldname];
+        if ($fieldtype != "file" && $fieldtype != "multifile") continue;
+        if (!is_array($value)) continue;
+        if (!isset($value["newFileName"])) continue;
+        $ret1 = renameAnhang($antrag["id"], $fieldname, $value["newFileName"]);
+        $ret = $ret && $ret1;
+      }
       // add new files (tbl anhang) and write files to disk
       // commitTx
-      dbCommit();
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret)
+        dbRollBack();
       // delete files from disk after successfull commit
-      $ret = true;
-      $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+      if ($ret)
+        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       break;
     case "antrag.create":
       $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);

@@ -178,7 +178,8 @@ $(document).ready(function() {
       $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-pencil")).appendTo($sfc).on("click.mfcdest", onClickRenameFile);
       $("<a/>").attr("href","#").append($("<i/>").addClass("fa fa-fw fa-trash")).appendTo($sfc).on("click.mfcdest", onClickTrashFile);
       $sfc.data("file", file);
-      $sfc.data("filename", file.name);
+      $sfc.attr("orig-filename", file.name);
+      $sfc.attr("filename", file.name);
       $sfc.closest("td").data("display-text", file.name);
       $tr.on("pre-row-delete.multi-file-with-destination", function (evt) {
         $mfinput.fileinput('clear');
@@ -222,6 +223,12 @@ $(document).ready(function() {
 
     });
   });
+  $(".show-file-size").each(function (i,e) {
+    var $e = $(e);
+    $e.text(getSizeText($e.text()));
+  });
+  $(".on-click-rename-file").on("click.mfcdest", onClickRenameFile);
+  $(".on-click-delete-file").on("click.mfcdest", onClickTrashFile);
   $(".multi-file-container-without-destination").on("clone-post.multi-file cloned.file", function(evt) {
     var cfg = {
       'fileActionSettings': {
@@ -746,7 +753,7 @@ function handleSubmitForm($form, evt) {
     var $sf = $(sf);
     var name = $sf.attr("name");
     var file = $sf.data("file");
-    var filename = $sf.data("filename");
+    var filename = $sf.attr("filename");
     if (!file) { return; }
     if (!filename) { filename = file.name; }
     data.append(name, file, filename);
@@ -940,12 +947,15 @@ function updateInvRef($sel, newRef) {
 function onClickRenameFile(evt) {
   evt.preventDefault();
   var $sfc = $(this).closest(".single-file-container");
-  $("#rename-file-oldname").val($sfc.data("file").name);
-  $("#rename-file-newname").val($sfc.data("filename"));
+  $("#rename-file-oldname").val($sfc.attr("orig-filename"));
+  $("#rename-file-newname").val($sfc.attr("filename"));
   $("#rename-file-ok").off("click");
   $("#rename-file-ok").on("click.rename-file", function (evt) {
-    $sfc.data("filename", $("#rename-file-newname").val());
-    $sfc.find(".show-file-name").text($sfc.data("filename"));
+    var newFileName = $("#rename-file-newname").val();
+    if (newFileName.length == 0) return;
+    $sfc.attr("filename", newFileName);
+    $sfc.find(".form-file-name").val(newFileName);
+    $sfc.find(".show-file-name").text(newFileName);
     $("#rename-file-dlg").modal("hide");
   });
   $("#rename-file-dlg").modal("show");
@@ -960,7 +970,7 @@ function onClickTrashFile(evt) {
   $("#delete-file-ok").on("click.delete-file", function (evt) {
     $sfc.empty();
     $sfc.removeClass("form-files");
-    $sfc.data("filename", false);
+    $sfc.attr("filename", null);
     $sfc.data("file", false);
     var html = $sfc.data("old-html");
     $sfc.html(html);

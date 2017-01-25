@@ -234,7 +234,7 @@ function dbDelete($table, $filter) {
 function dbGet($table, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFields = ["id","token","antrag_id"];
+   $validFields = ["id","token","antrag_id", "fieldname"];
    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields)); # only fetch using id and url
 
    if (count($fields) == 0) die("No fields given.");

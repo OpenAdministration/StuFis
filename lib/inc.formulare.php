@@ -445,7 +445,7 @@ function renderFormItemTextarea($meta, $ctrl) {
 function getFileLink($file, $antrag) {
   global $URIBASE;
   $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/anhang/".$file["id"];
-  return "<a href=\"".htmlspecialchars($target)."\">".htmlspecialchars($file["filename"])."</a>";
+  return "<a class=\"show-file-name\" href=\"".htmlspecialchars($target)."\">".htmlspecialchars($file["filename"])."</a>";
 }
 
 function renderFormItemFile($meta, $ctrl) {
@@ -469,12 +469,20 @@ function renderFormItemFile($meta, $ctrl) {
     echo $tPattern;
     echo "</div>";
   } elseif ($file) { // FIXME DELETE FILE FIXME REPLACE FILE FIXME RENAME FILE
-    echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\">";
-    echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\" value=\"delete\"/>";
-    echo "&nbsp;";
-    echo "<label for=\"".htmlspecialchars($ctrl["id"])."\">";
-    echo "$tPattern löschen";
-    echo "</label>";
+    $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
+    $renameFileFieldNameOrig = $renameFileFieldName;
+    foreach($ctrl["suffix"] as $suffix) {
+      $renameFileFieldName .= "[{$suffix}]";
+      $renameFileFieldNameOrig .= "[]";
+    }
+
+    echo "<div class=\"single-file-container\" display-text=\"".newTemplatePattern($ctrl, $fileName)."\" filename=\"".newTemplatePattern($ctrl, $fileName)."\" orig-filename=\"".newTemplatePattern($ctrl, $fileName)."\">";
+    echo "<span>".$tPattern."</span>";
+    echo "<span>&nbsp;</span>";
+    echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
+    echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+    echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
     echo "</div>";
   } else {
     echo "<div class=\"single-file-container\">";
