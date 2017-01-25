@@ -803,6 +803,11 @@ function handleSubmitForm($form, evt) {
          var msg = (values.msgs[i]);
          $('<li/>').text(msg).appendTo( $smcu );
        }
+       if (values.forceClose) {
+         $('#server-question-dlg').find("*[data-dismiss=\"modal\"]").hide();
+       } else {
+         $('#server-question-dlg').find("*[data-dismiss=\"modal\"]").show();
+       }
        $("#server-question-close-window").off("click");
        $("#server-question-close-window").on("click", function(evt) {
          if (!values.target) {
@@ -816,8 +821,12 @@ function handleSubmitForm($form, evt) {
        });
        $("#server-question-dlg").off('hidden.bs.modal');
        $("#server-question-dlg").on('hidden.bs.modal', function (e) {
-         if (values.target) {
-           window.open(values.target);
+         if (values.forceClose) {
+           $("#server-question-close-window").triggerHandler("click");
+         } else {
+           if (values.target) {
+             window.open(values.target);
+           }
          }
        });
        $("#server-question-dlg").modal("show");

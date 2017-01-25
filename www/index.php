@@ -135,6 +135,7 @@ if (isset($_REQUEST["action"])) {
  $msgs = Array();
  $ret = false;
  $target = false;
+ $forceClose = false;
 
  if (!isset($_REQUEST["nonce"]) || $_REQUEST["nonce"] !== $nonce) {
   $msgs[] = "Formular veraltet - CSRF Schutz aktiviert.";
@@ -216,7 +217,7 @@ if (isset($_REQUEST["action"])) {
           $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
           $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
           $ret = $ret && ($ret1 === 1);
-          $filesDeleted[] = $anhang["path"];
+          $filesRemoved[] = $anhang["path"];
         } else {
           $newFieldName = $fieldNameMap[$oldFieldName];
           if ($newFieldName != $oldFieldName) {
@@ -271,17 +272,19 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          unlink($f);
+          unlink($STORAGE."/".$f);
         }
       } else {
         // delete files from disk after successfull commit
         foreach ($filesRemoved as $f) {
-          unlink($f);
+          unlink($STORAGE."/".$f);
         }
       }
 outAntragUpdate:
-      if ($ret)
+      if ($ret) {
+        $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+      }
       break;
     case "antrag.create":
       $formconfig = getFormConfig($_REQUEST["type"], $_REQUEST["revision"]);
@@ -332,100 +335,6 @@ outAntragUpdate:
 outAntragCreate:
 
       break;
-#    case "antrag.update":
-#      $antrag = getAntrag();
-#
-#      $q = $_REQUEST;
-#      $f = ["id" => $antrag["id"]];
-#      unset($q["id"]);
-#      $ret = dbUpdate("antrag", $f, $q);
-#
-#      $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["updatetoken"]);
-#
-#      break;
-#    case "antrag.submit":
-#      $antrag = getAntrag();
-#      $ahs = dbFetchAll("anhang",["antrag_id" => $antrag["id"]]);
-#      if ($ahs === false) die("Reading anhang failed.");
-#
-#      $missinganhang = array_map("strtolower",$NEEDANHANG[$antrag["reason"]]);
-#      foreach ($ahs as $ah) {
-#        if ($ah["state"] != "active")
-#          continue;
-#        if(($key = array_search(strtolower($ah["type"]), $missinganhang)) !== false) {
-#          unset($missinganhang[$key]);
-#        }
-#      }
-#
-#      if (count($missinganhang) == 0) {
-#        $ret = dbUpdate("antrag",["id" => $antrag["id"]], ["state" => "WAIT_STURA"]);
-#      } else {
-#        $ret = false;
-#        $msgs[] = "Der Antrag kann nicht abgesendet werden, da noch Nachweise fehlen.";
-#        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["updatetoken"])."/anhang";
-#      }
-#
-#      if ($ret) {
-#
-#        // build and send email
-#        $msg = "Hallo {$antrag["fullname"]},
-#
-#anbei erhälst du deinen beim StuRa eingereichten Antrag auf Erstattung des Semesterbeitrages in Kopie.
-#
-#Mit freundlichen Grüßen,
-#
-#Dein StuRa";
-#        sendAntrag($antrag, $ahs, $msg);
-#
-#        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["updatetoken"])."/submitted";
-#      }
-#
-#      break;
-#    case "anhang.create":
-#      $antrag = getAntrag();
-#      $ret = true;
-#      for ($i = 0; $i < (int) $_REQUEST["_numAnhang"]; $i++) {
-#        if (!isset($_FILES["datei_$i"])) continue;
-#        if (!is_uploaded_file($_FILES["datei_$i"]['tmp_name'])) die("Invalid upload");
-#        $f = [];
-#        $f["md5sum"] = md5_file($_FILES["datei_$i"]['tmp_name']);
-#        $f["mimetype"] = $_FILES["datei_$i"]["type"];
-#        $f["size"] = $_FILES["datei_$i"]["size"];
-#        $f["name"] = $_FILES["datei_$i"]['name'];
-#        $f["state"] = "active";
-#        $f["description"] = $_REQUEST["description_$i"];
-#        $f["type"] = $_REQUEST["type_$i"];
-#        $f["antrag_id"] = $_REQUEST["antrag_id"];
-#
-#        $path = $STORAGE."/".$antrag["id"]."/".uniqid().".".pathinfo($_FILES["datei_$i"]["name"],PATHINFO_EXTENSION);
-#        if (!is_dir(dirname($path)))
-#          mkdir(dirname($path),0777,true);
-#        $f["path"] = $path;
-#        $ret = $ret && move_uploaded_file($_FILES["datei_$i"]['tmp_name'],$path);
-#
-#        $ret = $ret && dbInsert("anhang", $f);
-#      }
-#
-#      if ($ret !== false) {
-#        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["updatetoken"])."/anhang";
-#      }
-#
-#      break;
-#    case "anhang.disable":
-#    case "anhang.enable":
-#      $antrag = getAntrag();
-#      if (!isset($_REQUEST["anhang_id"])) die("Missing anhang_id");
-#
-#      $enabled = $_POST["action"] == "anhang.enable";
-#
-#      $f = ["antrag_id" => $antrag["id"], "id" => $_REQUEST["anhang_id"]];
-#      $ret = dbUpdate("anhang", $f, ["state" => ($enabled ? "active" : "revoked")]);
-#
-#      if ($ret !== false) {
-#        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["updatetoken"])."/anhang";
-#      }
-#
-#      break;
     default:
       logAppend($logId, "__result", "invalid action");
       die("Aktion nicht bekannt.");
@@ -442,6 +351,7 @@ outAntragCreate:
  $result["ret"] = ($ret !== false);
  if ($target !== false)
    $result["target"] = $target;
+ $result["forceClose"] = ($forceClose !== false);
  $result["_REQUEST"] = $_REQUEST;
  $result["_FILES"] = $_FILES;
 
