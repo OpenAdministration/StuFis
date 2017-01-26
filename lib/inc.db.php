@@ -3,7 +3,7 @@ global $pdo;
 global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX;
 global $scheme;
 
-$pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8; SET lc_time_names = 'de_DE';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
+$pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8; SET lc_time_names = 'de_DE'; SET sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
 $scheme = [];
 
 $scheme["antrag"] = [
@@ -11,6 +11,7 @@ $scheme["antrag"] = [
   "type" => "VARCHAR(256) NOT NULL",  # Projektantrag, Fahrtkostenantrag, etc.
   "revision" => "VARCHAR(256) NOT NULL", # Version des Formulars (welche Felder erwartet)
   "creator" => "VARCHAR(256) NOT NULL",
+  "creatorFullName" => "VARCHAR(256) NOT NULL",
   "createdat" => "DATETIME NOT NULL",
   "lastupdated" => "DATETIME NOT NULL",
   "token" => "VARCHAR(32) NOT NULL",
@@ -23,7 +24,7 @@ $scheme["inhalt"] = [
   "antrag_id" => "INT NOT NULL",
   "fieldname" => "VARCHAR(128) NOT NULL",
   "contenttype" => "VARCHAR(128) NOT NULL", # automatisch aus Formulardefinition, zur Darstellung alter Anträge (alte Revision) ohne Metadaten
-  "value" => "VARCHAR(128) NOT NULL",
+  "value" => "TEXT NOT NULL",
 ];
 
 $scheme["anhang"] = [

@@ -1,5 +1,11 @@
 <?php
 
+$classConfig = $form["_class"];
+$classTitle = isset($classConfig["title"]) ? $classConfig["title"] : $form["type"];
+
+$revConfig = $form["config"];
+$revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $form["revision"];
+
 $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/edit";
 $targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 
@@ -9,7 +15,10 @@ if ($antrag["state"] != "draft") $targetEdit = false;
 ?>
 <nav class="navbar navbar-default">
   <div class="container-fluid">
-    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($classTitle); ?></a>
+      <p class="navbar-text navbar-right"><?php echo htmlspecialchars($revTitle); ?></p>
+    </div><!-- /.navbar-collapse -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
 <?php if ($targetEdit !== false) { ?>

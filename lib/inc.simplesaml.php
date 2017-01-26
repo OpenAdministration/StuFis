@@ -2,6 +2,12 @@
 
 global $SIMPLESAML, $SIMPLESAMLAUTHSOURCE, $attributes, $logoutUrl;
 
+function getUserFullName() {
+  global $attributes;
+  requireAuth();
+  return $attributes["displayName"][0];
+}
+
 function getUserMail() {
   global $attributes;
   requireAuth();

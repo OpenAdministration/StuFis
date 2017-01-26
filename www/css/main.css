@@ -1,6 +1,7 @@
-
-body {
+@media not print {
+  body {
     padding-top: 80px;
+  }
 }
 
 td .content
@@ -61,3 +62,13 @@ table.invref > tbody > tr.invref-template {
  display: inline;
 }
 
+@media print {
+ .no-print {
+   display: none;
+ }
+
+ a[href].link-shows-url::after {
+   display: none;
+   content: "";
+ }
+}

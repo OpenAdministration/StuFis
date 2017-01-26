@@ -345,8 +345,8 @@ outAntragUpdate:
       }
       break;
     case "antrag.create":
-      $formlayout = getFormLayout($_REQUEST["type"], $_REQUEST["revision"]);
-      if ($formlayout === false) die("Unbekannte Formularversion");
+      if (false === getForm($_REQUEST["type"], $_REQUEST["revision"]))
+        die("Unbekannte Formularversion");
       // FIXME check perm
 
       if (!dbBegin()) {
@@ -360,10 +360,14 @@ outAntragUpdate:
       $antrag["type"] = $_REQUEST["type"];
       $antrag["revision"] = $_REQUEST["revision"];
       $antrag["creator"] = getUsername();
+      $antrag["creatorFullName"] = getUserFullName();
       $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
       $antrag["createdat"] = date("Y-m-d H:i:s");
       $antrag["lastupdated"] = date("Y-m-d H:i:s");
-      $antrag["state"] = "draft"; // FIXME custom default state
+      $createState = "draft";
+      if (isset($form["_class"]["createState"]))
+        $createState = $form["_class"]["createState"];
+      $antrag["state"] = $createState; // FIXME custom default state
       $ret = dbInsert("antrag", $antrag);
       if ($ret !== false) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
@@ -493,7 +497,12 @@ switch($_REQUEST["tab"]) {
     global $inlineCSS;
     $inlineCSS = true;
     require "../template/header-print.tpl";
+
     $antrag = getAntrag();
+    $form = getForm($antrag["type"],$antrag["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+
+    require "../template/antrag.head.tpl";
     require "../template/antrag.tpl";
     require "../template/footer-print.tpl";
     exit;
@@ -511,7 +520,7 @@ switch($_REQUEST["tab"]) {
     // FIXME extended permission checking
     foreach ($antraege as $type => $l0) {
       foreach ($l0 as $revision => $l1) {
-        if (false === getFormLayout($type,$revision))
+        if (false === getForm($type,$revision))
           unset($antraege[$type][$revision]);
       }
     }
@@ -519,11 +528,20 @@ switch($_REQUEST["tab"]) {
   break;
   case "antrag":
     $antrag = getAntrag();
+    $form = getForm($antrag["type"],$antrag["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+
     require "../template/antrag.menu.tpl";
     require "../template/antrag.tpl";
   break;
   case "antrag.edit":
     $antrag = getAntrag();
+    if ($antrag["state"] != "draft") die("Antrag ist nicht editierbar");
+
+    $form = getForm($antrag["type"],$antrag["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+
+    require "../template/antrag.head.tpl";
     require "../template/antrag.edit.tpl";
   break;
   case "antrag.create":
@@ -531,8 +549,10 @@ switch($_REQUEST["tab"]) {
       header("Location: $URIBASE");
       exit;
     }
-    $formlayout = getFormLayout($_REQUEST["type"], $_REQUEST["revision"]);
-    if ($formlayout === false) die("Unbekannter Formulartyp oder keine Berechtigung");
+    $form = getForm($_REQUEST["type"], $_REQUEST["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp oder keine Berechtigung");
+
+    require "../template/antrag.head.tpl";
     require "../template/antrag.create.tpl";
   break;
 #  case "antrag.submit":

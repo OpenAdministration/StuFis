@@ -5,8 +5,25 @@ loadForms();
 function registerForm( $type, $revision, $layout, $config ) {
   global $formulare;
 
+  if (!isset($formulare[$type])) die("missing form-class $type");
   if (isset($formulare[$type][$revision])) die("duplicate form-id $type:$revision");
-  $formulare[$type][$revision] = ["layout" => $layout, "config" => $config];
+  $formulare[$type][$revision] = ["layout" => $layout, "config" => $config, "type" => $type, "revision" => $revision];
+}
+
+function registerFormClass( $type, $config ) {
+  global $formulare;
+
+  if (isset($formulare[$type])) die("duplicate form-class $type");
+  $formulare[$type] = [];
+  $formulare[$type]["_class"] = $config;
+}
+
+function getFormClass( $type ) {
+  global $formulare;
+
+  if (!isset($formulare[$type])) die("unknown form-class $type");
+
+  return $formulare[$type]["_class"];
 }
 
 function loadForms() {
@@ -14,13 +31,45 @@ function loadForms() {
 
   $handle = opendir(SYSBASE."/config/formulare");
 
+  $files = [];
   while (false !== ($entry = readdir($handle))) {
     if (substr($entry, -4) !== ".php") continue;
+    $files[] = $entry;
+  }
+
+  function cmp($ax, $bx)
+  {
+    $a = strlen($ax);
+    $b = strlen($bx);
+
+    if ($a == $b) {
+        return 0;
+    }
+    return ($a < $b) ? -1 : 1;
+  }
+
+  $a = array(3, 2, 5, 6, 1);
+
+  usort($files, "cmp");
+
+  foreach ($files as $entry) {
     require SYSBASE."/config/formulare/".$entry;
   }
 
   closedir($handle);
 
+}
+
+function getForm($type, $revision) {
+  global $formulare;
+
+  if (!isset($formulare[$type])) return false;
+  if (!isset($formulare[$type][$revision])) return false;
+
+  $form = $formulare[$type][$revision];
+  $form["_class"] = $formulare[$type]["_class"];
+
+  return $form;
 }
 
 function getFormLayout($type, $revision) {
@@ -129,7 +178,20 @@ function newTemplatePattern($ctrl, $value) {
   return $tPattern;
 }
 
-function renderForm($meta, $ctrl = false) {
+function renderForm($form, $ctrl = false) {
+
+  if (!isset($form["layout"]))
+    die("renderForm: \$form has no layout");
+
+  $layout = $form["layout"];
+
+  if (!is_array($ctrl))
+    $ctrl = [];
+
+  if (isset($form["_class"]))
+    $ctrl["_class"] = $form["_class"];
+  if (isset($form["config"]))
+    $ctrl["_config"] = $form["config"];
 
   $ctrl["_render"] = new stdClass();
   $ctrl["_render"]->displayValue = false;
@@ -147,7 +209,7 @@ function renderForm($meta, $ctrl = false) {
     $ctrl["render"] = [];
 
   ob_start();
-  foreach ($meta as $item) {
+  foreach ($layout as $item) {
     renderFormItem($item, $ctrl);
   }
   $txt = ob_get_contents();
@@ -167,16 +229,16 @@ function processTemplates($txt, $ctrl) {
   return str_replace(array_keys($ctrl["_render"]->templates), array_values($ctrl["_render"]->templates), $txt);
 }
 
-function renderFormItem($meta,$ctrl = false) {
+function renderFormItem($layout,$ctrl = false) {
 
-  if (!isset($meta["id"])) {
+  if (!isset($layout["id"])) {
     echo "Missing \"id\" in ";
-    print_r($meta);
+    print_r($layout);
     die();
   }
 
-  if (!isset($meta["opts"]))
-   $meta["opts"] = [];
+  if (!isset($layout["opts"]))
+   $layout["opts"] = [];
 
   if (!isset($ctrl["wrapper"])) {
     $wrapper = "div";
@@ -190,11 +252,11 @@ function renderFormItem($meta,$ctrl = false) {
   else
     $classes = [];
 
-  if (isset($meta["width"]))
-    $classes[] = "col-xs-{$meta["width"]}";
+  if (isset($layout["width"]))
+    $classes[] = "col-xs-{$layout["width"]}";
 
-  $ctrl["id"] = $meta["id"];
-  $ctrl["name"] = "formdata[{$meta["id"]}]";
+  $ctrl["id"] = $layout["id"];
+  $ctrl["name"] = "formdata[{$layout["id"]}]";
   $ctrl["orig-name"] = $ctrl["name"];
 
   if (!isset($ctrl["suffix"]))
@@ -209,13 +271,13 @@ function renderFormItem($meta,$ctrl = false) {
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
 
   $cls = ["form-group"];
-  if (in_array("hasFeedback", $meta["opts"])) $cls[] = "has-feedback";
+  if (in_array("hasFeedback", $layout["opts"])) $cls[] = "has-feedback";
 
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   ob_start();
-  switch ($meta["type"]) {
+  switch ($layout["type"]) {
     case "h1":
     case "h2":
     case "h3":
@@ -223,59 +285,59 @@ function renderFormItem($meta,$ctrl = false) {
     case "h5":
     case "h6":
     case "plaintext":
-      $isEmpty = renderFormItemPlainText($meta,$ctrl);
+      $isEmpty = renderFormItemPlainText($layout,$ctrl);
       break;
     case "group":
-      $isEmpty = renderFormItemGroup($meta,$ctrl);
+      $isEmpty = renderFormItemGroup($layout,$ctrl);
       break;
     case "text":
     case "email":
     case "url":
-      $isEmpty = renderFormItemText($meta,$ctrl);
+      $isEmpty = renderFormItemText($layout,$ctrl);
       break;
     case "money":
-      $isEmpty = renderFormItemMoney($meta,$ctrl);
+      $isEmpty = renderFormItemMoney($layout,$ctrl);
       break;
     case "textarea":
-      $isEmpty = renderFormItemTextarea($meta,$ctrl);
+      $isEmpty = renderFormItemTextarea($layout,$ctrl);
       break;
     case "select":
     case "ref":
-      $isEmpty = renderFormItemSelect($meta,$ctrl);
+      $isEmpty = renderFormItemSelect($layout,$ctrl);
       break;
     case "date":
-      $isEmpty = renderFormItemDate($meta,$ctrl);
+      $isEmpty = renderFormItemDate($layout,$ctrl);
       break;
     case "daterange":
-      $isEmpty = renderFormItemDateRange($meta,$ctrl);
+      $isEmpty = renderFormItemDateRange($layout,$ctrl);
       break;
     case "table":
-      $isEmpty = renderFormItemTable($meta,$ctrl);
+      $isEmpty = renderFormItemTable($layout,$ctrl);
       break;
     case "file":
-      $isEmpty = renderFormItemFile($meta,$ctrl);
+      $isEmpty = renderFormItemFile($layout,$ctrl);
       break;
     case "multifile":
-      $isEmpty = renderFormItemMultiFile($meta,$ctrl);
+      $isEmpty = renderFormItemMultiFile($layout,$ctrl);
       break;
     case "invref":
-      $isEmpty = renderFormItemInvRef($meta,$ctrl);
+      $isEmpty = renderFormItemInvRef($layout,$ctrl);
       break;
     default:
       ob_end_flush();
-      echo "<pre>"; print_r($meta); echo "</pre>";
-      die("Unkown form element meta type: ".$meta["type"]);
+      echo "<pre>"; print_r($layout); echo "</pre>";
+      die("Unkown form element meta type: ".$layout["type"]);
   }
   $txt = ob_get_contents();
   ob_end_clean();
 
   if (!$noFormMarkup) {
-    echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($meta["type"])."\"";
+    echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($layout["type"])."\"";
     echo " style=\"";
-    if (isset($meta["max-width"]))
-      echo "max-width: {$meta["max-width"]};";
-    if (isset($meta["min-width"]))
-      echo "min-width: {$meta["min-width"]};";
+    if (isset($layout["max-width"]))
+      echo "max-width: {$layout["max-width"]};";
+    if (isset($layout["min-width"]))
+      echo "min-width: {$layout["min-width"]};";
     echo "\"";
     echo ">";
   }
@@ -284,12 +346,12 @@ function renderFormItem($meta,$ctrl = false) {
     if (!$noFormMarkup)
       echo "<div class=\"".join(" ", $cls)."\">";
     if (!$noForm)
-      echo "<input type=\"hidden\" value=\"{$meta["type"]}\" name=\"formtype[".htmlspecialchars($meta["id"])."]\"/>";
+      echo "<input type=\"hidden\" value=\"{$layout["type"]}\" name=\"formtype[".htmlspecialchars($layout["id"])."]\"/>";
 
-    if (isset($meta["title"]) && isset($meta["id"]))
-      echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($meta["title"])."</label>";
-    elseif (isset($meta["title"]))
-      echo "<label class=\"control-label\">".htmlspecialchars($meta["title"])."</label>";
+    if (isset($layout["title"]) && isset($layout["id"]))
+      echo "<label class=\"control-label\" for=\"{$ctrl["id"]}\">".htmlspecialchars($layout["title"])."</label>";
+    elseif (isset($layout["title"]))
+      echo "<label class=\"control-label\">".htmlspecialchars($layout["title"])."</label>";
 
     echo $txt;
 
@@ -300,7 +362,7 @@ function renderFormItem($meta,$ctrl = false) {
   }
 
   if (!$noFormMarkup) {
-    if (isset($meta["width"]))
+    if (isset($layout["width"]))
       echo "</$wrapper>";
     else
       echo "</$wrapper>";
@@ -308,18 +370,27 @@ function renderFormItem($meta,$ctrl = false) {
 
 }
 
-function renderFormItemPlainText($meta, $ctrl) {
-  $value = $meta["value"];
+function renderFormItemPlainText($layout, $ctrl) {
+  $value = "";
+  if (isset($layout["value"]))
+    $value = $layout["value"];
+  if (isset($layout["autoValue"])) {
+    if (substr($layout["autoValue"],0,6) == "class:") {
+      $field = substr($layout["autoValue"], 6);
+      if (isset($ctrl["_class"]) && $ctrl["_class"][$field])
+        $value = $ctrl["_class"][$field];
+    }
+  }
   $value = htmlspecialchars($value);
   $value = implode("<br/>", explode("\n", $value));
-  switch ($meta["type"]) {
+  switch ($layout["type"]) {
     case "h1":
     case "h2":
     case "h3":
     case "h4":
     case "h5":
     case "h6":
-      $elem = $meta["type"];
+      $elem = $layout["type"];
       break;
     default:
       $elem = "div";
@@ -328,18 +399,18 @@ function renderFormItemPlainText($meta, $ctrl) {
   echo "<${elem}>{$tPattern}</${elem}>";
 }
 
-function renderFormItemGroup($meta, $ctrl) {
-  if (in_array("well", $meta["opts"]))
+function renderFormItemGroup($layout, $ctrl) {
+  if (in_array("well", $layout["opts"]))
      echo "<div class=\"well\">";
 
-  foreach ($meta["children"] as $child) {
+  foreach ($layout["children"] as $child) {
     renderFormItem($child, $ctrl);
   }
-  if (in_array("well", $meta["opts"]))
+  if (in_array("well", $layout["opts"]))
     echo "<div class=\"clearfix\"></div></div>";
 }
 
-function renderFormItemText($meta, $ctrl) {
+function renderFormItemText($layout, $ctrl) {
   global $nonce, $URIBASE;
 
   $noForm = in_array("no-form", $ctrl["render"]);
@@ -347,18 +418,18 @@ function renderFormItemText($meta, $ctrl) {
 
   $value = "";
   if (isset($ctrl["_values"])) {
-    $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
-  } elseif (isset($meta["value"])) {
-    $value = $meta["value"];
-  } elseif (!$noForm && isset($meta["prefill"]) && $meta["prefill"] == "user:mail") {
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
+  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
   }
   $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
-  if (isset($meta["addToSum"])) {
-    foreach ($meta["addToSum"] as $addToSumId) {
-      $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+  if (isset($layout["addToSum"])) {
+    foreach ($layout["addToSum"] as $addToSumId) {
+      $ctrl["_render"]->addToSumMeta[$addToSumId] = $layout;
       if (!isset($ctrl["_render"]->addToSumValue[$addToSumId]))
         $ctrl["_render"]->addToSumValue[$addToSumId] = 0.00;
       $ctrl["_render"]->addToSumValue[$addToSumId] += (float) $value;
@@ -368,72 +439,72 @@ function renderFormItemText($meta, $ctrl) {
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
   } elseif (!$noForm) {
-    echo "<input class=\"form-control\" type=\"{$meta["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
-  if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
-    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+  if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $layout["addToSum"]))."\"";
   }
-  if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
-    echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+  if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+    echo " data-printSum=\"".htmlspecialchars(implode(" ", $layout["printSum"]))."\"";
   }
 
   if ($noForm) {
     if (!$noFormMarkup) {
       echo ">";
     }
-    if ($meta["type"] == "email" && !empty($value))
-      echo "<a href=\"mailto:{$tPattern}\">";
-    if ($meta["type"] == "url" && !empty($value))
-      echo "<a href=\"{$tPattern}\" target=\"_blank\">";
+    if ($layout["type"] == "email" && !empty($value))
+      echo "<a href=\"mailto:{$tPattern}\" class=\"link-shows-url\">";
+    if ($layout["type"] == "url" && !empty($value))
+      echo "<a href=\"{$tPattern}\" target=\"_blank\" class=\"link-shows-url\">";
     echo $tPattern;
-    if ($meta["type"] == "email" && !empty($value))
+    if ($layout["type"] == "email" && !empty($value))
       echo "</a>";
-    if ($meta["type"] == "url" && !empty($value))
+    if ($layout["type"] == "url" && !empty($value))
       echo "</a>";
     if (!$noFormMarkup) {
       echo "</div>";
     }
   } else {
-    if (isset($meta["placeholder"]))
-      echo " placeholder=\"".htmlspecialchars($meta["placeholder"])."\"";
-    if (in_array("required", $meta["opts"]))
+    if (isset($layout["placeholder"]))
+      echo " placeholder=\"".htmlspecialchars($layout["placeholder"])."\"";
+    if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
-    if (isset($meta["minLength"]))
-      echo " data-minlength=\"".htmlspecialchars($meta["minLength"])."\"";
-    if (isset($meta["maxLength"]))
-      echo " maxlength=\"".htmlspecialchars($meta["maxLength"])."\"";
-    if (isset($meta["pattern"]))
-      echo " pattern=\"".htmlspecialchars($meta["pattern"])."\"";
-    if (isset($meta["pattern-error"]))
-      echo " data-pattern-error=\"".htmlspecialchars($meta["pattern-error"])."\"";
-    if ($meta["type"] == "email") {
+    if (isset($layout["minLength"]))
+      echo " data-minlength=\"".htmlspecialchars($layout["minLength"])."\"";
+    if (isset($layout["maxLength"]))
+      echo " maxlength=\"".htmlspecialchars($layout["maxLength"])."\"";
+    if (isset($layout["pattern"]))
+      echo " pattern=\"".htmlspecialchars($layout["pattern"])."\"";
+    if (isset($layout["pattern-error"]))
+      echo " data-pattern-error=\"".htmlspecialchars($layout["pattern-error"])."\"";
+    if ($layout["type"] == "email") {
       echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.email&nonce=".urlencode($nonce))."\"";
       echo " data-remote-error=\"Ungültige eMail-Adresse\"";
     }
     echo " value=\"{$tPattern}\"";
     echo "/>";
-    if (in_array("hasFeedback", $meta["opts"]))
+    if (in_array("hasFeedback", $layout["opts"]))
       echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
   }
 }
 
-function renderFormItemMoney($meta, $ctrl) {
+function renderFormItemMoney($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "0.00";
   if (isset($ctrl["_values"])) {
-    $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
-  } elseif (isset($meta["value"])) {
-    $value = $meta["value"];
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
   }
   $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
-  if (isset($meta["addToSum"])) {
-    foreach ($meta["addToSum"] as $addToSumId) {
-      $ctrl["_render"]->addToSumMeta[$addToSumId] = $meta;
+  if (isset($layout["addToSum"])) {
+    foreach ($layout["addToSum"] as $addToSumId) {
+      $ctrl["_render"]->addToSumMeta[$addToSumId] = $layout;
       if (!isset($ctrl["_render"]->addToSumValue[$addToSumId]))
         $ctrl["_render"]->addToSumValue[$addToSumId] = 0.00;
       $ctrl["_render"]->addToSumValue[$addToSumId] += (float) $value;
@@ -442,7 +513,7 @@ function renderFormItemMoney($meta, $ctrl) {
 
   echo "<div class=\"input-group\">";
 
-  if (in_array("is-sum", $meta["opts"]))
+  if (in_array("is-sum", $layout["opts"]))
     echo "<span class=\"input-group-addon\">Σ</span>";
 
   if ($noForm && $noFormMarkup) {
@@ -453,11 +524,11 @@ function renderFormItemMoney($meta, $ctrl) {
     echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
-  if (isset($meta["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
-    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $meta["addToSum"]))."\"";
+  if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
+    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $layout["addToSum"]))."\"";
   }
-  if (isset($meta["printSum"])) { # filter based on [data-printSum~={$printSumId}]
-    echo " data-printSum=\"".htmlspecialchars(implode(" ", $meta["printSum"]))."\"";
+  if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+    echo " data-printSum=\"".htmlspecialchars(implode(" ", $layout["printSum"]))."\"";
   }
 
   if ($noForm) {
@@ -465,25 +536,25 @@ function renderFormItemMoney($meta, $ctrl) {
     echo $tPattern;
     echo "</div>";
   } else {
-    if (in_array("required", $meta["opts"]))
+    if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
   }
 
-  echo "<span class=\"input-group-addon\">".htmlspecialchars($meta["currency"])."</span>";
+  echo "<span class=\"input-group-addon\">".htmlspecialchars($layout["currency"])."</span>";
   echo "</div>";
 }
 
-function renderFormItemTextarea($meta, $ctrl) {
+function renderFormItemTextarea($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
-    $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
-  } elseif (isset($meta["value"])) {
-    $value = $meta["value"];
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
   }
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
@@ -494,9 +565,9 @@ function renderFormItemTextarea($meta, $ctrl) {
     echo "</div>";
   } else {
     echo "<textarea class=\"form-control\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
-    if (isset($meta["min-rows"]))
-      echo " rows=".htmlspecialchars($meta["min-rows"]);
-    if (in_array("required", $meta["opts"]))
+    if (isset($layout["min-rows"]))
+      echo " rows=".htmlspecialchars($layout["min-rows"]);
+    if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
     echo ">";
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
@@ -510,7 +581,7 @@ function getFileLink($file, $antrag) {
   return "<a class=\"show-file-name\" href=\"".htmlspecialchars($target)."\">".htmlspecialchars($file["filename"])."</a>";
 }
 
-function renderFormItemFile($meta, $ctrl) {
+function renderFormItemFile($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
 
   $file = false;
@@ -531,7 +602,7 @@ function renderFormItemFile($meta, $ctrl) {
     echo $tPattern;
     echo "</div>";
   } else {
-    $oldFieldNameFieldName = "formdata[{$meta["id"]}][oldFieldName]";
+    $oldFieldNameFieldName = "formdata[{$layout["id"]}][oldFieldName]";
     $oldFieldNameFieldNameOrig = $oldFieldNameFieldName;
     foreach($ctrl["suffix"] as $suffix) {
       $oldFieldNameFieldName .= "[{$suffix}]";
@@ -544,7 +615,7 @@ function renderFormItemFile($meta, $ctrl) {
     $myOut .= $oldFieldName;
     $myOut .= "</div>";
     if ($file) {
-      $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
+      $renameFileFieldName = "formdata[{$layout["id"]}][newFileName]";
       $renameFileFieldNameOrig = $renameFileFieldName;
       foreach($ctrl["suffix"] as $suffix) {
         $renameFileFieldName .= "[{$suffix}]";
@@ -566,10 +637,10 @@ function renderFormItemFile($meta, $ctrl) {
   }
 }
 
-function renderFormItemMultiFile($meta, $ctrl) {
+function renderFormItemMultiFile($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
 
-  if ($noForm && isset($meta["destination"]))
+  if ($noForm && isset($layout["destination"]))
     return false; // no data here
 
   $files = false;
@@ -585,7 +656,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
   $ctrl["_render"]->displayValue = implode(", ",$html);
 
   if ($noForm) {
-    if (isset($meta["destination"])) return false; // no data here
+    if (isset($layout["destination"])) return false; // no data here
 
     echo "<div>";
     if (count($html) > 0) {
@@ -596,14 +667,14 @@ function renderFormItemMultiFile($meta, $ctrl) {
   }
 
   echo "<div";
-  if (isset($meta["destination"])) {
+  if (isset($layout["destination"])) {
     $cls = ["multi-file-container", "multi-file-container-with-destination"];
-    if (in_array("update-ref", $meta["opts"]))
+    if (in_array("update-ref", $layout["opts"]))
       $cls[] = "multi-file-container-update-ref";
-    $meta["destination"] = str_replace(".", "-", $meta["destination"]);
+    $layout["destination"] = str_replace(".", "-", $layout["destination"]);
 
     echo " class=\"".implode(" ", $cls)."\"";
-    echo " data-destination=\"".htmlspecialchars($meta["destination"])."\"";
+    echo " data-destination=\"".htmlspecialchars($layout["destination"])."\"";
   } else {
     echo " class=\"multi-file-container multi-file-container-without-destination\"";
   }
@@ -612,7 +683,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
   if (count($html) > 0) {
     echo "<ul>";
     foreach($files as $i => $file) {
-      $oldFieldNameFieldName = "formdata[{$meta["id"]}][oldFieldName]";
+      $oldFieldNameFieldName = "formdata[{$layout["id"]}][oldFieldName]";
       $oldFieldNameFieldNameOrig = $oldFieldNameFieldName;
       foreach($ctrl["suffix"] as $suffix) {
         $oldFieldNameFieldName .= "[{$suffix}]";
@@ -622,7 +693,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
       $oldFieldNameFieldNameOrig .= "[]";
       $oldFieldName = "<input type=\"hidden\" name=\"".htmlspecialchars($oldFieldNameFieldName)."\" orig-name=\"".htmlspecialchars($oldFieldNameFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-oldFieldName\" value=\"".htmlspecialchars($file["fieldname"])."\"/>";
 
-      $renameFileFieldName = "formdata[{$meta["id"]}][newFileName]";
+      $renameFileFieldName = "formdata[{$layout["id"]}][newFileName]";
       $renameFileFieldNameOrig = $renameFileFieldName;
       foreach($ctrl["suffix"] as $suffix) {
         $renameFileFieldName .= "[{$suffix}]";
@@ -647,7 +718,7 @@ function renderFormItemMultiFile($meta, $ctrl) {
   }
 
   echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\"[] id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
-  if (in_array("dir", $meta["opts"])) {
+  if (in_array("dir", $layout["opts"])) {
     echo " webkitdirectory";
   }
   echo "/>";
@@ -690,7 +761,7 @@ function getTrText($trName, $ctrl) {
   return implode(" ", $txtTr);
 }
 
-function renderFormItemSelect($meta, $ctrl) {
+function renderFormItemSelect($layout, $ctrl) {
   global $attributes, $GremiumPrefix;
 
   $noForm = in_array("no-form", $ctrl["render"]);
@@ -698,11 +769,11 @@ function renderFormItemSelect($meta, $ctrl) {
 
   $value = "";
   if (isset($ctrl["_values"])) {
-    $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
 
   if ($noForm) {
-    if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
+    if (isset($layout["data-source"]) && $layout["data-source"] == "own-orgs" && $layout["type"] != "ref") {
       if ($noFormMarkup)
         echo "<div class=\"visible-inline\">";
       else
@@ -710,7 +781,7 @@ function renderFormItemSelect($meta, $ctrl) {
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
       echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
-    } else if ($meta["type"] == "ref") {
+    } else if ($layout["type"] == "ref") {
       $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{ref:$value}>"));
       echo "<div>";
       echo $tPattern;
@@ -731,27 +802,27 @@ function renderFormItemSelect($meta, $ctrl) {
   }
 
   $liveSearch = true;
-  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs")
+  if (isset($layout["data-source"]) && $layout["data-source"] == "own-orgs")
     $liveSearch = false;
 
   $cls = ["select-picker-container"];
-  if (in_array("hasFeedback", $meta["opts"]))
+  if (in_array("hasFeedback", $layout["opts"]))
     $cls[] = "hasFeedback";
   echo "<div class=\"".implode(" ", $cls)."\">";
-  if (in_array("hasFeedback", $meta["opts"]))
+  if (in_array("hasFeedback", $layout["opts"]))
     echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
   echo "<select class=\"selectpicker form-control\" data-live-search=\"".($liveSearch ? "true" : "false")."\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
-  if (isset($meta["placeholder"]))
-    echo " title=\"".htmlspecialchars($meta["placeholder"])."\"";
-  elseif ($meta["type"] == "ref")
+  if (isset($layout["placeholder"]))
+    echo " title=\"".htmlspecialchars($layout["placeholder"])."\"";
+  elseif ($layout["type"] == "ref")
     echo " title=\"".htmlspecialchars("Bitte auswählen")."\"";
-  if (in_array("multiple", $meta["opts"]))
+  if (in_array("multiple", $layout["opts"]))
     echo " multiple";
-  if (in_array("required", $meta["opts"]))
+  if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if ($meta["type"] == "ref") {
-    $meta["references"] = str_replace(".", "-", $meta["references"]);
-    echo " data-references=\"".htmlspecialchars($meta["references"])."\"";
+  if ($layout["type"] == "ref") {
+    $layout["references"] = str_replace(".", "-", $layout["references"]);
+    echo " data-references=\"".htmlspecialchars($layout["references"])."\"";
   }
   if ($value != "") {
     $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
@@ -759,7 +830,7 @@ function renderFormItemSelect($meta, $ctrl) {
   }
   echo ">";
 
-  if (isset($meta["data-source"]) && $meta["data-source"] == "own-orgs" && $meta["type"] != "ref") {
+  if (isset($layout["data-source"]) && $layout["data-source"] == "own-orgs" && $layout["type"] != "ref") {
     $gremien = $attributes["gremien"];
     if ($value != "" && !in_array($value, $attributes["gremien"]))
       $gremien[] = $value;
@@ -773,22 +844,22 @@ function renderFormItemSelect($meta, $ctrl) {
       echo "</optgroup>";
     }
   }
-  if ($meta["type"] == "ref")
+  if ($layout["type"] == "ref")
     echo "<option value=\"\">Bitte auswählen</option>";
 
   echo "</select>";
   echo "</div>";
 }
 
-function renderFormItemDateRange($meta, $ctrl) {
+function renderFormItemDateRange($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $valueStart = "";
   $valueEnd = "";
   if (isset($ctrl["_values"])) {
-    $valueStart = getFormValue($ctrl["name"]."[start]", $meta["type"], $ctrl["_values"]["_inhalt"], $valueStart);
-    $valueEnd = getFormValue($ctrl["name"]."[end]", $meta["type"], $ctrl["_values"]["_inhalt"], $valueEnd);
+    $valueStart = getFormValue($ctrl["name"]."[start]", $layout["type"], $ctrl["_values"]["_inhalt"], $valueStart);
+    $valueEnd = getFormValue($ctrl["name"]."[end]", $layout["type"], $ctrl["_values"]["_inhalt"], $valueEnd);
   }
   $tPatternStart = newTemplatePattern($ctrl, htmlspecialchars($valueStart));
   $tPatternEnd =  newTemplatePattern($ctrl, htmlspecialchars($valueEnd));
@@ -823,7 +894,7 @@ function renderFormItemDateRange($meta, $ctrl) {
          data-date-calendar-weeks="true"
          data-date-language="de"
 <?php
-  if (in_array("not-before-creation", $meta["opts"])) {
+  if (in_array("not-before-creation", $layout["opts"])) {
 ?>
          data-date-start-date="today"
 <?php
@@ -834,7 +905,7 @@ function renderFormItemDateRange($meta, $ctrl) {
           von
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternStart; ?>"/>
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternStart; ?>"/>
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -843,7 +914,7 @@ function renderFormItemDateRange($meta, $ctrl) {
           bis
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternEnd; ?>"/>
+          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternEnd; ?>"/>
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -854,13 +925,13 @@ function renderFormItemDateRange($meta, $ctrl) {
 }
 
 
-function renderFormItemDate($meta, $ctrl) {
+function renderFormItemDate($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
-    $value = getFormValue($ctrl["name"], $meta["type"], $ctrl["_values"]["_inhalt"], $value);
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
@@ -884,14 +955,14 @@ function renderFormItemDate($meta, $ctrl) {
      data-date-calendar-weeks="true"
      data-date-language="de"
 <?php
-  if (in_array("not-before-creation", $meta["opts"])) {
+  if (in_array("not-before-creation", $layout["opts"])) {
 ?>
      data-date-start-date="today"
 <?php
   }
 ?>
 >
-    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $meta["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"/>
+    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"/>
     <div class="input-group-addon">
         <span class="glyphicon glyphicon-th"></span>
     </div>
@@ -905,19 +976,19 @@ function renderFormItemDate($meta, $ctrl) {
 */
 }
 
-function renderFormItemTable($meta, $ctrl) {
-  $withRowNumber = in_array("with-row-number", $meta["opts"]);
+function renderFormItemTable($layout, $ctrl) {
+  $withRowNumber = in_array("with-row-number", $layout["opts"]);
   $noForm = in_array("no-form", $ctrl["render"]);
 
   $cls = ["table", "table-striped", "summing-table"];
   if (!$noForm)
     $cls[] = "dynamic-table";
-  if (in_array("fixed-width-table", $meta["opts"]))
+  if (in_array("fixed-width-table", $layout["opts"]))
     $cls[] = "fixed-width-table";
 
-  $rowCountFieldName = (isset($meta["rowCountField"]) ? "formdata[{$meta["rowCountField"]}]" : "formdata[{$meta["id"]}][rowCount]");
+  $rowCountFieldName = (isset($layout["rowCountField"]) ? "formdata[{$layout["rowCountField"]}]" : "formdata[{$layout["id"]}][rowCount]");
   $rowCountFieldNameOrig = $rowCountFieldName;
-  $rowCountFieldTypeName = (isset($meta["rowCountField"]) ? "formtype[{$meta["rowCountField"]}]" : "formtype[{$meta["id"]}]");
+  $rowCountFieldTypeName = (isset($layout["rowCountField"]) ? "formtype[{$layout["rowCountField"]}]" : "formtype[{$layout["id"]}]");
   foreach($ctrl["suffix"] as $suffix) {
     $rowCountFieldName .= "[{$suffix}]";
     $rowCountFieldNameOrig .= "[]";
@@ -925,7 +996,7 @@ function renderFormItemTable($meta, $ctrl) {
 
   $rowCount = 0;
   if (isset($ctrl["_values"])) {
-    $rowCount = (int) getFormValue($rowCountFieldName, $meta["type"], $ctrl["_values"]["_inhalt"], $rowCount);
+    $rowCount = (int) getFormValue($rowCountFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $rowCount);
   }
   if ($noForm && $rowCount == 0) return false; //empty table
 
@@ -944,10 +1015,10 @@ function renderFormItemTable($meta, $ctrl) {
 <?php
   if (!$noForm) {
     echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" orig-name=\"".htmlspecialchars($rowCountFieldNameOrig)."\" class=\"store-row-count\"/>";
-    echo "<input type=\"hidden\" value=\"".htmlspecialchars($meta["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
   }
 
-  if (in_array("with-headline", $meta["opts"])) {
+  if (in_array("with-headline", $layout["opts"])) {
 
 ?>
 
@@ -958,7 +1029,7 @@ function renderFormItemTable($meta, $ctrl) {
         if ($withRowNumber) {
           echo "<th></th>";
         }
-        foreach ($meta["columns"] as $col) {
+        foreach ($layout["columns"] as $col) {
           echo "<th>".htmlspecialchars($col["name"])."</th>";
         }
 ?>
@@ -1001,7 +1072,7 @@ function renderFormItemTable($meta, $ctrl) {
           echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
         echo "</td>";
 
-        foreach ($meta["columns"] as $i => $col) {
+        foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"]))
             $col["opts"] = [];
 
@@ -1011,7 +1082,7 @@ function renderFormItemTable($meta, $ctrl) {
           else
             $tdClass[] = "dynamic-table-column-no-title";
           if (in_array("sum-over-table-bottom", $col["opts"])) {
-            $col["addToSum"][] = "col-sum-".$meta["id"]."-".$i;
+            $col["addToSum"][] = "col-sum-".$layout["id"]."-".$i;
             $hasPrintSumFooter |= true;
           }
           if (!empty($col["printSumFooter"]))
@@ -1066,10 +1137,10 @@ function renderFormItemTable($meta, $ctrl) {
 ?>
         <th></th>
 <?php
-        foreach ($meta["columns"] as $i => $col) {
+        foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
           if (in_array("sum-over-table-bottom", $col["opts"])) {
-            $col["printSumFooter"][] = "col-sum-".$meta["id"]."-".$i;
+            $col["printSumFooter"][] = "col-sum-".$layout["id"]."-".$i;
           }
           if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0) {
 ?>
@@ -1093,7 +1164,7 @@ function renderFormItemTable($meta, $ctrl) {
 
               $newCtrl = $ctrl;
               $newCtrl["suffix"][] = "print-foot";
-              $newCtrl["suffix"][] = $meta["id"];
+              $newCtrl["suffix"][] = $layout["id"];
               $newCtrl["render"][] = "no-form";
               unset($newCtrl["_values"]);
               renderFormItem($newMeta, $newCtrl);
@@ -1121,15 +1192,15 @@ function renderFormItemTable($meta, $ctrl) {
 
 }
 
-function renderFormItemInvRef($meta,$ctrl) {
+function renderFormItemInvRef($layout,$ctrl) {
   $refId = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
-  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $meta, $refId, $ctrl) {
+  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl) {
     $noForm = in_array("no-form", $ctrl["render"]);
-    if (isset($meta["printSum"]))
-      $printSum = $meta["printSum"];
+    if (isset($layout["printSum"]))
+      $printSum = $layout["printSum"];
     else
       $printSum = [];
 
@@ -1155,7 +1226,7 @@ function renderFormItemInvRef($meta,$ctrl) {
           $value = number_format($value, 2, ".", "");
           if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
             $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-            $newMeta["addToSum"] = [ "invref-".$meta["id"]."-".$psId ];
+            $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
             $newMeta["printSum"] = [ $psId ];
             $newMeta["value"] = $value;
             if (!isset($columnSum[ $psId ]))
@@ -1164,7 +1235,7 @@ function renderFormItemInvRef($meta,$ctrl) {
 
             $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
             $newCtrl["suffix"][] = "print";
-            $newCtrl["suffix"][] = $meta["id"];
+            $newCtrl["suffix"][] = $layout["id"];
             $newCtrl["render"][] = "no-form";
             unset($newCtrl["_values"]);
             ob_start();
@@ -1186,12 +1257,12 @@ function renderFormItemInvRef($meta,$ctrl) {
       foreach ($printSum as $psId) {
         if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-          $newMeta["addToSum"] = [ "invref-".$meta["id"]."-".$psId ];
+          $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
           $newMeta["printSum"] = [ $psId ];
 
           $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
           $newCtrl["suffix"][] = "print";
-          $newCtrl["suffix"][] = $meta["id"];
+          $newCtrl["suffix"][] = $layout["id"];
           $newCtrl["render"][] = "no-form";
           unset($newCtrl["_values"]);
           ob_start();
@@ -1216,7 +1287,7 @@ function renderFormItemInvRef($meta,$ctrl) {
       if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
         $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
         unset($newMeta["addToSum"]);
-        $newMeta["printSum"] = [ "invref-".$meta["id"]."-".$psId ];
+        $newMeta["printSum"] = [ "invref-".$layout["id"]."-".$psId ];
         if (!isset($columnSum[ $psId ]))
           $columnSum[ $psId ] = 0.00;
         $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
@@ -1224,7 +1295,7 @@ function renderFormItemInvRef($meta,$ctrl) {
 
         $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "cell-has-printSum" ] ]);
         $newCtrl["suffix"][] = "print-foot";
-        $newCtrl["suffix"][] = $meta["id"];
+        $newCtrl["suffix"][] = $layout["id"];
         $newCtrl["render"][] = "no-form";
         unset($newCtrl["_values"]);
         ob_start();

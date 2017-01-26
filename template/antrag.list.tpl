@@ -6,7 +6,22 @@
 <?php
   global $formulare;
   foreach ($formulare as $type => $list) {
-    echo "          <option value=\"".htmlspecialchars($type)."\" data-dep=\"".htmlspecialchars(json_encode(array_keys($list)))."\">".htmlspecialchars($type)."</option>\n";
+    $classConfig = getFormClass($type);
+    $title = $type;
+
+    if (isset($classConfig["title"]))
+      $title = $classConfig["title"];
+
+    $submenu = [];
+    foreach ($list as $revision => $form) {
+      if ($revision == "_class") continue;
+      $rtitle = $revision;
+      if (isset($form["config"]["revisionTitle"]))
+        $rtitle = $form["config"]["revisionTitle"];
+      $submenu[$revision] = $rtitle;
+    }
+
+    echo "          <option value=\"".htmlspecialchars($type)."\" data-dep=\"".htmlspecialchars(json_encode($submenu))."\">".htmlspecialchars($title)."</option>\n";
   }
 ?>
         </select>
@@ -40,33 +55,43 @@
 
 foreach ($antraege as $type => $l0) {
   foreach ($l0 as $revision => $l1) {
-    $config = getFormConfig($type, $revision);
-    if ($config === false) continue;
-    if (isset($config["title"]))
-      $title = "[{$type}] {$config["title"]} - {$revision}";
-    else
-      $title = "{$type} - {$revision}";
-    if (!isset($config["caption-field"]))
-      $config["caption-field"] = [];
-    if (!is_array($config["caption-field"]))
-      $config["caption-field"] = [ $config["caption-field"] ];
+    $classConfig = getFormClass($type);
+    $revConfig = getFormConfig($type, $revision);
+    if ($classConfig === false) continue;
+    if ($revConfig === false) continue;
+
+    $classTitle = "{$type}";
+    if (isset($classConfig["title"]))
+      $classTitle = "[{$type}] {$classConfig["title"]}";
+
+    $revTitle = "{$revision}";
+    if (isset($revConfig["revisionTitle"]))
+      $revTitle = "[{$revision}] {$revConfig["revisionTitle"]}";
+
+    $title = "{$classTitle} - {$revTitle}";
+
+    if (!isset($revConfig["captionField"]))
+      $revConfig["captionField"] = [];
+    if (!is_array($revConfig["captionField"]))
+      $revConfig["captionField"] = [ $revConfig["captionField"] ];
     echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
     foreach ($l1 as $i => $antrag) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";
       $caption = [ htmlspecialchars($antrag["token"]) ];
-      if (count($config["caption-field"]) > 0) {
+      if (count($revConfig["captionField"]) > 0) {
         if (!isset($antrag["_inhalt"])) {
           $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
           $antraege[$type][$revision][$i] = $antrag;
         }
-        foreach ($config["caption-field"] as $j => $fname) {
+        foreach ($revConfig["captionField"] as $j => $fname) {
           $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
           $row = count($rows) > 0 ? $rows[0] : false;
           if ($row !== false) {
             ob_start();
             $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
-            renderForm($formlayout, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+            $form = [ "layout" => $formlayout, "config" => [] ];
+            renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
             $val = ob_get_contents();
             ob_end_clean();
             $caption[$j] = $val;
@@ -74,8 +99,23 @@ foreach ($antraege as $type => $l0) {
         }
       }
       echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".implode(" ", $caption)."</a></td>";
-      echo "<td>".htmlspecialchars($antrag["creator"])."</td>";
-      echo "<td>".htmlspecialchars($antrag["state"])."</td>";
+      echo "<td>";
+       if (($antrag["creator"] == $antrag["creatorFullName"]) || empty($antrag["creatorFullName"])) {
+         echo htmlspecialchars($antrag["creator"]);
+       } else {
+         echo "<span title=\"";
+         echo htmlspecialchars($antrag["creator"]);
+         echo "\">";
+         echo htmlspecialchars($antrag["creatorFullName"]);
+         echo "</span>";
+       }
+      echo "</td>";
+      echo "<td>";
+       $txt = $antrag["state"];
+       if (isset($classConfig["state"]) && isset($classConfig["state"][$antrag["state"]]))
+         $txt = $classConfig["state"][$antrag["state"]];
+       echo htmlspecialchars($txt);
+      echo "</td>";
       echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
       echo "</tr>";
     }

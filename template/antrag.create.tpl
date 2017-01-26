@@ -11,7 +11,7 @@
 
 <?php
 
-  renderForm($formlayout);
+  renderForm($form);
 
 ?>
 

@@ -486,17 +486,24 @@ console.log(txt);
       var $opt = $sel.find("option[value=\""+val+"\"]");
       var newOpt = $opt.data("dep");
       if (newOpt == null) return;
-      for (var j = 0; j < newOpt.length; j++) {
-       $("<option/>").attr("value", newOpt[j]).text(newOpt[j]).appendTo($dep);
+      var firstKey = null;
+      for (var key in newOpt) {
+        if (!newOpt.hasOwnProperty(key)) continue;
+        $("<option/>").attr("value", key).text(newOpt[key]).appendTo($dep);
+        if (firstKey === null) {
+          firstKey = key;
+        } else {
+          firstKey = false;
+        }
       }
       if ($dep.is(".selectpicker")) {
         $dep.selectpicker("refresh");
       }
-      if (newOpt.length == 1) {
+      if (firstKey !== null && firstKey !== false) {
         if ($dep.is(".selectpicker")) {
-          $dep.selectpicker("val", newOpt[0]);
+          $dep.selectpicker("val", firstKey);
         } else {
-          $dep.val(newOpt[0]);
+          $dep.val(firstKey);
         }
         $dep.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
       }
