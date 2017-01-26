@@ -439,6 +439,7 @@ function renderFormItemText($layout, $ctrl) {
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
   } elseif (!$noForm) {
+    echo "<div class=\"input-group\">";
     echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
@@ -481,11 +482,28 @@ function renderFormItemText($layout, $ctrl) {
     if ($layout["type"] == "email") {
       echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.email&nonce=".urlencode($nonce))."\"";
       echo " data-remote-error=\"Ungültige eMail-Adresse\"";
+    } elseif ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
+      echo " data-tree-url=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=propose.wiki&nonce=".urlencode($nonce))."\"";
+      echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.wiki&nonce=".urlencode($nonce))."\"";
     }
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if (in_array("hasFeedback", $layout["opts"]))
       echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
+    if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
+      echo "<span class=\"input-group-btn tree-view-show\">";
+//      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"fa fa-expand\" aria-hidden=\"true\"></i></a>";
+      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"glyphicon glyphicon-triangle-bottom\" aria-hidden=\"true\"></i></a>";
+      echo "</span>";
+      echo "<span class=\"input-group-btn tree-view-hide\">";
+//      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"fa fa-compress\" aria-hidden=\"true\"></i></a>";
+      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"glyphicon glyphicon-triangle-top\" aria-hidden=\"true\"></i></a>";
+      echo "</span>";
+    }
+    echo "</div>"; // input-group
+    if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
+      echo '<div class="tree-view" aria-hidden="true" id="'.htmlspecialchars($ctrl["id"]).'-treeview"></div>';
+    }
   }
 }
 

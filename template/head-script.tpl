@@ -10,6 +10,7 @@
             <script src="<?php echo $URIBASE; ?>/js/validator.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-datepicker.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-datepicker.de.min.js"></script>
+            <script src="<?php echo $URIBASE; ?>/js/bootstrap-treeview.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput.de.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput-themes/gly/theme.js"></script>

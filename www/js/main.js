@@ -260,8 +260,6 @@ $(document).ready(function() {
         var $mfcos = $(mfcos);
         txt.push($mfcos.data("display-text"));
       });
-console.log("update mfc display text");
-console.log(txt);
       var $td = $(this).closest("td");
       $td.data("display-text", txt.join(", "));
       $td.closest("tr").triggerHandler("row-changed");
@@ -521,6 +519,166 @@ console.log(txt);
     } else {
       $e.val(val);
     }
+  });
+
+  $( ".tree-view").on("expand-tree", function (evt, data) {
+   var $treeView = $(this);
+
+   var dataUrl = $treeView.data("tree-url");
+
+   $.get(dataUrl, data)
+   .done(function (values, status, req) {
+     if (typeof(values) == "string") {
+       $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+       var $smc = $("#server-message-content");
+       $smc.empty();
+       $("#server-message-content").empty();
+       var $smcp = $('<pre>').appendTo( $smc ).text(values);
+       $("#server-message-dlg").modal("show");
+       return;
+     }
+     console.log(values);
+     var oldTree = $treeView.data("nodes");
+     var newTree = oldTree;
+     var currentPage = values.currentPage;
+
+     for (var i = 0; i < values.tree.length; i++) {
+       var page = values.tree[i];
+       if (page.id == "") continue;
+       /* integrate page */
+       var nsList = page.id.split(":");
+       var currentNS = null;
+       var parentNode = { nodes: newTree };
+       for (var j = 0; j < nsList.length; j++) {
+         if (currentNS === null)
+           currentNS = nsList[j];
+         else
+           currentNS = currentNS + ":" + nsList[j];
+         // look for child node
+         var found = false;
+         if (!parentNode.hasOwnProperty("nodes"))
+           parentNode.nodes = [];
+         for (var k=0; k < parentNode.nodes.length; k++) {
+           if (parentNode.nodes[k].id != currentNS)
+             continue;
+           parentNode = parentNode.nodes[k];
+           found = true;
+           break;
+         }
+         if (!found) {
+           var newParentNode = { "text": currentNS, "id": currentNS, "nodes": [], selectable: false, };
+           parentNode.nodes.push(newParentNode);
+           parentNode = newParentNode;
+         }
+         if (!parentNode.hasOwnProperty("state"))
+           parentNode.state = {};
+         if (currentPage && currentPage.substr(0, parentNode.id.length) == parentNode.id) {
+          parentNode.state.expanded = true;
+         } else {
+          parentNode.state.expanded = false;
+         }
+       }
+       if (page.id == parentNode.id) {
+         if (page.hasOwnProperty("url")) {
+           parentNode.url = page.url;
+           parentNode.selectable = true;
+           parentNode.state.selected = parentNode.state.expanded;
+           parentNode.icon = "glyphicon glyphicon-file";
+           parentNode.selectedIcon = "glyphicon glyphicon-file";
+           parentNode.href = page.url;
+         }
+         if (page.hasOwnProperty("extraDepth")) {
+           parentNode.extraDepth = page.extraDepth;
+           if (parentNode.hasOwnProperty("nodes") && (parentNode.nodes.length == 0))
+             delete parentNode.nodes; // will be re-added later if needed
+         }
+       } else {
+         console.log("ups");
+         console.log(page.id);
+         console.log(parentNode.id);
+       }
+     }
+
+     $treeView.data("nodes", newTree);
+     var cfg = {
+      data: newTree,
+      levels: 1,
+      enableLinks: true,
+	    template: {
+ 		    link: '<a href="#" style="color:inherit;" target="_blank" onClick="event.stopPropagation();"></a>',
+      },
+     };
+     $treeView.addClass("tree-view-visible");
+     $treeView.treeview(cfg);
+     $treeView.on('nodeExpanded', function(event, node) {
+       var $treeView = $(this);
+
+       setTimeout(function() { // hacky but treeview has not hooks for this
+         $('.tree-view a[href="#"]').each(function (i, e) {
+           var $e = $(e);
+           var $s = $("<span/>").text($e.text());
+           $e.replaceWith($s);
+         });
+       }, 100);
+
+       if (node) {
+         var selectedId = node.id;
+         if (node.hasOwnProperty("extraDepth")) {
+           console.log("do not fetch "+selectedId+" as extraDepth is already present");
+           return;
+         }
+         $treeView.triggerHandler("expand-tree", {"currentId":selectedId});
+       }
+     }).triggerHandler("nodeExpanded", false);
+     $treeView.on('nodeSelected', function(event, node) {
+       var $treeView = $(this);
+       var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
+       $input.val(node.url);
+     });
+     $treeView.on('nodeUnselected', function(event, node) {
+       var $treeView = $(this);
+       var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
+       var oldVal = $treeView.data("old-value");
+       $input.val(oldVal);
+     });
+     var $fg = $treeView.closest(".form-group");
+     var $btnClose = $fg.find(".tree-view-hide");
+     var $btnShow = $fg.find(".tree-view-show");
+     $btnClose.show();
+     $btnShow.hide();
+    })
+   .fail(xpAjaxErrorHandler)
+   .always(function() {
+     $treeView.removeClass("tree-view-wip");
+   });
+  });
+
+  $(".tree-view-hide").hide().on("click.tree", function(evt) {
+   var $btnClose = $(this);
+   var $fg = $btnClose.closest(".form-group");
+   var $treeView = $fg.find(".tree-view");
+   if ($treeView.is(".tree-view-wip")) return;
+   var $btnShow = $fg.find(".tree-view-show");
+   $treeView.removeClass("tree-view-visible");
+   $treeView.empty();
+   $btnClose.hide();
+   $btnShow.show();
+  });
+
+  $(".tree-view-show").show().on("click.tree", function(evt) {
+   var $btn = $(this);
+   var $fg = $btn.closest(".form-group");
+   var $input = $fg.find("input[data-tree-url]");
+   var $treeView = $fg.find(".tree-view");
+   if ($treeView.is(".tree-view-visible")) return;
+   if ($treeView.is(".tree-view-wip")) return;
+   $treeView.addClass("tree-view-wip");
+   $treeView.data("nodes", []);
+   $treeView.data("tree-url", $input.data("tree-url"));
+   $treeView.data("old-value", $input.val());
+   $treeView.empty();
+   $treeView.text("Bitte warten, die Daten werden geladen.");
+   $treeView.triggerHandler("expand-tree", {"currentUrl":$input.val()});
   });
 
   $( "form.ajax" ).validator().on("submit", function(e) {

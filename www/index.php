@@ -3,8 +3,7 @@ global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
-requireAuth();
-#requireGroup($ADMINGROUP);
+requireGroup($AUTHGROUP);
 
 function writeFormdata($antrag_id) {
   if (!isset($_REQUEST["formdata"]))

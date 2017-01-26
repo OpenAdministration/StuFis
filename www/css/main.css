@@ -72,3 +72,11 @@ table.invref > tbody > tr.invref-template {
    content: "";
  }
 }
+
+.tree-view {
+ display: none;
+}
+
+.tree-view.tree-view-visible, .tree-view.tree-view-wip {
+ display: initial;
+}

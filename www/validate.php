@@ -1,10 +1,10 @@
 <?php
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
+global $attributes, $logoutUrl, $AUTHGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 
-requireAuth();
+requireGroup($AUTHGROUP);
 
 $msgs = Array();
 $ret = false;
@@ -36,8 +36,120 @@ if (!isset($_REQUEST["action"])) {
      else
        header("HTTP/1.1 400 Ungültige eMail");
      exit;
-     header("Content-Type: text/plain; charset=UTF-8");
-     break;
+   case "validate.wiki":
+     if (!isset($_REQUEST["formdata"]))
+       $_REQUEST["formdata"] = [];
+     function checkWiki($wikis) {
+       global $wikiUrl;
+       if (is_array($wikis)) {
+         $ret = true;
+         foreach($wikis as $wiki) {
+           $ret1 = checkWiki($wiki);
+           $ret = $ret && $ret1;
+         }
+         return $ret;
+       }
+       if (parse_url($wikiUrl, PHP_URL_HOST) !== parse_url($wikis, PHP_URL_HOST))
+         return false;
+       if (NULL !== parse_url($wikis, PHP_URL_QUERY))
+         return false;
+       $wikiUrlPath = parse_url($wikiUrl, PHP_URL_PATH);
+       $wikisPath = parse_url($wikis, PHP_URL_PATH);
+       if ($wikisPath === NULL)
+         return false; // no page given
+       if ($wikiUrlPath !== NULL) {
+         if (substr($wikisPath, 0, strlen($wikiUrlPath)) != $wikiUrlPath)
+           return false; // bad prefix
+         $wikiPage = substr($wikisPath, strlen($wikiUrlPath));
+       } else {
+         $wikiPage = $wikisPath;
+       }
+       $wikiPage = cleanID($wikiPage);
+       return existsWikiPage($wikiPage,false);
+     }
+     $ret = checkWiki($_REQUEST["formdata"]);
+     if ($ret)
+       header("HTTP/1.1 200 OK");
+     else
+       header("HTTP/1.1 400 Wiki-Seite nicht gefunden");
+     exit;
+   case "propose.wiki":
+     $currentNS = [""];
+     $wikiPage = "";
+     if (isset($_REQUEST["currentUrl"])) {
+       $currentUrl = (string) $_REQUEST["currentUrl"];
+       if (parse_url($wikiUrl, PHP_URL_HOST) == parse_url($currentUrl, PHP_URL_HOST)) {
+         $wikiUrlPath = parse_url($wikiUrl, PHP_URL_PATH);
+         $currentUrlPath = parse_url($currentUrl, PHP_URL_PATH);
+
+         if ($currentUrlPath === NULL)
+           $currentUrlPath = "/";
+         if ($wikiUrlPath === NULL)
+           $wikiUrlPath = "/";
+
+         if (substr($currentUrlPath, 0, strlen($wikiUrlPath)) == $wikiUrlPath) {
+           $wikiPage = substr($currentUrlPath, strlen($wikiUrlPath));
+         } else {
+           $wikiPage = "";
+         }
+       }
+     }
+     if (isset($_REQUEST["currentId"])) {
+       $currentId = (string) $_REQUEST["currentId"];
+       $wikiPage = trim($currentId, ":/");
+     }
+     $wikiPage = trim(str_replace("/",":",$wikiPage),":");
+     $wikiPageNS = explode(":", $wikiPage);
+     $ns = false;
+     for ($i = 0; $i < count($wikiPageNS); $i++) {
+       if ($wikiPageNS[$i] == "") continue;
+       if ($ns === false)
+         $ns = "";
+       else
+         $ns .= ":";
+       $ns .= $wikiPageNS[$i];
+       $currentNS[] = $ns;
+     }
+     $currentNS = array_unique($currentNS);
+     $wikiPage = $ns;
+
+     $prefix = parse_url($wikiUrl, PHP_URL_PATH);
+     if ($prefix === NULL)
+       $prefix = "";
+     else
+       $prefix = trim($prefix,"/")."/";
+
+     $result["currentPage"] = $wikiPage;
+     $result["tree"] = [];
+     $extraDepth = 1;
+     if (isset($_REQUEST["currentId"])) {
+       $currentNS = array_slice($currentNS, -1);
+     }
+     for ($i = 0; $i < count($currentNS); $i += 1 + $extraDepth) {
+       $ns = $currentNS[$i];
+       $depth = ($ns == "" ? 0 : count(explode(":", $ns)))+$extraDepth+1;
+       $p = ["id" => $ns, "extraDepth" => $extraDepth ];
+       $result["tree"][] = $p; // put this first in the results so extraDepth can propagate in JavaScript
+
+       $subnss = listWikiNS($ns, $depth, true);
+       foreach($subnss as $subns) {
+         $thisDepth = count(explode(":", $subns["id"]));
+         if ($thisDepth < $depth)
+           $subns["extraDepth"] = $depth - $thisDepth - 1;
+         $result["tree"][] = $subns;
+       }
+
+       $pages = listWikiPages($ns, $depth, true);
+       foreach($pages as $page) {
+         $pageid = $page["id"];
+         $pageurl = $prefix.str_replace(":","/",$pageid);
+         $page["url"] = parse_url($wikiUrl, PHP_URL_SCHEME)."://".parse_url($wikiUrl, PHP_URL_HOST)."/".$pageurl;
+         $result["tree"][] = $page;
+       }
+     }
+     header("Content-Type: text/json; charset=UTF-8");
+     echo json_encode($result);
+     exit;
    default:
      die("Aktion nicht bekannt.");
  endswitch;
@@ -48,8 +160,7 @@ $result["msgs"] = $msgs;
 $result["ret"] = ($ret !== false);
 if ($target !== false)
   $result["target"] = $target;
-$result["_REQUEST"] = $_REQUEST;
-$result["_FILES"] = $_FILES;
+$target["result"] = $result;
 
 header("Content-Type: text/json; charset=UTF-8");
 echo json_encode($result);
