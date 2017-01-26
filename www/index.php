@@ -201,7 +201,10 @@ if (isset($_REQUEST["action"])) {
       }
 outAntragDelete:
       if ($ret) {
-        if (@rmdir($STORAGE."/".$antrag["id"]) === false) $msgs[] = "Kann Order nicht löschen: {$antrag["id"]}";
+        if (file_exists($STORAGE."/".$antrag["id"])) {
+          if (@rmdir($STORAGE."/".$antrag["id"]) === false)
+            $msgs[] = "Kann Order nicht löschen: {$antrag["id"]}";
+        }
         $forceClose = true;
         $target = $URIBASE;
       }
