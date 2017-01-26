@@ -572,7 +572,7 @@ $(document).ready(function() {
          }
          if (!parentNode.hasOwnProperty("state"))
            parentNode.state = {};
-         if (currentPage && currentPage.substr(0, parentNode.id.length) == parentNode.id) {
+         if (currentPage && (currentPage + ":").substr(0, parentNode.id.length+1) == (parentNode.id+":")) {
           parentNode.state.expanded = true;
          } else {
           parentNode.state.expanded = false;
@@ -582,10 +582,11 @@ $(document).ready(function() {
          if (page.hasOwnProperty("url")) {
            parentNode.url = page.url;
            parentNode.selectable = true;
-           parentNode.state.selected = parentNode.state.expanded;
            parentNode.icon = "glyphicon glyphicon-file";
            parentNode.selectedIcon = "glyphicon glyphicon-file";
            parentNode.href = page.url;
+           if (page.id === currentPage)
+             parentNode.state.selected = parentNode.state.expanded;
          }
          if (page.hasOwnProperty("extraDepth")) {
            parentNode.extraDepth = page.extraDepth;
@@ -634,12 +635,14 @@ $(document).ready(function() {
        var $treeView = $(this);
        var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
        $input.val(node.url);
+       $input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
      });
      $treeView.on('nodeUnselected', function(event, node) {
        var $treeView = $(this);
        var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
        var oldVal = $treeView.data("old-value");
        $input.val(oldVal);
+       $input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
      });
      var $fg = $treeView.closest(".form-group");
      var $btnClose = $fg.find(".tree-view-hide");

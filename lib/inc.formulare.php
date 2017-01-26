@@ -488,18 +488,13 @@ function renderFormItemText($layout, $ctrl) {
     }
     echo " value=\"{$tPattern}\"";
     echo "/>";
-    if (in_array("hasFeedback", $layout["opts"]))
-      echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
     if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
-      echo "<span class=\"input-group-btn tree-view-show\">";
-//      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"fa fa-expand\" aria-hidden=\"true\"></i></a>";
-      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"glyphicon glyphicon-triangle-bottom\" aria-hidden=\"true\"></i></a>";
+      echo "<span class=\"input-group-btn\">";
+      echo "<a class=\"btn btn-default tree-view-btn dropdown-toggle tree-view-show\"><i class=\"glyphicon glyphicon-triangle-bottom\" aria-hidden=\"true\"></i></a>";
+      echo "<a class=\"btn btn-default tree-view-btn dropdown-toggle tree-view-hide\"><i class=\"glyphicon glyphicon-triangle-top\" aria-hidden=\"true\"></i></a>";
       echo "</span>";
-      echo "<span class=\"input-group-btn tree-view-hide\">";
-//      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"fa fa-compress\" aria-hidden=\"true\"></i></a>";
-      echo "<a class=\"btn btn-default tree-view-btn\"><i class=\"glyphicon glyphicon-triangle-top\" aria-hidden=\"true\"></i></a>";
-      echo "</span>";
-    }
+    } else if (in_array("hasFeedback", $layout["opts"]))
+      echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
     echo "</div>"; // input-group
     if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
       echo '<div class="tree-view" aria-hidden="true" id="'.htmlspecialchars($ctrl["id"]).'-treeview"></div>';
