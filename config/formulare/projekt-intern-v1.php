@@ -6,7 +6,8 @@ $config = [
   "permission" => [
     "isCorrectGremium" => [
       [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
-    ]
+    ],
+    "isCreateable" => true,
   ],
 ];
 

@@ -139,29 +139,37 @@ function hasPermission(&$form, $antrag, $permName) {
   global $formulare, $ADMINGROUP;
   static $stack = false;
 
-/*
   if (hasGroup($ADMINGROUP))
     return true;
-*/
 
   if (!isset($form["_perms"][$permName]))
     return false;
+  $pp = $form["_perms"][$permName];
 
   if ($stack === false)
     $stack = [];
   if (in_array($permName, $stack))
     return false;
+
   array_push($stack, $permName);
 
-  $pp = $form["_perms"][$permName];
-  foreach($pp as $p) {
-    if (checkPermission($p, $antrag, $form)) {
-      array_pop($stack);
-      return true;
+  $ret = false;
+
+  if (is_bool($pp))
+    $ret = $pp;
+
+  if (is_array($pp)) {
+    foreach($pp as $p) {
+      if (!checkPermission($p, $antrag, $form))
+        continue;
+      $ret = true;
+      break;
     }
   }
+
   array_pop($stack);
-  return false;
+
+  return $ret;
 }
 
 function getForm($type, $revision) {

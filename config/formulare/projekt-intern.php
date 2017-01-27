@@ -13,14 +13,15 @@ $config = [
      * field: true if all given checks are ok
      */
     "canRead" => [
-      [ "state" => "draft", "creator" => "self" ],
+      [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
     ],
     "canEdit" => [
-      [ "state" => "draft", "creator" => "self" ],
-      [ "state" => "draft", "hasPermission" => "isCorrectGremium" ],
-      [ "state" => "draft", "group" => "ref-finanzen" ],
+      [ "state" => "draft", "hasPermission" => "canRead" ],
+    ],
+    "canCreate" => [
+      [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],
     "canStateChange.from.draft.to.new" => [
       [ "hasPermission" => "canEdit" ],
