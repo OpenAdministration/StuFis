@@ -85,11 +85,33 @@ table.invref > tbody > tr.invref-template {
  border-radius: 4px !important;
 }
 
+.custom-combobox ul.dropdown-menu {
+  right: 0px;
+}
+
 .custom-combobox ul.dropdown-menu li a.opt {
   padding-left: 2.25em;
 }
 
 .custom-combobox ul.dropdown-menu li a {
   cursor: pointer;
+}
+
+.caret.mycaret-up {
+    border: 4px solid transparent;
+    border-bottom: 4px solid;
+    margin-bottom: 4px;
+}
+.caret.mycaret-right {
+    border: 4px solid transparent;
+    border-left: 4px solid;
+}
+.caret.mycaret-down {
+    border: 4px solid transparent;
+    border-top: 4px solid;
+}
+.caret.mycaret-left {
+    border: 4px solid transparent;
+    border-right: 4px solid;
 }
 

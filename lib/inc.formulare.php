@@ -441,8 +441,12 @@ function renderFormItemText($layout, $ctrl) {
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
   } elseif (!$noForm) {
-    if ($isWikiUrl || $isDS)
-      echo "<div class=\"input-group\">";
+    if ($isWikiUrl || $isDS) {
+      $cls = ["input-group"];
+      if ($isDS)
+        $cls[] = "custom-combobox";
+      echo "<div class=\"".htmlspecialchars(implode(" ",$cls))."\">";
+    }
     echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
@@ -492,23 +496,19 @@ function renderFormItemText($layout, $ctrl) {
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
-      echo "<div class=\"input-group-btn\">";
+      echo "<div class=\"input-group-btn dropdown-toggle\">";
       echo "<span></span>"; // for borders
-      echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-toggle\">";
-      echo "<i class=\"glyphicon glyphicon-triangle-bottom tree-view-show\" aria-hidden=\"true\"></i>";
+      echo "<button class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-toggle\">";
+      echo "<span class=\"caret mycaret-down tree-view-show\"></span>";
       echo "<i class=\"fa fa-spinner fa-spin tree-view-spinning\" style=\"font-size:20px\"></i>";
-      echo "<i class=\"glyphicon glyphicon-triangle-top tree-view-hide\" aria-hidden=\"true\"></i>";
-      echo "</a>";
+      echo "<span class=\"caret mycaret-up tree-view-hide\"></span>";
+      echo "</button>";
       echo "</div>";
     }
     if ($isDS) {
       $dsId = $ctrl["id"]."-dataSource";
 ?>
-   <div class="input-group-btn custom-combobox">
-     <button type="button" class="btn btn-default dropdown-toggle <?php if (in_array("hasFeedback", $layout["opts"])) echo "form-control"; ?>" data-toggle="dropdown">
-       <span class="caret"></span>
-     </button>
-     <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu dropdown-menu-right" role="menu">
+     <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu dropdown-menu-rightX" role="menu">
 <?php
        if ($layout["data-source"] == "own-orgs") {
          $gremien = $attributes["gremien"];
@@ -544,6 +544,10 @@ function renderFormItemText($layout, $ctrl) {
        }
 ?>
      </ul>
+   <div class="input-group-btn custom-combobox dropdown-toggle" data-toggle="dropdown">
+     <button type="button" class="btn btn-default dropdown-toggle <?php if (in_array("hasFeedback", $layout["opts"])) echo "form-control"; ?>">
+       <span class="caret"></span>
+     </button>
    </div>
 <?php
     }

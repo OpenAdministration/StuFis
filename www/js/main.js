@@ -690,6 +690,7 @@ $(document).ready(function() {
 
   $(".tree-view-toggle").on("click.tree", function(evt) {
    evt.stopPropagation();
+   evt.preventDefault();
 
    var $btn = $(this);
    var $fg = $btn.closest(".form-group");
