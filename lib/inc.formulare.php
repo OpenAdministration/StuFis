@@ -545,6 +545,7 @@ function renderFormItemText($layout, $ctrl) {
 ?>
      </ul>
    <div class="input-group-btn custom-combobox dropdown-toggle" data-toggle="dropdown">
+     <span></span> <!-- // for borders -->
      <button type="button" class="btn btn-default dropdown-toggle <?php if (in_array("hasFeedback", $layout["opts"])) echo "form-control"; ?>">
        <span class="caret"></span>
      </button>

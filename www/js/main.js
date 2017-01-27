@@ -722,6 +722,7 @@ $(document).ready(function() {
     var $a = $(this);
     $a.closest(".input-group").find("input.form-control").val($a.attr("value"));
     $a.closest(".custom-combobox.open").removeClass("open");
+    $a.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
   });
 
   $( "form.ajax" ).validator().on("submit", function(e) {
