@@ -3,14 +3,13 @@
 function getAntrag() {
   $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
   if ($antrag === false) die("Unknown antrag.");
-  $readPermitted = hasGroup("admin");
-  $readPermitted |= hasGroup("ref-finanzen");
-  $readPermitted |= ($antrag["creator"] == getUsername());
-  if (!$readPermitted)
-		die("Permission denied");
-
   $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
   $antrag["_inhalt"] = $inhalt;
+
+  $form = getForm($antrag["type"], $antrag["revision"]);
+  $readPermitted = hasPermission($form, $antrag, "canRead");
+  if (!$readPermitted)
+		die("Permission denied");
 
   $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
   $antrag["_anhang"] = $anhang;

@@ -3,6 +3,11 @@
 $config = [
   "captionField" => [ "projekt.name", "projekt.zeitraum" ],
   "revisionTitle" => "Version 20170126",
+  "permission" => [
+    "isCorrectGremium" => [
+      [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
+    ]
+  ],
 ];
 
 $layout = [

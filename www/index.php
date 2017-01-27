@@ -152,11 +152,13 @@ if (isset($_REQUEST["action"])) {
   switch ($_POST["action"]):
     case "antrag.delete":
       $antrag = getAntrag();
-      // check antrag editability (state == DRAFT or alike) FIXME
-      if ("draft" !== $antrag["state"]) die("Antrag ist nicht editierbar");
-      // check antrag type and revision, token cannot be altered
+      // check antrag type and revision
       if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
       if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
+
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+
       if ($_REQUEST["version"] !== $antrag["version"]) {
         $ret = false;
         $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
@@ -210,11 +212,13 @@ outAntragDelete:
       break;
     case "antrag.update":
       $antrag = getAntrag();
-      // check antrag editability (state == DRAFT or alike) FIXME
-      if ("draft" !== $antrag["state"]) die("Antrag ist nicht editierbar");
       // check antrag type and revision, token cannot be altered
       if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
       if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
+
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+
       if ($_REQUEST["version"] !== $antrag["version"]) {
         $ret = false;
         $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
@@ -344,9 +348,11 @@ outAntragUpdate:
       }
       break;
     case "antrag.create":
-      if (false === getForm($_REQUEST["type"], $_REQUEST["revision"]))
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      if ($form === false)
         die("Unbekannte Formularversion");
-      // FIXME check perm
+
+      if (!hasPermission($form, null, "canEdit")) die("Antrag ist nicht editierbar");
 
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";

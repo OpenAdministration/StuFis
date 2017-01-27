@@ -7,7 +7,26 @@ function registerForm( $type, $revision, $layout, $config ) {
 
   if (!isset($formulare[$type])) die("missing form-class $type");
   if (isset($formulare[$type][$revision])) die("duplicate form-id $type:$revision");
-  $formulare[$type][$revision] = ["layout" => $layout, "config" => $config, "type" => $type, "revision" => $revision];
+  $formulare[$type][$revision] = [
+    "layout" => $layout,
+    "config" => $config,
+    "type" => $type,
+    "revision" => $revision,
+    "_class" => $formulare[$type]["_class"],
+    "_perms" => mergePermission($formulare[$type]["_class"], $config, $type, $revision),
+  ];
+}
+
+function mergePermission($classConfig, $revConfig, $type, $revision) {
+  $perms = [];
+  foreach ([$classConfig, $revConfig] as $config) {
+    if (!isset($config["permission"])) continue;
+    foreach ($config["permission"] as $id => $p) {
+      if (isset($perms[$id])) die("$type:$revision: permission $id has conflicting definitions");
+      $perms[$id] = $p;
+    }
+  }
+  return $perms;
 }
 
 function registerFormClass( $type, $config ) {
@@ -60,16 +79,98 @@ function loadForms() {
 
 }
 
+function checkPermission(&$p, &$antrag, &$form) {
+  global $attributes;
+  foreach ($p as $i => $c) {
+    if ($i == "state") {
+      $currentState = "draft";
+      if (isset($form["_class"]["createState"]))
+        $currentState = $form["_class"]["createState"];
+      if ($antrag)
+        $currentState = $antrag["state"];
+      if ($antrag["state"] != $c)
+        return false;
+    } else if ($i == "creator") {
+      if ($c == "self") {
+        if ($antrag !== null && ($antrag["creator"] != getUsername()))
+          return false;
+      } else {
+        die("unkown creator test: $c");
+      }
+    } else if ($i == "hasPermission") {
+      if (!is_array($c)) $c = [$c];
+      foreach ($c as $permName) {
+        if (!hasPermission($form, $antrag, $permName))
+          return false;
+      }
+    } else if ($i == "group") {
+      if (!is_array($c)) $c = [$c];
+      foreach ($c as $groupName) {
+        if (!hasGroup($groupName))
+          return false;
+      }
+    } else if (substr($i, 0, 6) == "field:") {
+      $fieldName = substr($i, 6);
+      if ($antrag !== null) {
+        $value = getFormValue($fieldName, null, $antrag["_inhalt"], null);
+        if (substr($c,0,5) == "isIn:") {
+          $in = substr($c,5);
+          $permittedValues = [];
+          if ($value === null) return false;
+          if ($in == "ifdata-source:own-orgs") {
+            $permittedValues = $attributes["gremien"];
+          } else {
+            die("isIn test $in (from $c) not implemented");
+          }
+          if (!in_array($value, $permittedValues))
+            return false;
+        } else {
+          die("field test $c not implemented");
+        }
+      } /* antrag === null -> muss erst noch passend ausgefüllt werden */
+    } else {
+      die("permission type $i not implemented");
+    }
+  }
+  return true;
+}
+
+function hasPermission(&$form, $antrag, $permName) {
+  global $formulare, $ADMINGROUP;
+  static $stack = false;
+
+/*
+  if (hasGroup($ADMINGROUP))
+    return true;
+*/
+
+  if (!isset($form["_perms"][$permName]))
+    return false;
+
+  if ($stack === false)
+    $stack = [];
+  if (in_array($permName, $stack))
+    return false;
+  array_push($stack, $permName);
+
+  $pp = $form["_perms"][$permName];
+  foreach($pp as $p) {
+    if (checkPermission($p, $antrag, $form)) {
+      array_pop($stack);
+      return true;
+    }
+  }
+  array_pop($stack);
+  return false;
+}
+
 function getForm($type, $revision) {
   global $formulare;
 
   if (!isset($formulare[$type])) return false;
   if (!isset($formulare[$type][$revision])) return false;
 
-  $form = $formulare[$type][$revision];
-  $form["_class"] = $formulare[$type]["_class"];
-
-  return $form;
+  return $formulare[$type][$revision];
 }
 
 function getFormLayout($type, $revision) {
