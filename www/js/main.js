@@ -720,8 +720,8 @@ $(document).ready(function() {
     evt.stopPropagation();
     evt.preventDefault();
     var $a = $(this);
-    var $input = $a.closest(".input-group").find("input.form-control");
-    $input.val($a.attr("value"));
+    $a.closest(".input-group").find("input.form-control").val($a.attr("value"));
+    $a.closest(".custom-combobox.open").removeClass("open");
   });
 
   $( "form.ajax" ).validator().on("submit", function(e) {
