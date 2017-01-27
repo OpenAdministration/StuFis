@@ -13,6 +13,8 @@ function getAntrag() {
 
   $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
   $antrag["_anhang"] = $anhang;
+  $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], [ "id" => false]);
+  $antrag["_comments"] = $comments;
 
   return $antrag;
 }

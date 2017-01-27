@@ -73,6 +73,7 @@ echo "<td>";
  $txt = $antrag["state"];
  if (isset($classConfig["state"]) && isset($classConfig["state"][$antrag["state"]]))
    $txt = $classConfig["state"][$antrag["state"]];
+ $txt .= " (".$antrag["stateCreator"].")";
  echo htmlspecialchars($txt);
 echo "</td>";
 echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";

@@ -34,6 +34,9 @@ $config = [
     "canStateChange.from.new.to.wip" => [
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.wip.to.new" => [
+      [ "group" => "ref-finanzen" ],
+    ],
     "canStateChange.from.wip.to.done" => [
       [ "group" => "ref-finanzen" ],
     ],
@@ -50,6 +53,8 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
   ],
+
+  
 ];
 
 registerFormClass( "projekt-intern", $config );

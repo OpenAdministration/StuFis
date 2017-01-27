@@ -375,6 +375,7 @@ outAntragUpdate:
       if (isset($form["_class"]["createState"]))
         $createState = $form["_class"]["createState"];
       $antrag["state"] = $createState; // FIXME custom default state
+      $antrag["stateCreator"] = getUsername();
       $ret = dbInsert("antrag", $antrag);
       if ($ret !== false) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
@@ -435,8 +436,22 @@ outAntragCreate:
       }
 
       if ($ret) {
-        $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState ]);
+        $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => getUsername() ]);
         $ret = ($ret === 1);
+      }
+
+      if ($ret) {
+        $comment = [];
+        $comment["antrag_id"] = $antrag["id"];
+        $comment["creator"] = getUsername();
+        $comment["creatorFullName"] = getUserFullName();
+        $comment["timestamp"] = date("Y-m-d H:i:s");
+        $txt = $newState;
+        if (isset($form["_class"]["state"][$newState]))
+          $txt = $form["_class"]["state"][$newState];
+        $comment["text"] = "Status nach [$newState] ".$txt." geändert";
+        $ret = dbInsert("comments", $comment);
+        $ret = ($ret !== false);
       }
 
       // commitTx
@@ -586,6 +601,7 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.menu.tpl";
     require "../template/antrag.state.tpl";
     require "../template/antrag.tpl";
+    require "../template/antrag.comments.tpl";
   break;
   case "antrag.edit":
     $antrag = getAntrag();

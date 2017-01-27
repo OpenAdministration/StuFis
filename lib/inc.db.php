@@ -17,6 +17,7 @@ $scheme["antrag"] = [
   "token" => "VARCHAR(32) NOT NULL",
   "version" => "BIGINT NOT NULL DEFAULT 0",
   "state" => "VARCHAR(32) NOT NULL",
+  "stateCreator" => "VARCHAR(32) NOT NULL",
  ];
 
 $scheme["inhalt"] = [
@@ -44,6 +45,7 @@ $scheme["comments"] = [
   "antrag_id" => "INT NOT NULL",
   "timestamp" => "DATETIME NOT NULL",
   "creator" => "VARCHAR(128) NOT NULL",
+  "creatorFullName" => "VARCHAR(256) NOT NULL",
   "text" => "varchar(2048) NOT NULL",
   "adminonly" => "BOOLEAN NOT NULL DEFAULT FALSE",
 ];
@@ -263,7 +265,7 @@ function dbFetchAll($table, $fields, $sort = []) {
    if (!isset($scheme[$table])) die("Unkown table $table");
    $validFields = ["antrag_id"];
    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields)); # only fetch using antrag_id
-   $sort = array_intersect_key($sort, $scheme[$table]); # only fetch using antrag_id
+   $sort = array_intersect_key($sort, $scheme[$table]);
 
    $c = [];
    foreach($fields as $k => $v) {
