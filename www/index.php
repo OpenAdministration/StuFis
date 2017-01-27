@@ -527,6 +527,7 @@ switch($_REQUEST["tab"]) {
       if (!hasPermission($form, $t, "canRead")) continue;
       $antraege[$t["type"]][$t["revision"]][$t["id"]] = $t;
     }
+    require "../template/antrag.createpanel.tpl";
     require "../template/antrag.list.tpl";
   break;
   case "antrag":
