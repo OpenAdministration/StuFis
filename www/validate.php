@@ -119,6 +119,8 @@ if (!isset($_REQUEST["action"])) {
      else
        $prefix = trim($prefix,"/")."/";
 
+     $result = [];
+     $result["delim"] = ":";
      $result["currentPage"] = $wikiPage;
      $result["tree"] = [];
      $extraDepth = 1;

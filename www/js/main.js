@@ -541,19 +541,22 @@ $(document).ready(function() {
      var oldTree = $treeView.data("nodes");
      var newTree = oldTree;
      var currentPage = values.currentPage;
+     var delim = values.delim;
+     if (delim === null)
+       delim = ":";
 
      for (var i = 0; i < values.tree.length; i++) {
        var page = values.tree[i];
        if (page.id == "") continue;
        /* integrate page */
-       var nsList = page.id.split(":");
+       var nsList = page.id.split(delim);
        var currentNS = null;
        var parentNode = { nodes: newTree };
        for (var j = 0; j < nsList.length; j++) {
          if (currentNS === null)
            currentNS = nsList[j];
          else
-           currentNS = currentNS + ":" + nsList[j];
+           currentNS = currentNS + delim + nsList[j];
          // look for child node
          var found = false;
          if (!parentNode.hasOwnProperty("nodes"))
@@ -572,7 +575,7 @@ $(document).ready(function() {
          }
          if (!parentNode.hasOwnProperty("state"))
            parentNode.state = {};
-         if (currentPage && (currentPage + ":").substr(0, parentNode.id.length+1) == (parentNode.id+":")) {
+         if (currentPage && (currentPage + delim).substr(0, parentNode.id.length+1) == (parentNode.id + delim)) {
           parentNode.state.expanded = true;
          } else {
           parentNode.state.expanded = false;
