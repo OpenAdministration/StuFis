@@ -352,7 +352,7 @@ outAntragUpdate:
       if ($form === false)
         die("Unbekannte Formularversion");
 
-      if (!hasPermission($form, null, "canEdit")) die("Antrag ist nicht editierbar");
+      if (!hasPermission($form, null, "canCreate")) die("Antrag ist nicht erstellbar");
 
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
@@ -555,6 +555,7 @@ switch($_REQUEST["tab"]) {
     }
     $form = getForm($_REQUEST["type"], $_REQUEST["revision"]);
     if ($form === false) die("Unbekannter Formulartyp oder keine Berechtigung");
+    if (!hasPermission($form, null, "canCreate")) die("Antrag ist nicht erstellbar");
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.create.tpl";

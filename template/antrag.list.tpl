@@ -1,13 +1,19 @@
-<label>Neuen Antrag erstellen</label>
-<div class="well">
-  <form action="<?php echo $URIBASE; ?>?tab=antrag.create" method="POST" role="form" data-toggle="validator">
-    <div class="col-xs-12 col-sm-4">
+<div class="panel panel-default">
+  <div class="panel-heading">Neuen Antrag erstellen</div>
+  <div class="panel-body">
+    <form action="<?php echo $URIBASE; ?>?tab=antrag.create" method="POST" role="form" data-toggle="validator" class="form-inline">
       <div class="form-group">
-        <label>Antragstyp</label>
-        <select class="selectpicker form-control" name="type" size="1" data-dep="revisionselect" title="Bitte auswählen" required="required">
+        <label class="sr-only" for="newantragtype">Antrag</label>
+        <select class="selectpicker form-control" name="type" size="1" data-dep="revisionselect" title="1. Bitte neuen Antrag auswählen..." required="required" id="newantragtype">
           <?php
   global $formulare;
   foreach ($formulare as $type => $list) {
+    foreach ($list as $revision => $form) {
+      if (hasPermission($form, null, "canCreate")) continue;
+      unset($list[$revision]);
+    }
+    if (count($list) == 0) continue;
+
     $classConfig = getFormClass($type);
     $title = $type;
 
@@ -30,24 +36,17 @@
         <div class="help-block with-errors"></div>
       </div>
       <!-- form-group -->
-    </div>
-    <!-- col-xs -->
-    <div class="col-xs-12 col-sm-4">
       <div class="form-group">
-        <label>Version</label>
-        <select class="selectpicker form-control" name="revision" size="1" title="Bitte auswählen" id="revisionselect" required="required"> </select>
+        <label class="sr-only" for="revisionselect">Version</label>
+        <select class="selectpicker form-control" name="revision" size="1" title="2. Bitte Revision des neuen Antrags auswählen..." id="revisionselect" required="required"> </select>
         <div class="help-block with-errors"></div>
       </div>
       <!-- form-group -->
-    </div>
-    <!-- col-xs -->
-    <div class="col-xs-12 col-sm-4 ">
-      <label class="">HIDE ME LATER</label>
-      <input type="submit" name="absenden" value="Antrag erstellen" class="form-control btn-primary"> </div>
-    <!-- col-xs -->
-  </form>
-  <div class="clearfix"></div>
+      <input type="submit" name="absenden" value="Antrag erstellen" class="btn btn-primary pull-right">
+    </form>
+  </div>
 </div>
+
 <table class="table table-striped">
   <thead>
     <tr>

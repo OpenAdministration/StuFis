@@ -79,58 +79,66 @@ function loadForms() {
 
 }
 
-function checkPermission(&$p, &$antrag, &$form) {
+function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
   global $attributes;
-  foreach ($p as $i => $c) {
-    if ($i == "state") {
-      $currentState = "draft";
-      if (isset($form["_class"]["createState"]))
-        $currentState = $form["_class"]["createState"];
-      if ($antrag)
-        $currentState = $antrag["state"];
-      if ($antrag["state"] != $c)
+  if ($i == "state") {
+    $currentState = "draft";
+    if (isset($form["_class"]["createState"]))
+      $currentState = $form["_class"]["createState"];
+    if ($antrag)
+      $currentState = $antrag["state"];
+    if ($currentState != $c)
+      return false;
+  } else if ($i == "creator") {
+    if ($c == "self") {
+      if ($antrag !== null && ($antrag["creator"] != getUsername()))
         return false;
-    } else if ($i == "creator") {
-      if ($c == "self") {
-        if ($antrag !== null && ($antrag["creator"] != getUsername()))
+    } else {
+      die("unkown creator test: $c");
+    }
+  } else if ($i == "hasPermission") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $permName) {
+      if (!hasPermission($form, $antrag, $permName))
+        return false;
+    }
+  } else if ($i == "group") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $groupName) {
+      if (!hasGroup($groupName))
+        return false;
+    }
+  } else if (substr($i, 0, 6) == "field:") {
+    $fieldName = substr($i, 6);
+    if ($antrag !== null) {
+      $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], null);
+      if (substr($c,0,5) == "isIn:") {
+        $in = substr($c,5);
+        $permittedValues = [];
+        if ($value === null) return false;
+        if ($in == "data-source:own-orgs") {
+          $permittedValues = $attributes["gremien"];
+        } else {
+          die("isIn test $in (from $c) not implemented");
+        }
+        if (!in_array($value, $permittedValues))
           return false;
       } else {
-        die("unkown creator test: $c");
+        die("field test $c not implemented");
       }
-    } else if ($i == "hasPermission") {
-      if (!is_array($c)) $c = [$c];
-      foreach ($c as $permName) {
-        if (!hasPermission($form, $antrag, $permName))
-          return false;
-      }
-    } else if ($i == "group") {
-      if (!is_array($c)) $c = [$c];
-      foreach ($c as $groupName) {
-        if (!hasGroup($groupName))
-          return false;
-      }
-    } else if (substr($i, 0, 6) == "field:") {
-      $fieldName = substr($i, 6);
-      if ($antrag !== null) {
-        $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], null);
-        if (substr($c,0,5) == "isIn:") {
-          $in = substr($c,5);
-          $permittedValues = [];
-          if ($value === null) return false;
-          if ($in == "data-source:own-orgs") {
-            $permittedValues = $attributes["gremien"];
-          } else {
-            die("isIn test $in (from $c) not implemented");
-          }
-          if (!in_array($value, $permittedValues))
-            return false;
-        } else {
-          die("field test $c not implemented");
-        }
-      } /* antrag === null -> muss erst noch passend ausgefüllt werden */
-    } else {
-      die("permission type $i not implemented");
-    }
+    } /* antrag === null -> muss erst noch passend ausgefüllt werden */
+  } else {
+    die("permission type $i not implemented");
+  }
+  return true;
+}
+
+function checkPermissionLine(&$p, &$antrag, &$form) {
+  foreach ($p as $i => $c) {
+    $tmp = checkSinglePermission($i, $c, $antrag, $form);
+#    echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c)." => ".($tmp ? "true":"false")." -->\n";
+    if (!$tmp)
+      return false;
   }
   return true;
 }
@@ -159,8 +167,10 @@ function hasPermission(&$form, $antrag, $permName) {
     $ret = $pp;
 
   if (is_array($pp)) {
-    foreach($pp as $p) {
-      if (!checkPermission($p, $antrag, $form))
+    foreach($pp as $i => $p) {
+      $tmp = checkPermissionLine($p, $antrag, $form);
+#      echo "\n<!-- checkPermissionLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
+      if (!$tmp)
         continue;
       $ret = true;
       break;
@@ -168,6 +178,8 @@ function hasPermission(&$form, $antrag, $permName) {
   }
 
   array_pop($stack);
+
+#  echo "\n<!-- hasPermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => ".($ret ? "true":"false")." -->\n";
 
   return $ret;
 }
