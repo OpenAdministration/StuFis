@@ -1,9 +1,11 @@
+<label>Neuen Antrag erstellen</label>
 <div class="well">
   <form action="<?php echo $URIBASE; ?>?tab=antrag.create" method="POST" role="form" data-toggle="validator">
-    <div class="col-xs-4">
+    <div class="col-xs-12 col-sm-4">
       <div class="form-group">
+        <label>Antragstyp</label>
         <select class="selectpicker form-control" name="type" size="1" data-dep="revisionselect" title="Bitte auswählen" required="required">
-<?php
+          <?php
   global $formulare;
   foreach ($formulare as $type => $list) {
     $classConfig = getFormClass($type);
@@ -26,32 +28,38 @@
 ?>
         </select>
         <div class="help-block with-errors"></div>
-      </div> <!-- form-group -->
-    </div> <!-- col-xs -->
-    <div class="col-xs-4">
+      </div>
+      <!-- form-group -->
+    </div>
+    <!-- col-xs -->
+    <div class="col-xs-12 col-sm-4">
       <div class="form-group">
-        <select class="selectpicker form-control" name="revision" size="1" title="Bitte auswählen" id="revisionselect" required="required">
-        </select>
+        <label>Version</label>
+        <select class="selectpicker form-control" name="revision" size="1" title="Bitte auswählen" id="revisionselect" required="required"> </select>
         <div class="help-block with-errors"></div>
-      </div> <!-- form-group -->
-    </div> <!-- col-xs -->
-    <div class="col-xs-4">
-      <input type="submit" name="absenden" value="Antrag erstellen" class="form-control btn-primary">
-    </div> <!-- col-xs -->
+      </div>
+      <!-- form-group -->
+    </div>
+    <!-- col-xs -->
+    <div class="col-xs-12 col-sm-4 ">
+      <label class="">HIDE ME LATER</label>
+      <input type="submit" name="absenden" value="Antrag erstellen" class="form-control btn-primary"> </div>
+    <!-- col-xs -->
   </form>
   <div class="clearfix"></div>
 </div>
-
 <table class="table table-striped">
-
-<thead>
-
-<tr><th>ID</th><th>Bezeichnung</th><th>Ersteller</th><th>Status</th><th>letztes Update</th></tr>
-
-</thead>
-<tbody>
-
-<?php
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Bezeichnung</th>
+      <th>Ersteller</th>
+      <th>Status</th>
+      <th>letztes Update</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php
 
 foreach ($antraege as $type => $l0) {
   foreach ($l0 as $revision => $l1) {
@@ -122,10 +130,8 @@ foreach ($antraege as $type => $l0) {
   }
 }
 ?>
-
-</tbody>
+  </tbody>
 </table>
-
 <?php
 
 # vim:syntax=php
