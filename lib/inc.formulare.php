@@ -112,12 +112,12 @@ function checkPermission(&$p, &$antrag, &$form) {
     } else if (substr($i, 0, 6) == "field:") {
       $fieldName = substr($i, 6);
       if ($antrag !== null) {
-        $value = getFormValue($fieldName, null, $antrag["_inhalt"], null);
+        $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], null);
         if (substr($c,0,5) == "isIn:") {
           $in = substr($c,5);
           $permittedValues = [];
           if ($value === null) return false;
-          if ($in == "ifdata-source:own-orgs") {
+          if ($in == "data-source:own-orgs") {
             $permittedValues = $attributes["gremien"];
           } else {
             die("isIn test $in (from $c) not implemented");
