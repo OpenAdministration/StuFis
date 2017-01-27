@@ -521,7 +521,7 @@ function renderFormItemText($layout, $ctrl) {
            foreach ($gremien as $gremium) {
              if (substr($gremium, 0, strlen($prefix)) != $prefix) continue;
              if ($lastNotEmpty) echo '<li role="separator" class="divider"></li>'; $lastNotEmpty = false;
-             if (!$thisNotEmpty) echo '<li class="dropdown-header"><span class="text">'.$prefix.'</span></text>'; $thisNotEmpty = true;
+             if (!$thisNotEmpty) echo '<li class="dropdown-header"><span class="text">'.$prefix.'</span></li>'; $thisNotEmpty = true;
              echo '<li><a class="opt" role="option" aria-disabled="false" aria-selected="false" value="';
              echo htmlspecialchars($gremium);
              echo '"><span class="text">';
