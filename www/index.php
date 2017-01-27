@@ -521,14 +521,11 @@ switch($_REQUEST["tab"]) {
     $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
     $antraege = [];
     foreach ($tmp as $t) {
+      $form = getForm($t["type"],$t["revision"]);
+      if (false === $form) continue;
+      $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
+      if (!hasPermission($form, $t, "canRead")) continue;
       $antraege[$t["type"]][$t["revision"]][$t["id"]] = $t;
-    }
-    // FIXME extended permission checking
-    foreach ($antraege as $type => $l0) {
-      foreach ($l0 as $revision => $l1) {
-        if (false === getForm($type,$revision))
-          unset($antraege[$type][$revision]);
-      }
     }
     require "../template/antrag.list.tpl";
   break;
@@ -542,7 +539,8 @@ switch($_REQUEST["tab"]) {
   break;
   case "antrag.edit":
     $antrag = getAntrag();
-    if ($antrag["state"] != "draft") die("Antrag ist nicht editierbar");
+    $form = getForm($antrag["type"], $antrag["revision"]);
+    if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
 
     $form = getForm($antrag["type"],$antrag["revision"]);
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
