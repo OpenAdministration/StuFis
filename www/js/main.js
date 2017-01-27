@@ -715,6 +715,13 @@ $(document).ready(function() {
    }
   });
 
+  $(".custom-combobox ul.dropdown-menu li a[value]").on("click.customcombobox", function(evt) {
+    evt.stopPropagation();
+    var $a = $(this);
+    var $input = $a.closest(".input-group").find("input.form-control");
+    $input.val($a.attr("value"));
+  });
+
   $( "form.ajax" ).validator().on("submit", function(e) {
     if (e.isDefaultPrevented()) return; // validator said no
     return handleSubmitForm($(this), e, false);

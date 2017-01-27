@@ -84,3 +84,12 @@ table.invref > tbody > tr.invref-template {
 .input-daterange .form-control {
  border-radius: 4px !important;
 }
+
+.custom-combobox ul.dropdown-menu li a.opt {
+  padding-left: 2.25em;
+}
+
+.custom-combobox ul.dropdown-menu li a {
+  cursor: pointer;
+}
+

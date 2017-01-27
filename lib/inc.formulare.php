@@ -416,6 +416,7 @@ function renderFormItemText($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
   $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
+  $isDS = isset($layout["data-source"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -440,7 +441,7 @@ function renderFormItemText($layout, $ctrl) {
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
   } elseif (!$noForm) {
-    if ($isWikiUrl)
+    if ($isWikiUrl || $isDS)
       echo "<div class=\"input-group\">";
     echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
@@ -488,52 +489,70 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-tree-url=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=propose.wiki&nonce=".urlencode($nonce))."\"";
       echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.wiki&nonce=".urlencode($nonce))."\"";
     }
-    if (isset($layout["data-source"])) {
-      $dsId = $ctrl["id"]."-dataSource";
-      echo " list=\"".htmlspecialchars($dsId)."\""; // always put datalist element close to input wrp to dynamic rows altering "id" and "list" attributes locally
-    }
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
-      echo "<span class=\"input-group-btn\">";
+      echo "<div class=\"input-group-btn\">";
       echo "<span></span>"; // for borders
       echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-toggle\">";
       echo "<i class=\"glyphicon glyphicon-triangle-bottom tree-view-show\" aria-hidden=\"true\"></i>";
       echo "<i class=\"fa fa-spinner fa-spin tree-view-spinning\" style=\"font-size:20px\"></i>";
       echo "<i class=\"glyphicon glyphicon-triangle-top tree-view-hide\" aria-hidden=\"true\"></i>";
       echo "</a>";
-      echo "</span>";
-      echo "</div>"; // input-group
+      echo "</div>";
     }
+    if ($isDS) {
+      $dsId = $ctrl["id"]."-dataSource";
+?>
+   <div class="input-group-btn custom-combobox">
+     <button type="button" class="btn btn-default dropdown-toggle <?php if (in_array("hasFeedback", $layout["opts"])) echo "form-control"; ?>" data-toggle="dropdown">
+       <span class="caret"></span>
+     </button>
+     <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu dropdown-menu-right" role="menu">
+<?php
+       if ($layout["data-source"] == "own-orgs") {
+         $gremien = $attributes["gremien"];
+         if ($value != "" && !in_array($value, $attributes["gremien"]))
+           $gremien[] = $value;
+         sort($gremien, SORT_STRING | SORT_FLAG_CASE);
+         $lastNotEmpty = false;
+         foreach ($GremiumPrefix as $prefix) {
+           $thisNotEmpty = false;
+           foreach ($gremien as $gremium) {
+             if (substr($gremium, 0, strlen($prefix)) != $prefix) continue;
+             if ($lastNotEmpty) echo '<li role="separator" class="divider"></li>'; $lastNotEmpty = false;
+             if (!$thisNotEmpty) echo '<li class="dropdown-header"><span class="text">'.$prefix.'</span></text>'; $thisNotEmpty = true;
+             echo '<li><a class="opt" role="option" aria-disabled="false" aria-selected="false" value="';
+             echo htmlspecialchars($gremium);
+             echo '"><span class="text">';
+             echo htmlspecialchars($gremium);
+             echo '</span></a></li>';
+           }
+           $lastNotEmpty |= $thisNotEmpty;
+         }
+       }
+       if ($layout["data-source"] == "own-mailinglists") {
+         $mailinglists = $attributes["mailinglists"];
+         if ($value != "" && !in_array($value, $attributes["mailinglists"]))
+           $mailinglists[] = $value;
+         sort($mailinglists, SORT_STRING | SORT_FLAG_CASE);
+         foreach ($mailinglists as $mailinglist) {
+           echo "<li class=\"input-xs\"><a href=\"#\" value=\"".htmlspecialchars($mailinglist)."\">";
+           echo htmlspecialchars($mailinglist);
+           echo "</a></li>";
+         }
+       }
+?>
+     </ul>
+   </div>
+<?php
+    }
+    if ($isWikiUrl || $isDS)
+      echo "</div>"; // input-group
     if (in_array("hasFeedback", $layout["opts"]))
       echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
     if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
       echo '<div class="tree-view" aria-hidden="true" id="'.htmlspecialchars($ctrl["id"]).'-treeview"></div>';
-    }
-    if (isset($layout["data-source"])) {
-      echo "<datalist id=\"".htmlspecialchars($dsId)."\">";
-      if ($layout["data-source"] == "own-orgs") {
-        $gremien = $attributes["gremien"];
-        if ($value != "" && !in_array($value, $attributes["gremien"]))
-          $gremien[] = $value;
-        sort($gremien, SORT_STRING | SORT_FLAG_CASE);
-        foreach ($GremiumPrefix as $prefix) {
-          foreach ($gremien as $gremium) {
-            if (substr($gremium, 0, strlen($prefix)) != $prefix) continue;
-            echo "<option>".htmlspecialchars($gremium)."</option>";
-          }
-        }
-      }
-      if ($layout["data-source"] == "own-mailinglists") {
-        $mailinglists = $attributes["mailinglists"];
-        if ($value != "" && !in_array($value, $attributes["mailinglists"]))
-          $mailinglists[] = $value;
-        sort($mailinglists, SORT_STRING | SORT_FLAG_CASE);
-        foreach ($mailinglists as $mailinglist) {
-          echo "<option>".htmlspecialchars($mailinglist)."</option>";
-        }
-      }
-      echo "</datalist>";
     }
   }
 }
