@@ -490,8 +490,12 @@ function renderFormItemText($layout, $ctrl) {
     echo "/>";
     if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
       echo "<span class=\"input-group-btn\">";
-      echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-show\"><i class=\"glyphicon glyphicon-triangle-bottom\" aria-hidden=\"true\"></i></a>";
-      echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-hide\"><i class=\"glyphicon glyphicon-triangle-top\" aria-hidden=\"true\"></i></a>";
+      echo "<span></span>"; // for borders
+      echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-toggle\">";
+      echo "<i class=\"glyphicon glyphicon-triangle-bottom tree-view-show\" aria-hidden=\"true\"></i>";
+      echo "<i class=\"fa fa-spinner fa-spin tree-view-spinning\" style=\"font-size:20px\"></i>";
+      echo "<i class=\"glyphicon glyphicon-triangle-top tree-view-hide\" aria-hidden=\"true\"></i>";
+      echo "</a>";
       echo "</span>";
     }
     echo "</div>"; // input-group

@@ -537,7 +537,6 @@ $(document).ready(function() {
        $("#server-message-dlg").modal("show");
        return;
      }
-     console.log(values);
      var oldTree = $treeView.data("nodes");
      var newTree = oldTree;
      var currentPage = values.currentPage;
@@ -569,9 +568,12 @@ $(document).ready(function() {
            break;
          }
          if (!found) {
-           var newParentNode = { "text": currentNS, "id": currentNS, "nodes": [], selectable: false, };
+           var newParentNode = { "text": currentNS, "id": currentNS, "nodes": [], selectable: false, isDir: false, isFile: false};
            parentNode.nodes.push(newParentNode);
            parentNode = newParentNode;
+         }
+         if (page.id != parentNode.id) {
+           parentNode.isDir = true;
          }
          if (!parentNode.hasOwnProperty("state"))
            parentNode.state = {};
@@ -588,11 +590,15 @@ $(document).ready(function() {
            parentNode.icon = "glyphicon glyphicon-file";
            parentNode.selectedIcon = "glyphicon glyphicon-file";
            parentNode.href = page.url;
+           parentNode.isFile = true;
            if (page.id === currentPage)
              parentNode.state.selected = parentNode.state.expanded;
+         } else {
+           parentNode.isDir = true;
          }
-         if (page.hasOwnProperty("extraDepth")) {
+         if (page.hasOwnProperty("extraDepth"))
            parentNode.extraDepth = page.extraDepth;
+         if (page.hasOwnProperty("extraDepth") || !parentNode.isDir) {
            if (parentNode.hasOwnProperty("nodes") && (parentNode.nodes.length == 0))
              delete parentNode.nodes; // will be re-added later if needed
          }
@@ -628,7 +634,7 @@ $(document).ready(function() {
        if (node) {
          var selectedId = node.id;
          if (node.hasOwnProperty("extraDepth")) {
-           console.log("do not fetch "+selectedId+" as extraDepth is already present");
+           //console.log("do not fetch "+selectedId+" as extraDepth is already present");
            return;
          }
          $treeView.triggerHandler("expand-tree", {"currentId":selectedId});
@@ -647,44 +653,63 @@ $(document).ready(function() {
        $input.val(oldVal);
        $input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
      });
-     var $fg = $treeView.closest(".form-group");
-     var $btnClose = $fg.find(".tree-view-hide");
-     var $btnShow = $fg.find(".tree-view-show");
-     $btnClose.show();
-     $btnShow.hide();
     })
    .fail(xpAjaxErrorHandler)
-   .always(function() {
+   .always(function() { // register last to have setup run last
      $treeView.removeClass("tree-view-wip");
+     $treeView.triggerHandler("setupico");
    });
   });
 
-  $(".tree-view-hide").hide().on("click.tree", function(evt) {
-   var $btnClose = $(this);
-   var $fg = $btnClose.closest(".form-group");
-   var $treeView = $fg.find(".tree-view");
-   if ($treeView.is(".tree-view-wip")) return;
-   var $btnShow = $fg.find(".tree-view-show");
-   $treeView.removeClass("tree-view-visible");
-   $treeView.empty();
-   $btnClose.hide();
-   $btnShow.show();
-  });
+  $(".tree-view").on("setupico.tree", function(evt) {
+   var $treeView = $(this);
+   var $fg = $treeView.closest(".form-group");
+   var $btn = $fg.find(".tree-view-toggle");
 
-  $(".tree-view-show").show().on("click.tree", function(evt) {
+   var $icoHide = $btn.find(".tree-view-hide");
+   var $icoShow = $btn.find(".tree-view-show");
+   var $icoSpin = $btn.find(".tree-view-spinning");
+
+   if ($treeView.is(".tree-view-wip")) {
+     $icoHide.hide();
+     $icoShow.hide();
+     $icoSpin.show();
+   } else if ($treeView.is(".tree-view-visible")) {
+     $icoHide.show();
+     $icoShow.hide();
+     $icoSpin.hide();
+   } else {
+     $icoHide.hide();
+     $icoShow.show();
+     $icoSpin.hide();
+   }
+  }).triggerHandler("setupico");
+
+  $(".tree-view-toggle").on("click.tree", function(evt) {
+   evt.stopPropagation();
+
    var $btn = $(this);
    var $fg = $btn.closest(".form-group");
-   var $input = $fg.find("input[data-tree-url]");
    var $treeView = $fg.find(".tree-view");
-   if ($treeView.is(".tree-view-visible")) return;
    if ($treeView.is(".tree-view-wip")) return;
-   $treeView.addClass("tree-view-wip");
-   $treeView.data("nodes", []);
-   $treeView.data("tree-url", $input.data("tree-url"));
-   $treeView.data("old-value", $input.val());
-   $treeView.empty();
-   $treeView.text("Bitte warten, die Daten werden geladen.");
-   $treeView.triggerHandler("expand-tree", {"currentUrl":$input.val()});
+
+
+   if ($treeView.is(".tree-view-visible")) {
+     $treeView.removeClass("tree-view-visible");
+     $treeView.empty();
+     $treeView.triggerHandler("setupico");
+   } else {
+     var $input = $fg.find("input[data-tree-url]");
+
+     $treeView.addClass("tree-view-wip");
+     $treeView.data("nodes", []);
+     $treeView.data("tree-url", $input.data("tree-url"));
+     $treeView.data("old-value", $input.val());
+     $treeView.empty();
+     $treeView.text("Bitte warten, die Daten werden geladen.");
+     $treeView.triggerHandler("setupico");
+     $treeView.triggerHandler("expand-tree", {"currentUrl":$input.val()});
+   }
   });
 
   $( "form.ajax" ).validator().on("submit", function(e) {
