@@ -717,6 +717,7 @@ $(document).ready(function() {
 
   $(".custom-combobox ul.dropdown-menu li a[value]").on("click.customcombobox", function(evt) {
     evt.stopPropagation();
+    evt.preventDefault();
     var $a = $(this);
     var $input = $a.closest(".input-group").find("input.form-control");
     $input.val($a.attr("value"));
