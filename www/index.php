@@ -503,6 +503,7 @@ switch($_REQUEST["tab"]) {
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.tpl";
+    require "../template/antrag.foot-print.tpl";
     require "../template/footer-print.tpl";
     exit;
 }

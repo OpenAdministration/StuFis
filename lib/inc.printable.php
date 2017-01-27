@@ -9,7 +9,9 @@ function loadCSS($fileName) {
     return "<link href=\"{$URIBASE}/css/{$fileName}\" rel=\"stylesheet\">\n";
   }
 
-  $out = "<style type=\"text/css\">";
+  $out = "";
+  $out .= "<!-- $fullFileName -->\n";
+  $out .= "<style type=\"text/css\">";
   $css = file_get_contents($fullFileName);
 
   $css = preg_replace_callback("/url\(([^)]*)\)/", function($treffer) use($fullFileName) {

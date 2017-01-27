@@ -73,6 +73,10 @@ table.invref > tbody > tr.invref-template {
  }
 }
 
+hr.blackhr {
+  border-color: black;
+}
+
 .tree-view {
  display: none;
 }
@@ -115,3 +119,6 @@ table.invref > tbody > tr.invref-template {
     border-right: 4px solid;
 }
 
+.table.small-table th, .table.small-table td {
+    font-size: 8px;
+}
