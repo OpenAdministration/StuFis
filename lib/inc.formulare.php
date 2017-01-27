@@ -411,10 +411,11 @@ function renderFormItemGroup($layout, $ctrl) {
 }
 
 function renderFormItemText($layout, $ctrl) {
-  global $nonce, $URIBASE;
+  global $nonce, $URIBASE, $attributes, $GremiumPrefix;
 
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -439,7 +440,8 @@ function renderFormItemText($layout, $ctrl) {
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
   } elseif (!$noForm) {
-    echo "<div class=\"input-group\">";
+    if ($isWikiUrl)
+      echo "<div class=\"input-group\">";
     echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
@@ -486,9 +488,13 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-tree-url=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=propose.wiki&nonce=".urlencode($nonce))."\"";
       echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.wiki&nonce=".urlencode($nonce))."\"";
     }
+    if (isset($layout["data-source"])) {
+      $dsId = $ctrl["id"]."-dataSource";
+      echo " list=\"".htmlspecialchars($dsId)."\""; // always put datalist element close to input wrp to dynamic rows altering "id" and "list" attributes locally
+    }
     echo " value=\"{$tPattern}\"";
     echo "/>";
-    if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
+    if ($isWikiUrl) {
       echo "<span class=\"input-group-btn\">";
       echo "<span></span>"; // for borders
       echo "<a class=\"btn btn-default tree-view-btn ".(in_array("hasFeedback", $layout["opts"]) ? "form-control":"")." dropdown-toggle tree-view-toggle\">";
@@ -497,12 +503,37 @@ function renderFormItemText($layout, $ctrl) {
       echo "<i class=\"glyphicon glyphicon-triangle-top tree-view-hide\" aria-hidden=\"true\"></i>";
       echo "</a>";
       echo "</span>";
+      echo "</div>"; // input-group
     }
-    echo "</div>"; // input-group
     if (in_array("hasFeedback", $layout["opts"]))
       echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
     if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
       echo '<div class="tree-view" aria-hidden="true" id="'.htmlspecialchars($ctrl["id"]).'-treeview"></div>';
+    }
+    if (isset($layout["data-source"])) {
+      echo "<datalist id=\"".htmlspecialchars($dsId)."\">";
+      if ($layout["data-source"] == "own-orgs") {
+        $gremien = $attributes["gremien"];
+        if ($value != "" && !in_array($value, $attributes["gremien"]))
+          $gremien[] = $value;
+        sort($gremien, SORT_STRING | SORT_FLAG_CASE);
+        foreach ($GremiumPrefix as $prefix) {
+          foreach ($gremien as $gremium) {
+            if (substr($gremium, 0, strlen($prefix)) != $prefix) continue;
+            echo "<option>".htmlspecialchars($gremium)."</option>";
+          }
+        }
+      }
+      if ($layout["data-source"] == "own-mailinglists") {
+        $mailinglists = $attributes["mailinglists"];
+        if ($value != "" && !in_array($value, $attributes["mailinglists"]))
+          $mailinglists[] = $value;
+        sort($mailinglists, SORT_STRING | SORT_FLAG_CASE);
+        foreach ($mailinglists as $mailinglist) {
+          echo "<option>".htmlspecialchars($mailinglist)."</option>";
+        }
+      }
+      echo "</datalist>";
     }
   }
 }
@@ -791,7 +822,7 @@ function renderFormItemSelect($layout, $ctrl) {
   }
 
   if ($noForm) {
-    if (isset($layout["data-source"]) && $layout["data-source"] == "own-orgs" && $layout["type"] != "ref") {
+    if (isset($layout["data-source"]) && in_array($layout["data-source"], [ "own-orgs", "own-mailinglists" ]) && $layout["type"] != "ref") {
       if ($noFormMarkup)
         echo "<div class=\"visible-inline\">";
       else
@@ -852,7 +883,7 @@ function renderFormItemSelect($layout, $ctrl) {
     $gremien = $attributes["gremien"];
     if ($value != "" && !in_array($value, $attributes["gremien"]))
       $gremien[] = $value;
-    sort($gremien);
+    sort($gremien, SORT_STRING | SORT_FLAG_CASE);
     foreach ($GremiumPrefix as $prefix) {
       echo "<optgroup label=\"".htmlspecialchars($prefix)."\">";
       foreach ($gremien as $gremium) {
@@ -860,6 +891,15 @@ function renderFormItemSelect($layout, $ctrl) {
         echo "<option>".htmlspecialchars($gremium)."</option>";
       }
       echo "</optgroup>";
+    }
+  }
+  if (isset($layout["data-source"]) && $layout["data-source"] == "own-mailinglists" && $layout["type"] != "ref") {
+    $mailinglists = $attributes["mailinglists"];
+    if ($value != "" && !in_array($value, $attributes["mailinglists"]))
+      $mailinglists[] = $value;
+    sort($mailinglists, SORT_STRING | SORT_FLAG_CASE);
+    foreach ($mailinglists as $mailinglist) {
+      echo "<option>".htmlspecialchars($mailinglist)."</option>";
     }
   }
   if ($layout["type"] == "ref")

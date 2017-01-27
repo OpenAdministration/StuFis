@@ -379,20 +379,23 @@ $(document).ready(function() {
     $tr.children("td.row-number").text(rowNumber+".");
   });
 
-  $("*[id]").each(function(i,e) {
-    var $e = $(e);
-    var id = $e.attr('id');
-    $e.attr('orig-id', id);
-  });
-  $(".dynamic-table *[id]").on("id-suffix-changed.dynamic-table", function(evt) {
-    var $e = $(this);
-    var id = $e.attr('orig-id');
-    var suffix = "";
-    $e.parents("*[id-suffix]").each(function (i,p) {
-      suffix = $(p).attr('id-suffix') + suffix;
+  /* list references an id and will always to printed next to its user so changing it alongside is safe */
+  [ 'id', 'list' ].forEach(function (attrName, i, l) {
+    $("*["+attrName+"]").each(function(i,e) {
+      var $e = $(e);
+      var id = $e.attr(attrName);
+      $e.attr('orig-'+attrName, id);
     });
+    $(".dynamic-table *["+attrName+"]").on("id-suffix-changed.dynamic-table", function(evt) {
+      var $e = $(this);
+      var id = $e.attr('orig-'+attrName);
+      var suffix = "";
+      $e.parents("*[id-suffix]").each(function (i,p) {
+        suffix = $(p).attr('id-suffix') + suffix;
+      });
 
-    $e.attr('id',id + suffix);
+      $e.attr(attrName,id + suffix);
+    });
   });
   $(".dynamic-table tr.new-table-row *").off('focus.dynamic-table mousedown.dynamic-table');
   $(".dynamic-table tr.new-table-row *").on('focus.dynamic-table mousedown.dynamic-table', function (evt) {

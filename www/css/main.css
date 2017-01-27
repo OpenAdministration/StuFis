@@ -80,3 +80,7 @@ table.invref > tbody > tr.invref-template {
 .tree-view.tree-view-visible, .tree-view.tree-view-wip {
  display: initial;
 }
+
+.input-daterange .form-control {
+ border-radius: 4px !important;
+}
