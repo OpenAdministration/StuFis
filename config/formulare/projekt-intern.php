@@ -53,8 +53,14 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
   ],
-
-  
+  "newStateActions" => [
+    "from.draft.to.new" => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.new.to.done" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.wip.to.done" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.new.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.wip.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
+  ],
 ];
 
 registerFormClass( "projekt-intern", $config );

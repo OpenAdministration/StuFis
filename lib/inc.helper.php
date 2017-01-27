@@ -19,6 +19,30 @@ function getAntrag() {
   return $antrag;
 }
 
+function getAntragDisplayTitle(&$antrag, &$revConfig) {
+  $caption = [ htmlspecialchars($antrag["token"]) ];
+  if (count($revConfig["captionField"]) > 0) {
+    if (!isset($antrag["_inhalt"])) {
+      $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
+      $antraege[$type][$revision][$i] = $antrag;
+    }
+    foreach ($revConfig["captionField"] as $j => $fname) {
+      $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
+      $row = count($rows) > 0 ? $rows[0] : false;
+      if ($row !== false) {
+        ob_start();
+        $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
+        $form = [ "layout" => $formlayout, "config" => [] ];
+        renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+        $val = ob_get_contents();
+        ob_end_clean();
+        $caption[$j] = $val;
+      }
+    }
+  }
+  return $caption;
+}
+
 function human_filesize($bytes, $decimals = 2) {
     $size = array('B','kB','MB','GB','TB','PB','EB','ZB','YB');
     $factor = floor((strlen($bytes) - 1) / 3);

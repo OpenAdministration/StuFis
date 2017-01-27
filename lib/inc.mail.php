@@ -9,22 +9,64 @@ function verify_mail($email) {
   return $results[$email];
 }
 
-function sendAntrag($antrag, $ahs, $msg) {
-  global $ANTRAGMAILTO, $mail_object;
+function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
+  global $URIBASE, $URIBASEREF, $ANTRAGMAILTO, $mail_object, $STORAGE;
 
-  $antragtxt = "";
-  foreach ($antrag as $k => $v)
-    $antragtxt .= "$k = $v\n";
+  $attachAnhang = (bool) $action["attachForm"];
 
-  $antragtxt .= "\n\nNachweise:\n";
-  foreach ($ahs as $ah) {
-    if (strtolower($ah["state"]) != "active") continue;
-    $antragtxt .= $ah["id"]." ".$ah["type"]."\n";
-    if ($ah["description"] == "") continue;
-    $antragtxt .= " Beschreibung:\n";
-    foreach (explode("\n",$ah["description"]) as $dline)
-      $antragtxt .= "  ".trim($dline)."\n";
+  $classConfig = getFormClass($antrag["type"]);
+  $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
+
+  if (!isset($revConfig["mailTo"])) {
+    $mailTo = "ref-it@tu-ilmenau.de";
+    $subject = "[KEINE MAILTO ANGABE] $subject";
+  } else {
+    $mailTo = $revConfig["mailTo"];
   }
+
+  $to = [];
+  foreach ($mailTo as $mail) {
+    if (substr($mail,0,7) == "mailto:") {
+      $to[] = substr($mail,7);
+    } elseif (substr($mail,0,6) == "field:") {
+      $fieldName = substr($mail,6);
+      $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], null);
+      if ($value === null) continue;
+      $to[] = $value;
+    }
+  }
+  if (count($to) == 0) return;
+  $to = array_unique($to);
+
+  $antragurl = str_replace("//","/",$URIBASEREF."/".$URIBASE."/").rawurlencode($antrag["token"]);
+  $caption = getAntragDisplayTitle($antrag, $revConfig);
+  $antragtitle = preg_replace('/\s+/', ' ', strip_tags(implode(" ", $caption)));
+
+  $classTitle = "{$antrag["type"]}";
+  if (isset($classConfig["title"]))
+    $classTitle = "{$classConfig["title"]}";
+
+  #$revTitle = "{$antrag["revision"]}";
+  #if (isset($revConfig["revisionTitle"]))
+  #  $revTitle = "[{$antrag["revision"]}] {$revConfig["revisionTitle"]}";
+
+  #$subject = "Information zu {$antragtitle} ({$classTitle} - {$revTitle})";
+  $subject = "Information zu {$antragtitle} ({$classTitle})";
+
+  $newStateTxt = $classConfig["state"][$newState];
+
+  $txt = "";
+  $txt .= "Hallo,\n";
+  $txt .= "\n";
+  $txt .= "der Antrag\n";
+  $txt .= "  {$classTitle}\n";
+  $txt .= "  {$antragtitle}\n";
+  $txt .= "wurde in den Bearbeitungsstatus \"{$newStateTxt}\" verschoben.\n";
+  $txt .= "\n";
+  $txt .= "Mit freundlichen Grüßen,\n";
+  $txt .= "Referat Finanzen\n";
+  $txt .= "\n";
+  $txt .= "{$antragurl}";
 
   $boundary = strtoupper(md5(uniqid(time())));
   $message = "This is a multi-part message in MIME format -- Dies ist eine mehrteilige Nachricht im MIME-Format" . "\r\n" .
@@ -32,44 +74,74 @@ function sendAntrag($antrag, $ahs, $msg) {
              "Content-type: text/plain; charset=UTF-8" . "\r\n" .
              "Content-Transfer-Encoding: base64" . "\r\n".
              "\r\n" .
-              chunk_split(base64_encode($msg)) .
-             "\r\n" .
-             "\r\n" .
-             "--$boundary" . "\r\n" .
-             "Content-Type: text/plain; name=\"antrag{$antrag["id"]}.txt\"" ."\r\n" .
-             "Content-Transfer-Encoding: base64" . "\r\n" .
-             "\r\n" .
-             chunk_split(base64_encode($antragtxt)) .
+              chunk_split(base64_encode($txt)) .
              "\r\n" .
              "\r\n" .
              "--$boundary";
 
-  foreach ($ahs as $ah) {
-    if (strtolower($ah["state"]) != "active") continue;
+  if ($attachAnhang) {
+    $antrag["state"] = $newState;
+    $antrag["stateCreator"] = $newStateCreator;
+    $antraghtml = antrag2html($antrag);
     $message .= "\r\n" .
-             "Content-Type: ".$ah["mimetype"]."; name=\"".$ah["id"]."-".$ah["type"].".".pathinfo($ah["name"],PATHINFO_EXTENSION)."\"\r\n" .
-             "Content-Transfer-Encoding: base64" . "\r\n" .
-             "Content-Disposition: attachment; filename=\"".$ah["id"]."-".$ah["type"].".".pathinfo($ah["name"],PATHINFO_EXTENSION)."\"\r\n" .
-             "\r\n" .
-             chunk_split(base64_encode(file_get_contents($ah["path"]))) .
-             "\r\n" .
-             "\r\n" .
-             "--$boundary";
-  }
+               "Content-Type: text/html; name=\"antrag{$antrag["id"]}.html\"" ."\r\n" .
+               "Content-Transfer-Encoding: base64" . "\r\n" .
+               "Content-Disposition: attachment; filename=\"antrag{$antrag["id"]}.html\"\r\n" .
+               "\r\n" .
+               chunk_split(base64_encode($antraghtml)) .
+               "\r\n" .
+               "\r\n" .
+               "--$boundary";
 
-  $to = [ $antrag["email"], $ANTRAGMAILTO ];
-  $subject = "Dein Antrag auf Erstattung des Semesterbeitrages der Studierendenschaft";
+    foreach ($antrag["_anhang"] as $ah) {
+      if (strtolower($ah["state"]) != "active") continue;
+      $fileName = $ah["antrag_id"]."-".$ah["id"].".".str_replace(["[","]",'"'], ["-","",""], $ah["fieldname"]).".".pathinfo($ah["filename"],PATHINFO_BASENAME);
+      $message .= "\r\n" .
+               "Content-Type: ".$ah["mimetype"]."; name=\"".$fileName."\"\r\n" .
+               "Content-Transfer-Encoding: base64" . "\r\n" .
+               "Content-Disposition: attachment; filename=\"".$fileName."\"\r\n" .
+               "\r\n" .
+               chunk_split(base64_encode(file_get_contents($STORAGE."/".$ah["path"]))) .
+               "\r\n" .
+               "\r\n" .
+               "--$boundary";
+    }
+  }
 
   $subject = '=?UTF-8?B?'.base64_encode($subject).'?=';
   $header = Array(
     "From"                      => $ANTRAGMAILTO,
     "Reply-To"                  => $ANTRAGMAILTO,
-    "X-Mailer"                  => "helfer.stura.tu-ilmenau.de/erstattung-semesterbeitrag",
+    "X-Mailer"                  => $URIBASEREF.$URIBASE,
     "To"                        => join(", ", $to),
     "Subject"                   => $subject,
     "MIME-Version"              => "1.0",
     "Content-Type"              => "multipart/mixed; boundary=$boundary; charset=UTF-8"
    );
+
+  if (isset($ANTRAGMAILTO)) {
+    add_message("eMail an $ANTRAGMAILTO umgeleitet");
+    $to = [ $ANTRAGMAILTO ];
+  }
+
   return (true === $mail_object->send($to, $header, $message));
+}
+
+function antrag2html($antrag) {
+  global $URIBASEREF, $URIBASE;
+  global $inlineCSS;
+  $oldInlineCSS = $inlineCSS;
+  $inlineCSS = true;
+  $form = getForm($antrag["type"],$antrag["revision"]);
+  ob_start();
+  require "../template/header-print.tpl";
+  require "../template/antrag.head.tpl";
+  require "../template/antrag.tpl";
+  require "../template/antrag.foot-print.tpl";
+  require "../template/footer-print.tpl";
+  $antraghtml = ob_get_contents();
+  ob_end_clean();
+  $inlineCSS = $oldInlineCSS;
+  return $antraghtml;
 }
 

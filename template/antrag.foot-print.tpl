@@ -37,27 +37,8 @@ echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
 
 echo "<tr>";
 echo "<td>".htmlspecialchars($antrag["id"])."</td>";
-$caption = [ htmlspecialchars($antrag["token"]) ];
-if (count($revConfig["captionField"]) > 0) {
-  if (!isset($antrag["_inhalt"])) {
-    $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
-    $antraege[$type][$revision][$i] = $antrag;
-  }
-  foreach ($revConfig["captionField"] as $j => $fname) {
-    $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
-    $row = count($rows) > 0 ? $rows[0] : false;
-    if ($row !== false) {
-      ob_start();
-      $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
-      $form = [ "layout" => $formlayout, "config" => [] ];
-      renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
-      $val = ob_get_contents();
-      ob_end_clean();
-      $caption[$j] = $val;
-    }
-  }
-}
-echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".implode(" ", $caption)."</a></td>";
+$caption = getAntragDisplayTitle($antrag, $revConfig);
+echo "<td><a href=\"{$URIBASEREF}{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".implode(" ", $caption)."</a></td>";
 echo "<td>";
  if (($antrag["creator"] == $antrag["creatorFullName"]) || empty($antrag["creatorFullName"])) {
    echo htmlspecialchars($antrag["creator"]);

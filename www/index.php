@@ -428,7 +428,8 @@ outAntragCreate:
       $newState = $_REQUEST["state"];
       if ($ret) {
         $form = getForm($antrag["type"], $antrag["revision"]);
-        $perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
+        $transition = "from.{$antrag["state"]}.to.{$newState}";
+        $perm = "canStateChange.{$transition}";
         if (!hasPermission($form, $antrag, $perm)) {
           $ret = false;
           $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung).";
@@ -452,6 +453,14 @@ outAntragCreate:
         $comment["text"] = "Status nach [$newState] ".$txt." geändert";
         $ret = dbInsert("comments", $comment);
         $ret = ($ret !== false);
+      }
+
+      if ($ret && isset($form["_class"]["newStateActions"]) && isset($form["_class"]["newStateActions"][$transition])) {
+        $actions = $form["_class"]["newStateActions"][$transition];
+        foreach ($actions as $action) {
+          if (!$action["sendMail"]) continue;
+          notifyStateTransition($antrag, $newState, getUsername(), $action);
+        }
       }
 
       // commitTx

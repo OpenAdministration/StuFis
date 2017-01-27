@@ -9,6 +9,7 @@ $config = [
     ],
     "isCreateable" => true,
   ],
+  "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
 ];
 
 $layout = [
