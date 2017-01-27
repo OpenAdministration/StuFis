@@ -151,6 +151,13 @@ if (isset($_REQUEST["action"])) {
 
   switch ($_POST["action"]):
     case "antrag.delete":
+      // beginTx
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        goto outAntragDelete;
+      }
+
       $antrag = getAntrag();
       // check antrag type and revision
       if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
@@ -164,12 +171,6 @@ if (isset($_REQUEST["action"])) {
         $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
       } else {
         $ret = true;
-      }
-      // beginTx
-      if (!dbBegin()) {
-        $msgs[] = "Cannot start DB transaction";
-        $ret = false;
-        goto outAntragDelete;
       }
       $filesCreated = []; $filesRemoved = [];
 
@@ -200,7 +201,6 @@ if (isset($_REQUEST["action"])) {
           if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
-outAntragDelete:
       if ($ret) {
         if (file_exists($STORAGE."/".$antrag["id"])) {
           if (@rmdir($STORAGE."/".$antrag["id"]) === false)
@@ -209,8 +209,15 @@ outAntragDelete:
         $forceClose = true;
         $target = $URIBASE;
       }
+outAntragDelete:
       break;
     case "antrag.update":
+      // beginTx
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        goto outAntragUpdate;
+      }
       $antrag = getAntrag();
       // check antrag type and revision, token cannot be altered
       if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
@@ -224,12 +231,6 @@ outAntragDelete:
         $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
       } else {
         $ret = true;
-      }
-      // beginTx
-      if (!dbBegin()) {
-        $msgs[] = "Cannot start DB transaction";
-        $ret = false;
-        goto outAntragUpdate;
       }
       $filesCreated = []; $filesRemoved = [];
       // update last-modified timestamp
@@ -341,24 +342,25 @@ outAntragDelete:
           if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
-outAntragUpdate:
       if ($ret) {
         $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       }
+outAntragUpdate:
       break;
     case "antrag.create":
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        goto outAntragCreate;
+      }
+
       $form = getForm($antrag["type"], $antrag["revision"]);
       if ($form === false)
         die("Unbekannte Formularversion");
 
       if (!hasPermission($form, null, "canCreate")) die("Antrag ist nicht erstellbar");
 
-      if (!dbBegin()) {
-        $msgs[] = "Cannot start DB transaction";
-        $ret = false;
-        goto outAntragCreate;
-      }
       $filesCreated = []; $filesRemoved = [];
 
       $antrag = [];
@@ -401,6 +403,52 @@ outAntragUpdate:
       }
 outAntragCreate:
 
+      break;
+    case "antrag.state":
+      // beginTx
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        goto outAntragState;
+      }
+
+      $antrag = getAntrag();
+      // check antrag type and revision, token cannot be altered
+      if ($_REQUEST["type"] !== $antrag["type"]) die("Unerlaubter Typ");
+      if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
+
+      if ($_REQUEST["version"] !== $antrag["version"]) {
+        $ret = false;
+        $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
+      } else {
+        $ret = true;
+      }
+
+      $newState = $_REQUEST["state"];
+      if ($ret) {
+        $form = getForm($antrag["type"], $antrag["revision"]);
+        $perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
+        if (!hasPermission($form, $antrag, $perm)) {
+          $ret = false;
+          $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung).";
+        }
+      }
+
+      if ($ret) {
+        $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState ]);
+        $ret = ($ret === 1);
+      }
+
+      // commitTx
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret)
+        dbRollBack();
+      if ($ret) {
+        $forceClose = true;
+        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+      }
+outAntragState:
       break;
     default:
       logAppend($logId, "__result", "invalid action");
@@ -536,6 +584,7 @@ switch($_REQUEST["tab"]) {
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
     require "../template/antrag.menu.tpl";
+    require "../template/antrag.state.tpl";
     require "../template/antrag.tpl";
   break;
   case "antrag.edit":

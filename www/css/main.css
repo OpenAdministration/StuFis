@@ -124,3 +124,14 @@ hr.blackhr {
 .table.small-table th, .table.small-table td {
     font-size: 8px;
 }
+
+.form-inline select.selectpicker option {
+    width: .5px !important;
+}
+
+.form-inline .bootstrap-select.form-control:not([class*="col-"]),
+.form-inline .bootstrap-select > .dropdown-toggle,
+.form-inline .bootstrap-select.btn-group .dropdown-toggle .filter-option {
+    width: initial !important;
+}
+

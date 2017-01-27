@@ -9,8 +9,8 @@ $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $
 $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/edit";
 $targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 
-// FIXME: check antrag editability and set $targetEdit = false if uneditable (e.g. STATE == DRAFT)
-if ($antrag["state"] != "draft") $targetEdit = false;
+if (!hasPermission($form, $antrag, "canEdit"))
+  $targetEdit = false;
 
 ?>
 <nav class="navbar navbar-default">
