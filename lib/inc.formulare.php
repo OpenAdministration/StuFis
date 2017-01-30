@@ -416,6 +416,9 @@ function renderFormItem($layout,$ctrl = false) {
     case "url":
       $isEmpty = renderFormItemText($layout,$ctrl);
       break;
+    case "radio":
+      $isEmpty = renderFormItemRadio($layout,$ctrl);
+      break;
     case "money":
       $isEmpty = renderFormItemMoney($layout,$ctrl);
       break;
@@ -529,6 +532,27 @@ function renderFormItemGroup($layout, $ctrl) {
   }
   if (in_array("well", $layout["opts"]))
     echo "<div class=\"clearfix\"></div></div>";
+}
+
+function renderFormItemRadio($layout,$ctrl) {
+  $noForm = in_array("no-form", $ctrl["render"]);
+
+  $value = "";
+  if (isset($ctrl["_values"])) {
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
+  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
+    $value = getUserMail();
+  }
+
+  echo '<div class="radio">';
+  echo '<label><input type="radio" name="'.htmlspecialchars($ctrl["name"]).'" value="'.htmlspecialchars($layout["value"]).'"';
+  if ($value == $layout["value"]) {
+    echo " selected=\"selected\"";
+  }
+  echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
+  echo '</div>';
 }
 
 function renderFormItemText($layout, $ctrl) {

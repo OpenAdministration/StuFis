@@ -27,11 +27,24 @@ $layout = [
    "id" => "group0",
    "title" => "Genehmigung",
    "children" => [
-     [ "id" => "genehmigung.recht",   "title" =>"Rechtsgrundlage",        "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"] ], # FIXME RADIO OPTIONS
+     [ "id" => "genehmigung.recht.grp",   "title" =>"Rechtsgrundlage",        "type" => "group",    "width" => 12, "children" => [
+
+       [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, ],
+       [ "id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, ],
+       [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, ],
+
+       [ "id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura", "width" => 6, ],
+       [ "id" => "genehmigung.recht.stura.beschluss", "title" => "Beschluss-Nr", "type" => "text", "width" => 2, ],
+       [ "id" => "genehmigung.recht.stura.datum", "title" => "vom", "type" => "date", "width" => 2, ],
+
+       [ "id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR", "type" => "radio", "value" => "fsr", "width" => 6, ],
+       [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text", "width" => 2, ],
+       [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date", "width" => 2, ],
+     ], ], # FIXME ANTRAG REF
      [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan", "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "5" ],
-     [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
+     [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 12, "opts" => [ "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
      [ "id" => "genehmigung.antrag",  "title" =>"Antrag war",             "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"] ],
-     [ "id" => "genehmigung.hinweis", "title" =>"Auflagen",               "type" => "textarea", "width" => 12, "opts" => ["required", "hasFeedback"] ],
+     [ "id" => "genehmigung.hinweis", "title" =>"Auflagen",               "type" => "textarea", "width" => 12, "opts" => [ "hasFeedback"] ],
    ],
  ],
 
