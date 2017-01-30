@@ -12,6 +12,12 @@ $config = [
      * group: true if all given groups are present
      * field: true if all given checks are ok
      */
+    "canBeLinked" => [
+      [ "state" => "new" ],
+      [ "state" => "wip" ],
+      [ "state" => "done" ],
+      [ "state" => "obsolete" ],
+    ],
     "canRead" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
@@ -27,7 +33,7 @@ $config = [
       [ "hasPermission" => "canEdit" ],
     ],
     "canStateChange.from.new.to.obsolete" => [
-      [ "state" => "draft", "creator" => "self" ],
+      [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
     ],

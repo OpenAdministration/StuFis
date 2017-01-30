@@ -1,0 +1,110 @@
+<?php
+
+$config = [
+  "title" => "Genehmigung für ein Projekt der Studierendenschaft (internes Projekt)",
+  "state" => [ "draft" => "Entwurf",
+               "wait-stura" => "Warte auf StuRa Beschluss",
+               "ok-by-hv" => "Genehmigt durch HV (muss noch verkündet werden)",
+               "ok-by-stura" => "Genehmigt durch StuRa-Beschluss",
+               "done-hv" => "Genehmigt durch HV und protokolliert in StuRa Sitzung",
+               "revoked" => "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)"
+             ],
+  "createState" => "draft",
+  "buildFrom" => [ "projekt-intern" ],
+  "permission" => [
+    /* each permission has a name and a list of sufficient conditions.
+     * Each condition is an AND clause.
+     * This is merged with form data that can add extra permissions not given here
+     * hasPermission: true if all given permissions are present
+     * group: true if all given groups are present
+     * field: true if all given checks are ok
+     */
+    "canRead" => [
+      [ "creator" => "self" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "ok" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "wait-stura" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "done" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canEdit" => [
+      [ "state" => "draft", "creator" => "self" ],
+      [ "state" => "draft", "group" => "ref-finanzen", ],
+    ],
+    "canCreate" => [
+      [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
+    ],
+    # Genehmigung durch StuRa
+    "canStateChange.from.draft.to.wait-stura" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    "canStateChange.from.wait-stura.to.ok-by-stura" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    "canStateChange.from.draft.to.ok-by-stura" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    # Genehmigung durch HV
+    "canStateChange.from.draft.to.ok-by-hv" => [
+      [ "group" => "ref-finanzen", ],
+    ],
+    "canStateChange.from.ok-by-hv.to.done-hv" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    "canStateChange.from.draft.to.done-hv" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    "canStateChange.from.wait-stura.to.ok-by-hv" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    "canStateChange.from.wait-stura.to.done-hv" => [
+      [ "hasPermission" => "canEdit" ],
+    ],
+    # Rücknahme
+    "canRevoke" => [
+      [ "creator" => "self" ],
+      [ "hasPermission" => "isCorrectGremium" ],
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.wait-stura.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
+    "canStateChange.from.ok-by-hv.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
+    "canStateChange.from.ok-by-stura.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
+    "canStateChange.from.done-hv.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
+    "canUnrevoke" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.revoked.to.wait-stura" => [
+      [ "hasPermission" => "canUnrevoke" ],
+    ],
+    "canStateChange.from.revoked.to.ok-by-hv" => [
+      [ "hasPermission" => "canUnrevoke" ],
+    ],
+    "canStateChange.from.revoked.to.ok-by-stura" => [
+      [ "hasPermission" => "canUnrevoke" ],
+    ],
+    "canStateChange.from.revoked.to.done-hv" => [
+      [ "hasPermission" => "canUnrevoke" ],
+    ],
+  ],
+  "newStateActions" => [
+    "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.done-hv"       => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.wait-stura"    => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.ok-by-stura"   => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.wait-stura.to.revoked"  => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.ok-by-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-hv.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],
+  ],
+];
+
+registerFormClass( "projekt-intern-genehmigung-veraendert", $config );
+

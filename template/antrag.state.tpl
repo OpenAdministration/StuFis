@@ -6,6 +6,7 @@ if (!isset($classConfig["state"])) return;
 $txt = $antrag["state"];
 if (isset($classConfig["state"][$antrag["state"]]))
   $txt = $classConfig["state"][$antrag["state"]];
+$txt .= " ({$antrag["stateCreator"]})";
 
 $newStates = [];
 foreach (array_keys($classConfig["state"]) as $newState) {

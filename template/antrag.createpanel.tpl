@@ -5,24 +5,25 @@ global $formulare;
 $menu = [];
 
 foreach ($formulare as $type => $list) {
-  foreach ($list as $revision => $form) {
-    if (hasPermission($form, null, "canCreate")) continue;
+  foreach ($list as $revision => $lForm) {
+    if (hasPermission($lForm, null, "canCreate")) continue;
     unset($list[$revision]);
   }
   if (count($list) == 0) continue;
 
   $classConfig = getFormClass($type);
-  $title = $type;
+  if (isset($classConfig["buildFrom"])) continue;
 
+  $title = $type;
   if (isset($classConfig["title"]))
     $title = $classConfig["title"];
 
   $submenu = [];
-  foreach ($list as $revision => $form) {
+  foreach ($list as $revision => $lForm) {
     if ($revision == "_class") continue;
     $rtitle = $revision;
-    if (isset($form["config"]["revisionTitle"]))
-      $rtitle = $form["config"]["revisionTitle"];
+    if (isset($lForm["config"]["revisionTitle"]))
+      $rtitle = $lForm["config"]["revisionTitle"];
     $submenu[$revision] = $rtitle;
   }
 

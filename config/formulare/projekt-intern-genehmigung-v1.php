@@ -10,6 +10,7 @@ $config = [
     "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
+  "referenceField" => [ "name" => "genehmigung.antrag", "type" => "text" ],
 ];
 
 $layout = [
@@ -17,6 +18,21 @@ $layout = [
    "type" => "h2", /* renderer */
    "id" => "head1",
    "autoValue" => "class:title",
+ ],
+
+ [
+   "type" => "group", /* renderer */
+   "width" => 12,
+   "opts" => ["well"],
+   "id" => "group0",
+   "title" => "Genehmigung",
+   "children" => [
+     [ "id" => "genehmigung.recht",   "title" =>"Rechtsgrundlage",        "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"] ], # FIXME RADIO OPTIONS
+     [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan", "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "5" ],
+     [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
+     [ "id" => "genehmigung.antrag",  "title" =>"Antrag war",             "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"] ],
+     [ "id" => "genehmigung.hinweis", "title" =>"Auflagen",               "type" => "textarea", "width" => 12, "opts" => ["required", "hasFeedback"] ],
+   ],
  ],
 
  [
@@ -32,7 +48,7 @@ $layout = [
      [ "id" => "projekt.org.name",    "title" =>"Projekt von",                        "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"] ],
      [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"] ],
      [ "id" => "projekt.protokoll",   "title" =>"Projektbeschluss (Wiki Direktlink)", "type" => "url",    "width" => 12, "placeholder" => "https://wiki.stura.tu-ilmenau.de/protokoll/...", "opts" => ["required","hasFeedback","wikiUrl"], "pattern" => "^https:\/\/wiki\.stura\.tu-ilmenau\.de\/protokoll\/.*", "pattern-error" => "Muss mit \"https://wiki.stura.tu-ilmenau.de/protokoll/\" beginnen." ],
-     [ "id" => "projekt.zeitraum",    "title" =>"Projektdauer",                       "type" => "daterange", "width" => 12,  "opts" => ["not-before-creation", "required"] ],
+     [ "id" => "projekt.zeitraum",    "title" =>"Projektdauer",                       "type" => "daterange", "width" => 12,  "opts" => [ "required"] ],
    ],
  ],
 
@@ -43,9 +59,11 @@ $layout = [
    "width" => 12,
    "rowCountField" => "numgrp",
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 8, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
+     [ "id" => "geld.titel",       "name" => "Titel",                              "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
+     [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
    ], // finanzgruppentbl
  ],
 
@@ -70,5 +88,5 @@ $layout = [
 ];
 
 /* formname , formrevision */
-registerForm( "projekt-intern", "v1", $layout, $config );
+registerForm( "projekt-intern-genehmigung-veraendert", "v1", $layout, $config );
 

@@ -74,6 +74,7 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated) 
     }
     if ($errors == UPLOAD_ERR_NO_FILE || $errors == UPLOAD_ERR_OK) {
       // try to delete file
+      // do not try to replace file, as it might be hard-linked to another antrag
       $oldAnhang = dbGet("anhang", [ "antrag_id" => $anhang["antrag_id"], "fieldname" => $names ]);
       if ($oldAnhang !== false) {
         $ret = dbDelete("anhang", [ "antrag_id" => $oldAnhang["antrag_id"], "id" => $oldAnhang["id"] ]);
@@ -129,6 +130,42 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated) 
   return $ret;
 }
 
+function writeState($newState, $antrag, $form, &$msg) {
+  $transition = "from.{$antrag["state"]}.to.{$newState}";
+  $perm = "canStateChange.{$transition}";
+  if (!hasPermission($form, $antrag, $perm)) {
+    $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung).";
+    return false;
+  }
+
+  $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => getUsername() ]);
+  if ($ret !== 1)
+    return false;
+
+  $comment = [];
+  $comment["antrag_id"] = $antrag["id"];
+  $comment["creator"] = getUsername();
+  $comment["creatorFullName"] = getUserFullName();
+  $comment["timestamp"] = date("Y-m-d H:i:s");
+  $txt = $newState;
+  if (isset($form["_class"]["state"][$newState]))
+    $txt = $form["_class"]["state"][$newState];
+  $comment["text"] = "Status nach [$newState] ".$txt." geändert";
+  $ret = dbInsert("comments", $comment);
+  if ($ret === false)
+    return false;
+
+  if (isset($form["_class"]["newStateActions"]) && isset($form["_class"]["newStateActions"][$transition])) {
+    $actions = $form["_class"]["newStateActions"][$transition];
+    foreach ($actions as $action) {
+      if (!$action["sendMail"]) continue;
+      notifyStateTransition($antrag, $newState, getUsername(), $action);
+    }
+  }
+
+  return true;
+}
+
 if (isset($_REQUEST["action"])) {
  global $msgs;
  $msgs = Array();
@@ -155,7 +192,7 @@ if (isset($_REQUEST["action"])) {
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
         $ret = false;
-        goto outAntragDelete;
+        break;
       }
 
       $antrag = getAntrag();
@@ -209,14 +246,13 @@ if (isset($_REQUEST["action"])) {
         $forceClose = true;
         $target = $URIBASE;
       }
-outAntragDelete:
       break;
     case "antrag.update":
       // beginTx
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
         $ret = false;
-        goto outAntragUpdate;
+        break;
       }
       $antrag = getAntrag();
       // check antrag type and revision, token cannot be altered
@@ -346,16 +382,15 @@ outAntragDelete:
         $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       }
-outAntragUpdate:
       break;
     case "antrag.create":
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
         $ret = false;
-        goto outAntragCreate;
+        break;
       }
 
-      $form = getForm($antrag["type"], $antrag["revision"]);
+      $form = getForm($_REQUEST["type"], $_REQUEST["revision"]);
       if ($form === false)
         die("Unbekannte Formularversion");
 
@@ -382,7 +417,6 @@ outAntragUpdate:
         $antrag_id = (int) $ret;
         $msgs[] = "Antrag wurde erstellt.";
 
-        # write formdata
         $ret0 = writeFormdata($antrag_id);
 
         $ret1 = writeFormdataFiles($antrag_id, $msgs, $filesRemoved, $filesCreated);
@@ -402,7 +436,117 @@ outAntragUpdate:
           if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
-outAntragCreate:
+
+      break;
+    case "antrag.copy":
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        break;
+      }
+
+      $form = getForm($_REQUEST["type"], $_REQUEST["revision"]);
+      if ($form === false)
+        die("Unbekannte Formularversion");
+      if (!hasPermission($form, null, "canCreate")) die("Antrag ist nicht erstellbar");
+
+      $oldAntrag = dbGet("antrag", ["id" => $_REQUEST["copy_from"]]);
+      if ($oldAntrag === false) die("Unknown antrag.");
+      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $oldAntrag["id"]]);
+      $oldAntrag["_inhalt"] = $inhalt;
+      $anhang = dbFetchAll("anhang", ["antrag_id" => $oldAntrag["id"]]);
+      $oldAntrag["_anhang"] = $anhang;
+
+      $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
+      $readPermitted = hasPermission($oldForm, $oldAntrag, "canRead");
+      if (!$readPermitted)
+        die("Permission denied: alter Antrag nicht lesbar");
+
+      $filesCreated = []; $filesRemoved = [];
+
+      $antrag = [];
+      $antrag["type"] = $_REQUEST["type"];
+      $antrag["revision"] = $_REQUEST["revision"];
+      $antrag["creator"] = getUsername();
+      $antrag["creatorFullName"] = getUserFullName();
+      $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+      $antrag["createdat"] = date("Y-m-d H:i:s");
+      $antrag["lastupdated"] = date("Y-m-d H:i:s");
+      $createState = "draft";
+      if (isset($form["_class"]["createState"]))
+        $createState = $form["_class"]["createState"];
+      $antrag["state"] = $createState; // FIXME custom default state
+      $antrag["stateCreator"] = getUsername();
+      $ret = dbInsert("antrag", $antrag);
+      if ($ret !== false) {
+        $target = str_replace("//","/",$URIBASE."/").rawurlencode($token)."/edit";
+        $antrag_id = (int) $ret;
+        $msgs[] = "Antrag wurde erstellt.";
+
+        # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
+        foreach($oldAntrag["_inhalt"] as $row) {
+          $row["antrag_id"] = $antrag_id;
+          $ret0 = dbInsert("inhalt", $row);
+          $ret = $ret && $ret0;
+        }
+
+        if ($oldForm["type"] != $form["type"] &&
+            isset($form["_class"]["buildFrom"]) &&
+            in_array($oldForm["type"], $form["_class"]["buildFrom"]) &&
+            isset($form["config"]["referenceField"]))
+        {
+           $row = Array();
+           $row["antrag_id"] = $antrag_id;
+           $row["contenttype"] = $form["config"]["referenceField"]["type"];
+           $row["fieldname"] = $form["config"]["referenceField"]["name"];
+           $row["value"] = $oldAntrag["id"];
+           $ret0 = dbInsert("inhalt", $row);
+        }
+
+        # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
+        foreach($oldAntrag["_anhang"] as $row) {
+          $row["antrag_id"] = $antrag_id;
+
+          $dbPath = $antrag_id."/".uniqid().".".pathinfo($row["filename"], PATHINFO_EXTENSION);
+          $destPath = $STORAGE."/".$dbPath;
+          $srcPath = $STORAGE."/".$row["path"];
+          if (!is_dir(dirname($destPath)))
+            mkdir(dirname($destPath),0777,true);
+          $anhang["path"] = $dbPath;
+
+          $ret0 = link($srcPath, $destPath);
+          if ($ret0 === false)
+            $ret0 = copy($srcPath, $destPath);
+          $filesCreated[] = $path;
+
+          $ret1 = dbInsert("anhang", $row);
+          $ret = $ret && $ret0 && $ret1;
+        }
+      } /* dbInsert(antrag) -> $ret !== false */
+
+      if ($_REQUEST["copy_from_version"] !== $oldAntrag["version"]) {
+        $ret = false;
+        $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
+      }
+
+      $newState = $_REQUEST["copy_from_state"];
+      if ($newState != "" && $ret) {
+        $ret = writeState($newState, $oldAntrag, $oldForm, $msg);
+      }
+
+      if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret) {
+        dbRollBack();
+        foreach ($filesCreated as $f) {
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      } else {
+        foreach ($filesRemoved as $f) {
+          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      }
 
       break;
     case "antrag.state":
@@ -410,7 +554,7 @@ outAntragCreate:
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
         $ret = false;
-        goto outAntragState;
+        break;
       }
 
       $antrag = getAntrag();
@@ -428,39 +572,7 @@ outAntragCreate:
       $newState = $_REQUEST["state"];
       if ($ret) {
         $form = getForm($antrag["type"], $antrag["revision"]);
-        $transition = "from.{$antrag["state"]}.to.{$newState}";
-        $perm = "canStateChange.{$transition}";
-        if (!hasPermission($form, $antrag, $perm)) {
-          $ret = false;
-          $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung).";
-        }
-      }
-
-      if ($ret) {
-        $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => getUsername() ]);
-        $ret = ($ret === 1);
-      }
-
-      if ($ret) {
-        $comment = [];
-        $comment["antrag_id"] = $antrag["id"];
-        $comment["creator"] = getUsername();
-        $comment["creatorFullName"] = getUserFullName();
-        $comment["timestamp"] = date("Y-m-d H:i:s");
-        $txt = $newState;
-        if (isset($form["_class"]["state"][$newState]))
-          $txt = $form["_class"]["state"][$newState];
-        $comment["text"] = "Status nach [$newState] ".$txt." geändert";
-        $ret = dbInsert("comments", $comment);
-        $ret = ($ret !== false);
-      }
-
-      if ($ret && isset($form["_class"]["newStateActions"]) && isset($form["_class"]["newStateActions"][$transition])) {
-        $actions = $form["_class"]["newStateActions"][$transition];
-        foreach ($actions as $action) {
-          if (!$action["sendMail"]) continue;
-          notifyStateTransition($antrag, $newState, getUsername(), $action);
-        }
+        $ret = writeState($newState, $antrag, $form, $msg);
       }
 
       // commitTx
@@ -472,7 +584,6 @@ outAntragCreate:
         $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       }
-outAntragState:
       break;
     default:
       logAppend($logId, "__result", "invalid action");
@@ -609,6 +720,7 @@ switch($_REQUEST["tab"]) {
 
     require "../template/antrag.menu.tpl";
     require "../template/antrag.state.tpl";
+    require "../template/antrag.subcreate.tpl";
     require "../template/antrag.tpl";
     require "../template/antrag.comments.tpl";
   break;
