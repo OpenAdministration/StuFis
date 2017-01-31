@@ -38,9 +38,9 @@ $layout = [
        [ "id" => "genehmigung.recht.stura.datum", "title" => "vom", "type" => "date", "width" => 2, ],
 
        [ "id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR", "type" => "radio", "value" => "fsr", "width" => 6, "opts" => ["required"], ],
-       [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text", "width" => 2, ],
-       [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date", "width" => 2, ],
-     ], ], # FIXME ANTRAG REF
+       [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text", "width" => 2, "onClickFillFrom" => "projekt.org.name"],
+       [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date", "width" => 2,  "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
+     ], ],
      [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan", "type" => "text",     "width" => 6, "opts" => ["required", "hasFeedback"], "minLength" => "5" ],
      [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 6, "opts" => [ "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
      [ "id" => "genehmigung.antrag",  "title" =>"Antrag war",             "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback"] ],

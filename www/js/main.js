@@ -750,6 +750,40 @@ $(document).ready(function() {
 
   }).triggerHandler("change.extra-text");
 
+  $(":input[data-onClickFillFrom]").on("focus.onClickFillFrom mousedown.onClickFillFrom", function (evt) {
+    var $el = $(this);
+    var origId = $el.attr("data-onClickFillFrom");
+    var fdn = getFormdataName(origId);
+
+    if ($el.val() != "") return;
+
+    $el.parents().each(function (i, p) {
+      var $ref = $(p).find(':input[name="'+fdn+'"]');
+      if ($ref.length == 0) {
+        $ref = $(p).find(':input[name^="'+fdn+'["]');
+      }
+      if ($ref.length == 0) {
+        return;
+      }
+
+      var val = $ref.val();
+      if ($el.is("*[data-onClickFillFromPattern]")) {
+        var regex = new RegExp($el.attr("data-onClickFillFromPattern"));
+        var m = val.match(regex);
+        if (m !== null) {
+          val = m[0];
+        } else {
+          val = "";
+        }
+      }
+      $el.val(val);
+      $el.trigger("change");
+
+      return false;
+    });
+
+  });
+
   $( "form.ajax" ).validator().on("submit", function(e) {
     if (e.isDefaultPrevented()) return; // validator said no
     return handleSubmitForm($(this), e, false);
@@ -1135,6 +1169,8 @@ function extractFieldName(name) {
 }
 
 function getFormdataName(fieldname) {
+  if (fieldname == null)
+    return false;
   var re = /^([^\[\]]*)(\[.*)?$/;
   var m = fieldname.match(re);
   if (!m)

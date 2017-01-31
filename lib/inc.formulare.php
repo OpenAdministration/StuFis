@@ -729,6 +729,10 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-tree-url=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=propose.wiki&nonce=".urlencode($nonce))."\"";
       echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.wiki&nonce=".urlencode($nonce))."\"";
     }
+    if (isset($layout["onClickFillFrom"]))
+      echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
+    if (isset($layout["onClickFillFromPattern"]))
+      echo " data-onClickFillFromPattern=\"".htmlspecialchars($layout["onClickFillFromPattern"])."\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
@@ -1280,7 +1284,14 @@ function renderFormItemDate($layout, $ctrl) {
   }
 ?>
 >
-    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"/>
+    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"
+<?php
+    if (isset($layout["onClickFillFrom"]))
+      echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
+    if (isset($layout["onClickFillFromPattern"]))
+      echo " data-onClickFillFromPattern=\"".htmlspecialchars($layout["onClickFillFromPattern"])."\"";
+?>
+    />
     <div class="input-group-addon">
         <span class="glyphicon glyphicon-th"></span>
     </div>
