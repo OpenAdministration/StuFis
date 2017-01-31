@@ -106,5 +106,5 @@ $config = [
   ],
 ];
 
-registerFormClass( "projekt-intern-genehmigung-veraendert", $config );
+registerFormClass( "projekt-intern-genehmigung", $config );
 

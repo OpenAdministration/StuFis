@@ -551,6 +551,8 @@ function renderFormItemRadio($layout,$ctrl) {
   if ($value == $layout["value"]) {
     echo " selected=\"selected\"";
   }
+  if (in_array("required", $layout["opts"]))
+    echo " required=\"required\"";
   echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
   echo '</div>';
 }
