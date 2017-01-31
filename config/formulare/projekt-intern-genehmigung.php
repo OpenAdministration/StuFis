@@ -32,6 +32,13 @@ $config = [
       [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
       [ "group" => "ref-finanzen" ],
     ],
+    "canEditPartiell" => [
+      [ "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.genehmigung.recht.int.sturabeschluss" => [
+      [ "state" => "ok-by-hv", "group" => "ref-finanzen", ],
+      [ "state" => "done-hv", "group" => "ref-finanzen", ],
+    ],
     "canEdit" => [
       [ "state" => "draft", "creator" => "self" ],
       [ "state" => "draft", "group" => "ref-finanzen", ],

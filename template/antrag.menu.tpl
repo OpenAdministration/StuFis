@@ -7,10 +7,16 @@ $revConfig = $form["config"];
 $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $form["revision"];
 
 $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/edit";
+$targetEditPartiell = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/editPartiell";
 $targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 
 if (!hasPermission($form, $antrag, "canEdit"))
   $targetEdit = false;
+else
+  $targetEditPartiell = false;
+
+if (!hasPermission($form, $antrag, "canEditPartiell"))
+  $targetEditPartiell = false;
 
 ?>
 <nav class="navbar navbar-default">
@@ -21,6 +27,9 @@ if (!hasPermission($form, $antrag, "canEdit"))
     </div><!-- /.navbar-collapse -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
+<?php if ($targetEditPartiell !== false) { ?>
+        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li>
+<?php } ?>
 <?php if ($targetEdit !== false) { ?>
         <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
 <?php } ?>

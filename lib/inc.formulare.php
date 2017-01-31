@@ -350,6 +350,16 @@ function processTemplates($txt, $ctrl) {
   return str_replace(array_keys($ctrl["_render"]->templates), array_values($ctrl["_render"]->templates), $txt);
 }
 
+function isNoForm($layout, $ctrl) {
+  $noForm = in_array("no-form", $ctrl["render"]);
+  $noFormCb = in_array("no-form-cb", $ctrl["render"]);
+  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  if ($noFormCb) {
+    $noForm |= $ctrl["no-form-cb"]($layout, $ctrl);
+  }
+  return Array ($noForm, $noFormMarkup);
+}
+
 function renderFormItem($layout,$ctrl = false) {
 
   if (!isset($layout["id"])) {
@@ -394,8 +404,11 @@ function renderFormItem($layout,$ctrl = false) {
   $cls = ["form-group"];
   if (in_array("hasFeedback", $layout["opts"])) $cls[] = "has-feedback";
 
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  if ($noForm)
+    $cls[] = "no-form-grp";
+  else
+    $cls[] = "form-grp";
 
   ob_start();
   switch ($layout["type"]) {
@@ -482,7 +495,7 @@ function renderFormItem($layout,$ctrl = false) {
 
     echo $txt;
 
-    if (!in_array("no-form", $ctrl["render"]))
+    if (!$noForm)
       echo '<div class="help-block with-errors"></div>';
     if (!$noFormMarkup)
       echo "</div>";
@@ -540,7 +553,7 @@ function renderFormItemGroup($layout, $ctrl) {
 function renderFormItemOtherForm($layout,$ctrl) {
   global $URIBASE, $nonce;
 
-  $noForm = in_array("no-form", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -609,7 +622,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
 }
 
 function renderFormItemRadio($layout,$ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -649,8 +662,7 @@ function renderFormItemRadio($layout,$ctrl) {
 function renderFormItemText($layout, $ctrl) {
   global $nonce, $URIBASE, $attributes, $GremiumPrefix;
 
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
   $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
   $isDS = isset($layout["data-source"]);
 
@@ -803,8 +815,7 @@ function renderFormItemText($layout, $ctrl) {
 }
 
 function renderFormItemMoney($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $value = "0.00";
   if (isset($ctrl["_values"])) {
@@ -860,8 +871,7 @@ function renderFormItemMoney($layout, $ctrl) {
 }
 
 function renderFormItemTextarea($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -895,7 +905,7 @@ function getFileLink($file, $antrag) {
 }
 
 function renderFormItemFile($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $file = false;
   if (isset($ctrl["_values"])) {
@@ -951,7 +961,7 @@ function renderFormItemFile($layout, $ctrl) {
 }
 
 function renderFormItemMultiFile($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   if ($noForm && isset($layout["destination"]))
     return false; // no data here
@@ -1077,8 +1087,7 @@ function getTrText($trName, $ctrl) {
 function renderFormItemSelect($layout, $ctrl) {
   global $attributes, $GremiumPrefix;
 
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1174,8 +1183,7 @@ function renderFormItemSelect($layout, $ctrl) {
 }
 
 function renderFormItemDateRange($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $valueStart = "";
   $valueEnd = "";
@@ -1248,8 +1256,7 @@ function renderFormItemDateRange($layout, $ctrl) {
 
 
 function renderFormItemDate($layout, $ctrl) {
-  $noForm = in_array("no-form", $ctrl["render"]);
-  $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1307,7 +1314,7 @@ function renderFormItemDate($layout, $ctrl) {
 
 function renderFormItemTable($layout, $ctrl) {
   $withRowNumber = in_array("with-row-number", $layout["opts"]);
-  $noForm = in_array("no-form", $ctrl["render"]);
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $cls = ["table", "table-striped", "summing-table"];
   if (!$noForm)
@@ -1522,12 +1529,13 @@ function renderFormItemTable($layout, $ctrl) {
 }
 
 function renderFormItemInvRef($layout,$ctrl) {
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+
   $refId = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
   $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl) {
-    $noForm = in_array("no-form", $ctrl["render"]);
     if (isset($layout["printSum"]))
       $printSum = $layout["printSum"];
     else

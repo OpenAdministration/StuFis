@@ -139,3 +139,29 @@ hr.blackhr {
   vertical-align: top;
 }
 
+.glyphicon.align-top {
+  margin-top: 1px;
+}
+
+#editantragpartiell input:not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]),
+#editantragpartiell textarea,
+#editantragpartiell select
+{
+   border-color: #ff80ff;
+   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 100, 255, 0.5);
+   padding-left: 26px;
+}
+
+#editantragpartiell .form-grp {
+  position: relative;
+}
+
+#editantragpartiell .form-grp::after {
+  content: "\f040";
+  font-family: FontAwesome;
+  z-index:100;
+  position: absolute;
+  left: 10px;
+  top: 32px;
+}
+

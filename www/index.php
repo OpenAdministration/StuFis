@@ -5,18 +5,18 @@ ob_start('ob_gzhandler');
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
 
-function writeFormdata($antrag_id) {
+function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
   if (!isset($_REQUEST["formdata"]))
     $_REQUEST["formdata"] = [];
 
-  function storeInhalt($inhalt) {
+  function storeInhalt($inhalt, $isPartiell) {
     if (is_array($inhalt["value"])) {
       $fieldname = $inhalt["fieldname"];
       $ret = true;
       foreach ($inhalt["value"] as $i => $value) {
         $inhalt["fieldname"] = $fieldname . "[{$i}]";
         $inhalt["value"] = $value;
-        $ret1 = storeInhalt($inhalt);
+        $ret1 = storeInhalt($inhalt, $isPartiell);
         $ret = $ret && $ret1;
       }
       return $ret;
@@ -32,6 +32,8 @@ function writeFormdata($antrag_id) {
       }
       return $ret;
     }
+    if ($isPartiell)
+      dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"] ]);
     $ret = dbInsert("inhalt", $inhalt);
     if (!$ret) {
       $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
@@ -43,19 +45,23 @@ function writeFormdata($antrag_id) {
   foreach($_REQUEST["formdata"] as $fieldname => $value) {
     $fieldtype = $_REQUEST["formtype"][$fieldname];
     if ($fieldtype == "file" || $fieldtype == "multifile") continue;
+    if ($isPartiell) {
+      $perm = "canEditPartiell.field.{$fieldname}";
+      if (!hasPermission($form, $antrag, $perm)) continue;
+    }
     $inhalt = [];
     $inhalt["antrag_id"] = $antrag_id;
     $inhalt["contenttype"] = $_REQUEST["formtype"][$fieldname];
     $inhalt["fieldname"] = $fieldname;
     $inhalt["value"] = $value;
-    $ret1 = storeInhalt($inhalt);
+    $ret1 = storeInhalt($inhalt, $isPartiell);
     $ret = $ret && $ret1;
   } /* formdata */
 
   return $ret;
 }
 
-function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated) {
+function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, $isPartiell, $form, $antrag) {
   if (!isset($_FILES["formdata"]))
     return true;
 
@@ -116,6 +122,10 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated) 
   $fd = $_FILES["formdata"];
   $ret = true;
   foreach (array_keys($fd["name"]) as $key) {
+    if ($isPartiell) {
+      $perm = "canEditPartiell.field.{$key}";
+      if (!hasPermission($form, $antrag, $perm)) continue;
+    }
     $anhang["fieldname"] = $key;
     $fieldtype = $_REQUEST["formtype"][$key];
     if ($fieldtype != "file" && $fieldtype != "multifile") {
@@ -248,6 +258,9 @@ if (isset($_REQUEST["action"])) {
       }
       break;
     case "antrag.update":
+    case "antrag.updatePartiell":
+      $isPartiell = ($_POST["action"] == "antrag.updatePartiell");
+
       // beginTx
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
@@ -260,7 +273,11 @@ if (isset($_REQUEST["action"])) {
       if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
 
       $form = getForm($antrag["type"], $antrag["revision"]);
-      if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+      if ($isPartiell) {
+        if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag ist nicht editierbar");
+      } else {
+        if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+      }
 
       if ($_REQUEST["version"] !== $antrag["version"]) {
         $ret = false;
@@ -272,9 +289,10 @@ if (isset($_REQUEST["action"])) {
       // update last-modified timestamp
       dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1 ]);
       // clear all old values (tbl inhalt)
-      dbDelete("inhalt", [ "antrag_id" => $antrag["id"] ]);
+      if (!$isPartiell)
+        dbDelete("inhalt", [ "antrag_id" => $antrag["id"] ]);
       // add new values
-      $ret1 = writeFormdata($antrag["id"]);
+      $ret1 = writeFormdata($antrag["id"], $isPartiell, $form, $antrag);
       $ret = $ret && $ret1;
       // delete files (tbl anhang) and change fieldname
       function buildAnhangRenameMap($antrag_id, $newFieldName, $formdata, &$fieldNameMap) {
@@ -298,32 +316,34 @@ if (isset($_REQUEST["action"])) {
         return true;
       }
 
-      $fieldNameMap = [];
-      foreach($_REQUEST["formdata"] as $fieldname => $value) {
-        $fieldtype = $_REQUEST["formtype"][$fieldname];
-        if ($fieldtype != "file" && $fieldtype != "multifile") continue;
-        if (!is_array($value)) continue;
-        if (!isset($value["oldFieldName"])) continue;
-        $ret1 = buildAnhangRenameMap($antrag["id"], $fieldname, $value["oldFieldName"], $fieldNameMap);
-        $ret = $ret && $ret1;
-      }
+      if (!$isPartiell) { // dynamic tables cannot be edited with editPartiell
+        $fieldNameMap = [];
+        foreach($_REQUEST["formdata"] as $fieldname => $value) {
+          $fieldtype = $_REQUEST["formtype"][$fieldname];
+          if ($fieldtype != "file" && $fieldtype != "multifile") continue;
+          if (!is_array($value)) continue;
+          if (!isset($value["oldFieldName"])) continue;
+          $ret1 = buildAnhangRenameMap($antrag["id"], $fieldname, $value["oldFieldName"], $fieldNameMap);
+          $ret = $ret && $ret1;
+        }
 
-      $anhaenge = dbFetchAll("anhang", [ "antrag_id" => $antrag["id"] ]);
-      foreach($anhaenge as $anhang) {
-        $oldFieldName = $anhang["fieldname"];
-        if (!isset($fieldNameMap[$oldFieldName])) {
-          $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
-          $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
-          $ret = $ret && ($ret1 === 1);
-          $filesRemoved[] = $anhang["path"];
-        } else {
-          $newFieldName = $fieldNameMap[$oldFieldName];
-          if ($newFieldName != $oldFieldName) {
-            $ret1 = dbUpdate("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ], [ "fieldname" => $newFieldName ]);
+        $anhaenge = dbFetchAll("anhang", [ "antrag_id" => $antrag["id"] ]);
+        foreach($anhaenge as $anhang) {
+          $oldFieldName = $anhang["fieldname"];
+          if (isset($fieldNameMap[$oldFieldName])) {
+            $newFieldName = $fieldNameMap[$oldFieldName];
+            if ($newFieldName != $oldFieldName) {
+              $ret1 = dbUpdate("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ], [ "fieldname" => $newFieldName ]);
+              $ret = $ret && ($ret1 === 1);
+            }
+          } else {
+            $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
+            $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
             $ret = $ret && ($ret1 === 1);
+            $filesRemoved[] = $anhang["path"];
           }
         }
-      }
+      } /* isPartiell */
       // rename files (aka filename) (tbl anhang)
       function renameAnhang($antrag_id, $fieldname, $formdata) {
         global $msgs;
@@ -358,11 +378,15 @@ if (isset($_REQUEST["action"])) {
         if ($fieldtype != "file" && $fieldtype != "multifile") continue;
         if (!is_array($value)) continue;
         if (!isset($value["newFileName"])) continue;
+        if ($isPartiell) {
+          $perm = "canEditPartiell.field.{$fieldname}";
+          if (!hasPermission($form, $antrag, $perm)) continue;
+        }
         $ret1 = renameAnhang($antrag["id"], $fieldname, $value["newFileName"]);
         $ret = $ret && $ret1;
       }
       // add or replace (or delete) new files (tbl anhang) and write files to disk
-      $ret1 = writeFormdataFiles($antrag["id"], $msgs, $filesRemoved, $filesCreated);
+      $ret1 = writeFormdataFiles($antrag["id"], $msgs, $filesRemoved, $filesCreated, $isPartiell, $form, $antrag);
       $ret = $ret && $ret1;
       // commitTx
       if ($ret)
@@ -417,9 +441,9 @@ if (isset($_REQUEST["action"])) {
         $antrag_id = (int) $ret;
         $msgs[] = "Antrag wurde erstellt.";
 
-        $ret0 = writeFormdata($antrag_id);
+        $ret0 = writeFormdata($antrag_id, false, null, null);
 
-        $ret1 = writeFormdataFiles($antrag_id, $msgs, $filesRemoved, $filesCreated);
+        $ret1 = writeFormdataFiles($antrag_id, $msgs, $filesRemoved, $filesCreated, false, null, null);
 
         $ret = $ret && $ret0 && $ret1;
       } /* dbInsert(antrag) -> $ret !== false */
@@ -734,6 +758,17 @@ switch($_REQUEST["tab"]) {
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.edit.tpl";
+  break;
+  case "antrag.editPartiell":
+    $antrag = getAntrag();
+    $form = getForm($antrag["type"], $antrag["revision"]);
+    if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag ist nicht partiell editierbar");
+
+    $form = getForm($antrag["type"],$antrag["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+
+    require "../template/antrag.head.tpl";
+    require "../template/antrag.editPartiell.tpl";
   break;
   case "antrag.create":
     if (!isset($_REQUEST["type"]) || !isset($_REQUEST["revision"])) {

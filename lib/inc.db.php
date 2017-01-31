@@ -220,7 +220,7 @@ function dbUpdate($table, $filter, $fields) {
 function dbDelete($table, $filter) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFilterFields = ["id","token","antrag_id"];
+   $validFilterFields = ["id","token","antrag_id","fieldname"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
 
    if (count($filter) == 0) die("No filter fields given.");
