@@ -37,7 +37,8 @@ foreach ($antraege as $type => $l0) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";
       $caption = getAntragDisplayTitle($antrag, $revConfig);
-      echo "<td><a href=\"{$URIBASE}/".htmlspecialchars($antrag["token"])."\">".implode(" ", $caption)."</a></td>";
+      $url = str_replace("//","/", $URIBASE."/".$antrag["token"]);
+      echo "<td><a href=\"".htmlspecialchars($url)."\">".implode(" ", $caption)."</a></td>";
       echo "<td>";
        if (($antrag["creator"] == $antrag["creatorFullName"]) || empty($antrag["creatorFullName"])) {
          echo htmlspecialchars($antrag["creator"]);
