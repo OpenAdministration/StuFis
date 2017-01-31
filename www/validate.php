@@ -9,6 +9,7 @@ requireGroup($AUTHGROUP);
 $msgs = Array();
 $ret = false;
 $target = false;
+$text = false;
 
 if (!isset($_REQUEST["action"])) {
   die("Keine Aktion");
@@ -16,6 +17,58 @@ if (!isset($_REQUEST["action"])) {
  $msgs[] = "Formular veraltet - CSRF Schutz aktiviert.";
 } else {
  switch ($_REQUEST["action"]):
+   case "text.otherForm":
+     function checkOtherForm($value) {
+      global $URIBASE;
+
+      $otherAntrag = dbGet("antrag", ["id" => $value]);
+      if ($otherAntrag === false) return false;
+      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+      $otherAntrag["_inhalt"] = $inhalt;
+
+      $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+      $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+      if (!$readPermitted)
+        return false;
+
+      $c = getAntragDisplayTitle($otherAntrag, $otherForm["config"]);
+      $target = str_replace("//","/",$URIBASE."/").rawurlencode($otherAntrag["token"]);
+
+      return "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">".implode(" ",$c)."</a>";
+     }
+     $text = checkOtherForm($_REQUEST["value"]);
+     break;
+   case "validate.otherForm":
+     if (!isset($_REQUEST["formdata"]))
+       $_REQUEST["formdata"] = [];
+     function checkOtherForm($otherForms) {
+       if (is_array($otherForms)) {
+         $ret = true;
+         foreach($otherForms as $otherForm) {
+           $ret1 = checkOtherForm($otherForm);
+           $ret = $ret && $ret1;
+         }
+         return $ret;
+       }
+
+      $otherAntrag = dbGet("antrag", ["id" => $otherForms]);
+      if ($otherAntrag === false) return false;
+      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+      $otherAntrag["_inhalt"] = $inhalt;
+
+      $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+      $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+      if (!$readPermitted)
+        return false;
+
+       return true;
+     }
+     $ret = checkOtherForm($_REQUEST["formdata"]);
+     if ($ret)
+       header("HTTP/1.1 200 OK");
+     else
+       header("HTTP/1.1 400 Ungültige Formularnummer");
+     exit;
    case "validate.email":
      if (!isset($_REQUEST["formdata"]))
        $_REQUEST["formdata"] = [];
@@ -162,7 +215,7 @@ $result["msgs"] = $msgs;
 $result["ret"] = ($ret !== false);
 if ($target !== false)
   $result["target"] = $target;
-$target["result"] = $result;
+$result["text"] = $text;
 
 header("Content-Type: text/json; charset=UTF-8");
 echo json_encode($result);

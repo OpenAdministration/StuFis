@@ -4,6 +4,7 @@ String.prototype.replaceAll = function(target, replacement) {
 
 $(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
+  $.fn.validator.Constructor.INPUT_SELECTOR = ':input:not([type="hidden"], [type="submit"], [type="reset"], button, tr.new-table-row *)'
 
   $('.selectpicker').each(function (i,e) {
     var $e = $(e);
@@ -434,6 +435,7 @@ $(document).ready(function() {
     });
     $table.children(".store-row-count").val($tbody.children("tr:not(.new-table-row)").length);
     $table.triggerHandler("update-summing-table.sum");
+    $table.closest("form[data-toggle=\"validator\"],form.ajax").validator('update');
     return false;
   });
   $('.dynamic-table').each(function (i, table) {
@@ -725,6 +727,29 @@ $(document).ready(function() {
     $a.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
   });
 
+  $(":input[data-extra-text]").on("change.extra-text", function (evt) {
+    var $el = $(this);
+    var $out = $el.closest(".form-group").find(".extra-text");
+    var url = $el.data("extra-text");
+    var data = {"value" : $el.val()};
+
+    $.get(url, data)
+    .done(function (values, status, req) {
+      if (typeof(values) == "string") {
+        $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+        var $smc = $("#server-message-content");
+        $smc.empty();
+        $("#server-message-content").empty();
+        var $smcp = $('<pre>').appendTo( $smc ).text(values);
+        $("#server-message-dlg").modal("show");
+        return;
+      }
+      $out.html(values.text);
+    })
+    .fail(xpAjaxErrorHandler);
+
+  }).triggerHandler("change.extra-text");
+
   $( "form.ajax" ).validator().on("submit", function(e) {
     if (e.isDefaultPrevented()) return; // validator said no
     return handleSubmitForm($(this), e, false);
@@ -763,6 +788,9 @@ function onClickNewRow($tr, $table, tableId) {
   $tr.find("*").each(function (i, e) { $(e).triggerHandler("clone-post"); });
 
   initDynamicRow($tr, $table, tableId);
+
+  $tr.closest("form[data-toggle=\"validator\"],form.ajax").validator('update');
+
 }
 
 function initDynamicRow($tr, $table, tableId) {

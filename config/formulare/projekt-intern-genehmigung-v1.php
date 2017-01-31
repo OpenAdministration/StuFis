@@ -10,7 +10,7 @@ $config = [
     "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
-  "referenceField" => [ "name" => "genehmigung.antrag", "type" => "text" ],
+  "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],
 ];
 
 $layout = [
@@ -41,9 +41,9 @@ $layout = [
        [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text", "width" => 2, ],
        [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date", "width" => 2, ],
      ], ], # FIXME ANTRAG REF
-     [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan", "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "5" ],
-     [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 12, "opts" => [ "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
-     [ "id" => "genehmigung.antrag",  "title" =>"Antrag war",             "type" => "text",     "width" => 12, "opts" => ["required", "hasFeedback"] ],
+     [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan", "type" => "text",     "width" => 6, "opts" => ["required", "hasFeedback"], "minLength" => "5" ],
+     [ "id" => "genehmigung.konto",   "title" =>"Konto (Gnu-Cash)",       "type" => "text",     "width" => 6, "opts" => [ "hasFeedback"], "minLength" => "5", "placeholder" => "Wie Titel" ],
+     [ "id" => "genehmigung.antrag",  "title" =>"Antrag war",             "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback"] ],
      [ "id" => "genehmigung.hinweis", "title" =>"Auflagen",               "type" => "textarea", "width" => 12, "opts" => [ "hasFeedback"] ],
    ],
  ],
@@ -53,7 +53,7 @@ $layout = [
    "width" => 12,
    "opts" => ["well"],
    "id" => "group1",
-   "title" => "Allgemeine Angaben",
+   "title" => "Genehmigtes Projekt",
    "children" => [
      [ "id" => "projekt.name",        "title" =>"Projektname",                        "type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
      [ "id" => "projekt.leitung",     "title" =>"Projektverantwortlich (eMail)",      "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"] ],
@@ -72,7 +72,7 @@ $layout = [
    "width" => 12,
    "rowCountField" => "numgrp",
    "columns" => [
-     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, ],
+     [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, "opts" => [ "required" ] ],
      [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
      [ "id" => "geld.titel",       "name" => "Titel",                              "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],

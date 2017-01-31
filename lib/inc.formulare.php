@@ -419,6 +419,9 @@ function renderFormItem($layout,$ctrl = false) {
     case "radio":
       $isEmpty = renderFormItemRadio($layout,$ctrl);
       break;
+    case "otherForm":
+      $isEmpty = renderFormItemOtherForm($layout,$ctrl);
+      break;
     case "money":
       $isEmpty = renderFormItemMoney($layout,$ctrl);
       break;
@@ -534,6 +537,77 @@ function renderFormItemGroup($layout, $ctrl) {
     echo "<div class=\"clearfix\"></div></div>";
 }
 
+function renderFormItemOtherForm($layout,$ctrl) {
+  global $URIBASE, $nonce;
+
+  $noForm = in_array("no-form", $ctrl["render"]);
+  $value = "";
+  if (isset($ctrl["_values"])) {
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+    $value = getFormValue($ctrl["name"], "text", $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
+  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
+    $value = getUserMail();
+  }
+
+  if ($noForm) {
+    echo '<div>';
+    echo '<span class="glyphicon glyphicon glyphicon-link align-top" aria-hidden="true"></span>';
+
+    $otherAntrag = false;
+    if ($value === "") {
+      echo '<i>Keine Angabe</i>';
+    } else {
+      $otherAntrag = dbGet("antrag", ["id" => $value]);
+      if ($otherAntrag === false) {
+        echo "<i>ungültiger Wert: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
+      }
+    }
+
+    $readPermitted = false;
+    if ($otherAntrag !== false) {
+      $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+      $otherAntrag["_inhalt"] = $otherInhalt;
+
+      $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+      $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+
+      if (!$readPermitted) {
+        echo "<i>Formular nicht lesbar: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
+      }
+    }
+
+    if ($readPermitted) {
+      $text = getAntragDisplayTitle($otherAntrag, $otherForm["config"]);
+      $target = str_replace("//","/",$URIBASE."/").rawurlencode($otherAntrag["token"]);
+
+      echo "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">";
+      echo newTemplatePattern($ctrl, str_replace("\n","<br/>",implode(" ",$text)));
+      echo "</a>";
+    }
+
+    echo '</div>';
+    return;
+  }
+
+  $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+  echo "<div class=\"input-group\">";
+  echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+  if (in_array("required", $layout["opts"]))
+    echo " required=\"required\"";
+  echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.otherForm&nonce=".urlencode($nonce))."\"";
+  echo " data-remote-error=\"Ungültige Formularnummer\"";
+  echo " data-extra-text=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=text.otherForm&nonce=".urlencode($nonce))."\"";
+  echo " value=\"{$tPattern}\"";
+  echo '>';
+  echo "<span class=\"input-group-addon extra-text\" style=\"padding-right:30px;\"></span>";
+  echo "</div>";
+  if (in_array("hasFeedback", $layout["opts"]))
+    echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
+#  echo '<div class="extra-text pull-right"></div>';
+}
+
 function renderFormItemRadio($layout,$ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
 
@@ -549,7 +623,8 @@ function renderFormItemRadio($layout,$ctrl) {
   if ($noForm) {
     echo '<div class="radio">';
     if ($value == $layout["value"]) {
-      echo '<span class="glyphicon glyphicon-ok-circle align-top" aria-hidden="true"></span>';
+      #echo '<span class="glyphicon glyphicon-ok-circle align-top" aria-hidden="true"></span>';
+      echo '<span class="glyphicon glyphicon-check align-top" aria-hidden="true"></span>';
     } else {
       echo '<span class="glyphicon glyphicon-unchecked align-top" aria-hidden="true"></span>';
     }
