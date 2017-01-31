@@ -546,10 +546,24 @@ function renderFormItemRadio($layout,$ctrl) {
     $value = getUserMail();
   }
 
+  if ($noForm) {
+    echo '<div class="radio">';
+    if ($value == $layout["value"]) {
+      echo '<span class="glyphicon glyphicon-ok-circle align-top" aria-hidden="true"></span>';
+    } else {
+      echo '<span class="glyphicon glyphicon-unchecked align-top" aria-hidden="true"></span>';
+    }
+    echo '<label>';
+    echo str_replace("\n","<br/>",htmlspecialchars($layout["text"]));
+    echo '</label>';
+    echo '</div>';
+    return;
+  }
+
   echo '<div class="radio">';
   echo '<label><input type="radio" name="'.htmlspecialchars($ctrl["name"]).'" value="'.htmlspecialchars($layout["value"]).'"';
   if ($value == $layout["value"]) {
-    echo " selected=\"selected\"";
+    echo " checked=\"checked\"";
   }
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
