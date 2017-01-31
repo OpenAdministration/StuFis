@@ -9,6 +9,11 @@ $config = [
                "done-hv" => "Genehmigt durch HV und protokolliert in StuRa Sitzung",
                "revoked" => "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)"
              ],
+  "proposeNewState" => [
+    "draft" => [ "wait-stura", "ok-by-hv" ],
+    "wait-stura" => [ "ok-by-stura" ],
+    "ok-by-hv" => [ "done-hv" ],
+  ],
   "createState" => "draft",
   "buildFrom" => [ "projekt-intern" ],
   "permission" => [
