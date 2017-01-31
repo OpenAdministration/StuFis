@@ -48,6 +48,9 @@ foreach (array_keys($classConfig["state"]) as $newState) {
 }
 
 ?>
+
+<div class="clearfix"> </div>
+
 <div class="panel panel-default">
   <div class="panel-heading">Neuen Antrag erstellen und dabei Angaben aus diesem Antrag übernehmen</div>
   <div class="panel-body">

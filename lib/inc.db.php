@@ -263,8 +263,8 @@ function dbGet($table, $fields) {
 function dbFetchAll($table, $fields, $sort = []) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFields = ["antrag_id"];
-   $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields)); # only fetch using antrag_id
+   $validFields = ["antrag_id","fieldname","value","contenttype"];
+   $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields));
    $sort = array_intersect_key($sort, $scheme[$table]);
 
    $c = [];

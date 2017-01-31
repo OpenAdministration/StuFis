@@ -742,9 +742,29 @@ switch($_REQUEST["tab"]) {
     $form = getForm($antrag["type"],$antrag["revision"]);
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
+    $tmp = dbFetchAll("inhalt", ["contenttype" => "otherForm", "value" => $antrag["id"]], ["antrag_id" => true]);
+    $idx = [];
+    $antraegeRef = [];
+    foreach ($tmp as $t) {
+      $antrag_id = $t["antrag_id"];
+
+      if (isset($idx[$antrag_id])) continue;
+      $idx[$antrag_id] = true;
+
+      $a = dbGet("antrag", ["id" => $antrag_id]);
+      $form = getForm($a["type"],$a["revision"]);
+      if (false === $form) continue;
+
+      $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $a["id"] ]);
+      if (!hasPermission($form, $a, "canRead")) continue;
+
+      $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
+    }
+
     require "../template/antrag.menu.tpl";
     require "../template/antrag.state.tpl";
     require "../template/antrag.subcreate.tpl";
+    require "../template/antrag.ref.tpl";
     require "../template/antrag.tpl";
     require "../template/antrag.comments.tpl";
   break;
