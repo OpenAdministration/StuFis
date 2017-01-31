@@ -2,6 +2,7 @@
 
 $config = [
   "title" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
+  "shortTitle" => "Antrag internes Projekt",
   "state" => [ "draft" => "Entwurf", "new" => "Eingereicht", "wip" => "In Bearbeitung", "done" => "Erledigt", "obsolete" => "Veraltet / wird nicht bearbeitet" ],
   "createState" => "draft",
   "permission" => [

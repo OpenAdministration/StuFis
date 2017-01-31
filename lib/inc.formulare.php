@@ -592,11 +592,17 @@ function renderFormItemOtherForm($layout,$ctrl) {
     }
 
     if ($readPermitted) {
+      $classTitle = "[{$otherAntrag["type"]}]";
+      $classConfig = $otherForm["_class"];
+      if (isset($classConfig["title"]))
+        $classTitle = $classConfig["title"];
+      if (isset($classConfig["shortTitle"]))
+        $classTitle = $classConfig["shortTitle"];
       $text = getAntragDisplayTitle($otherAntrag, $otherForm["config"]);
       $target = str_replace("//","/",$URIBASE."/").rawurlencode($otherAntrag["token"]);
 
       echo "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">";
-      echo newTemplatePattern($ctrl, str_replace("\n","<br/>",implode(" ",$text)));
+      echo newTemplatePattern($ctrl, "{$classTitle}: ".str_replace("\n","<br/>",implode(" ",$text)));
       echo "</a>";
     }
 

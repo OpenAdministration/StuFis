@@ -33,8 +33,14 @@ if (!isset($_REQUEST["action"])) {
 
       $c = getAntragDisplayTitle($otherAntrag, $otherForm["config"]);
       $target = str_replace("//","/",$URIBASE."/").rawurlencode($otherAntrag["token"]);
+      $classTitle = "[{$otherAntrag["type"]}]";
+      $classConfig = $otherForm["_class"];
+      if (isset($classConfig["title"]))
+        $classTitle = $classConfig["title"];
+      if (isset($classConfig["shortTitle"]))
+        $classTitle = $classConfig["shortTitle"];
 
-      return "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">".implode(" ",$c)."</a>";
+      return "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">".htmlspecialchars($classTitle).": ".implode(" ",$c)."</a>";
      }
      $text = checkOtherForm($_REQUEST["value"]);
      break;

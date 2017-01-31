@@ -2,6 +2,7 @@
 
 $config = [
   "title" => "Genehmigung für ein Projekt der Studierendenschaft (internes Projekt)",
+  "shortTitle" => "Genehmigung internes Projekt",
   "state" => [ "draft" => "Entwurf",
                "wait-stura" => "Warte auf StuRa Beschluss",
                "ok-by-hv" => "Genehmigt durch HV (muss noch verkündet werden)",
