@@ -15,6 +15,11 @@ foreach (array_keys($classConfig["state"]) as $newState) {
   $newStates[] = $newState;
 }
 
+$proposeNewState = [];
+if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewState"][$antrag["state"]])) {
+  $proposeNewState = array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]]));
+}
+
 if (count($newStates) > 0) {
 
 ?>
@@ -73,11 +78,33 @@ if (count($newStates) > 0) {
 <?php } ?>
   </div>
   <div class="panel-body">
-    <div style="font-size:36px;">
+    <span style="font-size:36px;">
 <?php
 echo htmlspecialchars($txt);
 ?>
-    </div>
+    </span>
+<?php
+
+foreach ($proposeNewState as $newState) {
+  $txt3 = $classConfig["state"][$newState];
+
+?>
+    <form id="stateantrag<?php echo htmlspecialchars($newState); ?>" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax" data-toggle="validator" style="display:inline-block;">
+      <input type="hidden" name="action" value="antrag.state"/>
+      <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
+      <input type="hidden" name="type" value="<?php echo $antrag["type"]; ?>"/>
+      <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
+      <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
+      <input type="hidden" name="state" value="<?php echo $newState; ?>"/>
+      <button type="submit" name="absenden" class="btn btn-primary pull-right">Wechsel nach: <?php echo $txt3; ?></button>
+    </form>
+
+<?php
+
+}
+
+
+?>
   </div>
   <!-- panel-body -->
 </div>

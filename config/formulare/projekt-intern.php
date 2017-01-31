@@ -67,6 +67,10 @@ $config = [
     "from.wip.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
   ],
+  "proposeNewState" => [
+    "draft" => [ "new" ],
+    "new" => [ "wip" ],
+  ],
 ];
 
 registerFormClass( "projekt-intern", $config );
