@@ -41,37 +41,39 @@ $config = [
       [ "state" => "done-hv", "group" => "ref-finanzen", ],
     ],
     "canEdit" => [
-      [ "state" => "draft", "creator" => "self" ],
       [ "state" => "draft", "group" => "ref-finanzen", ],
     ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],
     # Genehmigung durch StuRa
+    "canEditState" => [
+      [ "group" => "ref-finanzen", ],
+    ],
     "canStateChange.from.draft.to.wait-stura" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.wait-stura.to.ok-by-stura" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.draft.to.ok-by-stura" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     # Genehmigung durch HV
     "canStateChange.from.draft.to.ok-by-hv" => [
-      [ "group" => "ref-finanzen", ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.ok-by-hv.to.done-hv" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.draft.to.done-hv" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.wait-stura.to.ok-by-hv" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.wait-stura.to.done-hv" => [
-      [ "hasPermission" => "canEdit" ],
+      [ "hasPermission" => "canEditState" ],
     ],
     # Rücknahme
     "canRevoke" => [

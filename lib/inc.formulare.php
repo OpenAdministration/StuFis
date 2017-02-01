@@ -557,11 +557,8 @@ function renderFormItemOtherForm($layout,$ctrl) {
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
-    $value = getFormValue($ctrl["name"], "text", $ctrl["_values"]["_inhalt"], $value);
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
-  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
-    $value = getUserMail();
   }
 
   if ($noForm) {
