@@ -5,7 +5,7 @@ if (!isset($classConfig["state"])) return;
 
 $txt = $antrag["state"];
 if (isset($classConfig["state"][$antrag["state"]]))
-  $txt = $classConfig["state"][$antrag["state"]];
+  $txt = $classConfig["state"][$antrag["state"]][0];
 $txt .= " ({$antrag["stateCreator"]})";
 
 $newStates = [];
@@ -15,10 +15,23 @@ foreach (array_keys($classConfig["state"]) as $newState) {
   $newStates[] = $newState;
 }
 
+$canEdit = hasPermission($form, $antrag, "canEdit");
 $proposeNewState = [];
 if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewState"][$antrag["state"]])) {
-  $proposeNewState = array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]]));
+  $proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
 }
+
+$removeList = [];
+foreach($proposeNewState as $state) {
+  // filter out states that transit from editable to non-editable to "enforce" html5 client validation
+  $antragAfterEdit = $antrag;
+  $antragAfterEdit["state"] = $state;
+  if (!$canEdit || hasPermission($form, $antragAfterEdit, "canEdit")) continue;
+  $removeList[] = $state;
+}
+
+$newStates = array_diff($newStates, $removeList);
+$proposeNewState = array_diff($proposeNewState, $removeList);
 
 if (count($newStates) > 0) {
 
@@ -45,7 +58,7 @@ if (count($newStates) > 0) {
             <select class="selectpicker form-control" name="state" size="1" title="Neuer Bearbeitungsstatus" required="required" id="newantragstate">
   <?php
     foreach ($newStates as $state) {
-      $txt2 = $classConfig["state"][$state];
+      $txt2 = $classConfig["state"][$state][0];
       echo "            <option value=\"".htmlspecialchars($state)."\">".htmlspecialchars($txt2)."</option>\n";
     }
   ?>
@@ -83,10 +96,19 @@ if (count($newStates) > 0) {
 echo htmlspecialchars($txt);
 ?>
     </span>
+  </div>
+  <!-- panel-body -->
+<?php
+ if (count($proposeNewState) > 0) {
+?>
+  <div class="panel-footer">
 <?php
 
-foreach ($proposeNewState as $newState) {
-  $txt3 = $classConfig["state"][$newState];
+  foreach ($proposeNewState as $newState) {
+    $txt3 = "Wechseln nach {$classConfig["state"][$newState][0]}";
+    if (isset($classConfig["state"][$newState][1])) {
+      $txt3 = ucfirst($classConfig["state"][$newState][1]);
+    }
 
 ?>
     <form id="stateantrag<?php echo htmlspecialchars($newState); ?>" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax" data-toggle="validator" style="display:inline-block;">
@@ -96,17 +118,17 @@ foreach ($proposeNewState as $newState) {
       <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
       <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
       <input type="hidden" name="state" value="<?php echo $newState; ?>"/>
-      <button type="submit" name="absenden" class="btn btn-primary pull-right">Wechsel nach: <?php echo $txt3; ?></button>
+      <button type="submit" name="absenden" class="btn btn-primary btn-sm"><?php echo $txt3; ?></button>
     </form>
 
 <?php
-
-}
-
-
+  } /* foreach */
 ?>
   </div>
-  <!-- panel-body -->
+  <!-- panel-footer -->
+<?php
+ } /* if count proposeNewState */
+?>
 </div>
 <!-- panel -->
 

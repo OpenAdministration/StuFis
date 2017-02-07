@@ -50,7 +50,7 @@ foreach ($menu as $m) {
         <div class="help-block with-errors"></div>
       </div>
       <!-- form-group -->
-      <div class="form-group">
+      <div class="form-group optional-select">
         <label class="sr-only" for="revisionselect">Version</label>
         <select class="selectpicker form-control" name="revision" size="1" title="2. Bitte Revision des neuen Antrags auswählen..." id="revisionselect" required="required"> </select>
         <div class="help-block with-errors"></div>

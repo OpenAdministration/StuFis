@@ -3,8 +3,14 @@
 $config = [
   "title" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
   "shortTitle" => "Antrag internes Projekt",
-  "state" => [ "draft" => "Entwurf", "new" => "Eingereicht", "wip" => "In Bearbeitung", "done" => "Erledigt", "obsolete" => "Veraltet / wird nicht bearbeitet" ],
+  "state" => [ "draft"    => [ "Entwurf", "Entwurf", ],
+               "new"      => [ "Eingereicht", "einreichen" ],
+               "wip"      => [ "In Bearbeitung", "mir zur Bearbeitung zuweisen", ],
+               "done"     => [ "Erledigt", "erledigen", ],
+               "obsolete" => [ "Zurückgezogen", "zurückziehen", ],
+             ],
   "createState" => "draft",
+  "stateNoValidate" => [ "draft", ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

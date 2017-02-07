@@ -186,6 +186,14 @@ if (!isset($_REQUEST["action"])) {
      if (isset($_REQUEST["currentId"])) {
        $currentNS = array_slice($currentNS, -1);
      }
+     function checkUrlPrefix($url, $prefix) {
+       if (trim($prefix) == "") return true;
+       $url = trim($url, "/")."/";
+       $prefix = trim($prefix, "/")."/";
+       $ret = (substr($url, 0, strlen($prefix)) == $prefix ||
+               substr($prefix, 0, strlen($url)) == $url);
+       return $ret;
+     }
      for ($i = 0; $i < count($currentNS); $i += 1 + $extraDepth) {
        $ns = $currentNS[$i];
        $depth = ($ns == "" ? 0 : count(explode(":", $ns)))+$extraDepth+1;
@@ -197,6 +205,12 @@ if (!isset($_REQUEST["action"])) {
          $thisDepth = count(explode(":", $subns["id"]));
          if ($thisDepth < $depth)
            $subns["extraDepth"] = $depth - $thisDepth - 1;
+
+         $subnsid = $subns["id"];
+         $subnsurl = $prefix.str_replace(":","/",$subnsid);
+         $url = parse_url($wikiUrl, PHP_URL_SCHEME)."://".parse_url($wikiUrl, PHP_URL_HOST)."/".$subnsurl;
+         if (!checkUrlPrefix($url, $_REQUEST["require-prefix"]))
+           continue;
          $result["tree"][] = $subns;
        }
 
@@ -204,7 +218,10 @@ if (!isset($_REQUEST["action"])) {
        foreach($pages as $page) {
          $pageid = $page["id"];
          $pageurl = $prefix.str_replace(":","/",$pageid);
-         $page["url"] = parse_url($wikiUrl, PHP_URL_SCHEME)."://".parse_url($wikiUrl, PHP_URL_HOST)."/".$pageurl;
+         $url = parse_url($wikiUrl, PHP_URL_SCHEME)."://".parse_url($wikiUrl, PHP_URL_HOST)."/".$pageurl;
+         $page["url"] = $url;
+         if (!checkUrlPrefix($page["url"], $_REQUEST["require-prefix"]))
+           continue;
          $result["tree"][] = $page;
        }
      }

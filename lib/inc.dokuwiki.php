@@ -85,9 +85,17 @@ function existsWikiPage($wiki, $autoDie = true) {
   try {
     $wikiClient = getClient();
     # getPage returns template for new page if page does not exist -> check existance before
-    $method="wiki.getPageVersions";
-    return (count($wikiClient->$method($wiki)) > 0);
+#    $method="wiki.getPageVersions";
+#    $rev = $wikiClient->$method($wiki);
+#    $numRev = count($rev);
+#    $doesExist = ($numRev > 0);
+    $method = "wiki.getPageInfo";
+    $ret = $wikiClient->$method($wiki);
+    $doesExist = true; # XML_RPC2 Exception will catch this
+     return $doesExist;
   } catch (XML_RPC2_FaultException $e) {
+    if ($e->getFaultCode() == 121)
+      return false;
     if ($autoDie)
       die(__LINE__."@".__FILE__.': Exception reading '.$wiki.' #' . $e->getFaultCode() . ' : ' . $e->getFaultString());
     return false;

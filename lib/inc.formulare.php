@@ -91,7 +91,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
       return false;
   } else if ($i == "creator") {
     if ($c == "self") {
-      if ($antrag !== null && ($antrag["creator"] != getUsername()))
+      if ($antrag !== null && isset($antrag["creator"]) && ($antrag["creator"] != getUsername()))
         return false;
     } else {
       die("unkown creator test: $c");
@@ -110,7 +110,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
     }
   } else if (substr($i, 0, 6) == "field:") {
     $fieldName = substr($i, 6);
-    if ($antrag !== null) {
+    if ($antrag !== null && isset($antrag["_inhalt"])) {
       $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], null);
       if (substr($c,0,5) == "isIn:") {
         $in = substr($c,5);
@@ -126,7 +126,9 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
       } else {
         die("field test $c not implemented");
       }
-    } /* antrag === null -> muss erst noch passend ausgefüllt werden */
+    }
+    /* antrag === null -> muss erst noch passend ausgefüllt werden (e.g. bei canCreate) */
+    /* antrag !== null aber !isset(_inhalt) -> muss erst noch passend ausgefüllt werden (e.g. can alter state before create) */
   } else {
     die("permission type $i not implemented");
   }
@@ -677,7 +679,7 @@ function renderFormItemText($layout, $ctrl) {
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
   }
-  $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+  $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
   if (isset($layout["addToSum"])) {
@@ -735,6 +737,11 @@ function renderFormItemText($layout, $ctrl) {
       echo " maxlength=\"".htmlspecialchars($layout["maxLength"])."\"";
     if (isset($layout["pattern"]))
       echo " pattern=\"".htmlspecialchars($layout["pattern"])."\"";
+    else if (isset($layout["pattern-from-prefix"])) {
+      $pattern = hexEscape($layout["pattern-from-prefix"]).".*"; # preg_quote produces invalid \: result
+      echo " pattern=\"".htmlspecialchars($pattern)."\"";
+      echo " data-pattern-from-prefix=\"".htmlspecialchars($layout["pattern-from-prefix"])."\"";
+    }
     if (isset($layout["pattern-error"]))
       echo " data-pattern-error=\"".htmlspecialchars($layout["pattern-error"])."\"";
     if ($layout["type"] == "email") {
@@ -763,7 +770,7 @@ function renderFormItemText($layout, $ctrl) {
     if ($isDS) {
       $dsId = $ctrl["id"]."-dataSource";
 ?>
-     <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu dropdown-menu-rightX" role="menu">
+     <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu" role="menu">
 <?php
        if ($layout["data-source"] == "own-orgs") {
          $gremien = $attributes["gremien"];
@@ -811,9 +818,8 @@ function renderFormItemText($layout, $ctrl) {
       echo "</div>"; // input-group
     if (in_array("hasFeedback", $layout["opts"]))
       echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
-    if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"])) {
+    if ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]))
       echo '<div class="tree-view" aria-hidden="true" id="'.htmlspecialchars($ctrl["id"]).'-treeview"></div>';
-    }
   }
 }
 
@@ -1364,12 +1370,17 @@ function renderFormItemTable($layout, $ctrl) {
     <thead>
       <tr>
 <?php
-        echo "<th></th>";
-        if ($withRowNumber) {
-          echo "<th></th>";
-        }
-        foreach ($layout["columns"] as $col) {
-          echo "<th>".htmlspecialchars($col["name"])."</th>";
+        if ($withRowNumber)
+          echo "<th class=\"row-number\"></th>";
+        echo "<th class=\"delete-row\"></th>";
+        foreach ($layout["columns"] as $i => $col) {
+          echo "<th class=\"dynamic-table-cell dynamic-table-col-$i\">";
+          echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["name"])."</span>";
+          if (isset($col["opts"]) && in_array("hideable", $col["opts"])) {
+            echo " <a class=\"pull-right hide-col-toggle\" data-col-class=\"dynamic-table-col-$i\" href=\"javascript:void(0);\"><i class=\"fa fa-fw fa-compress\"></i></a>";
+            echo " <a class=\"pull-right show-col-toggle\" data-col-class=\"dynamic-table-col-$i\" href=\"javascript:void(0);\"><i class=\"fa fa-fw fa-expand\"></i></a>";
+          }
+          echo "</th>";
         }
 ?>
       </tr>
@@ -1420,6 +1431,9 @@ function renderFormItemTable($layout, $ctrl) {
             $tdClass[] = "dynamic-table-column-title";
           else
             $tdClass[] = "dynamic-table-column-no-title";
+          $tdClass[] = "dynamic-table-cell";
+          $tdClass[] = "dynamic-table-col-$i";
+
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             $col["addToSum"][] = "col-sum-".$layout["id"]."-".$i;
             $hasPrintSumFooter |= true;
@@ -1470,12 +1484,10 @@ function renderFormItemTable($layout, $ctrl) {
     <tfoot>
       <tr>
 <?php
-        if ($withRowNumber) {
-          echo "<th></th>";
-        }
-?>
-        <th></th>
-<?php
+        if ($withRowNumber)
+          echo "<th class=\"row-number\"></th>";
+        echo "<th class=\"delete-row\"></th>";
+
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
           if (in_array("sum-over-table-bottom", $col["opts"])) {
@@ -1483,7 +1495,7 @@ function renderFormItemTable($layout, $ctrl) {
           }
           if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0) {
 ?>
-        <th class="cell-has-printSum">
+        <th class="cell-has-printSum dynamic-table-cell dynamic-table-col-<?php echo $i; ?>">
 <?php
             foreach ($col["printSumFooter"] as $psId) {
               if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
@@ -1510,7 +1522,7 @@ function renderFormItemTable($layout, $ctrl) {
             }
           } else {
 ?>
-        <th>
+        <th class="dynamic-table-cell dynamic-table-col-<?php echo $i; ?>">
 <?php
           }
 ?>

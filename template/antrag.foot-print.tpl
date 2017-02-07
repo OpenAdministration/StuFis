@@ -53,7 +53,7 @@ echo "</td>";
 echo "<td>";
  $txt = $antrag["state"];
  if (isset($classConfig["state"]) && isset($classConfig["state"][$antrag["state"]]))
-   $txt = $classConfig["state"][$antrag["state"]];
+   $txt = $classConfig["state"][$antrag["state"]][0];
  $txt .= " (".$antrag["stateCreator"].")";
  echo htmlspecialchars($txt);
 echo "</td>";

@@ -37,8 +37,9 @@ foreach ($antraege as $type => $l0) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";
       $caption = getAntragDisplayTitle($antrag, $revConfig);
+      $caption = trim(implode(" ", $caption));
       $url = str_replace("//","/", $URIBASE."/".$antrag["token"]);
-      echo "<td><a href=\"".htmlspecialchars($url)."\">".implode(" ", $caption)."</a></td>";
+      echo "<td><a href=\"".htmlspecialchars($url)."\">".$caption."</a></td>";
       echo "<td>";
        if (($antrag["creator"] == $antrag["creatorFullName"]) || empty($antrag["creatorFullName"])) {
          echo htmlspecialchars($antrag["creator"]);
@@ -53,7 +54,7 @@ foreach ($antraege as $type => $l0) {
       echo "<td>";
        $txt = $antrag["state"];
        if (isset($classConfig["state"]) && isset($classConfig["state"][$antrag["state"]]))
-         $txt = $classConfig["state"][$antrag["state"]];
+         $txt = $classConfig["state"][$antrag["state"]][0];
        $txt .= " (".$antrag["stateCreator"].")";
        echo htmlspecialchars($txt);
       echo "</td>";

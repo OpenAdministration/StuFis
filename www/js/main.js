@@ -5,6 +5,7 @@ String.prototype.replaceAll = function(target, replacement) {
 $(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
   $.fn.validator.Constructor.INPUT_SELECTOR = ':input:not([type="hidden"], [type="submit"], [type="reset"], button, tr.new-table-row *)'
+  $.fn.validator.Constructor.BUTTON_SELECTOR = 'button[type="submit"]:not(.no-validate), input[type="submit"]:not(.no-validate), a.submit-form.validate'
 
   $('.selectpicker').each(function (i,e) {
     var $e = $(e);
@@ -214,7 +215,7 @@ $(document).ready(function() {
             var $sel = $(sel);
             if ($sel.is(".selectpicker")) {
               $sel.selectpicker("val", selValue);
-              $sel.triggerHandler("change");
+              $sel.trigger("change");
             } else { /* not selectpicker */
               $sel.val(selValue);
             }
@@ -319,7 +320,7 @@ $(document).ready(function() {
       sum += val;
     });
     $out.text(sum.toFixed(2));
-    $out.triggerHandler("change");
+    $out.trigger("change");
   });
   $("table.summing-table").off("update-summing-table.sum");
   $("table.summing-table").on("update-summing-table.sum", function(evt) {
@@ -482,6 +483,7 @@ $(document).ready(function() {
     var $sel = $(sel);
     var $dep = $(document.getElementById($sel.attr("data-dep")));
     $dep.empty();
+    $dep.closest(".optional-select").hide();
     $sel.on("changed.bs.select.dep", function (evt) {
       var $sel = $(this);
       var $dep = $(document.getElementById($sel.attr("data-dep")));
@@ -490,6 +492,8 @@ $(document).ready(function() {
       var newOpt = $opt.data("dep");
       if (newOpt == null) return;
       var firstKey = null;
+      $dep.empty();
+      $dep.closest(".optional-select").show();
       for (var key in newOpt) {
         if (!newOpt.hasOwnProperty(key)) continue;
         $("<option/>").attr("value", key).text(newOpt[key]).appendTo($dep);
@@ -508,7 +512,9 @@ $(document).ready(function() {
         } else {
           $dep.val(firstKey);
         }
-        $dep.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+        //$dep.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+        $dep.trigger("change");
+        $dep.closest(".optional-select").hide();
       }
     });
     $sel.triggerHandler("changed.bs.select");
@@ -519,8 +525,8 @@ $(document).ready(function() {
     var val = $e.attr("data-value");
     if ($e.is(".selectpicker")) {
       $e.selectpicker("val", val);
-      $e.triggerHandler("change");
-      $e.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+      $e.trigger("change");
+      //$e.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
     } else {
       $e.val(val);
     }
@@ -530,6 +536,7 @@ $(document).ready(function() {
    var $treeView = $(this);
 
    var dataUrl = $treeView.data("tree-url");
+   $.extend(data, { "require-prefix": $treeView.data("require-prefix") });
 
    $.get(dataUrl, data)
    .done(function (values, status, req) {
@@ -647,16 +654,18 @@ $(document).ready(function() {
      }).triggerHandler("nodeExpanded", false);
      $treeView.on('nodeSelected', function(event, node) {
        var $treeView = $(this);
-       var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
+       var $input = $treeView.closest(".form-group").find("input[data-tree-url]").first();
        $input.val(node.url);
-       $input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+       //$input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+       $input.trigger("change");
      });
      $treeView.on('nodeUnselected', function(event, node) {
        var $treeView = $(this);
-       var $input = $treeView.closest(".form-group").find("input[data-tree-url]");
+       var $input = $treeView.closest(".form-group").find("input[data-tree-url]").first();
        var oldVal = $treeView.data("old-value");
        $input.val(oldVal);
-       $input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+       //$input.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+       $input.trigger("change");
      });
     })
    .fail(xpAjaxErrorHandler)
@@ -710,6 +719,11 @@ $(document).ready(function() {
      $treeView.addClass("tree-view-wip");
      $treeView.data("nodes", []);
      $treeView.data("tree-url", $input.data("tree-url"));
+     if ($input.is("[data-pattern-from-prefix]")) {
+       $treeView.data("require-prefix", $input.attr("data-pattern-from-prefix"));
+     } else {
+       $treeView.data("require-prefix", "");
+     }
      $treeView.data("old-value", $input.val());
      $treeView.empty();
      $treeView.text("Bitte warten, die Daten werden geladen.");
@@ -718,13 +732,35 @@ $(document).ready(function() {
    }
   });
 
+  $('.custom-combobox input:input:not([type="hidden"], [type="submit"], [type="reset"], button)').on("focus.customcombobox", function(evt) {
+    var $ig = $(this).closest(".input-group.custom-combobox");
+    $ig.addClass("open");
+  });
+  $('.custom-combobox input:input:not([type="hidden"], [type="submit"], [type="reset"], button)').on("keyup.customcombobox change.customcombobox", function(evt) {
+    var $ig = $(this).closest(".input-group.custom-combobox");
+    var val = $(this).val().toLowerCase();
+    $ig.find("ul.dropdown-menu li:not(.dropdown-header, .divider)").each(function (i, li) {
+      var $li = $(li);
+      var $lia = $li.find("a[value]");
+      if ($lia.length == 0) return;
+
+      var lival = $lia.attr("value").toLowerCase();
+      if (val.length > 0 && lival.indexOf(val) < 0) {
+        $li.hide();
+      } else {
+        $li.show();
+      }
+    });
+  });
   $(".custom-combobox ul.dropdown-menu li a[value]").on("click.customcombobox", function(evt) {
     evt.stopPropagation();
     evt.preventDefault();
     var $a = $(this);
-    $a.closest(".input-group").find("input.form-control").val($a.attr("value"));
+    var $i = $a.closest(".input-group").find("input.form-control").first();
+    $i.val($a.attr("value"));
     $a.closest(".custom-combobox.open").removeClass("open");
-    $a.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
+    $i.trigger("change");
+    //$a.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
   });
 
   $(":input[data-extra-text]").on("change.extra-text", function (evt) {
@@ -748,7 +784,7 @@ $(document).ready(function() {
     })
     .fail(xpAjaxErrorHandler);
 
-  }).triggerHandler("change.extra-text");
+  }).each(function (i, e) { $(e). triggerHandler("change.extra-text"); });
 
   $(":input[data-onClickFillFrom]").on("focus.onClickFillFrom mousedown.onClickFillFrom", function (evt) {
     var $el = $(this);
@@ -784,8 +820,46 @@ $(document).ready(function() {
 
   });
 
+  $( ".show-col-toggle" ).hide();
+  $( ".hide-col-toggle" ).show();
+  $( ".show-col-toggle, .hide-col-toggle" ).on("click.col-toggle", function(evt) {
+    var visible = $(this).is(".show-col-toggle");
+    var colClass = $(this).attr("data-col-class");
+    var $th = $(this).closest("td,th");
+    var $table = $th.closest("table");
+    var $cells = $table.children("thead,tbody,tfoot").children("tr").children("td,th").filter(function (i, e) {
+      return $(e).hasClass(colClass);
+    });
+    $cells.toggleClass("hide-column-manual", !visible);
+    if (visible) {
+      $th.find( ".show-col-toggle" ).hide();
+      $th.find( ".hide-col-toggle" ).show();
+    } else {
+      $th.find( ".show-col-toggle" ).show();
+      $th.find( ".hide-col-toggle" ).hide();
+    }
+  });
+
+  $( "form.ajax a.submit-form" ).on("click.submit-form", function(e) {
+    var $el = $(this);
+    var $frm = $el.closest("form");
+    if ($el.is("[data-name]") && $el.is("[data-value]")) {
+      var elName = $el.attr("data-name");
+      var elValue = $el.attr("data-value");
+      $frm.find('input[type="hidden"][name="'+elName+'"]').val(elValue);
+    }
+    if ($el.is(".no-validate")) {
+      handleSubmitForm($frm, e, false);
+    } else { // do validate
+      $frm.triggerHandler("submit");
+    }
+  });
+
   $( "form.ajax" ).validator().on("submit", function(e) {
-    if (e.isDefaultPrevented()) return; // validator said no
+    if (e.isDefaultPrevented()) { // validator said no
+      console.log(e);
+      return;
+    }
     return handleSubmitForm($(this), e, false);
   });
 
@@ -891,7 +965,7 @@ function initDynamicRow($tr, $table, tableId) {
         if (wasSelected) {
           if ($sel.is(".selectpicker")) {
             $sel.selectpicker("val", null);
-            $sel.triggerHandler("change");
+            $sel.trigger("change");
           } else {
             $sel.val("");
           }
@@ -933,7 +1007,7 @@ function initDynamicRow($tr, $table, tableId) {
         if ($sel.is(".selectpicker")) {
           $sel.selectpicker("refresh");
           $sel.selectpicker("val", selValue);
-          $sel.triggerHandler("change");
+          $sel.trigger("change");
         } else { /* not selectpicker */
           $sel.val(selValue);
         }

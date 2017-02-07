@@ -40,6 +40,8 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
       }
     }
   }
+  if (trim(strip_tags(implode(" ", $caption))) == "")
+    array_unshift($caption, "[ID=".htmlspecialchars($antrag["id"])."]");
   return $caption;
 }
 
@@ -64,5 +66,13 @@ function trimMe($d) {
 function add_message($msg) {
   global $msgs;
   $msgs[] = $msg;
+}
+
+function hexEscape($string) {
+  $return = '';
+  for ($x=0; $x < strlen($string); $x++) {
+    $return .= '\x' . bin2hex($string[$x]);
+  }
+  return $return;
 }
 

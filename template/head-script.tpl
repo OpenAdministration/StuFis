@@ -7,7 +7,7 @@
             <script src="<?php echo $URIBASE; ?>/js/ie-emulation-modes-warning.js"></script>
 
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-select.min.js"></script>
-            <script src="<?php echo $URIBASE; ?>/js/validator.min.js"></script>
+            <script src="<?php echo $URIBASE; ?>/js/validator.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-datepicker.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-datepicker.de.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/bootstrap-treeview.js"></script>

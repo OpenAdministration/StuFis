@@ -65,7 +65,7 @@ foreach ($antraegeRef as $type => $l0) {
       echo "<td>";
        $txt = $a["state"];
        if (isset($classConfig["state"]) && isset($classConfig["state"][$a["state"]]))
-         $txt = $classConfig["state"][$a["state"]];
+         $txt = $classConfig["state"][$a["state"]][0];
        $txt .= " (".$a["stateCreator"].")";
        echo htmlspecialchars($txt);
       echo "</td>";

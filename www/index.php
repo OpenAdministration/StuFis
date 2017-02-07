@@ -553,9 +553,11 @@ if (isset($_REQUEST["action"])) {
         $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
       }
 
-      $newState = $_REQUEST["copy_from_state"];
-      if ($newState != "" && $ret) {
-        $ret = writeState($newState, $oldAntrag, $oldForm, $msg);
+      if (isset($_REQUEST["copy_from_state"])) {
+        $newState = $_REQUEST["copy_from_state"];
+        if ($newState != "" && $ret) {
+          $ret = writeState($newState, $oldAntrag, $oldForm, $msg);
+        }
       }
 
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
@@ -764,6 +766,7 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.menu.tpl";
     require "../template/antrag.state.tpl";
     require "../template/antrag.subcreate.tpl";
+    require "../template/antrag.copy.tpl";
     require "../template/antrag.ref.tpl";
     require "../template/antrag.tpl";
     require "../template/antrag.comments.tpl";

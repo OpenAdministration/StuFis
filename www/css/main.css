@@ -87,7 +87,7 @@ hr.blackhr {
   display: initial;
 }
 
-.input-daterange .form-control {
+.input-daterange div.form-control {
   border-radius: 4px !important;
 }
 
@@ -163,5 +163,49 @@ hr.blackhr {
   position: absolute;
   left: 10px;
   top: 32px;
+}
+
+a.btn.disabled {
+  pointer-events: initial; /* fixes cursor on Firefox */
+}
+
+.dynamic-table > thead > tr > td,
+.dynamic-table > thead > tr > th {
+  overflow: hidden;
+  position: relative;
+  vertical-align: top;
+}
+
+
+.dynamic-table > thead a {
+  display: inline-block;
+  position: absolute;
+  right: 0px;
+  top: 5px;
+  z-index: 2;
+}
+
+.dynamic-table > thead .dynamic-table-caption {
+  display: block;
+  overflow: hidden;
+  margin-right: 10px;
+/*  white-space: nowrap; */
+}
+
+.hide-column-manual {
+  width: 20px;
+  font-size: xx-small;
+}
+
+td.hide-column-manual,
+td.hide-column-manual > *,
+tfoot > td.hide-column-manual,
+tfoot > td.hide-column-manual * {
+  display: none;
+}
+
+.dynamic-table > * > tr > *.row-number,
+.dynamic-table > * > tr > *.delete-row {
+  width: 15px;
 }
 
