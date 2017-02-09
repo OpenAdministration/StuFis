@@ -159,7 +159,7 @@ function writeState($newState, $antrag, $form, &$msg) {
   $comment["timestamp"] = date("Y-m-d H:i:s");
   $txt = $newState;
   if (isset($form["_class"]["state"][$newState]))
-    $txt = $form["_class"]["state"][$newState];
+    $txt = $form["_class"]["state"][$newState][0];
   $comment["text"] = "Status nach [$newState] ".$txt." geändert";
   $ret = dbInsert("comments", $comment);
   if ($ret === false)
@@ -286,6 +286,10 @@ if (isset($_REQUEST["action"])) {
         $ret = true;
       }
       $filesCreated = []; $filesRemoved = [];
+      if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
+        $newState = $_REQUEST["state"];
+        $ret = writeState($newState, $antrag, $form, $msg);
+      }
       // update last-modified timestamp
       dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1 ]);
       // clear all old values (tbl inhalt)
@@ -447,6 +451,10 @@ if (isset($_REQUEST["action"])) {
 
         $ret = $ret && $ret0 && $ret1;
       } /* dbInsert(antrag) -> $ret !== false */
+      if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
+        $newState = $_REQUEST["state"];
+        $ret = writeState($newState, $antrag, $form, $msg);
+      }
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
       if ($ret)
         $ret = dbCommit();

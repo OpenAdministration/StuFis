@@ -24,7 +24,7 @@ foreach ($formulare as $type => $list) {
     $rtitle = $revision;
     if (isset($lForm["config"]["revisionTitle"]))
       $rtitle = $lForm["config"]["revisionTitle"];
-    $submenu[$revision] = $rtitle;
+    $submenu[$revision] = [ "value" => $revision, "text" => $rtitle, "submenu" => [] ];
   }
 
   $menu[] = [ "value" => $type, "text" => $title, "submenu" => $submenu ];
@@ -69,7 +69,7 @@ foreach ($menu as $m) {
         <div class="help-block with-errors"></div>
       </div>
       <!-- form-group -->
-      <input type="submit" name="absenden" value="Antrag erstellen" class="btn btn-primary pull-right">
+      <input type="submit" name="absenden" value="Formular erstellen" class="btn btn-primary pull-right">
       <input type="hidden" name="copy_from" value="<?php echo htmlspecialchars($antrag["id"]); ?>">
       <input type="hidden" name="action" value="antrag.copy">
       <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>

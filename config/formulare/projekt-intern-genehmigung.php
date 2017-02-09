@@ -16,7 +16,9 @@ $config = [
     "ok-by-hv" => [ "done-hv" ],
   ],
   "createState" => "draft",
-  "buildFrom" => [ "projekt-intern" ],
+  "buildFrom" => [
+    [ "projekt-intern" /* type */, "done" /* state */ ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

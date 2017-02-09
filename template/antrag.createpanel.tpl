@@ -24,7 +24,7 @@ foreach ($formulare as $type => $list) {
     $rtitle = $revision;
     if (isset($lForm["config"]["revisionTitle"]))
       $rtitle = $lForm["config"]["revisionTitle"];
-    $submenu[$revision] = $rtitle;
+    $submenu[$revision] = [ "value" => $revision, "text" => $rtitle, "submenu" => [] ];
   }
 
   $menu[] = [ "value" => $type, "text" => $title, "submenu" => $submenu ];

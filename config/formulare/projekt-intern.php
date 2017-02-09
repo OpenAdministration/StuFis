@@ -23,7 +23,6 @@ $config = [
       [ "state" => "new" ],
       [ "state" => "wip" ],
       [ "state" => "done" ],
-      [ "state" => "obsolete" ],
     ],
     "canRead" => [
       [ "creator" => "self" ],
@@ -54,9 +53,6 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.new.to.done" => [
-      [ "group" => "ref-finanzen" ],
-    ],
-    "canStateChange.from.new.to.obsolete" => [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.wip.to.obsolete" => [

@@ -496,24 +496,38 @@ $(document).ready(function() {
       $dep.closest(".optional-select").show();
       for (var key in newOpt) {
         if (!newOpt.hasOwnProperty(key)) continue;
-        $("<option/>").attr("value", key).text(newOpt[key]).appendTo($dep);
+        var $newOpt = $("<option/>").attr("value", newOpt[key]["value"]).text(newOpt[key]["text"]).appendTo($dep);
+        if (newOpt[key].hasOwnProperty("submenu")) {
+          $newOpt.data("dep", newOpt[key]["submenu"]);
+        }
+        if (newOpt[key].hasOwnProperty("submenu-val")) {
+          $newOpt.data("dep-val", newOpt[key]["submenu-val"]);
+        }
         if (firstKey === null) {
           firstKey = key;
         } else {
           firstKey = false;
         }
       }
+      var newOptVal = $opt.data("dep-val");
+      if (newOptVal == null) {
+        newOptVal = firstKey;
+      }
+
       if ($dep.is(".selectpicker")) {
         $dep.selectpicker("refresh");
       }
-      if (firstKey !== null && firstKey !== false) {
+      if (newOptVal !== null && newOptVal !== false) {
         if ($dep.is(".selectpicker")) {
-          $dep.selectpicker("val", firstKey);
+          $dep.selectpicker("val", newOptVal);
         } else {
-          $dep.val(firstKey);
+          $dep.val(newOptVal);
         }
         //$dep.closest("form[data-toggle=\"validator\"],form.ajax").validator('validate');
         $dep.trigger("change");
+        $dep.triggerHandler("changed");
+      }
+      if (firstKey !== null && firstKey !== false) {
         $dep.closest(".optional-select").hide();
       }
     });
