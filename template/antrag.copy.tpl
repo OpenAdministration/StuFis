@@ -35,18 +35,10 @@ if (count($submenu) == 0)
 <div class="clearfix"> </div>
 
 <div class="panel panel-default">
-  <div class="panel-heading">Dieses Formular als Vorlage für ein neues Formular verwenden</div>
+  <div class="panel-heading">Dieses Formular als Vorlage für ein neues gleiches Formular verwenden</div>
   <div class="panel-body">
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-horizontal ajax">
       <input type="hidden" name="type" value="<?php echo htmlspecialchars($type); ?>"/>
-<?php
-if (count($submenu) == 1) {
-?>
-      <input type="hidden" name="revision" value="<?php echo htmlspecialchars($submenu[0]["value"]); ?>"/>
-
-<?php
-} else {
-?>
       <div class="form-group">
         <label class="control-label col-sm-4">Formular</label>
         <div class="col-sm-8">
@@ -56,6 +48,14 @@ if (count($submenu) == 1) {
         </div>
       </div>
       <!-- form-group -->
+<?php
+if (count($submenu) == 1) {
+?>
+      <input type="hidden" name="revision" value="<?php echo htmlspecialchars($submenu[0]["value"]); ?>"/>
+
+<?php
+} else {
+?>
       <div class="form-group">
         <label class="control-label col-sm-4" for="copyantragrevision">Antrag</label>
         <div class="col-sm-8">
