@@ -38,7 +38,7 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
   if (count($to) == 0) return;
   $to = array_unique($to);
 
-  $antragurl = str_replace("//","/",$URIBASEREF."/".$URIBASE."/").rawurlencode($antrag["token"]);
+  $antragurl = trim($URIBASEREF,"/").str_replace("//","/","/".$URIBASE."/").rawurlencode($antrag["token"]);
   $caption = getAntragDisplayTitle($antrag, $revConfig);
   $antragtitle = preg_replace('/\s+/', ' ', strip_tags(implode(" ", $caption)));
 
@@ -53,7 +53,7 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
   #$subject = "Information zu {$antragtitle} ({$classTitle} - {$revTitle})";
   $subject = "Information zu {$antragtitle} ({$classTitle})";
 
-  $newStateTxt = $classConfig["state"][$newState];
+  $newStateTxt = $classConfig["state"][$newState][0];
 
   $txt = "";
   $txt .= "Hallo,\n";
