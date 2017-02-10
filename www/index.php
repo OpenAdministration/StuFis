@@ -286,10 +286,6 @@ if (isset($_REQUEST["action"])) {
         $ret = true;
       }
       $filesCreated = []; $filesRemoved = [];
-      if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
-        $newState = $_REQUEST["state"];
-        $ret = writeState($newState, $antrag, $form, $msg);
-      }
       // update last-modified timestamp
       dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1 ]);
       // clear all old values (tbl inhalt)
@@ -395,6 +391,11 @@ if (isset($_REQUEST["action"])) {
       // commitTx
       if ($ret)
         $ret = dbCommit();
+      if ($ret && isset($_REQUEST["state"]) && $_REQUEST["state"] != "") {
+        $newState = $_REQUEST["state"];
+        $antrag = getAntrag(); // report new version to user
+        $ret = writeState($newState, $antrag, $form, $msg);
+      }
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
@@ -451,11 +452,12 @@ if (isset($_REQUEST["action"])) {
 
         $ret = $ret && $ret0 && $ret1;
       } /* dbInsert(antrag) -> $ret !== false */
+      if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
       if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
+        $antrag = getAntrag($antrag_id); // report new version to user
         $newState = $_REQUEST["state"];
         $ret = writeState($newState, $antrag, $form, $msg);
       }
-      if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {

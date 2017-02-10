@@ -1,7 +1,11 @@
 <?php
 
-function getAntrag() {
-  $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+function getAntrag($id = null) {
+  if ($id === null) {
+    $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+  } else {
+    $antrag = dbGet("antrag", ["id" => $id]);
+  }
   if ($antrag === false) die("Unknown antrag.");
   $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
   $antrag["_inhalt"] = $inhalt;
@@ -20,7 +24,7 @@ function getAntrag() {
 }
 
 function getAntragDisplayTitle(&$antrag, &$revConfig) {
-  $caption = [ htmlspecialchars($antrag["token"]) ];
+  $caption = [ ];
   if (count($revConfig["captionField"]) > 0) {
     if (!isset($antrag["_inhalt"])) {
       $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
@@ -41,7 +45,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
     }
   }
   if (trim(strip_tags(implode(" ", $caption))) == "")
-    array_unshift($caption, "[ID=".htmlspecialchars($antrag["id"])."]");
+    array_unshift($caption, htmlspecialchars($antrag["token"]));
   return $caption;
 }
 
