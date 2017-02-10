@@ -72,33 +72,39 @@ if (count($menu) == 0)
 <div class="panel panel-default">
   <div class="panel-heading">Neues Formular erstellen und dabei Angaben aus diesem Formular übernehmen</div>
   <div class="panel-body">
-    <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
+    <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-horizontal ajax">
       <div class="form-group">
-        <label class="sr-only" for="newantragtype">Antrag</label>
-        <select class="selectpicker form-control" name="type" size="1" data-dep="subcreate-revisionselect" title="Neues Formular auswählen..." required="required" id="subcreate-newantragtype">
+        <label class="col-sm-4 control-label" for="newantragtype">Typ des neuen Formulars</label>
+        <div class="col-sm-8">
+          <select class="selectpicker form-control" name="type" size="1" data-dep="subcreate-revisionselect" title="Neues Formular auswählen..." required="required" id="subcreate-newantragtype">
 <?php
 foreach ($menu as $m) {
   echo "          <option value=\"".htmlspecialchars($m["value"])."\" data-dep=\"".htmlspecialchars(json_encode($m["submenu"]))."\">".htmlspecialchars($m["text"])."</option>\n";
 }
 ?>
-        </select>
-        <div class="help-block with-errors"></div>
+          </select>
+          <div class="help-block with-errors"></div>
+        </div>
       </div>
       <!-- form-group -->
       <div class="form-group optional-select">
-        <label class="sr-only" for="subcreate-revisionselect">Version</label>
-        <select class="selectpicker form-control" name="revision" size="1" data-dep="subcreate-newantragstate" title="Revision des neuen Antrags auswählen..." id="subcreate-revisionselect" required="required"> </select>
-        <div class="help-block with-errors"></div>
+        <label class="col-sm-4 control-label" for="subcreate-revisionselect">Version des neuen Formulars</label>
+        <div class="col-sm-8">
+          <select class="selectpicker form-control" name="revision" size="1" data-dep="subcreate-newantragstate" title="Revision des neuen Antrags auswählen..." id="subcreate-revisionselect" required="required"> </select>
+          <div class="help-block with-errors"></div>
+        </div>
       </div>
       <!-- form-group -->
 <?php
 if (count($newStates) > 0) {
 ?>
       <div class="form-group">
-        <label class="sr-only" for="subcreate-newantragstate">Neuer Bearbeitungsstatus des aktuellen Antrags</label>
-        <select class="selectpicker form-control" name="copy_from.state" size="1" title="Neuer Bearbeitungsstatus des aktuellen Antrags" id="subcreate-newantragstate">
-        </select>
-        <div class="help-block with-errors"></div>
+        <label class="col-sm-4 control-label" for="subcreate-newantragstate">Neuer Bearbeitungsstatus des aktuellen Antrags</label>
+        <div class="col-sm-8">
+          <select class="selectpicker form-control" name="copy_from.state" size="1" title="Neuer Bearbeitungsstatus des aktuellen Antrags" id="subcreate-newantragstate">
+          </select>
+          <div class="help-block with-errors"></div>
+        </div>
       </div>
       <!-- form-group -->
 <?php
