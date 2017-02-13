@@ -1481,12 +1481,12 @@ function renderFormItemTable($layout, $ctrl) {
   if ($ctrl["readonly"] || $noForm)
     $cls[] = "dynamic-table-readonly";
 
-  $rowCountFieldName = (isset($layout["rowCountField"]) ? "formdata[{$layout["rowCountField"]}]" : "formdata[{$layout["id"]}][rowCount]");
+  $rowCountFieldName =  "formdata[{$layout["id"]}][rowCount]";
   $rowCountFieldNameOrig = $rowCountFieldName;
-  $rowCountFieldTypeName = (isset($layout["rowCountField"]) ? "formtype[{$layout["rowCountField"]}]" : "formtype[{$layout["id"]}]");
-  $extraColsFieldName = (isset($layout["extraColsField"]) ? "formdata[{$layout["extraColsField"]}]" : "formdata[{$layout["id"]}][extraCols]");
+  $rowCountFieldTypeName = "formtype[{$layout["id"]}]";
+  $extraColsFieldName =  "formdata[{$layout["id"]}][extraCols]";
   $extraColsFieldNameOrig = $extraColsFieldName;
-  $extraColsFieldTypeName = (isset($layout["extraColsField"]) ? "formtype[{$layout["extraColsField"]}]" : "formtype[{$layout["id"]}]");
+  $extraColsFieldTypeName = "formtype[{$layout["id"]}]";
   foreach($ctrl["suffix"] as $suffix) {
     $rowCountFieldName .= "[{$suffix}]";
     $rowCountFieldNameOrig .= "[]";

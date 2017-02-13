@@ -7,7 +7,6 @@ $layout = [
    "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
-   "rowCountField" => "numgrp",
    "columns" => [
      [ "id" => "anhang.beschreibung", "name" => "Beschreibung 1",             "type" => "text",   "width" => 3, "opts" => ["title"] ],
      [

@@ -71,7 +71,6 @@ $layout = [
    "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
-   "rowCountField" => "numgrp",
    "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
    "columns" => [
      [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, "opts" => [ "required" ],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],

@@ -43,7 +43,6 @@ $layout = [
    "id" => "finanzauslagen",
    "opts" => ["with-row-number","with-headline"],
    "width" => 12,
-   "rowCountField" => "numauslagen",
    "columns" => [
      [ "id" => "geld.datum",        "name" => "Datum",                  "type" => "date",   "width" => 3, "opts" => [ "required" ] ],
      [ "id" => "geld.beschreibung", "name" => "Beschreibung",           "type" => "text",   "width" => 4, ],

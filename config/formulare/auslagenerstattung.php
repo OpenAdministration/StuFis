@@ -26,7 +26,7 @@ $config = [
       [ "creator" => "self" ],
       [ "group" => "ref-finanzen" ],
 # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
-# FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen
+# FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
     ],
     "canEdit" => [
       [ "state" => "draft", "creator" => "self" ],
@@ -39,6 +39,8 @@ $config = [
 #      [ "creator" => "self" ],
 # FIXME Zustimmung vom Projektverantwortlichen erforderlich?
       [ "group" => "ref-finanzen" ],
+      [ "hasPermission" => [ "" ] ],
+# context switch stmt referenceField
     ],
     "canStateChange.from.new.to.revoked" => [
       [ "creator" => "self" ],
