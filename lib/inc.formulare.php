@@ -431,6 +431,9 @@ function renderFormItem($layout,$ctrl = false) {
     case "url":
       $isEmpty = renderFormItemText($layout,$ctrl);
       break;
+    case "checkbox":
+      $isEmpty = renderFormItemCheckbox($layout,$ctrl);
+      break;
     case "radio":
       $isEmpty = renderFormItemRadio($layout,$ctrl);
       break;
@@ -615,6 +618,8 @@ function renderFormItemOtherForm($layout,$ctrl) {
   echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
+  if (in_array("readonly", $layout["opts"]))
+    echo " readonly=\"readonly\"";
   echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.otherForm&nonce=".urlencode($nonce))."\"";
   echo " data-remote-error=\"Ungültige Formularnummer\"";
   echo " data-extra-text=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=text.otherForm&nonce=".urlencode($nonce))."\"";
@@ -660,6 +665,46 @@ function renderFormItemRadio($layout,$ctrl) {
   }
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
+  if (in_array("readonly", $layout["opts"]))
+    echo " readonly=\"readonly\"";
+  echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
+  echo '</div>';
+}
+
+function renderFormItemCheckbox($layout,$ctrl) {
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+
+  $value = "";
+  if (isset($ctrl["_values"])) {
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
+  }
+
+  if ($noForm) {
+    echo '<div class="checkbox">';
+    if ($value == $layout["value"]) {
+      #echo '<span class="glyphicon glyphicon-ok-circle align-top" aria-hidden="true"></span>';
+      echo '<span class="glyphicon glyphicon-check align-top" aria-hidden="true"></span>';
+    } else {
+      echo '<span class="glyphicon glyphicon-unchecked align-top" aria-hidden="true"></span>';
+    }
+    echo '<label>';
+    echo str_replace("\n","<br/>",htmlspecialchars($layout["text"]));
+    echo '</label>';
+    echo '</div>';
+    return;
+  }
+
+  echo '<div class="checkbox">';
+  echo '<label><input type="checkbox" name="'.htmlspecialchars($ctrl["name"]).'" value="'.htmlspecialchars($layout["value"]).'"';
+  if ($value == $layout["value"]) {
+    echo " checked=\"checked\"";
+  }
+  if (in_array("required", $layout["opts"]))
+    echo " required=\"required\"";
+  if (in_array("readonly", $layout["opts"]))
+    echo " readonly=\"readonly\"";
   echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
   echo '</div>';
 }
@@ -755,6 +800,8 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
     if (isset($layout["onClickFillFromPattern"]))
       echo " data-onClickFillFromPattern=\"".htmlspecialchars($layout["onClickFillFromPattern"])."\"";
+    if (in_array("readonly", $layout["opts"]))
+      echo " readonly=\"readonly\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
@@ -871,6 +918,8 @@ function renderFormItemMoney($layout, $ctrl) {
   } else {
     if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
+    if (in_array("readonly", $layout["opts"]))
+      echo " readonly=\"readonly\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
   }
@@ -901,6 +950,8 @@ function renderFormItemTextarea($layout, $ctrl) {
       echo " rows=".htmlspecialchars($layout["min-rows"]);
     if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
+    if (in_array("readonly", $layout["opts"]))
+      echo " readonly=\"readonly\"";
     echo ">";
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
     echo "</textarea>";
@@ -1151,6 +1202,8 @@ function renderFormItemSelect($layout, $ctrl) {
     echo " multiple";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
+  if (in_array("readonly", $layout["opts"]))
+    echo " readonly=\"readonly\"";
   if ($layout["type"] == "ref") {
     $layout["references"] = str_replace(".", "-", $layout["references"]);
     echo " data-references=\"".htmlspecialchars($layout["references"])."\"";
@@ -1244,7 +1297,14 @@ function renderFormItemDateRange($layout, $ctrl) {
           von
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternStart; ?>"/>
+          <input type="text"
+                 class="input-sm form-control"
+                 name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]"
+                 orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]"
+                 <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?>
+                 <?php echo (in_array("readonly", $layout["opts"]) ? "readonly=\"readonly\"": ""); ?>
+                 value="<?php echo $tPatternStart; ?>"
+          />
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -1253,7 +1313,14 @@ function renderFormItemDateRange($layout, $ctrl) {
           bis
         </div>
         <div class="input-group">
-          <input type="text" class="input-sm form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPatternEnd; ?>"/>
+          <input type="text"
+                 class="input-sm form-control"
+                 name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]"
+                 orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]"
+                 <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?>
+                 <?php echo (in_array("readonly", $layout["opts"]) ? "readonly=\"readonly\"": ""); ?>
+                 value="<?php echo $tPatternEnd; ?>"
+          />
           <div class="input-group-addon">
             <span class="glyphicon glyphicon-th"></span>
           </div>
@@ -1300,7 +1367,14 @@ function renderFormItemDate($layout, $ctrl) {
   }
 ?>
 >
-    <input type="text" class="form-control" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?> value="<?php echo $tPattern; ?>"
+    <input type="text"
+           class="form-control"
+           name="<?php echo htmlspecialchars($ctrl["name"]); ?>"
+           orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>"
+           id="<?php echo htmlspecialchars($ctrl["id"]); ?>"
+           <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?>
+           <?php echo (in_array("readonly", $layout["opts"]) ? "readonly=\"readonly\"": ""); ?>
+           value="<?php echo $tPattern; ?>"
 <?php
     if (isset($layout["onClickFillFrom"]))
       echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
