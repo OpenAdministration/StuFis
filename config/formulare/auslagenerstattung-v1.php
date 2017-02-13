@@ -41,18 +41,42 @@ $layout = [
  [
    "type" => "table", /* renderer */
    "id" => "finanzauslagen",
-   "opts" => ["with-row-number","with-headline"],
+   "opts" => ["with-row-number"],
    "width" => 12,
    "columns" => [
-     [ "id" => "geld.datum",        "name" => "Datum",                  "type" => "date",   "width" => 3, "opts" => [ "required" ] ],
-     [ "id" => "geld.beschreibung", "name" => "Beschreibung",           "type" => "text",   "width" => 4, ],
-     [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",    "width" => 2, ],
-     [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
-     [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"] ],
-     [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
-     [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",        "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
+     [ "id" => "geld",
+       "type" => "group", /* renderer */
+       "width" => 12,
+       "printSumFooter" => ["einnahmen","ausgaben"],
+       "children" => [
+         [ "id" => "geld.datum",        "title" => "Datum",                  "type" => "date",   "width" => 3, "opts" => [ "required" ] ],
+         [ "id" => "geld.beschreibung", "title" => "Beschreibung",           "type" => "text",   "width" => 3, "placeholder" => "Hinweis", ],
+         [ "id" => "geld.file",         "title" => "Beleg",                  "type" => "file",   "width" => 6, ],
+         [
+           "type" => "table", /* renderer */
+           "id" => "finanzauslagenposten",
+           "opts" => ["with-row-number", "with-headline"],
+           "width" => 12,
+           "columns" => [
+             [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",    "width" => 4, "references" => []],
+             [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"] ],
+             [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"] ],
+             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
+             [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",        "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
+           ],
+         ],
+       ],
+     ],
 # FIXME Anlagen und Verweise
    ], // finanzgruppentbl
+ ],
+
+ [
+   "type" => "multifile", /* renderer */
+   "id" => "upload",
+   "title" => "Anhänge hochladen",
+   "width" => 12,
+   "destination" => "geld.file",
  ],
 
  [
@@ -61,7 +85,7 @@ $layout = [
    "id" => "info",
    "width" => 12,
    "opts" => ["well"],
-   "value" => "Der Projektantrag muss rechtzeitig vor Projektbeginn eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
+   "value" => "Die Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
  ],
 
 ];

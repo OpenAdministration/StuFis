@@ -296,17 +296,30 @@ $(document).ready(function() {
   });
   $("*[data-printSum]").on("update-print-sum.compute", function(evt) {
     var $out = $(this);
+		var printId = $out.attr("data-printSum");
 
     $region = $out.data("print-sum-region");
     if (!$region) {
-      return;
-    }
-    if ($.isFunction($region)) {
-      $region = $region($out);
-    }
+// not yet implemented in php for print/read-only version
+/*
+      $out.parents().each(function (i, p) {
+        var $ref = $(p).find("*[data-addToSum~=\""+printId+"\"]");
+        if ($ref.length == 0) {
+          return;
+        }
+        $region = $(p);
+        return false;
+      });
+      if (!$region)
+*/
+        return;
+    } else {
+      if ($.isFunction($region)) {
+        $region = $region($out);
+      }
+   }
 
     var sum = 0.00;
-		var printId = $out.attr("data-printSum");
     $region.find("*[data-addToSum~=\""+printId+"\"]").each(function (k, e) {
       var val;
       var $e = $(this);
@@ -321,7 +334,12 @@ $(document).ready(function() {
       }
       sum += val;
     });
-    $out.text(sum.toFixed(2));
+    if ($out.is(":input")) {
+      $out.val(sum.toFixed(2));
+      console.log("warning: printSum is form field!");
+    } else {
+      $out.text(sum.toFixed(2));
+    }
     $out.trigger("change");
   });
   $("table.summing-table").off("update-summing-table.sum");

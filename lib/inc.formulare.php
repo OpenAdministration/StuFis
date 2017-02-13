@@ -828,6 +828,9 @@ function renderFormItemText($layout, $ctrl) {
     echo '>';
     $noForm = true;
   }
+  if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+    $noForm = true;
+  }
 
   if (!$noFormMarkup && $noForm) {
     echo "<div class=\"form-control\"";
@@ -992,6 +995,10 @@ function renderFormItemMoney($layout, $ctrl) {
     echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
     echo " value=\"{$tPattern}\"";
     echo '>';
+    $noForm = true;
+  }
+
+  if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
     $noForm = true;
   }
 
@@ -1562,6 +1569,7 @@ function renderFormItemTable($layout, $ctrl) {
 
   $hasPrintSumFooter = false;
 
+
 ?>
 
   <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>">
@@ -1791,6 +1799,9 @@ function renderFormItemTable($layout, $ctrl) {
               $newMeta["value"] = $value;
               $newMeta["opts"][] = "is-sum";
               $newMeta["printSum"] = [ $psId ];
+              if (count($col["printSumFooter"]) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"])) {
+                $newMeta["title"] = $newMeta["name"];
+              }
 
               $newCtrl = $ctrl;
               $newCtrl["suffix"][] = "print-foot";
