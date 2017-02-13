@@ -524,9 +524,20 @@ if (isset($_REQUEST["action"])) {
           $ret = $ret && $ret0;
         }
 
+        $foundBuildFrom = false;
+        if (isset($form["_class"]["buildFrom"])) {
+          foreach($form["_class"]["buildFrom"] as $tmp) {
+            if (is_array($tmp) && $tmp[0] != $oldForm["type"])
+              continue;
+            elseif (!is_array($tmp) && $tmp != $oldForm["type"])
+              continue;
+            $foundBuildFrom = true;
+            break;
+          }
+        }
+
         if ($oldForm["type"] != $form["type"] &&
-            isset($form["_class"]["buildFrom"]) &&
-            in_array($oldForm["type"], $form["_class"]["buildFrom"]) &&
+            $foundBuildFrom &&
             isset($form["config"]["referenceField"]))
         {
            $row = Array();
@@ -535,6 +546,7 @@ if (isset($_REQUEST["action"])) {
            $row["fieldname"] = $form["config"]["referenceField"]["name"];
            $row["value"] = $oldAntrag["id"];
            $ret0 = dbInsert("inhalt", $row);
+           $ret = $ret && $ret0;
         }
 
         # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
