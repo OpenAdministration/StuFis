@@ -835,24 +835,23 @@ $(document).ready(function() {
 
   });
 
-  $( ".show-col-toggle" ).hide();
-  $( ".hide-col-toggle" ).show();
-  $( ".show-col-toggle, .hide-col-toggle" ).on("click.col-toggle", function(evt) {
-    var visible = $(this).is(".show-col-toggle");
+  $( "input.col-toggle[type=\"checkbox\"]" ).on("change.col-toggle", function(evt) {
+    var visible = $(this).is(":checked");
     var colClass = $(this).attr("data-col-class");
-    var $th = $(this).closest("td,th");
-    var $table = $th.closest("table");
+    var $table = $(this).closest("table");
     var $cells = $table.children("thead,tbody,tfoot").children("tr").children("td,th").filter(function (i, e) {
       return $(e).hasClass(colClass);
     });
     $cells.toggleClass("hide-column-manual", !visible);
-    if (visible) {
-      $th.find( ".show-col-toggle" ).hide();
-      $th.find( ".hide-col-toggle" ).show();
-    } else {
-      $th.find( ".show-col-toggle" ).show();
-      $th.find( ".hide-col-toggle" ).hide();
-    }
+    evt.preventDefault();
+    evt.stopPropagation();
+  });
+  $( "a.toggle-checkbox").on("click.checkbox-toggle", function(evt) {
+    $(this).find('input[type="checkbox"]').each(function (i, e) {
+      e.checked = !e.checked;
+    }).trigger("change");
+    evt.preventDefault();
+    evt.stopPropagation();
   });
 
   $( "*[data-isToggleReadOnly]" ).on("change.pleaseReloadForEdit", function (evt) {

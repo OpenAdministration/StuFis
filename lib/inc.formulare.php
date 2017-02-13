@@ -1470,6 +1470,7 @@ function renderFormItemDate($layout, $ctrl) {
 
 function renderFormItemTable($layout, $ctrl) {
   $withRowNumber = in_array("with-row-number", $layout["opts"]);
+  $withHeadline = in_array("with-headline", $layout["opts"]);
   list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $cls = ["table", "table-striped", "summing-table"];
@@ -1477,15 +1478,20 @@ function renderFormItemTable($layout, $ctrl) {
     $cls[] = "dynamic-table";
   if (in_array("fixed-width-table", $layout["opts"]))
     $cls[] = "fixed-width-table";
-  if ($ctrl["readonly"])
+  if ($ctrl["readonly"] || $noForm)
     $cls[] = "dynamic-table-readonly";
 
   $rowCountFieldName = (isset($layout["rowCountField"]) ? "formdata[{$layout["rowCountField"]}]" : "formdata[{$layout["id"]}][rowCount]");
   $rowCountFieldNameOrig = $rowCountFieldName;
   $rowCountFieldTypeName = (isset($layout["rowCountField"]) ? "formtype[{$layout["rowCountField"]}]" : "formtype[{$layout["id"]}]");
+  $extraColsFieldName = (isset($layout["extraColsField"]) ? "formdata[{$layout["extraColsField"]}]" : "formdata[{$layout["id"]}][extraCols]");
+  $extraColsFieldNameOrig = $extraColsFieldName;
+  $extraColsFieldTypeName = (isset($layout["extraColsField"]) ? "formtype[{$layout["extraColsField"]}]" : "formtype[{$layout["id"]}]");
   foreach($ctrl["suffix"] as $suffix) {
     $rowCountFieldName .= "[{$suffix}]";
     $rowCountFieldNameOrig .= "[]";
+    $extraColsFieldName .= "[{$suffix}]";
+    $extraColsFieldNameOrig .= "[]";
   }
 
   $rowCount = 0;
@@ -1512,23 +1518,86 @@ function renderFormItemTable($layout, $ctrl) {
     echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
   }
 
-  if (in_array("with-headline", $layout["opts"])) {
+  $compressableColumns = [];
+  foreach ($layout["columns"] as $i => $col) {
+    $layout["columns"][$i]["_hideable_isHidden"] = false;
+    if (!isset($col["opts"]) || !in_array("hideable", $col["opts"]))
+      continue;
+    $name = "[$i]";
+    if (isset($col["name"]))
+      $name = $col["name"];
+    $colId = $col["id"];
+    $fname = $extraColsFieldName . "[" . $colId . "]";
+    $fnameOrig = $extraColsFieldNameOrig . "[" . $colId . "]";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValue($fname, null, $ctrl["_values"]["_inhalt"], ""); # checkbox does not store value if unchecked
+    } else {
+      $value = "show"; # default to show
+    }
+    $isChecked = ($value == "show");
+    $compressableColumns[] = ["name" => $name, "i" => $i, "fname" => $fname, "fnameOrig" => $fnameOrig, "isChecked" => $isChecked ];
+    $layout["columns"][$i]["_hideable_isHidden"] = !$isChecked;
+  }
+
+  $withHeadlineRow = $withHeadline || (count($compressableColumns) > 0);
+
+  if ($withHeadlineRow) {
 
 ?>
 
     <thead>
       <tr>
 <?php
+        $colSpan = 0;
+        if (!$noForm)
+          $colSpan++; # delete-row
         if ($withRowNumber)
-          echo "<th class=\"row-number\"></th>";
-        echo "<th class=\"delete-row\"></th>";
+          $colSpan++;
+        echo "<th colspan=\"{$colSpan}\">";
+        if (count($compressableColumns) > 0 && !$noForm) {
+          echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($extraColsFieldTypeName)."\"/>";
+?>
+          <div class="dropdown">
+            <button type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+<?php
+
+    foreach ($compressableColumns as $m) {
+      $i = $m["i"];
+      $name = $m["name"];
+      $fname = $m["fname"];
+      $fnameOrig = $m["fnameOrig"];
+      $isChecked = $m["isChecked"];
+?>
+              <li><a href="#" class="toggle-checkbox">
+                  <input type="checkbox"
+                         name="<?php echo htmlspecialchars($fname); ?>"
+                         orig-name="<?php echo htmlspecialchars($fnameOrig); ?>"
+                         <?php if ($isChecked) echo "checked=\"checked\""; ?>
+                         data-col-class="dynamic-table-col-<?php echo htmlspecialchars($i); ?>"
+                         class="col-toggle"
+                         value="show" >
+                  <?php echo htmlspecialchars($name); ?>
+                  </a>
+              </li>
+<?php
+    }
+
+?>
+            </ul>
+          </div>
+<?php
+        }
+        echo "</th>";
         foreach ($layout["columns"] as $i => $col) {
-          echo "<th class=\"dynamic-table-cell dynamic-table-col-$i\">";
-          echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["name"])."</span>";
-          if (isset($col["opts"]) && in_array("hideable", $col["opts"])) {
-            echo " <a class=\"pull-right hide-col-toggle\" data-col-class=\"dynamic-table-col-$i\" href=\"javascript:void(0);\"><i class=\"fa fa-fw fa-compress\"></i></a>";
-            echo " <a class=\"pull-right show-col-toggle\" data-col-class=\"dynamic-table-col-$i\" href=\"javascript:void(0);\"><i class=\"fa fa-fw fa-expand\"></i></a>";
-          }
+          $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
+          if ($layout["columns"][$i]["_hideable_isHidden"])
+            $cls[] = "hide-column-manual";
+          echo "<th class=\"".implode(" ", $cls)."\">";
+          if ($withHeadline)
+            echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["name"])."</span>";
           echo "</th>";
         }
 ?>
@@ -1563,13 +1632,13 @@ function renderFormItemTable($layout, $ctrl) {
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
-        if ($withRowNumber) {
+        if ($withRowNumber)
           echo "<td class=\"row-number\">".($rowNumber+1)."</td>";
-        }
-        echo "<td class=\"delete-row\">";
-        if (!$noForm)
+        if (!$noForm) {
+          echo "<td class=\"delete-row\">";
           echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
-        echo "</td>";
+          echo "</td>";
+        }
 
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"]))
@@ -1582,6 +1651,8 @@ function renderFormItemTable($layout, $ctrl) {
             $tdClass[] = "dynamic-table-column-no-title";
           $tdClass[] = "dynamic-table-cell";
           $tdClass[] = "dynamic-table-col-$i";
+          if ($layout["columns"][$i]["_hideable_isHidden"])
+            $tdClass[] = "hide-column-manual";
 
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             $col["addToSum"][] = "col-sum-".$layout["id"]."-".$i;
@@ -1633,19 +1704,24 @@ function renderFormItemTable($layout, $ctrl) {
     <tfoot>
       <tr>
 <?php
+        $colSpan = 0;
+        if (!$noForm)
+          $colSpan++; # delete-row
         if ($withRowNumber)
-          echo "<th class=\"row-number\"></th>";
-        echo "<th class=\"delete-row\"></th>";
+          $colSpan++;
+        echo "<th colspan=\"{$colSpan}\">";
 
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             $col["printSumFooter"][] = "col-sum-".$layout["id"]."-".$i;
           }
+          $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
+          if ($layout["columns"][$i]["_hideable_isHidden"])
+            $cls[] = "hide-column-manual";
           if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0) {
-?>
-        <th class="cell-has-printSum dynamic-table-cell dynamic-table-col-<?php echo $i; ?>">
-<?php
+            $cls[] = "cell-has-printSum";
+            echo "<th class=\"".implode(" ", $cls)."\">";
             foreach ($col["printSumFooter"] as $psId) {
               if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
                 $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
@@ -1670,9 +1746,7 @@ function renderFormItemTable($layout, $ctrl) {
               renderFormItem($newMeta, $newCtrl);
             }
           } else {
-?>
-        <th class="dynamic-table-cell dynamic-table-col-<?php echo $i; ?>">
-<?php
+            echo "<th class=\"".implode(" ", $cls)."\">";
           }
 ?>
         </th>

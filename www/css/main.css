@@ -176,41 +176,15 @@ a.btn.disabled {
   pointer-events: initial; /* fixes cursor on Firefox */
 }
 
-.dynamic-table > thead > tr > td,
-.dynamic-table > thead > tr > th {
-  overflow: hidden;
-  position: relative;
-  vertical-align: top;
-}
-
-
-.dynamic-table > thead a {
-  display: inline-block;
-  position: absolute;
-  right: 0px;
-  top: 5px;
-  z-index: 2;
-}
-
-.dynamic-table > thead .dynamic-table-caption {
-  display: block;
-  overflow: hidden;
-  margin-right: 10px;
-/*  white-space: nowrap; */
-}
-
-.hide-column-manual {
-  width: 20px;
-  font-size: xx-small;
-}
-
 td.hide-column-manual,
 td.hide-column-manual > *,
-tfoot > td.hide-column-manual,
-tfoot > td.hide-column-manual * {
-  display: none;
+th.hide-column-manual,
+th.hide-column-manual > * {
+  display: none !important;
 }
 
+.dynamic-table-readonly > * > tr > *.row-number,
+.dynamic-table-readonly > * > tr > *.delete-row,
 .dynamic-table > * > tr > *.row-number,
 .dynamic-table > * > tr > *.delete-row {
   width: 15px;
@@ -223,3 +197,4 @@ input[readonly="readonly"] ~ .dropdown-menu {
 input[readonly="readonly"] ~ .dropdown-toggle .caret {
   display: none !important;
 }
+
