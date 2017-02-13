@@ -611,6 +611,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
 
   $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
   echo "<div class=\"input-group\">";
+  echo "<span class=\"input-group-addon extra-text\"></span>";
   echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
@@ -619,7 +620,6 @@ function renderFormItemOtherForm($layout,$ctrl) {
   echo " data-extra-text=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=text.otherForm&nonce=".urlencode($nonce))."\"";
   echo " value=\"{$tPattern}\"";
   echo '>';
-  echo "<span class=\"input-group-addon extra-text\" style=\"padding-right:30px;\"></span>";
   echo "</div>";
   if (in_array("hasFeedback", $layout["opts"]))
     echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span>';
