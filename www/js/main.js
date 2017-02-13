@@ -2,6 +2,8 @@ String.prototype.replaceAll = function(target, replacement) {
   return this.split(target).join(replacement);
 };
 
+// numeral.locale("de");
+
 $(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
   $.fn.validator.Constructor.INPUT_SELECTOR = ':input:not([type="hidden"], [type="submit"], [type="reset"], button, tr.new-table-row *)'

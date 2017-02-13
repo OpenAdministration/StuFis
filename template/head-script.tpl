@@ -14,6 +14,10 @@
             <script src="<?php echo $URIBASE; ?>/js/fileinput.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput.de.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput-themes/gly/theme.js"></script>
+<!--
+            <script src="<?php echo $URIBASE; ?>/js/numeral.min.js"></script>
+            <script src="<?php echo $URIBASE; ?>/js/numeral-locales.min.js"></script>
+-->
             <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
             <!--[if lt IE 9]>
               <script src="<?php echo $URIBASE; ?>/js/html5shiv.min.js"></script>
