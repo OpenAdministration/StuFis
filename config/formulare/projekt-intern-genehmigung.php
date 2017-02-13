@@ -29,9 +29,10 @@ $config = [
      */
     "canRead" => [
       [ "creator" => "self" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "ok" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-hv" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-stura" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "wait-stura" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "done" ],
+      [ "hasPermission" => "isCorrectGremium", "state" => "done-hv" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
       [ "group" => "ref-finanzen" ],
     ],
