@@ -34,7 +34,7 @@ $layout = [
      [ "id" => "projekt.org.mail",  "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"] ],
      [ "id" => "antragsteller",     "title" =>"Antragsteller (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"] ],
      [ "id" => "genehmigung",       "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback"], ],
-     [ "id" => "iban",              "title" =>"Bankverbindung (IBAN)",       "type" => "text",  "width" => 12, "opts" => ["required", "hasFeedback"] ], # FIXME IBAN TYPE for validation
+     [ "id" => "iban",              "title" =>"Bankverbindung (IBAN)",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"] ], # FIXME IBAN TYPE for validation
    ],
  ],
 

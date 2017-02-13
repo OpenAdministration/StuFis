@@ -14,6 +14,7 @@
             <script src="<?php echo $URIBASE; ?>/js/fileinput.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput.de.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/fileinput-themes/gly/theme.js"></script>
+            <script src="<?php echo $URIBASE; ?>/js/iban.js"></script>
 <!--
             <script src="<?php echo $URIBASE; ?>/js/numeral.min.js"></script>
             <script src="<?php echo $URIBASE; ?>/js/numeral-locales.min.js"></script>

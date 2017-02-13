@@ -489,6 +489,7 @@ function renderFormItem($layout,$ctrl = false) {
     case "text":
     case "email":
     case "url":
+    case "iban":
       $isEmpty = renderFormItemText($layout,$ctrl);
       break;
     case "checkbox":
@@ -837,7 +838,10 @@ function renderFormItemText($layout, $ctrl) {
         $cls[] = "custom-combobox";
       echo "<div class=\"".htmlspecialchars(implode(" ",$cls))."\">";
     }
-    echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    $fType = $layout["type"];
+    if ($fType == "iban")
+      $fType = "text";
+    echo "<input class=\"form-control\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
   if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
@@ -845,6 +849,9 @@ function renderFormItemText($layout, $ctrl) {
   }
   if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
     echo " data-printSum=\"".htmlspecialchars(implode(" ", $layout["printSum"]))."\"";
+  }
+  if ($layout["type"] == "iban") {
+    echo " data-validateIBAN=\"1\"";
   }
 
   if ($noForm) {

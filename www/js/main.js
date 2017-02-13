@@ -886,7 +886,16 @@ $(document).ready(function() {
     }
   });
 
-  $( "form.ajax" ).validator().on("submit", function(e) {
+  $( "form.ajax" ).validator({
+    'custom': {
+       'validateIBAN': function ($el) {
+          var val = $el.val();
+          if (!IBAN.isValid(val))
+            return "Ungültige IBAN";
+          $el.val(IBAN.printFormat(val));
+       },
+    },
+  }).on("submit", function(e) {
     if (e.isDefaultPrevented()) { // validator said no
       console.log(e);
       return;
