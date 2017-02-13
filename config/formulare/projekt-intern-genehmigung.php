@@ -45,6 +45,11 @@ $config = [
     "canEdit" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
     ],
+    "canBeLinked" => [
+      [ "state" => "ok-by-hv", ],
+      [ "state" => "ok-by-stura", ],
+      [ "state" => "done-hv", ],
+    ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],

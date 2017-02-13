@@ -564,6 +564,29 @@ if (isset($_REQUEST["action"])) {
            $ret = $ret && $ret0;
         }
 
+        $fillOnCopy = [];
+        if (isset($form["config"]["fillOnCopy"]))
+          $fillOnCopy = $form["config"]["fillOnCopy"];
+        foreach ($fillOnCopy as $rec) {
+           $row = Array();
+           $row["antrag_id"] = $antrag_id;
+           $row["contenttype"] = $rec["type"];
+           $row["fieldname"] = $rec["name"];
+           $value = "";
+           switch ($rec["prefill"]) {
+             case "user:mail":
+               $value = getUserMail();
+             break;
+             default:
+               $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
+               $ret = false;
+               break 2; # abort foreach fillOnCopy
+           }
+           $row["value"] = $value;
+           dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);
+           $ret0 = dbInsert("inhalt", $row);
+           $ret = $ret && $ret0;
+        }
         # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
         foreach($oldAntrag["_anhang"] as $row) {
           $row["antrag_id"] = $antrag_id;

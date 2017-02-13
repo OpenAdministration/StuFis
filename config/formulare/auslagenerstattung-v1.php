@@ -11,6 +11,9 @@ $config = [
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:antragsteller" ],
   "referenceField" => [ "name" => "genehmigung", "type" => "otherForm" ],
+  "fillOnCopy" => [
+    [ "name" => "antragsteller", "type" => "email", "prefill" => "user:mail" ],
+  ],
 ];
 
 $layout = [
