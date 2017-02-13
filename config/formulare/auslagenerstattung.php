@@ -3,10 +3,10 @@
 $config = [
   "title" => "Auslagenerstattung",
   "shortTitle" => "Auslagenerstattung",
-  "state" => [ "draft" => "Entwurf",
-               "new" => "Beantragt",
-               "ok" => "Genehmigt",
-               "revoked" => "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)"
+  "state" => [ "draft" => [ "Entwurf" ],
+               "new" => [ "Beantragt", "beantragen" ],
+               "ok" => [ "Genehmigt", "genehmigen", ],
+               "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
   "proposeNewState" => [
     "draft" => [ "new", ],

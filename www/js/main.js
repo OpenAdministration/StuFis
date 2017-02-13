@@ -482,7 +482,6 @@ $(document).ready(function() {
   $(".selectpicker[data-dep]").each(function(i, sel) {
     var $sel = $(sel);
     var $dep = $(document.getElementById($sel.attr("data-dep")));
-    $dep.empty();
     $dep.closest(".optional-select").hide();
     $sel.on("changed.bs.select.dep", function (evt) {
       var $sel = $(this);
@@ -490,32 +489,32 @@ $(document).ready(function() {
       var val = $sel.selectpicker("val");
       var $opt = $sel.find("option[value=\""+val+"\"]");
       var newOpt = $opt.data("dep");
-      if (newOpt == null) return;
       var firstKey = null;
-      $dep.empty();
-      $dep.closest(".optional-select").show();
-      for (var key in newOpt) {
-        if (!newOpt.hasOwnProperty(key)) continue;
-        var $newOpt = $("<option/>").attr("value", newOpt[key]["value"]).text(newOpt[key]["text"]).appendTo($dep);
-        if (newOpt[key].hasOwnProperty("submenu")) {
-          $newOpt.data("dep", newOpt[key]["submenu"]);
+      if (newOpt != null) {
+        $dep.empty();
+        $dep.closest(".optional-select").show();
+        for (var key in newOpt) {
+          if (!newOpt.hasOwnProperty(key)) continue;
+          var $newOpt = $("<option/>").attr("value", newOpt[key]["value"]).text(newOpt[key]["text"]).appendTo($dep);
+          if (newOpt[key].hasOwnProperty("submenu")) {
+            $newOpt.data("dep", newOpt[key]["submenu"]);
+          }
+          if (newOpt[key].hasOwnProperty("submenu-val")) {
+            $newOpt.data("dep-val", newOpt[key]["submenu-val"]);
+          }
+          if (firstKey === null) {
+            firstKey = key;
+          } else {
+            firstKey = false;
+          }
         }
-        if (newOpt[key].hasOwnProperty("submenu-val")) {
-          $newOpt.data("dep-val", newOpt[key]["submenu-val"]);
-        }
-        if (firstKey === null) {
-          firstKey = key;
-        } else {
-          firstKey = false;
+        if ($dep.is(".selectpicker")) {
+          $dep.selectpicker("refresh");
         }
       }
       var newOptVal = $opt.data("dep-val");
       if (newOptVal == null) {
         newOptVal = firstKey;
-      }
-
-      if ($dep.is(".selectpicker")) {
-        $dep.selectpicker("refresh");
       }
       if (newOptVal !== null && newOptVal !== false) {
         if ($dep.is(".selectpicker")) {

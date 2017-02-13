@@ -56,7 +56,7 @@ foreach ($formulare as $type => $list) {
     $rtitle = $revision;
     if (isset($lForm["config"]["revisionTitle"]))
       $rtitle = $lForm["config"]["revisionTitle"];
-    $submenu[$revision] = [ "value" => $revision, "text" => $rtitle, "submenu" => $newStatesSubmenu, "submenu-val" => $newState ];
+    $submenu[$revision] = [ "value" => $revision, "text" => $rtitle, "submenu-val" => $newState ];
   }
 
   $menu[] = [ "value" => $type, "text" => $title, "submenu" => $submenu ];
@@ -101,7 +101,12 @@ if (count($newStates) > 0) {
       <div class="form-group">
         <label class="col-sm-4 control-label" for="subcreate-newantragstate">Neuer Bearbeitungsstatus des aktuellen Antrags</label>
         <div class="col-sm-8">
-          <select class="selectpicker form-control" name="copy_from.state" size="1" title="Neuer Bearbeitungsstatus des aktuellen Antrags" id="subcreate-newantragstate">
+          <select class="selectpicker form-control" name="copy_from.state" size="1" id="subcreate-newantragstate" data-value="">
+<?php
+foreach ($newStatesSubmenu as $m) {
+  echo "          <option value=\"".htmlspecialchars($m["value"])."\">".htmlspecialchars($m["text"])."</option>\n";
+}
+?>
           </select>
           <div class="help-block with-errors"></div>
         </div>
