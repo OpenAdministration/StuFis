@@ -3,12 +3,12 @@
 $config = [
   "title" => "Genehmigung für ein Projekt der Studierendenschaft (internes Projekt)",
   "shortTitle" => "Genehmigung internes Projekt",
-  "state" => [ "draft" => "Entwurf",
-               "wait-stura" => "Warte auf StuRa Beschluss",
-               "ok-by-hv" => "Genehmigt durch HV (muss noch verkündet werden)",
-               "ok-by-stura" => "Genehmigt durch StuRa-Beschluss",
-               "done-hv" => "Genehmigt durch HV und protokolliert in StuRa Sitzung",
-               "revoked" => "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)"
+  "state" => [ "draft" => [ "Entwurf", ],
+               "wait-stura" => [ "Warte auf StuRa Beschluss", ],
+               "ok-by-hv" => [ "Genehmigt durch HV (muss noch verkündet werden)", ],
+               "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
+               "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
+               "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
   "proposeNewState" => [
     "draft" => [ "wait-stura", "ok-by-hv" ],
