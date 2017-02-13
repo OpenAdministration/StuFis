@@ -412,6 +412,19 @@ function renderFormItem($layout,$ctrl = false) {
   else
     $cls[] = "form-grp";
 
+  $ctrl["readonly"] = false;
+  if (isset($layout["toggleReadOnly"])) {
+    /* check readonly state of element, needs to be checkbox or radio */
+    list ($elId, $elVal) = $layout["toggleReadOnly"];
+    $value = "";
+    if (isset($ctrl["_values"])) {
+      $value = getFormValueInt($elId, null, $ctrl["_values"]["_inhalt"], $value);
+    }
+    $isReadOnly = ($elVal != $value);
+    $ctrl["readonly"] = $isReadOnly;
+  } elseif (in_array("readonly", $layout["opts"]))
+    $ctrl["readonly"] = true;
+
   ob_start();
   switch ($layout["type"]) {
     case "h1":
@@ -566,6 +579,14 @@ function renderFormItemOtherForm($layout,$ctrl) {
     $value = $layout["value"];
   }
 
+  if (!$noForm && $ctrl["readonly"]) {
+    $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
+  }
+
   if ($noForm) {
     echo '<div>';
     echo '<span class="glyphicon glyphicon glyphicon-link align-top" aria-hidden="true"></span>';
@@ -618,8 +639,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
   echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if (in_array("readonly", $layout["opts"]))
-    echo " readonly=\"readonly\"";
+
   echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.otherForm&nonce=".urlencode($nonce))."\"";
   echo " data-remote-error=\"Ungültige Formularnummer\"";
   echo " data-extra-text=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=text.otherForm&nonce=".urlencode($nonce))."\"";
@@ -641,6 +661,16 @@ function renderFormItemRadio($layout,$ctrl) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
+  }
+
+  if (!$noForm && $ctrl["readonly"]) {
+    if ($value == $layout["value"]) {
+      $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+      echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+      echo " value=\"{$tPattern}\"";
+      echo '>';
+    }
+    $noForm = true;
   }
 
   if ($noForm) {
@@ -665,8 +695,8 @@ function renderFormItemRadio($layout,$ctrl) {
   }
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if (in_array("readonly", $layout["opts"]))
-    echo " readonly=\"readonly\"";
+  if (in_array("toggleReadOnly", $layout["opts"]))
+    echo " data-isToggleReadOnly=\"true\"";
   echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
   echo '</div>';
 }
@@ -677,8 +707,16 @@ function renderFormItemCheckbox($layout,$ctrl) {
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
-  } elseif (isset($layout["value"])) {
-    $value = $layout["value"];
+  }
+
+  if (!$noForm && $ctrl["readonly"]) {
+    if ($value == $layout["value"]) {
+      $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+      echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+      echo " value=\"{$tPattern}\"";
+      echo '>';
+    }
+    $noForm = true;
   }
 
   if ($noForm) {
@@ -703,8 +741,8 @@ function renderFormItemCheckbox($layout,$ctrl) {
   }
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if (in_array("readonly", $layout["opts"]))
-    echo " readonly=\"readonly\"";
+  if (in_array("toggleReadOnly", $layout["opts"]))
+    echo " data-isToggleReadOnly=\"true\"";
   echo '>'.str_replace("\n","<br/>",htmlspecialchars($layout["text"])).'</label>';
   echo '</div>';
 }
@@ -734,6 +772,13 @@ function renderFormItemText($layout, $ctrl) {
         $ctrl["_render"]->addToSumValue[$addToSumId] = 0.00;
       $ctrl["_render"]->addToSumValue[$addToSumId] += (float) $value;
     }
+  }
+
+  if (!$noForm && $ctrl["readonly"]) {
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
   }
 
   if (!$noFormMarkup && $noForm) {
@@ -800,8 +845,6 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
     if (isset($layout["onClickFillFromPattern"]))
       echo " data-onClickFillFromPattern=\"".htmlspecialchars($layout["onClickFillFromPattern"])."\"";
-    if (in_array("readonly", $layout["opts"]))
-      echo " readonly=\"readonly\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
@@ -891,6 +934,13 @@ function renderFormItemMoney($layout, $ctrl) {
     }
   }
 
+  if (!$noForm && $ctrl["readonly"]) {
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
+  }
+
   echo "<div class=\"input-group\">";
 
   if (in_array("is-sum", $layout["opts"]))
@@ -918,8 +968,6 @@ function renderFormItemMoney($layout, $ctrl) {
   } else {
     if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
-    if (in_array("readonly", $layout["opts"]))
-      echo " readonly=\"readonly\"";
     echo " value=\"{$tPattern}\"";
     echo "/>";
   }
@@ -940,6 +988,14 @@ function renderFormItemTextarea($layout, $ctrl) {
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
 
+  if (!$noForm && $ctrl["readonly"]) {
+    $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+    echo "<textarea style=\"display:none;\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\">";
+    echo $tPattern;
+    echo '</textarea>';
+    $noForm = true;
+  }
+
   if ($noForm) {
     echo "<div>";
     echo newTemplatePattern($ctrl, implode("<br/>",explode("\n",htmlspecialchars($value))));
@@ -950,8 +1006,6 @@ function renderFormItemTextarea($layout, $ctrl) {
       echo " rows=".htmlspecialchars($layout["min-rows"]);
     if (in_array("required", $layout["opts"]))
       echo " required=\"required\"";
-    if (in_array("readonly", $layout["opts"]))
-      echo " readonly=\"readonly\"";
     echo ">";
     echo newTemplatePattern($ctrl, htmlspecialchars($value));
     echo "</textarea>";
@@ -1154,6 +1208,14 @@ function renderFormItemSelect($layout, $ctrl) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
 
+  if (!$noForm && $ctrl["readonly"]) {
+    $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
+  }
+
   if ($noForm) {
     if (isset($layout["data-source"]) && in_array($layout["data-source"], [ "own-orgs", "own-mailinglists" ]) && $layout["type"] != "ref") {
       if ($noFormMarkup)
@@ -1202,8 +1264,6 @@ function renderFormItemSelect($layout, $ctrl) {
     echo " multiple";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if (in_array("readonly", $layout["opts"]))
-    echo " readonly=\"readonly\"";
   if ($layout["type"] == "ref") {
     $layout["references"] = str_replace(".", "-", $layout["references"]);
     echo " data-references=\"".htmlspecialchars($layout["references"])."\"";
@@ -1257,6 +1317,12 @@ function renderFormItemDateRange($layout, $ctrl) {
   $tPatternEnd =  newTemplatePattern($ctrl, htmlspecialchars($valueEnd));
   $ctrl["_render"]->displayValue = htmlspecialchars("$valueStart - $valueEnd");
 
+  if (!$noForm && $ctrl["readonly"]) {
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."[start]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."[start]\" value=\"{$tPatternStart}\">";
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."[end]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."[end]\" value=\"{$tPatternEnd}\">";
+    $noForm = true;
+  }
+
   if ($noForm && !$noFormMarkup) {
     echo '<div class="input-daterange input-group">';
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">von</div>';
@@ -1302,7 +1368,7 @@ function renderFormItemDateRange($layout, $ctrl) {
                  name="<?php echo htmlspecialchars($ctrl["name"]); ?>[start]"
                  orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[start]"
                  <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?>
-                 <?php echo (in_array("readonly", $layout["opts"]) ? "readonly=\"readonly\"": ""); ?>
+                 <?php echo ($ctrl["readonly"] ? "readonly=\"readonly\"": ""); ?>
                  value="<?php echo $tPatternStart; ?>"
           />
           <div class="input-group-addon">
@@ -1318,7 +1384,7 @@ function renderFormItemDateRange($layout, $ctrl) {
                  name="<?php echo htmlspecialchars($ctrl["name"]); ?>[end]"
                  orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>[end]"
                  <?php echo (in_array("required", $layout["opts"]) ? "required=\"required\"": ""); ?>
-                 <?php echo (in_array("readonly", $layout["opts"]) ? "readonly=\"readonly\"": ""); ?>
+                 <?php echo ($ctrl["readonly"] ? "readonly=\"readonly\"": ""); ?>
                  value="<?php echo $tPatternEnd; ?>"
           />
           <div class="input-group-addon">
@@ -1340,6 +1406,13 @@ function renderFormItemDate($layout, $ctrl) {
   }
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
+
+  if (!$noForm && $ctrl["readonly"]) {
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
+  }
 
   if ($noForm) {
     $cls = [];
@@ -1404,6 +1477,8 @@ function renderFormItemTable($layout, $ctrl) {
     $cls[] = "dynamic-table";
   if (in_array("fixed-width-table", $layout["opts"]))
     $cls[] = "fixed-width-table";
+  if ($ctrl["readonly"])
+    $cls[] = "dynamic-table-readonly";
 
   $rowCountFieldName = (isset($layout["rowCountField"]) ? "formdata[{$layout["rowCountField"]}]" : "formdata[{$layout["id"]}][rowCount]");
   $rowCountFieldNameOrig = $rowCountFieldName;

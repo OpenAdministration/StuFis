@@ -21,6 +21,13 @@ pre {
   display: none;
 }
 
+.dynamic-table-readonly.dynamic-table > tbody > tr > td.delete-row a.delete-row {
+  display: none;
+}
+
+.dynamic-table-readonly.dynamic-table > tbody > tr.new-table-row {
+  display: none;
+}
 
 /* Adjust feedback icon position */
 
@@ -209,3 +216,10 @@ tfoot > td.hide-column-manual * {
   width: 15px;
 }
 
+input[readonly="readonly"] ~ .dropdown-menu {
+  display: none;
+}
+
+input[readonly="readonly"] ~ .dropdown-toggle .caret {
+  display: none !important;
+}

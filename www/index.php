@@ -140,11 +140,13 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
   return $ret;
 }
 
-function writeState($newState, $antrag, $form, &$msg) {
+function writeState($newState, $antrag, $form, &$msgs) {
+  if ($antrag["state"] == $newState) return true;
+
   $transition = "from.{$antrag["state"]}.to.{$newState}";
   $perm = "canStateChange.{$transition}";
   if (!hasPermission($form, $antrag, $perm)) {
-    $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung).";
+    $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung): {$antrag["state"]} -> {$newState}";
     return false;
   }
 
@@ -389,13 +391,13 @@ if (isset($_REQUEST["action"])) {
       $ret1 = writeFormdataFiles($antrag["id"], $msgs, $filesRemoved, $filesCreated, $isPartiell, $form, $antrag);
       $ret = $ret && $ret1;
       // commitTx
-      if ($ret)
-        $ret = dbCommit();
       if ($ret && isset($_REQUEST["state"]) && $_REQUEST["state"] != "") {
         $newState = $_REQUEST["state"];
         $antrag = getAntrag(); // report new version to user
-        $ret = writeState($newState, $antrag, $form, $msg);
+        $ret = writeState($newState, $antrag, $form, $msgs);
       }
+      if ($ret)
+        $ret = dbCommit();
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
@@ -410,6 +412,16 @@ if (isset($_REQUEST["action"])) {
       if ($ret) {
         $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+        if (isset($_REQUEST["subaction"]) && $_REQUEST["subaction"] == "resumeEdit") {
+          switch ($_POST["action"]) {
+            case "antrag.update":
+              $target .= "/edit";
+              break;
+            case "antrag.updatePartiell":
+              $target .= "/editPartiell";
+              break;
+          }
+        }
       }
       break;
     case "antrag.create":
@@ -456,7 +468,7 @@ if (isset($_REQUEST["action"])) {
       if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
         $antrag = getAntrag($antrag_id); // report new version to user
         $newState = $_REQUEST["state"];
-        $ret = writeState($newState, $antrag, $form, $msg);
+        $ret = writeState($newState, $antrag, $form, $msgs);
       }
       if ($ret)
         $ret = dbCommit();
@@ -471,6 +483,9 @@ if (isset($_REQUEST["action"])) {
         }
       }
 
+      if ($ret && isset($_REQUEST["subaction"]) && $_REQUEST["subaction"] == "resumeEdit") {
+        $target .= "/edit";
+      }
       break;
     case "antrag.copy":
       if (!dbBegin()) {
@@ -578,7 +593,7 @@ if (isset($_REQUEST["action"])) {
       if (isset($_REQUEST["copy_from_state"])) {
         $newState = $_REQUEST["copy_from_state"];
         if ($newState != "" && $ret) {
-          $ret = writeState($newState, $oldAntrag, $oldForm, $msg);
+          $ret = writeState($newState, $oldAntrag, $oldForm, $msgs);
         }
       }
 
@@ -620,7 +635,7 @@ if (isset($_REQUEST["action"])) {
       $newState = $_REQUEST["state"];
       if ($ret) {
         $form = getForm($antrag["type"], $antrag["revision"]);
-        $ret = writeState($newState, $antrag, $form, $msg);
+        $ret = writeState($newState, $antrag, $form, $msgs);
       }
 
       // commitTx

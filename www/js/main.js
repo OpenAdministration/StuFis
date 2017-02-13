@@ -427,6 +427,8 @@ $(document).ready(function() {
     var $tr = $(this).closest("tr");
     var $tbody = $tr.closest("tbody");
     var $table = $tbody.closest("table");
+    if ($table.is(".dynamic-table-readonly")) return;
+
     $tr.triggerHandler("pre-row-delete");
     $tr.remove();
     $tbody.children("tr").each(function(rowNumber,tr) {
@@ -853,6 +855,21 @@ $(document).ready(function() {
     }
   });
 
+  $( "*[data-isToggleReadOnly]" ).on("change.pleaseReloadForEdit", function (evt) {
+    var $form = $(this).closest("form.ajax");
+    if ($form.length < 1) return;
+    var oldState = $form.find('input[name="state"]').attr("state");
+    $form.find('input[name="state"]').val(oldState);
+
+    $("#please-reload-btn").off("click");
+    $("#please-reload-btn").on("click.dosubmit", function (evt) {
+      $("#please-reload-dlg").modal("hide");
+      handleSubmitForm($form, evt, false, function(data) { data.append('subaction', 'resumeEdit'); });
+    });
+    $("#please-reload-dlg").modal("show");
+    return false;
+  });
+
   $( "form.ajax a.submit-form" ).on("click.submit-form", function(e) {
     var $el = $(this);
     var $frm = $el.closest("form");
@@ -1082,7 +1099,7 @@ function xpAjaxErrorHandler (jqXHR, textStatus, errorThrown) {
       $("#server-message-dlg").modal("show");
 };
 
-function handleSubmitForm($form, evt, isConfirmed) {
+function handleSubmitForm($form, evt, isConfirmed, fnMod) {
   var action = $form.attr("action");
   if ($form.find(":input[name=action]").length == 0) { return true; }
   if (!isConfirmed && $form.find(":input[name=action]").val().substr(-6) == "delete") {
@@ -1090,13 +1107,15 @@ function handleSubmitForm($form, evt, isConfirmed) {
     $("#confirm-delete-btn").off("click");
     $("#confirm-delete-btn").on("click.dosubmit", function (evt) {
       $("#confirm-delete-dlg").modal("hide");
-      handleSubmitForm($form, evt, true);
+      handleSubmitForm($form, evt, true, fnMod);
     });
     $("#confirm-delete-dlg").modal("show");
     return false;
   }
   var data = new FormData($form[0]);
   data.append("ajax", 1);
+  if (fnMod)
+    fnMod(data);
   $('.new-table-row *[name]').each(function (i,e) {
     var $e = $(e);
     var name = $e.attr("name");
