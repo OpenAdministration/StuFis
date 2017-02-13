@@ -467,6 +467,7 @@ if (isset($_REQUEST["action"])) {
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
       if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
         $antrag = getAntrag($antrag_id); // report new version to user
+        if ($antrag === false) die("Ups failed to read antrag just created");
         $newState = $_REQUEST["state"];
         $ret = writeState($newState, $antrag, $form, $msgs);
       }

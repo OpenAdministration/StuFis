@@ -6,14 +6,19 @@ function getAntrag($id = null) {
   } else {
     $antrag = dbGet("antrag", ["id" => $id]);
   }
-  if ($antrag === false) die("Unknown antrag.");
+  if ($antrag === false) {
+    if ($id === null) die("Unknown antrag.");
+    return false;
+  }
   $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
   $antrag["_inhalt"] = $inhalt;
 
   $form = getForm($antrag["type"], $antrag["revision"]);
   $readPermitted = hasPermission($form, $antrag, "canRead");
-  if (!$readPermitted)
-		die("Permission denied");
+  if (!$readPermitted) {
+		if ($id === null) die("Permission denied");
+    return false;
+  }
 
   $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
   $antrag["_anhang"] = $anhang;

@@ -7,6 +7,9 @@ $config = [
     "isCorrectGremium" => [
       [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
     ],
+    "isProjektLeitung" => [
+      [ "field:projekt.leitung" => "isIn:data-source:own-mail" ],
+    ],
     "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],

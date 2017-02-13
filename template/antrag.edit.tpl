@@ -5,7 +5,7 @@
   $newStates = [];
   foreach (array_keys($classConfig["state"]) as $newState) {
     $perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
-    if ($newState != $antrag["state"] && !hasPermission($form, null, $perm)) continue;
+    if ($newState != $antrag["state"] && !hasPermission($form, $antrag, $perm)) continue;
     $newStates[] = $newState;
   }
 

@@ -96,6 +96,32 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
     } else {
       die("unkown creator test: $c");
     }
+  } else if (substr($i,0,12) == "inOtherForm:") {
+    $fieldDesc = substr($i, 12);
+    $fieldValue = false;
+    $fieldName = false;
+    if ($fieldDesc == "referenceField") {
+      if (!isset($form["config"]["referenceField"])) return false; #no such field
+      $fieldName = $form["config"]["referenceField"]["name"];
+    } else {
+      die ("inOtherForm: fieldDesc=$fildDesc not implemented");
+    }
+    if ($fieldValue === false && $fieldName !== false && $antrag !== null && isset($antrag["_inhalt"]))
+      $fieldValue = getFormValueInt($fieldName, null, $antrag["_inhalt"], $fieldValue);
+#    echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c).": fieldName = $fieldName fieldValue = ".(print_r($fieldValue,true))." -->\n";
+    if ($fieldValue === false || $fieldValue == "")
+      return false; # nothing given here
+    $otherAntrag = getAntrag($fieldValue);
+#    echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c).": otherAntrag = ".($otherAntrag === false ? "false" : "non-false")." -->\n";
+    if ($otherAntrag === false) return false; # not readable. Ups.
+    $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
+
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $permName) {
+#      echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c).": evaluate $permName -->\n";
+      if (!hasPermission($otherForm, $otherAntrag, $permName))
+        return false;
+    }
   } else if ($i == "hasPermission") {
     if (!is_array($c)) $c = [$c];
     foreach ($c as $permName) {
@@ -118,6 +144,10 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
         if ($value === null) return false;
         if ($in == "data-source:own-orgs") {
           $permittedValues = $attributes["gremien"];
+        } else if ($in == "data-source:own-mail") {
+          $permittedValues = array_values($attributes["mail"]);
+          if (isset($attributes["extra-mail"]))
+            $permittedValues = array_merge($permittedValues, array_values($attributes["extra-mail"]));
         } else {
           die("isIn test $in (from $c) not implemented");
         }
@@ -146,22 +176,41 @@ function checkPermissionLine(&$p, &$antrag, &$form) {
 }
 
 function hasPermission(&$form, $antrag, $permName) {
-  global $formulare, $ADMINGROUP;
+  global $formulare;
   static $stack = false;
-
-  if (hasGroup($ADMINGROUP))
-    return true;
 
   if (!isset($form["_perms"][$permName]))
     return false;
-  $pp = $form["_perms"][$permName];
 
+  $pp = $form["_perms"][$permName];
+  if ($antrag === null || !isset($antrag["id"]))
+    $aId = "null";
+  else
+    $aId = $antrag["id"];
+
+  $permId = $form["type"].":".$form["revision"].":".$aId.".".$permName;
   if ($stack === false)
     $stack = [];
-  if (in_array($permName, $stack))
+  if (in_array($permId, $stack))
     return false;
+  array_push($stack, $permId);
 
-  array_push($stack, $permName);
+#  echo "\n<!-- hasPermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => to be evaluated -->\n";
+
+  $ret = hasPermissionImpl($form, $antrag, $pp, $permName);
+
+  array_pop($stack);
+
+#  echo "\n<!-- hasPermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => ".($ret ? "true":"false")." -->\n";
+
+  return $ret;
+}
+
+function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous") {
+  global $ADMINGROUP;
+
+  if (hasGroup($ADMINGROUP))
+    return true;
 
   $ret = false;
 
@@ -179,9 +228,7 @@ function hasPermission(&$form, $antrag, $permName) {
     }
   }
 
-  array_pop($stack);
-
-#  echo "\n<!-- hasPermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => ".($ret ? "true":"false")." -->\n";
+#  echo "\n<!-- hasPermissionImpl: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => ".($ret ? "true":"false")." -->\n";
 
   return $ret;
 }
