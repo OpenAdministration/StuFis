@@ -353,6 +353,11 @@ function renderForm($form, $ctrl = false) {
   if (!isset($form["layout"]))
     die("renderForm: \$form has no layout");
 
+  renderFormImpl($form, $ctrl);
+}
+
+function renderFormImpl(&$form, &$ctrl) {
+
   $layout = $form["layout"];
 
   if (!is_array($ctrl))
@@ -374,6 +379,8 @@ function renderForm($form, $ctrl = false) {
   $ctrl["_render"]->addToSumValue = [];
   $ctrl["_render"]->addToSumValueByRowRecursive = [];
   $ctrl["_render"]->referencedBy = []; /* tableRowReferenced -> tableRowWhereReferenceIs */
+  $ctrl["_render"]->otherForm = [];
+  $ctrl["_render"]->numTableRows = [];
 
   if (!isset($ctrl["render"]))
     $ctrl["render"] = [];
@@ -1286,6 +1293,21 @@ function renderFormItemSelect($layout, $ctrl) {
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
       echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
+    } else if ($layout["type"] == "ref" && is_array($layout["references"])) {
+      $tmp = otherForm($layout, $ctrl);
+      $txtTr = "";
+      if ($tmp !== false) {
+        $otherForm = $tmp["form"];
+        $otherCtrl = $tmp["ctrl"];
+        $otherAntrag = $tmp["antrag"];
+        $txtTr = getTrText($value, $otherCtrl);
+        $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped
+      }
+
+      $tPattern = newTemplatePattern($ctrl, $txtTr);
+      echo "<div>";
+      echo $tPattern;
+      echo "</div>";
     } else if ($layout["type"] == "ref") {
       $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{ref:$value}>"));
       echo "<div>";
@@ -1325,7 +1347,7 @@ function renderFormItemSelect($layout, $ctrl) {
     echo " multiple";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
-  if ($layout["type"] == "ref") {
+  if ($layout["type"] == "ref" && is_string($layout["references"])) {
     $layout["references"] = str_replace(".", "-", $layout["references"]);
     echo " data-references=\"".htmlspecialchars($layout["references"])."\"";
   }
@@ -1360,9 +1382,76 @@ function renderFormItemSelect($layout, $ctrl) {
   }
   if ($layout["type"] == "ref")
     echo "<option value=\"\">Bitte auswählen</option>";
+  if ($layout["type"] == "ref" && is_array($layout["references"])) {
+    echo otherFormTrOptions($layout, $ctrl);
+  }
 
   echo "</select>";
   echo "</div>";
+}
+
+function otherForm(&$layout, &$ctrl) {
+  $fieldValue = false;
+  $fieldName = false;
+  if ($layout["references"][0] == "referenceField") {
+    if (!isset($ctrl["_config"]["referenceField"])) {
+      return false; #no such field
+    }
+    $fieldName = $ctrl["_config"]["referenceField"]["name"];
+  } else {
+    die("Unknown otherForm reference in references: {$layout["references"][0]}");
+  }
+  if ($fieldValue === false && $fieldName !== false && isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"]))
+    $fieldValue = getFormValueInt($fieldName, null, $ctrl["_values"]["_inhalt"], $fieldValue);
+  if ($fieldValue === false || $fieldValue == "") {
+    return false; # nothing given here
+  }
+  $fieldValue = (int) $fieldValue;
+
+  if (!isset($ctrl["_render"]->otherForm[$fieldValue])) {
+    $otherAntrag = getAntrag($fieldValue);
+    if ($otherAntrag === false) return ""; # not readable. Ups.
+    $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
+    $otherCtrl = ["_values" => $otherAntrag];
+
+    ob_start();
+    renderFormImpl($otherForm, $otherCtrl);
+    ob_end_clean();
+
+    $ctrl["_render"]->otherForm[$fieldValue] = ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag];
+  } else {
+    $otherForm = $ctrl["_render"]->otherForm[$fieldValue]["form"];
+    $otherCtrl = $ctrl["_render"]->otherForm[$fieldValue]["ctrl"];
+    $otherAntrag = $ctrl["_render"]->otherForm[$fieldValue]["antrag"];
+  }
+
+  return ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag ];
+}
+
+function otherFormTrOptions($layout, $ctrl) {
+  $tmp = otherForm($layout, $ctrl);
+  if ($tmp === false) return "";
+  $otherForm = $tmp["form"];
+  $otherCtrl = $tmp["ctrl"];
+  $otherAntrag = $tmp["antrag"];
+
+  $tableName = $layout["references"][1];
+  if (!isset($otherCtrl["_render"]->numTableRows[$tableName])) {
+    #return "\n<!-- no row count $tableName -->"."\n<!-- ".print_r($otherCtrl["_render"]->numTableRows,true)." -->";
+    return "";
+  }
+  $rowCount = $otherCtrl["_render"]->numTableRows[$tableName];
+
+  $ret = "";
+  $ret .= "\n<!-- row count $tableName : $rowCount -->";
+  for($i=0; $i < $rowCount; $i++) {
+    $txtTr = getTrText("{$tableName}[{$i}]", $otherCtrl);
+    $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
+    $tPattern = newTemplatePattern($ctrl, $txtTr);
+    $ret .= "<option value=\"".htmlspecialchars("{$tableName}[{$i}]")."\">{$tPattern}</option>";
+  }
+
+  return $ret;
 }
 
 function renderFormItemDateRange($layout, $ctrl) {
@@ -1568,7 +1657,7 @@ function renderFormItemTable($layout, $ctrl) {
   $ctrl["_render"]->currentParent = getFormName($ctrl["name"]);
 
   $hasPrintSumFooter = false;
-
+  $ctrl["_render"]->numTableRows[getFormName($ctrl["name"])] = $rowCount;
 
 ?>
 
