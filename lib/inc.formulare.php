@@ -268,6 +268,14 @@ function getFormName($name) {
   return false;
 }
 
+function getFormNames($name) {
+  $matches = [];
+  if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
+    return [ $matches[1], $matches[2] ];
+  }
+  return false;
+}
+
 function getFormValue($name, $type, $values, $defaultValue = false) {
   $name = getFormName($name);
   if ($name === false)
@@ -1351,6 +1359,9 @@ function renderFormItemSelect($layout, $ctrl) {
     $layout["references"] = str_replace(".", "-", $layout["references"]);
     echo " data-references=\"".htmlspecialchars($layout["references"])."\"";
   }
+  if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["updateByReference"])) {
+    echo " data-update-value-maps=\"present\"";
+  }
   if ($value != "") {
     $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
     echo " data-value=\"{$tPattern}\"";
@@ -1440,15 +1451,51 @@ function otherFormTrOptions($layout, $ctrl) {
     #return "\n<!-- no row count $tableName -->"."\n<!-- ".print_r($otherCtrl["_render"]->numTableRows,true)." -->";
     return "";
   }
-  $rowCount = $otherCtrl["_render"]->numTableRows[$tableName];
-
   $ret = "";
-  $ret .= "\n<!-- row count $tableName : $rowCount -->";
-  for($i=0; $i < $rowCount; $i++) {
-    $txtTr = getTrText("{$tableName}[{$i}]", $otherCtrl);
-    $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
-    $tPattern = newTemplatePattern($ctrl, $txtTr);
-    $ret .= "<option value=\"".htmlspecialchars("{$tableName}[{$i}]")."\">{$tPattern}</option>";
+
+  foreach ($otherCtrl["_render"]->numTableRows[$tableName] as $suffix => $rowCount) {
+#   $ret .= "\n<!-- row count $tableName : $rowCount -->";
+    for($i=0; $i < $rowCount; $i++) {
+      $txtTr = getTrText("{$tableName}{$suffix}[{$i}]", $otherCtrl);
+      $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
+      $tPattern = newTemplatePattern($ctrl, $txtTr);
+
+      $updateByReference = [];
+      if (isset($layout["updateByReference"]))
+        $updateByReference = $layout["updateByReference"];
+      $updateValueMap = [];
+      foreach ($updateByReference as $destFieldName => $sources) {
+        /* we only care for destFieldName with same suffix */
+        $destFieldNameOrig = $destFieldName;
+        foreach($ctrl["suffix"] as $s) {
+          $destFieldName .= "[{$s}]";
+          $destFieldNameOrig .= "[]";
+        }
+        $otherFormFieldValue = "";
+        foreach ($sources as $srcFieldId) {
+          $currSuffix = "{$suffix}[{$i}]";
+          while ($currSuffix !== false) {
+            $srcFieldName = $srcFieldId . $currSuffix;
+
+            $m = [];
+            if (!preg_match('/(.*)(\[[^[]]*\])$/', $currSuffix, $m))
+              $currSuffix = false;
+            else
+              $currSuffix = $m[1];
+
+            $fieldValue = getFormValueInt($srcFieldName, null, $otherAntrag["_inhalt"], false);
+            if ($fieldValue === false) continue; /* other form does not have this field */
+            if ($fieldValue == "") continue; /* other form left this field empty */
+            /* if found */
+             $otherFormFieldValue = $fieldValue;
+            break 2; /* while currSuffix, foreach sources */
+          }
+        }
+
+        $updateValueMap[ $destFieldNameOrig ] = $otherFormFieldValue;
+      }
+      $ret .= "<option value=\"".htmlspecialchars("{$tableName}{$suffix}[{$i}]")."\" data-update-value-map=\"".htmlspecialchars(json_encode($updateValueMap))."\">{$tPattern}</option>";
+    }
   }
 
   return $ret;
@@ -1657,7 +1704,8 @@ function renderFormItemTable($layout, $ctrl) {
   $ctrl["_render"]->currentParent = getFormName($ctrl["name"]);
 
   $hasPrintSumFooter = false;
-  $ctrl["_render"]->numTableRows[getFormName($ctrl["name"])] = $rowCount;
+  list ($a, $b) = getFormNames($ctrl["name"]);
+  $ctrl["_render"]->numTableRows[$a][$b] = $rowCount;
 
 ?>
 

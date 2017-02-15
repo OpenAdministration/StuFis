@@ -58,11 +58,17 @@ $layout = [
            "opts" => ["with-row-number", "with-headline"],
            "width" => 12,
            "columns" => [
-             [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",    "width" => 4, "references" => ["referenceField", "finanzgruppentbl"]],
+             [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",    "width" => 4,
+               "references" => ["referenceField", "finanzgruppentbl"],
+               "updateByReference" => [
+                 "geld.titel" /* destination */ => /* remote source */ [ "geld.titel", "genehmigung.titel" /* fallback */ ],
+                 "geld.konto" /* destination */ => /* remote source */ [ "geld.konto", "genehmigung.konto" ],
+               ]
+             ],
              [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"] ],
              [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"] ],
-             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
-             [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",        "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
+             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["hideable"], ],
+             [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",        "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["hideable"], ],
            ],
          ],
        ],

@@ -300,7 +300,7 @@ $(document).ready(function() {
 
     $region = $out.data("print-sum-region");
     if (!$region) {
-// not yet implemented in php for print/read-only version
+// FIXME not yet implemented in php for print/read-only version
 /*
       $out.parents().each(function (i, p) {
         var $ref = $(p).find("*[data-addToSum~=\""+printId+"\"]");
@@ -553,6 +553,59 @@ $(document).ready(function() {
       }
     });
     $sel.triggerHandler("changed.bs.select");
+  });
+
+  $( 'select[data-update-value-maps]' ).on("change.updateValueMap", function (evt) {
+    var $sel = $(this);
+    var val;
+    if ($sel.is(".selectpicker")) {
+      val = $sel.selectpicker("val");
+    } else {
+      val = $sel.val();
+    }
+    var $opt = $sel.find("option[value=\""+val+"\"]");
+    var updateValueMap = $opt.data("updateValueMap");
+    if (updateValueMap === null) return;
+    console.log(updateValueMap);
+    for (var key in updateValueMap) {
+      if (!updateValueMap.hasOwnProperty(key)) continue;
+      // key is fieldNameOrig
+      var name = key.split("[]");
+      var $ns = $sel.parents("*[name-suffix]");
+      $ns.each(function (i,p) {
+        name[$ns.length - 1 - i] += $(p).attr('name-suffix');
+      });
+      for (var i = $ns.length; i < name.length - 1; i++)
+        name[i] += "[]";
+
+      var fieldName = name.join("");
+      var newVal = updateValueMap[key];
+
+      var $out = $(':input[name="'+getFormdataName(fieldName)+'"]');
+      if ($out.length == 0) {
+        console.log("field "+fieldName+" not found [updateValueMap]");
+        continue;
+      }
+      var outVal;
+      if ($out.is("select.selectpicker")) {
+        outVal = $out.selectpicker("val");
+      } else {
+        outVal = $out.val();
+      }
+      var altVal = $out.data("autoValue");
+      if (outVal != "" && outVal != altVal) {
+        console.log("cannot update "+fieldName+" to "+newVal);
+        continue;
+      }
+      console.log("update "+fieldName+" to "+newVal);
+      if ($out.is("select.selectpicker")) {
+        $out.selectpicker("val", newVal);
+      } else {
+        $out.val(newVal);
+      }
+      $out.data("autoValue", newVal);
+      $out.trigger("change");
+    } /* for key in updateValueMap */
   });
 
   $( "select[data-value]" ).each(function (i, e) {
