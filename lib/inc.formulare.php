@@ -103,6 +103,8 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
     if ($fieldDesc == "referenceField") {
       if (!isset($form["config"]["referenceField"])) return false; #no such field
       $fieldName = $form["config"]["referenceField"]["name"];
+    } elseif (substr($fieldDesc,0,6) == "field:") {
+      $fieldName = substr($fieldDesc,6);
     } else {
       die ("inOtherForm: fieldDesc=$fildDesc not implemented");
     }
@@ -1409,6 +1411,8 @@ function otherForm(&$layout, &$ctrl) {
       return false; #no such field
     }
     $fieldName = $ctrl["_config"]["referenceField"]["name"];
+  } elseif (substr($layout["references"][0],0,6) == "field:") {
+    $fieldName = substr($layout["references"][0],6);
   } else {
     die("Unknown otherForm reference in references: {$layout["references"][0]}");
   }
