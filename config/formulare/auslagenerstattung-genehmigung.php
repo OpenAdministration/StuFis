@@ -13,7 +13,6 @@ $config = [
     "ok" => [ "payed", ],
   ],
   "createState" => "draft",
-  "stateNoValidate" => [ "draft", ],
   "buildFrom" => [ [ "auslagenerstattung", "ok" ] ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.

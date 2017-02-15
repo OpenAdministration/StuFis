@@ -10,7 +10,6 @@ $config = [
                "obsolete" => [ "Zurückgezogen", "zurückziehen", ],
              ],
   "createState" => "draft",
-  "stateNoValidate" => [ "draft", ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.
