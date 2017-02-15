@@ -58,7 +58,7 @@ $layout = [
            "opts" => ["with-row-number", "with-headline"],
            "width" => 12,
            "columns" => [
-             [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",    "width" => 4,
+             [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",
                "references" => ["referenceField", "finanzgruppentbl"],
                "updateByReference" => [
                  "geld.titel" /* destination */ => /* remote source */ [ "geld.titel", "genehmigung.titel" /* fallback */ ],

@@ -566,7 +566,7 @@ $(document).ready(function() {
     var $opt = $sel.find("option[value=\""+val+"\"]");
     var updateValueMap = $opt.data("updateValueMap");
     if (updateValueMap === null) return;
-    console.log(updateValueMap);
+    //console.log(updateValueMap);
     for (var key in updateValueMap) {
       if (!updateValueMap.hasOwnProperty(key)) continue;
       // key is fieldNameOrig
@@ -593,11 +593,11 @@ $(document).ready(function() {
         outVal = $out.val();
       }
       var altVal = $out.data("autoValue");
-      if (outVal != "" && outVal != altVal) {
-        console.log("cannot update "+fieldName+" to "+newVal);
+      if (outVal != "" && outVal != altVal && outVal != newVal) {
+//        console.log("cannot update "+fieldName+" to "+newVal);
         continue;
       }
-      console.log("update "+fieldName+" to "+newVal);
+//      console.log("update "+fieldName+" to "+newVal);
       if ($out.is("select.selectpicker")) {
         $out.selectpicker("val", newVal);
       } else {
@@ -917,6 +917,9 @@ $(document).ready(function() {
     });
     $cells.toggleClass("hide-column-manual", !visible);
     evt.preventDefault();
+    evt.stopPropagation();
+  });
+  $( 'a.toggle-checkbox input[type="checkbox"]').on("click.checkbox-toggle", function(evt) {
     evt.stopPropagation();
   });
   $( "a.toggle-checkbox").on("click.checkbox-toggle", function(evt) {

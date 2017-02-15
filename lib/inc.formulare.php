@@ -1770,7 +1770,7 @@ function renderFormItemTable($layout, $ctrl) {
       $fnameOrig = $m["fnameOrig"];
       $isChecked = $m["isChecked"];
 ?>
-              <li><a href="#" class="toggle-checkbox">
+              <li><a href="javascript:void(false);" class="toggle-checkbox">
                   <input type="checkbox"
                          name="<?php echo htmlspecialchars($fname); ?>"
                          orig-name="<?php echo htmlspecialchars($fnameOrig); ?>"
