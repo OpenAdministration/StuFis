@@ -860,11 +860,11 @@ switch($_REQUEST["tab"]) {
       $idx[$antrag_id] = true;
 
       $a = dbGet("antrag", ["id" => $antrag_id]);
-      $form = getForm($a["type"],$a["revision"]);
-      if (false === $form) continue;
+      $f = getForm($a["type"],$a["revision"]);
+      if (false === $f) continue;
 
       $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $a["id"] ]);
-      if (!hasPermission($form, $a, "canRead")) continue;
+      if (!hasPermission($f, $a, "canRead")) continue;
 
       $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
     }
