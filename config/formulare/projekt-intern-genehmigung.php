@@ -15,6 +15,7 @@ $config = [
     "wait-stura" => [ "ok-by-stura" ],
     "ok-by-hv" => [ "done-hv" ],
   ],
+  "stateNoValidate" => [ "draft", ],
   "createState" => "draft",
   "buildFrom" => [
     [ "projekt-intern" /* type */, "done" /* state */ ],
