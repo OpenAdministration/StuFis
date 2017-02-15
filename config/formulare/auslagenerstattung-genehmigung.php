@@ -5,11 +5,12 @@ $config = [
   "shortTitle" => "Genehmigung Auslagenerstattung",
   "state" => [ "draft" => [ "Entwurf" ],
                "ok" => [ "Genehmigt", "genehmigen", ],
+               "payed" => [ "Bezahlt", ],
                "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
   "proposeNewState" => [
-    "draft" => [ "new", ],
-    "new" => [ "ok", "revoked", ],
+    "draft" => [ "ok", ],
+    "ok" => [ "payed", ],
   ],
   "createState" => "draft",
   "buildFrom" => [ [ "auslagenerstattung", "ok" ] ],
@@ -38,10 +39,14 @@ $config = [
     "canStateChange.from.draft.to.ok" => [
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.ok.to.payed" => [
+      [ "group" => "ref-finanzen" ],
+    ],
     "canStateChange.from.ok.to.revoked" => [
       [ "group" => "ref-finanzen" ],
-      [ "hasPermission" => "isEigenerAntrag" ],
-      [ "hasPermission" => "isProjektLeitung" ],
+    ],
+    "canStateChange.from.payed.to.revoked" => [
+      [ "group" => "ref-finanzen" ],
     ],
   ],
   "newStateActions" => [
