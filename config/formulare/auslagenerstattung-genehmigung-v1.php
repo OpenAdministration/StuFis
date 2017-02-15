@@ -91,6 +91,7 @@ $layout = [
    "id" => "finanzauslagen",
    "opts" => ["with-row-number"],
    "width" => 12,
+   "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
    "columns" => [
      [ "id" => "geld",
        "type" => "group", /* renderer */
@@ -131,6 +132,7 @@ $layout = [
    "title" => "Anhänge hochladen",
    "width" => 12,
    "destination" => "geld.file",
+   "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
  ],
 
  [

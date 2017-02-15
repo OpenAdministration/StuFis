@@ -1141,10 +1141,15 @@ function renderFormItemFile($layout, $ctrl) {
       echo "<span>".$tPattern."</span>";
       echo "<span>&nbsp;</span>";
       echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
-      echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
-      echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      if (!$ctrl["readonly"]) {
+        echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+        echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      }
       echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
       echo $oldFieldName;
+      echo "</div>";
+    } elseif ($ctrl["readonly"]) {
+      echo "<div class=\"single-file-container\">";
       echo "</div>";
     } else {
       echo $myOut;
@@ -1157,6 +1162,9 @@ function renderFormItemMultiFile($layout, $ctrl) {
 
   if ($noForm && isset($layout["destination"]))
     return false; // no data here
+
+  if (!$noForm && $ctrl["readonly"] && isset($layout["destination"]))
+    return false;
 
   $files = false;
   if (isset($ctrl["_values"])) {
@@ -1223,8 +1231,10 @@ function renderFormItemMultiFile($layout, $ctrl) {
       echo "<span>".newTemplatePattern($ctrl, $html[$i])."</span>";
       echo "<span>&nbsp;</span>";
       echo "<small><nobr class=\"show-file-size\">".newTemplatePattern($ctrl, $file["size"])."</nobr></small>";
-      echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
-      echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      if (!$ctrl["readonly"]) {
+        echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+        echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+      }
       echo "<input type=\"hidden\" name=\"".htmlspecialchars($renameFileFieldName)."\" orig-name=\"".htmlspecialchars($renameFileFieldNameOrig)."\" id=\"".htmlspecialchars($ctrl["id"])."-newFileName\" value=\"\" class=\"form-file-name\"/>";
       echo $oldFieldName;
       echo "</li>";
@@ -1232,11 +1242,13 @@ function renderFormItemMultiFile($layout, $ctrl) {
     echo "</ul>";
   }
 
-  echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\"[] id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
-  if (in_array("dir", $layout["opts"])) {
-    echo " webkitdirectory";
+  if (!$ctrl["readonly"]) {
+    echo "<input class=\"form-control multi-file\" type=\"file\" name=\"".htmlspecialchars($ctrl["name"])."[]\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\"[] id=\"".htmlspecialchars($ctrl["id"])."\" multiple";
+    if (in_array("dir", $layout["opts"])) {
+      echo " webkitdirectory";
+    }
+    echo "/>";
   }
-  echo "/>";
   echo "</div>";
 }
 
