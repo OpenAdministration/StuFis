@@ -1,10 +1,9 @@
 <?php
 
 $config = [
-  "title" => "Auslagenerstattung",
-  "shortTitle" => "Auslagenerstattung",
+  "title" => "Genehmigung Auslagenerstattung",
+  "shortTitle" => "Genehmigung Auslagenerstattung",
   "state" => [ "draft" => [ "Entwurf" ],
-               "new" => [ "Beantragt", "beantragen" ],
                "ok" => [ "Genehmigt", "genehmigen", ],
                "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
@@ -13,7 +12,7 @@ $config = [
     "new" => [ "ok", "revoked", ],
   ],
   "createState" => "draft",
-  "buildFrom" => [ "projekt-intern-genehmigung" ],
+  "buildFrom" => [ [ "auslagenerstattung", "ok" ] ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.
@@ -25,43 +24,31 @@ $config = [
     "canRead" => [
       [ "creator" => "self" ],
       [ "group" => "ref-finanzen" ],
+      [ "hasPermission" => "isEigenerAntrag" ],
+      [ "hasPermission" => "isProjektLeitung" ],
 # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
 # FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
     ],
-    "isProjektLeitung" => [
-      [ "inOtherForm:referenceField" => [ "isProjektLeitung", ], ],
-    ],
     "canEdit" => [
-      [ "state" => "draft", "creator" => "self" ],
       [ "state" => "draft", "group" => "ref-finanzen", ],
     ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],
-    "canBeLinked" => [
-      [ "state" => "new", ],
-      [ "state" => "ok", ],
-    ],
-    "canStateChange.from.draft.to.new" => [
-      [ "group" => "ref-finanzen" ],
-      # Zustimmung vom Projektverantwortlichen erforderlich
-      [ "hasPermission" => [ "isProjektLeitung" ], ],
-    ],
-    "canStateChange.from.new.to.revoked" => [
-      [ "creator" => "self" ],
+    "canStateChange.from.draft.to.ok" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.new.to.ok" => [
+    "canStateChange.from.ok.to.revoked" => [
       [ "group" => "ref-finanzen" ],
+      [ "hasPermission" => "isEigenerAntrag" ],
+      [ "hasPermission" => "isProjektLeitung" ],
     ],
   ],
   "newStateActions" => [
-    "from.draft.to.new"     => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.new.to.ok"        => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.new.to.revoked"   => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.ok.to.revoked"    => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.ok.to.revoked"   => [ [ "sendMail" => true, "attachForm" => true ] ],
   ],
 ];
 
-registerFormClass( "auslagenerstattung", $config );
+registerFormClass( "auslagenerstattung-genehmigung", $config );
 

@@ -578,6 +578,49 @@ if (isset($_REQUEST["action"])) {
              case "user:mail":
                $value = getUserMail();
              break;
+             case "otherForm":
+               $fieldValue = false;
+               $fieldName = false;
+               if ($rec["otherForm"][0] == "referenceField" && isset($form["config"]["referenceField"])) {
+                 $fieldName = $form["config"]["referenceField"]["name"];
+               } elseif (substr($rec["otherForm"][0],0,6) == "field:") {
+                 $fieldName = substr($rec["otherForm"][0],6);
+               } else {
+                 die("Unknown otherForm reference in fillOnCopy: {$rec["otherForm"][0]}");
+               }
+               if ($fieldValue === false && $fieldName !== false) {
+                 $f = dbGet("inhalt", [ "antrag_id" => $antrag_id, "fieldname" => $fieldName, "type" => "otherForm" ] );
+                 if ($f !== false)
+                   $fieldValue = $f["value"];
+               }
+               if ($fieldValue === false || $fieldValue == "") {
+                 // no other form provided
+                 break;
+               }
+               $otherAntrag = dbGet("antrag", ["id" => (int) $fieldValue]);
+               if ($otherAntrag === false) {
+                 // invalid value
+                 break;
+               }
+
+               $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+               $otherAntrag["_inhalt"] = $otherInhalt;
+
+               $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+               $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+
+               if (!$readPermitted) {
+                 break;
+               }
+
+               $f = dbGet("inhalt", [ "antrag_id" => $otherAntrag["id"], "fieldname" => $rec["otherForm"][1], "type" => "otherForm" ] );
+               if ($f === false)
+                 // other field not in other form
+                 break;
+
+               $value = $f["value"];
+
+             break;
              default:
                $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
                $ret = false;
