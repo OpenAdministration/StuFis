@@ -85,7 +85,7 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
       if ($oldAnhang !== false) {
         $ret = dbDelete("anhang", [ "antrag_id" => $oldAnhang["antrag_id"], "id" => $oldAnhang["id"] ]);
         $ret = ($ret === 1);
-        $filesRemoved[] = $STORAGE."/".$oldAnhang["path"];
+        $filesRemoved[] = $STORAGE."/".$oldAnhang["antrag_id"]."/".$oldAnhang["path"];
       }
     } else {
       $msgs[] = uploadCodeToMessage($errors);
@@ -100,8 +100,8 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
     $anhang["state"] = "active";
     $anhang["filename"] = $names;
 
-    $dbPath = $anhang["antrag_id"]."/".uniqid().".".pathinfo($names, PATHINFO_EXTENSION);
-    $path = $STORAGE."/".$dbPath;
+    $dbPath = uniqid().".".pathinfo($names, PATHINFO_EXTENSION);
+    $path = $STORAGE."/".$anhang["antrag_id"]."/".$dbPath;
     if (!is_dir(dirname($path)))
       mkdir(dirname($path),0777,true);
     $anhang["path"] = $dbPath;
@@ -228,7 +228,7 @@ if (isset($_REQUEST["action"])) {
         $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
         $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
         $ret = $ret && ($ret1 === 1);
-        $filesRemoved[] = $anhang["path"];
+        $filesRemoved[] = $STORAGE."/".$anhang["antrag_id"]."/".$anhang["path"];
       }
       dbDelete("inhalt", [ "antrag_id" => $antrag["id"] ]);
       dbDelete("comments", [ "antrag_id" => $antrag["id"] ]);
@@ -242,12 +242,12 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         // delete files from disk after successfull commit
         foreach ($filesRemoved as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
       if ($ret) {
@@ -342,7 +342,7 @@ if (isset($_REQUEST["action"])) {
             $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
             $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
             $ret = $ret && ($ret1 === 1);
-            $filesRemoved[] = $anhang["path"];
+            $filesRemoved[] = $STORAGE."/".$anhang["antrag_id"]."/".$anhang["path"];
           }
         }
       } /* isPartiell */
@@ -401,12 +401,12 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         // delete files from disk after successfull commit
         foreach ($filesRemoved as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
       if ($ret) {
@@ -476,11 +476,11 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         foreach ($filesRemoved as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
 
@@ -590,19 +590,21 @@ if (isset($_REQUEST["action"])) {
         }
         # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
         foreach($oldAntrag["_anhang"] as $row) {
-          $row["antrag_id"] = $antrag_id;
 
-          $dbPath = $antrag_id."/".uniqid().".".pathinfo($row["filename"], PATHINFO_EXTENSION);
-          $destPath = $STORAGE."/".$dbPath;
-          $srcPath = $STORAGE."/".$row["path"];
+          $dbPath = uniqid().".".pathinfo($row["filename"], PATHINFO_EXTENSION);
+          $destPath = $STORAGE."/".$antrag_id."/".$dbPath;
+          $srcPath = $STORAGE."/".$row["antrag_id"]."/".$row["path"];
           if (!is_dir(dirname($destPath)))
             mkdir(dirname($destPath),0777,true);
-          $anhang["path"] = $dbPath;
+
+          $row["antrag_id"] = $antrag_id;
+          $row["path"] = $dbPath;
 
           $ret0 = link($srcPath, $destPath);
           if ($ret0 === false)
             $ret0 = copy($srcPath, $destPath);
-          $filesCreated[] = $path;
+          $filesCreated[] = $destPath;
+          $msgs[] = "Created $destPath";
 
           $ret1 = dbInsert("anhang", $row);
           $ret = $ret && $ret0 && $ret1;
@@ -627,11 +629,11 @@ if (isset($_REQUEST["action"])) {
       if (!$ret) {
         dbRollBack();
         foreach ($filesCreated as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       } else {
         foreach ($filesRemoved as $f) {
-          if (@unlink($STORAGE."/".$f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
         }
       }
 
@@ -719,7 +721,7 @@ switch($_REQUEST["tab"]) {
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 
     $fileSize = $ah["size"];
-    $filePath = $ah["path"];
+    $filePath = $STORAGE."/".$ah["antrag_id"]."/".$ah["path"];
 
     // Multipart-Download and Download Resuming Support
     if(isset($_SERVER['HTTP_RANGE'])) {

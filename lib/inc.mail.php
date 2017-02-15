@@ -101,7 +101,7 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
                "Content-Transfer-Encoding: base64" . "\r\n" .
                "Content-Disposition: attachment; filename=\"".$fileName."\"\r\n" .
                "\r\n" .
-               chunk_split(base64_encode(file_get_contents($STORAGE."/".$ah["path"]))) .
+               chunk_split(base64_encode(file_get_contents($STORAGE."/".$ah["antrag_id"]."/".$ah["path"]))) .
                "\r\n" .
                "\r\n" .
                "--$boundary";
