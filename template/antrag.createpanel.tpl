@@ -40,7 +40,7 @@ if (count($menu) == 0)
     <form action="<?php echo $URIBASE; ?>?tab=antrag.create" method="POST" role="form" data-toggle="validator" class="form-inline">
       <div class="form-group">
         <label class="sr-only" for="newantragtype">Antrag</label>
-        <select class="selectpicker form-control" name="type" size="1" data-dep="revisionselect" title="1. Bitte neuen Antrag auswählen..." required="required" id="newantragtype">
+        <select class="selectpicker form-control" name="type" size="1" data-dep="revisionselect" title="Bitte Antragstyp auswählen..." required="required" id="newantragtype">
 <?php
 foreach ($menu as $m) {
   echo "          <option value=\"".htmlspecialchars($m["value"])."\" data-dep=\"".htmlspecialchars(json_encode($m["submenu"]))."\">".htmlspecialchars($m["text"])."</option>\n";
