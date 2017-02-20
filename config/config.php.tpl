@@ -1,6 +1,6 @@
 <?php
 
-global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX, $SIMPLESAML, $SIMPLESAMLAUTHSOURCE, $AUTHGROUP, $ADMINGROUP, $URIBASE, $STORAGE, $ANTRAGMAILTO, $GremiumPrefix, $URIBASEREF, $wikiUrl, $CA_file;
+global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX, $SIMPLESAML, $SIMPLESAMLAUTHSOURCE, $AUTHGROUP, $ADMINGROUP, $URIBASE, $STORAGE, $ANTRAGMAILTO, $GremiumPrefix, $URIBASEREF, $wikiUrl, $CA_file, $DEV;
 
 $DB_DSN = "FIXME";
 $DB_USERNAME = "FIXME";
@@ -20,5 +20,6 @@ $GremiumPrefix = [];
 define("MAILFROM", "ref-it@tu-ilmenau.");
 $wikiUrl = "https://FIXME:FIXME@wiki.stura.tu-ilmenau.de"; #/lib/exe/xmlrpc.php
 $CA_file = dirname(__FILE__).'/ca.pem';
+$DEV = false;
 
 // :vim:set syntax=php:

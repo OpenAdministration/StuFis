@@ -83,7 +83,7 @@ $layout = [
  [
    "type" => "multifile", /* renderer */
    "id" => "upload",
-   "title" => "Anhänge hochladen",
+   "title" => "Belege hochladen",
    "width" => 12,
    "destination" => "geld.file",
  ],
