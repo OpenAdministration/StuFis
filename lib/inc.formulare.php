@@ -368,6 +368,17 @@ function renderForm($form, $ctrl = false) {
 
 function renderFormImpl(&$form, &$ctrl) {
 
+  static $stack = false;
+
+  if ($stack === false) $stack = [];
+  if (isset($ctrl["_values"])) {
+    if (in_array($ctrl["_values"]["id"], $stack)) {
+      echo "form {$ctrl["_values"]["id"]} already on stack<br>\n";
+      return;
+    }
+    array_push($stack, $ctrl["_values"]["id"]);
+  }
+
   $layout = $form["layout"];
 
   if (!is_array($ctrl))
@@ -409,6 +420,8 @@ function renderFormImpl(&$form, &$ctrl) {
   $txt = processTemplates($txt, $ctrl);
 
   echo $txt;
+
+  array_pop($stack);
 }
 
 
@@ -626,11 +639,20 @@ function renderFormItemGroup($layout, $ctrl) {
   if (in_array("well", $layout["opts"]))
      echo "<div class=\"well\">";
 
+  $rowTxt = [];
+
   foreach ($layout["children"] as $child) {
+    $ctrl["_render"]->displayValue = true;
     renderFormItem($child, $ctrl);
+    if (in_array("title", $child["opts"])) {
+      $rowTxt[] = $ctrl["_render"]->displayValue;
+    }
   }
   if (in_array("well", $layout["opts"]))
     echo "<div class=\"clearfix\"></div></div>";
+
+  $ctrl["_render"]->displayValue = implode(", ", $rowTxt);
+
 }
 
 function renderFormItemOtherForm($layout,$ctrl) {
@@ -1297,6 +1319,9 @@ function renderFormItemSelect($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
+  if ($layout["type"] == "ref" && $value != "") {
+    $ctrl["_render"]->referencedBy[$value][] = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
+  }
 
   if (!$noForm && $ctrl["readonly"]) {
     $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
@@ -1335,9 +1360,6 @@ function renderFormItemSelect($layout, $ctrl) {
       echo "<div>";
       echo $tPattern;
       echo "</div>";
-      if ($value != "") {
-        $ctrl["_render"]->referencedBy[$value][] = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
-      }
       $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
         $txtTr = getTrText($value, $ctrl);
         $ctrl["_render"]->templates[$tPattern] = processTemplates($txtTr, $ctrl); // rowTxt is from displayValue and thus already escaped
@@ -1439,7 +1461,7 @@ function otherForm(&$layout, &$ctrl) {
     $otherAntrag = getAntrag($fieldValue);
     if ($otherAntrag === false) return ""; # not readable. Ups.
     $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
-    $otherCtrl = ["_values" => $otherAntrag];
+    $otherCtrl = ["_values" => $otherAntrag, "render" => ["no-form"]];
 
     ob_start();
     renderFormImpl($otherForm, $otherCtrl);
@@ -1463,6 +1485,10 @@ function otherFormTrOptions($layout, $ctrl) {
   $otherAntrag = $tmp["antrag"];
 
   $tableName = $layout["references"][1];
+  if (!isset($otherCtrl["_render"])) {
+    return "Rendering skipped due to nesting";
+  }
+
   if (!isset($otherCtrl["_render"]->numTableRows[$tableName])) {
     #return "\n<!-- no row count $tableName -->"."\n<!-- ".print_r($otherCtrl["_render"]->numTableRows,true)." -->";
     return "";
@@ -1811,8 +1837,28 @@ function renderFormItemTable($layout, $ctrl) {
           if ($layout["columns"][$i]["_hideable_isHidden"])
             $cls[] = "hide-column-manual";
           echo "<th class=\"".implode(" ", $cls)."\">";
-          if ($withHeadline)
-            echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["name"])."</span>";
+          if ($withHeadline) {
+            if ($col["name"] === true) {
+              if ($col["type"] == "group") {
+                $colWidthSum = 0;
+                foreach ($col["children"] as $child) {
+                  $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
+                  if (isset($child["width"])) {
+                    $colWidthSum += $child["width"];
+                    echo "<span class=\"dynamic-table-caption col-xs-{$child["width"]}\">".htmlspecialchars($title)."</span>";
+                  } else {
+                    $colWidthSum += 1;
+                    echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($title)."</span>";
+                  }
+                  if ($colWidthSum >= 12) break;
+                }
+              } elseif( isset ($col["title"])) {
+                echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["title"])."</span>";
+              }
+            } else {
+              echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["name"])."</span>";
+            }
+          }
           echo "</th>";
         }
 ?>
@@ -1992,60 +2038,131 @@ function renderFormItemInvRef($layout,$ctrl) {
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
   $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl) {
+    $withHeadline = in_array("with-headline", $layout["opts"]);
     if (isset($layout["printSum"]))
       $printSum = $layout["printSum"];
     else
       $printSum = [];
+    $hasForms = isset($layout["otherForms"]);
+    $currentFormId = false;
+    if (isset($ctrl["_values"])) {
+      $currentFormId = $ctrl["_values"]["id"];
+    }
 
-    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\"  orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\">\n";
-    $myOut .= "  <tbody>\n";
+    $refMe = [];
+    if ($noForm && isset($ctrl["_render"]->referencedBy[$refId])) {
+      foreach( $ctrl["_render"]->referencedBy[$refId] as $r) {
+        $refMe[] = ["ctrl" => $ctrl, "ref" => $r ];
+      }
+    }
+    if ($hasForms && $currentFormId !== false) {
+      $forms = [];
+      // find other forms
+      foreach ($layout["otherForms"] as $formFilterDef) {
+        $f = ["type" => $formFilterDef["type"]];
+        if (isset($formFilterDef["state"]))
+          $f["state"] = $formFilterDef["state"];
+        $al = dbFetchAll("antrag", $f);
+        foreach ($al as $a) {
+          $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
+          if ($r === false || $r["value"] != $currentFormId) continue;
+          $forms[$a["id"]] = ["antrag" => $a];
+        }
+      }
+      foreach (array_keys($forms) as $aId) {
+        $m = $forms[$aId];
+        $a = $m["antrag"];
+        $i = dbFetchAll("inhalt", ["antrag_id" => $a["id"]]);
+        $a["_inhalt"] = $i;
 
-    if ($noForm) {
-      if (isset($ctrl["_render"]->referencedBy[$refId]))
-        $referencingMe = $ctrl["_render"]->referencedBy[$refId];
-      else
-        $referencingMe = [];
+        $f = getForm($a["type"], $a["revision"]);
+        $readPermitted = hasPermission($f, $a, "canRead");
 
-      $columnSum = [];
+        if (!$readPermitted) {
+          echo "<i>Formular nicht lesbar: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
+          unset($forms[$aId]);
+          continue;
+        }
+        $otherCtrl = ["_values" => $a, "render" => ["no-form"]];
 
-      foreach ($referencingMe as $referencingRow) {
-        $txtTr = getTrText($referencingRow, $ctrl);
+        ob_start();
+        renderFormImpl($f, $otherCtrl);
+        ob_end_clean();
 
-        $myOut .= "    <tr>\n";
-        $myOut .= "      <td class=\"invref-txtTr\">{$txtTr}</td>\n"; /* Spalte: Quelle */
+        $m["form"] = $f;
+        $m["ctrl"] = $otherCtrl;
+        $m["antrag"] = $a;
+        $forms[$aId] = $m;
 
-        foreach ($printSum as $psId) {
-          $value = $ctrl["_render"]->addToSumValueByRowRecursive[$referencingRow][$psId];
-          $value = number_format($value, 2, ".", "");
-          if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
-            $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-            $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
-            $newMeta["printSum"] = [ $psId ];
-            $newMeta["value"] = $value;
-            if (!isset($columnSum[ $psId ]))
-              $columnSum[ $psId ] = 0.00;
-            $columnSum[ $psId ] += (float) $value;
-
-            $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
-            $newCtrl["suffix"][] = "print";
-            $newCtrl["suffix"][] = $layout["id"];
-            $newCtrl["render"][] = "no-form";
-            unset($newCtrl["_values"]);
-            ob_start();
-            renderFormItem($newMeta, $newCtrl);
-            $myOut .= ob_get_contents();
-            ob_end_clean();
-          } else {
-            $myOut .= "    <td class=\"cell-has-printSum\">";
-            $myOut .= "      <div data-printSum=\"".htmlspecialchars($psId)."\">".htmlspecialchars($value)."</div>";
-            $myOut .= "    </td>\n";
+        if (!isset($otherCtrl["_render"])) {
+          echo "cannot identify references due to nesting";
+          continue;
+        }
+        if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
+          foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
+            $refMe[] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a ];
           }
         }
-        $myOut .= "    </tr>\n";
       }
-    } else {
-      $myOut .= "    <tr class=\"invref-template summing-skip\">\n";
-      $myOut .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
+    }
+
+    $columnSum = [];
+    $myOutBody = "";
+
+    foreach ($refMe as $r) {
+      $refRow = $r["ref"];
+      $refCtrl = $r["ctrl"];
+      $txtTr = getTrText($refRow, $refCtrl);
+      $txtTr = newTemplatePattern($ctrl, processTemplates($txtTr, $refCtrl));
+
+      $myOutBody .= "    <tr>\n";
+      if ($hasForms) {
+        $revConfig = getFormConfig($r["antrag"]["type"], $r["antrag"]["revision"]);
+        $caption = getAntragDisplayTitle($r["antrag"], $revConfig);
+        $caption = trim(implode(" ", $caption));
+        $url = str_replace("//","/", $URIBASE."/".$r["antrag"]["token"]);
+        $myOutBody .= "<td>[".$r["antrag"]["id"]."] <a href=\"".htmlspecialchars($url)."\">".$caption."</a></td>";
+      }
+      $myOutBody .= "      <td class=\"invref-txtTr\">{$txtTr}</td>\n"; /* Spalte: Quelle */
+
+      foreach ($printSum as $psId) {
+        $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
+        $value = number_format($value, 2, ".", "");
+        if (isset($refCtrl["_render"]->addToSumMeta[$psId])) {
+          if (!isset($ctrl["_render"]->addToSumMeta[$psId])) {
+            $ctrl["_render"]->addToSumMeta[$psId] = $refCtrl["_render"]->addToSumMeta[$psId];
+          }
+          $newMeta = $refCtrl["_render"]->addToSumMeta[$psId];
+          $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
+          $newMeta["printSum"] = [ $psId ];
+          $newMeta["value"] = $value;
+          if (!isset($columnSum[ $psId ]))
+            $columnSum[ $psId ] = 0.00;
+          $columnSum[ $psId ] += (float) $value;
+
+          $newCtrl = array_merge($refCtrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
+          $newCtrl["suffix"][] = "print";
+          $newCtrl["suffix"][] = $layout["id"];
+          $newCtrl["render"][] = "no-form";
+          unset($newCtrl["_values"]);
+          ob_start();
+          renderFormItem($newMeta, $newCtrl);
+          $myOutBody .= newTemplatePattern($ctrl, processTemplates(ob_get_contents(), $newCtrl));
+          ob_end_clean();
+        } else {
+          $myOutBody .= "    <td class=\"cell-has-printSum\">";
+          $myOutBody .= "      <div data-printSum=\"".htmlspecialchars($psId)."\">".htmlspecialchars($value)."</div>";
+          $myOutBody .= "    </td>\n";
+        }
+      }
+      $myOutBody .= "    </tr>\n";
+    }
+    if (!$noForm) {
+      $myOutBody .= "    <tr class=\"invref-template summing-skip\">\n";
+      if ($hasForms) {
+        $myOutBody .= "      <td></td>\n"; /* Spalte: Quelleformular */
+      }
+      $myOutBody .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
 
       foreach ($printSum as $psId) {
         if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
@@ -2060,21 +2177,52 @@ function renderFormItemInvRef($layout,$ctrl) {
           unset($newCtrl["_values"]);
           ob_start();
           renderFormItem($newMeta, $newCtrl);
-          $myOut .= ob_get_contents();
+          $myOutBody .= ob_get_contents();
           ob_end_clean();
         } else {
-          $myOut .= "    <td class=\"cell-has-printSum\">";
-            $myOut .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
-          $myOut .= "    </td>\n";
+          $myOutBody .= "    <td class=\"cell-has-printSum\">";
+            $myOutBody .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
+          $myOutBody .= "    </td>\n";
         }
       }
 
-      $myOut .= "    </tr>\n";
+      $myOutBody .= "    </tr>\n";
     }
 
+    $myOutHead = "  <thead>\n";
+    $myOutHead .= "    <tr>\n";
+    if ($hasForms) {
+      $myOutHead .= "      <td></td>\n"; /* Spalte: Quelleformular */
+    }
+    $myOutHead .= "      <td></td>\n"; /* Spalte: Quelle */
+    foreach ($printSum as $psId) {
+      if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+        $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+        $title = $psId;
+        if (isset($newMeta["name"])) $title = $newMeta["name"];
+        if (isset($newMeta["name"])) $title = $newMeta["name"];
+        if (isset($newMeta["title"])) $title = $newMeta["title"];
+        $myOutHead .= "    <th>".htmlspecialchars($title)."</th>";
+      } else {
+        $myOutHead .= "    <th>".htmlspecialchars($psId)."</th>";
+      }
+    }
+
+    $myOutHead .= "    </tr>\n";
+    $myOutHead .= "  </thead>\n";
+
+    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\"  orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\">\n";
+    if ($withHeadline) {
+      $myOut .= $myOutHead;
+    }
+    $myOut .= "  <tbody>\n";
+    $myOut .= $myOutBody;
     $myOut .= "  </tbody>\n";
     $myOut .= "  <tfoot>\n";
     $myOut .= "    <tr>\n";
+    if ($hasForms) {
+      $myOut .= "      <td></td>\n"; /* Spalte: Quelleformular */
+    }
     $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
     foreach ($printSum as $psId) {
       if (isset($ctrl["_render"]->addToSumMeta[$psId])) {

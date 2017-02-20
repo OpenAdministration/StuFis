@@ -45,9 +45,6 @@ $config = [
     "canStateChange.from.ok.to.revoked" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.payed.to.revoked" => [
-      [ "group" => "ref-finanzen" ],
-    ],
   ],
   "newStateActions" => [
     "from.draft.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],

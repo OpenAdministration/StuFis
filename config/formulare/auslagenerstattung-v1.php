@@ -51,9 +51,10 @@ $layout = [
        "type" => "group", /* renderer */
        "width" => 12,
        "printSumFooter" => ["einnahmen","ausgaben"],
+       "opts" => ["title"],
        "children" => [
-         [ "id" => "geld.datum",        "title" => "Datum",                  "type" => "date",   "width" => 3, "opts" => [ "required" ] ],
-         [ "id" => "geld.beschreibung", "title" => "Beschreibung",           "type" => "text",   "width" => 3, "placeholder" => "Hinweis", ],
+         [ "id" => "geld.datum",        "title" => "Datum",                  "type" => "date",   "width" => 3, "opts" => [ "required", "title" ] ],
+         [ "id" => "geld.beschreibung", "title" => "Beschreibung",           "type" => "text",   "width" => 3, "opts" => [ "title" ], "placeholder" => "Hinweis", ],
          [ "id" => "geld.file",         "title" => "Beleg",                  "type" => "file",   "width" => 6, ],
          [
            "type" => "table", /* renderer */
