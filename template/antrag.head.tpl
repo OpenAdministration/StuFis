@@ -19,6 +19,6 @@ $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $
   </div><!-- /.container-fluid -->
 </nav>
 
-<?
+<?php
 
 # vim:syntax=php

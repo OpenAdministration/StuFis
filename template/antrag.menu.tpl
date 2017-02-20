@@ -39,6 +39,6 @@ if (!hasPermission($form, $antrag, "canEditPartiell"))
   </div><!-- /.container-fluid -->
 </nav>
 
-<?
+<?php
 
 # vim:syntax=php
