@@ -45,7 +45,7 @@
     $stateTxt = $classConfig["state"][$state][0];
 
 ?>
-    <a href="javascript:void();" class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate"; else echo "validate"; ?>' data-name="state" data-value="<?php echo htmlspecialchars($state); ?>" id="state-<?php echo htmlspecialchars($state); ?>">Speichern als <?php echo $stateTxt; ?></a>
+    <a href="javascript:void(false);" class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate"; else echo "validate"; ?>' data-name="state" data-value="<?php echo htmlspecialchars($state); ?>" id="state-<?php echo htmlspecialchars($state); ?>">Speichern als <?php echo $stateTxt; ?></a>
     &nbsp;
 <?php
   }
