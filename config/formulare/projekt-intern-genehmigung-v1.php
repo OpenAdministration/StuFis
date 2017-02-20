@@ -88,7 +88,7 @@ $layout = [
          [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", ],
          [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
          [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-         [ "id" => "geld.invref",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline"],
+         [ "id" => "geld.invref",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
            "printSum" => [ "einnahmen", "ausgaben" ],
            "otherForms" => [
              ["type" => "auslagenerstattung", "state" => "new", "referenceFormField" => "genehmigung", ],
