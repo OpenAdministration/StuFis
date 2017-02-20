@@ -1977,7 +1977,7 @@ function renderFormItemTable($layout, $ctrl) {
     } /* if has column sums */
 ?>
   </table>
-<?
+<?php
   $ctrl["_render"]->displayValue = false;
   $ctrl["_render"]->currentParent = $myParent;
   $ctrl["_render"]->currentParentRow = $myParentRow;
