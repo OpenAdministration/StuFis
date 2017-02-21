@@ -1,4 +1,4 @@
- <?php
+<?php
 
 global $formulare;
 
@@ -6,10 +6,11 @@ $menu = [];
 
 foreach ($formulare as $type => $list) {
   foreach ($list as $revision => $lForm) {
-    if (hasPermission($lForm, null, "canCreate")) continue;
+    if ($revision !== "_class" && hasPermission($lForm, null, "canCreate")) continue;
     unset($list[$revision]);
   }
   if (count($list) == 0) continue;
+  ksort($list);
 
   $classConfig = getFormClass($type);
   if (isset($classConfig["buildFrom"])) continue;
@@ -63,3 +64,5 @@ foreach ($menu as $m) {
 
 <?php
 # vim:syntax=php
+# vim: set syntax=php
+

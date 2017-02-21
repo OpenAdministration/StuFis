@@ -211,7 +211,7 @@ $(document).ready(function() {
           var refTableId = $refTable.attr('orig-id');
           var $refTBody = $refTable.children("tbody");
           var $refTr = $refTBody.children('tr.new-table-row').last();
-          var selValue = extractFieldName($table.attr("name") + "["+$tr.attr('dynamic-table-row-number')+"]");
+          var selValue = extractFieldNameBase($table.attr("name")) + "{"+$tr.attr('dynamic-table-row-identifier')+"}";
           onClickNewRow($refTr, $refTable, refTableId);
           $refTr.find('select[data-references='+tableId+']').each(function (i, sel) {
             var $sel = $(sel);
@@ -403,7 +403,7 @@ $(document).ready(function() {
 
   /* list references an id and will always to printed next to its user so changing it alongside is safe */
   [ 'id', 'list' ].forEach(function (attrName, i, l) {
-    $("*["+attrName+"]").each(function(i,e) {
+    $("*["+attrName+"]:not([orig-"+attrName+"])").each(function(i,e) {
       var $e = $(e);
       var id = $e.attr(attrName);
       $e.attr('orig-'+attrName, id);
@@ -472,6 +472,7 @@ $(document).ready(function() {
       var trId = 'dynamic-table-row-'+$table.attr("id")+'-'+i;
       $tr.attr('id', trId);
       $tr.attr('dynamic-table-row-number', i);
+      $tr.attr('dynamic-table-row-identifier', $tr.children(".store-row-id").val());
       $tr.attr('name-suffix','['+i+']');
       initDynamicRow($tr, $table, tableId);
     });
@@ -481,10 +482,13 @@ $(document).ready(function() {
     $tr.attr('dynamic-table-id', tableId);
 
     var numOldRows = $tbody.children("tr:not(.new-table-row)").length;
-    $table.attr('dynamic-table-id-ctr', numOldRows);
     $tr.attr('dynamic-table-row-number', numOldRows);
     $tr.triggerHandler("row-number-changed");
     $table.children(".store-row-count").val(numOldRows);
+
+    var numIdCtr = $table.children(".store-row-id-count").val();
+    if (numIdCtr < numOldRows) { alert("invalid id ctr"); numIdCtr = numOldRows; };
+    $table.attr('dynamic-table-id-ctr', numIdCtr);
 
     $tr.attr('id-suffix', '-' + numOldRows);
     $tr.find("*[id]").each(function(i,e) {
@@ -991,10 +995,22 @@ function onClickNewRow($tr, $table, tableId) {
   $tr.removeClass("new-table-row");
 
   var ctr = $table.attr('dynamic-table-id-ctr');
+
   var trId = 'dynamic-table-row-'+$table.attr("id")+'-'+ctr;
-  ctr++;
-  $table.attr('dynamic-table-id-ctr', ctr);
   $tr.attr('id', trId);
+
+  var rowIdentifier = [];
+  rowIdentifier.push(ctr);
+  $table.parents("*[dynamic-table-row-identifier]").each(function (i,e) {
+    rowIdentifier.push($(e).attr("dynamic-table-row-identifier"));
+  });
+  rowIdentifier = rowIdentifier.join("-");
+  $tr.attr('dynamic-table-row-identifier', rowIdentifier);
+  $tr.children(".store-row-id").val(rowIdentifier);
+
+  ctr++;
+  $table.children(".store-row-id-count").val(ctr);
+  $table.attr('dynamic-table-id-ctr', ctr);
 
   $ntr.appendTo($tbody); /* insert first so suffix can be found */
   $ntr.attr('id-suffix', '-' + ctr);
@@ -1101,7 +1117,8 @@ function initDynamicRow($tr, $table, tableId) {
       var $opts = $("option[data-references="+trId+"]");
       var $table = $tr.closest("table");
       var rowIdx = $tr.attr('dynamic-table-row-number');
-      var newValue = extractFieldName( $table.attr("name") + "["+rowIdx+"]" );
+      var rowId = $tr.attr('dynamic-table-row-identifier');
+      var newValue = extractFieldNameBase( $table.attr("name") ) + "{"+rowId+"}";
       var trText = getTrText($tr);
 
       $opts.each(function(i, opt) {
@@ -1350,12 +1367,28 @@ function getSizeText(size) {
   return out;
 }
 
+function extractBaseName(name) {
+  var re = /^([^\[\]]*)(\[.*)?$/;
+  var m = fieldname.match(re);
+  if (!m)
+    return false;
+  return m[1];
+}
+
 function extractFieldName(name) {
   var re = /^formdata\[([^\]]*)\](.*)/;
   var m = name.match(re);
   if (!m)
     return false;
   return m[1]+m[2];
+}
+
+function extractFieldNameBase(name) {
+  var re = /^formdata\[([^\]]*)\](.*)/;
+  var m = name.match(re);
+  if (!m)
+    return false;
+  return m[1];
 }
 
 function getFormdataName(fieldname) {
@@ -1394,10 +1427,34 @@ function updateInvRef($sel, newRef) {
   var $selTr = $sel.closest("tr.dynamic-table-row");
 
   if (oldRefEmpty || (oldRef != newRef)) {
-    var re = /^(.*)\[([0-9]*)\]$/;
+    var re = /^(.*)\{([0-9\-]*)\}$/;
     var m = newRef.match(re);
     if (!m) {
-      console.log("reference invalid: "+newRef);
+      console.log("reference id invalid: "+newRef);
+      return; // invalid reference
+    }
+    var tableBaseName = m[1];
+    var rowIdentifier = m[2];
+
+    // look rowIdentifier
+    var newRefStr = false;
+    $("table[orig-id]")
+      .filter(function() { return $(this).attr("orig-id") == tableBaseName; })
+      .children("tbody").children("tr").children(".store-row-id")
+      .filter(function() { return $(this).val() == rowIdentifier; })
+      .each(function (i, e) {
+        var $e = $(e);
+        newRefStr = extractFieldName($(e).attr("name").replace("[rowId]",""));
+      });
+    if (newRefStr === false) {
+      console.log("reference not found: "+newRef);
+      return; // invalid reference
+    }
+
+    var re = /^(.*)\[([0-9]*)\]$/;
+    var m = newRefStr.match(re);
+    if (!m) {
+      console.log("reference invalid: "+newRef + " ("+newRefStr+")");
       return; // invalid reference
     }
     tableName = m[1];
@@ -1405,7 +1462,7 @@ function updateInvRef($sel, newRef) {
 
     var $table = $("table[name]").filter(function() { return extractFieldName($(this).attr("name")) == tableName; });
     if ($table.length != 1) {
-      console.log("cannot find table instance referenced");
+      console.log("cannot find table instance referenced: " +tableName);
       return;
     }
     var $tr = $table.children("tbody").children("tr[dynamic-table-row-number]").filter(function() { return $(this).attr("dynamic-table-row-number") == rowNumber; });

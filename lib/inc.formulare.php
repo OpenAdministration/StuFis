@@ -311,7 +311,7 @@ function getFormEntry($name, $type, $values) {
   return false;
 }
 
-function getFormEntries($name, $type, $values) {
+function getFormEntries($name, $type, $values, $value = null) {
   $ret = [];
   foreach($values as $row) {
     if ($row["fieldname"] != $name && (substr($row["fieldname"], 0, strlen($name."[")) != $name."["))
@@ -320,6 +320,8 @@ function getFormEntries($name, $type, $values) {
       add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
       continue;
     }
+    if ($value !== null && $row["value"] != $value)
+      continue;
     $ret[] = $row;
   }
   return $ret;
@@ -395,6 +397,7 @@ function renderFormImpl(&$form, &$ctrl) {
   $ctrl["_render"]->parentMap = []; /* map currentName => parentName */
   $ctrl["_render"]->currentParent = false;
   $ctrl["_render"]->currentParentRow = false;
+  $ctrl["_render"]->currentRowId = false;
   $ctrl["_render"]->postHooks = []; /* e.g. ref-field */
   $ctrl["_render"]->addToSumMeta = [];
   $ctrl["_render"]->addToSumValue = [];
@@ -468,6 +471,7 @@ function renderFormItem($layout,$ctrl = false) {
   $ctrl["id"] = $layout["id"];
   $ctrl["name"] = "formdata[{$layout["id"]}]";
   $ctrl["orig-name"] = $ctrl["name"];
+  $ctrl["orig-id"] = $ctrl["id"];
 
   if (!isset($ctrl["suffix"]))
    $ctrl["suffix"] = [];
@@ -479,6 +483,7 @@ function renderFormItem($layout,$ctrl = false) {
     }
   }
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
+  $ctrl["orig-id"] = str_replace(".", "-", $ctrl["orig-id"]);
 
   $cls = ["form-group"];
   if (in_array("hasFeedback", $layout["opts"])) $cls[] = "has-feedback";
@@ -1274,12 +1279,33 @@ function renderFormItemMultiFile($layout, $ctrl) {
   echo "</div>";
 }
 
-function getTrText($trName, $ctrl) {
+function getTrText($trId, $ctrl) {
   $matches = [];
-  $origValue = $trName;
+  $origValue = $trId;
 
-  if ($trName == "")
+  if ($trId == "")
     return "";
+
+  if (preg_match('/^(.*)\{([0-9\-]+)\}$/', $trId, $matches)) {
+    $tableBaseName = $matches[1];
+    $rowIdentifier = $matches[2];
+    // rowIdentifier is stored in $tableBaseName[rowId]$suffix
+
+    if (isset($ctrl["_values"])) {
+      $ret = getFormEntries("{$tableBaseName}[rowId]", "table", $ctrl["_values"]["_inhalt"], $rowIdentifier);
+      if (count($ret) == 0) {
+        return newTemplatePattern($ctrl, htmlspecialchars("unknown row id: ".$trId));
+      }
+      if (count($ret) > 1) {
+        return newTemplatePattern($ctrl, htmlspecialchars("non-unique row id: ".$trId));
+      }
+      $trName = str_replace("[rowId]", "", $ret[0]["fieldname"]);
+    } else {
+      return newTemplatePattern($ctrl, htmlspecialchars("missing formdata to resolve row id: ".$trId));
+    }
+  } else {
+    $trName = $trId;
+  }
 
   if (!preg_match('/^(.*)\[([0-9]+)\]$/', $trName, $matches)) {
     return newTemplatePattern($ctrl, htmlspecialchars("miss row idx: ".$trName));
@@ -1726,11 +1752,19 @@ function renderFormItemTable($layout, $ctrl) {
   $extraColsFieldName =  "formdata[{$layout["id"]}][extraCols]";
   $extraColsFieldNameOrig = $extraColsFieldName;
   $extraColsFieldTypeName = "formtype[{$layout["id"]}]";
+  $rowIdCountFieldName =  "formdata[{$layout["id"]}][rowIdCount]";
+  $rowIdCountFieldNameOrig = $rowIdCountFieldName;
+  $rowIdCountFieldTypeName = "formtype[{$layout["id"]}]";
+  $rowIdFieldName =  "formdata[{$layout["id"]}][rowId]";
+  $rowIdFieldNameOrig = $rowIdFieldName;
+  $rowIdFieldTypeName = "formtype[{$layout["id"]}]";
   foreach($ctrl["suffix"] as $suffix) {
     $rowCountFieldName .= "[{$suffix}]";
     $rowCountFieldNameOrig .= "[]";
     $extraColsFieldName .= "[{$suffix}]";
     $extraColsFieldNameOrig .= "[]";
+    $rowIdCountFieldName .= "[{$suffix}]";
+    $rowIdCountFieldNameOrig .= "[]";
   }
 
   $rowCount = 0;
@@ -1749,14 +1783,21 @@ function renderFormItemTable($layout, $ctrl) {
   list ($a, $b) = getFormNames($ctrl["name"]);
   $ctrl["_render"]->numTableRows[$a][$b] = $rowCount;
 
+  $rowIdCount = 0;
+  if (isset($ctrl["_values"])) {
+    $rowIdCount = (int) getFormValue($rowIdCountFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $rowIdCount);
+  }
+
 ?>
 
-  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>">
+  <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" orig-id="<?php echo htmlspecialchars($ctrl["orig-id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>">
 
 <?php
   if (!$noForm) {
     echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" orig-name=\"".htmlspecialchars($rowCountFieldNameOrig)."\" class=\"store-row-count\"/>";
     echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowIdCount)."\" name=\"".htmlspecialchars($rowIdCountFieldName)."\" orig-name=\"".htmlspecialchars($rowIdCountFieldNameOrig)."\" class=\"store-row-id-count\"/>";
+    echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowIdCountFieldTypeName)."\"/>";
   }
 
   $compressableColumns = [];
@@ -1881,11 +1922,12 @@ function renderFormItemTable($layout, $ctrl) {
        $cls = ["dynamic-table-row"];
        if ($rowNumber == $rowCount)
          $cls[] = "new-table-row";
-       $newSuffix = $ctrl["suffix"];
        if ($rowNumber == $rowCount)
-         $newSuffix[] = false;
+         $thisSuffix = false;
        else
-         $newSuffix[] = $rowNumber;
+         $thisSuffix = $rowNumber;
+       $newSuffix = $ctrl["suffix"];
+       $newSuffix[] = $thisSuffix;
        $ctrl["_render"]->displayValue = false;
        $ctrl["_render"]->currentParentRow = $rowNumber;
        $addToSumValueBeforeRow = $ctrl["_render"]->addToSumValue;
@@ -1893,8 +1935,26 @@ function renderFormItemTable($layout, $ctrl) {
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
+        $myRowIdFieldName = $rowIdFieldName;
+        $myRowIdFieldNameOrig = $rowIdFieldNameOrig;
+        foreach($newSuffix as $suffix) {
+          $myRowIdFieldName .= "[{$suffix}]";
+          $myRowIdFieldNameOrig .= "[]";
+        }
+        $myRowId = $myRowIdCount;
+        if (isset($ctrl["_values"])) {
+          $myRowId = getFormValue($myRowIdFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $myRowId);
+        }
+        $lastRowId = $ctrl["_render"]->currentRowId;
+        $ctrl["_render"]->currentRowId = $ctrl["_render"]->currentParent."{".$myRowId."}";
+        if (!$noForm) {
+          echo "<input type=\"hidden\" value=\"".htmlspecialchars($myRowId)."\" name=\"".htmlspecialchars($myRowIdFieldName)."\" orig-name=\"".htmlspecialchars($myRowIdFieldNameOrig)."\" class=\"store-row-id\"/>";
+          echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowIdFieldTypeName)."\"/>";
+        }
+
         if ($withRowNumber)
           echo "<td class=\"row-number\">".($rowNumber+1)."</td>";
+
         if (!$noForm) {
           echo "<td class=\"delete-row\">";
           echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
@@ -1944,6 +2004,7 @@ function renderFormItemTable($layout, $ctrl) {
           $addToSumDifference[$addToSumId] = $sum - $before;
         }
         $ctrl["_render"]->addToSumValueByRowRecursive[$refname."[".$rowNumber."]"] = $addToSumDifference;
+        $ctrl["_render"]->currentRowId = $lastRowId;
 
 ?>
        </tr>
@@ -2033,11 +2094,13 @@ function renderFormItemTable($layout, $ctrl) {
 function renderFormItemInvRef($layout,$ctrl) {
   list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
-  $refId = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
+  $refId = $ctrl["_render"]->currentRowId;
+  if ($refId === false) return false;
+
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
-  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl) {
+  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl, $noForm) {
     global $URIBASE;
 
     $withHeadline = in_array("with-headline", $layout["opts"]);
