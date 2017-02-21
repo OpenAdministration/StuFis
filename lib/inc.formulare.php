@@ -262,6 +262,14 @@ function getFormConfig($type, $revision) {
   return $formulare[$type][$revision]["config"];
 }
 
+function getBaseName($name) {
+  $matches = [];
+  if (preg_match("/^([^\[\]]*)(.*)/", $name, $matches)) {
+    return $matches[1];
+  }
+  return false;
+}
+
 function getFormName($name) {
   $matches = [];
   if (preg_match("/^formdata\[([^\]]*)\](.*)/", $name, $matches)) {
@@ -405,6 +413,8 @@ function renderFormImpl(&$form, &$ctrl) {
   $ctrl["_render"]->referencedBy = []; /* tableRowReferenced -> tableRowWhereReferenceIs */
   $ctrl["_render"]->otherForm = [];
   $ctrl["_render"]->numTableRows = [];
+  $ctrl["_render"]->rowIdToNumber = [];
+  $ctrl["_render"]->rowNumberToId = [];
 
   if (!isset($ctrl["render"]))
     $ctrl["render"] = [];
@@ -1286,25 +1296,25 @@ function getTrText($trId, $ctrl) {
   if ($trId == "")
     return "";
 
-  if (preg_match('/^(.*)\{([0-9\-]+)\}$/', $trId, $matches)) {
-    $tableBaseName = $matches[1];
-    $rowIdentifier = $matches[2];
-    // rowIdentifier is stored in $tableBaseName[rowId]$suffix
+  if (!preg_match('/^(.*)\{([0-9\-]+)\}$/', $trId, $matches)) {
+    return newTemplatePattern($ctrl, htmlspecialchars("invalid row id: ".$trId));
+  }
 
-    if (isset($ctrl["_values"])) {
-      $ret = getFormEntries("{$tableBaseName}[rowId]", "table", $ctrl["_values"]["_inhalt"], $rowIdentifier);
-      if (count($ret) == 0) {
-        return newTemplatePattern($ctrl, htmlspecialchars("unknown row id: ".$trId));
-      }
-      if (count($ret) > 1) {
-        return newTemplatePattern($ctrl, htmlspecialchars("non-unique row id: ".$trId));
-      }
-      $trName = str_replace("[rowId]", "", $ret[0]["fieldname"]);
-    } else {
-      return newTemplatePattern($ctrl, htmlspecialchars("missing formdata to resolve row id: ".$trId));
+  $tableBaseName = $matches[1];
+  $rowIdentifier = $matches[2];
+  // rowIdentifier is stored in $tableBaseName[rowId]$suffix
+
+  if (isset($ctrl["_values"])) {
+    $ret = getFormEntries("{$tableBaseName}[rowId]", "table", $ctrl["_values"]["_inhalt"], $rowIdentifier);
+    if (count($ret) == 0) {
+      return newTemplatePattern($ctrl, htmlspecialchars("unknown row id: ".$trId));
     }
+    if (count($ret) > 1) {
+      return newTemplatePattern($ctrl, htmlspecialchars("non-unique row id: ".$trId));
+    }
+    $trName = str_replace("[rowId]", "", $ret[0]["fieldname"]);
   } else {
-    $trName = $trId;
+    return newTemplatePattern($ctrl, htmlspecialchars("missing formdata to resolve row id: ".$trId));
   }
 
   if (!preg_match('/^(.*)\[([0-9]+)\]$/', $trName, $matches)) {
@@ -1524,8 +1534,16 @@ function otherFormTrOptions($layout, $ctrl) {
   foreach ($otherCtrl["_render"]->numTableRows[$tableName] as $suffix => $rowCount) {
 #   $ret .= "\n<!-- row count $tableName : $rowCount -->";
     for($i=0; $i < $rowCount; $i++) {
-      $txtTr = getTrText("{$tableName}{$suffix}[{$i}]", $otherCtrl);
-      $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
+      if (isset($otherCtrl["_values"]))
+        $rowId = getFormValueInt("{$tableName}[rowId]{$suffix}[{$i}]", null, $otherCtrl["_values"]["_inhalt"], false);
+      else
+        $rowId = false;
+      if ($rowId !== false) {
+        $txtTr = getTrText("{$tableName}{{$rowId}}", $otherCtrl);
+        $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
+      } else {
+        $txtTr = "missing {$tableName}[rowId]{$suffix}[{$i}]";
+      }
       $tPattern = newTemplatePattern($ctrl, $txtTr);
 
       $updateByReference = [];
@@ -1562,7 +1580,7 @@ function otherFormTrOptions($layout, $ctrl) {
 
         $updateValueMap[ $destFieldNameOrig ] = $otherFormFieldValue;
       }
-      $ret .= "<option value=\"".htmlspecialchars("{$tableName}{$suffix}[{$i}]")."\" data-update-value-map=\"".htmlspecialchars(json_encode($updateValueMap))."\">{$tPattern}</option>";
+      $ret .= "<option value=\"".htmlspecialchars("{$tableName}{{$rowId}}")."\" data-update-value-map=\"".htmlspecialchars(json_encode($updateValueMap))."\">{$tPattern}</option>";
     }
   }
 
@@ -1932,21 +1950,25 @@ function renderFormItemTable($layout, $ctrl) {
        $ctrl["_render"]->currentParentRow = $rowNumber;
        $addToSumValueBeforeRow = $ctrl["_render"]->addToSumValue;
        $rowTxt = [];
+
+       $myRowIdFieldName = $rowIdFieldName;
+       $myRowIdFieldNameOrig = $rowIdFieldNameOrig;
+       foreach($newSuffix as $suffix) {
+         $myRowIdFieldName .= "[{$suffix}]";
+         $myRowIdFieldNameOrig .= "[]";
+       }
+       $myRowId = $myRowIdCount;
+       if (isset($ctrl["_values"])) {
+         $myRowId = getFormValue($myRowIdFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $myRowId);
+       }
+       $lastRowId = $ctrl["_render"]->currentRowId;
+       $ctrl["_render"]->currentRowId = getBaseName($ctrl["_render"]->currentParent)."{".$myRowId."}";
+       $ctrl["_render"]->rowIdToNumber[ $ctrl["_render"]->currentRowId ] = $ctrl["_render"]->currentParent."[".$rowNumber."]";
+       $ctrl["_render"]->rowNumberToId[ $ctrl["_render"]->currentParent."[".$rowNumber."]" ] = $ctrl["_render"]->currentRowId;
 ?>
        <tr class="<?php echo implode(" ", $cls); ?>">
 <?php
-        $myRowIdFieldName = $rowIdFieldName;
-        $myRowIdFieldNameOrig = $rowIdFieldNameOrig;
-        foreach($newSuffix as $suffix) {
-          $myRowIdFieldName .= "[{$suffix}]";
-          $myRowIdFieldNameOrig .= "[]";
-        }
-        $myRowId = $myRowIdCount;
-        if (isset($ctrl["_values"])) {
-          $myRowId = getFormValue($myRowIdFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $myRowId);
-        }
-        $lastRowId = $ctrl["_render"]->currentRowId;
-        $ctrl["_render"]->currentRowId = $ctrl["_render"]->currentParent."{".$myRowId."}";
+
         if (!$noForm) {
           echo "<input type=\"hidden\" value=\"".htmlspecialchars($myRowId)."\" name=\"".htmlspecialchars($myRowIdFieldName)."\" orig-name=\"".htmlspecialchars($myRowIdFieldNameOrig)."\" class=\"store-row-id\"/>";
           echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowIdFieldTypeName)."\"/>";
@@ -2208,7 +2230,8 @@ function renderFormItemInvRef($layout,$ctrl) {
           $myOutBody .= "<td>[".$r["antrag"]["id"]."] <a href=\"".htmlspecialchars($url)."\">".$caption."</a></td>";
         }
         if (!$withAggByForm) {
-          $txtTr = getTrText($refRow, $refCtrl);
+          $refRowId = $ctrl["_render"]->rowNumberToId[$refRow];
+          $txtTr = getTrText($refRowId, $refCtrl);
           $txtTr = newTemplatePattern($ctrl, processTemplates($txtTr, $refCtrl));
           $myOutBody .= "      <td class=\"invref-txtTr\">{$txtTr}</td>\n"; /* Spalte: Quelle */
         }
