@@ -6,7 +6,7 @@ function convertDBValueToUserValue($value, $type) {
   switch ($type) {
     case "money":
       if ($value === false || $value == "") return $value;
-      return number_format($value, 2, ',', '.');
+      return number_format($value, 2, ',', ' ');
     default:
       return $value;
   }
@@ -1873,7 +1873,8 @@ function renderFormItemTable($layout, $ctrl) {
           $colSpan++; # delete-row
         if ($withRowNumber)
           $colSpan++;
-        echo "<th colspan=\"{$colSpan}\">";
+        if ($colSpan > 0)
+          echo "<th colspan=\"{$colSpan}\">";
         if (count($compressableColumns) > 0 && !$noForm) {
           echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($extraColsFieldTypeName)."\"/>";
 ?>
