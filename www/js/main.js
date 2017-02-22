@@ -2,7 +2,7 @@ String.prototype.replaceAll = function(target, replacement) {
   return this.split(target).join(replacement);
 };
 
-// numeral.locale("de");
+numeral.locale("de");
 
 $(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
@@ -284,10 +284,10 @@ $(document).ready(function() {
     var $i = $(this);
     if ($i.is(":input")) {
       var val = $i.val();
-      val = parseFloat(val);
-      $i.val(val.toFixed(2));
+      val = numeral(val);
+      $i.val(val.format('[0,]0.00'));
     }
-		var ids = $i.attr("data-addToSum").split(" ");
+    var ids = $i.attr("data-addToSum").split(" ");
     for (var j = 0; j < ids.length; j++) {
       $("*[data-printSum~=\""+ ids[j] + "\"]").each(function (k, e) {
         $(e).triggerHandler("update-print-sum");
@@ -296,7 +296,7 @@ $(document).ready(function() {
   });
   $("*[data-printSum]").on("update-print-sum.compute", function(evt) {
     var $out = $(this);
-		var printId = $out.attr("data-printSum");
+    var printId = $out.attr("data-printSum");
 
     $region = $out.data("print-sum-region");
     if (!$region) {
@@ -328,17 +328,18 @@ $(document).ready(function() {
       } else {
         val = $e.text();
       }
-      val = parseFloat(val);
+      val = numeral(val).value();
       if (isNaN(val)) {
         val = 0;
       }
       sum += val;
     });
+    sum = numeral(sum).format("[0,]0.00");
     if ($out.is(":input")) {
-      $out.val(sum.toFixed(2));
+      $out.val(sum);
       console.log("warning: printSum is form field!");
     } else {
-      $out.text(sum.toFixed(2));
+      $out.text(sum);
     }
     $out.trigger("change");
   });
@@ -718,8 +719,8 @@ $(document).ready(function() {
       data: newTree,
       levels: 1,
       enableLinks: true,
-	    template: {
- 		    link: '<a href="#" style="color:inherit;" target="_blank" onClick="event.stopPropagation();"></a>',
+      template: {
+         link: '<a href="#" style="color:inherit;" target="_blank" onClick="event.stopPropagation();"></a>',
       },
      };
      $treeView.addClass("tree-view-visible");

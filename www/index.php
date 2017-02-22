@@ -34,6 +34,7 @@ function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
     }
     if ($isPartiell)
       dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"] ]);
+    $inhalt["value"] = convertUserValueToDBValue($inhalt["value"], $inhalt["contenttype"]);
     $ret = dbInsert("inhalt", $inhalt);
     if (!$ret) {
       $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);

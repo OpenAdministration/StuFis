@@ -2,6 +2,25 @@
 
 loadForms();
 
+function convertDBValueToUserValue($value, $type) {
+  switch ($type) {
+    case "money":
+      if ($value === false || $value == "") return $value;
+      return number_format($value, 2, ',', '.');
+    default:
+      return $value;
+  }
+}
+
+function convertUserValueToDBValue($value, $type) {
+  switch ($type) {
+    case "money":
+      return str_replace(" ", "", str_replace(",",".",str_replace(".", "", $value)));
+    default:
+      return $value;
+  }
+}
+
 function registerForm( $type, $revision, $layout, $config ) {
   global $formulare;
 
@@ -1033,7 +1052,8 @@ function renderFormItemMoney($layout, $ctrl) {
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   }
-  $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+  $fvalue = convertDBValueToUserValue($value, $layout["type"]);
+  $tPattern = newTemplatePattern($ctrl, htmlspecialchars($fvalue));
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
   if (isset($layout["addToSum"])) {
