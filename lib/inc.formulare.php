@@ -14,6 +14,14 @@ function convertDBValueToUserValue($value, $type) {
 
 function convertUserValueToDBValue($value, $type) {
   switch ($type) {
+    case "titelnr":
+      $value = trim(str_replace(" ", "", $value));
+      $nv = "";
+      for ($i = 0; $i < strlen($value); $i++) {
+        if ($i % 4 == 1) $nv .= " ";
+        $nv .= $value[$i];
+      }
+      return $nv;
     case "money":
       return str_replace(" ", "", str_replace(",",".",str_replace(".", "", $value)));
     default:
@@ -551,6 +559,7 @@ function renderFormItem($layout,$ctrl = false) {
       $isEmpty = renderFormItemGroup($layout,$ctrl);
       break;
     case "text":
+    case "titelnr":
     case "email":
     case "url":
     case "iban":
@@ -916,6 +925,8 @@ function renderFormItemText($layout, $ctrl) {
     }
     $fType = $layout["type"];
     if ($fType == "iban")
+      $fType = "text";
+    if ($fType == "titelnr")
       $fType = "text";
     echo "<input class=\"form-control\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }

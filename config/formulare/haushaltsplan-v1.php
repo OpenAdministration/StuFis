@@ -40,7 +40,7 @@ $layout = [
            "opts" => ["with-headline"],
            "width" => 12,
            "columns" => [
-              [ "id" => "titel.einnahmen.nummer",    "name" => "Titel",       "type" => "text",   "opts" => [ "required" ], "width" => 4 ],
+              [ "id" => "titel.einnahmen.nummer",    "name" => "Titel",       "type" => "titelnr",   "opts" => [ "required" ], "width" => 4 ],
               [ "id" => "titel.einnahmen.name",      "name" => "Bezeichnung", "type" => "text",   "opts" => [ "required" ], "width" => 4 ],
               [ "id" => "titel.einnahmen.einnahmen", "name" => "Einnahmen",   "type" => "money",  "opts" => [ "required", "sum-over-table-bottom" ], "width" => 4, "currency" => "€", "addToSum" => ["einnahmen"] ],
            ],
@@ -73,7 +73,7 @@ $layout = [
            "opts" => ["with-headline"],
            "width" => 12,
            "columns" => [
-              [ "id" => "titel.ausgaben.nummer",    "name" => "Titel",       "type" => "text",   "opts" => [ "required" ], "width" => 4 ],
+              [ "id" => "titel.ausgaben.nummer",    "name" => "Titel",       "type" => "titelnr",   "opts" => [ "required" ], "width" => 4 ],
               [ "id" => "titel.ausgaben.name",      "name" => "Bezeichnung", "type" => "text",   "opts" => [ "required" ], "width" => 4 ],
               [ "id" => "titel.ausgaben.ausgaben",  "name" => "Ausgaben",    "type" => "money",  "opts" => [ "required", "sum-over-table-bottom" ], "width" => 4, "currency" => "€" , "addToSum" => ["ausgaben"]],
            ],
