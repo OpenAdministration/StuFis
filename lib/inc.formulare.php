@@ -2073,7 +2073,8 @@ function renderFormItemTable($layout, $ctrl) {
           $colSpan++; # delete-row
         if ($withRowNumber)
           $colSpan++;
-        echo "<th colspan=\"{$colSpan}\">";
+        if ($colSpan > 0)
+          echo "<th colspan=\"{$colSpan}\">";
 
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
@@ -2093,6 +2094,8 @@ function renderFormItemTable($layout, $ctrl) {
                 $newMeta = $col;
               }
               unset($newMeta["addToSum"]);
+              if (isset($newMeta["width"]))
+                unset($newMeta["width"]);
               if (isset($addToSumDifference[$psId]))
                 $value = $addToSumDifference[$psId];
               else
