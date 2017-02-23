@@ -37,8 +37,9 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
     $children[] =
       [ "id" => "titel.$id.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
         "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId"],
-        "title" => "Genehmigte Projekte",
-        "printSum" => [ "einnahmen", "ausgaben" ],
+        "title" => "Genehmigte Projekte (offene Posten)",
+        "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
+        "printSumWidth" => 3,
         "otherForms" => [
           ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
           ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],

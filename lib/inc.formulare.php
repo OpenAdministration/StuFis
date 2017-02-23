@@ -2261,88 +2261,151 @@ function renderFormItemTable($layout, $ctrl) {
 
 }
 
+function evalPrintSum($psId, $sums, &$src = []) {
+  if (substr($psId, 0, 5) != "expr:") {
+    $src[] = $psId;
+    return $sums[$psId];
+  }
+
+  $psId = trim(substr($psId, 5));
+  $psId = preg_replace_callback('/%([^\s]+)/', function($m) use($sums, &$src) {
+    $src[] = $m[1];
+    return $sums[$m[1]];
+  }, $psId);
+  $psId = preg_replace('/[^\d\s+-]/', '', $psId); # ensure only match is in here
+
+  return eval("return ($psId);");
+}
+
 function renderFormItemInvRef($layout,$ctrl) {
   list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $refId = $ctrl["_render"]->currentRowId;
   if ($refId === false) return false;
 
+  $hasForms = isset($layout["otherForms"]);
+
+  $currentFormId = false;
+  if (isset($ctrl["_values"])) {
+    $currentFormId = $ctrl["_values"]["id"];
+  }
+
+  if (isset($layout["printSum"]))
+    $printSum = $layout["printSum"];
+  else
+    $printSum = [];
+
+  $refMe = [];
+
+  if ($hasForms && $currentFormId !== false) {
+    $forms = [];
+    // find other forms
+    foreach ($layout["otherForms"] as $formFilterDef) {
+      $f = ["type" => $formFilterDef["type"]];
+      if (isset($formFilterDef["state"]))
+        $f["state"] = $formFilterDef["state"];
+      $al = dbFetchAll("antrag", $f);
+      foreach ($al as $a) {
+        if (isset($formFilterDef["referenceFormField"])) {
+          $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
+          if ($r === false || $r["value"] != $currentFormId) continue;
+        }
+        $forms[$a["id"]]["antrag"] = $a;
+        if (!isset($formFilterDef["addToSum"]))
+          $formFilterDef["addToSum"] = [];
+        if (!isset($forms[$a["id"]]["_addToSum"]))
+          $forms[$a["id"]]["_addToSum"] = [];
+        foreach ($formFilterDef["addToSum"] as $src => $dstA) {
+          if (!isset($forms[$a["id"]]["_addToSum"][$src]))
+            $forms[$a["id"]]["_addToSum"][$src] = [];
+          $forms[$a["id"]]["_addToSum"][$src] = array_merge($forms[$a["id"]]["_addToSum"][$src], $dstA);
+        }
+      }
+    }
+    foreach (array_keys($forms) as $aId) {
+      $m = $forms[$aId];
+      $a = $m["antrag"];
+      $i = dbFetchAll("inhalt", ["antrag_id" => $a["id"]]);
+      $a["_inhalt"] = $i;
+
+      $f = getForm($a["type"], $a["revision"]);
+      $readPermitted = hasPermission($f, $a, "canRead");
+
+      if (!$readPermitted) {
+        echo "<i>Formular nicht lesbar: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
+        unset($forms[$aId]);
+        continue;
+      }
+      $otherCtrl = ["_values" => $a, "render" => ["no-form"]];
+      if (in_array("skip-referencesId", $layout["opts"]))
+        $otherCtrl["render"][] = "skip-referencesId";
+
+      ob_start();
+      renderFormImpl($f, $otherCtrl);
+      ob_end_clean();
+
+      $m["form"] = $f;
+      $m["ctrl"] = $otherCtrl;
+      $m["antrag"] = $a;
+      $forms[$aId] = $m;
+
+      if (!isset($otherCtrl["_render"])) {
+        echo "cannot identify references due to nesting";
+        continue;
+      }
+      if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
+        $addToSum = $m["_addToSum"];
+        foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
+          $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a, "_addToSum" => $addToSum ];
+        }
+      }
+    }
+  }
+
+  foreach ($refMe as $grp => $rr) {
+    for ($i = count($rr) - 1; $i >= 0; $i--) {
+      $r = $rr[$i];
+      $refRow = $r["ref"];
+      $refCtrl = $r["ctrl"];
+      $addToSum = $r["_addToSum"];
+      if ($refRow == "[]")
+        $sums = $refCtrl["_render"]->addToSumValue;
+      else
+        $sums = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow];
+
+      foreach ($printSum as $psId) {
+        if (!isset($addToSum[$psId])) continue;
+        $src = [];
+        $value = evalPrintSum($psId, $sums, $src);
+        $value = number_format($value, 2, ".", "");
+        foreach($addToSum[$psId] as $dstPsId) {
+          if (!isset($ctrl["_render"]->addToSumValue[$dstPsId]))
+            $ctrl["_render"]->addToSumValue[$dstPsId] = 0.00;
+          $ctrl["_render"]->addToSumValue[$dstPsId] += (float) $value;
+          foreach ($src as $srcPsId) {
+            if (isset($refCtrl["_render"]->addToSumMeta[$srcPsId]) && !isset($ctrl["_render"]->addToSumMeta[$dstPsId])) {
+              $ctrl["_render"]->addToSumMeta[$dstPsId] = $refCtrl["_render"]->addToSumMeta[$srcPsId];
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
-  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl, $noForm) {
+  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl, $noForm, $refMe, $hasForms, $currentFormId, $printSum) {
     global $URIBASE;
 
     $withHeadline = in_array("with-headline", $layout["opts"]);
     $withAggByForm = in_array("aggregate-by-otherForm", $layout["opts"]);
-    if (isset($layout["printSum"]))
-      $printSum = $layout["printSum"];
-    else
-      $printSum = [];
-    $hasForms = isset($layout["otherForms"]);
-    $currentFormId = false;
-    if (isset($ctrl["_values"])) {
-      $currentFormId = $ctrl["_values"]["id"];
-    }
 
-    $refMe = [];
     if ($noForm && isset($ctrl["_render"]->referencedBy[$refId])) {
       foreach( $ctrl["_render"]->referencedBy[$refId] as $r) {
-        $refMe[-1][] = ["ctrl" => $ctrl, "ref" => $r ];
-      }
-    }
-    if ($hasForms && $currentFormId !== false) {
-      $forms = [];
-      // find other forms
-      foreach ($layout["otherForms"] as $formFilterDef) {
-        $f = ["type" => $formFilterDef["type"]];
-        if (isset($formFilterDef["state"]))
-          $f["state"] = $formFilterDef["state"];
-        $al = dbFetchAll("antrag", $f);
-        foreach ($al as $a) {
-          if (isset($formFilterDef["referenceFormField"])) {
-            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
-            if ($r === false || $r["value"] != $currentFormId) continue;
-          }
-          $forms[$a["id"]] = ["antrag" => $a];
-        }
-      }
-      foreach (array_keys($forms) as $aId) {
-        $m = $forms[$aId];
-        $a = $m["antrag"];
-        $i = dbFetchAll("inhalt", ["antrag_id" => $a["id"]]);
-        $a["_inhalt"] = $i;
-
-        $f = getForm($a["type"], $a["revision"]);
-        $readPermitted = hasPermission($f, $a, "canRead");
-
-        if (!$readPermitted) {
-          echo "<i>Formular nicht lesbar: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
-          unset($forms[$aId]);
-          continue;
-        }
-        $otherCtrl = ["_values" => $a, "render" => ["no-form"]];
-        if (in_array("skip-referencesId", $layout["opts"]))
-          $otherCtrl["render"][] = "skip-referencesId";
-
-        ob_start();
-        renderFormImpl($f, $otherCtrl);
-        ob_end_clean();
-
-        $m["form"] = $f;
-        $m["ctrl"] = $otherCtrl;
-        $m["antrag"] = $a;
-        $forms[$aId] = $m;
-
-        if (!isset($otherCtrl["_render"])) {
-          echo "cannot identify references due to nesting";
-          continue;
-        }
-        if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
-          foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
-            $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a ];
-          }
-        }
+        $refMe[-1][] = ["ctrl" => $ctrl, "ref" => $r, "_addToSum" => [] ];
       }
     }
 
@@ -2356,11 +2419,14 @@ function renderFormItemInvRef($layout,$ctrl) {
         $refRow = $r["ref"];
         $refCtrl = $r["ctrl"];
 
+        if ($refRow == "[]")
+          $sums = $refCtrl["_render"]->addToSumValue;
+        else
+          $sums = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow];
+
         foreach ($printSum as $psId) {
-          if ($refRow == "[]")
-            $value = $refCtrl["_render"]->addToSumValue[$psId];
-          else
-            $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
+          $src = [];
+          $value = evalPrintSum($psId, $sums, $src);
           $value = number_format($value, 2, ".", "");
           if (!isset($columnSum[ $psId ]))
             $columnSum[ $psId ] = 0.00;
@@ -2369,8 +2435,11 @@ function renderFormItemInvRef($layout,$ctrl) {
             $otherFormSum[ $psId ] = 0.00;
           $otherFormSum[ $psId ] += (float) $value;
 
-          if (isset($refCtrl["_render"]->addToSumMeta[$psId]) && !isset($ctrl["_render"]->addToSumMeta[$psId])) {
-            $ctrl["_render"]->addToSumMeta[$psId] = $refCtrl["_render"]->addToSumMeta[$psId];
+          foreach ($src as $srcPsId) {
+            if (isset($refCtrl["_render"]->addToSumMeta[$srcPsId]) && !isset($ctrl["_render"]->addToSumMeta[$psId])) {
+              $ctrl["_render"]->addToSumMeta[$psId] = $refCtrl["_render"]->addToSumMeta[$srcPsId];
+              break;
+            }
           }
         }
 
@@ -2395,16 +2464,23 @@ function renderFormItemInvRef($layout,$ctrl) {
           if ($withAggByForm)
             $value = $otherFormSum[$psId];
           else
-            if ($refRow == "[]")
-              $value = $refCtrl["_render"]->addToSumValue[$psId];
-            else
-              $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
+            $value = evalPrintSum($psId, $sums, $src);
           $value = number_format($value, 2, ".", "");
           if (isset($refCtrl["_render"]->addToSumMeta[$psId])) {
             $newMeta = $refCtrl["_render"]->addToSumMeta[$psId];
+          } elseif (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+            $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+          } else {
+            $newMeta = false;
+          }
+          if ($newMeta !== false) {
             $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
             $newMeta["printSum"] = [ $psId ];
             $newMeta["value"] = $value;
+            if (isset($newMeta["width"]))
+              unset($newMeta["width"]);
+            if (isset($layout["printSumWidth"]))
+              $newMeta["width"] = $layout["printSumWidth"];
   
             $newCtrl = array_merge($refCtrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
             $newCtrl["suffix"][] = "print";
@@ -2436,6 +2512,10 @@ function renderFormItemInvRef($layout,$ctrl) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
           $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
           $newMeta["printSum"] = [ $psId ];
+          if (isset($newMeta["width"]))
+            unset($newMeta["width"]);
+          if (isset($layout["printSumWidth"]))
+            $newMeta["width"] = $layout["printSumWidth"];
 
           $newCtrl = array_merge($ctrl, ["wrapper"=> "td", "class" => [ "cell-has-printSum" ] ]);
           $newCtrl["suffix"][] = "print";
@@ -2500,6 +2580,10 @@ function renderFormItemInvRef($layout,$ctrl) {
           $columnSum[ $psId ] = 0.00;
         $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
         $newMeta["opts"][] = "is-sum";
+        if (isset($newMeta["width"]))
+          unset($newMeta["width"]);
+        if (isset($layout["printSumWidth"]))
+          $newMeta["width"] = $layout["printSumWidth"];
 
         $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "cell-has-printSum" ] ]);
         $newCtrl["suffix"][] = "print-foot";
@@ -2520,6 +2604,9 @@ function renderFormItemInvRef($layout,$ctrl) {
     $myOut .= "    </tr>\n";
     $myOut .= "  </tfoot>\n";
     $myOut .= "</table>\n";
+
+    if ($myOutBody == "") $myOut = "";
+
     $ctrl["_render"]->templates[$tPattern] = processTemplates($myOut, $ctrl); // rowTxt is from displayValue and thus already escaped
   };
 }
