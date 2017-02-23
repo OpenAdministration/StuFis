@@ -17,6 +17,15 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
   $classConfig = getFormClass($antrag["type"]);
   $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
 
+  $citeText = "";
+  if (isset($revConfig["citeFieldsInMailIfNotEmpty"])) {
+    foreach($revConfig["citeFieldsInMailIfNotEmpty"] as $fieldName => $label) {
+      $value = getFormValueInt($fieldName, null, $antrag["_inhalt"], "");
+      if ($value == "") continue;
+      $citeText .= "$label: $value\n\n";
+    }
+  }
+
   if (!isset($revConfig["mailTo"])) {
     $mailTo = "ref-it@tu-ilmenau.de";
     $subject = "[KEINE MAILTO ANGABE] $subject";
@@ -63,6 +72,7 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
   $txt .= "  {$antragtitle}\n";
   $txt .= "wurde in den Bearbeitungsstatus \"{$newStateTxt}\" verschoben.\n";
   $txt .= "\n";
+  $txt .= $citeText;
   $txt .= "Mit freundlichen Grüßen,\n";
   $txt .= "Referat Finanzen\n";
   $txt .= "\n";
