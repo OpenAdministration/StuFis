@@ -881,6 +881,18 @@ function renderFormItemCheckbox($layout,$ctrl) {
   echo '</div>';
 }
 
+function printSumId($psIds) {
+  if (!is_array($psIds)) $psIds = [ $psIds ];
+  $r = [];
+  foreach ($psIds as $psId) {
+    if (substr($psId,0,5) == "expr:")
+      $r[] = md5($psId);
+    else
+      $r[] = $psId;
+  }
+  return implode(" ", $r);
+}
+
 function renderFormItemText($layout, $ctrl) {
   global $nonce, $URIBASE, $attributes, $GremiumPrefix;
 
@@ -936,10 +948,10 @@ function renderFormItemText($layout, $ctrl) {
   }
 
   if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
-    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $layout["addToSum"]))."\"";
+    echo " data-addToSum=\"".htmlspecialchars(printSumId($layout["addToSum"]))."\"";
   }
   if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
-    echo " data-printSum=\"".htmlspecialchars(implode(" ", $layout["printSum"]))."\"";
+    echo " data-printSum=\"".htmlspecialchars(printSumId($layout["printSum"]))."\"";
   }
   if ($layout["type"] == "iban") {
     echo " data-validateIBAN=\"1\"";
@@ -1105,10 +1117,10 @@ function renderFormItemMoney($layout, $ctrl) {
   }
 
   if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
-    echo " data-addToSum=\"".htmlspecialchars(implode(" ", $layout["addToSum"]))."\"";
+    echo " data-addToSum=\"".htmlspecialchars(printSumId($layout["addToSum"]))."\"";
   }
   if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
-    echo " data-printSum=\"".htmlspecialchars(implode(" ", $layout["printSum"]))."\"";
+    echo " data-printSum=\"".htmlspecialchars(printSumId($layout["printSum"]))."\"";
   }
 
   if ($noForm) {
@@ -2473,7 +2485,7 @@ function renderFormItemInvRef($layout,$ctrl) {
             $newMeta = false;
           }
           if ($newMeta !== false) {
-            $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
+            $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
             $newMeta["printSum"] = [ $psId ];
             $newMeta["value"] = $value;
             if (isset($newMeta["width"]))
@@ -2492,7 +2504,7 @@ function renderFormItemInvRef($layout,$ctrl) {
             ob_end_clean();
           } else {
             $myOutBody .= "    <td class=\"cell-has-printSum\">";
-            $myOutBody .= "      <div data-printSum=\"".htmlspecialchars($psId)."\">".htmlspecialchars($value)."</div>";
+            $myOutBody .= "      <div data-printSum=\"".htmlspecialchars(printSumId($psId))."\">".htmlspecialchars($value)."</div>";
             $myOutBody .= "    </td>\n";
           }
         }
@@ -2509,7 +2521,7 @@ function renderFormItemInvRef($layout,$ctrl) {
       foreach ($printSum as $psId) {
         if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-          $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".$psId ];
+          $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
           $newMeta["printSum"] = [ $psId ];
           if (isset($newMeta["width"]))
             unset($newMeta["width"]);
@@ -2527,7 +2539,7 @@ function renderFormItemInvRef($layout,$ctrl) {
           ob_end_clean();
         } else {
           $myOutBody .= "    <td class=\"cell-has-printSum\">";
-            $myOutBody .= "    <div data-printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
+            $myOutBody .= "    <div data-printSum=\"".htmlspecialchars(printSumId($psId))."\">no meta data for ".htmlspecialchars($psId)."</div>";
           $myOutBody .= "    </td>\n";
         }
       }
@@ -2574,7 +2586,7 @@ function renderFormItemInvRef($layout,$ctrl) {
       if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
         $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
         unset($newMeta["addToSum"]);
-        $newMeta["printSum"] = [ "invref-".$layout["id"]."-".$psId ];
+        $newMeta["printSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
         if (!isset($columnSum[ $psId ]))
           $columnSum[ $psId ] = 0.00;
         $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
@@ -2595,7 +2607,7 @@ function renderFormItemInvRef($layout,$ctrl) {
         ob_end_clean();
       } else {
         $myOut .= "    <td class=\"cell-has-printSum\">";
-          $myOut .= "    <div printSum=\"".htmlspecialchars($psId)."\">no meta data for ".htmlspecialchars($psId)."</div>";
+          $myOut .= "    <div data-printSum=\"".htmlspecialchars(printSumId($psId))."\">no meta data for ".htmlspecialchars($psId)."</div>";
         $myOut .= "    </td>\n"; /* Spalte: Quelle */
       }
     }
