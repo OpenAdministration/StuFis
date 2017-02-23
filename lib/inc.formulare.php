@@ -1568,6 +1568,32 @@ function renderFormItemSelect($layout, $ctrl) {
   echo "</div>";
 }
 
+function renderOtherAntrag($antragId, $renderOpts = "") {
+  static $cache = false;
+
+  if ($cache === false) $cache = [];
+  $key = "a:{$antragId},r:{$renderOpts}";
+
+  if (!isset($cache[$key])) {
+    $otherAntrag = getAntrag($antragId);
+    if ($otherAntrag === false) return false; # not readable. Ups.
+    $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
+    $otherCtrl = ["_values" => $otherAntrag, "render" => explode(",", "no-form,{$renderOpts}")];
+
+    ob_start();
+    renderFormImpl($otherForm, $otherCtrl);
+    ob_end_clean();
+
+    $cache[$key] = ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag];
+  } else {
+    $otherForm = $cache[$key]["form"];
+    $otherCtrl = $cache[$key]["ctrl"];
+    $otherAntrag = $cache[$key]["antrag"];
+  }
+
+  return ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag ];
+}
+
 function otherForm(&$layout, &$ctrl) {
   $fieldValue = false;
   $fieldName = false;
@@ -1615,24 +1641,7 @@ function otherForm(&$layout, &$ctrl) {
   }
   $fieldValue = (int) $fieldValue;
 
-  if (!isset($ctrl["_render"]->otherForm[$fieldValue])) {
-    $otherAntrag = getAntrag($fieldValue);
-    if ($otherAntrag === false) return ""; # not readable. Ups.
-    $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
-    $otherCtrl = ["_values" => $otherAntrag, "render" => ["no-form"]];
-
-    ob_start();
-    renderFormImpl($otherForm, $otherCtrl);
-    ob_end_clean();
-
-    $ctrl["_render"]->otherForm[$fieldValue] = ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag];
-  } else {
-    $otherForm = $ctrl["_render"]->otherForm[$fieldValue]["form"];
-    $otherCtrl = $ctrl["_render"]->otherForm[$fieldValue]["ctrl"];
-    $otherAntrag = $ctrl["_render"]->otherForm[$fieldValue]["antrag"];
-  }
-
-  return ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag ];
+  return renderOtherAntrag($fieldValue);
 }
 
 function otherFormTrOptions($layout, $ctrl) {
@@ -2270,6 +2279,7 @@ function evalPrintSum($psId, $sums, &$src = []) {
   $psId = trim(substr($psId, 5));
   $psId = preg_replace_callback('/%([^\s]+)/', function($m) use($sums, &$src) {
     $src[] = $m[1];
+    if (!isset($sums[$m[1]])) return "0";
     return $sums[$m[1]];
   }, $psId);
   $psId = preg_replace('/[^\d\s+-]/', '', $psId); # ensure only match is in here
@@ -2300,61 +2310,50 @@ function renderFormItemInvRef($layout,$ctrl) {
   if ($hasForms && $currentFormId !== false) {
     $forms = [];
     // find other forms
-    foreach ($layout["otherForms"] as $formFilterDef) {
-      $f = ["type" => $formFilterDef["type"]];
-      if (isset($formFilterDef["state"]))
-        $f["state"] = $formFilterDef["state"];
-      $al = dbFetchAll("antrag", $f);
-      foreach ($al as $a) {
-        if (isset($formFilterDef["referenceFormField"])) {
-          $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
-          if ($r === false || $r["value"] != $currentFormId) continue;
-        }
-        $forms[$a["id"]]["antrag"] = $a;
-        if (!isset($formFilterDef["addToSum"]))
-          $formFilterDef["addToSum"] = [];
-        if (!isset($forms[$a["id"]]["_addToSum"]))
-          $forms[$a["id"]]["_addToSum"] = [];
-        foreach ($formFilterDef["addToSum"] as $src => $dstA) {
-          if (!isset($forms[$a["id"]]["_addToSum"][$src]))
-            $forms[$a["id"]]["_addToSum"][$src] = [];
-          $forms[$a["id"]]["_addToSum"][$src] = array_merge($forms[$a["id"]]["_addToSum"][$src], $dstA);
+    if (isset($ctrl["_render"]->otherForm[$layout["id"]])) {
+      $forms = $ctrl["_render"]->otherForm[$layout["id"]];
+    } else {
+      foreach ($layout["otherForms"] as $formFilterDef) {
+        $f = ["type" => $formFilterDef["type"]];
+        if (isset($formFilterDef["state"]))
+          $f["state"] = $formFilterDef["state"];
+        $al = dbFetchAll("antrag", $f);
+        foreach ($al as $a) {
+          if (isset($formFilterDef["referenceFormField"])) {
+            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
+            if ($r === false || $r["value"] != $currentFormId) continue;
+          }
+          $forms[$a["id"]]["antrag"] = $a;
+          if (!isset($formFilterDef["addToSum"]))
+            $formFilterDef["addToSum"] = [];
+          if (!isset($forms[$a["id"]]["_addToSum"]))
+            $forms[$a["id"]]["_addToSum"] = [];
+          foreach ($formFilterDef["addToSum"] as $src => $dstA) {
+            if (!isset($forms[$a["id"]]["_addToSum"][$src]))
+              $forms[$a["id"]]["_addToSum"][$src] = [];
+            $forms[$a["id"]]["_addToSum"][$src] = array_merge($forms[$a["id"]]["_addToSum"][$src], $dstA);
+          }
         }
       }
+      $ctrl["_render"]->otherForm[$layout["id"]] = $forms;
     }
+
     foreach (array_keys($forms) as $aId) {
-      $m = $forms[$aId];
-      $a = $m["antrag"];
-      $i = dbFetchAll("inhalt", ["antrag_id" => $a["id"]]);
-      $a["_inhalt"] = $i;
-
-      $f = getForm($a["type"], $a["revision"]);
-      $readPermitted = hasPermission($f, $a, "canRead");
-
-      if (!$readPermitted) {
-        echo "<i>Formular nicht lesbar: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
-        unset($forms[$aId]);
-        continue;
-      }
-      $otherCtrl = ["_values" => $a, "render" => ["no-form"]];
+      $ro = "";
       if (in_array("skip-referencesId", $layout["opts"]))
-        $otherCtrl["render"][] = "skip-referencesId";
+        $ro = "skip-referencesId";
+      $t = renderOtherAntrag($aId, $ro);
 
-      ob_start();
-      renderFormImpl($f, $otherCtrl);
-      ob_end_clean();
-
-      $m["form"] = $f;
-      $m["ctrl"] = $otherCtrl;
-      $m["antrag"] = $a;
-      $forms[$aId] = $m;
+      $otherCtrl = $t["ctrl"];
+      $f = $t["form"];
+      $a = $t["antrag"];
 
       if (!isset($otherCtrl["_render"])) {
         echo "cannot identify references due to nesting";
         continue;
       }
       if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
-        $addToSum = $m["_addToSum"];
+        $addToSum = $forms[$aId]["_addToSum"];
         foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
           $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a, "_addToSum" => $addToSum ];
         }
