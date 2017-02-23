@@ -65,19 +65,25 @@ $layout = [
              [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",
                "references" => ["referenceField", "finanzgruppentbl"],
                "updateByReference" => [
-                 "geld.titel" /* destination */ => /* remote source */ [ "geld.titel", "genehmigung.titel" /* fallback */ ],
-                 "geld.konto" /* destination */ => /* remote source */ [ "geld.konto", "genehmigung.konto" ],
+                 # fallback not really needed
+                 #"geld.titel" /* destination */ => /* remote source */ [ "geld.titel", "genehmigung.titel" /* fallback */ ],
+                 #"geld.konto" /* destination */ => /* remote source */ [ "geld.konto", "genehmigung.konto" ],
+                 "geld.titel" /* destination */ => /* remote source */ [ "geld.titel" ],
+                 "geld.konto" /* destination */ => /* remote source */ [ "geld.konto" ],
                ]
              ],
              [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"] ],
              [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"] ],
-             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["hideable"], ],
+             [ "id" => "geld.titel",        "name" =>"Titel",                   "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => [ "hasFeedback", "hideable" ],
+               "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "state" => "final" ], [ "titel.einnahmen" => "Einnahmen", "titel.ausgaben" => "Ausgaben" ] ],
+               "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
+               "referencesId" => "haushaltsplan.otherForm",
+             ],
              [ "id" => "geld.konto",       "name" => "Konto (Gnu-Cash)",        "type" => "text",   "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["hideable"], ],
            ],
          ],
        ],
      ],
-# FIXME Anlagen und Verweise
    ], // finanzgruppentbl
  ],
 

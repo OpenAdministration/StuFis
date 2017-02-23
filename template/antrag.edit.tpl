@@ -43,9 +43,15 @@ renderForm($form, ["_values" => $antrag] );
   foreach($proposeNewState as $state) {
     $isEditable = hasPermission($form, ["state" => $state], "canEdit");
     $stateTxt = $classConfig["state"][$state][0];
+    if ($stateTxt == "")
+      $stateTxt = $state;
+    if ($state == $antrag["state"])
+      $btnTxt = "Speichern";
+    else
+      $btnTxt = "Speichern als {$stateTxt}";
 
 ?>
-    <a href="javascript:void(false);" class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate"; else echo "validate"; ?>' data-name="state" data-value="<?php echo htmlspecialchars($state); ?>" id="state-<?php echo htmlspecialchars($state); ?>">Speichern als <?php echo $stateTxt; ?></a>
+    <a href="javascript:void(false);" class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate"; else echo "validate"; ?>' data-name="state" data-value="<?php echo htmlspecialchars($state); ?>" id="state-<?php echo htmlspecialchars($state); ?>"><?php echo $btnTxt; ?></a>
     &nbsp;
 <?php
   }

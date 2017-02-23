@@ -6,11 +6,16 @@ $classTitle = isset($classConfig["title"]) ? $classConfig["title"] : $form["type
 $revConfig = $form["config"];
 $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $form["revision"];
 
+if (isset($antrag))
+  $h = "[{$antrag["id"]}] {$classTitle}";
+else
+  $h = "{$classTitle}";
+
 ?>
 <nav class="navbar navbar-default no-print">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($classTitle); ?></a>
+      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($h); ?></a>
     </div>
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">

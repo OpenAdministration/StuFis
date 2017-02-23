@@ -874,8 +874,8 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.state.tpl";
     require "../template/antrag.subcreate.tpl";
     require "../template/antrag.copy.tpl";
-    require "../template/antrag.ref.tpl";
     require "../template/antrag.tpl";
+    require "../template/antrag.ref.tpl";
     require "../template/antrag.comments.tpl";
   break;
   case "antrag.edit":

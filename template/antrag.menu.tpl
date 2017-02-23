@@ -18,11 +18,16 @@ else
 if (!hasPermission($form, $antrag, "canEditPartiell"))
   $targetEditPartiell = false;
 
+if (isset($antrag))
+  $h = "[{$antrag["id"]}] {$classTitle}";
+else
+  $h = "{$classTitle}";
+
 ?>
 <nav class="navbar navbar-default">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($classTitle); ?></a>
+      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($h); ?></a>
       <p class="navbar-text navbar-right"><?php echo htmlspecialchars($revTitle); ?></p>
     </div><!-- /.navbar-collapse -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">

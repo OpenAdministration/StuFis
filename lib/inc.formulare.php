@@ -544,6 +544,10 @@ function renderFormItem($layout,$ctrl = false) {
   } elseif (in_array("readonly", $layout["opts"]))
     $ctrl["readonly"] = true;
 
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  if (!$noForm && in_array("hide-edit", $layout["opts"]))
+    return;
+
   ob_start();
   switch ($layout["type"]) {
     case "h1":
@@ -1386,8 +1390,57 @@ function renderFormItemSelect($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
-  if ($layout["type"] == "ref" && $value != "") {
-    $ctrl["_render"]->referencedBy[$value][] = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
+  if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["refValueIfEmpty"]) && $value == "") {
+    $fvalue = getFormValueInt($layout["refValueIfEmpty"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  } else {
+    $fvalue = $value;
+  }
+  if ($layout["type"] == "ref") {
+    $rowId = false;
+    if (is_array($layout["references"])) {
+      if (isset($layout["referencesId"])) {
+        $otherFormIdField = "formdata[{$layout["referencesId"]}]";
+        /* rationale:otherFormIdField uses no suffix as 
+         * 1. current logic ensures it always references the same form on every copy
+         * 2. it would make checking references more difficult
+         */
+        $otherFormId = "";
+        if (isset($ctrl["_values"]))
+          $otherFormId = getFormValue($otherFormIdField, "otherForm", $ctrl["_values"]["_inhalt"], $otherFormId);
+        if ($otherFormId != "")
+          $layout["references"][0] = "id:{$otherFormId}";
+      }
+      $tmp = otherForm($layout, $ctrl);
+      $txtTr = "";
+      if ($tmp !== false) {
+        $otherForm = $tmp["form"];
+        $otherCtrl = $tmp["ctrl"];
+        $otherAntrag = $tmp["antrag"];
+  
+        $rowId = false;
+        if (isset($layout["referencesKey"])) {
+          $rowIdentifier = false;
+          foreach (array_keys($layout["referencesKey"]) as $tableName) {
+            $ret = getFormEntries($layout["referencesKey"][$tableName], null, $otherCtrl["_values"]["_inhalt"], $fvalue);
+            if (count($ret) != 1)
+              continue;
+            $suffix = substr($ret[0]["fieldname"], strlen($layout["referencesKey"][$tableName]));
+            $rowIdentifier = getFormValueInt("{$tableName}[rowId]{$suffix}", null, $otherCtrl["_values"]["_inhalt"], false);
+            if ($rowIdentifier === false)
+              continue;
+            $rowId = "{$tableName}{{$rowIdentifier}}";
+            break;
+          }
+        } else if ($fvalue != "") {
+          $rowId = $fvalue;
+        }
+      }
+    } else if ($fvalue != "") {
+      $rowId = $fvalue;
+    }
+    if ($rowId !== false && $rowId != "" && !in_array("no-invref", $layout["opts"]) ) {
+      $ctrl["_render"]->referencedBy[$rowId][] = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
+    }
   }
 
   if (!$noForm && $ctrl["readonly"]) {
@@ -1408,13 +1461,10 @@ function renderFormItemSelect($layout, $ctrl) {
       echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
     } else if ($layout["type"] == "ref" && is_array($layout["references"])) {
-      $tmp = otherForm($layout, $ctrl);
-      $txtTr = "";
-      if ($tmp !== false) {
-        $otherForm = $tmp["form"];
-        $otherCtrl = $tmp["ctrl"];
-        $otherAntrag = $tmp["antrag"];
-        $txtTr = getTrText($value, $otherCtrl);
+      if ($rowId === false || $rowId == "") {
+        $txtTr = htmlspecialchars($value);
+      } else {
+        $txtTr = getTrText($rowId, $otherCtrl);
         $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped
       }
 
@@ -1497,10 +1547,21 @@ function renderFormItemSelect($layout, $ctrl) {
   if ($layout["type"] == "ref")
     echo "<option value=\"\">Bitte auswählen</option>";
   if ($layout["type"] == "ref" && is_array($layout["references"])) {
-    echo otherFormTrOptions($layout, $ctrl);
+    list ($txt, $otherFormId) = otherFormTrOptions($layout, $ctrl);
+    echo $txt;
   }
 
   echo "</select>";
+  if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["referencesId"])) {
+    $otherFormIdField = "formdata[{$layout["referencesId"]}]";
+    $otherFormIdTypeField = "formtype[{$layout["referencesId"]}]";
+    /* rationale:otherFormIdField uses no suffix as 
+     * 1. current logic ensures it always references the same form on every copy
+     * 2. it would make checking references more difficult
+     */
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($otherFormIdField)."\" value=\"".htmlspecialchars($otherFormId)."\">";
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($otherFormIdTypeField)."\" value=\"otherForm\">";
+  }
   echo "</div>";
 }
 
@@ -1514,6 +1575,33 @@ function otherForm(&$layout, &$ctrl) {
     $fieldName = $ctrl["_config"]["referenceField"]["name"];
   } elseif (substr($layout["references"][0],0,6) == "field:") {
     $fieldName = substr($layout["references"][0],6);
+  } elseif (substr($layout["references"][0],0,3) == "id:") {
+    $fieldValue = substr($layout["references"][0],3);
+  } elseif (is_array($layout["references"])) {
+    $formFilterDef = $layout["references"][0];
+    $f = ["type" => $formFilterDef["type"]];
+    if (isset($formFilterDef["state"]))
+      $f["state"] = $formFilterDef["state"];
+    if (isset($formFilterDef["revision"]))
+      $f["revision"] = $formFilterDef["revision"];
+    $al = dbFetchAll("antrag", $f);
+    $currentFormId = false;
+    if (isset($ctrl["_values"])) {
+      $currentFormId = $ctrl["_values"]["id"];
+    }
+    $fieldValue = [];
+
+    foreach ($al as $a) {
+      if (isset($formFilterDef["referenceFormField"])) {
+        $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
+        if ($r === false || $r["value"] != $currentFormId) continue;
+      }
+      $fieldValue[] = $a["id"];
+    }
+    if (count($fieldValue) != 1)
+      $fieldValue = false;
+    else
+      $fieldValue = $fieldValue[0];
   } else {
     die("Unknown otherForm reference in references: {$layout["references"][0]}");
   }
@@ -1551,71 +1639,93 @@ function otherFormTrOptions($layout, $ctrl) {
   $otherCtrl = $tmp["ctrl"];
   $otherAntrag = $tmp["antrag"];
 
-  $tableName = $layout["references"][1];
+  $tableNames = $layout["references"][1];
   if (!isset($otherCtrl["_render"])) {
     return "Rendering skipped due to nesting";
   }
 
-  if (!isset($otherCtrl["_render"]->numTableRows[$tableName])) {
-    #return "\n<!-- no row count $tableName -->"."\n<!-- ".print_r($otherCtrl["_render"]->numTableRows,true)." -->";
-    return "";
-  }
+  if (!is_array($tableNames)) $tableNames = [ $tableNames => $tableNames ];
   $ret = "";
 
-  foreach ($otherCtrl["_render"]->numTableRows[$tableName] as $suffix => $rowCount) {
-#   $ret .= "\n<!-- row count $tableName : $rowCount -->";
-    for($i=0; $i < $rowCount; $i++) {
-      if (isset($otherCtrl["_values"]))
-        $rowId = getFormValueInt("{$tableName}[rowId]{$suffix}[{$i}]", null, $otherCtrl["_values"]["_inhalt"], false);
-      else
-        $rowId = false;
-      if ($rowId !== false) {
-        $txtTr = getTrText("{$tableName}{{$rowId}}", $otherCtrl);
-        $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
-      } else {
-        $txtTr = "missing {$tableName}[rowId]{$suffix}[{$i}]";
-      }
-      $tPattern = newTemplatePattern($ctrl, $txtTr);
+  foreach ($tableNames as $tableName => $label) {
+    if (!isset($otherCtrl["_render"]->numTableRows[$tableName]))
+      continue;
 
-      $updateByReference = [];
-      if (isset($layout["updateByReference"]))
-        $updateByReference = $layout["updateByReference"];
-      $updateValueMap = [];
-      foreach ($updateByReference as $destFieldName => $sources) {
-        /* we only care for destFieldName with same suffix */
-        $destFieldNameOrig = $destFieldName;
-        foreach($ctrl["suffix"] as $s) {
-          $destFieldName .= "[{$s}]";
-          $destFieldNameOrig .= "[]";
-        }
-        $otherFormFieldValue = "";
-        foreach ($sources as $srcFieldId) {
-          $currSuffix = "{$suffix}[{$i}]";
-          while ($currSuffix !== false) {
-            $srcFieldName = $srcFieldId . $currSuffix;
-
-            $m = [];
-            if (!preg_match('/(.*)(\[[^[]]*\])$/', $currSuffix, $m))
-              $currSuffix = false;
-            else
-              $currSuffix = $m[1];
-
-            $fieldValue = getFormValueInt($srcFieldName, null, $otherAntrag["_inhalt"], false);
-            if ($fieldValue === false) continue; /* other form does not have this field */
-            if ($fieldValue == "") continue; /* other form left this field empty */
-            /* if found */
-             $otherFormFieldValue = $fieldValue;
-            break 2; /* while currSuffix, foreach sources */
-          }
-        }
-
-        $updateValueMap[ $destFieldNameOrig ] = $otherFormFieldValue;
-      }
-      $ret .= "<option value=\"".htmlspecialchars("{$tableName}{{$rowId}}")."\" data-update-value-map=\"".htmlspecialchars(json_encode($updateValueMap))."\">{$tPattern}</option>";
+    if (count($tableNames) > 1) {
+      $ret .= "<optgroup label=\"".htmlspecialchars($label)."\">";
     }
+  
+    foreach ($otherCtrl["_render"]->numTableRows[$tableName] as $suffix => $rowCount) {
+     $ret .= "\n<!-- row count $tableName : $rowCount -->";
+      for($i=0; $i < $rowCount; $i++) {
+        if (!isset($otherCtrl["_values"])) {
+          $rowId = false;
+          $rowKey = false;
+        } else {
+          $rowId = getFormValueInt("{$tableName}[rowId]{$suffix}[{$i}]", null, $otherCtrl["_values"]["_inhalt"], false);
+          if (isset($layout["referencesKey"]) && isset($layout["referencesKey"][$tableName]))
+            $rowKey = getFormValueInt("{$layout["referencesKey"][$tableName]}{$suffix}[{$i}]", null, $otherCtrl["_values"]["_inhalt"], false);
+          else
+            $rowKey = "{$tableName}{{$rowId}}";
+        }
+        if ($rowId !== false) {
+          $txtTr = getTrText("{$tableName}{{$rowId}}", $otherCtrl);
+          $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped ;; pattern stored in otherRenderer thus copy
+        } else {
+          $txtTr = "missing {$tableName}[rowId]{$suffix}[{$i}]";
+        }
+        $tPattern = newTemplatePattern($ctrl, $txtTr);
+  
+        $updateByReference = [];
+        if (isset($layout["updateByReference"]))
+          $updateByReference = $layout["updateByReference"];
+        $updateValueMap = [];
+        foreach ($updateByReference as $destFieldName => $sources) {
+          /* we only care for destFieldName with same suffix */
+          $destFieldNameOrig = $destFieldName;
+          foreach($ctrl["suffix"] as $s) {
+            $destFieldName .= "[{$s}]";
+            $destFieldNameOrig .= "[]";
+          }
+          $otherFormFieldValue = "";
+          foreach ($sources as $srcFieldId) {
+            $currSuffix = "{$suffix}[{$i}]";
+            while ($currSuffix !== false) {
+              $srcFieldName = $srcFieldId . $currSuffix;
+  
+              $m = [];
+              if (!preg_match('/(.*)(\[[^[]]*\])$/', $currSuffix, $m))
+                $currSuffix = false;
+              else
+                $currSuffix = $m[1];
+  
+              $fieldValue = getFormValueInt($srcFieldName, null, $otherAntrag["_inhalt"], false);
+              if ($fieldValue === false) continue; /* other form does not have this field */
+              if ($fieldValue == "") continue; /* other form left this field empty */
+              /* if found */
+               $otherFormFieldValue = $fieldValue;
+              break 2; /* while currSuffix, foreach sources */
+            }
+          }
+  
+          $updateValueMap[ $destFieldNameOrig ] = $otherFormFieldValue;
+        }
+        $ret .= "<option value=\"".htmlspecialchars($rowKey)."\" data-update-value-map=\"".htmlspecialchars(json_encode($updateValueMap))."\">{$tPattern}</option>";
+      }
+    }
+
+    if (count($tableNames) > 1) {
+      $ret .= "</optgroup>";
+    }
+
   }
 
-  return $ret;
+  if ($otherAntrag !== false)
+    $otherFormId = $otherAntrag["id"];
+  else
+    $otherFormId = false;
+
+  return [ $ret, $otherFormId ];
 }
 
 function renderFormItemDateRange($layout, $ctrl) {
@@ -2240,7 +2350,10 @@ function renderFormItemInvRef($layout,$ctrl) {
         $refCtrl = $r["ctrl"];
 
         foreach ($printSum as $psId) {
-          $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
+          if ($refRow == "[]")
+            $value = $refCtrl["_render"]->addToSumValue[$psId];
+          else
+            $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
           $value = number_format($value, 2, ".", "");
           if (!isset($columnSum[ $psId ]))
             $columnSum[ $psId ] = 0.00;
@@ -2275,7 +2388,10 @@ function renderFormItemInvRef($layout,$ctrl) {
           if ($withAggByForm)
             $value = $otherFormSum[$psId];
           else
-            $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
+            if ($refRow == "[]")
+              $value = $refCtrl["_render"]->addToSumValue[$psId];
+            else
+              $value = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow][$psId];
           $value = number_format($value, 2, ".", "");
           if (isset($refCtrl["_render"]->addToSumMeta[$psId])) {
             $newMeta = $refCtrl["_render"]->addToSumMeta[$psId];
