@@ -21,5 +21,5 @@ require_once 'XML/RPC2/Client.php';
 // Mail
 require_once 'Mail.php';
 global $mail_object;
-$mail_object =& Mail::factory('smtp', array("debug" => false, "timeout" => 5));
+$mail_object = Mail::factory('smtp', array("debug" => false, "timeout" => 5));
 
