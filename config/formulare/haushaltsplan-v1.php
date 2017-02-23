@@ -27,6 +27,35 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
      "id" => "head2",
      "value" => $caption,
    ];
+
+  $children = [
+    [ "id" => "titel.$id.nummer",    "name" => "Titel",       "type" => "titelnr", "width" => 4, "opts" => [ "required", "title" ] ],
+    [ "id" => "titel.$id.name",      "name" => "Bezeichnung", "type" => "text",    "width" => 4, "opts" => [ "required", "title" ] ],
+    [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 4, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
+  ];
+  if ($year == date("Y")) {
+    $children[] =
+      [ "id" => "titel.$id.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
+        "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId"],
+        "title" => "Genehmigte Projekte",
+        "printSum" => [ "einnahmen", "ausgaben" ],
+        "otherForms" => [
+          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
+          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
+          ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
+        ],
+      ];
+  }
+  $children[] =
+    [ "id" => "titel.$id.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
+      "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
+      "printSum" => [ "einnahmen", "ausgaben" ],
+      "title" => "Getätigte oder genehmigte $caption",
+      "otherForms" => [
+        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
+        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
+      ],
+    ];
   
   $layout[] =
    [
@@ -49,30 +78,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
              "columns" => [
                 [ "id" => "titel.$id.grp", "type" => "group", "opts" => ["title"], "width" => 12,
                   "name" => true,
-                  "children" => [
-                    [ "id" => "titel.$id.nummer",    "name" => "Titel",       "type" => "titelnr", "width" => 4, "opts" => [ "required", "title" ] ],
-                    [ "id" => "titel.$id.name",      "name" => "Bezeichnung", "type" => "text",    "width" => 4, "opts" => [ "required", "title" ] ],
-                    [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 4, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
-                    [ "id" => "titel.$id.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
-                      "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
-                      "title" => "Genehmigte Projekte",
-                      "printSum" => [ "einnahmen", "ausgaben" ],
-                      "otherForms" => [
-                        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", "referenceFormField" => "haushaltsplan.otherForm", ],
-                        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", "referenceFormField" => "haushaltsplan.otherForm", ],
-                        ["type" => "projekt-intern-genehmigung", "state" => "done-hv", "referenceFormField" => "haushaltsplan.otherForm", ],
-                      ],
-                    ],
-                    [ "id" => "titel.$id.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
-                      "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
-                      "printSum" => [ "einnahmen", "ausgaben" ],
-                      "title" => "Getätigte oder genehmigte $caption",
-                      "otherForms" => [
-                        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
-                        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
-                      ],
-                    ],
-                  ], // children
+                  "children" => $children,
                 ], // column
              ], // columns
            ], // table titel

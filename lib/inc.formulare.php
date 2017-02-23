@@ -691,7 +691,7 @@ function renderFormItemGroup($layout, $ctrl) {
   foreach ($layout["children"] as $child) {
     $ctrl["_render"]->displayValue = true;
     renderFormItem($child, $ctrl);
-    if (in_array("title", $child["opts"])) {
+    if (isset($child["opts"]) && in_array("title", $child["opts"])) {
       $rowTxt[] = $ctrl["_render"]->displayValue;
     }
   }
@@ -1398,7 +1398,10 @@ function renderFormItemSelect($layout, $ctrl) {
   if ($layout["type"] == "ref") {
     $rowId = false;
     if (is_array($layout["references"])) {
-      if (isset($layout["referencesId"])) {
+      # skip referencesId: Projektgenehmigungen beziehen sich auf einen HHP, sind aber auch im nächsten HHP noch gültig.
+      # referencesKey ist dort auflösbar, rowId kann aber verschieden sein.
+      # referencesId wird in dem Fall dennoch benötigt, wenn der Antrag nochmal gedruckt oder gelesen werden soll aber im aktuellen HHP der Titel nicht mehr existiert o.ä.
+      if (isset($layout["referencesId"]) && !in_array("skip-referencesId", $ctrl["render"])) {
         $otherFormIdField = "formdata[{$layout["referencesId"]}]";
         /* rationale:otherFormIdField uses no suffix as 
          * 1. current logic ensures it always references the same form on every copy
@@ -1568,7 +1571,7 @@ function renderFormItemSelect($layout, $ctrl) {
 function otherForm(&$layout, &$ctrl) {
   $fieldValue = false;
   $fieldName = false;
-  if (is_array($layout["references"])) {
+  if (is_array($layout["references"][0])) {
     $formFilterDef = $layout["references"][0];
     $f = ["type" => $formFilterDef["type"]];
     if (isset($formFilterDef["state"]))
@@ -2297,8 +2300,10 @@ function renderFormItemInvRef($layout,$ctrl) {
           $f["state"] = $formFilterDef["state"];
         $al = dbFetchAll("antrag", $f);
         foreach ($al as $a) {
-          $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
-          if ($r === false || $r["value"] != $currentFormId) continue;
+          if (isset($formFilterDef["referenceFormField"])) {
+            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
+            if ($r === false || $r["value"] != $currentFormId) continue;
+          }
           $forms[$a["id"]] = ["antrag" => $a];
         }
       }
@@ -2317,6 +2322,8 @@ function renderFormItemInvRef($layout,$ctrl) {
           continue;
         }
         $otherCtrl = ["_values" => $a, "render" => ["no-form"]];
+        if (in_array("skip-referencesId", $layout["opts"]))
+          $otherCtrl["render"][] = "skip-referencesId";
 
         ob_start();
         renderFormImpl($f, $otherCtrl);
