@@ -1390,7 +1390,7 @@ function renderFormItemSelect($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   }
-  if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["refValueIfEmpty"]) && $value == "") {
+  if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["refValueIfEmpty"]) && $value == "" && isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"])) {
     $fvalue = getFormValueInt($layout["refValueIfEmpty"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
   } else {
     $fvalue = $value;
@@ -1568,16 +1568,7 @@ function renderFormItemSelect($layout, $ctrl) {
 function otherForm(&$layout, &$ctrl) {
   $fieldValue = false;
   $fieldName = false;
-  if ($layout["references"][0] == "referenceField") {
-    if (!isset($ctrl["_config"]["referenceField"])) {
-      return false; #no such field
-    }
-    $fieldName = $ctrl["_config"]["referenceField"]["name"];
-  } elseif (substr($layout["references"][0],0,6) == "field:") {
-    $fieldName = substr($layout["references"][0],6);
-  } elseif (substr($layout["references"][0],0,3) == "id:") {
-    $fieldValue = substr($layout["references"][0],3);
-  } elseif (is_array($layout["references"])) {
+  if (is_array($layout["references"])) {
     $formFilterDef = $layout["references"][0];
     $f = ["type" => $formFilterDef["type"]];
     if (isset($formFilterDef["state"]))
@@ -1602,6 +1593,15 @@ function otherForm(&$layout, &$ctrl) {
       $fieldValue = false;
     else
       $fieldValue = $fieldValue[0];
+  } elseif ($layout["references"][0] == "referenceField") {
+    if (!isset($ctrl["_config"]["referenceField"])) {
+      return false; #no such field
+    }
+    $fieldName = $ctrl["_config"]["referenceField"]["name"];
+  } elseif (substr($layout["references"][0],0,6) == "field:") {
+    $fieldName = substr($layout["references"][0],6);
+  } elseif (substr($layout["references"][0],0,3) == "id:") {
+    $fieldValue = substr($layout["references"][0],3);
   } else {
     die("Unknown otherForm reference in references: {$layout["references"][0]}");
   }
@@ -2099,7 +2099,7 @@ function renderFormItemTable($layout, $ctrl) {
          $myRowIdFieldName .= "[{$suffix}]";
          $myRowIdFieldNameOrig .= "[]";
        }
-       $myRowId = $myRowIdCount;
+       $myRowId = $rowIdCount;
        if (isset($ctrl["_values"])) {
          $myRowId = getFormValue($myRowIdFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $myRowId);
        }
