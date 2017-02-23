@@ -9,11 +9,14 @@ $config = [
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
                "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
                "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
+               "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
              ],
   "proposeNewState" => [
     "draft" => [ "wait-stura", "ok-by-hv" ],
     "wait-stura" => [ "ok-by-stura" ],
     "ok-by-hv" => [ "done-hv" ],
+    "done-hv" => ["terminated"],
+    "ok-by-stura" => ["terminated"],
   ],
   "createState" => "draft",
   "buildFrom" => [
@@ -42,6 +45,7 @@ $config = [
     "canEditPartiell.field.genehmigung.recht.int.sturabeschluss" => [
       [ "state" => "ok-by-hv", "group" => "ref-finanzen", ],
       [ "state" => "done-hv", "group" => "ref-finanzen", ],
+      [ "state" => "terminated", "group" => "ref-finanzen", ],
     ],
     "canEdit" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
@@ -116,6 +120,18 @@ $config = [
     "canStateChange.from.revoked.to.done-hv" => [
       [ "hasPermission" => "canUnrevoke" ],
     ],
+    # Beendung
+    "canTerminate" => [
+      [ "creator" => "self" ],
+      [ "hasPermission" => "isCorrectGremium" ],
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.ok-by-stura.to.terminatedd" => [
+      [ "hasPermission" => "canTerminate" ],
+    ],
+    "canStateChange.from.done-hv.to.terminatedd" => [
+      [ "hasPermission" => "canTerminate" ],
+    ],
   ],
   "newStateActions" => [
     "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
@@ -126,6 +142,8 @@ $config = [
     "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-hv.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.ok-by-stura.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
   ],
 ];
 
