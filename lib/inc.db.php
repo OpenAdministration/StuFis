@@ -3,7 +3,8 @@ global $pdo;
 global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX;
 global $scheme;
 
-$pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD);
+$pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
+
 $scheme = [];
 
 $scheme["antrag"] = [
