@@ -20,7 +20,7 @@ $layout = [
 ];
 
 $children = [
-  [ "id" => "kosten.nummer",    "name" => "Titel",       "type" => "kostennr", "width" => 2, "opts" => [ "required", "title" ] ],
+  [ "id" => "kosten.nummer",    "name" => "Nummer",       "type" => "kostennr", "width" => 2, "opts" => [ "required", "title" ] ],
   [ "id" => "kosten.name",      "name" => "Bezeichnung", "type" => "text",    "width" => 10, "opts" => [ "required", "title" ] ],
 ];
 if ($year == date("Y")) {
