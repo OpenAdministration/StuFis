@@ -22,6 +22,14 @@ function convertUserValueToDBValue($value, $type) {
         $nv .= $value[$i];
       }
       return $nv;
+    case "kostennr":
+      $value = trim(str_replace(" ", "", $value));
+      $nv = "";
+      for ($i = 0; $i < strlen($value); $i++) {
+        if ($i % 3 == 2) $nv .= " ";
+        $nv .= $value[$i];
+      }
+      return $nv;
     case "money":
       return str_replace(" ", "", str_replace(",",".",str_replace(".", "", $value)));
     default:
@@ -564,6 +572,7 @@ function renderFormItem($layout,$ctrl = false) {
       break;
     case "text":
     case "titelnr":
+    case "kostennr":
     case "email":
     case "url":
     case "iban":
@@ -943,6 +952,8 @@ function renderFormItemText($layout, $ctrl) {
     if ($fType == "iban")
       $fType = "text";
     if ($fType == "titelnr")
+      $fType = "text";
+    if ($fType == "kostennr")
       $fType = "text";
     echo "<input class=\"form-control\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
@@ -1473,11 +1484,16 @@ function renderFormItemSelect($layout, $ctrl) {
       else
         echo "<div class=\"form-control\">";
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
+      if ($value == "")
+        echo "&nbsp;"; # prevent collapsing
       echo "</div>";
       $ctrl["_render"]->displayValue = htmlspecialchars($value);
     } else if ($layout["type"] == "ref" && is_array($layout["references"])) {
       if ($rowId === false || $rowId == "") {
-        $txtTr = htmlspecialchars($value);
+        if ($value != "")
+          $txtTr = "missing row id for ".htmlspecialchars($value);
+        else
+          $txtTr = "";
       } else {
         $txtTr = getTrText($rowId, $otherCtrl);
         $txtTr = processTemplates($txtTr, $otherCtrl); // rowTxt is from displayValue and thus already escaped
@@ -1486,6 +1502,8 @@ function renderFormItemSelect($layout, $ctrl) {
       $tPattern = newTemplatePattern($ctrl, $txtTr);
       echo "<div>";
       echo $tPattern;
+      if ($txtTr == "")
+        echo "&nbsp;"; # prevent collapsing
       echo "</div>";
     } else if ($layout["type"] == "ref") {
       $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{ref:$value}>"));
@@ -1494,7 +1512,10 @@ function renderFormItemSelect($layout, $ctrl) {
       echo "</div>";
       $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $value) {
         $txtTr = getTrText($value, $ctrl);
-        $ctrl["_render"]->templates[$tPattern] = processTemplates($txtTr, $ctrl); // rowTxt is from displayValue and thus already escaped
+        $txtTr = processTemplates($txtTr, $ctrl); // rowTxt is from displayValue and thus already escaped
+        if ($txtTr == "")
+          $txtTr = "&nbsp;";
+        $ctrl["_render"]->templates[$tPattern] = $txtTr;
       };
     } else {
       echo "<div class=\"form-control\">";
