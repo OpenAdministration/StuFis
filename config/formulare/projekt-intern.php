@@ -3,11 +3,12 @@
 $config = [
   "title" => "Finanzantrag für ein Projekt der Studierendenschaft (internes Projekt)",
   "shortTitle" => "Antrag internes Projekt",
-  "state" => [ "draft"    => [ "Entwurf", "Entwurf", ],
-               "new"      => [ "Eingereicht", "einreichen" ],
-               "wip"      => [ "In Bearbeitung", "mir zur Bearbeitung zuweisen", ],
-               "done"     => [ "Erledigt", "erledigen", ],
-               "obsolete" => [ "Zurückgezogen", "zurückziehen", ],
+  "state" => [ "draft"      => [ "Entwurf", "Entwurf", ],
+               "new"        => [ "Eingereicht", "einreichen" ],
+               "wip"        => [ "In Bearbeitung", "mir zur Bearbeitung zuweisen", ],
+               "done"       => [ "Erledigt", "erledigen", ],
+               "need-stura" => [ "StuRa-Beschluss fehlt", "auf StuRa Beschluss warten", ],
+               "obsolete"   => [ "Zurückgezogen", "zurückziehen", ],
              ],
   "createState" => "draft",
   "permission" => [
@@ -45,16 +46,31 @@ $config = [
     "canStateChange.from.new.to.wip" => [
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.new.to.done" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.new.to.need-stura" => [
+      [ "group" => "ref-finanzen" ],
+    ],
     "canStateChange.from.wip.to.new" => [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.wip.to.done" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.new.to.done" => [
+    "canStateChange.from.wip.to.need-stura" => [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.wip.to.obsolete" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.need-stura.to.done" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.need-stura.to.new" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.need-stura.to.obsolete" => [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.done.to.obsolete" => [
@@ -64,12 +80,15 @@ $config = [
   "newStateActions" => [
     "from.draft.to.new" => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.new.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.new.to.need-stura" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.wip.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.wip.to.need-stura" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done.to.obsolete" => [ [ "sendMail" => true, "attachForm" => false ] ],
   ],
   "proposeNewState" => [
     "draft" => [ "new" ],
-    "new" => [ "wip" ],
+    "new" => [ "wip", "need-stura" ],
+    "wip" => [ "need-stura" ],
   ],
 ];
 
