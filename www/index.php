@@ -457,7 +457,7 @@ if (isset($_REQUEST["action"])) {
       if ($ret !== false) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
         $antrag_id = (int) $ret;
-        $msgs[] = "Antrag wurde erstellt.";
+        #$msgs[] = "Antrag wurde erstellt.";
 
         $ret0 = writeFormdata($antrag_id, false, null, null);
 
