@@ -2,7 +2,7 @@
 
 $config = [
   "title" => "Kostenstellenplan",
-  "shortTitle" => "HHP",
+  "shortTitle" => "Kostenstellen",
   "state" => [ "draft"    => [ "Entwurf", "Entwurf", ],
                "final"    => [ "In Kraft", "in Kraft" ],
              ],

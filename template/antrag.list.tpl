@@ -1,3 +1,41 @@
+<ul class="nav nav-tabs">
+<?php
+$activeType = false;
+foreach ($antraege as $type => $l0) {
+  if ($activeType === false)
+    $activeType = $type;
+
+  $classConfig = getFormClass($type);
+  if ($classConfig === false) continue;
+
+  $classTitle = "{$type}";
+  if (isset($classConfig["title"]))
+    $classTitle = "{$classConfig["title"]}";
+  if (isset($classConfig["shortTitle"]))
+    $classTitle = "{$classConfig["shortTitle"]}";
+
+  $title = "{$classTitle}";
+  echo '<li'.($activeType == $type ? ' class="active"':'').'><a data-toggle="tab" href="#'.md5($type).'">'.htmlspecialchars($title).'</a></li>';
+}
+?>
+</ul>
+
+<div class="tab-content">
+<?php
+
+foreach ($antraege as $type => $l0) {
+  $classConfig = getFormClass($type);
+  if ($classConfig === false) continue;
+
+  $classTitle = "{$type}";
+  if (isset($classConfig["title"]))
+    $classTitle = "[{$type}] {$classConfig["title"]}";
+
+  $title = "{$classTitle}";
+
+  echo '<div id="'.md5($type).'" class="tab-pane fade'.($activeType == $type ? ' in active':'').'">';
+?>
+
 <table class="table table-striped">
   <thead>
     <tr>
@@ -9,40 +47,16 @@
     </tr>
   </thead>
   <tbody>
-    <?php
-
-foreach ($antraege as $type => $l0) {
-  $classConfig = getFormClass($type);
-  if ($classConfig === false) continue;
-
-  $classTitle = "{$type}";
-  if (isset($classConfig["title"]))
-    $classTitle = "[{$type}] {$classConfig["title"]}";
-
-  $title = "{$classTitle}";
-  echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
+<?php
 
   foreach ($l0 as $revision => $l1) {
     $revConfig = getFormConfig($type, $revision);
     if ($revConfig === false) continue;
 
-    $classTitle = "{$type}";
-    if (isset($classConfig["title"]))
-      $classTitle = "[{$type}] {$classConfig["title"]}";
-
-#    $revTitle = "{$revision}";
-#    if (isset($revConfig["revisionTitle"]))
-#      $revTitle = "[{$revision}] {$revConfig["revisionTitle"]}";
-
-#    $title = "{$classTitle} - {$revTitle}";
-    $title = "{$classTitle}";
-
     if (!isset($revConfig["captionField"]))
       $revConfig["captionField"] = [];
     if (!is_array($revConfig["captionField"]))
       $revConfig["captionField"] = [ $revConfig["captionField"] ];
-
-#    echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
 
     foreach ($l1 as $i => $antrag) {
       echo "<tr>";
@@ -73,10 +87,11 @@ foreach ($antraege as $type => $l0) {
       echo "</tr>";
     }
   }
-}
 ?>
   </tbody>
 </table>
+</div>
 <?php
+}
 
 # vim:syntax=php
