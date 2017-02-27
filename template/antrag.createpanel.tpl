@@ -18,6 +18,8 @@ foreach ($formulare as $type => $list) {
   $title = $type;
   if (isset($classConfig["title"]))
     $title = $classConfig["title"];
+  if (isset($classConfig["shortTitle"]))
+    $title = $classConfig["shortTitle"];
 
   $submenu = [];
   foreach ($list as $revision => $lForm) {
