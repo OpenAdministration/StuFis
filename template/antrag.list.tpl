@@ -12,27 +12,38 @@
     <?php
 
 foreach ($antraege as $type => $l0) {
+  $classConfig = getFormClass($type);
+  if ($classConfig === false) continue;
+
+  $classTitle = "{$type}";
+  if (isset($classConfig["title"]))
+    $classTitle = "[{$type}] {$classConfig["title"]}";
+
+  $title = "{$classTitle}";
+  echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
+
   foreach ($l0 as $revision => $l1) {
-    $classConfig = getFormClass($type);
     $revConfig = getFormConfig($type, $revision);
-    if ($classConfig === false) continue;
     if ($revConfig === false) continue;
 
     $classTitle = "{$type}";
     if (isset($classConfig["title"]))
       $classTitle = "[{$type}] {$classConfig["title"]}";
 
-    $revTitle = "{$revision}";
-    if (isset($revConfig["revisionTitle"]))
-      $revTitle = "[{$revision}] {$revConfig["revisionTitle"]}";
+#    $revTitle = "{$revision}";
+#    if (isset($revConfig["revisionTitle"]))
+#      $revTitle = "[{$revision}] {$revConfig["revisionTitle"]}";
 
-    $title = "{$classTitle} - {$revTitle}";
+#    $title = "{$classTitle} - {$revTitle}";
+    $title = "{$classTitle}";
 
     if (!isset($revConfig["captionField"]))
       $revConfig["captionField"] = [];
     if (!is_array($revConfig["captionField"]))
       $revConfig["captionField"] = [ $revConfig["captionField"] ];
-    echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
+
+#    echo "<tr><th colspan=\"5\">".htmlspecialchars($title)."</th></tr>\n";
+
     foreach ($l1 as $i => $antrag) {
       echo "<tr>";
       echo "<td>".htmlspecialchars($antrag["id"])."</td>";

@@ -4,6 +4,7 @@ for ($year = 2017; $year <= date("Y") + 1; $year++):
 
 $config = [
   "revisionTitle" => $year,
+  "caption" => $year,
   "permission" => [
     "isCreateable" => ($year == date("Y") || $year == date("Y")+1),
   ],

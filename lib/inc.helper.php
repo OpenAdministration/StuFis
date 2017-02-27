@@ -45,9 +45,12 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
         renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
         $val = ob_get_contents();
         ob_end_clean();
-        $caption[$j] = $val;
+        $caption[] = $val;
       }
     }
+  }
+  if (isset($revConfig["caption"]) > 0) {
+    $caption[] = $revConfig["caption"];
   }
   if (trim(strip_tags(implode(" ", $caption))) == "")
     array_unshift($caption, htmlspecialchars($antrag["token"]));
