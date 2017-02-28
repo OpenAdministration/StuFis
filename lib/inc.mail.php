@@ -10,6 +10,24 @@ function verify_mail($email) {
 }
 
 function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
+  global $URIBASE, $URIBASEREF;
+
+  include "/var/www/telegram-bot/302395532:AAElmpkUrSoAGPHRUicAr1ZyFBxoqX5JnHI/inc.php";
+  $url = trim($URIBASEREF,"/").str_replace("//","/","/".$URIBASE."/").rawurlencode($antrag["token"]);
+  $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
+  $caption = getAntragDisplayTitle($antrag, $revConfig);
+  $antragtitle = preg_replace('/\s+/', ' ', strip_tags(implode(" ", $caption)));
+  $classConfig = getFormClass($antrag["type"]);
+  if (isset($classConfig["title"]))
+    $classTitle = "{$classConfig["title"]}";
+  $msg = $classTitle . "\n" . $antragtitle . "\n Neuer Status: " . $classConfig["state"][$newState][0] . "\n von: " . $newStateCreator . "\n" . $url;
+  sendToAllTGUser($msg);
+
+
+  notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action);
+}
+
+function notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action) {
   global $URIBASE, $URIBASEREF, $ANTRAGMAILTO, $mail_object, $STORAGE;
 
   $attachAnhang = (bool) $action["attachForm"];
@@ -51,7 +69,6 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
   $caption = getAntragDisplayTitle($antrag, $revConfig);
   $antragtitle = preg_replace('/\s+/', ' ', strip_tags(implode(" ", $caption)));
 
-  $classTitle = "{$antrag["type"]}";
   if (isset($classConfig["title"]))
     $classTitle = "{$classConfig["title"]}";
 
@@ -133,7 +150,6 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
     add_message("eMail an $ANTRAGMAILTO umgeleitet");
     $to = [ $ANTRAGMAILTO ];
   }
-
   return (true === $mail_object->send($to, $header, $message));
 }
 
