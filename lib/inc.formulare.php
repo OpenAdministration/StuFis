@@ -563,10 +563,11 @@ function isNoForm($layout, $ctrl) {
   $noForm = in_array("no-form", $ctrl["render"]);
   $noFormCb = in_array("no-form-cb", $ctrl["render"]);
   $noFormMarkup = in_array("no-form-markup", $ctrl["render"]);
+  $noFormCompress = in_array("no-form-compress", $ctrl["render"]);
   if ($noFormCb) {
     $noForm |= $ctrl["no-form-cb"]($layout, $ctrl);
   }
-  return Array ($noForm, $noFormMarkup);
+  return Array ($noForm, $noFormMarkup, $noFormCompress);
 }
 
 function renderFormItem($layout,$ctrl = false) {
@@ -612,10 +613,14 @@ function renderFormItem($layout,$ctrl = false) {
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
   $ctrl["orig-id"] = str_replace(".", "-", $ctrl["orig-id"]);
 
-  $cls = ["form-group"];
-  if (in_array("hasFeedback", $layout["opts"])) $cls[] = "has-feedback";
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  $cls = [];
+  if ((!$noFormMarkup && !$noFormCompress) || !$noForm)
+    $cls[] = "form-group";
+  if (in_array("hasFeedback", $layout["opts"]))
+    $cls[] = "has-feedback";
+
   if ($noForm)
     $cls[] = "no-form-grp";
   else
@@ -636,7 +641,7 @@ function renderFormItem($layout,$ctrl = false) {
   } elseif (in_array("readonly", $layout["opts"]))
     $ctrl["readonly"] = true;
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
   if (!$noForm && in_array("hide-edit", $layout["opts"]))
     return;
 
@@ -801,7 +806,7 @@ function renderFormItemGroup($layout, $ctrl) {
 function renderFormItemOtherForm($layout,$ctrl) {
   global $URIBASE, $nonce;
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -882,7 +887,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
 }
 
 function renderFormItemRadio($layout,$ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -932,7 +937,7 @@ function renderFormItemRadio($layout,$ctrl) {
 }
 
 function renderFormItemCheckbox($layout,$ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -992,7 +997,7 @@ function printSumId($psIds) {
 function renderFormItemSignBox($layout, $ctrl) {
   global $nonce, $URIBASE, $attributes, $GremiumPrefix;
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1039,7 +1044,8 @@ function renderFormItemSignBox($layout, $ctrl) {
 function renderFormItemText($layout, $ctrl) {
   global $nonce, $URIBASE, $attributes, $GremiumPrefix;
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
+  $noFormMarkup |= $noFormCompress;
   $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
   $isDS = isset($layout["data-source"]);
 
@@ -1216,7 +1222,7 @@ function renderFormItemText($layout, $ctrl) {
 }
 
 function renderFormItemMoney($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "0.00";
   if (isset($ctrl["_values"])) {
@@ -1248,14 +1254,21 @@ function renderFormItemMoney($layout, $ctrl) {
     $noForm = true;
   }
 
-  echo "<div class=\"input-group\">";
+  if (!($noFormMarkup || $noFormCompress) || !$noForm)
+    echo "<div class=\"input-group\">";
+  else
+    echo "<div class=\"text-right\">";
 
-  if (in_array("is-sum", $layout["opts"]))
-    echo "<span class=\"input-group-addon\">Σ</span>";
+  if (in_array("is-sum", $layout["opts"])) {
+    if (!($noFormMarkup || $noFormCompress))
+      echo "<span class=\"input-group-addon\">Σ</span>";
+    else
+      echo "Σ&nbsp;";
+  }
 
-  if ($noForm && $noFormMarkup) {
+  if ($noForm && ($noFormMarkup || $noFormCompress)) {
     echo "<div class=\"text-right visible-inline\"";
-  } else if ($noForm && !$noFormMarkup) {
+  } else if ($noForm) {
     echo "<div class=\"form-control text-right\"";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
@@ -1267,7 +1280,6 @@ function renderFormItemMoney($layout, $ctrl) {
   if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
     echo " data-printSum=\"".htmlspecialchars(printSumId($layout["printSum"]))."\"";
   }
-
   if ($noForm) {
     echo ">";
     echo $tPattern;
@@ -1279,12 +1291,16 @@ function renderFormItemMoney($layout, $ctrl) {
     echo "/>";
   }
 
-  echo "<span class=\"input-group-addon\">".htmlspecialchars($layout["currency"])."</span>";
+  if (!($noFormMarkup || $noFormCompress) || !$noForm)
+    echo "<span class=\"input-group-addon\">".htmlspecialchars($layout["currency"])."</span>";
+  else
+    echo "&nbsp;".htmlspecialchars($layout["currency"]);
+
   echo "</div>";
 }
 
 function renderFormItemTextarea($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1326,7 +1342,7 @@ function getFileLink($file, $antrag) {
 }
 
 function renderFormItemFile($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $file = false;
   if (isset($ctrl["_values"])) {
@@ -1387,7 +1403,7 @@ function renderFormItemFile($layout, $ctrl) {
 }
 
 function renderFormItemMultiFile($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   if ($noForm && isset($layout["destination"]))
     return false; // no data here
@@ -1541,7 +1557,7 @@ function getTrText($trId, $ctrl) {
 function renderFormItemSelect($layout, $ctrl) {
   global $attributes, $GremiumPrefix;
 
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1911,7 +1927,7 @@ function otherFormTrOptions($layout, $ctrl) {
 }
 
 function renderFormItemDateRange($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $valueStart = "";
   $valueEnd = "";
@@ -2004,7 +2020,7 @@ function renderFormItemDateRange($layout, $ctrl) {
 
 
 function renderFormItemDate($layout, $ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -2078,7 +2094,7 @@ function renderFormItemTable($layout, $ctrl) {
   $withRowNumber = in_array("with-row-number", $layout["opts"]);
   $withHeadline = in_array("with-headline", $layout["opts"]);
   $withExpand = in_array("with-expand", $layout["opts"]);
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $cls = ["table", "table-striped", "summing-table"];
   if (!$noForm)
@@ -2466,7 +2482,7 @@ function evalPrintSum($psId, $sums, &$src = []) {
 }
 
 function renderFormItemInvRef($layout,$ctrl) {
-  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $refId = $ctrl["_render"]->currentRowId;
   if ($refId === false) return false;

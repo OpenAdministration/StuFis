@@ -9,6 +9,7 @@ $config = [
     "isCreateable" => ($year == date("Y") || $year == date("Y")+1),
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
+ä  "renderOptRead" => [ "no-form-compress" ],
 ];
 
 $layout = [
@@ -80,6 +81,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
              "columns" => [
                 [ "id" => "titel.$id.grp", "type" => "group", "opts" => ["title"], "width" => 12,
                   "name" => true,
+                  "printSumFooter" => ["$id"],
                   "children" => $children,
                 ], // column
              ], // columns
