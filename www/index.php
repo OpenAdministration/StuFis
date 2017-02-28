@@ -841,7 +841,11 @@ switch($_REQUEST["tab"]) {
       if (false === $form) continue;
       $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
       if (!hasPermission($form, $t, "canRead")) continue;
-      $antraege[$t["type"]][$t["revision"]][$t["id"]] = $t;
+      $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
+      foreach (array_keys($form["_categories"]) as $cat) {
+        if (!hasCategory($form, $t, $cat)) continue;
+        $antraege[$cat][$t["type"]][$t["revision"]][$t["id"]] = $t;
+      }
     }
     require "../template/antrag.createpanel.tpl";
     require "../template/antrag.list.tpl";

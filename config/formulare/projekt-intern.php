@@ -11,6 +11,23 @@ $config = [
                "obsolete"   => [ "Zurückgezogen", "zurückziehen", ],
              ],
   "createState" => "draft",
+  "categories" => [
+    "finished" => [
+       [ "state" => "obsolete", "group" => "ref-finanzen" ],
+       [ "state" => "done", "group" => "ref-finanzen" ],
+    ],
+    "wait-action" => [
+       [ "state" => "new", "notHasCategory" => "need-action" ],
+       [ "state" => "wip", "notHasCategory" => "need-action" ],
+       [ "state" => "need-stura", "notHasCategory" => "need-action" ],
+    ],
+    "need-action" => [
+       [ "state" => "new", "group" => "ref-finanzen" ],
+       [ "state" => "wip", "group" => "ref-finanzen" ],
+       [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
+       [ "state" => "need-stura", "creator" => "self" ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

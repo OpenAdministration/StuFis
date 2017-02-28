@@ -7,6 +7,11 @@ $config = [
                "final"    => [ "In Kraft", "in Kraft" ],
              ],
   "createState" => "draft",
+  "categories" => [
+    "plan" => [
+      [],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

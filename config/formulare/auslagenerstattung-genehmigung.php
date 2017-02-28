@@ -14,6 +14,16 @@ $config = [
   ],
   "createState" => "draft",
   "buildFrom" => [ [ "auslagenerstattung", "ok" ] ],
+  "categories" => [
+    "need-action" => [
+      [ "state" => "draft", "group" => "ref-finanzen" ],
+      [ "state" => "ok", "group" => "ref-finanzen" ],
+    ],
+    "finished" => [
+      [ "state" => "payed" ],
+      [ "state" => "revoked" ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

@@ -4,7 +4,6 @@ $config = [
   "title" => "Genehmigung für ein Projekt der Studierendenschaft (internes Projekt)",
   "shortTitle" => "Genehmigung internes Projekt",
   "state" => [ "draft" => [ "Entwurf", ],
-               "wait-stura" => [ "Warte auf StuRa Beschluss", ],
                "ok-by-hv" => [ "Genehmigt durch HV (muss noch verkündet werden)", ],
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
                "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
@@ -12,8 +11,7 @@ $config = [
                "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
              ],
   "proposeNewState" => [
-    "draft" => [ "wait-stura", "ok-by-hv" ],
-    "wait-stura" => [ "ok-by-stura" ],
+    "draft" => [ "ok-by-stura", "ok-by-hv" ],
     "ok-by-hv" => [ "done-hv" ],
     "done-hv" => ["terminated"],
     "ok-by-stura" => ["terminated"],
@@ -21,6 +19,20 @@ $config = [
   "createState" => "draft",
   "buildFrom" => [
     [ "projekt-intern" /* type */, "done" /* state */ ],
+  ],
+  "categories" => [
+    "finished" => [
+       [ "state" => "terminated" ],
+       [ "state" => "revoked" ],
+    ],
+    "running-project" => [
+       [ "state" => "ok-by-hv" ],
+       [ "state" => "ok-by-stura" ],
+       [ "state" => "done-hv" ],
+    ],
+    "need-action" => [
+       [ "state" => "draft" ],
+    ],
   ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
@@ -34,7 +46,6 @@ $config = [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-hv" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-stura" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "wait-stura" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "done-hv" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
       [ "group" => "ref-finanzen" ],
@@ -62,10 +73,7 @@ $config = [
     "canEditState" => [
       [ "group" => "ref-finanzen", ],
     ],
-    "canStateChange.from.draft.to.wait-stura" => [
-      [ "hasPermission" => "canEditState" ],
-    ],
-    "canStateChange.from.wait-stura.to.ok-by-stura" => [
+    "canStateChange.from.draft.to.ok-by-stura" => [
       [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.draft.to.ok-by-stura" => [
@@ -81,20 +89,11 @@ $config = [
     "canStateChange.from.draft.to.done-hv" => [
       [ "hasPermission" => "canEditState" ],
     ],
-    "canStateChange.from.wait-stura.to.ok-by-hv" => [
-      [ "hasPermission" => "canEditState" ],
-    ],
-    "canStateChange.from.wait-stura.to.done-hv" => [
-      [ "hasPermission" => "canEditState" ],
-    ],
     # Rücknahme
     "canRevoke" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
-    ],
-    "canStateChange.from.wait-stura.to.revoked" => [
-      [ "hasPermission" => "canRevoke" ],
     ],
     "canStateChange.from.ok-by-hv.to.revoked" => [
       [ "hasPermission" => "canRevoke" ],
@@ -107,9 +106,6 @@ $config = [
     ],
     "canUnrevoke" => [
       [ "group" => "ref-finanzen" ],
-    ],
-    "canStateChange.from.revoked.to.wait-stura" => [
-      [ "hasPermission" => "canUnrevoke" ],
     ],
     "canStateChange.from.revoked.to.ok-by-hv" => [
       [ "hasPermission" => "canUnrevoke" ],
@@ -136,9 +132,7 @@ $config = [
   "newStateActions" => [
     "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.done-hv"       => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.draft.to.wait-stura"    => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.ok-by-stura"   => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.wait-stura.to.revoked"  => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],

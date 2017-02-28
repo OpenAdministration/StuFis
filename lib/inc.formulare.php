@@ -49,15 +49,16 @@ function registerForm( $type, $revision, $layout, $config ) {
     "revision" => $revision,
     "_class" => $formulare[$type]["_class"],
     "_perms" => mergePermission($formulare[$type]["_class"], $config, $type, $revision),
+    "_categories" => mergePermission($formulare[$type]["_class"], $config, $type, $revision, "categories"),
   ];
 }
 
-function mergePermission($classConfig, $revConfig, $type, $revision) {
+function mergePermission($classConfig, $revConfig, $type, $revision, $setting = "permission") {
   $perms = [];
   foreach ([$classConfig, $revConfig] as $config) {
-    if (!isset($config["permission"])) continue;
-    foreach ($config["permission"] as $id => $p) {
-      if (isset($perms[$id])) die("$type:$revision: permission $id has conflicting definitions");
+    if (!isset($config[$setting])) continue;
+    foreach ($config[$setting] as $id => $p) {
+      if (isset($perms[$id])) die("$type:$revision: $setting $id has conflicting definitions");
       $perms[$id] = $p;
     }
   }
@@ -114,7 +115,7 @@ function loadForms() {
 
 }
 
-function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
+function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) {
   global $attributes;
   if ($i == "state") {
     $currentState = "draft";
@@ -156,7 +157,9 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
     if (!is_array($c)) $c = [$c];
     foreach ($c as $permName) {
 #      echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c).": evaluate $permName -->\n";
-      if (!hasPermission($otherForm, $otherAntrag, $permName))
+      if ($isCategory && !hasCategory($otherForm, $otherAntrag, $permName))
+        return false;
+      if (!$isCategory && !hasPermission($otherForm, $otherAntrag, $permName))
         return false;
     }
   } else if ($i == "hasPermission") {
@@ -165,6 +168,25 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
       if (!hasPermission($form, $antrag, $permName))
         return false;
     }
+  } else if ($i == "hasPermissionNoAdmin") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $permName) {
+      if (!hasPermission($form, $antrag, $permName, false))
+        return false;
+    }
+  } else if ($i == "hasCategory") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $permName) {
+      if (!hasCategory($form, $antrag, $permName))
+        return false;
+    }
+  } else if ($i == "notHasCategory") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $permName) {
+      if (!hasCategory($form, $antrag, $permName))
+        return true;
+    }
+    return false;
   } else if ($i == "group") {
     if (!is_array($c)) $c = [$c];
     foreach ($c as $groupName) {
@@ -202,9 +224,9 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form) {
   return true;
 }
 
-function checkPermissionLine(&$p, &$antrag, &$form) {
+function checkPermissionLine(&$p, &$antrag, &$form, $isCategory) {
   foreach ($p as $i => $c) {
-    $tmp = checkSinglePermission($i, $c, $antrag, $form);
+    $tmp = checkSinglePermission($i, $c, $antrag, $form, $isCategory);
 #    echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c)." => ".($tmp ? "true":"false")." -->\n";
     if (!$tmp)
       return false;
@@ -212,7 +234,7 @@ function checkPermissionLine(&$p, &$antrag, &$form) {
   return true;
 }
 
-function hasPermission(&$form, $antrag, $permName) {
+function hasPermission(&$form, $antrag, $permName, $adminOk = true) {
   global $formulare;
   static $stack = false;
 
@@ -234,7 +256,7 @@ function hasPermission(&$form, $antrag, $permName) {
 
 #  echo "\n<!-- hasPermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => to be evaluated -->\n";
 
-  $ret = hasPermissionImpl($form, $antrag, $pp, $permName);
+  $ret = hasPermissionImpl($form, $antrag, $pp, $permName, $adminOk);
 
   array_pop($stack);
 
@@ -243,10 +265,41 @@ function hasPermission(&$form, $antrag, $permName) {
   return $ret;
 }
 
-function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous") {
+function hasCategory(&$form, $antrag, $permName) {
+  global $formulare;
+  static $stack = false;
+
+  if (!isset($form["_categories"][$permName]))
+    return false;
+
+  $pp = $form["_categories"][$permName];
+  if ($antrag === null || !isset($antrag["id"]))
+    $aId = "null";
+  else
+    $aId = $antrag["id"];
+
+  $permId = $form["type"].":".$form["revision"].":".$aId.".".$permName;
+  if ($stack === false)
+    $stack = [];
+  if (in_array($permId, $stack))
+    return false;
+  array_push($stack, $permId);
+
+#  echo "\n<!-- hasCategory: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => to be evaluated -->\n";
+
+  $ret = hasPermissionImpl($form, $antrag, $pp, $permName, false, true);
+
+  array_pop($stack);
+
+#  echo "\n<!-- hasCategory: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $permName => ".($ret ? "true":"false")." -->\n";
+
+  return $ret;
+}
+
+function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous", $adminOk = true, $isCategory = false) {
   global $ADMINGROUP;
 
-  if (hasGroup($ADMINGROUP))
+  if ($adminOk && hasGroup($ADMINGROUP))
     return true;
 
   $ret = false;
@@ -256,7 +309,7 @@ function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous") {
 
   if (is_array($pp)) {
     foreach($pp as $i => $p) {
-      $tmp = checkPermissionLine($p, $antrag, $form);
+      $tmp = checkPermissionLine($p, $antrag, $form, $isCategory);
 #      echo "\n<!-- checkPermissionLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
       if (!$tmp)
         continue;

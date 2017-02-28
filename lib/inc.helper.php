@@ -29,6 +29,11 @@ function getAntrag($id = null) {
 }
 
 function getAntragDisplayTitle(&$antrag, &$revConfig) {
+  static $cache = false;
+  if ($cache === false) $cache = [];
+  if (isset($antrag["id"]) && isset($cache[$antrag["id"]]))
+    return $cache[$antrag["id"]];
+
   $caption = [ ];
   if (count($revConfig["captionField"]) > 0) {
     if (!isset($antrag["_inhalt"])) {
@@ -54,6 +59,9 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
   }
   if (trim(strip_tags(implode(" ", $caption))) == "")
     array_unshift($caption, htmlspecialchars($antrag["token"]));
+
+  if (isset($antrag["id"]))
+    $cache[$antrag["id"]] = $caption;
   return $caption;
 }
 

@@ -14,6 +14,17 @@ $config = [
   ],
   "createState" => "draft",
   "buildFrom" => [ "projekt-intern-genehmigung" ],
+  "categories" => [
+    "need-action" => [
+      [ "state" => "draft", "creator" => "self" ],
+      [ "state" => "draft", "hasPermissionNoAdmin" => "isProjektLeitung" ],
+      [ "state" => "new", "group" => "ref-finanzen" ],
+    ],
+    "finished" => [
+      [ "state" => "ok" ],
+      [ "state" => "revoked" ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.
