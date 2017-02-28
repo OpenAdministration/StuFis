@@ -950,6 +950,45 @@ $(document).ready(function() {
     return false;
   });
 
+  $( "td.expand-toggle" ).each(function (i, td) {
+    var $td = $(td);
+    var $tr = $td.closest("tr");
+    var $e = $tr.find(".hideable-during-read");
+    var $btnOpen = $td.children(".expand-toggle-expand");
+    var $btnClose = $td.children(".expand-toggle-compress");
+
+    $btnClose.hide();
+    $e.hide();
+
+    if ($e.length == 0) {
+      $btnOpen.hide();
+      return;
+    }
+
+    $btnOpen.on("click.expand-toggle", function(evt) {
+      var $td = $(this).closest("td");
+      var $tr = $td.closest("tr");
+      var $btnOpen = $td.children(".expand-toggle-expand");
+      var $btnClose = $td.children(".expand-toggle-compress");
+      var $e = $tr.find(".hideable-during-read");
+      $e.show();
+      $btnClose.show();
+      $btnOpen.hide();
+    });
+
+    $btnClose.on("click.expand-toggle", function(evt) {
+      var $td = $(this).closest("td");
+      var $tr = $td.closest("tr");
+      var $btnOpen = $td.children(".expand-toggle-expand");
+      var $btnClose = $td.children(".expand-toggle-compress");
+      var $e = $tr.find(".hideable-during-read");
+      $e.hide();
+      $btnOpen.show();
+      $btnClose.hide();
+    });
+    
+  });
+
   $( "form.ajax a.submit-form" ).on("click.submit-form", function(e) {
     var $el = $(this);
     var $frm = $el.closest("form");

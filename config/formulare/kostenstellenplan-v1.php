@@ -27,7 +27,7 @@ $children = [
 if ($year == date("Y")) {
   $children[] =
     [ "id" => "kosten.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
-      "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId"],
+      "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId","hideableDuringRead"],
       "title" => "Genehmigte Projekte (offene Posten)",
       "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
       "printSumWidth" => 3,
@@ -40,7 +40,7 @@ if ($year == date("Y")) {
 }
 $children[] =
   [ "id" => "kosten.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
-    "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
+    "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","hideableDuringRead"],
     "printSum" => [ "einnahmen", "ausgaben" ],
     "title" => "Getätigte oder genehmigte Einnahmen und Ausgaben",
     "otherForms" => [
@@ -64,7 +64,7 @@ $layout[] =
          [
            "type" => "table", /* renderer */
            "id" => "kosten",
-           "opts" => ["with-headline"],
+           "opts" => ["with-headline","with-expand"],
            "width" => 12,
            "columns" => [
               [ "id" => "kosten.grp", "type" => "group", "opts" => ["title"], "width" => 12,

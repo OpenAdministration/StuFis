@@ -201,3 +201,8 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
 .form-control.signbox {
   height: 3cm;
 }
+
+.expand-toggle-expand, .expand-toggle-compress {
+  cursor: pointer;
+}
+

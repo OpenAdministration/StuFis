@@ -620,6 +620,8 @@ function renderFormItem($layout,$ctrl = false) {
     $cls[] = "no-form-grp";
   else
     $cls[] = "form-grp";
+  if ($noForm && in_array("hideableDuringRead", $layout["opts"]))
+    $cls[] = "hideable-during-read";
 
   $ctrl["readonly"] = false;
   if (isset($layout["toggleReadOnly"])) {
@@ -2075,6 +2077,7 @@ function renderFormItemDate($layout, $ctrl) {
 function renderFormItemTable($layout, $ctrl) {
   $withRowNumber = in_array("with-row-number", $layout["opts"]);
   $withHeadline = in_array("with-headline", $layout["opts"]);
+  $withExpand = in_array("with-expand", $layout["opts"]);
   list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
 
   $cls = ["table", "table-striped", "summing-table"];
@@ -2173,6 +2176,8 @@ function renderFormItemTable($layout, $ctrl) {
         if (!$noForm)
           $colSpan++; # delete-row
         if ($withRowNumber)
+          $colSpan++;
+        if ($withExpand)
           $colSpan++;
         if ($colSpan > 0)
           echo "<th colspan=\"{$colSpan}\">";
@@ -2299,6 +2304,9 @@ function renderFormItemTable($layout, $ctrl) {
         if ($withRowNumber)
           echo "<td class=\"row-number\">".($rowNumber+1)."</td>";
 
+        if ($withExpand)
+          echo "<td class=\"expand-toggle\"><i class=\"expand-toggle-expand fa fa-plus-square-o\" aria-hidden=\"true\"></i><i class=\"expand-toggle-compress fa fa-minus-square-o\" aria-hidden=\"true\"></i></td>";
+
         if (!$noForm) {
           echo "<td class=\"delete-row\">";
           echo "<a href=\"\" class=\"delete-row\"><i class=\"fa fa-fw fa-trash\"></i></a>";
@@ -2374,6 +2382,8 @@ function renderFormItemTable($layout, $ctrl) {
         if (!$noForm)
           $colSpan++; # delete-row
         if ($withRowNumber)
+          $colSpan++;
+        if ($withExpand)
           $colSpan++;
         if ($colSpan > 0)
           echo "<th colspan=\"{$colSpan}\">";
