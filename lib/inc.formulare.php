@@ -212,6 +212,27 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
         }
         if (!in_array($value, $permittedValues))
           return false;
+      } elseif (substr($c,0,2) == "<=") {
+        $cmpVal = substr($c,2);
+        if ($value > $cmpVal)
+          return false;
+      } elseif (substr($c,0,2) == ">=") {
+        $cmpVal = substr($c,2);
+        if ($value < $cmpVal)
+          return false;
+      } elseif (substr($c,0,2) == "==") {
+        $cmpVal = substr($c,2);
+        if ($value != $cmpVal)
+          return false;
+      } elseif (substr($c,0,1) == "<") {
+        $cmpVal = substr($c,1);
+echo "\n<!-- $fieldName = $value < $cmpVal -->\n";
+        if ($value >= $cmpVal)
+          return false;
+      } elseif (substr($c,0,1) == ">") {
+        $cmpVal = substr($c,1);
+        if ($value <= $cmpVal)
+          return false;
       } else {
         die("field test $c not implemented");
       }

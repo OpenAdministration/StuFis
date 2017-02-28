@@ -4,6 +4,7 @@ $catList = [
   "need-action" => "zu erledigen",
   "finished" => "erledigt",
   "running-project" => "laufende Projekte",
+  "expired-project" => "abgelaufende Projekte",
   "plan" => "HHP/KP",
   "wait-action" => "Wartet",
   "all" => "alle",
@@ -20,6 +21,8 @@ $availCats = array_keys($catList);
 $orderedCats = array_merge(array_intersect($availCats, $usedCats), array_diff($usedCats, $availCats));
 
 foreach ($orderedCats as $cat) {
+  if (substr($cat,0,1) == "_") continue;
+
   if ($activeCat === false)
     $activeCat = $cat;
 
@@ -35,6 +38,8 @@ foreach ($orderedCats as $cat) {
 <?php
 
 foreach ($antraege as $cat => $l0) {
+  if (substr($cat,0,1) == "_") continue;
+
   $title = "{$cat}";
   echo '<div id="'.md5($cat).'" class="tab-pane fade'.($activeCat == $cat ? ' in active':'').'">';
 

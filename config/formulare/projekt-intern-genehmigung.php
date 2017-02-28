@@ -26,9 +26,14 @@ $config = [
        [ "state" => "revoked" ],
     ],
     "running-project" => [
-       [ "state" => "ok-by-hv" ],
-       [ "state" => "ok-by-stura" ],
-       [ "state" => "done-hv" ],
+       [ "state" => "ok-by-hv", "notHasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "ok-by-stura", "notHasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "done-hv", "notHasCategory" => "_isExpiredProject2W" ],
+    ],
+    "expired-project" => [
+       [ "state" => "ok-by-hv", "hasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "ok-by-stura", "hasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "done-hv", "hasCategory" => "_isExpiredProject2W" ],
     ],
     "need-action" => [
        [ "state" => "draft" ],

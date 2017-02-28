@@ -3,6 +3,14 @@
 $config = [
   "captionField" => [ "projekt.name", "projekt.zeitraum" ],
   "revisionTitle" => "Version 20170126",
+  "categories" => [
+    "_isExpiredProject" => [
+      ["field:projekt.zeitraum[end]" => "<".date("Y-m-d")],
+    ],
+    "_isExpiredProject2W" => [
+      ["field:projekt.zeitraum[end]" => "<".date("Y-m-d", strtotime("-2 weeks"))],
+    ],
+  ],
   "permission" => [
     "isCorrectGremium" => [
       [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
