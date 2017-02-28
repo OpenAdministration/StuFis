@@ -9,7 +9,7 @@ $config = [
     "isCreateable" => ($year == date("Y") || $year == date("Y")+1),
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
-ä  "renderOptRead" => [ "no-form-compress" ],
+  "renderOptRead" => [ "no-form-compress" ],
 ];
 
 $layout = [
