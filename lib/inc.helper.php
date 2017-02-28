@@ -33,6 +33,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
   if ($cache === false) $cache = [];
   if (isset($antrag["id"]) && isset($cache[$antrag["id"]]))
     return $cache[$antrag["id"]];
+  $renderOk = true;
 
   $caption = [ ];
   if (count($revConfig["captionField"]) > 0) {
@@ -47,7 +48,8 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
         ob_start();
         $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
         $form = [ "layout" => $formlayout, "config" => [] ];
-        renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+        $ret = renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+        if ($ret === false) $renderOk = false;
         $val = ob_get_contents();
         ob_end_clean();
         $caption[] = $val;
@@ -60,7 +62,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
   if (trim(strip_tags(implode(" ", $caption))) == "")
     array_unshift($caption, htmlspecialchars($antrag["token"]));
 
-  if (isset($antrag["id"]))
+  if (isset($antrag["id"]) && $renderOk)
     $cache[$antrag["id"]] = $caption;
   return $caption;
 }

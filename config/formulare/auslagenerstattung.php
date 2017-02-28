@@ -5,7 +5,7 @@ $config = [
   "shortTitle" => "Auslagenerstattung",
   "state" => [ "draft" => [ "Entwurf" ],
                "new" => [ "Beantragt", "beantragen" ],
-               "ok" => [ "Genehmigt", "genehmigen", ],
+               "ok" => [ "Erledigt", "erledigt", ],
                "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
   "proposeNewState" => [

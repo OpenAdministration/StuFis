@@ -70,6 +70,8 @@ $layout = [
      ],
      [ "id" => "genehmigung.antrag",  "title" =>"Antrag auf Erstattung war",  "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback", "readonly"] ],
      [ "id" => "genehmigung.modified", "text" =>"Genehmigte Erstattung weicht vom Antrag ab", "type" => "checkbox", "width" => 12, "opts" => [ "toggleReadOnly" ], "value" => "yes" ],
+     [ "id" => "genehmigung.sachlicheRichtigkeit", "title" =>"Sachliche Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required" ]],
+     [ "id" => "genehmigung.rechnerischeRichtigkeit", "title" =>"Rechnerische Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required" ] ],
    ],
  ],
 

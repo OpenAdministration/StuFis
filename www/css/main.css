@@ -198,3 +198,6 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   display: none !important;
 }
 
+.form-control.signbox {
+  height: 3cm;
+}

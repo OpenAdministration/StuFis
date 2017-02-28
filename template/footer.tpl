@@ -139,5 +139,16 @@
   </div>
 </div>
 
+<!--
+<?php
+  global $renderFormTrace;
+
+if (isset($renderFormTrace)) {
+  print_r($renderFormTrace);
+}
+
+?>
+-->
+
 		</body>
 </html>

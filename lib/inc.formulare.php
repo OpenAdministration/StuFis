@@ -299,6 +299,7 @@ function hasCategory(&$form, $antrag, $permName) {
 function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous", $adminOk = true, $isCategory = false) {
   global $ADMINGROUP;
 
+$adminOk=false;
   if ($adminOk && hasGroup($ADMINGROUP))
     return true;
 
@@ -461,10 +462,11 @@ function renderForm($form, $ctrl = false) {
   if (!isset($form["layout"]))
     die("renderForm: \$form has no layout");
 
-  renderFormImpl($form, $ctrl);
+  return renderFormImpl($form, $ctrl);
 }
 
 function renderFormImpl(&$form, &$ctrl) {
+  global $renderFormTrace;
 
   static $stack = false;
 
@@ -472,10 +474,12 @@ function renderFormImpl(&$form, &$ctrl) {
   if (isset($ctrl["_values"])) {
     if (in_array($ctrl["_values"]["id"], $stack)) {
       echo "form {$ctrl["_values"]["id"]} already on stack<br>\n";
-      return;
+      return false;
     }
     array_push($stack, $ctrl["_values"]["id"]);
   }
+#  $renderFormTrace[] = [ "formStack" => $stack, "funcStack" => xdebug_get_function_stack()]; #$ctrl["_values"]["id"];
+#  $renderFormTrace[] = $ctrl["_values"]["id"];
 
   $layout = $form["layout"];
 
@@ -522,7 +526,11 @@ function renderFormImpl(&$form, &$ctrl) {
 
   echo $txt;
 
-  array_pop($stack);
+  if (isset($ctrl["_values"])) {
+    array_pop($stack);
+  }
+
+  return true;
 }
 
 
@@ -622,6 +630,9 @@ function renderFormItem($layout,$ctrl = false) {
       break;
     case "group":
       $isEmpty = renderFormItemGroup($layout,$ctrl);
+      break;
+    case "signbox":
+      $isEmpty = renderFormItemSignBox($layout,$ctrl);
       break;
     case "text":
     case "titelnr":
@@ -953,6 +964,53 @@ function printSumId($psIds) {
       $r[] = $psId;
   }
   return implode(" ", $r);
+}
+
+function renderFormItemSignBox($layout, $ctrl) {
+  global $nonce, $URIBASE, $attributes, $GremiumPrefix;
+
+  list ($noForm, $noFormMarkup) = isNoForm($layout, $ctrl);
+
+  $value = "";
+  if (isset($ctrl["_values"])) {
+    $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
+  }
+
+  $ctrl["_render"]->displayValue = htmlspecialchars($value);
+  $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
+
+  if (!$noForm && $ctrl["readonly"]) {
+    echo "<input type=\"hidden\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    echo " value=\"{$tPattern}\"";
+    echo '>';
+    $noForm = true;
+  }
+
+  if ($noForm) {
+    if (!$noFormMarkup) {
+      echo "<div class=\"form-control signbox\">";
+    }
+    echo $tPattern;
+    if (!$noFormMarkup) {
+      echo "</div>";
+    }
+  } else {
+    $isChecked = ($value != "");
+    $newValue = ($isChecked ? $value : getUserFullName()." am ".date("Y-m-d"));
+    $tPatternNew = newTemplatePattern($ctrl, htmlspecialchars($newValue));
+    echo "<div class=\"checkbox\"><label>";
+    echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    if ($isChecked)
+      echo " checked=\"checked\"";
+    if (in_array("required", $layout["opts"]))
+      echo " required=\"required\"";
+    if (in_array("toggleReadOnly", $layout["opts"]))
+      echo " data-isToggleReadOnly=\"true\"";
+    echo " value=\"{$tPatternNew}\"";
+    echo "/>";
+    echo $tPattern;
+    echo "</label></div>";
+  }
 }
 
 function renderFormItemText($layout, $ctrl) {
@@ -1489,7 +1547,7 @@ function renderFormItemSelect($layout, $ctrl) {
         if ($otherFormId != "")
           $layout["references"][0] = "id:{$otherFormId}";
       }
-      $tmp = otherForm($layout, $ctrl);
+      $tmp = otherForm($layout, $ctrl, "no-nesting");
       $txtTr = "";
       if ($tmp !== false) {
         $otherForm = $tmp["form"];
@@ -1654,10 +1712,12 @@ function renderFormItemSelect($layout, $ctrl) {
   echo "</div>";
 }
 
-function renderOtherAntrag($antragId, $renderOpts = "") {
+function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "") {
   static $cache = false;
-
   if ($cache === false) $cache = [];
+
+  if (isset($ctrl["render"]) && in_array("no-nesting", $ctrl["render"])) return false;
+
   $key = "a:{$antragId},r:{$renderOpts}";
 
   if (!isset($cache[$key])) {
@@ -1667,10 +1727,11 @@ function renderOtherAntrag($antragId, $renderOpts = "") {
     $otherCtrl = ["_values" => $otherAntrag, "render" => explode(",", "no-form,{$renderOpts}")];
 
     ob_start();
-    renderFormImpl($otherForm, $otherCtrl);
+    $success = renderFormImpl($otherForm, $otherCtrl);
     ob_end_clean();
 
-    $cache[$key] = ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag];
+    if ($success)
+      $cache[$key] = ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag];
   } else {
     $otherForm = $cache[$key]["form"];
     $otherCtrl = $cache[$key]["ctrl"];
@@ -1680,7 +1741,7 @@ function renderOtherAntrag($antragId, $renderOpts = "") {
   return ["form" => $otherForm, "ctrl" => $otherCtrl, "antrag" => $otherAntrag ];
 }
 
-function otherForm(&$layout, &$ctrl) {
+function otherForm(&$layout, &$ctrl, $renderOpts = "") {
   $fieldValue = false;
   $fieldName = false;
   if (is_array($layout["references"][0])) {
@@ -1727,11 +1788,11 @@ function otherForm(&$layout, &$ctrl) {
   }
   $fieldValue = (int) $fieldValue;
 
-  return renderOtherAntrag($fieldValue);
+  return renderOtherAntrag($fieldValue, $ctrl, $renderOpts);
 }
 
 function otherFormTrOptions($layout, $ctrl) {
-  $tmp = otherForm($layout, $ctrl);
+  $tmp = otherForm($layout, $ctrl, "no-nesting");
   if ($tmp === false) return "";
   $otherForm = $tmp["form"];
   $otherCtrl = $tmp["ctrl"];
@@ -2428,7 +2489,7 @@ function renderFormItemInvRef($layout,$ctrl) {
       $ro = "";
       if (in_array("skip-referencesId", $layout["opts"]))
         $ro = "skip-referencesId";
-      $t = renderOtherAntrag($aId, $ro);
+      $t = renderOtherAntrag($aId, $ctrl, $ro);
 
       $otherCtrl = $t["ctrl"];
       $f = $t["form"];
