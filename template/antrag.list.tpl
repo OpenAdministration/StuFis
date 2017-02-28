@@ -6,7 +6,7 @@ $catList = [
   "running-project" => "laufende Projekte",
   "expired-project" => "abgelaufende Projekte",
   "plan" => "HHP/KP",
-  "wait-action" => "Wartet",
+  "wait-action" => "wartet",
   "all" => "alle",
 ];
 
