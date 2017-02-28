@@ -49,6 +49,7 @@ $config = [
       [ "hasPermission" => "isCorrectGremium", "state" => "done-hv" ],
       [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
       [ "group" => "ref-finanzen" ],
+      [ "group" => "konsul" ],
     ],
     "canEditPartiell" => [
       [ "group" => "ref-finanzen", ],

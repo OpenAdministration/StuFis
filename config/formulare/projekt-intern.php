@@ -45,6 +45,7 @@ $config = [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
+      [ "group" => "konsul" ],
     ],
     "canEdit" => [
       [ "state" => "draft", "hasPermission" => "canRead" ],

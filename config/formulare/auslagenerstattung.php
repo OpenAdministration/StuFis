@@ -36,6 +36,7 @@ $config = [
     "canRead" => [
       [ "creator" => "self" ],
       [ "group" => "ref-finanzen" ],
+      [ "group" => "konsul" ],
 # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
 # FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
     ],

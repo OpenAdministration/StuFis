@@ -35,6 +35,7 @@ $config = [
     "canRead" => [
       [ "creator" => "self" ],
       [ "group" => "ref-finanzen" ],
+      [ "group" => "konsul" ],
       [ "hasPermission" => "isEigenerAntrag" ],
       [ "hasPermission" => "isProjektLeitung" ],
 # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
