@@ -21,6 +21,9 @@ $config = [
     [ "projekt-intern" /* type */, "done" /* state */ ],
   ],
   "categories" => [
+    "report-stura" => [
+       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ],
+    ],
     "finished" => [
        [ "state" => "terminated" ],
        [ "state" => "revoked" ],

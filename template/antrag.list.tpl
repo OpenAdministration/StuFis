@@ -2,6 +2,7 @@
 
 $catList = [
   "need-action" => "zu erledigen",
+  "report-stura" => "im StuRa berichten",
   "finished" => "erledigt",
   "running-project" => "laufende Projekte",
   "expired-project" => "abgelaufende Projekte",
