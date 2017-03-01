@@ -39,23 +39,23 @@ if ($year == date("Y")) {
   $children[] =
     [ "id" => "kosten.einnahmen",   "name" => "getätigte Einnahmen",  "type" => "money",  "width" => 1,
       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-      "printSumDefer" => "einnahmen.offen"
+      "printSumDefer" => "einnahmen.brutto"
     ];
   $children[] =
     [ "id" => "kosten.ausgaben",   "name" => "getätigte Ausgaben",  "type" => "money",  "width" => 1,
       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-      "printSumDefer" => "ausgaben.offen"
+      "printSumDefer" => "ausgaben.brutto"
     ];
 } else {
   $children[] =
     [ "id" => "kosten.einnahmen",   "name" => "Einnahmen",  "type" => "money",  "width" => 1,
       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-      "printSumDefer" => "einnahmen.offen"
+      "printSumDefer" => "einnahmen.brutto"
     ];
   $children[] =
     [ "id" => "kosten.ausgaben",   "name" => "Ausgaben",  "type" => "money",  "width" => 1,
       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-      "printSumDefer" => "ausgaben.offen"
+      "printSumDefer" => "ausgaben.brutto"
     ];
 }
 
