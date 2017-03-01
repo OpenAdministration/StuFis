@@ -556,6 +556,8 @@ function renderFormImpl(&$form, &$ctrl) {
 
 
 function processTemplates($txt, $ctrl) {
+  if (!isset($ctrl["_render"]))
+    return $txt;
   return str_replace(array_keys($ctrl["_render"]->templates), array_values($ctrl["_render"]->templates), $txt);
 }
 
