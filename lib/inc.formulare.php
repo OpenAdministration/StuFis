@@ -792,7 +792,15 @@ function renderFormItemGroup($layout, $ctrl) {
 
   foreach ($layout["children"] as $child) {
     $ctrl["_render"]->displayValue = true;
+    ob_start();
     renderFormItem($child, $ctrl);
+    $childTxt = ob_get_contents();
+    ob_end_clean();
+    if (isset($child["width"]) && $child["width"] == -1) {
+      // hide
+    } else  {
+      echo $childTxt;
+    }
     if (isset($child["opts"]) && in_array("title", $child["opts"])) {
       $rowTxt[] = $ctrl["_render"]->displayValue;
     }
@@ -1233,6 +1241,8 @@ function renderFormItemMoney($layout, $ctrl) {
   }
   $fvalue = convertDBValueToUserValue($value, $layout["type"]);
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($fvalue));
+  $tPatternC = newTemplatePattern($ctrl, htmlspecialchars($layout["currency"]));
+  $tPatternS = newTemplatePattern($ctrl, "Σ");
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
   if (isset($layout["addToSum"])) {
@@ -1251,9 +1261,35 @@ function renderFormItemMoney($layout, $ctrl) {
     $noForm = true;
   }
 
-  if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
+  if (isset($layout["printSum"])) {
     $noForm = true;
   }
+  if (isset($layout["printSumDefer"])) {
+    $noForm = true;
+    $refname = false;
+    if ( $ctrl["_render"]->currentRowId !== false)
+      $refname = $ctrl["_render"]->rowIdToNumber[ $ctrl["_render"]->currentRowId ];
+    $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $tPatternC, $tPatternS, &$layout, $refname) {
+      $sums = [];
+      if ($refname === false) {
+        $sums = $ctrl["_render"]->addToSumValue;
+      } elseif (isset($ctrl["_render"]->addToSumValueByRowRecursive[$refname])) {
+        $sums = $ctrl["_render"]->addToSumValueByRowRecursive[$refname];
+      }
+      $psId = $layout["printSumDefer"];
+      $src = [];
+      $value = evalPrintSum($psId, $sums, $src);
+      $value = number_format($value, 2, ".", "");
+      if (in_array("hide-if-zero", $layout["opts"]) && $value == 0) {
+        $fvalue = "";
+        $ctrl["_render"]->templates[$tPatternC] = "";
+        $ctrl["_render"]->templates[$tPatternS] = "";
+      } else
+        $fvalue = convertDBValueToUserValue($value, $layout["type"]);
+      $ctrl["_render"]->templates[$tPattern] = $fvalue;
+    };
+  } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0)
+    return true;
 
   if (!($noFormMarkup || $noFormCompress) || !$noForm)
     echo "<div class=\"input-group\">";
@@ -1262,9 +1298,9 @@ function renderFormItemMoney($layout, $ctrl) {
 
   if (in_array("is-sum", $layout["opts"])) {
     if (!($noFormMarkup || $noFormCompress))
-      echo "<span class=\"input-group-addon\">Σ</span>";
+      echo "<span class=\"input-group-addon\">$tPatternS</span>";
     else
-      echo "Σ&nbsp;";
+      echo "$tPatternS&nbsp;";
   }
 
   if ($noForm && ($noFormMarkup || $noFormCompress)) {
@@ -1293,9 +1329,9 @@ function renderFormItemMoney($layout, $ctrl) {
   }
 
   if (!($noFormMarkup || $noFormCompress) || !$noForm)
-    echo "<span class=\"input-group-addon\">".htmlspecialchars($layout["currency"])."</span>";
+    echo "<span class=\"input-group-addon\">$tPatternC</span>";
   else
-    echo "&nbsp;".htmlspecialchars($layout["currency"]);
+    echo "&nbsp;$tPatternC";
 
   echo "</div>";
 }
@@ -2243,6 +2279,8 @@ function renderFormItemTable($layout, $ctrl) {
         }
         echo "</th>";
         foreach ($layout["columns"] as $i => $col) {
+          if (isset($col["width"]) && $col["width"] == -1)
+            continue;
           $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
           if ($layout["columns"][$i]["_hideable_isHidden"])
             $cls[] = "hide-column-manual";
@@ -2254,6 +2292,8 @@ function renderFormItemTable($layout, $ctrl) {
               if ($col["type"] == "group") {
                 $colWidthSum = 0;
                 foreach ($col["children"] as $child) {
+                  if (isset($child["width"]) && $child["width"] == -1)
+                    continue;
                   $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
                   $childCls = [ "dynamic-table-caption" ];
                   if ($child["type"] == "money")
@@ -2367,7 +2407,16 @@ function renderFormItemTable($layout, $ctrl) {
           if ($noForm)
             $ctrl["_render"]->displayValue = false;
 
+          ob_start();
           renderFormItem($col, array_merge($ctrl, $newCtrl));
+          $colTxt = ob_get_contents();
+          ob_end_clean();
+
+          if (isset($col["width"]) && $col["width"] == -1) {
+            // skip output
+          } else {
+            echo $colTxt;
+          }
 
           if (in_array("title", $col["opts"]))
             $rowTxt[] = $ctrl["_render"]->displayValue;
@@ -2425,43 +2474,48 @@ function renderFormItemTable($layout, $ctrl) {
           $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
           if ($layout["columns"][$i]["_hideable_isHidden"])
             $cls[] = "hide-column-manual";
-          if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0) {
+          if (isset($col["printSumFooter"]) && count($col["printSumFooter"]) > 0)
             $cls[] = "cell-has-printSum";
-            echo "<th class=\"".implode(" ", $cls)."\">";
-            foreach ($col["printSumFooter"] as $psId) {
-              if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
-                $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-              } else {
-                $newMeta = $col;
-              }
-              unset($newMeta["addToSum"]);
-              if (isset($newMeta["width"]))
-                unset($newMeta["width"]);
-              if (isset($addToSumDifference[$psId]))
-                $value = $addToSumDifference[$psId];
-              else
-                $value = 0.00;
-              $value = number_format($value, 2, ".", "");
-              $newMeta["value"] = $value;
-              $newMeta["opts"][] = "is-sum";
-              $newMeta["printSum"] = [ $psId ];
-              if (count($col["printSumFooter"]) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"])) {
-                $newMeta["title"] = $newMeta["name"];
-              }
-
-              $newCtrl = $ctrl;
-              $newCtrl["suffix"][] = "print-foot";
-              $newCtrl["suffix"][] = $layout["id"];
-              $newCtrl["render"][] = "no-form";
-              unset($newCtrl["_values"]);
-              renderFormItem($newMeta, $newCtrl);
+          else
+            $col["printSumFooter"] = [];
+          $colTxt = "<th class=\"".implode(" ", $cls)."\">";
+          foreach ($col["printSumFooter"] as $psId) {
+            if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+              $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+            } else {
+              $newMeta = $col;
             }
-          } else {
-            echo "<th class=\"".implode(" ", $cls)."\">";
+            unset($newMeta["addToSum"]);
+            if (isset($newMeta["width"]))
+              unset($newMeta["width"]);
+            if (isset($addToSumDifference[$psId]))
+              $value = $addToSumDifference[$psId];
+            else
+              $value = 0.00;
+            $value = number_format($value, 2, ".", "");
+            $newMeta["value"] = $value;
+            $newMeta["opts"][] = "is-sum";
+            $newMeta["printSum"] = [ $psId ];
+            if (count($col["printSumFooter"]) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"])) {
+              $newMeta["title"] = $newMeta["name"];
+            }
+
+            $newCtrl = $ctrl;
+            $newCtrl["suffix"][] = "print-foot";
+            $newCtrl["suffix"][] = $layout["id"];
+            $newCtrl["render"][] = "no-form";
+            unset($newCtrl["_values"]);
+            ob_start();
+            renderFormItem($newMeta, $newCtrl);
+            $colTxt .= ob_get_contents();
+            ob_end_clean();
           }
-?>
-        </th>
-<?php
+          $colTxt .= "</th>";
+          if (isset($col["width"]) && $col["width"] == -1) {
+            // hide column
+          } else {
+            echo $colTxt;
+          }
         }
 ?>
       </tr>
@@ -2480,6 +2534,8 @@ function renderFormItemTable($layout, $ctrl) {
 function evalPrintSum($psId, $sums, &$src = []) {
   if (substr($psId, 0, 5) != "expr:") {
     $src[] = $psId;
+    if (!isset($sums[$psId]))
+      return "0";
     return $sums[$psId];
   }
 
@@ -2587,8 +2643,7 @@ function renderFormItemInvRef($layout,$ctrl) {
       else
         $sums = $refCtrl["_render"]->addToSumValueByRowRecursive[$refRow];
 
-      foreach ($printSum as $psId) {
-        if (!isset($addToSum[$psId])) continue;
+      foreach (array_keys($addToSum) as $psId) {
         $src = [];
         $value = evalPrintSum($psId, $sums, $src);
         $value = number_format($value, 2, ".", "");
@@ -2607,6 +2662,8 @@ function renderFormItemInvRef($layout,$ctrl) {
     }
   }
 
+  if ($layout["width"] == -1)
+    return true;
 
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;

@@ -36,65 +36,69 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
     [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 2, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
   ];
   if ($year == date("Y")) {
+    if ($id == "einnahmen") {
+      $children[] =
+        [ "id" => "titel.$id.projekt.ausgaben",   "name" => "erwartete Ausgaben",  "type" => "money",  "width" => 1,
+          "currency" => "€", "opts" => ["hide-if-zero"],
+          "printSumDefer" => "ausgaben.offen"
+        ];
+    } else {
+      $children[] =
+        [ "id" => "titel.$id.projekt.einnahmen",   "name" => "erwartete Einnahmen",  "type" => "money",  "width" => 1,
+          "currency" => "€", "opts" => ["hide-if-zero"],
+          "printSumDefer" => "einnahmen.offen"
+        ];
+    }
     $children[] =
-      [ "id" => "titel.$id.invrefprojekt.einnahmen",   "name" => "beschlossene Einnahmen",  "type" => "invref",  "width" => 1,
-        "opts" => ["with-headline","aggregate","hide-edit","skip-referencesId"],
-        "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet" ],
-        "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "Einnahmen" ] ],
-        "otherForms" => [
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
-        ],
+      [ "id" => "titel.$id.rest",   "name" => "verbleibende $caption",  "type" => "money",  "width" => 2,
+        "currency" => "€", "opts" => ["hide-if-zero"],
+        "printSumDefer" => "expr: %$id - %$id.netto - %$id.offen"
       ];
+  } else {
     $children[] =
-      [ "id" => "titel.$id.invrefprojekt.ausgaben",   "name" => "beschlossene Ausgaben",  "type" => "invref",  "width" => 1,
-        "opts" => ["with-headline","aggregate","hide-edit","skip-referencesId"],
-        "printSum" => [ "expr: %ausgaben - %ausgaben.erstattet" ],
-        "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "Ausgaben" ] ],
-        "otherForms" => [
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
-        ],
+      [ "id" => "titel.$id.zahlungen",   "name" => "getätigte $caption",  "type" => "money",  "width" => 2,
+        "currency" => "€", "opts" => ["is-sum"],
+        "printSumDefer" => "$id.netto"
       ];
   }
-  $children[] =
-    [ "id" => "titel.$id.invrefzahlung",
-      "name" => "getätigte $caption",
-      "type" => "invref",
-      "width" => 2,
-      "opts" => ["with-headline","aggregate","hide-edit"],
-      "printSum" => [ (($id == "einnahmen") ? "expr: %einnahmen - %ausgaben" : "expr: %ausgaben - %einnahmen" ) ],
-      "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "$caption" ] ],
-      "otherForms" => [
-        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
-        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
-      ],
-    ];
   if ($year == date("Y")) {
     $children[] =
-      [ "id" => "titel.$id.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
+      [ "id" => "titel.$id.invrefprojekt",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
         "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId","hideableDuringRead"],
         "title" => "Genehmigte Projekte (offene Posten)",
         "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
         "printSumWidth" => 2,
         "otherForms" => [
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
-          ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
+          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura",
+           "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                           "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+          ],
+          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv",
+           "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                           "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+          ],
+          ["type" => "projekt-intern-genehmigung", "state" => "done-hv",
+           "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                           "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+          ],
         ],
       ];
   }
   $children[] =
-    [ "id" => "titel.$id.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
+    [ "id" => "titel.$id.invrefzahlungen",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
       "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","hideableDuringRead"],
       "printSum" => [ "einnahmen", "ausgaben" ],
       "printSumWidth" => 2,
       "title" => "Getätigte oder genehmigte $caption",
       "otherForms" => [
-        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
-        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
+        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm",
+         "addToSum" => [ "expr: %einnahmen - %ausgaben" => [ "einnahmen.netto" ],
+                         "expr: %ausgaben - %einnahmen" => [ "ausgaben.netto" ] ],
+        ],
+        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm",
+         "addToSum" => [ "expr: %einnahmen - %ausgaben" => [ "einnahmen.netto" ],
+                         "expr: %ausgaben - %einnahmen" => [ "ausgaben.netto" ] ],
+        ],
       ],
     ];
   
