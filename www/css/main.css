@@ -206,3 +206,7 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   cursor: pointer;
 }
 
+.no-form-grp > .well {
+  margin-top: 5px;
+}
+

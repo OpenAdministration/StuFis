@@ -1130,7 +1130,11 @@ function renderFormItemText($layout, $ctrl) {
       echo "<a href=\"mailto:{$tPattern}\" class=\"link-shows-url\">";
     if ($layout["type"] == "url" && !empty($value))
       echo "<a href=\"{$tPattern}\" target=\"_blank\" class=\"link-shows-url\">";
+    if (isset($layout["format"]))
+      echo "<{$layout["format"]}>";
     echo $tPattern;
+    if (isset($layout["format"]))
+      echo "</{$layout["format"]}>";
     if ($layout["type"] == "email" && !empty($value))
       echo "</a>";
     if ($layout["type"] == "url" && !empty($value))

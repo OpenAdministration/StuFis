@@ -61,8 +61,9 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
         "printSumDefer" => "$id.netto"
       ];
   }
+  $invreftables = [];
   if ($year == date("Y")) {
-    $children[] =
+    $invreftables[] =
       [ "id" => "titel.$id.invrefprojekt",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
         "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId","hideableDuringRead"],
         "title" => "Genehmigte Projekte (offene Posten)",
@@ -84,7 +85,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
         ],
       ];
   }
-  $children[] =
+  $invreftables[] =
     [ "id" => "titel.$id.invrefzahlungen",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
       "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","hideableDuringRead"],
       "printSum" => [ "einnahmen", "ausgaben" ],
@@ -101,6 +102,10 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
         ],
       ],
     ];
+  $children[] = [
+    "id" => "table.$id.invref", "type" => "group", "opts" => [ "well", "hide-edit", "hideableDuringRead" ], "width" => 12,
+    "children" => $invreftables,
+  ];
   
   $layout[] =
    [
@@ -114,7 +119,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
          "printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
          "opts" => ["title"],
          "children" => [
-           [ "id" => "gruppe.$id.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ] ],
+           [ "id" => "gruppe.$id.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ], "format" => "h4" ],
            [
              "type" => "table", /* renderer */
              "id" => "titel.$id",

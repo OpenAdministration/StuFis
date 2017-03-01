@@ -9,6 +9,7 @@ $config = [
     "isCreateable" => ($year == date("Y") || $year == date("Y")+1),
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
+  "renderOptRead" => [ "no-form-compress" ],
 ];
 
 $layout = [
@@ -22,32 +23,84 @@ $layout = [
 
 $children = [
   [ "id" => "kosten.nummer",    "name" => "Nummer",       "type" => "kostennr", "width" => 2, "opts" => [ "required", "title" ] ],
-  [ "id" => "kosten.name",      "name" => "Bezeichnung", "type" => "text",    "width" => 10, "opts" => [ "required", "title" ] ],
+  [ "id" => "kosten.name",      "name" => "Bezeichnung", "type" => "text",    "width" => ($year == date("Y") ? 6 : 8), "opts" => [ "required", "title" ] ],
 ];
 if ($year == date("Y")) {
   $children[] =
+    [ "id" => "kosten.einnahmen.offen",   "name" => "offene Einnahmen",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "einnahmen.offen"
+    ];
+  $children[] =
+    [ "id" => "kosten.ausgaben.offen",   "name" => "offene Ausgaben",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "ausgaben.offen"
+    ];
+  $children[] =
+    [ "id" => "kosten.einnahmen",   "name" => "getätigte Einnahmen",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "einnahmen.offen"
+    ];
+  $children[] =
+    [ "id" => "kosten.ausgaben",   "name" => "getätigte Ausgaben",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "ausgaben.offen"
+    ];
+} else {
+  $children[] =
+    [ "id" => "kosten.einnahmen",   "name" => "Einnahmen",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "einnahmen.offen"
+    ];
+  $children[] =
+    [ "id" => "kosten.ausgaben",   "name" => "Ausgaben",  "type" => "money",  "width" => 1,
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "printSumDefer" => "ausgaben.offen"
+    ];
+}
+
+$invreftables = [];
+if ($year == date("Y")) {
+  $invreftables[] =
     [ "id" => "kosten.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
       "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId","hideableDuringRead"],
       "title" => "Genehmigte Projekte (offene Posten)",
       "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
       "printSumWidth" => 3,
       "otherForms" => [
-        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
-        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
-        ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
+        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura",
+         "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                         "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+        ],
+        ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv",
+         "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                         "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+        ],
+        ["type" => "projekt-intern-genehmigung", "state" => "done-hv",
+         "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                         "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+        ],
       ],
     ];
 }
-$children[] =
+$invreftables[] =
   [ "id" => "kosten.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
     "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","hideableDuringRead"],
     "printSum" => [ "einnahmen", "ausgaben" ],
     "title" => "Getätigte oder genehmigte Einnahmen und Ausgaben",
     "otherForms" => [
-      ["type" => "auslagenerstattung-genehmigung", "state" => "ok",    "referenceFormField" => "kostenstellenplan.otherForm", ],
-      ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "kostenstellenplan.otherForm", ],
+      ["type" => "auslagenerstattung-genehmigung", "state" => "ok",    "referenceFormField" => "kostenstellenplan.otherForm",
+       "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
+      ],
+      ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "kostenstellenplan.otherForm",
+       "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
+      ],
     ],
   ];
+$children[] = [
+  "id" => "kosten.invref0.grp", "type" => "group", "opts" => ["well","hide-edit","hideableDuringRead"], "width" => 12,
+  "children" => $invreftables,
+];
 
 $layout[] =
  [
@@ -60,7 +113,7 @@ $layout[] =
        "type" => "group",
        "opts" => ["title"],
        "children" => [
-         [ "id" => "gruppe.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ] ],
+         [ "id" => "gruppe.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ], "format" => "h4" ],
          [
            "type" => "table", /* renderer */
            "id" => "kosten",
