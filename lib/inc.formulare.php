@@ -2307,8 +2307,8 @@ function renderFormItemTable($layout, $ctrl) {
                   } else {
                     $colWidthSum += 1;
                   }
+                  if ($colWidthSum > 12) break;
                   echo "<span class=\"".implode(" ", $childCls)."\">".htmlspecialchars($title)."</span>";
-                  if ($colWidthSum >= 12) break;
                 }
               } elseif( isset ($col["title"])) {
                 echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($col["title"])."</span>";
@@ -2402,6 +2402,22 @@ function renderFormItemTable($layout, $ctrl) {
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             $col["addToSum"][] = "col-sum-".$layout["id"]."-".$i;
             $hasPrintSumFooter |= true;
+            if ($col["type"] == "group") {
+              $colWidthSum = 0;
+              foreach ($col["children"] as $j => $child) {
+                if (isset($child["width"]) && $child["width"] == -1) continue;
+                if (isset($child["width"])) {
+                  $colWidthSum += $child["width"];
+                } else {
+                  $colWidthSum += 1;
+                }
+                if ($colWidthSum > 12) break;
+                if (!isset($child["opts"]) || !in_array("sum-over-table-bottom", $child["opts"]))
+                  continue;
+                $sumOverTableBottomChild = "col-sum-".$layout["id"]."-".$i."-".$child["id"];
+                $col["children"][$j]["addToSum"][] = $sumOverTableBottomChild;
+              }
+            }
           }
           if (!empty($col["printSumFooter"]))
             $hasPrintSumFooter |= true;
@@ -2467,12 +2483,16 @@ function renderFormItemTable($layout, $ctrl) {
         if ($withExpand)
           $colSpan++;
         if ($colSpan > 0)
-          echo "<th colspan=\"{$colSpan}\">";
+          echo "<th colspan=\"{$colSpan}\"></th>";
 
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
+          $sumOverTableBottom = false;
           if (in_array("sum-over-table-bottom", $col["opts"])) {
-            $col["printSumFooter"][] = "col-sum-".$layout["id"]."-".$i;
+            $sumOverTableBottom = "col-sum-".$layout["id"]."-".$i;
+            if (!isset($col["printSumFooter"]))
+              $col["printSumFooter"] = [];
+            array_unshift($col["printSumFooter"], $sumOverTableBottom);
           }
           $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
           if ($layout["columns"][$i]["_hideable_isHidden"])
@@ -2482,39 +2502,80 @@ function renderFormItemTable($layout, $ctrl) {
           else
             $col["printSumFooter"] = [];
           $colTxt = "<th class=\"".implode(" ", $cls)."\">";
-          foreach ($col["printSumFooter"] as $psId) {
-            if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
-              $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-            } elseif ($col["type"] != "group") {
-              $newMeta = $col;
-            } else {
-              $colTxt .= "missing meta data for $psId";
-              continue;
-            }
-            unset($newMeta["addToSum"]);
-            if (isset($newMeta["width"]))
-              unset($newMeta["width"]);
-            if (isset($addToSumDifference[$psId]))
-              $value = $addToSumDifference[$psId];
-            else
-              $value = 0.00;
-            $value = number_format($value, 2, ".", "");
-            $newMeta["value"] = $value;
-            $newMeta["opts"][] = "is-sum";
-            $newMeta["printSum"] = [ $psId ];
-            if (count($col["printSumFooter"]) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"])) {
-              $newMeta["title"] = $newMeta["name"];
+          foreach ($col["printSumFooter"] as $psIdF) {
+            $children = [ [ $psIdF, $col, true] ];
+            if ($psIdF == $sumOverTableBottom && $col["type"] == "group") {
+              $children = [];
+              $colWidthSum = 0;
+              foreach ($col["children"] as $child) {
+                if (isset($child["width"]) && $child["width"] == -1) continue;
+                if (isset($child["width"])) {
+                  $colWidthSum += $child["width"];
+                } else {
+                  $colWidthSum += 1;
+                }
+                if ($colWidthSum > 12) break;
+                if (!isset($child["opts"]) || !in_array("sum-over-table-bottom", $child["opts"])) {
+                  $children[] = [ null, $child, false ];
+                } else {
+                  $sumOverTableBottomChild = "col-sum-".$layout["id"]."-".$i."-".$child["id"];
+                  $children[] = [ $sumOverTableBottomChild, $child, false ];
+                }
+              }
             }
 
-            $newCtrl = $ctrl;
-            $newCtrl["suffix"][] = "print-foot";
-            $newCtrl["suffix"][] = $layout["id"];
-            $newCtrl["render"][] = "no-form";
-            unset($newCtrl["_values"]);
-            ob_start();
-            renderFormItem($newMeta, $newCtrl);
-            $colTxt .= ob_get_contents();
-            ob_end_clean();
+            foreach ($children as $childMeta) {
+              $psId = $childMeta[0];
+              $child = $childMeta[1];
+              $clearWidth = $childMeta[2];
+
+              if ($psId == null) {
+                $childCls = [];
+                if (isset($child["width"]))
+                  $childCls[] = "col-xs-{$child["width"]}";
+                $colTxt .= "<div class=\"".implode(" ", $childCls)."\">&nbsp;</div>";
+                continue;
+              }
+
+              if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+                $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+              } elseif ($child["type"] != "group") {
+                $newMeta = $child;
+              } else {
+                $colTxt .= "missing meta data for $psId";
+                continue;
+              }
+              unset($newMeta["addToSum"]);
+              if (isset($newMeta["width"]) && $clearWidth)
+                unset($newMeta["width"]);
+              if (isset($addToSumDifference[$psId]))
+                $value = $addToSumDifference[$psId];
+              else
+                $value = 0.00;
+              $value = number_format($value, 2, ".", "");
+              $newMeta["value"] = $value;
+              $newMeta["opts"][] = "is-sum";
+              if (isset($newMeta["printSumDefer"])) {
+                if (isset($newMeta["printSum"])) {
+                  unset($newMeta["printSum"]);
+                }
+              } else {
+                $newMeta["printSum"] = [ $psId ];
+              }
+              if (count($col["printSumFooter"]) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"])) {
+                $newMeta["title"] = $newMeta["name"];
+              }
+  
+              $newCtrl = $ctrl;
+              $newCtrl["suffix"][] = "print-foot";
+              $newCtrl["suffix"][] = $layout["id"];
+              $newCtrl["render"][] = "no-form";
+              unset($newCtrl["_values"]);
+              ob_start();
+              renderFormItem($newMeta, $newCtrl);
+              $colTxt .= ob_get_contents();
+              ob_end_clean();
+            }
           }
           $colTxt .= "</th>";
           if (isset($col["width"]) && $col["width"] == -1) {

@@ -38,26 +38,26 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
   if ($year == date("Y")) {
     if ($id == "einnahmen") {
       $children[] =
-        [ "id" => "titel.$id.projekt.ausgaben",   "name" => "erwartete Ausgaben",  "type" => "money",  "width" => 1,
-          "currency" => "€", "opts" => ["hide-if-zero"],
+        [ "id" => "titel.$id.projekt.ausgaben",   "name" => "erwartete Ausgaben",  "type" => "money",  "width" => 2,
+          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
           "printSumDefer" => "ausgaben.offen"
         ];
     } else {
       $children[] =
-        [ "id" => "titel.$id.projekt.einnahmen",   "name" => "erwartete Einnahmen",  "type" => "money",  "width" => 1,
-          "currency" => "€", "opts" => ["hide-if-zero"],
+        [ "id" => "titel.$id.projekt.einnahmen",   "name" => "erwartete Einnahmen",  "type" => "money",  "width" => 2,
+          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
           "printSumDefer" => "einnahmen.offen"
         ];
     }
     $children[] =
       [ "id" => "titel.$id.rest",   "name" => "verbleibende $caption",  "type" => "money",  "width" => 2,
-        "currency" => "€", "opts" => ["hide-if-zero"],
+        "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
         "printSumDefer" => "expr: %$id - %$id.netto - %$id.offen",
       ];
   } else {
     $children[] =
       [ "id" => "titel.$id.zahlungen",   "name" => "getätigte $caption",  "type" => "money",  "width" => 2,
-        "currency" => "€", "opts" => ["is-sum"],
+        "currency" => "€", "opts" => ["is-sum","sum-over-table-bottom"],
         "printSumDefer" => "$id.netto"
       ];
   }
@@ -111,8 +111,8 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
      "columns" => [
        [ "id" => "gruppe.$id",
          "type" => "group",
-         #"printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
-         "printSumFooter" => ["$id"],
+         "printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
+         #"printSumFooter" => ["$id"],
          "opts" => ["title"],
          "children" => [
            [ "id" => "gruppe.$id.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ] ],
@@ -122,10 +122,8 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
              "opts" => ["with-headline","with-expand"],
              "width" => 12,
              "columns" => [
-                [ "id" => "titel.$id.grp", "type" => "group", "opts" => ["title"], "width" => 12,
+                [ "id" => "titel.$id.grp", "type" => "group", "opts" => ["title","sum-over-table-bottom"], "width" => 12,
                   "name" => true,
-                  "printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
-                  #"printSumFooter" => ["$id"],
                   "children" => $children,
                 ], // column
              ], // columns
