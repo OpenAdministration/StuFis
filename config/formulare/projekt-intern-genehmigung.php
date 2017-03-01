@@ -74,6 +74,7 @@ $config = [
       [ "state" => "ok-by-hv", ],
       [ "state" => "ok-by-stura", ],
       [ "state" => "done-hv", ],
+      [ "state" => "terminated", "group" => "ref-finanzen" ],
     ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
