@@ -35,6 +35,17 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
     [ "id" => "titel.$id.name",      "name" => "Bezeichnung", "type" => "text",    "width" => 4, "opts" => [ "required", "title" ] ],
     [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 4, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
   ];
+#    $children[] =
+#      [ "id" => "titel.$id.invrefprojekt",   "name" => "Genehmigte Projekte (offene Posten)",  "type" => "invref",  "width" => 3,
+#        "opts" => ["with-headline","aggregate","hide-edit","skip-referencesId","hideableDuringRead"],
+#        "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
+#        "printSumWidth" => 3,
+#        "otherForms" => [
+#          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura", ],
+#          ["type" => "projekt-intern-genehmigung", "state" => "ok-by-hv", ],
+#          ["type" => "projekt-intern-genehmigung", "state" => "done-hv", ],
+#        ],
+#      ];
   if ($year == date("Y")) {
     $children[] =
       [ "id" => "titel.$id.invref0",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,

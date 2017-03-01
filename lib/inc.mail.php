@@ -10,9 +10,17 @@ function verify_mail($email) {
 }
 
 function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
+  notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action);
+  notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action);
+}
+
+function notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action) {
   global $URIBASE, $URIBASEREF;
 
-  include "/var/www/telegram-bot/302395532:AAElmpkUrSoAGPHRUicAr1ZyFBxoqX5JnHI/inc.php";
+  $src = "/var/www/telegram-bot/302395532:AAElmpkUrSoAGPHRUicAr1ZyFBxoqX5JnHI/inc.php";
+  if (!file_exists($src)) return;
+
+  include "$src";
   $url = trim($URIBASEREF,"/").str_replace("//","/","/".$URIBASE."/").rawurlencode($antrag["token"]);
   $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
   $caption = getAntragDisplayTitle($antrag, $revConfig);
@@ -22,9 +30,6 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
     $classTitle = "{$classConfig["title"]}";
   $msg = $classTitle . "\n" . $antragtitle . "\n Neuer Status: " . $classConfig["state"][$newState][0] . "\n von: " . $newStateCreator . "\n" . $url;
   sendToAllTGUser($msg);
-
-
-  notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action);
 }
 
 function notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action) {

@@ -2595,6 +2595,7 @@ function renderFormItemInvRef($layout,$ctrl) {
 
     $withHeadline = in_array("with-headline", $layout["opts"]);
     $withAggByForm = in_array("aggregate-by-otherForm", $layout["opts"]);
+    $withAgg = in_array("aggregate", $layout["opts"]);
 
     if ($noForm && isset($ctrl["_render"]->referencedBy[$refId])) {
       foreach( $ctrl["_render"]->referencedBy[$refId] as $r) {
@@ -2637,6 +2638,7 @@ function renderFormItemInvRef($layout,$ctrl) {
         }
 
         if ($withAggByForm && $i > 0) continue; # not last
+        if ($withAgg) continue;
 
         $myOutBody .= "    <tr>\n";
         if ($hasForms) {
@@ -2693,7 +2695,7 @@ function renderFormItemInvRef($layout,$ctrl) {
         $myOutBody .= "    </tr>\n";
       }
     }
-    if (!$noForm) {
+    if (!$noForm && !$withAgg) {
       $myOutBody .= "    <tr class=\"invref-template summing-skip\">\n";
       if ($hasForms && !$withAggByForm) {
         $myOutBody .= "      <td></td>\n"; /* Spalte: Quelleformular */
@@ -2729,76 +2731,111 @@ function renderFormItemInvRef($layout,$ctrl) {
       $myOutBody .= "    </tr>\n";
     }
 
-    $myOutHead = "  <thead>\n";
-    $myOutHead .= "    <tr>\n";
-    if ($hasForms && !$withAggByForm) {
-      $myOutHead .= "      <td></td>\n"; /* Spalte: Quelleformular */
-    }
-    $myOutHead .= "      <td></td>\n"; /* Spalte: Quelle */
-    foreach ($printSum as $psId) {
-      if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
-        $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-        $title = $psId;
-        if (isset($newMeta["name"])) $title = $newMeta["name"];
-        if (isset($newMeta["name"])) $title = $newMeta["name"];
-        if (isset($newMeta["title"])) $title = $newMeta["title"];
-        $myOutHead .= "    <th>".htmlspecialchars($title)."</th>";
-      } else {
-        $myOutHead .= "    <th>".htmlspecialchars($psId)."</th>";
+    if ($withAgg) {
+      $myOutHead = "  <thead>\n";
+      $myOutHead .= "    <tr>\n";
+      if ($hasForms && !$withAggByForm) {
+        $myOutHead .= "      <td></td>\n"; /* Spalte: Quelleformular */
       }
-    }
-
-    $myOutHead .= "    </tr>\n";
-    $myOutHead .= "  </thead>\n";
-
-    $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\"  orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\">\n";
-    if ($withHeadline) {
-      $myOut .= $myOutHead;
-    }
-    $myOut .= "  <tbody>\n";
-    $myOut .= $myOutBody;
-    $myOut .= "  </tbody>\n";
-    $myOut .= "  <tfoot>\n";
-    $myOut .= "    <tr>\n";
-    if ($hasForms && !$withAggByForm) {
-      $myOut .= "      <td></td>\n"; /* Spalte: Quelleformular */
-    }
-    $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
-    foreach ($printSum as $psId) {
-      if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
-        $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-        unset($newMeta["addToSum"]);
-        $newMeta["printSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
-        if (!isset($columnSum[ $psId ]))
-          $columnSum[ $psId ] = 0.00;
-        $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
-        $newMeta["opts"][] = "is-sum";
-        if (isset($newMeta["width"]))
-          unset($newMeta["width"]);
-        if (isset($layout["printSumWidth"]))
-          $newMeta["width"] = $layout["printSumWidth"];
-
-        $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "cell-has-printSum" ] ]);
-        $newCtrl["suffix"][] = "print-foot";
-        $newCtrl["suffix"][] = $layout["id"];
-        $newCtrl["render"][] = "no-form";
-        unset($newCtrl["_values"]);
-        ob_start();
-        renderFormItem($newMeta, $newCtrl);
-        $myOut .= ob_get_contents();
-        ob_end_clean();
-      } else {
-        $myOut .= "    <td class=\"cell-has-printSum\">";
+      $myOutHead .= "      <td></td>\n"; /* Spalte: Quelle */
+      foreach ($printSum as $psId) {
+        if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+          $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+          $title = $psId;
+          if (isset($newMeta["name"])) $title = $newMeta["name"];
+          if (isset($newMeta["name"])) $title = $newMeta["name"];
+          if (isset($newMeta["title"])) $title = $newMeta["title"];
+          $myOutHead .= "    <th>".htmlspecialchars($title)."</th>";
+        } else {
+          $myOutHead .= "    <th>".htmlspecialchars($psId)."</th>";
+        }
+      }
+  
+      $myOutHead .= "    </tr>\n";
+      $myOutHead .= "  </thead>\n";
+  
+      $myOut = "<table class=\"table table-striped invref summing-table\" id=\"".htmlspecialchars($ctrl["id"])."\" name=\"".htmlspecialchars($ctrl["name"])."\"  orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\">\n";
+      if ($withHeadline) {
+        $myOut .= $myOutHead;
+      }
+      $myOut .= "  <tbody>\n";
+      $myOut .= $myOutBody;
+      $myOut .= "  </tbody>\n";
+      $myOut .= "  <tfoot>\n";
+      $myOut .= "    <tr>\n";
+      if ($hasForms && !$withAggByForm) {
+        $myOut .= "      <td></td>\n"; /* Spalte: Quelleformular */
+      }
+      $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
+      foreach ($printSum as $psId) {
+        if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+          $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+          unset($newMeta["addToSum"]);
+          $newMeta["printSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
+          if (!isset($columnSum[ $psId ]))
+            $columnSum[ $psId ] = 0.00;
+          $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
+          $newMeta["opts"][] = "is-sum";
+          if (isset($newMeta["width"]))
+            unset($newMeta["width"]);
+          if (isset($layout["printSumWidth"]))
+            $newMeta["width"] = $layout["printSumWidth"];
+  
+          $newCtrl = array_merge($ctrl, ["wrapper"=> "th", "class" => [ "cell-has-printSum" ] ]);
+          $newCtrl["suffix"][] = "print-foot";
+          $newCtrl["suffix"][] = $layout["id"];
+          $newCtrl["render"][] = "no-form";
+          unset($newCtrl["_values"]);
+          ob_start();
+          renderFormItem($newMeta, $newCtrl);
+          $myOut .= ob_get_contents();
+          ob_end_clean();
+        } else {
+          $myOut .= "    <td class=\"cell-has-printSum\">";
+            $myOut .= "    <div data-printSum=\"".htmlspecialchars(printSumId($psId))."\">no meta data for ".htmlspecialchars($psId)."</div>";
+          $myOut .= "    </td>\n"; /* Spalte: Quelle */
+        }
+      }
+  
+      $myOut .= "    </tr>\n";
+      $myOut .= "  </tfoot>\n";
+      $myOut .= "</table>\n";
+  
+      if ($myOutBody == "") $myOut = "";
+    } else { // !$withAgg
+      $myOut = "<div>";
+      foreach ($printSum as $psId) {
+        if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+          $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
+          unset($newMeta["addToSum"]);
+          $newMeta["printSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
+          if (!isset($columnSum[ $psId ]))
+            $columnSum[ $psId ] = 0.00;
+          $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
+          $newMeta["opts"][] = "is-sum";
+          if (isset($newMeta["width"]))
+            unset($newMeta["width"]);
+          if (isset($layout["printSumWidth"]))
+            $newMeta["width"] = $layout["printSumWidth"];
+          if (count($printSum) > 1 && isset($newMeta["name"]) && !isset($newMeta["title"]))
+            $newMeta["title"] = $newMeta["name"];
+  
+          $newCtrl = array_merge($ctrl, ["class" => [ "cell-has-printSum" ] ]);
+          $newCtrl["suffix"][] = "print-foot";
+          $newCtrl["suffix"][] = $layout["id"];
+          $newCtrl["render"][] = "no-form";
+          unset($newCtrl["_values"]);
+          ob_start();
+          renderFormItem($newMeta, $newCtrl);
+          $myOut .= ob_get_contents();
+          ob_end_clean();
+        } else {
           $myOut .= "    <div data-printSum=\"".htmlspecialchars(printSumId($psId))."\">no meta data for ".htmlspecialchars($psId)."</div>";
-        $myOut .= "    </td>\n"; /* Spalte: Quelle */
+        }
+        $myOut .= "</div>";
       }
+  
     }
-
-    $myOut .= "    </tr>\n";
-    $myOut .= "  </tfoot>\n";
-    $myOut .= "</table>\n";
-
-    if ($myOutBody == "") $myOut = "";
 
     $ctrl["_render"]->templates[$tPattern] = processTemplates($myOut, $ctrl); // rowTxt is from displayValue and thus already escaped
   };
