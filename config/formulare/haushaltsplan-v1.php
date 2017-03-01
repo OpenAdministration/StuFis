@@ -60,20 +60,13 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
       ];
   }
   $children[] =
-    [ "id" => "titel.$id.invrefzahlung.einnahmen",   "name" => "getätigte Einnahmen",  "type" => "invref",  "width" => 1,
+    [ "id" => "titel.$id.invrefzahlung",
+      "name" => "getätigte $caption",
+      "type" => "invref",
+      "width" => 2,
       "opts" => ["with-headline","aggregate","hide-edit"],
-      "printSum" => [ "einnahmen" ],
-      "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "Einnahmen" ] ],
-      "otherForms" => [
-        ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
-        ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
-      ],
-    ];
-  $children[] =
-    [ "id" => "titel.$id.invrefzahlung.ausgaben",   "name" => "getätigte Ausgaben",  "type" => "invref",  "width" => 1,
-      "opts" => ["with-headline","aggregate","hide-edit"],
-      "printSum" => [ "ausgaben" ],
-      "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "Ausgaben" ] ],
+      "printSum" => [ (($id == "einnahmen") ? "expr: %einnahmen - %ausgaben" : "expr: %ausgaben - %einnahmen" ) ],
+      "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "$caption" ] ],
       "otherForms" => [
         ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "haushaltsplan.otherForm", ],
         ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "haushaltsplan.otherForm", ],
