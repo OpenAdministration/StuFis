@@ -2,12 +2,12 @@
 
 $catList = [
   "need-action" => "zu erledigen",
+  "wait-action" => "wartet",
   "report-stura" => "im StuRa berichten",
-  "finished" => "erledigt",
   "running-project" => "laufende Projekte",
   "expired-project" => "abgelaufende Projekte",
+  "finished" => "erledigt",
   "plan" => "HHP/KP",
-  "wait-action" => "wartet",
   "all" => "alle",
 ];
 
@@ -30,7 +30,13 @@ foreach ($orderedCats as $cat) {
   $title = "{$cat}";
   if (isset($catList[$cat]))
     $title = $catList[$cat];
-  echo '<li'.($activeCat == $cat ? ' class="active"':'').'><a data-toggle="tab" href="#'.md5($cat).'">'.htmlspecialchars($title).'</a></li>';
+
+  $num = 0;
+  foreach ($antraege[$cat] as $type => $l1) {
+    $num += count($l1);
+  }
+
+  echo '<li'.($activeCat == $cat ? ' class="active"':'').'><a data-toggle="tab" href="#'.md5($cat).'">'.htmlspecialchars($title).' ('.$num.')</a></li>';
 }
 ?>
 </ul>
