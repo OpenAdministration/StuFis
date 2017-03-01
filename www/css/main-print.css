@@ -1,0 +1,6 @@
+  .expand-toggle-expand, .expand-toggle-compress {
+    display: none !important;
+  }
+  .hideable-during-read {
+    display: none !important;
+  }

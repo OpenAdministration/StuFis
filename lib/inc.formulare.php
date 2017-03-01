@@ -1288,6 +1288,9 @@ function renderFormItemMoney($layout, $ctrl) {
         $fvalue = convertDBValueToUserValue($value, $layout["type"]);
       $ctrl["_render"]->templates[$tPattern] = $fvalue;
     };
+    $psId = $layout["printSumDefer"];
+    if (!isset($ctrl["_render"]->addToSumMeta[$psId]))
+      $ctrl["_render"]->addToSumMeta[$psId] = $layout;
   } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0)
     return true;
 
@@ -2482,8 +2485,11 @@ function renderFormItemTable($layout, $ctrl) {
           foreach ($col["printSumFooter"] as $psId) {
             if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
               $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
-            } else {
+            } elseif ($col["type"] != "group") {
               $newMeta = $col;
+            } else {
+              $colTxt .= "missing meta data for $psId";
+              continue;
             }
             unset($newMeta["addToSum"]);
             if (isset($newMeta["width"]))

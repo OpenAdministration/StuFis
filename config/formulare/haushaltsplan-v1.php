@@ -52,7 +52,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
     $children[] =
       [ "id" => "titel.$id.rest",   "name" => "verbleibende $caption",  "type" => "money",  "width" => 2,
         "currency" => "€", "opts" => ["hide-if-zero"],
-        "printSumDefer" => "expr: %$id - %$id.netto - %$id.offen"
+        "printSumDefer" => "expr: %$id - %$id.netto - %$id.offen",
       ];
   } else {
     $children[] =
@@ -111,6 +111,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
      "columns" => [
        [ "id" => "gruppe.$id",
          "type" => "group",
+         #"printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
          "printSumFooter" => ["$id"],
          "opts" => ["title"],
          "children" => [
@@ -123,7 +124,8 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
              "columns" => [
                 [ "id" => "titel.$id.grp", "type" => "group", "opts" => ["title"], "width" => 12,
                   "name" => true,
-                  "printSumFooter" => ["$id"],
+                  "printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
+                  #"printSumFooter" => ["$id"],
                   "children" => $children,
                 ], // column
              ], // columns
