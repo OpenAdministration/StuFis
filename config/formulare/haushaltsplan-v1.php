@@ -31,33 +31,33 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
    ];
 
   $children = [
-    [ "id" => "titel.$id.nummer",    "name" => "Titel",       "type" => "titelnr", "width" => 2, "opts" => [ "required", "title" ] ],
-    [ "id" => "titel.$id.name",      "name" => "Bezeichnung", "type" => "text",    "width" => ($year == date("Y") ? 4 : 6), "opts" => [ "required", "title" ] ],
-    [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 2, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
+    [ "id" => "titel.$id.nummer",    "name" => "Titel",       "type" => "titelnr", "width" => 2, "editWidth" => 2, "opts" => [ "required", "title" ] ],
+    [ "id" => "titel.$id.name",      "name" => "Bezeichnung", "type" => "text",    "width" => ($year == date("Y") ? 4 : 6), "editWidth" => 6, "opts" => [ "required", "title" ] ],
+    [ "id" => "titel.$id.$id",       "name" => "$caption",    "type" => "money",   "width" => 2, "editWidth" => 4, "opts" => [ "required", "sum-over-table-bottom" ], "currency" => "€", "addToSum" => ["$id"] ],
   ];
   if ($year == date("Y")) {
     if ($id == "einnahmen") {
       $children[] =
         [ "id" => "titel.$id.projekt.ausgaben",   "name" => "erwartete Ausgaben",  "type" => "money",  "width" => 2,
-          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
+          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
           "printSumDefer" => "ausgaben.offen"
         ];
     } else {
       $children[] =
         [ "id" => "titel.$id.projekt.einnahmen",   "name" => "erwartete Einnahmen",  "type" => "money",  "width" => 2,
-          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
+          "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
           "printSumDefer" => "einnahmen.offen"
         ];
     }
     $children[] =
       [ "id" => "titel.$id.rest",   "name" => "verbleibende $caption",  "type" => "money",  "width" => 2,
-        "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom"],
+        "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
         "printSumDefer" => "expr: %$id - %$id.netto - %$id.offen",
       ];
   } else {
     $children[] =
       [ "id" => "titel.$id.zahlungen",   "name" => "getätigte $caption",  "type" => "money",  "width" => 2,
-        "currency" => "€", "opts" => ["is-sum","sum-over-table-bottom"],
+        "currency" => "€", "opts" => ["is-sum","sum-over-table-bottom","hide-edit"],
         "printSumDefer" => "$id.netto"
       ];
   }
@@ -112,7 +112,6 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
        [ "id" => "gruppe.$id",
          "type" => "group",
          "printSumFooter" => ["$id", "expr: %$id - %$id.netto - %$id.offen" ],
-         #"printSumFooter" => ["$id"],
          "opts" => ["title"],
          "children" => [
            [ "id" => "gruppe.$id.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ] ],

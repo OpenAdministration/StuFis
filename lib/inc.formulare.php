@@ -582,6 +582,8 @@ function renderFormItem($layout,$ctrl = false) {
   if (!isset($layout["opts"]))
    $layout["opts"] = [];
 
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
+
   if (!isset($ctrl["wrapper"])) {
     $wrapper = "div";
   } else {
@@ -594,6 +596,8 @@ function renderFormItem($layout,$ctrl = false) {
   else
     $classes = [];
 
+  if (isset($layout["editWidth"]) && !$noForm)
+    $layout["width"] = $layout["editWidth"];
   if (isset($layout["width"]))
     $classes[] = "col-xs-{$layout["width"]}";
 
@@ -613,8 +617,6 @@ function renderFormItem($layout,$ctrl = false) {
   }
   $ctrl["id"] = str_replace(".", "-", $ctrl["id"]);
   $ctrl["orig-id"] = str_replace(".", "-", $ctrl["orig-id"]);
-
-  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $cls = [];
   if ((!$noFormMarkup && !$noFormCompress) || !$noForm)
@@ -642,10 +644,6 @@ function renderFormItem($layout,$ctrl = false) {
   } elseif (in_array("readonly", $layout["opts"]))
     $ctrl["readonly"] = true;
 
-  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
-  if (!$noForm && in_array("hide-edit", $layout["opts"]))
-    return;
-
   ob_start();
   switch ($layout["type"]) {
     case "h1":
@@ -655,13 +653,13 @@ function renderFormItem($layout,$ctrl = false) {
     case "h5":
     case "h6":
     case "plaintext":
-      $isEmpty = renderFormItemPlainText($layout,$ctrl);
+      $isNotEmpty = renderFormItemPlainText($layout,$ctrl);
       break;
     case "group":
-      $isEmpty = renderFormItemGroup($layout,$ctrl);
+      $isNotEmpty = renderFormItemGroup($layout,$ctrl);
       break;
     case "signbox":
-      $isEmpty = renderFormItemSignBox($layout,$ctrl);
+      $isNotEmpty = renderFormItemSignBox($layout,$ctrl);
       break;
     case "text":
     case "titelnr":
@@ -669,44 +667,44 @@ function renderFormItem($layout,$ctrl = false) {
     case "email":
     case "url":
     case "iban":
-      $isEmpty = renderFormItemText($layout,$ctrl);
+      $isNotEmpty = renderFormItemText($layout,$ctrl);
       break;
     case "checkbox":
-      $isEmpty = renderFormItemCheckbox($layout,$ctrl);
+      $isNotEmpty = renderFormItemCheckbox($layout,$ctrl);
       break;
     case "radio":
-      $isEmpty = renderFormItemRadio($layout,$ctrl);
+      $isNotEmpty = renderFormItemRadio($layout,$ctrl);
       break;
     case "otherForm":
-      $isEmpty = renderFormItemOtherForm($layout,$ctrl);
+      $isNotEmpty = renderFormItemOtherForm($layout,$ctrl);
       break;
     case "money":
-      $isEmpty = renderFormItemMoney($layout,$ctrl);
+      $isNotEmpty = renderFormItemMoney($layout,$ctrl);
       break;
     case "textarea":
-      $isEmpty = renderFormItemTextarea($layout,$ctrl);
+      $isNotEmpty = renderFormItemTextarea($layout,$ctrl);
       break;
     case "select":
     case "ref":
-      $isEmpty = renderFormItemSelect($layout,$ctrl);
+      $isNotEmpty = renderFormItemSelect($layout,$ctrl);
       break;
     case "date":
-      $isEmpty = renderFormItemDate($layout,$ctrl);
+      $isNotEmpty = renderFormItemDate($layout,$ctrl);
       break;
     case "daterange":
-      $isEmpty = renderFormItemDateRange($layout,$ctrl);
+      $isNotEmpty = renderFormItemDateRange($layout,$ctrl);
       break;
     case "table":
-      $isEmpty = renderFormItemTable($layout,$ctrl);
+      $isNotEmpty = renderFormItemTable($layout,$ctrl);
       break;
     case "file":
-      $isEmpty = renderFormItemFile($layout,$ctrl);
+      $isNotEmpty = renderFormItemFile($layout,$ctrl);
       break;
     case "multifile":
-      $isEmpty = renderFormItemMultiFile($layout,$ctrl);
+      $isNotEmpty = renderFormItemMultiFile($layout,$ctrl);
       break;
     case "invref":
-      $isEmpty = renderFormItemInvRef($layout,$ctrl);
+      $isNotEmpty = renderFormItemInvRef($layout,$ctrl);
       break;
     default:
       ob_end_flush();
@@ -715,6 +713,9 @@ function renderFormItem($layout,$ctrl = false) {
   }
   $txt = ob_get_contents();
   ob_end_clean();
+
+  if (!$noForm && in_array("hide-edit", $layout["opts"]))
+    $isNotEmpty = false;
 
   if (!$noFormMarkup) {
     echo "<$wrapper class=\"".implode(" ", $classes)."\" data-formItemType=\"".htmlspecialchars($layout["type"])."\"";
@@ -727,7 +728,7 @@ function renderFormItem($layout,$ctrl = false) {
     echo ">";
   }
 
-  if ($isEmpty !== false) {
+  if ($isNotEmpty !== false) {
     if (!$noFormMarkup)
       echo "<div class=\"".join(" ", $cls)."\">";
     if (!$noForm)
@@ -785,6 +786,8 @@ function renderFormItemPlainText($layout, $ctrl) {
 }
 
 function renderFormItemGroup($layout, $ctrl) {
+  list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
+
   if (in_array("well", $layout["opts"]))
      echo "<div class=\"well\">";
 
@@ -796,6 +799,8 @@ function renderFormItemGroup($layout, $ctrl) {
     renderFormItem($child, $ctrl);
     $childTxt = ob_get_contents();
     ob_end_clean();
+    if (isset($child["editWidth"]) && !$noForm)
+      $child["width"] = $child["editWidth"];
     if (isset($child["width"]) && $child["width"] == -1) {
       // hide
     } else  {
@@ -1269,7 +1274,9 @@ function renderFormItemMoney($layout, $ctrl) {
     $refname = false;
     if ( $ctrl["_render"]->currentRowId !== false)
       $refname = $ctrl["_render"]->rowIdToNumber[ $ctrl["_render"]->currentRowId ];
-    $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $tPatternC, $tPatternS, &$layout, $refname) {
+    elseif ( $ctrl["_render"]->currentParent !== false )
+      $refname = $ctrl["_render"]->currentParent;
+    $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $tPatternC, $tPatternS, &$layout, $refname, $noForm, $noFormMarkup, $noFormCompress) {
       $sums = [];
       if ($refname === false) {
         $sums = $ctrl["_render"]->addToSumValue;
@@ -1280,7 +1287,7 @@ function renderFormItemMoney($layout, $ctrl) {
       $src = [];
       $value = evalPrintSum($psId, $sums, $src);
       $value = number_format($value, 2, ".", "");
-      if (in_array("hide-if-zero", $layout["opts"]) && $value == 0) {
+      if (in_array("hide-if-zero", $layout["opts"]) && $value == 0 && $noForm && ($noFormCompress || $noFormMarkup)) {
         $fvalue = "";
         $ctrl["_render"]->templates[$tPatternC] = "";
         $ctrl["_render"]->templates[$tPatternS] = "";
@@ -1291,8 +1298,8 @@ function renderFormItemMoney($layout, $ctrl) {
     $psId = $layout["printSumDefer"];
     if (!isset($ctrl["_render"]->addToSumMeta[$psId]))
       $ctrl["_render"]->addToSumMeta[$psId] = $layout;
-  } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0)
-    return true;
+  } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0 && $noForm && ($noFormCompress || $noFormMarup))
+    return false;
 
   if (!($noFormMarkup || $noFormCompress) || !$noForm)
     echo "<div class=\"input-group\">";
@@ -2129,12 +2136,6 @@ function renderFormItemDate($layout, $ctrl) {
     </div>
 </div>
 <?php
-
-/*
-
-     [ "id" => "start",       "name" => "Projektbeginn",                      "type" => "date",   "width" => 6,  "opts" => ["not-before-creation"], "not-after" => "field:ende" ],
-     [ "id" => "ende",        "name" => "Projektende",                        "type" => "date",   "width" => 6,  "opts" => ["not-before-creation"], "not-before" => "field:start" ],
-*/
 }
 
 function renderFormItemTable($layout, $ctrl) {
@@ -2282,7 +2283,11 @@ function renderFormItemTable($layout, $ctrl) {
         }
         echo "</th>";
         foreach ($layout["columns"] as $i => $col) {
+          if (isset($col["editWidth"]) && !$noForm)
+            $col["width"] = $col["editWidth"];
           if (isset($col["width"]) && $col["width"] == -1)
+            continue;
+          if (!$noForm && isset($col["opts"]) && in_array("hide-edit", $col["opts"]))
             continue;
           $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
           if ($layout["columns"][$i]["_hideable_isHidden"])
@@ -2295,7 +2300,11 @@ function renderFormItemTable($layout, $ctrl) {
               if ($col["type"] == "group") {
                 $colWidthSum = 0;
                 foreach ($col["children"] as $child) {
+                  if (isset($child["editWidth"]) && !$noForm)
+                    $child["width"] = $child["editWidth"];
                   if (isset($child["width"]) && $child["width"] == -1)
+                    continue;
+                  if (!$noForm && isset($child["opts"]) && in_array("hide-edit", $child["opts"]))
                     continue;
                   $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
                   $childCls = [ "dynamic-table-caption" ];
@@ -2376,8 +2385,12 @@ function renderFormItemTable($layout, $ctrl) {
         if ($withRowNumber)
           echo "<td class=\"row-number\">".($rowNumber+1)."</td>";
 
-        if ($withExpand)
-          echo "<td class=\"expand-toggle\"><i class=\"expand-toggle-expand fa fa-plus-square-o\" aria-hidden=\"true\"></i><i class=\"expand-toggle-compress fa fa-minus-square-o\" aria-hidden=\"true\"></i></td>";
+        if ($withExpand) {
+          echo "<td class=\"expand-toggle\">";
+          if ($noForm)
+            echo "<i class=\"expand-toggle-expand fa fa-plus-square-o\" aria-hidden=\"true\"></i><i class=\"expand-toggle-compress fa fa-minus-square-o\" aria-hidden=\"true\"></i>";
+          echo "</td>";
+        }
 
         if (!$noForm) {
           echo "<td class=\"delete-row\">";
@@ -2388,6 +2401,8 @@ function renderFormItemTable($layout, $ctrl) {
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"]))
             $col["opts"] = [];
+          if (!$noForm && in_array("hide-edit", $col["opts"]))
+            continue;
 
           $tdClass = [ "{$ctrl["id"]}-col-$i" ];
           if (in_array("title", $col["opts"]))
@@ -2405,6 +2420,8 @@ function renderFormItemTable($layout, $ctrl) {
             if ($col["type"] == "group") {
               $colWidthSum = 0;
               foreach ($col["children"] as $j => $child) {
+                if (isset($child["editWidth"]) && !$noForm)
+                  $child["width"] = $child["editWidth"];
                 if (isset($child["width"]) && $child["width"] == -1) continue;
                 if (isset($child["width"])) {
                   $colWidthSum += $child["width"];
@@ -2431,6 +2448,8 @@ function renderFormItemTable($layout, $ctrl) {
           $colTxt = ob_get_contents();
           ob_end_clean();
 
+          if (isset($col["editWidth"]) && !$noForm)
+            $col["width"] = $col["editWidth"];
           if (isset($col["width"]) && $col["width"] == -1) {
             // skip output
           } else {
@@ -2462,15 +2481,28 @@ function renderFormItemTable($layout, $ctrl) {
 ?>
     </tbody>
 <?php
+
+    $addToSumDifference = [];
+    foreach($ctrl["_render"]->addToSumValue as $addToSumId => $sum) {
+      if (isset($addToSumValueBeforeTable[$addToSumId]))
+        $before = $addToSumValueBeforeTable[$addToSumId];
+      else
+        $before = 0.00;
+      $addToSumDifference[$addToSumId] = $sum - $before;
+    }
+    $ctrl["_render"]->addToSumValueByRowRecursive[$refname] = $addToSumDifference;
+
+    if ($hasPrintSumFooter) {
+
+?>
+       </tr>
+<?php
+     }
+?>
+    </tbody>
+<?php
     if ($hasPrintSumFooter) {
         $addToSumDifference = [];
-        foreach($ctrl["_render"]->addToSumValue as $addToSumId => $sum) {
-          if (isset($addToSumValueBeforeTable[$addToSumId]))
-            $before = $addToSumValueBeforeTable[$addToSumId];
-          else
-            $before = 0.00;
-          $addToSumDifference[$addToSumId] = $sum - $before;
-        }
 ?>
     <tfoot>
       <tr>
@@ -2487,6 +2519,8 @@ function renderFormItemTable($layout, $ctrl) {
 
         foreach ($layout["columns"] as $i => $col) {
           if (!isset($col["opts"])) $col["opts"] = [];
+          if (!$noForm && in_array("hide-edit", $col["opts"]))
+            continue;
           $sumOverTableBottom = false;
           if (in_array("sum-over-table-bottom", $col["opts"])) {
             $sumOverTableBottom = "col-sum-".$layout["id"]."-".$i;
@@ -2508,7 +2542,11 @@ function renderFormItemTable($layout, $ctrl) {
               $children = [];
               $colWidthSum = 0;
               foreach ($col["children"] as $child) {
+                if (isset($child["editWidth"]) && !$noForm)
+                  $child["width"] = $child["editWidth"];
                 if (isset($child["width"]) && $child["width"] == -1) continue;
+                if (!$noForm && isset($child["opts"]) && in_array("hide-edit", $child["opts"]))
+                  continue;
                 if (isset($child["width"])) {
                   $colWidthSum += $child["width"];
                 } else {
@@ -2531,6 +2569,8 @@ function renderFormItemTable($layout, $ctrl) {
 
               if ($psId == null) {
                 $childCls = [];
+                if (isset($child["editWidth"]) && !$noForm)
+                  $child["width"] = $child["editWidth"];
                 if (isset($child["width"]))
                   $childCls[] = "col-xs-{$child["width"]}";
                 $colTxt .= "<div class=\"".implode(" ", $childCls)."\">&nbsp;</div>";
@@ -2542,19 +2582,27 @@ function renderFormItemTable($layout, $ctrl) {
               } elseif ($child["type"] != "group") {
                 $newMeta = $child;
               } else {
-                $colTxt .= "missing meta data for $psId";
-                continue;
+                $colTxt .= "missing meta data for $psId = $value";
+                $newMeta = [ "id" => $child["id"], "type" => "money", "currency" => "€", "printSumDefer" => $psId ];
+                #continue;
               }
               unset($newMeta["addToSum"]);
               if (isset($newMeta["width"]) && $clearWidth)
                 unset($newMeta["width"]);
+              if (isset($newMeta["editWidth"]) && $clearWidth)
+                unset($newMeta["editWidth"]);
+
               if (isset($addToSumDifference[$psId]))
                 $value = $addToSumDifference[$psId];
               else
                 $value = 0.00;
               $value = number_format($value, 2, ".", "");
               $newMeta["value"] = $value;
+
               $newMeta["opts"][] = "is-sum";
+              if (!$noForm && in_array("hide-edit", $newMeta["opts"]))
+                continue;
+
               if (isset($newMeta["printSumDefer"])) {
                 if (isset($newMeta["printSum"])) {
                   unset($newMeta["printSum"]);
@@ -2578,6 +2626,8 @@ function renderFormItemTable($layout, $ctrl) {
             }
           }
           $colTxt .= "</th>";
+          if (isset($col["editWidth"]) && !$noForm)
+            $col["width"] = $col["editWidth"];
           if (isset($col["width"]) && $col["width"] == -1) {
             // hide column
           } else {
@@ -2730,7 +2780,7 @@ function renderFormItemInvRef($layout,$ctrl) {
   }
 
   if ($layout["width"] == -1)
-    return true;
+    return false;
 
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
@@ -2817,6 +2867,8 @@ function renderFormItemInvRef($layout,$ctrl) {
             $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
             $newMeta["printSum"] = [ $psId ];
             $newMeta["value"] = $value;
+            if (isset($newMeta["editWidth"]))
+              unset($newMeta["editWidth"]);
             if (isset($newMeta["width"]))
               unset($newMeta["width"]);
             if (isset($layout["printSumWidth"]))
@@ -2852,6 +2904,8 @@ function renderFormItemInvRef($layout,$ctrl) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
           $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
           $newMeta["printSum"] = [ $psId ];
+          if (isset($newMeta["editWidth"]))
+            unset($newMeta["editWidth"]);
           if (isset($newMeta["width"]))
             unset($newMeta["width"]);
           if (isset($layout["printSumWidth"]))
@@ -2924,6 +2978,8 @@ function renderFormItemInvRef($layout,$ctrl) {
             $columnSum[ $psId ] = 0.00;
           $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
           $newMeta["opts"][] = "is-sum";
+          if (isset($newMeta["editWidth"]))
+            unset($newMeta["editWidth"]);
           if (isset($newMeta["width"]))
             unset($newMeta["width"]);
           if (isset($layout["printSumWidth"]))
@@ -2961,6 +3017,8 @@ function renderFormItemInvRef($layout,$ctrl) {
             $columnSum[ $psId ] = 0.00;
           $newMeta["value"] = number_format($columnSum[ $psId ], 2, ".", "");
           $newMeta["opts"][] = "is-sum";
+          if (isset($newMeta["editWidth"]))
+            unset($newMeta["editWidth"]);
           if (isset($newMeta["width"]))
             unset($newMeta["width"]);
           if (isset($layout["printSumWidth"]))
