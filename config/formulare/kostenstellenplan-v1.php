@@ -66,7 +66,7 @@ if ($year == date("Y")) {
       "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","skip-referencesId","hideableDuringRead"],
       "title" => "Genehmigte Projekte (offene Posten)",
       "printSum" => [ "expr: %einnahmen - %einnahmen.erstattet", "expr: %ausgaben - %ausgaben.erstattet" ],
-      "printSumWidth" => 3,
+      "printSumWidth" => 2,
       "otherForms" => [
         ["type" => "projekt-intern-genehmigung", "state" => "ok-by-stura",
          "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
@@ -87,6 +87,7 @@ $invreftables[] =
   [ "id" => "kosten.invref1",   "name" => "Verwendung",  "type" => "invref",  "width" => 12,
     "opts" => ["with-headline","aggregate-by-otherForm","hide-edit","hideableDuringRead"],
     "printSum" => [ "einnahmen", "ausgaben" ],
+    "printSumWidth" => 2,
     "title" => "Getätigte oder genehmigte Einnahmen und Ausgaben",
     "otherForms" => [
       ["type" => "auslagenerstattung-genehmigung", "state" => "ok",    "referenceFormField" => "kostenstellenplan.otherForm",
