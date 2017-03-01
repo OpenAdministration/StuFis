@@ -48,7 +48,7 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
         ],
       ];
     $children[] =
-      [ "id" => "titel.$id.invrefprojekt.ausgaben",   "name" => "getätigte Ausgaben",  "type" => "invref",  "width" => 1,
+      [ "id" => "titel.$id.invrefprojekt.ausgaben",   "name" => "beschlossene Ausgaben",  "type" => "invref",  "width" => 1,
         "opts" => ["with-headline","aggregate","hide-edit","skip-referencesId"],
         "printSum" => [ "expr: %ausgaben - %ausgaben.erstattet" ],
         "printSumLayout" => [ [ "type" => "money", "currency" => "€", "name" => "Ausgaben" ] ],
