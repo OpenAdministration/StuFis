@@ -320,7 +320,6 @@ function hasCategory(&$form, $antrag, $permName) {
 function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous", $adminOk = true, $isCategory = false) {
   global $ADMINGROUP;
 
-$adminOk=false;
   if ($adminOk && hasGroup($ADMINGROUP))
     return true;
 
