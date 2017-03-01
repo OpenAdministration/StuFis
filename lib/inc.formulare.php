@@ -754,6 +754,8 @@ function renderFormItem($layout,$ctrl = false) {
       echo "</$wrapper>";
   }
 
+  return $isNotEmpty;
+
 }
 
 function renderFormItemPlainText($layout, $ctrl) {
@@ -792,12 +794,14 @@ function renderFormItemGroup($layout, $ctrl) {
      echo "<div class=\"well\">";
 
   $rowTxt = [];
+  $isEmpty = true;
 
   foreach ($layout["children"] as $child) {
     $ctrl["_render"]->displayValue = true;
     ob_start();
-    renderFormItem($child, $ctrl);
+    $isNotEmpty = renderFormItem($child, $ctrl);
     $childTxt = ob_get_contents();
+    $isEmpty = $isEmpty && ($isNotEmpty === false);
     ob_end_clean();
     if (isset($child["editWidth"]) && !$noForm)
       $child["width"] = $child["editWidth"];
@@ -815,6 +819,7 @@ function renderFormItemGroup($layout, $ctrl) {
 
   $ctrl["_render"]->displayValue = implode(", ", $rowTxt);
 
+  if ($isEmpty) return false;
 }
 
 function renderFormItemOtherForm($layout,$ctrl) {
@@ -2784,6 +2789,9 @@ function renderFormItemInvRef($layout,$ctrl) {
   }
 
   if ($layout["width"] == -1)
+    return false;
+
+  if ($hasForms && count($refMe) == 0)
     return false;
 
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
