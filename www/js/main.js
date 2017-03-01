@@ -1266,7 +1266,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
   $('.new-table-row *[name]').each(function (i,e) {
     var $e = $(e);
     var name = $e.attr("name");
-    if (name.substr(0, 8) == "formdata" && name.indexOf("[]") == -1) {
+    var origName = $e.attr("orig-name");
+    if (name.substr(0, 8) == "formdata" && name.indexOf("[]") == -1 && origName.indexOf("[]") != -1) {
       data.delete(name);
     }
   });
