@@ -381,7 +381,10 @@ $(document).ready(function() {
     var suffix = "";
     var $ns = $e.parents("*[name-suffix]");
     $ns.each(function (i,p) {
-      name[$ns.length - 1 - i] += $(p).attr('name-suffix');
+      var idx = $ns.length - 1 - i;
+      if (idx < name.length - 1) { // the last item shall not have a suffix
+        name[idx] += $(p).attr('name-suffix');
+      }
     });
     for (var i = $ns.length; i < name.length - 1; i++)
       name[i] += "[]";
@@ -578,7 +581,10 @@ $(document).ready(function() {
       var name = key.split("[]");
       var $ns = $sel.parents("*[name-suffix]");
       $ns.each(function (i,p) {
-        name[$ns.length - 1 - i] += $(p).attr('name-suffix');
+        var idx = $ns.length - 1 - i;
+        if (idx < name.length - 1) { // the last item shall not have a suffix
+          name[idx] += $(p).attr('name-suffix');
+        }
       });
       for (var i = $ns.length; i < name.length - 1; i++)
         name[i] += "[]";
