@@ -116,6 +116,7 @@ $layout = [
            "id" => "finanzauslagenposten",
            "opts" => ["with-row-number", "with-headline"],
            "width" => 12,
+           "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
            "columns" => [
              [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",
                "references" => ["field:genehmigung", "finanzgruppentbl"],
