@@ -1756,8 +1756,15 @@ function renderFormItemSelect($layout, $ctrl) {
 function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "") {
   static $cache = false;
   if ($cache === false) $cache = [];
+  $renderOpts = explode(",", $renderOpts);
 
   if (isset($ctrl["render"]) && in_array("no-nesting", $ctrl["render"])) return false;
+  if (isset($ctrl["render"]) && in_array("no-form-compress", $ctrl["render"]))
+    $renderOpts[] = "no-form-compress";
+
+  $renderOpts = array_unique($renderOpts);
+  sort($renderOpts);
+  $renderOpts = implode(",", $renderOpts);
 
   $key = "a:{$antragId},r:{$renderOpts}";
 
@@ -2240,6 +2247,8 @@ function renderFormItemTable($layout, $ctrl) {
           $cls = [ "dynamic-table-cell", "dynamic-table-col-$i" ];
           if ($layout["columns"][$i]["_hideable_isHidden"])
             $cls[] = "hide-column-manual";
+          if ($col["type"] == "money")
+            $cls[] = "text-right";
           echo "<th class=\"".implode(" ", $cls)."\">";
           if ($withHeadline) {
             if ($col["name"] === true) {
@@ -2247,13 +2256,16 @@ function renderFormItemTable($layout, $ctrl) {
                 $colWidthSum = 0;
                 foreach ($col["children"] as $child) {
                   $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
+                  $childCls = [ "dynamic-table-caption" ];
+                  if ($child["type"] == "money")
+                    $childCls[] = "text-right";
                   if (isset($child["width"])) {
                     $colWidthSum += $child["width"];
-                    echo "<span class=\"dynamic-table-caption col-xs-{$child["width"]}\">".htmlspecialchars($title)."</span>";
+                    $childCls[] = "col-xs-{$child["width"]}";
                   } else {
                     $colWidthSum += 1;
-                    echo "<span class=\"dynamic-table-caption\">".htmlspecialchars($title)."</span>";
                   }
+                  echo "<span class=\"".implode(" ", $childCls)."\">".htmlspecialchars($title)."</span>";
                   if ($colWidthSum >= 12) break;
                 }
               } elseif( isset ($col["title"])) {
@@ -2501,6 +2513,14 @@ function renderFormItemInvRef($layout,$ctrl) {
   else
     $printSum = [];
 
+  if (isset($layout["printSumLayout"])) {
+    foreach ($printSum as $i => $psId) {
+      $ctrl["_render"]->addToSumMeta[$psId] = $layout["printSumLayout"][$i];
+      if (!isset($ctrl["_render"]->addToSumMeta[$psId]["id"]))
+        $ctrl["_render"]->addToSumMeta[$psId]["id"] = "printSum-{$layout["id"]}";
+    }
+  }
+
   $refMe = [];
 
   if ($hasForms && $currentFormId !== false) {
@@ -2733,7 +2753,7 @@ function renderFormItemInvRef($layout,$ctrl) {
       $myOutBody .= "    </tr>\n";
     }
 
-    if ($withAgg) {
+    if (!$withAgg) {
       $myOutHead = "  <thead>\n";
       $myOutHead .= "    <tr>\n";
       if ($hasForms && !$withAggByForm) {
@@ -2741,16 +2761,19 @@ function renderFormItemInvRef($layout,$ctrl) {
       }
       $myOutHead .= "      <td></td>\n"; /* Spalte: Quelle */
       foreach ($printSum as $psId) {
+        $thCls = [];
         if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
           $title = $psId;
           if (isset($newMeta["name"])) $title = $newMeta["name"];
           if (isset($newMeta["name"])) $title = $newMeta["name"];
           if (isset($newMeta["title"])) $title = $newMeta["title"];
-          $myOutHead .= "    <th>".htmlspecialchars($title)."</th>";
+          if ($newMeta["type"] == "money")
+            $thCls[] = "text-right";
         } else {
-          $myOutHead .= "    <th>".htmlspecialchars($psId)."</th>";
+          $title = $psId;
         }
+        $myOutHead .= "    <th class=\"".implode(" ", $thCls)."\">".htmlspecialchars($title)."</th>";
       }
   
       $myOutHead .= "    </tr>\n";
