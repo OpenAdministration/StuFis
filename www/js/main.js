@@ -25,6 +25,22 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
+  $("table.checkbox-summing").each(function(i,tbl) {
+    var $tbl = $(tbl);
+    var $container = $tbl.parent();
+    var $out = $container.find(".checkbox-summing-output");
+    var $cbs = $tbl.find(".checkbox-summing");
+    $cbs.on("change.cbs click.cbs", function(evt) {
+      var sum = 0.00;
+      $cbs.filter(":checked").each(function(i, cb) {
+        sum += numeral($(cb).data("summingValue")).value();
+      });
+      $out.text(numeral(sum).format('[0,]0.00'));
+    }).triggerHandler("change");
+  });
+});
+
+$(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
   $.fn.validator.Constructor.INPUT_SELECTOR = ':input:not([type="hidden"], [type="submit"], [type="reset"], button, tr.new-table-row *)'
   $.fn.validator.Constructor.BUTTON_SELECTOR = 'button[type="submit"]:not(.no-validate), input[type="submit"]:not(.no-validate), a.submit-form.validate'

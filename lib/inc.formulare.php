@@ -2745,8 +2745,15 @@ function renderFormItemInvRef($layout,$ctrl) {
         $al = dbFetchAll("antrag", $f);
         foreach ($al as $a) {
           if (isset($formFilterDef["referenceFormField"])) {
-            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm" ]);
-            if ($r === false || $r["value"] != $currentFormId) continue;
+            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId ]);
+            if ($r === false) continue;
+          }
+          if (isset($formFilterDef["referenceFormFieldInTable"])) {
+            $r = dbFetchAll("inhalt", ["antrag_id" => $a["id"], "fieldname" => [ "LIKE", $formFilterDef["referenceFormFieldInTable"]."[%" ], "contenttype" => "otherForm", "value" => $currentFormId ]);
+            if ($r === false || count($r) == 0) continue;
+
+// FIXME: identify suffix and relevant table -> addToSum restricted to refname
+
           }
           $forms[$a["id"]]["antrag"] = $a;
           if (!isset($formFilterDef["addToSum"]))

@@ -5,6 +5,9 @@ $config = [
   "revisionTitle" => "Bank (Version 20170302)",
   "permission" => [
     "isCreateable" => true,
+    "canStateChange.from.booked.to.canceled" => [
+      [ "group" => "ref-finanzen" ],
+    ],
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
 ];

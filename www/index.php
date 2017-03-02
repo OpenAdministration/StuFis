@@ -141,8 +141,8 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
   return $ret;
 }
 
-function writeState($newState, $antrag, $form, &$msgs) {
-  if ($antrag["state"] == $newState) return true;
+function writeState($newState, $antrag, $form, &$msgs, $skipIfNoOp = true) {
+  if ($antrag["state"] == $newState && $skipIfNoOp) return true;
 
   $transition = "from.{$antrag["state"]}.to.{$newState}";
   $perm = "canStateChange.{$transition}";
@@ -792,8 +792,64 @@ if (isset($_REQUEST["action"])) {
         $ret = dbCommit();
       if (!$ret)
         dbRollBack();
-      header("Location: $URIBASE");
-      exit;
+      if ($ret) {
+        header("Location: $URIBASE?tab=booking");
+        exit;
+      }
+    break;
+    case "booking":
+      requireGroup($HIBISCUSGROUP);
+      $zahlungSum = 0.00;
+      $grundSum = 0.00;
+
+      if (!isset($_REQUEST["zahlungId"])) die("Keine Zahlung ausgewählt");
+      if (!isset($_REQUEST["grundId"])) die("Keine Grund ausgewählt");
+      if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) die("Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele Buchungen ausgewählt.");
+
+      foreach($_REQUEST["zahlungId"] as $aId)
+        $zahlungSum += $_REQUEST["zahlungValue"][$aId];
+      foreach($_REQUEST["grundId"] as $aId)
+        $grundSum += $_REQUEST["grundValue"][$aId];
+
+      if ($zahlungSum != $grundSum) die("Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.");
+
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        break;
+      } else {
+        $ret = true;
+      }
+
+      // alle Zahlungen wechseln nach state payed
+      foreach($_REQUEST["zahlungId"] as $aId) {
+        $a = dbGet("antrag", ["id" => $aId]);
+        $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+        $form = getForm($antrag["type"], $antrag["revision"]);
+        $ret0 = writeState("payed", $a, $form, $msgs, false);
+        $ret = $ret && $ret0;
+      }
+
+      // alle Buchungen wechseln nach state booked
+      foreach($_REQUEST["grundId"] as $aId) {
+        $a = dbGet("antrag", ["id" => $aId]);
+        $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+        $form = getForm($antrag["type"], $antrag["revision"]);
+        $ret0 = writeState("booked", $a, $form, $msgs, false);
+        $ret = $ret && $ret0;
+      }
+
+      // FIXME: Gründe/Grund bei Zahlung(en) eintragen
+die("Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.");
+
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret)
+        dbRollBack();
+      if ($ret) {
+        header("Location: $URIBASE");
+        exit;
+      }
     break;
     default:
       logAppend($logId, "__result", "invalid action");
@@ -993,6 +1049,82 @@ switch($_REQUEST["tab"]) {
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.create.tpl";
+  break;
+  case "booking":
+    requireGroup($HIBISCUSGROUP);
+    $alGrund = dbFetchAll("antrag", [ "type" => "auslagenerstattung-genehmigung", "state" => "ok" ] );
+    foreach(array_keys($alGrund) as $i) {
+      $antrag = $alGrund[$i];
+      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+      $antrag["_inhalt"] = $inhalt;
+      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      ob_start();
+      $success = renderFormImpl($form, $ctrl);
+      ob_end_clean();
+
+      $value = 0.00;
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
+        $value -= $ctrl["_render"]->addToSumValue["ausgaben"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen"])) {
+        $value += $ctrl["_render"]->addToSumValue["einnahmen"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben.zahlung"])) {
+        $value += $ctrl["_render"]->addToSumValue["ausgaben.zahlung"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.zahlung"])) {
+        $value -= $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
+      }
+die("einnahmen.ausgaben.zahlung not ready due to referenceFormFieldInTable");
+
+      $antrag["_value"] = $value;
+      $antrag["_ctrl"] = $ctrl;
+      $antrag["_form"] = $form;
+      $alGrund[$i] = $antrag;
+    }
+    $alZahlung = dbFetchAll("antrag", [ "type" => "zahlung", "state" => "payed" ] );
+    foreach(array_keys($alZahlung) as $i) {
+      $antrag = $alZahlung[$i];
+      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+      $antrag["_inhalt"] = $inhalt;
+      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      ob_start();
+      $success = renderFormImpl($form, $ctrl);
+      ob_end_clean();
+
+      $value = 0.00;
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
+        $value -= $ctrl["_render"]->addToSumValue["ausgaben"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen"])) {
+        $value += $ctrl["_render"]->addToSumValue["einnahmen"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben.beleg"])) {
+        $value += $ctrl["_render"]->addToSumValue["ausgaben.beleg"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.beleg"])) {
+        $value -= $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
+      }
+
+      $antrag["_value"] = $value;
+      $antrag["_ctrl"] = $ctrl;
+      $antrag["_form"] = $form;
+      $alZahlung[$i] = $antrag;
+    }
+    usort($alGrund, function ($a, $b) {
+      if ($a["_value"] < $b["_value"]) return -1;
+      if ($a["_value"] > $b["_value"]) return 1;
+      return 0;
+    });
+    usort($alZahlung, function ($a, $b) {
+      if ($a["_value"] < $b["_value"]) return -1;
+      if ($a["_value"] > $b["_value"]) return 1;
+      return 0;
+    });
+
+    require "../template/booking.tpl";
   break;
 #  case "antrag.submitted":
 #    require "../template/antrag.submitted.tpl";

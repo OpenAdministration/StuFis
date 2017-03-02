@@ -12,6 +12,10 @@ if (!hasGroup($HIBISCUSGROUP)) return;
       <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
     </form>
 
+<span class="pull-right">&nbsp;</span>
+
+    <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary pull-right">Zahlungen verbuchen</a>
+
 <?php
 # vim:syntax=php
 # vim: set syntax=php

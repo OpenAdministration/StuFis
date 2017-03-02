@@ -5,7 +5,7 @@ $config = [
   "shortTitle" => "Zahlung",
   "state" => [ "payed" => [ "Gezahlt", ],
                "booked" => [ "Gezahlt und gebucht", ],
-               "cancelled" => [ "Storniert", ],
+               "canceled" => [ "Storniert", ],
              ],
   "proposeNewState" => [
     "payed" => [ "booked" ],

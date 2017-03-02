@@ -146,7 +146,6 @@ $layout = [
          ],
        ],
      ],
-# FIXME Anlagen und Verweise
    ], // finanzgruppentbl
  ],
 
@@ -166,6 +165,20 @@ $layout = [
    "width" => 12,
    "opts" => ["well"],
    "value" => "Die Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
+ ],
+
+ [ "id" => "zahlungen.invref1", "type" => "invref", "width" => 12,
+   "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
+   "printSum" => [ "einnahmen", "ausgaben" ],
+   "printSumWidth" => 2,
+   "orderBy" => [ "field:zahlung.datum", "id" ],
+   "title" => "Zahlungen",
+   "otherForms" => [
+     ["type" => "zahlung", "referenceFormFieldInTable" => "zahlung.grund.beleg",
+// FIXME: referenceFormField soll nur passende Tabellenzeilen ermitteln
+      "addToSum" => [ "ausgaben" => [ "ausgaben.zahlung" ], "einnahmen" => [ "einnahmen.zahlung" ] ],
+     ],
+   ],
  ],
 
 ];

@@ -242,18 +242,24 @@ function dbDelete($table, $filter) {
 function dbGet($table, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFields = ["id","token","antrag_id", "fieldname"];
+   $validFields = ["id","token","antrag_id", "fieldname","value","contenttype"];
    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields)); # only fetch using id and url
 
    if (count($fields) == 0) die("No fields given.");
 
-   $c = [];
+   $c = []; $vals = [];
    foreach($fields as $k => $v) {
-     $c[] = quoteIdent($k) . " = ?";
+     if (is_array($v)) {
+       $c[] = quoteIdent($k) . " ".$v[0]." ?";
+       $vals[] = $v[1];
+     } else {
+       $c[] = quoteIdent($k) . " = ?";
+       $vals[] = $v;
+     }
    }
    $sql = "SELECT * FROM {$DB_PREFIX}{$table} WHERE ".implode(" AND ", $c);
    $query = $pdo->prepare($sql);
-   $ret = $query->execute(array_values($fields)) or httperror(print_r($query->errorInfo(),true));
+   $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(),true));
    if ($ret === false)
      return false;
    if ($query->rowCount() != 1) return false;
@@ -264,13 +270,19 @@ function dbGet($table, $fields) {
 function dbFetchAll($table, $fields, $sort = []) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFields = ["antrag_id","fieldname","value","contenttype","state","type"];
+   $validFields = ["antrag_id","fieldname","value","contenttype","state","type","value"];
    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields));
    $sort = array_intersect_key($sort, $scheme[$table]);
 
-   $c = [];
+   $c = []; $vals = [];
    foreach($fields as $k => $v) {
-     $c[] = quoteIdent($k) . " = ?";
+     if (is_array($v)) {
+       $c[] = quoteIdent($k) . " ".$v[0]." ?";
+       $vals[] = $v[1];
+     } else {
+       $c[] = quoteIdent($k) . " = ?";
+       $vals[] = $v;
+     }
    }
    $o = [];
    foreach($sort as $k => $v) {
@@ -284,7 +296,7 @@ function dbFetchAll($table, $fields, $sort = []) {
      $sql .= " ORDER BY ".implode(", ", $o);
    }
    $query = $pdo->prepare($sql);
-   $ret = $query->execute(array_values($fields)) or httperror(print_r($query->errorInfo(),true));
+   $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(),true));
    if ($ret === false)
      return false;
 
