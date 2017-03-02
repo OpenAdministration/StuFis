@@ -41,7 +41,7 @@ renderForm($form, ["_values" => $antrag] );
 <?php
 
   foreach($proposeNewState as $state) {
-    $isEditable = hasPermission($form, ["state" => $state], "canEdit");
+    $isEditable = hasPermission($form, ["state" => $state], "canEdit", false);
     $stateTxt = $classConfig["state"][$state][0];
     if ($stateTxt == "")
       $stateTxt = $state;
