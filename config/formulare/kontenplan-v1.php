@@ -57,6 +57,7 @@ foreach ( [ "giro" => "Bankkonten", "bar" => "Bargeldkonten" ] as $id => $captio
       "printSumSaldo" => [ "expr:%einnahmen - %ausgaben" ],
       "printSumLayout" => [ "expr:%einnahmen - %ausgaben" => [ "type" => "money", "name" => "Saldo", "currency" => "€" ] ],
       "printSumWidth" => 2,
+      "orderBy" => [ "field:zahlung.datum", "id" ],
       "title" => "Getätigte oder genehmigte Einnahmen und Ausgaben",
       "otherForms" => [
         ["type" => "zahlung", "referenceFormField" => "kontenplan.otherForm",

@@ -2721,6 +2721,7 @@ function renderFormItemInvRef($layout,$ctrl) {
   }
 
   $refMe = [];
+  $refMeOrder = [];
 
   if ($hasForms && $currentFormId !== false) {
     $forms = [];
@@ -2767,14 +2768,48 @@ function renderFormItemInvRef($layout,$ctrl) {
         echo "cannot identify references due to nesting";
         continue;
       }
+      $orderBy = [];
+      if (isset($layout["orderBy"])) {
+        foreach ($layout["orderBy"] as $o) {
+          if ($o == "id") {
+            $orderBy[] = $aId;
+          } elseif (substr($o,0,6) == "field:") {
+            $fieldName = substr($o,6);
+            $fieldValue = getFormValueInt($fieldName, null, $a["_inhalt"], "");
+            $orderBy[] = $fieldValue;
+          } else
+            die("unknown sort criteria $o");
+        }
+      }
+      if (count($orderBy) == 0)
+        $orderBy[] = $aId;
+
       if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
         $addToSum = $forms[$aId]["_addToSum"];
         foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
           $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a, "_addToSum" => $addToSum ];
+          $refMeOrder[$aId] = $orderBy;
         }
       }
     }
   }
+
+  /* sort $refMe by $refMeOrder */
+  uksort($refMe, function ($a, $b) use ($refMeOrder) {
+    if (!isset($refMeOrder[$a]) || !isset($refMeOrder[$b]))
+      return 0;
+    $oA = $refMeOrder[$a];
+    $oB = $refMeOrder[$b];
+    if (count($oA) != count($oB))
+      return 0;
+
+    for($i = 0; $i < count($oA); $i++) {
+      if ($oA[$i] < $oB[$i]) return -1;
+      if ($oA[$i] > $oB[$i]) return 1;
+    }
+
+    return 0;
+  });
 
   foreach ($refMe as $grp => $rr) {
     for ($i = count($rr) - 1; $i >= 0; $i--) {
