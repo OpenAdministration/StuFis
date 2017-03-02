@@ -30,6 +30,14 @@ function convertUserValueToDBValue($value, $type) {
         $nv .= $value[$i];
       }
       return $nv;
+    case "kontennr":
+      $value = trim(str_replace(" ", "", $value));
+      $nv = "";
+      for ($i = 0; $i < strlen($value); $i++) {
+        if ($i % 2 == 0 && $i > 0) $nv .= " ";
+        $nv .= $value[$i];
+      }
+      return $nv;
     case "money":
       return str_replace(" ", "", str_replace(",",".",str_replace(".", "", $value)));
     default:
@@ -662,8 +670,10 @@ function renderFormItem($layout,$ctrl = false) {
       $isNotEmpty = renderFormItemSignBox($layout,$ctrl);
       break;
     case "text":
+    case "number":
     case "titelnr":
     case "kostennr":
+    case "kontennr":
     case "email":
     case "url":
     case "iban":
@@ -1114,6 +1124,8 @@ function renderFormItemText($layout, $ctrl) {
       $fType = "text";
     if ($fType == "kostennr")
       $fType = "text";
+    if ($fType == "kontennr")
+      $fType = "text";
     echo "<input class=\"form-control\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
@@ -1375,7 +1387,9 @@ function renderFormItemTextarea($layout, $ctrl) {
     $noForm = true;
   }
 
-  if ($noForm) {
+  if ($noForm && $noFormMarkup) {
+    echo newTemplatePattern($ctrl, implode("<br/>",explode("\n",htmlspecialchars($value))));
+  } elseif ($noForm) {
     echo "<div>";
     echo newTemplatePattern($ctrl, implode("<br/>",explode("\n",htmlspecialchars($value))));
     echo "</div>";
@@ -2699,10 +2713,10 @@ function renderFormItemInvRef($layout,$ctrl) {
     $printSum = [];
 
   if (isset($layout["printSumLayout"])) {
-    foreach ($printSum as $i => $psId) {
-      $ctrl["_render"]->addToSumMeta[$psId] = $layout["printSumLayout"][$i];
-      if (!isset($ctrl["_render"]->addToSumMeta[$psId]["id"]))
-        $ctrl["_render"]->addToSumMeta[$psId]["id"] = "printSum-{$layout["id"]}";
+    foreach ($layout["printSumLayout"] as $psId => $newMeta) {
+      if (!isset($newMeta["id"]))
+        $newMeta["id"] = "printSum-{$layout["id"]}";
+      $ctrl["_render"]->addToSumMeta[$psId] = $newMeta;
     }
   }
 
@@ -2815,6 +2829,7 @@ function renderFormItemInvRef($layout,$ctrl) {
     }
 
     $columnSum = [];
+    $saldoSum = [];
     $myOutBody = "";
 
     foreach ($refMe as $grp => $rr) {
@@ -2871,6 +2886,11 @@ function renderFormItemInvRef($layout,$ctrl) {
             $value = $otherFormSum[$psId];
           else
             $value = evalPrintSum($psId, $sums, $src);
+
+          if (!isset($saldoSum[$psId]))
+            $saldoSum[$psId] = 0.00;
+          $saldoSum[$psId] += $value;
+
           $value = number_format($value, 2, ".", "");
           if (isset($refCtrl["_render"]->addToSumMeta[$psId])) {
             $newMeta = $refCtrl["_render"]->addToSumMeta[$psId];
@@ -2880,13 +2900,21 @@ function renderFormItemInvRef($layout,$ctrl) {
             $newMeta = false;
           }
           if ($newMeta !== false) {
-            $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
-            $newMeta["printSum"] = [ $psId ];
-            $newMeta["value"] = $value;
+            if (isset($layout["printSumSaldo"]) && in_array($psId, $layout["printSumSaldo"])) {
+              $newMeta["value"] = $saldoSum[$psId];
+              unset($newMeta["printSum"]);
+              unset($newMeta["addToSum"]);
+            } else {
+              $newMeta["value"] = $value;
+              $newMeta["printSum"] = [ $psId ];
+              $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
+            }
             if (isset($newMeta["editWidth"]))
               unset($newMeta["editWidth"]);
             if (isset($newMeta["width"]))
               unset($newMeta["width"]);
+            if (isset($newMeta["title"]))
+              unset($newMeta["title"]);
             if (isset($layout["printSumWidth"]))
               $newMeta["width"] = $layout["printSumWidth"];
   
@@ -2916,7 +2944,9 @@ function renderFormItemInvRef($layout,$ctrl) {
       $myOutBody .= "      <td class=\"invref-rowTxt\"></td>\n"; /* Spalte: Quelle */
 
       foreach ($printSum as $psId) {
-        if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+        if (isset($layout["printSumSaldo"]) && in_array($psId, $layout["printSumSaldo"])) {
+          $myOutBody .= "    <td></td>";
+        } elseif (isset($ctrl["_render"]->addToSumMeta[$psId])) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
           $newMeta["addToSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
           $newMeta["printSum"] = [ $psId ];
@@ -2986,7 +3016,9 @@ function renderFormItemInvRef($layout,$ctrl) {
       }
       $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
       foreach ($printSum as $psId) {
-        if (isset($ctrl["_render"]->addToSumMeta[$psId])) {
+        if (isset($layout["printSumSaldo"]) && in_array($psId, $layout["printSumSaldo"])) {
+          $myOut .= "    <td></td>";
+        } elseif (isset($ctrl["_render"]->addToSumMeta[$psId])) {
           $newMeta = $ctrl["_render"]->addToSumMeta[$psId];
           unset($newMeta["addToSum"]);
           $newMeta["printSum"] = [ "invref-".$layout["id"]."-".printSumId($psId) ];
@@ -2998,6 +3030,8 @@ function renderFormItemInvRef($layout,$ctrl) {
             unset($newMeta["editWidth"]);
           if (isset($newMeta["width"]))
             unset($newMeta["width"]);
+          if (isset($newMeta["title"]))
+            unset($newMeta["title"]);
           if (isset($layout["printSumWidth"]))
             $newMeta["width"] = $layout["printSumWidth"];
   
