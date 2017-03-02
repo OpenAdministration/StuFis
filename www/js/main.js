@@ -5,6 +5,26 @@ String.prototype.replaceAll = function(target, replacement) {
 numeral.locale("de");
 
 $(document).ready(function() {
+  // add a hash to the URL when the user clicks on a tab
+  $('a[data-toggle="tab"]').on('click.tabstate', function(e) {
+    history.pushState(null, null, $(this).attr('href'));
+  });
+
+  // navigate to a tab whn the history changes
+  $(window).on("popstate.tabstate", function(evt) {
+    var activeTab = $('*[href]').filter(function(i,e) { 
+      return $(e).attr('href') == location.hash;
+    });
+    if (activeTab.length) {
+      activeTab.tab('show');
+    } else {
+      $('.nav-tabs a:first').tab('show');
+    }
+  });
+  $(window).triggerHandler("popstate");
+});
+
+$(document).ready(function() {
   $.fn.validator.Constructor.FOCUS_OFFSET = 100;
   $.fn.validator.Constructor.INPUT_SELECTOR = ':input:not([type="hidden"], [type="submit"], [type="reset"], button, tr.new-table-row *)'
   $.fn.validator.Constructor.BUTTON_SELECTOR = 'button[type="submit"]:not(.no-validate), input[type="submit"]:not(.no-validate), a.submit-form.validate'

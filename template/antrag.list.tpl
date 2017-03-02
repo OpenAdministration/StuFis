@@ -36,7 +36,7 @@ foreach ($orderedCats as $cat) {
     $num += count($l1);
   }
 
-  echo '<li'.($activeCat == $cat ? ' class="active"':'').'><a data-toggle="tab" href="#'.md5($cat).'">'.htmlspecialchars($title).' ('.$num.')</a></li>';
+  echo '<li'.($activeCat == $cat ? ' class="active"':'').'><a data-toggle="tab" href="#'.htmlspecialchars($cat).'">'.htmlspecialchars($title).' ('.$num.')</a></li>';
 }
 ?>
 </ul>
@@ -48,7 +48,7 @@ foreach ($antraege as $cat => $l0) {
   if (substr($cat,0,1) == "_") continue;
 
   $title = "{$cat}";
-  echo '<div id="'.md5($cat).'" class="tab-pane fade'.($activeCat == $cat ? ' in active':'').'">';
+  echo '<div id="'.htmlspecialchars($cat).'" class="tab-pane fade'.($activeCat == $cat ? ' in active':'').'">';
 
 
 ?>
