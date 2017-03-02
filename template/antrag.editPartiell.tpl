@@ -23,15 +23,5 @@ renderForm($form, ["_values" => $antrag, "render" => ["no-form-cb"], "no-form-cb
 
 </form>
 
-
-<form id="deleteantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">
-  <input type="hidden" name="action" value="antrag.delete"/>
-  <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-  <input type="hidden" name="type" value="<?php echo $antrag["type"]; ?>"/>
-  <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
-  <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
-  <button type="submit" class='btn btn-danger' name="delete" id="delete">Löschen</button>
-</form>
-
 <?php
 # vim: set syntax=php:
