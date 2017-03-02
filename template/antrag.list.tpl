@@ -116,6 +116,9 @@ foreach ($antraege as $cat => $l0) {
         echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
         echo "</tr>";
         if ($cat == "report-stura" || $cat == "wait-stura") {
+          $gremium = getAntragDisplayTitle($antrag, $revConfig, [ "projekt.org.name" ]);
+          $gremium = trim(implode(" ", $gremium));
+
           $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
           $form = getForm($type, $revision);
           ob_start();
@@ -156,10 +159,10 @@ foreach ($antraege as $cat => $l0) {
             }
           }
           if ($cat == "report-stura")
-            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt {$caption}.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt {$caption} von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
 
           if ($cat == "wait-stura")
-            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt {$caption}.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt {$caption} von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
           
         }
       }

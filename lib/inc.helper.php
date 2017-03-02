@@ -28,20 +28,24 @@ function getAntrag($id = null) {
   return $antrag;
 }
 
-function getAntragDisplayTitle(&$antrag, &$revConfig) {
+function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false) {
   static $cache = false;
   if ($cache === false) $cache = [];
-  if (isset($antrag["id"]) && isset($cache[$antrag["id"]]))
+  $cacheMe = ($captionField === false);
+  if (isset($antrag["id"]) && isset($cache[$antrag["id"]]) && $cacheMe)
     return $cache[$antrag["id"]];
   $renderOk = true;
 
   $caption = [ ];
-  if (count($revConfig["captionField"]) > 0) {
+  if ($captionField === false && isset($revConfig["captionField"]) && count($revConfig["captionField"]) > 0) {
+    $captionField = $revConfig["captionField"];
+  }
+  if ($captionField !== false) {
     if (!isset($antrag["_inhalt"])) {
       $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
       $antraege[$type][$revision][$i] = $antrag;
     }
-    foreach ($revConfig["captionField"] as $j => $fname) {
+    foreach ($captionField as $j => $fname) {
       $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
       $row = count($rows) > 0 ? $rows[0] : false;
       if ($row !== false) {
@@ -56,13 +60,13 @@ function getAntragDisplayTitle(&$antrag, &$revConfig) {
       }
     }
   }
-  if (isset($revConfig["caption"]) > 0) {
+  if (isset($revConfig["caption"]) > 0 && $captionField === false) {
     $caption[] = $revConfig["caption"];
   }
   if (trim(strip_tags(implode(" ", $caption))) == "")
     array_unshift($caption, htmlspecialchars($antrag["token"]));
 
-  if (isset($antrag["id"]) && $renderOk)
+  if (isset($antrag["id"]) && $renderOk && $cacheMe)
     $cache[$antrag["id"]] = $caption;
   return $caption;
 }
