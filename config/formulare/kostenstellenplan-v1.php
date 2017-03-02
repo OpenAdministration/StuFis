@@ -121,7 +121,7 @@ $layout[] =
            "opts" => ["with-headline","with-expand"],
            "width" => 12,
            "columns" => [
-              [ "id" => "kosten.grp", "type" => "group", "opts" => ["title"], "width" => 12,
+              [ "id" => "kosten.grp", "type" => "group", "opts" => ["title","sum-over-table-bottom"], "width" => 12,
                 "name" => true,
                 "children" => $children,
               ], // column
