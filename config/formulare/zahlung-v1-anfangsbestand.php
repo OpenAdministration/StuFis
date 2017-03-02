@@ -5,6 +5,7 @@ $config = [
   "captionField" => [ "zahlung.datum" ],
   "revisionTitle" => "Kassen-Anfangsbestand (Version 20170302)",
   "permission" => [
+    "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
 ];

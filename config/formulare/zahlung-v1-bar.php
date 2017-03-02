@@ -4,6 +4,7 @@ $config = [
   "captionField" => [ "zahlung.datum", "zahlung.verwendungszweck" ],
   "revisionTitle" => "Bar (Version 20170302)",
   "permission" => [
+    "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
 ];

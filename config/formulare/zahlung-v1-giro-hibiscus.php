@@ -2,9 +2,9 @@
 
 $config = [
   "captionField" => [ "zahlung.datum", "zahlung.verwendungszweck" ],
-  "revisionTitle" => "Bank (Version 20170302)",
+  "revisionTitle" => "Bank.Hibiscus (Version 20170302)",
   "permission" => [
-    "isCreateable" => true,
+    "isCreateable" => false,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
 ];
@@ -23,7 +23,7 @@ $layout = [
    "id" => "group1",
    "title" => "Zahlung",
    "children" => [
-     [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 6, "opts" => ["required", "hasFeedback"],
+     [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 5, "opts" => ["required", "hasFeedback"],
        "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "state" => "final" ], [ "konten.giro" => "Konto" ] ],
        "referencesKey" => [ "konten.giro" => "konten.giro.nummer" ],
        "referencesId" => "kontenplan.otherForm",
@@ -31,6 +31,7 @@ $layout = [
      [ "id" => "zahlung.datum",            "title" => "Datum",               "type" => "date",     "width" => 2, "opts" => ["required"], ],
      [ "id" => "zahlung.einnahmen",        "title" => "Einnahmen",           "type" => "money",    "width" => 2, "opts" => ["required"], "addToSum" => [ "einnahmen" ], "currency" => "€"],
      [ "id" => "zahlung.ausgaben",         "title" => "Ausgaben",            "type" => "money",    "width" => 2, "opts" => ["required"], "addToSum" => [ "ausgaben" ], "currency" => "€"],
+     [ "id" => "zahlung.hibiscus",         "title" => "Hibiscus",            "type" => "number",   "width" => 1, "opts" => ["readonly"], ],
      [ "id" => "zahlung.verwendungszweck", "title" => "Verwendungszweck",    "type" => "textarea", "width" => 12, "opts" => ["required"], ],
    ],
  ],
@@ -68,5 +69,5 @@ $layout = [
 ];
 
 /* formname , formrevision */
-registerForm( "zahlung", "v1-giro", $layout, $config );
+registerForm( "zahlung", "v1-giro-hibiscus", $layout, $config );
 
