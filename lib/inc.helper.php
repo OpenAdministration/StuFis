@@ -60,7 +60,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false) {
       }
     }
   }
-  if (isset($revConfig["caption"]) > 0 && $captionField === false) {
+  if (isset($revConfig["caption"]) > 0 && $cacheMe) {
     $caption[] = $revConfig["caption"];
   }
   if (trim(strip_tags(implode(" ", $caption))) == "")

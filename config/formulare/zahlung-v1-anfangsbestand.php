@@ -1,7 +1,8 @@
 <?php
 
 $config = [
-  "caption" => [ "Anfangsbestand" ],
+  "caption" => "Anfangsbestand",
+  "captionField" => [ "zahlung.datum" ],
   "revisionTitle" => "Kassen-Anfangsbestand (Version 20170302)",
   "permission" => [
   ],
