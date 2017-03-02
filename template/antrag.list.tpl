@@ -2,10 +2,11 @@
 
 $catList = [
   "need-action" => "zu erledigen",
-  "wait-action" => "wartet",
+  "wait-stura" => "durch StuRa beschließen",
   "report-stura" => "im StuRa berichten",
   "running-project" => "laufende Projekte",
   "expired-project" => "abgelaufende Projekte",
+  "wait-action" => "wartet",
   "finished" => "erledigt",
   "plan" => "HHP/KP",
   "all" => "alle",
@@ -65,6 +66,8 @@ foreach ($antraege as $cat => $l0) {
   </thead>
   <tbody>
 <?php
+  $wikiBeschlussliste = [];
+
   foreach ($l0 as $type => $l1) {
     $classConfig = getFormClass($type);
     if ($classConfig === false) continue;
@@ -112,12 +115,70 @@ foreach ($antraege as $cat => $l0) {
         echo "</td>";
         echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
         echo "</tr>";
+        if ($cat == "report-stura" || $cat == "wait-stura") {
+          $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
+          $form = getForm($type, $revision);
+          ob_start();
+          $success = renderFormImpl($form, $ctrl);
+          ob_end_clean();
+          $betrag = "XXX EUR";
+          if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
+            $value = $ctrl["_render"]->addToSumValue["ausgaben"];
+            $value = number_format($value, 2, ".", "");
+            if (isset($ctrl["_render"]->addToSumMeta["ausgaben"])) {
+              $newMeta = $ctrl["_render"]->addToSumMeta["ausgaben"];
+
+              unset($newMeta["addToSum"]);
+              if (isset($newMeta["width"]))
+                unset($newMeta["width"]);
+              if (isset($newMeta["editWidth"]))
+                unset($newMeta["editWidth"]);
+
+              $newMeta["value"] = $value;
+
+              if (isset($newMeta["printSum"]))
+                unset($newMeta["printSum"]);
+              if (isset($newMeta["printSumDefer"]))
+                unset($newMeta["printSumDefer"]);
+  
+              $newCtrl = $ctrl;
+              $newCtrl["suffix"][] = "listing";
+              $newCtrl["render"][] = "no-form";
+              $newCtrl["render"][] = "no-form-markup";
+              unset($newCtrl["_values"]);
+              ob_start();
+              renderFormItem($newMeta, $newCtrl);
+              $betrag = ob_get_contents();
+              ob_end_clean();
+              $betrag = processTemplates($betrag, $newCtrl);
+            } else {
+              $betrag = $value;
+            }
+          }
+          if ($cat == "report-stura")
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt {$caption}.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+
+          if ($cat == "wait-stura")
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt {$caption}.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+          
+        }
       }
     }
   }
 ?>
   </tbody>
 </table>
+
+<?php
+
+if (count($wikiBeschlussliste) > 0) {
+  echo "<pre>";
+  echo strip_tags(implode("\n", $wikiBeschlussliste));
+  echo "</pre>";
+}
+
+?>
+
 </div>
 <?php
 }

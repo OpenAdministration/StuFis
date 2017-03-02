@@ -27,6 +27,9 @@ $config = [
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
     ],
+    "wait-stura" => [
+       [ "state" => "need-stura" ],
+    ],
   ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
