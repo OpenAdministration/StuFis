@@ -103,6 +103,14 @@ $children[] = [
   "children" => $invreftables,
 ];
 
+$printSumFooter = [];
+if ($year == date("Y")) {
+  $printSumFooter[] = "einnahmen.offen";
+  $printSumFooter[] = "ausgaben.offen";
+}
+$printSumFooter[] = "einnahmen.brutto";
+$printSumFooter[] = "ausgaben.brutto";
+
 $layout[] =
  [
    "type" => "table", /* renderer */
@@ -113,6 +121,7 @@ $layout[] =
      [ "id" => "gruppe",
        "type" => "group",
        "opts" => ["title"],
+       "printSumFooter" => $printSumFooter,
        "children" => [
          [ "id" => "gruppe.name",   "name" => "Gruppe",                 "type" => "text", "width" => 12,      "opts" => [ "required", "title" ], "format" => "h4" ],
          [
