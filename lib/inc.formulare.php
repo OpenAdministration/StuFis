@@ -1871,6 +1871,15 @@ function otherForm(&$layout, &$ctrl, $renderOpts = "") {
       $f["state"] = $formFilterDef["state"];
     if (isset($formFilterDef["revision"]))
       $f["revision"] = $formFilterDef["revision"];
+    if (isset($formFilterDef["revisionIsYearFromField"])) {
+      if (isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"])) {
+        $fieldValue = getFormValueInt($formFilterDef["revisionIsYearFromField"], null, $ctrl["_values"]["_inhalt"], "");
+        if (!empty($fieldValue)) {
+          $year = substr($fieldValue,0,4);
+          $f["revision"] = $year;
+        }
+      }
+    }
     $al = dbFetchAll("antrag", $f);
     $currentFormId = false;
     if (isset($ctrl["_values"])) {
@@ -2689,7 +2698,7 @@ function evalPrintSum($psId, $sums, &$src = []) {
     if (!isset($sums[$m[1]])) return "0";
     return $sums[$m[1]];
   }, $psId);
-  $psId = preg_replace('/[^\d\s+-]/', '', $psId); # ensure only match is in here
+  $psId = preg_replace('/[^\d\.\s+-]/', '', $psId); # ensure only match is in here
 
   return eval("return ($psId);");
 }
