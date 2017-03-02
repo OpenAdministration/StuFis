@@ -1564,6 +1564,10 @@ function getTrText($trId, $ctrl) {
     return newTemplatePattern($ctrl, htmlspecialchars("invalid row id: ".$trId));
   }
 
+  if (!isset($ctrl["_render"])) {
+    return newTemplatePattern($ctrl, htmlspecialchars("form not rendered: ".$trId));
+  }
+
   $tableBaseName = $matches[1];
   $rowIdentifier = $matches[2];
   // rowIdentifier is stored in $tableBaseName[rowId]$suffix
