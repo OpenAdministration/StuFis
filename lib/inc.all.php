@@ -16,6 +16,7 @@ require_once SYSBASE.'/lib/inc.formulare.php';
 require_once SYSBASE.'/lib/inc.printable.php';
 require_once SYSBASE.'/lib/inc.sni.php';
 require_once SYSBASE.'/lib/inc.dokuwiki.php';
+require_once SYSBASE.'/lib/inc.hibiscus.php';
 require_once 'XML/RPC2/Client.php';
 
 // Mail

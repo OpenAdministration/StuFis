@@ -1,7 +1,7 @@
 <?php
 
 $config = [
-  "captionField" => [ "zahlung.datum", "zahlung.verwendungszweck" ],
+  "captionField" => [ "zahlung.datum", "zahlung.empfaenger_name", "zahlung.art", "zahlung.verwendungszweck" ],
   "revisionTitle" => "Bank.Hibiscus (Version 20170302)",
   "permission" => [
     "isCreateable" => false,
@@ -24,7 +24,7 @@ $layout = [
    "title" => "Zahlung",
    "children" => [
      [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 5, "opts" => ["required", "hasFeedback"],
-       "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "state" => "final" ], [ "konten.giro" => "Konto" ] ],
+       "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "revisionIsYearFromField" => "zahlung.datum", "state" => "final" ], [ "konten.giro" => "Konto" ] ],
        "referencesKey" => [ "konten.giro" => "konten.giro.nummer" ],
        "referencesId" => "kontenplan.otherForm",
      ],
@@ -32,6 +32,10 @@ $layout = [
      [ "id" => "zahlung.einnahmen",        "title" => "Einnahmen",           "type" => "money",    "width" => 2, "opts" => ["required"], "addToSum" => [ "einnahmen" ], "currency" => "€"],
      [ "id" => "zahlung.ausgaben",         "title" => "Ausgaben",            "type" => "money",    "width" => 2, "opts" => ["required"], "addToSum" => [ "ausgaben" ], "currency" => "€"],
      [ "id" => "zahlung.hibiscus",         "title" => "Hibiscus",            "type" => "number",   "width" => 1, "opts" => ["readonly"], ],
+     [ "id" => "zahlung.art",              "title" => "Art",                 "type" => "text",     "width" => 6, ],
+     [ "id" => "zahlung.empfaenger_name",  "title" => "Empfänger",           "type" => "text",     "width" => 6, ],
+     [ "id" => "zahlung.empfaenger_konto", "title" => "Konto (Empfänger)",   "type" => "text",     "width" => 6, ],
+     [ "id" => "zahlung.empfaenger_blz",   "title" => "BLZ (Empfänger)",     "type" => "text",     "width" => 6, ],
      [ "id" => "zahlung.verwendungszweck", "title" => "Verwendungszweck",    "type" => "textarea", "width" => 12, "opts" => ["required"], ],
    ],
  ],

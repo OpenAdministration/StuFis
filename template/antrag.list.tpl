@@ -2,6 +2,7 @@
 
 $catList = [
   "need-action" => "zu erledigen",
+  "need-booking" => "zu buchen",
   "wait-stura" => "durch StuRa beschließen",
   "report-stura" => "im StuRa berichten",
   "running-project" => "laufende Projekte",
@@ -34,7 +35,9 @@ foreach ($orderedCats as $cat) {
 
   $num = 0;
   foreach ($antraege[$cat] as $type => $l1) {
-    $num += count($l1);
+    foreach ($l1 as $revision => $l2) {
+      $num += count($l2);
+    }
   }
 
   echo '<li'.($activeCat == $cat ? ' class="active"':'').'><a data-toggle="tab" href="#'.htmlspecialchars($cat).'">'.htmlspecialchars($title).' ('.$num.')</a></li>';
@@ -159,10 +162,10 @@ foreach ($antraege as $cat => $l0) {
             }
           }
           if ($cat == "report-stura")
-            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt {$caption} von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt \"{$caption}\" von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
 
           if ($cat == "wait-stura")
-            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt {$caption} von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
+            $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt \"{$caption}\" von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
           
         }
       }

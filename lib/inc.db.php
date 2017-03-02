@@ -291,5 +291,37 @@ function dbFetchAll($table, $fields, $sort = []) {
    return $query->fetchAll(PDO::FETCH_ASSOC);
 }
 
+function dbGetLastHibiscus() {
+   global $pdo, $DB_PREFIX;
+
+   $sql = "SELECT MAX(CAST(i.value AS DECIMAL)) AS t_max FROM {$DB_PREFIX}antrag a INNER JOIN {$DB_PREFIX}inhalt i ON a.id = i.antrag_id AND i.fieldname = 'zahlung.hibiscus' AND a.type = 'zahlung' AND a.revision = 'v1-giro-hibiscus'";
+
+   $query = $pdo->prepare($sql);
+   $ret = $query->execute() or httperror(print_r($query->errorInfo(),true));
+   if ($ret === false)
+     return false;
+   if ($query->rowCount() != 1) return false;
+
+   return $query->fetchColumn();
+}
+
+function dbHasAnfangsbestand($ktoId, $kpId) {
+   global $pdo, $DB_PREFIX;
+
+   $sql = "SELECT COUNT(*) FROM {$DB_PREFIX}antrag a
+ INNER JOIN {$DB_PREFIX}inhalt i1 ON a.id = i1.antrag_id AND i1.fieldname = 'kontenplan.otherForm' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i1.value = ?
+ INNER JOIN {$DB_PREFIX}inhalt i2 ON a.id = i2.antrag_id AND i2.fieldname = 'zahlung.konto' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i2.value = ?
+";
+
+   $query = $pdo->prepare($sql);
+   $ret = $query->execute([$kpId, $ktoId]) or httperror(print_r($query->errorInfo(),true));
+   if ($ret === false)
+     return false;
+   if ($query->rowCount() != 1) return false;
+
+   return $query->fetchColumn() > 0;
+}
+
+
 # vim: set expandtab tabstop=8 shiftwidth=8 :
 

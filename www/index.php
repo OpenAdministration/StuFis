@@ -1,5 +1,5 @@
 <?php
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
@@ -718,6 +718,83 @@ if (isset($_REQUEST["action"])) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       }
       break;
+    case "hibiscus":
+      requireGroup($HIBISCUSGROUP);
+
+      $ret = true;  
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        break;
+      }
+  
+      $newFormAnfangsbestand = fetchFromHibiscusAnfangsbestand();
+      foreach ($newFormAnfangsbestand as $inhalte) {
+        $antrag = [];
+        $antrag["type"] = "zahlung";
+        $antrag["revision"] = "v1-anfangsbestand";
+        $antrag["creator"] = getUsername();
+        $antrag["creatorFullName"] = getUserFullName();
+        $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+        $antrag["createdat"] = date("Y-m-d H:i:s");
+        $antrag["lastupdated"] = date("Y-m-d H:i:s");
+        $createState = "draft";
+        $form = getForm($antrag["type"], $antrag["revision"]);
+        if (isset($form["_class"]["createState"]))
+          $createState = $form["_class"]["createState"];
+        $antrag["state"] = $createState; // FIXME custom default state
+        $antrag["stateCreator"] = getUsername();
+        $ret = dbInsert("antrag", $antrag);
+        if ($ret === false) {
+          echo "antrag.create failed<br/>";
+          continue;
+        }
+        $antrag_id = (int) $ret;
+  
+        foreach ($inhalte as $inhalt) {
+          $inhalt["antrag_id"] = $antrag_id;
+          $ret0 = dbInsert("inhalt", $inhalt);
+          $ret = $ret && $ret0;
+        }
+      }
+
+      $newFormZahlungen = fetchFromHibiscus();
+  
+      foreach ($newFormZahlungen as $inhalte) {
+        $antrag = [];
+        $antrag["type"] = "zahlung";
+        $antrag["revision"] = "v1-giro-hibiscus";
+        $antrag["creator"] = getUsername();
+        $antrag["creatorFullName"] = getUserFullName();
+        $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+        $antrag["createdat"] = date("Y-m-d H:i:s");
+        $antrag["lastupdated"] = date("Y-m-d H:i:s");
+        $createState = "draft";
+        $form = getForm($antrag["type"], $antrag["revision"]);
+        if (isset($form["_class"]["createState"]))
+          $createState = $form["_class"]["createState"];
+        $antrag["state"] = $createState; // FIXME custom default state
+        $antrag["stateCreator"] = getUsername();
+        $ret = dbInsert("antrag", $antrag);
+        if ($ret === false) {
+          echo "antrag.create failed<br/>";
+          continue;
+        }
+        $antrag_id = (int) $ret;
+  
+        foreach ($inhalte as $inhalt) {
+          $inhalt["antrag_id"] = $antrag_id;
+          $ret0 = dbInsert("inhalt", $inhalt);
+          $ret = $ret && $ret0;
+        }
+      }
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret)
+        dbRollBack();
+      header("Location: $URIBASE");
+      exit;
+    break;
     default:
       logAppend($logId, "__result", "invalid action");
       die("Aktion nicht bekannt.");
@@ -849,6 +926,7 @@ switch($_REQUEST["tab"]) {
     }
     require "../template/antrag.createpanel.tpl";
     require "../template/antrag.list.tpl";
+    require "../template/antrag.actions.tpl";
   break;
   case "antrag":
     $antrag = getAntrag();
@@ -916,10 +994,6 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.head.tpl";
     require "../template/antrag.create.tpl";
   break;
-#  case "antrag.submit":
-#    $antrag = getAntrag();
-#    require "../template/antrag.submit.tpl";
-#  break;
 #  case "antrag.submitted":
 #    require "../template/antrag.submitted.tpl";
 #  break;

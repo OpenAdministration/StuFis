@@ -1,6 +1,6 @@
 <?php
 
-global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX, $SIMPLESAML, $SIMPLESAMLAUTHSOURCE, $AUTHGROUP, $ADMINGROUP, $URIBASE, $STORAGE, $ANTRAGMAILTO, $GremiumPrefix, $URIBASEREF, $wikiUrl, $CA_file, $DEV;
+global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX, $SIMPLESAML, $SIMPLESAMLAUTHSOURCE, $AUTHGROUP, $ADMINGROUP, $URIBASE, $STORAGE, $ANTRAGMAILTO, $GremiumPrefix, $URIBASEREF, $wikiUrl, $CA_file, $DEV, $HIBISCUSGROUP, $HIBISCUSPASSWORD;
 
 $DB_DSN = "FIXME";
 $DB_USERNAME = "FIXME";
@@ -10,8 +10,11 @@ $SIMPLESAML = dirname(dirname(dirname(__FILE__)))."/simplesamlphp";
 $SIMPLESAMLAUTHSOURCE = "FIXME";
 # permissions required by index.php
 $AUTHGROUP = "FIXME";
+# permission required for hibiscus import
+$HIBISCUSGROUP = "FIXME";
 # admin groups (comma separated)
 $ADMINGROUP = "FIXME";
+$HIBISCUSPASSWORD = "FIXME";
 $URIBASE = "/FinanzAntragUI/";
 $URIBASEREF = "https://".$_SERVER["SERVER_NAME"];
 $STORAGE = dirname(dirname(__FILE__))."/storage";
