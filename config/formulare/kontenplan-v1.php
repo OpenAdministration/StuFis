@@ -28,12 +28,12 @@ $children = [
 $children[] =
   [ "id" => "konten.einnahmen",   "name" => "Einnahmen",  "type" => "money",  "width" => 2,
     "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-    "printSumDefer" => "einnahmen.brutto"
+    "printSumDefer" => "einnahmen"
   ];
 $children[] =
   [ "id" => "konten.ausgaben",   "name" => "Ausgaben",  "type" => "money",  "width" => 2,
     "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
-    "printSumDefer" => "ausgaben.brutto"
+    "printSumDefer" => "ausgaben"
   ];
 
 $invreftables = [];
@@ -44,11 +44,8 @@ $invreftables[] =
     "printSumWidth" => 2,
     "title" => "Getätigte oder genehmigte Einnahmen und Ausgaben",
     "otherForms" => [
-      ["type" => "auslagenerstattung-genehmigung", "state" => "ok",    "referenceFormField" => "kontenplan.otherForm",
-       "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
-      ],
-      ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "kontenplan.otherForm",
-       "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
+      ["type" => "zahlung", "referenceFormField" => "kontenplan.otherForm",
+       "addToSum" => [ "ausgaben" => [ "ausgaben" ], "einnahmen" => [ "einnahmen" ] ],
       ],
     ],
   ];
@@ -58,8 +55,8 @@ $children[] = [
 ];
 
 $printSumFooter = [];
-$printSumFooter[] = "einnahmen.brutto";
-$printSumFooter[] = "ausgaben.brutto";
+$printSumFooter[] = "einnahmen";
+$printSumFooter[] = "ausgaben";
 
 $layout[] =
  [
