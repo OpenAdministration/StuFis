@@ -5,6 +5,7 @@ loadForms();
 function convertDBValueToUserValue($value, $type) {
   switch ($type) {
     case "money":
+       $value = (string) $value;
       if ($value === false || $value == "") return $value;
       return number_format($value, 2, ',', ' ');
     default:
