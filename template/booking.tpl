@@ -7,14 +7,14 @@ Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugeh
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
 
 <table>
-<thead><tr><th class="text-center">Zahlungen</th><th class="text-center">Zahlungsgründe</th></tr></thead>
+<thead><tr><th class="text-center col-xs-6">Zahlungen</th><th class="text-center col-xs-6">Zahlungsgründe</th></tr></thead>
 <tbody>
 <tr><td valign="top">
 
  <div>Ausgewählte Summe: <span class="checkbox-summing-output"></span> €</div>
 
  <table class="table table-striped checkbox-summing">
- <thead><tr><th></th><th>Betrag</th><th>Verwendungszweck</th></tr></thead>
+ <thead><tr><th></th><th class="col-xs-2">Betrag</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
  <tbody>
 <?php
 
@@ -29,6 +29,9 @@ foreach ($alZahlung as $a) {
   echo "<td class=\"text-right\">";
   echo htmlspecialchars($fvalue." €");
   echo "<input type=\"hidden\" name=\"zahlungValue[".$a["id"]."]\" value=\"$value\">";
+  echo "</td>";
+  echo "<td valign=\"top\">";
+  echo $a["id"];
   echo "</td>";
   $revConfig = $a["_form"]["config"];
   $caption = getAntragDisplayTitle($a, $revConfig);
@@ -50,7 +53,7 @@ foreach ($alZahlung as $a) {
  <div>Ausgewählte Summe: <span class="checkbox-summing-output"></span> €</div>
  
  <table class="table table-striped checkbox-summing">
- <thead><tr><th></th><th>Betrag</th><th>Verwendungszweck</th></tr></thead>
+ <thead><tr><th></th><th class="col-xs-2">Betrag</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
  <tbody>
 <?php
 
@@ -65,6 +68,9 @@ foreach ($alGrund as $a) {
   echo "<td class=\"text-right\">";
   echo htmlspecialchars($fvalue." €");
   echo "<input type=\"hidden\" name=\"grundValue[".$a["id"]."]\" value=\"$value\">";
+  echo "</td>";
+  echo "<td valign=\"top\">";
+  echo $a["id"];
   echo "</td>";
   $revConfig = $a["_form"]["config"];
   $caption = getAntragDisplayTitle($a, $revConfig);

@@ -531,6 +531,7 @@ function renderFormImpl(&$form, &$ctrl) {
   $ctrl["_render"]->addToSumValue = [];
   $ctrl["_render"]->addToSumValueByRowRecursive = [];
   $ctrl["_render"]->referencedBy = []; /* tableRowReferenced -> tableRowWhereReferenceIs */
+  $ctrl["_render"]->referencedByOtherForm = []; /* otherFormId -> myFieldName -> tableRowWhereReferenceIs */
   $ctrl["_render"]->otherForm = [];
   $ctrl["_render"]->numTableRows = [];
   $ctrl["_render"]->rowIdToNumber = [];
@@ -850,6 +851,8 @@ function renderFormItemOtherForm($layout,$ctrl) {
     echo '>';
     $noForm = true;
   }
+  if ($value != "")
+    $ctrl["_render"]->referencedByOtherForm[(int) $value][$layout["id"]][] = $ctrl["_render"]->currentParent."[".$ctrl["_render"]->currentParentRow."]";
 
   if ($noForm) {
     echo '<div>';
@@ -2703,11 +2706,12 @@ function evalPrintSum($psId, $sums, &$src = []) {
   return eval("return ($psId);");
 }
 
+# FIXME: Wenn invref nicht in Tabelle verwendet wird, macht es nur dann sinn, wenn bestimmte otherForm Referenzen ausgewertet werden. D.h. im aktuellen Dokument: referenziert alles, im anderen Dokument: je nach Position von otherForm Element.
+
 function renderFormItemInvRef($layout,$ctrl) {
   list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
-  $refId = $ctrl["_render"]->currentRowId;
-  if ($refId === false) return false;
+  $refId = $ctrl["_render"]->currentRowId; # false if out of table
 
   $hasForms = isset($layout["otherForms"]);
 
@@ -2715,6 +2719,11 @@ function renderFormItemInvRef($layout,$ctrl) {
   if (isset($ctrl["_values"])) {
     $currentFormId = $ctrl["_values"]["id"];
   }
+
+  if ($refId === false && $currentFormId === false) # nothing other forms could reference here
+    return false;
+  if ($refId === false && !$hasForms) # no other forms that could reference this given
+    return false;
 
   if (isset($layout["printSum"]))
     $printSum = $layout["printSum"];
@@ -2745,15 +2754,11 @@ function renderFormItemInvRef($layout,$ctrl) {
         $al = dbFetchAll("antrag", $f);
         foreach ($al as $a) {
           if (isset($formFilterDef["referenceFormField"])) {
-            $r = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId ]);
-            if ($r === false) continue;
-          }
-          if (isset($formFilterDef["referenceFormFieldInTable"])) {
-            $r = dbFetchAll("inhalt", ["antrag_id" => $a["id"], "fieldname" => [ "LIKE", $formFilterDef["referenceFormFieldInTable"]."[%" ], "contenttype" => "otherForm", "value" => $currentFormId ]);
-            if ($r === false || count($r) == 0) continue;
-
-// FIXME: identify suffix and relevant table -> addToSum restricted to refname
-
+            $r0 = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId ]);
+            $r1 = false;
+            if ($refId === false) # we're not in a table so lookup otherForm in-Table references (this is unsupported if we're in table)
+              $r1 = dbFetchAll("inhalt", ["antrag_id" => $a["id"], "fieldname" => [ "LIKE", $formFilterDef["referenceFormField"]."[%" ], "contenttype" => "otherForm", "value" => $currentFormId ]);
+            if ($r0 === false && ($r1 === false || count($r1) == 0)) continue;
           }
           $forms[$a["id"]]["antrag"] = $a;
           if (!isset($formFilterDef["addToSum"]))
@@ -2765,6 +2770,10 @@ function renderFormItemInvRef($layout,$ctrl) {
               $forms[$a["id"]]["_addToSum"][$src] = [];
             $forms[$a["id"]]["_addToSum"][$src] = array_merge($forms[$a["id"]]["_addToSum"][$src], $dstA);
           }
+          if (!isset($forms[$a["id"]]["_referenceFormField"]))
+            $forms[$a["id"]]["_referenceFormField"] = [];
+          if (isset($formFilterDef["referenceFormField"]))
+            $forms[$a["id"]]["_referenceFormField"][] = $formFilterDef["referenceFormField"];
         }
       }
       $ctrl["_render"]->otherForm[$layout["id"]] = $forms;
@@ -2800,7 +2809,24 @@ function renderFormItemInvRef($layout,$ctrl) {
       if (count($orderBy) == 0)
         $orderBy[] = $aId;
 
-      if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
+      if ($refId === false) {
+        # we're not in a table
+        if ($currentFormId === false || $currentFormId == "") die("empty form id");
+        if ($currentFormId === false || $currentFormId == "") continue;
+        if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId])) die("no reference to this form $currentFormid");
+        if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId])) continue;
+        $referenceFormFields = array_unique($forms[$aId]["_referenceFormField"]);
+        $addToSum = $forms[$aId]["_addToSum"];
+        foreach ($referenceFormFields as $referenceFormField) {
+          if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId][$referenceFormField])) die("no reference in field $referenceFormField");
+          if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId][$referenceFormField])) continue;
+          foreach( $otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId][$referenceFormField] as $r) {
+            $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a, "_addToSum" => $addToSum ];
+            $refMeOrder[$aId] = $orderBy;
+          }
+        }
+      } else if (isset($otherCtrl["_render"]->referencedBy[$refId])) {
+        # we're in a table. the other forms needs to reference
         $addToSum = $forms[$aId]["_addToSum"];
         foreach( $otherCtrl["_render"]->referencedBy[$refId] as $r) {
           $refMe[$aId][] = ["ctrl" => $otherCtrl, "ref" => $r, "form" => $f, "antrag" => $a, "_addToSum" => $addToSum ];

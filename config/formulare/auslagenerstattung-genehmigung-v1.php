@@ -169,14 +169,13 @@ $layout = [
 
  [ "id" => "zahlungen.invref1", "type" => "invref", "width" => 12,
    "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
-   "printSum" => [ "einnahmen", "ausgaben" ],
+   "printSum" => [ "einnahmen.beleg", "ausgaben.beleg" ],
    "printSumWidth" => 2,
    "orderBy" => [ "field:zahlung.datum", "id" ],
    "title" => "Zahlungen",
    "otherForms" => [
-     ["type" => "zahlung", "referenceFormFieldInTable" => "zahlung.grund.beleg",
-// FIXME: referenceFormField soll nur passende Tabellenzeilen ermitteln
-      "addToSum" => [ "ausgaben" => [ "ausgaben.zahlung" ], "einnahmen" => [ "einnahmen.zahlung" ] ],
+     ["type" => "zahlung", "referenceFormField" => "zahlung.grund.beleg",
+      "addToSum" => [ "ausgaben.beleg" => [ "ausgaben.zahlung" ], "einnahmen.beleg" => [ "einnahmen.zahlung" ] ],
      ],
    ],
  ],

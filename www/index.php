@@ -802,8 +802,8 @@ if (isset($_REQUEST["action"])) {
       $zahlungSum = 0.00;
       $grundSum = 0.00;
 
-      if (!isset($_REQUEST["zahlungId"])) die("Keine Zahlung ausgewählt");
-      if (!isset($_REQUEST["grundId"])) die("Keine Grund ausgewählt");
+      if (!isset($_REQUEST["zahlungId"])) $_REQUEST["zahlungId"] = [];
+      if (!isset($_REQUEST["grundId"])) $_REQUEST["grundId"] = [];
       if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) die("Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele Buchungen ausgewählt.");
 
       foreach($_REQUEST["zahlungId"] as $aId)
@@ -1076,7 +1076,6 @@ switch($_REQUEST["tab"]) {
       if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.zahlung"])) {
         $value -= $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
       }
-die("einnahmen.ausgaben.zahlung not ready due to referenceFormFieldInTable");
 
       $antrag["_value"] = $value;
       $antrag["_ctrl"] = $ctrl;

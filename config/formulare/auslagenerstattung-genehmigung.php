@@ -1,5 +1,8 @@
 <?php
 
+# FIXME: Status zwischen "Anzahlung angewiesen" und "Gezahlt und verbucht" (aka Zahlung auf Kontoauszug erledigt) unterscheiden
+# FIXME: Wenn in lezterem Status dann validateInput mit Summe Einnahmen = Summe Einnahmen.Zahlung analog Ausgaben
+
 $config = [
   "title" => "Genehmigung Auslagenerstattung",
   "shortTitle" => "Genehmigung Auslagenerstattung",

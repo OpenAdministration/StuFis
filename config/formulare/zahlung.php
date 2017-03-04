@@ -1,5 +1,8 @@
 <?php
 
+# FIXME für bar, giro, giro-hibiscus: check zahlungsbegründender beleg sum matches own sums
+# FIXME für bar, giro, giro-hibiscus: check zahlungsbegründender hhp matches own hhp
+
 $config = [
   "title" => "Zahlung",
   "shortTitle" => "Zahlung",
