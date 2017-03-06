@@ -142,8 +142,6 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
 }
 
 function writeState($newState, $antrag, $form, &$msgs) {
-$msgs[] .= print_r($antrag["state"],true);
-$msgs[] .= print_r($newState,true);
   if ($antrag["state"] == $newState) return true;
 
   $transition = "from.{$antrag["state"]}.to.{$newState}";
@@ -852,13 +850,6 @@ if (isset($_REQUEST["action"])) {
         break;
       } else {
         $ret = true;
-      }
-
-      // FIXME: Gründe/Grund bei Zahlung(en) eintragen
-      if (false) {
-        $msgs[] = "Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.";
-        $ret = false;
-        break;
       }
 
       foreach($_REQUEST["zahlungId"] as $zId) {
