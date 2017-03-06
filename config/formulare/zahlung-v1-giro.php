@@ -26,7 +26,7 @@ $layout = [
    "id" => "group1",
    "title" => "Zahlung",
    "children" => [
-     [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 6, "opts" => ["required", "hasFeedback"],
+     [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 6, "opts" => ["required", "hasFeedback","edit-skip-referencesId"],
        "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "revisionIsYearFromField" => "zahlung.datum", "state" => "final" ], [ "konten.giro" => "Konto" ] ],
        "referencesKey" => [ "konten.giro" => "konten.giro.nummer" ],
        "referencesId" => "kontenplan.otherForm",

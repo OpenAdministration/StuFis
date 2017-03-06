@@ -529,7 +529,7 @@ function getFormValueInt($name, $type, $values, $defaultValue = false) {
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
       continue;
-    if ($type !== null && $row["contenttype"] != $type) {
+    if ($type !== null && $row["contenttype"] !== null && $row["contenttype"] != $type) {
       add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
       continue;
     }
@@ -542,7 +542,7 @@ function getFormEntry($name, $type, $values) {
   foreach($values as $row) {
     if ($row["fieldname"] != $name)
       continue;
-    if ($type !== null && $row["contenttype"] != $type) {
+    if ($type !== null && $row["contenttype"] !== null && $row["contenttype"] != $type) {
       add_message("Feld $name: erwarteter Typ = \"$type\", erhaltener Typ = \"{$row["contenttype"]}\"");
       continue;
     }
@@ -1197,6 +1197,7 @@ function renderFormItemText($layout, $ctrl) {
   $noFormMarkup |= $noFormCompress;
   $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
   $isDS = isset($layout["data-source"]);
+  $isReloadFirst = in_array("refreshFormBeforeChange", $layout["opts"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1246,7 +1247,10 @@ function renderFormItemText($layout, $ctrl) {
       $fType = "text";
     if ($fType == "kontennr")
       $fType = "text";
-    echo "<input class=\"form-control\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+    $cls = ["form-control"];
+    if ($isReloadFirst)
+      $cls[] = "reload-first";
+    echo "<input class=\"".implode(" ", $cls)."\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 
   if (isset($layout["addToSum"])) { # filter based on [data-addToSum~={$addToSumId}]
@@ -1308,6 +1312,9 @@ function renderFormItemText($layout, $ctrl) {
       echo " data-onClickFillFrom=\"".htmlspecialchars($layout["onClickFillFrom"])."\"";
     if (isset($layout["onClickFillFromPattern"]))
       echo " data-onClickFillFromPattern=\"".htmlspecialchars($layout["onClickFillFromPattern"])."\"";
+    if ($isReloadFirst) {
+      echo " data-oldValue=\"{$tPattern}\"";
+    }
     echo " value=\"{$tPattern}\"";
     echo "/>";
     if ($isWikiUrl) {
@@ -1768,7 +1775,8 @@ function renderFormItemSelect($layout, $ctrl) {
       # skip referencesId: Projektgenehmigungen beziehen sich auf einen HHP, sind aber auch im nächsten HHP noch gültig.
       # referencesKey ist dort auflösbar, rowId kann aber verschieden sein.
       # referencesId wird in dem Fall dennoch benötigt, wenn der Antrag nochmal gedruckt oder gelesen werden soll aber im aktuellen HHP der Titel nicht mehr existiert o.ä.
-      if (isset($layout["referencesId"]) && !in_array("skip-referencesId", $ctrl["render"])) {
+      $useReferencesId = $noForm || !in_array("edit-skip-referencesId", $layout["opts"]); # is readonly or edit-skip-referencesId is not set
+      if (isset($layout["referencesId"]) && !in_array("skip-referencesId", $ctrl["render"]) && $useReferencesId ) {
         $otherFormIdField = "formdata[{$layout["referencesId"]}]";
         /* rationale:otherFormIdField uses no suffix as 
          * 1. current logic ensures it always references the same form on every copy

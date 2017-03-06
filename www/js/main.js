@@ -1031,6 +1031,29 @@ $(document).ready(function() {
     
   });
 
+  $( "input.reload-first[data-oldValue]").on("change.reload-first", function (evt) {
+    var $el = $(this);
+    var $form = $el.closest("form.ajax");
+    if ($form.length < 1) return;
+    var oldState = $form.find('input[name="state"]').attr("state");
+    $form.find('input[name="state"]').val(oldState);
+
+    $("#please-reload-btn").off("click");
+    $("#please-reload-btn").on("click.dosubmit", function (evt) {
+      $("#please-reload-dlg").modal("hide");
+      var newValue = $el.val();
+      var oldValue = $el.attr("data-oldValue");
+      $el.val( oldValue );
+      handleSubmitForm($form, evt, false, function(data) {
+        data.append('subaction', 'resumeEdit');
+        data.append(getFormdataName(extractFieldName($el.attr("name")), "overrideOnNextEdit"), newValue );
+      });
+    });
+    $("#please-reload-dlg").modal("show");
+    return false;
+   
+  });
+
   $( "form.ajax a.submit-form" ).on("click.submit-form", function(e) {
     var $el = $(this);
     var $frm = $el.closest("form");
@@ -1474,14 +1497,16 @@ function extractFieldNameBase(name) {
   return m[1];
 }
 
-function getFormdataName(fieldname) {
+function getFormdataName(fieldname, formdataname) {
   if (fieldname == null)
     return false;
   var re = /^([^\[\]]*)(\[.*)?$/;
   var m = fieldname.match(re);
   if (!m)
     return false;
-  var name = "formdata["+m[1]+"]";
+  if (typeof formdataname === 'undefined')
+    formdataname = 'formdata';
+  var name = formdataname + "["+m[1]+"]";
   if (m[2]) {
     name += m[2];
   }

@@ -424,6 +424,9 @@ if (isset($_REQUEST["action"])) {
               $target .= "/editPartiell";
               break;
           }
+          if (isset($_REQUEST["overrideOnNextEdit"])) {
+            $target .= "?".http_build_query([ "override" => $_REQUEST["overrideOnNextEdit"] ] );
+          }
         }
       }
       break;

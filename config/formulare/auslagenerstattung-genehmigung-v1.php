@@ -44,7 +44,10 @@ $layout = [
    "id" => "group0",
    "title" => "Genehmigung",
    "children" => [
-     [ "id" => "genehmigung.jahr", "title" =>"Haushaltsjahr", "type" => "text", "width" => 12, "opts" => ["required", "hasFeedback"], "prefill" => "value:".date("Y"),
+# Änderungen an diesem Feld brauchen eine Aktualisierung der *.titel und *.konto Felder und dort neben haushaltsplan.otherForm/kostenstellenplan.otherForm auch neue Select-Inhalte.
+# Ansatz: *alten* Wert speichern und Formular neuladen mit einem passenden Override
+# dazu "refreshBeforeChange" flag
+     [ "id" => "genehmigung.jahr", "title" =>"Haushaltsjahr", "type" => "text", "width" => 12, "opts" => ["required", "hasFeedback", "readonly", "refreshFormBeforeChange"], "prefill" => "value:".date("Y"),
        "pattern" => '^\d\d\d\d$' ],
      [ "id" => "genehmigung.recht.grp",   "title" =>"Rechtsgrundlage",        "type" => "group",    "width" => 12, "children" => [
 
@@ -61,12 +64,12 @@ $layout = [
        [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date", "width" => 2,  "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
        [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text", "width" => 2, ],
      ], ],
-     [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref" ], "placeholder" => "optional",
+     [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref", "edit-skip-referencesId" ], "placeholder" => "optional",
        "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], [ "titel.einnahmen" => "Einnahmen", "titel.ausgaben" => "Ausgaben" ] ],
        "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
        "referencesId" => "haushaltsplan.otherForm",
      ],
-     [ "id" => "genehmigung.konto",   "title" =>"Kostenstelle",                      "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref" ], "placeholder" => "optional",
+     [ "id" => "genehmigung.konto",   "title" =>"Kostenstelle",                      "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref", "edit-skip-referencesId" ], "placeholder" => "optional",
        "references" => [ [ "type" => "kostenstellenplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], "kosten" ],
        "referencesKey" => ["kosten" => "kosten.nummer" ],
        "referencesId" => "kostenstellenplan.otherForm",
@@ -133,13 +136,13 @@ $layout = [
              ],
              [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
              [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung",
+             [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["edit-skip-referencesId"],
                "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], [ "titel.einnahmen" => "Einnahmen", "titel.ausgaben" => "Ausgaben" ] ],
                "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
                "referencesId" => "haushaltsplan.otherForm",
                "refValueIfEmpty" => "genehmigung.titel",
              ],
-             [ "id" => "geld.konto",       "name" => "Kostenstelle",            "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung",
+             [ "id" => "geld.konto",       "name" => "Kostenstelle",            "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["edit-skip-referencesId"],
                "references" => [ [ "type" => "kostenstellenplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], "kosten" ],
                "referencesKey" => [ "kosten" => "kosten.nummer" ],
                "referencesId" => "kostenstellenplan.otherForm",

@@ -17,6 +17,31 @@
   if (!in_array($antrag["state"], $proposeNewState))
     $proposeNewState[] = $antrag["state"];
 
+  if (isset($_REQUEST["override"])) {
+    $overrides = [];
+    function addToOverrides ($key, $value, &$overrides) {
+      if (is_array($value)) {
+        foreach ($value as $k => $v) {
+          addToOverrides($key."[$k]", $v, $overrides);
+        }
+      } else {
+        $overrides[$key] = $value;
+      }
+    }
+    foreach ($_REQUEST["override"] as $key => $value) {
+      addToOverrides($key, $value, $overrides);
+    }
+    $append = $overrides;
+    foreach ($antrag["_inhalt"] as $i => $row) {
+      if (!isset($overrides[$row["fieldname"]])) continue;
+      $antrag["_inhalt"][$i]["value"] = $overrides[$row["fieldname"]];
+      unset($append[$row["fieldname"]]);
+    }
+    foreach ($append as $k => $v) {
+      $antrag["_inhalt"][] = [ "value" => $v, "fieldname" => $k, "contenttype" => null ];
+    }
+  }
+
 ?>
 
 <form id="editantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">
