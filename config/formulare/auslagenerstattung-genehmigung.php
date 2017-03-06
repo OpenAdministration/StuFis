@@ -31,11 +31,27 @@ $config = [
     "postEdit" => [
       [ "state" => "payed", "doValidate" => "checkZahlung", ], # hier sollten die Beträge stimmen
 #      [ "state" => "ok", "doValidate" => "checkZahlung", ], # hier kann es noch über- oder unterzahlt sein
+      [ "doValidate" => "checkKostenstellenplan", ],
+      [ "doValidate" => "checkHaushaltsplan", ],
     ],
     "checkZahlung" => [
       [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung + %einnahmen.beleg - %ausgaben.beleg",
         "maxValue" => 0.00,
       ],
+    ],
+    "checkKostenstellenplan" => [
+     [ "id" => "kostenstellenplan.otherForm",
+       "otherForm" => [
+         [ "type" => "kostenstellenplan", "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ],
+       ],
+     ],
+    ],
+    "checkHaushaltsplan" => [
+     [ "id" => "haushaltsplan.otherForm",
+       "otherForm" => [
+         [ "type" => "haushaltsplan", "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ],
+       ],
+     ],
     ],
   ],
   "permission" => [
