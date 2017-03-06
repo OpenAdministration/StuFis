@@ -6,7 +6,7 @@ if (!hasGroup($HIBISCUSGROUP)) return;
 
 ?>
 
-    <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline">
+    <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
       <input type="submit" name="absenden" value="Kontoauszug abrufen" class="btn btn-primary pull-right">
       <input type="hidden" name="action" value="hibiscus">
       <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>

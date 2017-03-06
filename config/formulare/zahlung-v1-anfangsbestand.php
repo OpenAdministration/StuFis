@@ -25,8 +25,8 @@ $layout = [
    "title" => "Zahlung",
    "children" => [
      [ "id" => "zahlung.konto",            "title" => "Konto",                "type" => "ref",     "width" => 6, "opts" => ["required", "hasFeedback"],
-       "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "state" => "final" ], [ "konten.giro" => "Bankkonten", "konten.bar" => "Bargeldkassen" ] ],
-       "referencesKey" => [ "konten.bar" => "konten.bar.nummer", "konten.giro" => "konten.giro.nummer" ],
+       "references" => [ [ "type" => "kontenplan", "revision" => date("Y"), "revisionIsYearFromField" => "zahlung.datum", "state" => "final" ], [ "konten.giro" => "Konto" ] ],
+       "referencesKey" => [ "konten.giro" => "konten.giro.nummer" ],
        "referencesId" => "kontenplan.otherForm",
      ],
      [ "id" => "zahlung.datum",            "title" => "Datum",               "type" => "date",     "width" => 2, "opts" => ["required"], ],

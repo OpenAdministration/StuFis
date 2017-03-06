@@ -2,7 +2,7 @@
 Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugehörige Gründe bzw. Zahlungen aus.
 </div>
 
-<form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline">
+<form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
   <input type="hidden" name="action" value="booking">
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
 

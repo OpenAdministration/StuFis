@@ -59,6 +59,7 @@ function registerForm( $type, $revision, $layout, $config ) {
     "_class" => $formulare[$type]["_class"],
     "_perms" => mergePermission($formulare[$type]["_class"], $config, $type, $revision),
     "_categories" => mergePermission($formulare[$type]["_class"], $config, $type, $revision, "categories"),
+    "_validate" => mergePermission($formulare[$type]["_class"], $config, $type, $revision, "validate"),
   ];
 }
 
@@ -265,7 +266,6 @@ function checkPermissionLine(&$p, &$antrag, &$form, $isCategory) {
 }
 
 function hasPermission(&$form, $antrag, $permName, $adminOk = true) {
-  global $formulare;
   static $stack = false;
 
   if (!isset($form["_perms"][$permName]))
@@ -296,7 +296,6 @@ function hasPermission(&$form, $antrag, $permName, $adminOk = true) {
 }
 
 function hasCategory(&$form, $antrag, $permName) {
-  global $formulare;
   static $stack = false;
 
   if (!isset($form["_categories"][$permName]))
@@ -353,6 +352,121 @@ function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous", $adm
   return $ret;
 }
 
+function isValid($antragId, $validateName, &$msgs = []) {
+  static $stack = false;
+
+  $ctrl = [ "render" => [ "no-form" ] ];
+  $tmp = renderOtherAntrag($antragId, $ctrl);
+  if ($tmp === false) return false;
+  $form = $tmp["form"];
+  $ctrl = $tmp["ctrl"];
+  $antrag = $tmp["antrag"];
+
+  if (!isset($form["_validate"][$validateName]))
+    return true; # nothing to violate anyway
+  $pp = $form["_validate"][$validateName];
+
+  $validateId = $antragId.".".$validateName;
+  if ($stack === false)
+    $stack = [];
+  if (in_array($validateId, $stack))
+    return false;
+  array_push($stack, $validateId);
+
+#  echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => to be evaluated -->\n";
+
+  $ret = isValidImpl($form, $antrag, $ctrl, $pp, $validateName, $msgs);
+
+  array_pop($stack);
+
+#  echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
+
+  return $ret;
+}
+
+function isValidImpl(&$form, &$antrag, &$ctrl, &$pp, &$validateName, &$msgs) {
+
+  $ret = true;
+
+  if (is_bool($pp))
+    $ret = $pp;
+
+  if (is_array($pp)) {
+    foreach($pp as $i => $p) {
+      $tmp = checkValidLine($p, $antrag, $ctrl, $form, $msgs);
+#      echo "\n<!-- checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
+      if ($tmp)
+        continue;
+      $ret = false;
+      break;
+    }
+  }
+
+#  echo "\n<!-- hasValidImpl: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
+
+  return $ret;
+}
+
+# once per form
+function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
+  if (isset($p["state"]) && ($antrag["state"] != $p["state"])) return true; # not selected
+  if (isset($p["revision"]) && ($antrag["revision"] != $p["revision"])) return true; # not selected
+  if (isset($p["doValidate"]) && !isValid($antrag["id"], $p["doValidate"], $msgs)) return false; # invalid content
+  if (isset($p["id"])) { # a field selector
+    foreach ($antrag["_inhalt"] as $inhalt0) {
+      $ret = checkValidLineField($p, $antrag, $ctrl, $form, $inhalt0, $msgs);
+      if ($ret === false) {
+        $msgs[] = "{$inhalt0["fieldname"]} validation failed";
+        return false;
+      }
+    }
+  }
+  if (isset($p["sum"])) { # a sum expression
+    $src = [];
+    $value = evalPrintSum($p["sum"], $ctrl["_render"]->addToSumValue, $src);
+    $value = (float) number_format($value, 2, ".", "");
+
+    if (isset($p["maxValue"]) && ($value > $p["maxValue"])) {
+      $msgs[] = "sum {$p["sum"]} too big";
+      return false;
+    }
+    if (isset($p["minValue"]) && ($value < $p["minValue"])) {
+      $msgs[] = "sum {$p["sum"]} too small";
+      return false;
+    }
+  }
+  return true;
+}
+
+# once per field
+function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
+  if (isset($p["id"]) && ($p["id"] != $inhalt["fieldname"]) && (substr($inhalt["fieldname"], 0, strlen($p["id"]) + 1) != $p["id"]."[") )
+    return true; # not selected
+  if (isset($p["id"]) && ($inhalt["contenttype"] == "otherForm") && isset($p["otherForm"])) {
+    # check if a valid other form is selected
+    if ($inhalt["value"] == "") return false;
+    $otherAntrag = getAntrag($inhalt["value"]);
+    $found = false;
+    foreach ($p["otherForm"] as $of) {
+      if (isset($of["type"]) && $of["type"] != $otherAntrag["type"]) continue;
+      if (isset($of["revision"]) && $of["revision"] != $otherAntrag["revision"]) continue;
+      if (isset($of["state"]) && $of["state"] != $otherAntrag["state"]) continue;
+      if (isset($of["revisionIsYearFromField"]) && !isset($antrag["_inhalt"])) continue;
+      if (isset($of["revisionIsYearFromField"])) {
+        $fieldValue = getFormValueInt($of["revisionIsYearFromField"], null, $antrag["_inhalt"], "");
+        if (empty($fieldValue)) continue;
+        $year = substr($fieldValue,0,4);
+        if ($otherAntrag["revision"] != $year) continue;
+      }
+      if (isset($of["validate"]) && !isValid($otherAntrag["id"], $of["validate"])) continue;
+      $found = true;
+      break;
+    }
+    if (!$found) return false;
+  }
+  return true;
+}
+ 
 function getForm($type, $revision) {
   global $formulare;
 

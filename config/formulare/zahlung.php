@@ -19,6 +19,29 @@ $config = [
        [ "state" => "payed", "group" => "ref-finanzen" ],
     ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "payed", "doValidate" => "checkBeleg", ],
+      [ "state" => "payed", "doValidate" => "checkKontenplan", ],
+      [ "state" => "booked", "doValidate" => "checkBeleg", ],
+      [ "state" => "booked", "doValidate" => "checkKontenplan", ],
+    ],
+    "checkBeleg" => [
+      [ "id" => "zahlung.grund.beleg",
+        "otherForm" => [
+          [ "type" => "auslagenerstattung-genehmigung", "state" => "ok", "validate" => "postEdit" ],
+          [ "type" => "auslagenerstattung-genehmigung", "state" => "payed", "validate" => "postEdit", ],
+        ],
+      ],
+    ],
+    "checkKontenplan" => [
+     [ "id" => "kontenplan.otherForm",
+       "otherForm" => [
+         [ "type" => "kontenplan", "revisionIsYearFromField" => "zahlung.datum", "state" => "final" ],
+       ],
+     ],
+    ],
+  ],
   "permission" => [
     "canRead" => [
       [ "group" => "konsul" ],

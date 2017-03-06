@@ -397,6 +397,8 @@ if (isset($_REQUEST["action"])) {
         $antrag = getAntrag(); // report new version to user
         $ret = writeState($newState, $antrag, $form, $msgs);
       }
+      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+        $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {
@@ -472,6 +474,8 @@ if (isset($_REQUEST["action"])) {
         $newState = $_REQUEST["state"];
         $ret = writeState($newState, $antrag, $form, $msgs);
       }
+      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+        $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {
@@ -668,6 +672,8 @@ if (isset($_REQUEST["action"])) {
       }
 
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
+      if ($ret && !isValid($antrag_id, "postEdit", $msgs))
+        $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {
@@ -709,6 +715,8 @@ if (isset($_REQUEST["action"])) {
       }
 
       // commitTx
+      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+        $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret)
@@ -744,18 +752,22 @@ if (isset($_REQUEST["action"])) {
           $createState = $form["_class"]["createState"];
         $antrag["state"] = $createState; // FIXME custom default state
         $antrag["stateCreator"] = getUsername();
-        $ret = dbInsert("antrag", $antrag);
-        if ($ret === false) {
-          echo "antrag.create failed<br/>";
+        $ret0 = dbInsert("antrag", $antrag);
+        if ($ret0 === false) {
+          $msgs[] = "antrag.create failed";
+          $ret = false;
           continue;
         }
-        $antrag_id = (int) $ret;
+        $antrag_id = (int) $ret0;
   
         foreach ($inhalte as $inhalt) {
           $inhalt["antrag_id"] = $antrag_id;
           $ret0 = dbInsert("inhalt", $inhalt);
           $ret = $ret && $ret0;
         }
+
+        if ($ret && !isValid($antrag_id, "postEdit", $msgs))
+          $ret = false;
       }
 
       $newFormZahlungen = fetchFromHibiscus();
@@ -775,26 +787,30 @@ if (isset($_REQUEST["action"])) {
           $createState = $form["_class"]["createState"];
         $antrag["state"] = $createState; // FIXME custom default state
         $antrag["stateCreator"] = getUsername();
-        $ret = dbInsert("antrag", $antrag);
-        if ($ret === false) {
-          echo "antrag.create failed<br/>";
+        $ret0 = dbInsert("antrag", $antrag);
+        if ($ret0 === false) {
+          $msgs[] = "antrag.create failed";
+          $ret = false;
           continue;
         }
-        $antrag_id = (int) $ret;
+        $antrag_id = (int) $ret0;
   
         foreach ($inhalte as $inhalt) {
           $inhalt["antrag_id"] = $antrag_id;
           $ret0 = dbInsert("inhalt", $inhalt);
           $ret = $ret && $ret0;
         }
+
+        if ($ret && !isValid($antrag_id, "postEdit", $msgs))
+          $ret = false;
       }
       if ($ret)
         $ret = dbCommit();
       if (!$ret)
         dbRollBack();
       if ($ret) {
-        header("Location: $URIBASE?tab=booking");
-        exit;
+        $forceClose = true;
+        $target = "$URIBASE?tab=booking";
       }
     break;
     case "booking":
@@ -804,14 +820,22 @@ if (isset($_REQUEST["action"])) {
 
       if (!isset($_REQUEST["zahlungId"])) $_REQUEST["zahlungId"] = [];
       if (!isset($_REQUEST["grundId"])) $_REQUEST["grundId"] = [];
-      if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) die("Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele Buchungen ausgewählt.");
+      if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) {
+        $msgs[] = "Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele oder keine Buchungen ausgewählt.";
+        $ret = false;
+        break;
+      }
 
       foreach($_REQUEST["zahlungId"] as $aId)
         $zahlungSum += $_REQUEST["zahlungValue"][$aId];
       foreach($_REQUEST["grundId"] as $aId)
         $grundSum += $_REQUEST["grundValue"][$aId];
 
-      if ($zahlungSum != $grundSum) die("Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.");
+      if ($zahlungSum != $grundSum) {
+        $msgs[] = "Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.";
+        $ret = false;
+        break;
+      }
 
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
@@ -840,15 +864,21 @@ if (isset($_REQUEST["action"])) {
       }
 
       // FIXME: Gründe/Grund bei Zahlung(en) eintragen
-die("Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.");
+      if (true) {
+        $msgs[] = "Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.";
+        $ret = false;
+        break;
+      }
 
+#        if ($ret && !isValid($antrag_id, "postEdit", $msgs))
+#          $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret)
         dbRollBack();
       if ($ret) {
-        header("Location: $URIBASE");
-        exit;
+        $forceClose = true;
+        $target = "$URIBASE?tab=booking";
       }
     break;
     default:
@@ -868,8 +898,8 @@ die("Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.");
  if ($target !== false)
    $result["target"] = $target;
  $result["forceClose"] = ($forceClose !== false);
- $result["_REQUEST"] = $_REQUEST;
- $result["_FILES"] = $_FILES;
+# $result["_REQUEST"] = $_REQUEST;
+# $result["_FILES"] = $_FILES;
 
  header("Content-Type: text/json; charset=UTF-8");
  echo json_encode($result);

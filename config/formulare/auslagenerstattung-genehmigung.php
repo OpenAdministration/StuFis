@@ -27,6 +27,17 @@ $config = [
       [ "state" => "revoked" ],
     ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "payed", "doValidate" => "checkZahlung", ], # hier sollten die Beträge stimmen
+#      [ "state" => "ok", "doValidate" => "checkZahlung", ], # hier kann es noch über- oder unterzahlt sein
+    ],
+    "checkZahlung" => [
+      [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung + %einnahmen.beleg - %ausgaben.beleg",
+        "maxValue" => 0.00,
+      ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.
