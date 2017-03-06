@@ -210,3 +210,11 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   margin-top: 5px;
 }
 
+.dynamic-table-cell[data-formitemtype="otherForm"] > .form-group {
+  overflow: auto;
+}
+
+.dynamic-table-cell[data-formitemtype="otherForm"] > .form-group > .input-group > input {
+  min-width: 4em;
+}
+
