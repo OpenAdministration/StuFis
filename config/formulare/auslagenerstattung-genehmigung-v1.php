@@ -44,7 +44,8 @@ $layout = [
    "id" => "group0",
    "title" => "Genehmigung",
    "children" => [
-     [ "id" => "genehmigung.jahr", "title" =>"Haushaltsjahr", "type" => "text", "width" => 12, "opts" => ["required", "hasFeedback"], "prefill" => "value:".date("Y") ],
+     [ "id" => "genehmigung.jahr", "title" =>"Haushaltsjahr", "type" => "text", "width" => 12, "opts" => ["required", "hasFeedback"], "prefill" => "value:".date("Y"),
+       "pattern" => '^\d\d\d\d$' ],
      [ "id" => "genehmigung.recht.grp",   "title" =>"Rechtsgrundlage",        "type" => "group",    "width" => 12, "children" => [
 
        [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, "opts" => ["required"], ],
