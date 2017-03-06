@@ -458,6 +458,30 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
         $year = substr($fieldValue,0,4);
         if ($otherAntrag["revision"] != $year) continue;
       }
+      if (isset($of["fieldMatch"])) {
+        $fieldMatchOk = true;
+        foreach ($of["fieldMatch"] as $c) {
+          $otherValue = getFormValueInt($c["otherFormFieldName"], null, $otherAntrag["_inhalt"], "");
+          $thisValue = getFormValueInt($c["thisFormFieldName"], null, $antrag["_inhalt"], "");
+          switch ($c["condition"]) {
+            case "matchYear":
+              $thisYear = substr($thisValue,0,4);
+              $otherYear = substr($otherValue,0,4);
+              if ($otherYear != $thisYear)
+                $fieldMatchOk = false;
+              break;
+            case "equal":
+              if ($otherValue != $thisValue)
+                $fieldMatchOk = false;
+              break;
+            default:
+              die("condition not implemented: ".$c["condition"]);
+              break;
+          }
+        }
+        if (!$fieldMatchOk)
+          continue;
+      }
       if (isset($of["validate"]) && !isValid($otherAntrag["id"], $of["validate"])) continue;
       $found = true;
       break;
