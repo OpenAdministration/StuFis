@@ -116,6 +116,9 @@ function fetchFromHibiscus() {
 
     $inhalt[] = [ "fieldname" => "zahlung.hibiscus", "contenttype" => "number", "value" => $id];
 
+    $saldo = tofloatHibiscus($u['saldo']);
+    $inhalt[] = [ "fieldname" => "zahlung.saldo", "contenttype" => "money", "value" => $saldo];
+
     foreach (Array("art","empfaenger_name","empfaenger_konto","empfaenger_blz") as $attr) {
       $inhalt[] = [ "fieldname" => "zahlung.$attr", "contenttype" => "text", "value" => (string) $u[$attr]];
     }

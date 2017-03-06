@@ -96,6 +96,9 @@ $invreftables[] =
       ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "kostenstellenplan.otherForm",
        "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
       ],
+      ["type" => "auslagenerstattung-genehmigung", "state" => "instructed", "referenceFormField" => "kostenstellenplan.otherForm",
+       "addToSum" => [ "ausgaben" => [ "ausgaben.brutto" ], "einnahmen" => [ "einnahmen.brutto" ] ],
+      ],
     ],
   ];
 $children[] = [

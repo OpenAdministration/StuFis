@@ -100,6 +100,10 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
          "addToSum" => [ "expr: %einnahmen - %ausgaben" => [ "einnahmen.netto" ],
                          "expr: %ausgaben - %einnahmen" => [ "ausgaben.netto" ] ],
         ],
+        ["type" => "auslagenerstattung-genehmigung", "state" => "instructed", "referenceFormField" => "haushaltsplan.otherForm",
+         "addToSum" => [ "expr: %einnahmen - %ausgaben" => [ "einnahmen.netto" ],
+                         "expr: %ausgaben - %einnahmen" => [ "ausgaben.netto" ] ],
+        ],
       ],
     ];
   $children[] = [

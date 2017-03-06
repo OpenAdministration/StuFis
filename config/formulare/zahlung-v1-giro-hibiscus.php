@@ -37,6 +37,7 @@ $layout = [
      [ "id" => "zahlung.empfaenger_konto", "title" => "Konto (Empfänger)",   "type" => "text",     "width" => 6, ],
      [ "id" => "zahlung.empfaenger_blz",   "title" => "BLZ (Empfänger)",     "type" => "text",     "width" => 6, ],
      [ "id" => "zahlung.verwendungszweck", "title" => "Verwendungszweck",    "type" => "textarea", "width" => 12, "opts" => ["required"], ],
+     [ "id" => "zahlung.saldo",            "title" => "Hibiscus-Saldo",      "type" => "money",    "width" => 12, "opts" => ["readonly"], "currency" => "€"],
    ],
  ],
 
