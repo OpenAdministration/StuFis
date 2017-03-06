@@ -12,7 +12,7 @@ $revConfig = $form["config"];
 
 <thead>
 
-<tr><th>ID</th><th>Bezeichnung</th><th>Ersteller</th><th>Status</th><th>letztes Update</th></tr>
+<tr><th>ID</th><th>Bezeichnung</th><th>Ersteller</th><th>Status</th><th>angelegt</th><th>letztes Update</th></tr>
 
 </thead>
 <tbody>
@@ -57,6 +57,7 @@ echo "<td>";
  $txt .= " (".$antrag["stateCreator"].")";
  echo htmlspecialchars($txt);
 echo "</td>";
+echo "<td>".htmlspecialchars($antrag["createdat"])."</td>";
 echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
 echo "</tr>";
 ?>
