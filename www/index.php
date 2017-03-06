@@ -627,9 +627,13 @@ if (isset($_REQUEST["action"])) {
 
              break;
              default:
-               $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
-               $ret = false;
-               break 2; # abort foreach fillOnCopy
+               if (substr($rec["prefill"],0,6) == "value:") {
+                 $value = substr($rec["prefill"],6);
+               } else {
+                 $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
+                 $ret = false;
+                 break 2; # abort foreach fillOnCopy
+               }
            }
            $row["value"] = $value;
            dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);

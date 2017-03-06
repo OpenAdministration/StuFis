@@ -1043,6 +1043,8 @@ function renderFormItemRadio($layout,$ctrl) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
+  } elseif (!$noForm && isset($layout["prefill"]) && substr($layout["prefill"],0,6) == "value:") {
+    $value = substr($layout["prefill"],6);
   }
 
   if (!$noForm && $ctrl["readonly"]) {
