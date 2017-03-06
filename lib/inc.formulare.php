@@ -893,7 +893,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
       $target = str_replace("//","/",$URIBASE."/").rawurlencode($otherAntrag["token"]);
 
       echo "<a href=\"".htmlspecialchars($target)."\" target=\"_blank\">";
-      echo newTemplatePattern($ctrl, "{$classTitle}: ".str_replace("\n","<br/>",implode(" ",$text)));
+      echo newTemplatePattern($ctrl, "[{$otherAntrag["id"]}] {$classTitle}: ".str_replace("\n","<br/>",implode(" ",$text)));
       echo "</a>";
     }
 
