@@ -194,7 +194,7 @@ function dbInsert($table, $fields) {
 function dbUpdate($table, $filter, $fields) {
    global $pdo, $DB_PREFIX, $scheme;
    if (!isset($scheme[$table])) die("Unkown table $table");
-   $validFilterFields = ["id","token","antrag_id"];
+   $validFilterFields = ["id","token","antrag_id","fieldname","contenttype"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
    $fields = array_diff_key(array_intersect_key($fields, $scheme[$table]), array_flip($validFilterFields)); # do not update filter fields
 

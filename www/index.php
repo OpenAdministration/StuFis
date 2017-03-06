@@ -141,8 +141,10 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
   return $ret;
 }
 
-function writeState($newState, $antrag, $form, &$msgs, $skipIfNoOp = true) {
-  if ($antrag["state"] == $newState && $skipIfNoOp) return true;
+function writeState($newState, $antrag, $form, &$msgs) {
+$msgs[] .= print_r($antrag["state"],true);
+$msgs[] .= print_r($newState,true);
+  if ($antrag["state"] == $newState) return true;
 
   $transition = "from.{$antrag["state"]}.to.{$newState}";
   $perm = "canStateChange.{$transition}";
@@ -852,12 +854,102 @@ if (isset($_REQUEST["action"])) {
         $ret = true;
       }
 
+      // FIXME: Gründe/Grund bei Zahlung(en) eintragen
+      if (false) {
+        $msgs[] = "Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.";
+        $ret = false;
+        break;
+      }
+
+      foreach($_REQUEST["zahlungId"] as $zId) {
+        $appendGrund = [];
+        foreach($_REQUEST["grundId"] as $gId) {
+          if (count($_REQUEST["zahlungId"]) == 1) {
+            # alle Gründe zusammen addieren auf diese Zahlung
+            $appendGrund[] = [ $gId, $_REQUEST["grundValue"][$gId] ];
+          } elseif (count($_REQUEST["grundId"]) == 1) {
+            # alle Zahlungen zusammen addieren auf diesen Grund
+            $appendGrund[] = [ $gId, $_REQUEST["zahlungValue"][$zId] ];
+          } else {
+            die("ups cannot compute this");
+          }
+        }
+        $z = getAntrag($zId);
+        if ($z === false) {
+          $msgs[] = "Zahlung $zId war nicht lesbar.";
+          $ret = false;
+          break;
+        }
+        $form = getForm($z["type"], $z["revision"]);
+        if (!hasPermission($form, $z, "canEdit")) die("Antrag ist nicht editierbar");
+
+        $rowCountFieldName =  "zahlung.grund.table[rowCount]";
+        $rowNumber = getFormValueInt($rowCountFieldName, null, $z["_inhalt"], false);
+        $rowNumberPresent = true;
+        if ($rowNumber === false) {
+          $rowNumberPresent = false;
+          $rowNumber = 0;
+         }
+        $rowIdNumberPresent = true;
+        $rowIdCountFieldName =  "zahlung.grund.table[rowIdCount]";
+        $rowIdNumber = getFormValueInt($rowIdCountFieldName, null, $z["_inhalt"], false);
+        if ($rowIdNumber === false) {
+          $rowIdNumberPresent = false;
+          $rowIdNumber = 0;
+         }
+        foreach ($appendGrund as $i => $a) {
+
+          $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
+          $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId ];
+          $inhalt["value"] = $rowIdNumber;
+          $ret0 = dbInsert("inhalt", $inhalt);
+          if ($ret0 === false) $ret = false;
+
+          $rowBelegFieldName = "zahlung.grund.beleg[{$rowNumber}]";
+          $inhalt = [ "fieldname" => $rowBelegFieldName, "contenttype" => "otherForm", "antrag_id" => $zId ];
+          $inhalt["value"] = $a[0];
+          $ret0 = dbInsert("inhalt", $inhalt);
+          if ($ret0 === false) $ret = false;
+
+          $value = $a[1];
+          if ($value < 0) {
+            $value *= -1.0;
+            $rowGeldFieldName = "zahlung.grund.ausgaben[{$rowNumber}]";
+          } else {
+            $rowGeldFieldName = "zahlung.grund.einnahmen[{$rowNumber}]";
+          }
+          $inhalt = [ "fieldname" => $rowGeldFieldName, "contenttype" => "money", "antrag_id" => $zId ];
+          $inhalt["value"] = convertUserValueToDBValue($value, $inhalt["contenttype"]);
+          $ret0 = dbInsert("inhalt", $inhalt);
+          if ($ret0 === false) $ret = false;
+
+          $rowNumber++;
+          $rowIdNumber++;
+        }
+        if ($rowNumberPresent) {
+          $ret0 = dbUpdate("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowNumber ] );
+        } else {
+          $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowNumber ] );
+        }
+        if ($ret0 === false) $ret = false;
+
+        if ($rowIdNumberPresent) {
+          $ret0 = dbUpdate("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowIdNumber ] );
+        } else {
+          $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowIdNumber ] );
+        }
+        if ($ret0 === false) $ret = false;
+
+        if ($ret && !isValid($zId, "postEdit", $msgs))
+          $ret = false;
+      }
+
       // alle Zahlungen wechseln nach state payed
       foreach($_REQUEST["zahlungId"] as $aId) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
-        $form = getForm($antrag["type"], $antrag["revision"]);
-        $ret0 = writeState("payed", $a, $form, $msgs, false);
+        $form = getForm($a["type"], $a["revision"]);
+        $ret0 = writeState("booked", $a, $form, $msgs);
         $ret = $ret && $ret0;
       }
 
@@ -865,20 +957,11 @@ if (isset($_REQUEST["action"])) {
       foreach($_REQUEST["grundId"] as $aId) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
-        $form = getForm($antrag["type"], $antrag["revision"]);
-        $ret0 = writeState("booked", $a, $form, $msgs, false);
+        $form = getForm($a["type"], $a["revision"]);
+        $ret0 = writeState("payed", $a, $form, $msgs);
         $ret = $ret && $ret0;
       }
 
-      // FIXME: Gründe/Grund bei Zahlung(en) eintragen
-      if (true) {
-        $msgs[] = "Grund noch nicht ergänzt. Nur neue Gründe zusätzlich einfügen.";
-        $ret = false;
-        break;
-      }
-
-#        if ($ret && !isValid($antrag_id, "postEdit", $msgs))
-#          $ret = false;
       if ($ret)
         $ret = dbCommit();
       if (!$ret)

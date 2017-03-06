@@ -2094,9 +2094,9 @@ function otherFormTrOptions($layout, $ctrl) {
     if (count($tableNames) > 1) {
       $ret .= "<optgroup label=\"".htmlspecialchars($label)."\">";
     }
-  
+
     foreach ($otherCtrl["_render"]->numTableRows[$tableName] as $suffix => $rowCount) {
-     $ret .= "\n<!-- row count $tableName : $rowCount -->";
+#     $ret .= "\n<!-- row count $tableName : $rowCount -->";
       for($i=0; $i < $rowCount; $i++) {
         if (!isset($otherCtrl["_values"])) {
           $rowId = false;
@@ -2115,7 +2115,7 @@ function otherFormTrOptions($layout, $ctrl) {
           $txtTr = "missing {$tableName}[rowId]{$suffix}[{$i}]";
         }
         $tPattern = newTemplatePattern($ctrl, $txtTr);
-  
+
         $updateByReference = [];
         if (isset($layout["updateByReference"]))
           $updateByReference = $layout["updateByReference"];
