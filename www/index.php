@@ -141,7 +141,31 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
   return $ret;
 }
 
-function writeState($newState, $antrag, $form, &$msgs) {
+function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
+  if (!isset($form["_class"]["newStateActions"]))
+    return;
+  if (!isset($form["_class"]["newStateActions"][$transition]))
+    return;
+
+  $actions = $form["_class"]["newStateActions"][$transition];
+  foreach ($actions as $action) {
+    if (isset($action["sendMail"]) && $action["sendMail"]) {
+      notifyStateTransition($antrag, $newState, getUsername(), $action);
+    }
+    if (isset($action["copy"]) && $action["copy"]) {
+      $newTarget = "";
+      $ret = copyAntrag($antrag["id"], $antrag["version"], false, $action["type"], $action["revision"], $msgs, $filesCreated, $filesRemoved, $newTarget);
+      if ($ret === false)
+        return false;
+      if (isset($action["redirect"]) && $action["redirect"]) {
+        $target = $newTarget;
+      }
+    }
+  }
+  return true;
+}
+
+function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
   if ($antrag["state"] == $newState) return true;
 
   $transition = "from.{$antrag["state"]}.to.{$newState}";
@@ -168,15 +192,199 @@ function writeState($newState, $antrag, $form, &$msgs) {
   if ($ret === false)
     return false;
 
-  if (isset($form["_class"]["newStateActions"]) && isset($form["_class"]["newStateActions"][$transition])) {
-    $actions = $form["_class"]["newStateActions"][$transition];
-    foreach ($actions as $action) {
-      if (!$action["sendMail"]) continue;
-      notifyStateTransition($antrag, $newState, getUsername(), $action);
+  $antrag = getAntrag($antrag["id"]);
+  $ret = doNewStateActions($form, $transition, $antrag, $newState, $msgs, $filesCreated, $filesRemoved, $target);
+  if ($ret === false)
+    return false;
+
+  return true;
+}
+
+function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newType, $newRevision, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
+  global $URIBASE;
+
+  $form = getForm($newType, $newRevision);
+  if ($form === false) {
+    $msgs[] = "Unbekannte Formularversion: $newType#$newRevision";
+    return false;
+  }
+  if (!hasPermission($form, null, "canCreate")) {
+    $msgs[] = "Antrag ist nicht erstellbar";
+    return false;
+  }
+
+  $oldAntrag = getAntrag($oldAntragId);
+  if ($oldAntrag === false) {
+    $msgs[] = "Unknown / unreadable source antrag.";
+    return false;
+  }
+  if ($oldAntragVersion !== $oldAntrag["version"]) {
+    $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden. (oldAntrag during copy)";
+    return false;
+  }
+
+  $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
+
+  $antrag = [];
+  $antrag["type"] = $newType;
+  $antrag["revision"] = $newRevision;
+  $antrag["creator"] = getUsername();
+  $antrag["creatorFullName"] = getUserFullName();
+  $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+  $antrag["createdat"] = date("Y-m-d H:i:s");
+  $antrag["lastupdated"] = date("Y-m-d H:i:s");
+  $createState = "draft";
+  if (isset($form["_class"]["createState"]))
+    $createState = $form["_class"]["createState"];
+  $antrag["state"] = $createState;
+  $antrag["stateCreator"] = getUsername();
+  $antrag_id = dbInsert("antrag", $antrag);
+  if ($antrag_id === false)
+    return false;
+
+  $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
+  $antrag_id = (int) $antrag_id;
+  $msgs[] = "Antrag wurde erstellt.";
+
+  # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
+  foreach($oldAntrag["_inhalt"] as $row) {
+    $row["antrag_id"] = $antrag_id;
+    $ret0 = dbInsert("inhalt", $row);
+    if ($ret0 === false)
+      return false;
+  }
+
+  $foundBuildFrom = false;
+  if (isset($form["_class"]["buildFrom"])) {
+    foreach($form["_class"]["buildFrom"] as $tmp) {
+      if (is_array($tmp) && $tmp[0] != $oldForm["type"])
+        continue;
+      elseif (!is_array($tmp) && $tmp != $oldForm["type"])
+        continue;
+      $foundBuildFrom = true;
+      break;
     }
   }
 
-  return true;
+  if ($oldForm["type"] != $form["type"] &&
+      $foundBuildFrom &&
+      isset($form["config"]["referenceField"]))
+  {
+     $row = Array();
+     $row["antrag_id"] = $antrag_id;
+     $row["contenttype"] = $form["config"]["referenceField"]["type"];
+     $row["fieldname"] = $form["config"]["referenceField"]["name"];
+     $row["value"] = $oldAntrag["id"];
+     $ret0 = dbInsert("inhalt", $row);
+     if ($ret0 === false)
+       return false;
+  }
+
+  $fillOnCopy = [];
+  if (isset($form["config"]["fillOnCopy"]))
+    $fillOnCopy = $form["config"]["fillOnCopy"];
+  foreach ($fillOnCopy as $rec) {
+     $row = Array();
+     $row["antrag_id"] = $antrag_id;
+     $row["contenttype"] = $rec["type"];
+     $row["fieldname"] = $rec["name"];
+     $value = "";
+     switch ($rec["prefill"]) {
+       case "user:mail":
+         $value = getUserMail();
+       break;
+       case "otherForm":
+         $fieldValue = false;
+         $fieldName = false;
+         if ($rec["otherForm"][0] == "referenceField" && isset($form["config"]["referenceField"])) {
+           $fieldName = $form["config"]["referenceField"]["name"];
+         } elseif (substr($rec["otherForm"][0],0,6) == "field:") {
+           $fieldName = substr($rec["otherForm"][0],6);
+         } else {
+           die("Unknown otherForm reference in fillOnCopy: {$rec["otherForm"][0]}");
+         }
+         if ($fieldValue === false && $fieldName !== false) {
+           $f = dbGet("inhalt", [ "antrag_id" => $antrag_id, "fieldname" => $fieldName, "type" => "otherForm" ] );
+           if ($f !== false)
+             $fieldValue = $f["value"];
+         }
+         if ($fieldValue === false || $fieldValue == "") {
+           // no other form provided
+           break;
+         }
+         $otherAntrag = dbGet("antrag", ["id" => (int) $fieldValue]);
+         if ($otherAntrag === false) {
+           // invalid value
+           break;
+         }
+
+         $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+         $otherAntrag["_inhalt"] = $otherInhalt;
+
+         $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+         $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+
+         if (!$readPermitted) {
+           break;
+         }
+
+         $f = dbGet("inhalt", [ "antrag_id" => $otherAntrag["id"], "fieldname" => $rec["otherForm"][1], "type" => "otherForm" ] );
+         if ($f === false)
+           // other field not in other form
+           break;
+
+         $value = $f["value"];
+
+       break;
+       default:
+         if (substr($rec["prefill"],0,6) == "value:") {
+           $value = substr($rec["prefill"],6);
+         } else {
+           $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
+           return false;
+           break 2; # abort foreach fillOnCopy
+         }
+     }
+     $row["value"] = $value;
+     dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);
+     $ret0 = dbInsert("inhalt", $row);
+     if ($ret0 === false)
+       return false;
+  }
+  # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
+  foreach($oldAntrag["_anhang"] as $row) {
+
+    $dbPath = uniqid().".".pathinfo($row["filename"], PATHINFO_EXTENSION);
+    $destPath = $STORAGE."/".$antrag_id."/".$dbPath;
+    $srcPath = $STORAGE."/".$row["antrag_id"]."/".$row["path"];
+    if (!is_dir(dirname($destPath)))
+      mkdir(dirname($destPath),0777,true);
+
+    $row["antrag_id"] = $antrag_id;
+    $row["path"] = $dbPath;
+
+    $ret0 = link($srcPath, $destPath);
+    if ($ret0 === false)
+      $ret0 = copy($srcPath, $destPath);
+    $filesCreated[] = $destPath;
+    $msgs[] = "Created $destPath";
+
+    $ret1 = dbInsert("anhang", $row);
+    if (($ret0 === false) || ($ret1 === false))
+      return false;
+  }
+
+  if ($oldAntragNewState !== false && $oldAntragNewState != "") {
+    if (false === writeState($oldAntragNewState, $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $target))
+      return false;
+  }
+
+  $newAntrag = getAntrag($antrag_id);
+  $ret = doNewStateActions($form, "create.$createState", $newAntrag, $createState, $msgs, $filesCreated, $filesRemoved, $target);
+  if ($ret === false)
+    return false;
+
+  return $antrag_id;
 }
 
 if (isset($_REQUEST["action"])) {
@@ -184,6 +392,7 @@ if (isset($_REQUEST["action"])) {
  $msgs = Array();
  $ret = false;
  $target = false;
+ $altTarget = false;
  $forceClose = false;
 
  if (!isset($_REQUEST["nonce"]) || $_REQUEST["nonce"] !== $nonce) {
@@ -395,7 +604,7 @@ if (isset($_REQUEST["action"])) {
       if ($ret && isset($_REQUEST["state"]) && $_REQUEST["state"] != "") {
         $newState = $_REQUEST["state"];
         $antrag = getAntrag(); // report new version to user
-        $ret = writeState($newState, $antrag, $form, $msgs);
+        $ret = writeState($newState, $antrag, $form, $msgs, $filesCreated, $filesRemoved, $altTarget);
       }
       if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
         $ret = false;
@@ -471,14 +680,19 @@ if (isset($_REQUEST["action"])) {
         $ret = $ret && $ret0 && $ret1;
       } /* dbInsert(antrag) -> $ret !== false */
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
+      if ($ret) {
+        $antrag = getAntrag($antrag_id); // report new version to user
+        $ret = doNewStateActions($form, "create.$createState", $antrag, $createState, $msgs, $filesCreated, $filesRemoved, $target);
+      }
       if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
         $antrag = getAntrag($antrag_id); // report new version to user
         if ($antrag === false) die("Ups failed to read antrag just created");
         $newState = $_REQUEST["state"];
-        $ret = writeState($newState, $antrag, $form, $msgs);
+        $ret = writeState($newState, $antrag, $form, $msgs, $filesCreated, $filesRemoved, $target);
       }
       if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
         $ret = false;
+
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {
@@ -502,183 +716,19 @@ if (isset($_REQUEST["action"])) {
         $ret = false;
         break;
       }
-
-      $form = getForm($_REQUEST["type"], $_REQUEST["revision"]);
-      if ($form === false)
-        die("Unbekannte Formularversion");
-      if (!hasPermission($form, null, "canCreate")) die("Antrag ist nicht erstellbar");
-
-      $oldAntrag = dbGet("antrag", ["id" => $_REQUEST["copy_from"]]);
-      if ($oldAntrag === false) die("Unknown antrag.");
-      $inhalt = dbFetchAll("inhalt", ["antrag_id" => $oldAntrag["id"]]);
-      $oldAntrag["_inhalt"] = $inhalt;
-      $anhang = dbFetchAll("anhang", ["antrag_id" => $oldAntrag["id"]]);
-      $oldAntrag["_anhang"] = $anhang;
-
-      $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
-      $readPermitted = hasPermission($oldForm, $oldAntrag, "canRead");
-      if (!$readPermitted)
-        die("Permission denied: alter Antrag nicht lesbar");
+      $ret = true;
 
       $filesCreated = []; $filesRemoved = [];
-
-      $antrag = [];
-      $antrag["type"] = $_REQUEST["type"];
-      $antrag["revision"] = $_REQUEST["revision"];
-      $antrag["creator"] = getUsername();
-      $antrag["creatorFullName"] = getUserFullName();
-      $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
-      $antrag["createdat"] = date("Y-m-d H:i:s");
-      $antrag["lastupdated"] = date("Y-m-d H:i:s");
-      $createState = "draft";
-      if (isset($form["_class"]["createState"]))
-        $createState = $form["_class"]["createState"];
-      $antrag["state"] = $createState; // FIXME custom default state
-      $antrag["stateCreator"] = getUsername();
-      $ret = dbInsert("antrag", $antrag);
-      if ($ret !== false) {
-        $target = str_replace("//","/",$URIBASE."/").rawurlencode($token)."/edit";
-        $antrag_id = (int) $ret;
-        $msgs[] = "Antrag wurde erstellt.";
-
-        # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
-        foreach($oldAntrag["_inhalt"] as $row) {
-          $row["antrag_id"] = $antrag_id;
-          $ret0 = dbInsert("inhalt", $row);
-          $ret = $ret && $ret0;
-        }
-
-        $foundBuildFrom = false;
-        if (isset($form["_class"]["buildFrom"])) {
-          foreach($form["_class"]["buildFrom"] as $tmp) {
-            if (is_array($tmp) && $tmp[0] != $oldForm["type"])
-              continue;
-            elseif (!is_array($tmp) && $tmp != $oldForm["type"])
-              continue;
-            $foundBuildFrom = true;
-            break;
-          }
-        }
-
-        if ($oldForm["type"] != $form["type"] &&
-            $foundBuildFrom &&
-            isset($form["config"]["referenceField"]))
-        {
-           $row = Array();
-           $row["antrag_id"] = $antrag_id;
-           $row["contenttype"] = $form["config"]["referenceField"]["type"];
-           $row["fieldname"] = $form["config"]["referenceField"]["name"];
-           $row["value"] = $oldAntrag["id"];
-           $ret0 = dbInsert("inhalt", $row);
-           $ret = $ret && $ret0;
-        }
-
-        $fillOnCopy = [];
-        if (isset($form["config"]["fillOnCopy"]))
-          $fillOnCopy = $form["config"]["fillOnCopy"];
-        foreach ($fillOnCopy as $rec) {
-           $row = Array();
-           $row["antrag_id"] = $antrag_id;
-           $row["contenttype"] = $rec["type"];
-           $row["fieldname"] = $rec["name"];
-           $value = "";
-           switch ($rec["prefill"]) {
-             case "user:mail":
-               $value = getUserMail();
-             break;
-             case "otherForm":
-               $fieldValue = false;
-               $fieldName = false;
-               if ($rec["otherForm"][0] == "referenceField" && isset($form["config"]["referenceField"])) {
-                 $fieldName = $form["config"]["referenceField"]["name"];
-               } elseif (substr($rec["otherForm"][0],0,6) == "field:") {
-                 $fieldName = substr($rec["otherForm"][0],6);
-               } else {
-                 die("Unknown otherForm reference in fillOnCopy: {$rec["otherForm"][0]}");
-               }
-               if ($fieldValue === false && $fieldName !== false) {
-                 $f = dbGet("inhalt", [ "antrag_id" => $antrag_id, "fieldname" => $fieldName, "type" => "otherForm" ] );
-                 if ($f !== false)
-                   $fieldValue = $f["value"];
-               }
-               if ($fieldValue === false || $fieldValue == "") {
-                 // no other form provided
-                 break;
-               }
-               $otherAntrag = dbGet("antrag", ["id" => (int) $fieldValue]);
-               if ($otherAntrag === false) {
-                 // invalid value
-                 break;
-               }
-
-               $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
-               $otherAntrag["_inhalt"] = $otherInhalt;
-
-               $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
-               $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
-
-               if (!$readPermitted) {
-                 break;
-               }
-
-               $f = dbGet("inhalt", [ "antrag_id" => $otherAntrag["id"], "fieldname" => $rec["otherForm"][1], "type" => "otherForm" ] );
-               if ($f === false)
-                 // other field not in other form
-                 break;
-
-               $value = $f["value"];
-
-             break;
-             default:
-               if (substr($rec["prefill"],0,6) == "value:") {
-                 $value = substr($rec["prefill"],6);
-               } else {
-                 $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
-                 $ret = false;
-                 break 2; # abort foreach fillOnCopy
-               }
-           }
-           $row["value"] = $value;
-           dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);
-           $ret0 = dbInsert("inhalt", $row);
-           $ret = $ret && $ret0;
-        }
-        # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
-        foreach($oldAntrag["_anhang"] as $row) {
-
-          $dbPath = uniqid().".".pathinfo($row["filename"], PATHINFO_EXTENSION);
-          $destPath = $STORAGE."/".$antrag_id."/".$dbPath;
-          $srcPath = $STORAGE."/".$row["antrag_id"]."/".$row["path"];
-          if (!is_dir(dirname($destPath)))
-            mkdir(dirname($destPath),0777,true);
-
-          $row["antrag_id"] = $antrag_id;
-          $row["path"] = $dbPath;
-
-          $ret0 = link($srcPath, $destPath);
-          if ($ret0 === false)
-            $ret0 = copy($srcPath, $destPath);
-          $filesCreated[] = $destPath;
-          $msgs[] = "Created $destPath";
-
-          $ret1 = dbInsert("anhang", $row);
-          $ret = $ret && $ret0 && $ret1;
-        }
-      } /* dbInsert(antrag) -> $ret !== false */
-
-      if ($_REQUEST["copy_from_version"] !== $oldAntrag["version"]) {
+      $oldAntragNewState = false;
+      if (isset($_REQUEST["copy_from_state"]))
+        $oldAntragNewState = $_REQUEST["copy_from_state"];
+      $antrag_id = copyAntrag($_REQUEST["copy_from"], $_REQUEST["copy_from_version"], $oldAntragNewState, $_REQUEST["type"], $_REQUEST["revision"], $msgs, $filesCreated, $filesRemoved, $target);
+      if ($antrag_id === false)
         $ret = false;
-        $msgs[] = "Der Antrag wurde von jemanden anderes bearbeitet und kann daher nicht gespeichert werden.";
-      }
+      else
+        $target .= "/edit";
 
-      if (isset($_REQUEST["copy_from_state"])) {
-        $newState = $_REQUEST["copy_from_state"];
-        if ($newState != "" && $ret) {
-          $ret = writeState($newState, $oldAntrag, $oldForm, $msgs);
-        }
-      }
-
-      if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
+      if (count($filesRemoved) > 0) die("ups files removed during antrag.copy");
       if ($ret && !isValid($antrag_id, "postEdit", $msgs))
         $ret = false;
       if ($ret)
@@ -702,6 +752,7 @@ if (isset($_REQUEST["action"])) {
         $ret = false;
         break;
       }
+      $filesCreated = []; $filesRemoved = [];
 
       $antrag = getAntrag();
       // check antrag type and revision, token cannot be altered
@@ -718,7 +769,7 @@ if (isset($_REQUEST["action"])) {
       $newState = $_REQUEST["state"];
       if ($ret) {
         $form = getForm($antrag["type"], $antrag["revision"]);
-        $ret = writeState($newState, $antrag, $form, $msgs);
+        $ret = writeState($newState, $antrag, $form, $msgs, $filesCreated, $filesRemoved, $target);
       }
 
       // commitTx
@@ -726,8 +777,17 @@ if (isset($_REQUEST["action"])) {
         $ret = false;
       if ($ret)
         $ret = dbCommit();
-      if (!$ret)
+      if (!$ret) {
         dbRollBack();
+        foreach ($filesCreated as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      } else {
+        // delete files from disk after successfull commit
+        foreach ($filesRemoved as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      }
       if ($ret) {
         $forceClose = true;
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
@@ -852,6 +912,8 @@ if (isset($_REQUEST["action"])) {
         $ret = true;
       }
 
+      $filesCreated = []; $filesRemoved = [];
+
       foreach($_REQUEST["zahlungId"] as $zId) {
         $appendGrund = [];
         foreach($_REQUEST["grundId"] as $gId) {
@@ -940,7 +1002,7 @@ if (isset($_REQUEST["action"])) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
         $form = getForm($a["type"], $a["revision"]);
-        $ret0 = writeState("booked", $a, $form, $msgs);
+        $ret0 = writeState("booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
         $ret = $ret && $ret0;
       }
 
@@ -949,14 +1011,23 @@ if (isset($_REQUEST["action"])) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
         $form = getForm($a["type"], $a["revision"]);
-        $ret0 = writeState("payed", $a, $form, $msgs);
+        $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
         $ret = $ret && $ret0;
       }
 
       if ($ret)
         $ret = dbCommit();
-      if (!$ret)
+      if (!$ret) {
         dbRollBack();
+        foreach ($filesCreated as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      } else {
+        // delete files from disk after successfull commit
+        foreach ($filesRemoved as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      }
       if ($ret) {
         $forceClose = true;
         $target = "$URIBASE?tab=booking";
@@ -978,6 +1049,8 @@ if (isset($_REQUEST["action"])) {
  $result["ret"] = ($ret !== false);
  if ($target !== false)
    $result["target"] = $target;
+ if ($altTarget !== false)
+   $result["altTarget"] = $altTarget;
  $result["forceClose"] = ($forceClose !== false);
 # $result["_REQUEST"] = $_REQUEST;
 # $result["_FILES"] = $_FILES;

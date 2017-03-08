@@ -16,7 +16,7 @@ function getAntrag($id = null) {
   $form = getForm($antrag["type"], $antrag["revision"]);
   $readPermitted = hasPermission($form, $antrag, "canRead");
   if (!$readPermitted) {
-		if ($id === null) die("Permission denied");
+    if ($id === null) die("Permission denied");
     return false;
   }
 

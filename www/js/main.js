@@ -1417,6 +1417,9 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
        }
        $("#server-question-close-window").off("click");
        $("#server-question-close-window").on("click", function(evt) {
+         if (values.altTarget) {
+           window.open(values.altTarget);
+         }
          if (!values.target) {
            if (self.opener) {
              self.opener.focus();
@@ -1431,6 +1434,9 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
          if (values.forceClose) {
            $("#server-question-close-window").triggerHandler("click");
          } else {
+           if (values.altTarget) {
+             window.open(values.altTarget);
+           }
            if (values.target) {
              window.open(values.target);
            }
@@ -1439,6 +1445,9 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
        $("#server-question-dlg").modal("show");
 
      } else if (values.ret) { // txt is empty
+       if (values.altTarget) {
+         window.open(values.altTarget);
+       }
        if (!values.target) {
          if (self.opener) {
            self.opener.focus();
@@ -1448,16 +1457,16 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
          self.location.href = values.target;
        }
      } else { // !values.ret
-      $("#server-message-label").text(txtHeadline);
-      var $smc = $("#server-message-content");
-      $smc.empty();
-      $("#server-message-content").empty();
-      var $smcu = $('<ul/>').appendTo( $smc );
-      for (var i = 0; i < values.msgs.length; i++) {
-          var msg = (values.msgs[i]);
-          $('<li/>').text(msg).appendTo( $smcu );
-      }
-      $("#server-message-dlg").modal("show");
+       $("#server-message-label").text(txtHeadline);
+       var $smc = $("#server-message-content");
+       $smc.empty();
+       $("#server-message-content").empty();
+       var $smcu = $('<ul/>').appendTo( $smc );
+       for (var i = 0; i < values.msgs.length; i++) {
+         var msg = (values.msgs[i]);
+         $('<li/>').text(msg).appendTo( $smcu );
+       }
+       $("#server-message-dlg").modal("show");
      }
    })
   .fail(xpAjaxErrorHandler);

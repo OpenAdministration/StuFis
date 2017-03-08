@@ -1,20 +1,23 @@
 <?php
 
 $config = [
-  "title" => "Genehmigung für ein Projekt der Studierendenschaft (internes Projekt)",
-  "shortTitle" => "Genehmigung internes Projekt",
-  "state" => [ "draft" => [ "Entwurf", ],
+  "title" => "Projekt der Studierendenschaft (internes Projekt)",
+  "shortTitle" => "Projekt (intern)",
+  "state" => [ "draft" => [ "Beantragt", ],
                "ok-by-hv" => [ "Genehmigt durch HV (muss noch verkündet werden)", ],
+               "need-stura" => [ "Warte auf StuRa-Beschluss", ],
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
                "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
-               "revoked" => [ "Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
+               "revoked" => [ "Abgelehnt / Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen", ],
                "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
              ],
   "proposeNewState" => [
-    "draft" => [ "ok-by-stura", "ok-by-hv" ],
+    "draft" => [ "need-stura", "ok-by-hv", "revoked", "wip" ],
+    "wip" => [ "need-stura", "ok-by-hv", "revoked", "draft" ],
     "ok-by-hv" => [ "done-hv" ],
+    "need-stura" => [ "ok-by-stura", "revoked" ],
     "done-hv" => ["terminated"],
-    "ok-by-stura" => ["terminated"],
+    "ok-by-stura" => [ "terminated" ],
   ],
   "createState" => "draft",
   "buildFrom" => [
@@ -39,7 +42,15 @@ $config = [
        [ "state" => "done-hv", "hasCategory" => "_isExpiredProject2W" ],
     ],
     "need-action" => [
-       [ "state" => "draft" ],
+       [ "state" => "draft", "group" => "ref-finanzen" ],
+       [ "state" => "wip", "group" => "ref-finanzen" ],
+       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ],
+       [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
+       [ "state" => "need-stura", "creator" => "self" ],
+    ],
+    "wait-stura" => [
+       [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
+       [ "state" => "need-stura", "creator" => "self" ],
     ],
   ],
   "permission" => [
@@ -52,10 +63,7 @@ $config = [
      */
     "canRead" => [
       [ "creator" => "self" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-hv" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "ok-by-stura" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "done-hv" ],
-      [ "hasPermission" => "isCorrectGremium", "state" => "revoked" ],
+      [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
     ],
@@ -63,6 +71,8 @@ $config = [
       [ "group" => "ref-finanzen", ],
     ],
     "canEditPartiell.field.genehmigung.recht.int.sturabeschluss" => [
+      [ "state" => "need-stura", "group" => "ref-finanzen", ],
+      [ "state" => "ok-by-stura", "group" => "ref-finanzen", ],
       [ "state" => "ok-by-hv", "group" => "ref-finanzen", ],
       [ "state" => "done-hv", "group" => "ref-finanzen", ],
       [ "state" => "terminated", "group" => "ref-finanzen", ],
@@ -78,15 +88,16 @@ $config = [
     ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
+      [ "hasPermission" => [ "canRead", "isCreateable" ] ],
     ],
     # Genehmigung durch StuRa
     "canEditState" => [
       [ "group" => "ref-finanzen", ],
     ],
-    "canStateChange.from.draft.to.ok-by-stura" => [
+    "canStateChange.from.draft.to.need-stura" => [
       [ "hasPermission" => "canEditState" ],
     ],
-    "canStateChange.from.draft.to.ok-by-stura" => [
+    "canStateChange.from.need-stura.to.ok-by-stura" => [
       [ "hasPermission" => "canEditState" ],
     ],
     # Genehmigung durch HV
@@ -140,11 +151,14 @@ $config = [
     ],
   ],
   "newStateActions" => [
+    "create.draft"                => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.done-hv"       => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.draft.to.ok-by-stura"   => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.need-stura"    => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.need-stura.to.ok-by-stura" => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.need-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
