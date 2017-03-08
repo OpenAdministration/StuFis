@@ -1178,7 +1178,7 @@ deleteZip:
     if ($ret === true) {
       header("Content-Type: application/zip"); 
       header("Content-Length: " . filesize($zipFileName)); 
-      header("Content-Disposition: attachment; filename=\"{$antrag["id"]}.zip\"");
+      header("Content-Disposition: attachment; filename=\"{$antrag["id"]} {$antrag["type"]} {$antrag["revision"]}.zip\"");
       readfile($zipFileName); 
     }
     unlink($zipFileName);
