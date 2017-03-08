@@ -17,7 +17,7 @@ function notifyStateTransition($antrag, $newState, $newStateCreator, $action) {
 function notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action) {
   global $URIBASE, $URIBASEREF;
 
-  $src = "/var/www/telegram-bot/302395532:AAElmpkUrSoAGPHRUicAr1ZyFBxoqX5JnHI/inc.php";
+  $src = "../telegrambot/mysupersecretpathforwebhook/inc.php";
   if (!file_exists($src)) return;
 
   include "$src";
