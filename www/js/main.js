@@ -117,6 +117,7 @@ $(document).ready(function() {
 
   $(".single-file-container").on("clone-post.single-file cloned.file", function(evt) {
     var cfg = {
+      'showUpload':false, // magically appears in fileinput
       'fileActionSettings': {
         'showUpload':false,
         'showZoom': false
@@ -273,6 +274,7 @@ $(document).ready(function() {
   $(".on-click-delete-file").on("click.mfcdest", onClickTrashFile);
   $(".multi-file-container-without-destination").on("clone-post.multi-file cloned.file", function(evt) {
     var cfg = {
+      'showUpload':false, // magically appears in fileinput
       'fileActionSettings': {
         'showUpload':false,
         'showZoom': false

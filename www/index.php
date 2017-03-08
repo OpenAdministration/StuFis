@@ -643,6 +643,19 @@ if (isset($_REQUEST["action"])) {
         }
       }
       break;
+    case "antrag.create-import":
+      if (!isset($_REQUEST["type"]) || !isset($_REQUEST["revision"])) {
+        header("Location: $URIBASE");
+        exit;
+      }
+      $doImport = isset($_FILES["importfile"]) && ($_FILES["importfile"]["error"] == UPLOAD_ERR_OK) &&  is_uploaded_file($_FILES["importfile"]["tmp_name"]);
+      if (!$doImport) {
+        $forceClose = true;
+        $target = str_replace("//","/",$URIBASE)."?tab=antrag.create&type=".rawurlencode($_REQUEST["type"])."&revision=".rawurlencode($_REQUEST["revision"]);
+        $ret = true;
+        break;
+      }
+      /* fall-through */
     case "antrag.create":
       if (!dbBegin()) {
         $msgs[] = "Cannot start DB transaction";
@@ -676,13 +689,89 @@ if (isset($_REQUEST["action"])) {
         $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
         $antrag_id = (int) $ret;
         #$msgs[] = "Antrag wurde erstellt.";
+        $ret = true;
+      }
 
+      $doImport = isset($_FILES["importfile"]) && ($_FILES["importfile"]["error"] == UPLOAD_ERR_OK) &&  is_uploaded_file($_FILES["importfile"]["tmp_name"]);
+
+      if ($ret && !$doImport) {
         $ret0 = writeFormdata($antrag_id, false, null, null);
 
         $ret1 = writeFormdataFiles($antrag_id, $msgs, $filesRemoved, $filesCreated, false, null, null);
 
         $ret = $ret && $ret0 && $ret1;
       } /* dbInsert(antrag) -> $ret !== false */
+
+      if ($ret && $doImport) {
+        $zip = new ZipArchive();
+        if ($zip->open( $_FILES["importfile"]["tmp_name"] ) === false) {
+          $msgs[] = "Invalid Importfile: {$_FILES["importfile"]["tmp_name"]}";
+          $ret = false;
+        }
+      }
+      if ($ret && $doImport) {
+        $oldAntrag = $zip->getFromName("antrag.json");
+        if ($oldAntrag !== false) {
+          $oldAntrag = json_decode($oldAntrag,true);
+        } else {
+          $msgs[] = "Invalid Importfile: missing antrag.json";
+          $ret = false;
+        }
+      }
+      if ($ret && $doImport) {
+        if (!is_array($oldAntrag) || !is_array($oldAntrag["_anhang"]) || !is_array($oldAntrag["_inhalt"])) {
+          $msgs[] = "Invalid Importfile: bad json data";
+          $ret = false;
+        }
+      }
+      if ($ret && $doImport) {
+        foreach ($oldAntrag["_inhalt"] as $ih) {
+          $ih["antrag_id"] = $antrag_id;
+          if (isset($ih["id"]))
+            unset($ih["id"]);
+          $ret0 = dbInsert("inhalt", $ih);
+          if ($ret0 === false) {
+            $msgs[] = "Failed to import field";
+            $ret = false;
+            break;
+          }
+        }
+      }
+      if ($ret && $doImport) {
+        foreach ($oldAntrag["_anhang"] as $ah) {
+          if (strtolower($ah["state"]) != "active") continue;
+          $content = $zip->getFromName($ah["id"].".attach");
+          if ($content === false) {
+            $msgs[] = "Failed to import file";
+            $ret = false;
+            break;
+          }
+          $ah["antrag_id"] = $antrag_id;
+          if (isset($ah["id"]))
+            unset($ah["id"]);
+          $dbPath = uniqid().".".pathinfo($ah["filename"], PATHINFO_EXTENSION);
+          $path = $STORAGE."/".$ah["antrag_id"]."/".$dbPath;
+          if (!is_dir(dirname($path)))
+            mkdir(dirname($path),0777,true);
+          $ah["path"] = $dbPath;
+
+          $filesCreated[] = $path;
+          $ret0 = file_put_contents($path, $content);
+          if ($ret0 === false) {
+            $msgs[] = "Failed to import file";
+            $ret = false;
+            break;
+          }
+
+          $ret0 = dbInsert("anhang", $ah);
+          if ($ret0 === false) {
+            $msgs[] = "Failed to import file";
+            $ret = false;
+            break;
+          }
+        }
+      }
+
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
       if ($ret) {
         $antrag = getAntrag($antrag_id); // report new version to user
