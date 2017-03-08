@@ -13,7 +13,7 @@ $config = [
     "new" => [ "ok", "revoked", ],
   ],
   "createState" => "draft",
-  "buildFrom" => [ "projekt-intern-genehmigung" ],
+  "buildFrom" => [ "projekt-intern" ],
   "categories" => [
     "need-action" => [
       [ "state" => "draft", "creator" => "self" ],
