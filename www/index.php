@@ -143,9 +143,9 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
 
 function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
   if (!isset($form["_class"]["newStateActions"]))
-    return;
+    return true;
   if (!isset($form["_class"]["newStateActions"][$transition]))
-    return;
+    return true;
 
   $actions = $form["_class"]["newStateActions"][$transition];
   foreach ($actions as $action) {
@@ -687,12 +687,14 @@ if (isset($_REQUEST["action"])) {
       if ($ret) {
         $antrag = getAntrag($antrag_id); // report new version to user
         $ret = doNewStateActions($form, "create.$createState", $antrag, $createState, $msgs, $filesCreated, $filesRemoved, $target);
+        if ($ret === false) $msgs[] = "Mit Status verknüpfte Aktion fehlgeschlagen.";
       }
       if (isset($_REQUEST["state"]) && $ret && $_REQUEST["state"] != "") {
         $antrag = getAntrag($antrag_id); // report new version to user
         if ($antrag === false) die("Ups failed to read antrag just created");
         $newState = $_REQUEST["state"];
         $ret = writeState($newState, $antrag, $form, $msgs, $filesCreated, $filesRemoved, $target);
+        if ($ret === false) $msgs[] = "Mit Status verknüpfte Aktion fehlgeschlagen.";
       }
       if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
         $ret = false;
