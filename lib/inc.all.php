@@ -19,6 +19,8 @@ require_once SYSBASE.'/lib/inc.dokuwiki.php';
 require_once SYSBASE.'/lib/inc.hibiscus.php';
 require_once 'XML/RPC2/Client.php';
 
+if (!extension_loaded("zip")) die("Missing ZIP support");
+
 // Mail
 require_once 'Mail.php';
 global $mail_object;

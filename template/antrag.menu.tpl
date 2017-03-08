@@ -9,6 +9,7 @@ $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $
 $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/edit";
 $targetEditPartiell = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/editPartiell";
 $targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
+$targetExport = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/export";
 
 if (!hasPermission($form, $antrag, "canEdit"))
   $targetEdit = false;
@@ -39,6 +40,7 @@ else
         <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
 <?php } ?>
         <li><a href="<?php echo htmlspecialchars($targetPrint); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li>
+        <li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->

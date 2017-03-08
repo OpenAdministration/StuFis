@@ -1,6 +1,6 @@
 storage
 TODO
-tmp
+tmp/*
 PHP_errors.log
 config/config.php
 config/ca.pem

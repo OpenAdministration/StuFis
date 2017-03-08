@@ -1152,6 +1152,41 @@ switch($_REQUEST["tab"]) {
     require "../template/antrag.foot-print.tpl";
     require "../template/footer-print.tpl";
     exit;
+  case "antrag.export":
+    $antrag = getAntrag();
+    $zipFileName = tempnam(SYSBASE.'/tmp', 'exp');
+    if ($zipFileName === false) die("Out of space.");
+
+    $zip = new ZipArchive();
+    if ($zip->open( $zipFileName, ZIPARCHIVE::OVERWRITE ) === false) {
+      goto deleteZip;
+    }
+
+    $antraghtml = antrag2html($antrag);
+    $zip->addFromString('antrag.html', $antraghtml);
+
+    $zip->addFromString('antrag.json', json_encode($antrag));
+
+    foreach ($antrag["_anhang"] as $ah) {
+      if (strtolower($ah["state"]) != "active") continue;
+      $zip->addFile($STORAGE."/".$ah["antrag_id"]."/".$ah["path"], $ah["id"].".attach");
+    }
+
+    $ret = $zip->close();
+
+deleteZip:
+    if ($ret === true) {
+      header("Content-Type: application/zip"); 
+      header("Content-Length: " . filesize($zipFileName)); 
+      header("Content-Disposition: attachment; filename=\"{$antrag["id"]}.zip\"");
+      readfile($zipFileName); 
+    }
+    unlink($zipFileName);
+    if ($ret === false)
+      die( "Failed to create ZIP" );
+    else
+      exit;
+  break;
 }
 
 require "../template/header.tpl";
