@@ -636,6 +636,10 @@ if (isset($_REQUEST["action"])) {
           if (isset($_REQUEST["overrideOnNextEdit"])) {
             $target .= "?".http_build_query([ "override" => $_REQUEST["overrideOnNextEdit"] ] );
           }
+        } elseif ($altTarget !== false) {
+          # nothing special here, we can safely redirect to new form
+          $target = $altTarget;
+          $altTarget = false;
         }
       }
       break;
@@ -790,7 +794,8 @@ if (isset($_REQUEST["action"])) {
       }
       if ($ret) {
         $forceClose = true;
-        $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
+        if ($target === false)
+          $target = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]);
       }
       break;
     case "hibiscus":
