@@ -143,13 +143,13 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.revoked.to.ok-by-hv" => [
-      [ "hasPermission" => "canUnrevoke" ],
+      [ "hasPermission" => [ "canUnrevoke", "isBeschlussHV" ] ],
     ],
     "canStateChange.from.revoked.to.ok-by-stura" => [
-      [ "hasPermission" => "canUnrevoke" ],
+      [ "hasPermission" => [ "canUnrevoke", "isBeschlussStuRa" ] ],
     ],
     "canStateChange.from.revoked.to.done-hv" => [
-      [ "hasPermission" => "canUnrevoke" ],
+      [ "hasPermission" => [ "canUnrevoke", "isBeschlussHV" ] ],
     ],
     # Beendung
     "canTerminate" => [
