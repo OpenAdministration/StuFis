@@ -21,6 +21,7 @@ if (!hasPermission($form, $antrag, "canEditPartiell"))
   $targetEditPartiell = false;
 
 $canBeCloned = hasPermission($form, $antrag, "canBeCloned", false);
+$canBeLinked = hasPermission($form, $antrag, "canBeLinked", false);
 
 if (isset($antrag))
   $h = "[{$antrag["id"]}] {$classTitle}";
@@ -46,6 +47,9 @@ else
         <li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>
 <?php if ($canBeCloned !== false) { ?>
         <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
+<?php } ?>
+<?php if ($canBeLinked !== false) { ?>
+        <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen"><i class="fa fw fa-plus-square"></i></a></li>
 <?php } ?>
       </ul>
     </div><!-- /.navbar-collapse -->
