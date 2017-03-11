@@ -23,6 +23,7 @@ $config = [
     "canBeLinked" => [
       [ "state" => "final" ],
     ],
+    "canBeCloned" => true,
     "canRead" => true,
     "canEdit" => [
       [ "group" => "ref-finanzen", ],

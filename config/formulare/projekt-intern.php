@@ -75,6 +75,9 @@ $config = [
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
     ],
+    "canBeCloned" => [
+      [ "group" => "ref-finanzen", ],
+    ],
     "canEditPartiell" => [
       [ "group" => "ref-finanzen", ],
     ],

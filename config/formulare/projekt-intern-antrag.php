@@ -26,6 +26,7 @@ $config = [
     "canBeLinked" => [
       [ "state" => "new" ],
     ],
+    "canBeCloned" => true,
     "canRead" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],

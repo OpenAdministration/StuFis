@@ -270,6 +270,10 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
       $foundBuildFrom &&
       isset($form["config"]["referenceField"]))
   {
+     if (!hasPermission($form, $oldAntrag, "canBeLinked")) {
+       $msgs[] = "Dieses Formular darf nicht verlinkt werden.";
+       return false;
+     }
      $row = Array();
      $row["antrag_id"] = $antrag_id;
      $row["contenttype"] = $form["config"]["referenceField"]["type"];
@@ -817,6 +821,14 @@ if (isset($_REQUEST["action"])) {
       $oldAntragNewState = false;
       if (isset($_REQUEST["copy_from_state"]))
         $oldAntragNewState = $_REQUEST["copy_from_state"];
+      $oldAntrag = getAntrag($_REQUEST["copy_from"]);
+      if ($oldAntrag !== false)
+        $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
+      if ($ret && $oldAntrag["type"] == $_REQUEST["type"] && !hasPermission($oldForm, $oldAntrag, "canBeCloned")) {
+        // cloning
+        $msgs[] = "Kopieren nicht erlaubt. Wolltest du vielleicht den zugehörigen Antrag kopieren?";
+        $ret = false;
+      }
       $antrag_id = copyAntrag($_REQUEST["copy_from"], $_REQUEST["copy_from_version"], $oldAntragNewState, $_REQUEST["type"], $_REQUEST["revision"], $msgs, $filesCreated, $filesRemoved, $target);
       if ($antrag_id === false)
         $ret = false;

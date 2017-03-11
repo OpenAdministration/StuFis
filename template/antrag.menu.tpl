@@ -19,6 +19,8 @@ else
 if (!hasPermission($form, $antrag, "canEditPartiell"))
   $targetEditPartiell = false;
 
+$canBeCloned = hasPermission($form, $antrag, "canBeCloned", false);
+
 if (isset($antrag))
   $h = "[{$antrag["id"]}] {$classTitle}";
 else
@@ -41,6 +43,9 @@ else
 <?php } ?>
         <li><a href="<?php echo htmlspecialchars($targetPrint); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li>
         <li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>
+<?php if ($canBeCloned !== false) { ?>
+        <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
+<?php } ?>
       </ul>
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->

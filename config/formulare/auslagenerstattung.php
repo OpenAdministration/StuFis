@@ -81,6 +81,9 @@ $config = [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
       [ "hasPermission" => [ "canRead", "isCreateable" ] ],
     ],
+    "canBeCloned" => [
+      [ "group" => "ref-finanzen", ],
+    ],
     "canStateChange.from.draft.to.ok" => [
       [ "group" => "ref-finanzen" ],
     ],
