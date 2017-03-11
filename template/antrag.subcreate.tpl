@@ -2,6 +2,8 @@
 
 global $formulare;
 
+if (!hasPermission($form, $antrag, "canBeLinked", false)) return;
+
 $classConfig = getFormClass($antrag["type"]);
 if (!isset($classConfig["state"])) return;
 
@@ -44,7 +46,6 @@ foreach ($formulare as $type => $list) {
     break;
   }
   if (!$found) continue;
-  if (!hasPermission($form, $antrag, "canBeLinked")) continue;
 
   $title = $type;
   if (isset($classConfig["title"]))
