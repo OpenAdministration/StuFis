@@ -99,7 +99,7 @@ $layout[] = [
        "width" => 12,
        "id" => "group2",
        "name" => true,
-       "opts" => [ "title" ],
+       "opts" => [ "title", "sum-over-table-bottom" ],
        "children" => [
          [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, "opts" => [ "required", "title" ],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
          [ "id" => "geld.titel",       "name" => "Titel",                              "type" => "ref",     "width" => 2, "placeholder" => "s. Genehmigung",
@@ -120,7 +120,7 @@ $layout[] = [
          [ "id" => "geld.invref.grp", "type" => "group", "width" => 12, "opts" => ["well"],
            "children" => [
              [ "id" => "geld.invref.0",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
-               "printSum" => [ "einnahmen", "ausgaben" ],
+               "printSum" => [ "einnahmen", "ausgaben" ], "printSumWidth" => 2,
                "title" => "Genehmigte oder getätigte Ausgaben und Einnahmen",
                "otherForms" => [
                  ["type" => "auslagenerstattung", "state" => "ok", "referenceFormField" => "genehmigung", 
@@ -133,17 +133,60 @@ $layout[] = [
                   "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
                  ],
                ],
+               "extraFooter" => [ # hidden if no invref references
+                 [ "id" => "geld.invref.0.sum", "type" => "group", "width" => 12, "title" => "Nach Abzug der getätigten Ausgaben und Einnahmen verbleiben",
+                   "children" => [
+                     [
+                       "type" => "plaintext", /* renderer */
+                       "title" => "",
+                       "id" => "geld.invref.0.sum.info",
+                       "width" => 8,
+                       "value" => " ",
+                     ],
+                     [ "id" => "geld.einnahmen.rest.0",   "name" => "verbleibende Einnahmen",  "type" => "money",  "width" => 2,
+                       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+                       "printSumDefer" => "expr:%einnahmen - %einnahmen.erstattet"
+                     ],
+                     [ "id" => "geld.ausgaben.rest.0",   "name" => "verbleibende Ausgaben",  "type" => "money",  "width" => 2,
+                       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+                       "printSumDefer" => "expr:%ausgaben - %ausgaben.erstattet"
+                     ],
+                   ],
+                 ],
+               ],
              ],
   
-             [ "id" => "geld.invref",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
-               "printSum" => [ "einnahmen", "ausgaben" ],
-               "title" => "Beantragte Ausgaben und Einnahmen",
+             [ "id" => "geld.invref.1",    "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
+               "printSum" => [ "einnahmen", "ausgaben" ], "printSumWidth" => 2,
+               "title" => "Beantragte Auslagenerstattungen",
                "otherForms" => [
                  ["type" => "auslagenerstattung", "state" => "draft", "referenceFormField" => "genehmigung", 
                   "addToSum" => [ "einnahmen" => ["einnahmen.beantragt"], "ausgaben" => ["ausgaben.beantragt"] ],
                  ],
                ],
+               "extraFooter" => [ # hidden if no invref references
+                 [ "id" => "geld.invref.1.sum", "type" => "group", "width" => 12, "title" => "Nach Abzug der getätigten oder beantragten Auslagenerstattungen verbleiben",
+                   "children" => [
+                     [
+                       "type" => "plaintext", /* renderer */
+                       "title" => "",
+                       "id" => "geld.invref.1.sum.info",
+                       "width" => 8,
+                       "value" => " ",
+                     ],
+                     [ "id" => "geld.einnahmen.rest.1",   "name" => "verbleibende Einnahmen",  "type" => "money",  "width" => 2,
+                       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+                       "printSumDefer" => "expr:%einnahmen - %einnahmen.erstattet - %einnahmen.beantragt"
+                     ],
+                     [ "id" => "geld.ausgaben.rest.1",   "name" => "verbleibende Ausgaben",  "type" => "money",  "width" => 2,
+                       "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+                       "printSumDefer" => "expr:%ausgaben - %ausgaben.erstattet - %ausgaben.beantragt"
+                     ],
+                   ],
+                 ],
+               ],
              ],
+
            ], // children
         ], // geld.invref.grp
       ], // children

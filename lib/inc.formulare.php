@@ -1448,6 +1448,7 @@ function renderFormItemMoney($layout, $ctrl) {
       $refname = $ctrl["_render"]->rowIdToNumber[ $ctrl["_render"]->currentRowId ];
     elseif ( $ctrl["_render"]->currentParent !== false )
       $refname = $ctrl["_render"]->currentParent;
+    echo "<!-- refname=$refname -->";
     $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $tPatternC, $tPatternS, &$layout, $refname, $noForm, $noFormMarkup, $noFormCompress) {
       $sums = [];
       if ($refname === false) {
@@ -3038,10 +3039,21 @@ function renderFormItemInvRef($layout,$ctrl) {
   if ($hasForms && count($refMe) == 0)
     return false;
 
+  $myExtraFooterOut = false;
+  if (isset($layout["extraFooter"])) {
+    $myExtraFooterOut = "";
+    foreach($layout["extraFooter"] as $newMeta) {
+      ob_start();
+      renderFormItem($newMeta, $ctrl);
+      $myExtraFooterOut .= ob_get_contents();
+      ob_end_clean();
+    }
+  }
+
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars("<{invref:".uniqid().":".$refId."}>"));
   echo $tPattern;
   $ctrl["_render"]->templates[$tPattern] = htmlspecialchars("{".$tPattern."}"); // fallback
-  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl, $noForm, $refMe, $hasForms, $currentFormId, $printSum) {
+  $ctrl["_render"]->postHooks[] = function($ctrl) use ($tPattern, $layout, $refId, $ctrl, $noForm, $refMe, $hasForms, $currentFormId, $printSum, $myExtraFooterOut) {
     global $URIBASE;
 
     $withHeadline = in_array("with-headline", $layout["opts"]);
@@ -3235,13 +3247,17 @@ function renderFormItemInvRef($layout,$ctrl) {
       $myOut .= "  <tbody>\n";
       $myOut .= $myOutBody;
       $myOut .= "  </tbody>\n";
+      $numCol = 0;
       $myOut .= "  <tfoot>\n";
       $myOut .= "    <tr>\n";
       if ($hasForms && !$withAggByForm) {
+        $numCol++;
         $myOut .= "      <td></td>\n"; /* Spalte: Quelleformular */
       }
+      $numCol++;
       $myOut .= "      <td></td>\n"; /* Spalte: Quelle */
       foreach ($printSum as $psId) {
+        $numCol++;
         if (isset($layout["printSumSaldo"]) && in_array($psId, $layout["printSumSaldo"])) {
           $myOut .= "    <td></td>";
         } elseif (isset($ctrl["_render"]->addToSumMeta[$psId])) {
@@ -3278,6 +3294,11 @@ function renderFormItemInvRef($layout,$ctrl) {
       }
   
       $myOut .= "    </tr>\n";
+      if (isset($layout["extraFooter"])) {
+        $myOut .= "    <tr><td colspan=\"$numCol\">\n";
+        $myOut .= $myExtraFooterOut;
+        $myOut .= "    </td></tr>\n";
+      }
       $myOut .= "  </tfoot>\n";
       $myOut .= "</table>\n";
   
