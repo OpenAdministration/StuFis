@@ -85,7 +85,7 @@ if (count($newStates) > 0) {
   <div class="panel-heading">
     Bearbeitungsstand
 <?php if (count($newStates) > 0) { ?>
-    <a href="#" class="pull-right" data-toggle="modal" data-target="#editStateModal">
+    <a href="#" data-toggle="modal" data-target="#editStateModal"> <!-- do not pull-right to avoid confusion -->
       <i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
     </a>
 <?php } ?>
