@@ -29,17 +29,17 @@ $config = [
     "checkBeleg" => [
       [ "id" => "zahlung.grund.beleg",
         "otherForm" => [
-          [ "type" => "auslagenerstattung-genehmigung", "state" => "ok", "validate" => "postEdit",
+          [ "type" => "auslagenerstattung", "state" => "ok", "validate" => "postEdit",
             "fieldMatch" => [
               [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
             ],
           ],
-          [ "type" => "auslagenerstattung-genehmigung", "state" => "instructed", "validate" => "postEdit",
+          [ "type" => "auslagenerstattung", "state" => "instructed", "validate" => "postEdit",
             "fieldMatch" => [
               [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
             ],
           ],
-          [ "type" => "auslagenerstattung-genehmigung", "state" => "payed", "validate" => "postEdit",
+          [ "type" => "auslagenerstattung", "state" => "payed", "validate" => "postEdit",
             "fieldMatch" => [
               [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
             ],

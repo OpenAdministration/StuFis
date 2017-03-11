@@ -1367,7 +1367,7 @@ switch($_REQUEST["tab"]) {
   break;
   case "booking":
     requireGroup($HIBISCUSGROUP);
-    $alGrund = dbFetchAll("antrag", [ "type" => "auslagenerstattung-genehmigung", "state" => "ok" ] );
+    $alGrund = dbFetchAll("antrag", [ "type" => "auslagenerstattung", "state" => "ok" ] );
     foreach(array_keys($alGrund) as $i) {
       $antrag = $alGrund[$i];
       $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);

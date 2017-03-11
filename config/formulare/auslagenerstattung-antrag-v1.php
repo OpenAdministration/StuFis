@@ -105,7 +105,7 @@ $layout = [
    "id" => "info",
    "width" => 12,
    "opts" => ["well"],
-   "value" => "Die Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
+   "value" => "Die Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. Das Projekt darf erst durchgeführt werden, nachdem der Antrag genehmigt wurde.\nDie Auslagenerstattung kann nur vom Projektverantwortlichen eingereicht werden.",
  ],
 
 ];
