@@ -423,7 +423,7 @@ if (isset($_REQUEST["action"])) {
       if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
 
       $form = getForm($antrag["type"], $antrag["revision"]);
-      if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+      if (!hasPermission($form, $antrag, "canDelete")) die("Antrag ist nicht editierbar");
 
       if ($_REQUEST["version"] !== $antrag["version"]) {
         $ret = false;

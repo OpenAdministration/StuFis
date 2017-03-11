@@ -39,6 +39,9 @@ $config = [
       [ "state" => "draft", "creator" => "self" ],
       [ "state" => "draft", "group" => "ref-finanzen", ],
     ],
+    "canDelete" => [
+      [ "state" => "draft", "hasPermission" => "canEdit" ],
+    ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],

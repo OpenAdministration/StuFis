@@ -35,6 +35,9 @@ $config = [
     "canEdit" => [
       [ "state" => "draft", "hasPermission" => "canRead" ],
     ],
+    "canDelete" => [
+      [ "state" => "draft", "hasPermission" => "canEdit" ],
+    ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],

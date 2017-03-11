@@ -1,5 +1,7 @@
 <?php
 
+  $isDeleteable = hasPermission($form, $antrag, "canDelete");
+
   $classConfig = $form["_class"];
 
   $newStates = [];
@@ -85,6 +87,11 @@ renderForm($form, ["_values" => $antrag] );
 
 </form>
 
+<?php
+
+if ($isDeleteable):
+
+?>
 
 <form id="deleteantrag" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax">
   <input type="hidden" name="action" value="antrag.delete"/>
@@ -94,6 +101,12 @@ renderForm($form, ["_values" => $antrag] );
   <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
   <button type="submit" class='btn btn-danger' name="delete" id="delete">Löschen</button>
 </form>
+
+<?php
+
+endif;
+
+?>
 
 <?php
 # vim: set syntax=php:

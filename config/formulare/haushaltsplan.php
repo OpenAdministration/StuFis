@@ -27,6 +27,9 @@ $config = [
     "canEdit" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
     ],
+    "canDelete" => [
+      [ "state" => "draft", "hasPermission" => "canEdit" ],
+    ],
     "canCreate" => [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
     ],
