@@ -56,6 +56,7 @@ $config = [
      ],
     ],
 # FIXME check rechnerische und sachliche Richtigkeit if state ok or later
+# FIXME check rechtsgrundlage gesetzt
   ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
