@@ -30,6 +30,8 @@ $config = [
     ],
     "checkSturaBeschlussHV" => [
       [ "id" => "genehmigung.recht.int.sturabeschluss", "value" => "is:notEmpty" ],
+    ],
+    "checkGremiumBeschlussHV" => [
       [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
     ],
