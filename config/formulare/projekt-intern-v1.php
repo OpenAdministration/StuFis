@@ -25,14 +25,15 @@ $config = [
   "citeFieldsInMailIfNotEmpty" => [ "genehmigung.hinweis" => "Auflagen", "genehmigung.modified" => "Genehmigtes Projekt weicht vom Antrag ab"],
 ];
 
-$layout = [
- [
+$layout = [];
+
+$layout[] = [
    "type" => "h2", /* renderer */
    "id" => "head1",
    "autoValue" => "class:title",
- ],
+ ];
 
- [
+$layout[] = [
    "type" => "group", /* renderer */
    "width" => 12,
    "opts" => ["well"],
@@ -68,9 +69,9 @@ $layout = [
      [ "id" => "genehmigung.hinweis", "title" =>"Auflagen",               "type" => "textarea", "width" => 12, "opts" => [ "hasFeedback"] ],
      [ "id" => "genehmigung.modified", "text" =>"Genehmigtes Projekt weicht vom Antrag ab", "type" => "checkbox", "width" => 12, "opts" => [ "toggleReadOnly" ], "value" => "yes" ],
    ],
- ],
+ ];
 
- [
+$layout[] = [
    "type" => "group", /* renderer */
    "width" => 12,
    "opts" => ["well"],
@@ -84,9 +85,9 @@ $layout = [
      [ "id" => "projekt.protokoll",   "title" =>"Projektbeschluss (Wiki Direktlink)", "type" => "url",    "width" => 12, "placeholder" => "https://wiki.stura.tu-ilmenau.de/protokoll/...", "opts" => ["required","hasFeedback","wikiUrl"], "pattern" => "^https:\/\/wiki\.stura\.tu-ilmenau\.de\/protokoll\/.*", "pattern-error" => "Muss mit \"https://wiki.stura.tu-ilmenau.de/protokoll/\" beginnen.",  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
      [ "id" => "projekt.zeitraum",    "title" =>"Projektdauer",                       "type" => "daterange", "width" => 12,  "opts" => [ "required"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
    ],
- ],
+ ];
 
- [
+$layout[] = [
    "type" => "table", /* renderer */
    "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
@@ -115,31 +116,42 @@ $layout = [
          ],
          [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], "addToSum" => ["einnahmen"]],
          [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], "addToSum" => ["ausgaben"] ],
-         [ "id" => "geld.invref.grp", "type" => "group", "width" => 12, "opts" => ["well"], "children" => [
-           [ "id" => "geld.invref",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
-             "printSum" => [ "einnahmen", "ausgaben" ],
-             "title" => "Genehmigte oder getätigte Ausgaben und Einnahmen",
-             "otherForms" => [
-               ["type" => "auslagenerstattung", "state" => "new", "referenceFormField" => "genehmigung", ],
-               ["type" => "auslagenerstattung-genehmigung", "state" => "draft", "referenceFormField" => "genehmigung", ],
-               ["type" => "auslagenerstattung-genehmigung", "state" => "ok", "referenceFormField" => "genehmigung", 
-                "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
-               ],
-               ["type" => "auslagenerstattung-genehmigung", "state" => "payed", "referenceFormField" => "genehmigung",
-                "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
-               ],
-               ["type" => "auslagenerstattung-genehmigung", "state" => "instructed", "referenceFormField" => "genehmigung",
-                "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
+# FIXME Restsummen anzeigen
+         [ "id" => "geld.invref.grp", "type" => "group", "width" => 12, "opts" => ["well"],
+           "children" => [
+             [ "id" => "geld.invref.0",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
+               "printSum" => [ "einnahmen", "ausgaben" ],
+               "title" => "Genehmigte oder getätigte Ausgaben und Einnahmen",
+               "otherForms" => [
+                 ["type" => "auslagenerstattung", "state" => "ok", "referenceFormField" => "genehmigung", 
+                  "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
+                 ],
+                 ["type" => "auslagenerstattung", "state" => "payed", "referenceFormField" => "genehmigung",
+                  "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
+                 ],
+                 ["type" => "auslagenerstattung", "state" => "instructed", "referenceFormField" => "genehmigung",
+                  "addToSum" => [ "einnahmen" => ["einnahmen.erstattet"], "ausgaben" => ["ausgaben.erstattet"] ],
+                 ],
                ],
              ],
-           ],
-         ],
-       ], ], // geld.invref.grp
-     ],
-   ], // finanzgruppentbl
- ],
+  
+             [ "id" => "geld.invref",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
+               "printSum" => [ "einnahmen", "ausgaben" ],
+               "title" => "Beantragte Ausgaben und Einnahmen",
+               "otherForms" => [
+                 ["type" => "auslagenerstattung", "state" => "draft", "referenceFormField" => "genehmigung", 
+                  "addToSum" => [ "einnahmen" => ["einnahmen.beantragt"], "ausgaben" => ["ausgaben.beantragt"] ],
+                 ],
+               ],
+             ],
+           ], // children
+        ], // geld.invref.grp
+      ], // children
+    ], // column
+  ], // columns
+];
 
- [
+$layout[] = [
    "type" => "textarea", /* renderer */
    "id" => "projekt.beschreibung",
    "title" => "Projektbeschreibung",
@@ -147,18 +159,16 @@ $layout = [
    "min-rows" => 10,
    "opts" => ["required"],
    "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
- ],
+ ];
 
- [
+$layout [] = [
    "type" => "plaintext", /* renderer */
    "title" => "Erläuterung",
    "id" => "info",
    "width" => 12,
    "opts" => ["well"],
    "value" => "Der Projektantrag muss rechtzeitig vor Projektbeginn eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
- ],
-
-];
+ ];
 
 /* formname , formrevision */
 registerForm( "projekt-intern", "v1", $layout, $config );

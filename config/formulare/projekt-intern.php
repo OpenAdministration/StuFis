@@ -8,7 +8,7 @@ $config = [
                "need-stura" => [ "Warte auf StuRa-Beschluss", ],
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
                "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
-               "revoked" => [ "Abgelehnt / Zurückgezogen (KEINE Gnehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen", ],
+               "revoked" => [ "Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen", ],
                "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
              ],
   "proposeNewState" => [

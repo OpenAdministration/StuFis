@@ -7,6 +7,9 @@ $config = [
                "new"        => [ "Eingereicht", "einreichen" ],
              ],
   "createState" => "draft",
+  "proposeNewState" => [
+    "draft" => [ "new" ],
+  ],
   "categories" => [
     "need-action" => [
        [ "state" => "draft", "hasPermission" => "isCorrectGremium" ],
@@ -41,9 +44,6 @@ $config = [
   ],
   "newStateActions" => [
     "from.draft.to.new" => [ [ "copy" => true, "type" => "projekt-intern", "revision" => "v1", "redirect" => true ] ],
-  ],
-  "proposeNewState" => [
-    "draft" => [ "new" ],
   ],
 ];
 
