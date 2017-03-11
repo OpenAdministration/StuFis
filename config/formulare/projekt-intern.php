@@ -23,6 +23,12 @@ $config = [
   "buildFrom" => [
     [ "projekt-intern-antrag" /* type */, "done" /* state */ ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "ok-by-stura", "doValidate" => "checkSturaBeschluss", ],
+      [ "state" => "done-hv", "doValidate" => "checkSturaBeschlussHV", ],
+    ],
+  ],
   "categories" => [
     "report-stura" => [
        [ "state" => "ok-by-hv", "group" => "ref-finanzen" ],
@@ -143,10 +149,10 @@ $config = [
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.ok-by-stura.to.terminatedd" => [
+    "canStateChange.from.ok-by-stura.to.terminated" => [
       [ "hasPermission" => "canTerminate" ],
     ],
-    "canStateChange.from.done-hv.to.terminatedd" => [
+    "canStateChange.from.done-hv.to.terminated" => [
       [ "hasPermission" => "canTerminate" ],
     ],
   ],

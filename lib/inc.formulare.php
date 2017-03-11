@@ -413,7 +413,18 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
   if (isset($p["revision"]) && ($antrag["revision"] != $p["revision"])) return true; # not selected
   if (isset($p["doValidate"]) && !isValid($antrag["id"], $p["doValidate"], $msgs)) return false; # invalid content
   if (isset($p["id"])) { # a field selector
+    $found = 0;
     foreach ($antrag["_inhalt"] as $inhalt0) {
+      $ret = checkValidLineField($p, $antrag, $ctrl, $form, $inhalt0, $msgs);
+      if ($ret === false) {
+        $msgs[] = "{$inhalt0["fieldname"]} validation failed";
+        return false;
+      }
+      if ($ret === null)
+        $found++;
+    }
+    if ($found == 0) {
+      $inhalt0 = [ "fieldname" => $p["id"], "contenttype" => null, "value" => null ];
       $ret = checkValidLineField($p, $antrag, $ctrl, $form, $inhalt0, $msgs);
       if ($ret === false) {
         $msgs[] = "{$inhalt0["fieldname"]} validation failed";
@@ -441,8 +452,8 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
 # once per field
 function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
   if (isset($p["id"]) && ($p["id"] != $inhalt["fieldname"]) && (substr($inhalt["fieldname"], 0, strlen($p["id"]) + 1) != $p["id"]."[") )
-    return true; # not selected
-  if (isset($p["id"]) && ($inhalt["contenttype"] == "otherForm") && isset($p["otherForm"])) {
+    return null; # not selected
+  if (($inhalt["contenttype"] === "otherForm") && isset($p["otherForm"])) {
     # check if a valid other form is selected
     if ($inhalt["value"] == "") return false;
     $otherAntrag = getAntrag($inhalt["value"]);
@@ -487,6 +498,29 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
       break;
     }
     if (!$found) return false;
+  }
+  if (isset($p["value"]) && (($pos = strpos($p["value"],":")) !== false)) {
+    $prefix = substr($p["value"],0,$pos);
+    $remainder = substr($p["value"],$pos+1);
+    switch ($prefix) {
+      case "is":
+        switch ($remainder) {
+          case "notEmpty":
+            if ($inhalt["value"] == "") return false;
+            break;
+          case "empty":
+            if ($inhalt["value"] != "") return false;
+            break;
+          default:
+            die("not implemented validation: value \"$prefix\" \"$remainer\"");
+        }
+      break;
+      case "equals":
+        if (((string) $inhalt["value"]) != $remainder) return false;
+      break;
+      default:
+        die("not implemented validation: value \"$prefix\" \"$remainer\"");
+    }
   }
   return true;
 }

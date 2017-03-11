@@ -23,6 +23,17 @@ $config = [
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
   "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],
   "citeFieldsInMailIfNotEmpty" => [ "genehmigung.hinweis" => "Auflagen", "genehmigung.modified" => "Genehmigtes Projekt weicht vom Antrag ab"],
+  "validate" => [
+    "checkSturaBeschluss" => [
+      [ "id" => "genehmigung.recht.stura.beschluss", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.stura.datum", "value" => "is:notEmpty" ],
+    ],
+    "checkSturaBeschlussHV" => [
+      [ "id" => "genehmigung.recht.int.sturabeschluss", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
+    ],
+  ],
 ];
 
 $layout = [];
