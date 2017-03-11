@@ -19,6 +19,12 @@ $config = [
       [ "field:projekt.leitung" => "isIn:data-source:own-mail" ],
     ],
     "isCreateable" => true,
+    "isBeschlussStuRa" => [
+      [ "field:genehmigung.recht" => "==stura" ],
+    ],
+    "isBeschlussHV" => [
+      [ "field:genehmigung.recht" => "==fsr" ],
+    ],
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
   "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],

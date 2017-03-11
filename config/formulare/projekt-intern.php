@@ -101,10 +101,10 @@ $config = [
       [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
       [ "hasPermission" => [ "canRead", "isCreateable" ] ],
     ],
-    # Genehmigung durch StuRa
     "canEditState" => [
       [ "group" => "ref-finanzen", ],
     ],
+    # Genehmigung durch StuRa
     "canStateChange.from.draft.to.need-stura" => [
       [ "hasPermission" => "canEditState" ],
     ],
@@ -112,6 +112,9 @@ $config = [
       [ "hasPermission" => "canEditState" ],
     ],
     # Genehmigung durch HV
+    "canStateChange.from.need-stura.to.ok-by-hv" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
     "canStateChange.from.draft.to.ok-by-hv" => [
       [ "hasPermission" => "canEditState" ],
     ],
@@ -159,6 +162,15 @@ $config = [
     ],
     "canStateChange.from.done-hv.to.terminated" => [
       [ "hasPermission" => "canTerminate" ],
+    ],
+    "canUnterminate" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.terminted.to.ok-by-stura" => [
+      [ "hasPermission" => [ "canTerminate", "isBeschlussStuRa" ] ],
+    ],
+    "canStateChange.from.terminated.to.done-hv" => [
+      [ "hasPermission" => [ "canTerminate", "isBeschlussHV" ] ],
     ],
   ],
   "newStateActions" => [

@@ -184,6 +184,12 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
       if (!hasPermission($form, $antrag, $permName, false))
         return false;
     }
+  } else if ($i == "passValidation") {
+    if (!is_array($c)) $c = [$c];
+    foreach ($c as $validateName) {
+      if (!isValid($antrag["id"], $validateName))
+        return false;
+    }
   } else if ($i == "hasCategory") {
     if (!is_array($c)) $c = [$c];
     foreach ($c as $permName) {
