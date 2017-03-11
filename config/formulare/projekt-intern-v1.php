@@ -25,6 +25,7 @@ $config = [
   "citeFieldsInMailIfNotEmpty" => [ "genehmigung.hinweis" => "Auflagen", "genehmigung.modified" => "Genehmigtes Projekt weicht vom Antrag ab"],
   "validate" => [
     "checkSturaBeschluss" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:stura" ],
       [ "id" => "genehmigung.recht.stura.beschluss", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.stura.datum", "value" => "is:notEmpty" ],
     ],
@@ -34,6 +35,7 @@ $config = [
     "checkGremiumBeschlussHV" => [
       [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht", "value" => "equals:fsr" ],
     ],
   ],
 ];

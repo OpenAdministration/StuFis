@@ -6,6 +6,8 @@ $classTitle = isset($classConfig["title"]) ? $classConfig["title"] : $form["type
 $revConfig = $form["config"];
 $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $form["revision"];
 
+$targetRead = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."";
+
 if (isset($antrag))
   $h = "[{$antrag["id"]}] {$classTitle}";
 else
@@ -15,7 +17,7 @@ else
 <nav class="navbar navbar-default no-print">
   <div class="container-fluid">
     <div class="navbar-header">
-      <a class="navbar-brand" href="#"><?php echo htmlspecialchars($h); ?></a>
+      <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
     </div>
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
