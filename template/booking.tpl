@@ -6,12 +6,13 @@ Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugeh
   <input type="hidden" name="action" value="booking">
   <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
 
+
 <table>
 <thead><tr><th class="text-center col-xs-6">Zahlungen</th><th class="text-center col-xs-6">Zahlungsgründe</th></tr></thead>
 <tbody>
 <tr><td valign="top">
 
- <div>Ausgewählte Summe: <span class="checkbox-summing-output"></span> €</div>
+ <div>Ausgewählte Summe: <span class="checkbox-summing-output">0,00</span> €</div>
 
  <table class="table table-striped checkbox-summing">
  <thead><tr><th></th><th class="col-xs-2">Betrag</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
@@ -50,7 +51,7 @@ foreach ($alZahlung as $a) {
 
 </td><td valign="top">
 
- <div>Ausgewählte Summe: <span class="checkbox-summing-output"></span> €</div>
+ <div>Ausgewählte Summe: <span class="checkbox-summing-output">0,00</span> €</div>
  
  <table class="table table-striped checkbox-summing">
  <thead><tr><th></th><th class="col-xs-2">Betrag</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
@@ -90,7 +91,19 @@ foreach ($alGrund as $a) {
 </tbody>
 </table>
 
-<input type="submit" name="absenden" value="Buchungen zuordnen" class="btn btn-primary pull-right">
+
+
+<nav class="navbar navbar-default navbar-fixed-bottom"
+<?php
+global $DEV;
+ if ($DEV)
+   echo " style=\"background-color:darkred;\"";
+?>
+ role="navigation">
+  <div class="container">
+    <input type="submit" name="absenden" value="ausgewählte Buchungen zuordnen" class="btn btn-primary navbar-right navbar-btn">
+  </div><!-- /.container -->
+</nav>
 
 </form>
 
