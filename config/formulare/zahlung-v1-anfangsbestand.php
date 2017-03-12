@@ -8,6 +8,9 @@ $config = [
     "isCreateable" => true,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
+  "validate" => [
+    "checkSum" => true,
+  ],
 ];
 
 $layout = [

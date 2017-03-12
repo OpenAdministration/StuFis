@@ -7,6 +7,14 @@ $config = [
     "isCreateable" => false,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
+  "validate" => [
+    "checkSum" => [
+      [ "sum" => "expr: %ausgaben - %einnahmen + %einnahmen.beleg - %ausgaben.beleg",
+        "maxValue" => 0.00,
+        "minValue" => 0.00,
+      ],
+    ],
+  ],
 ];
 
 $layout = [
