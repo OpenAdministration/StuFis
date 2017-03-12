@@ -1392,13 +1392,16 @@ switch($_REQUEST["tab"]) {
   break;
   case "booking":
     requireGroup($HIBISCUSGROUP);
-    $alGrund = dbFetchAll("antrag", [ "type" => "auslagenerstattung", "state" => "ok" ] );
+    $alGrund = dbFetchAll("antrag", [ ] );
     foreach(array_keys($alGrund) as $i) {
-      $antrag = $alGrund[$i];
+      $antrag = $alGrund[$i]; unset($alGrund[$i]);
       $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
       $antrag["_inhalt"] = $inhalt;
-      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
       $form = getForm($antrag["type"], $antrag["revision"]);
+
+      if (!hasCategory($form, $antrag, "_need_booking_payment")) continue;
+
+      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
       ob_start();
       $success = renderFormImpl($form, $ctrl);
       ob_end_clean();
@@ -1422,13 +1425,16 @@ switch($_REQUEST["tab"]) {
       $antrag["_form"] = $form;
       $alGrund[$i] = $antrag;
     }
-    $alZahlung = dbFetchAll("antrag", [ "type" => "zahlung", "state" => "payed" ] );
+    $alZahlung = dbFetchAll("antrag", [ ] );
     foreach(array_keys($alZahlung) as $i) {
-      $antrag = $alZahlung[$i];
+      $antrag = $alZahlung[$i]; unset($alZahlung[$i]);
       $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
       $antrag["_inhalt"] = $inhalt;
-      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
       $form = getForm($antrag["type"], $antrag["revision"]);
+
+      if (!hasCategory($form, $antrag, "_need_booking_reason")) continue;
+
+      $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
       ob_start();
       $success = renderFormImpl($form, $ctrl);
       ob_end_clean();
@@ -1466,7 +1472,20 @@ switch($_REQUEST["tab"]) {
     require "../template/booking.tpl";
   break;
   case "hibiscus.sct":
-    # FIXME offene Zahlungen ermitteln
+    $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
+    $antraege = [];
+    foreach ($tmp as $t) {
+      $form = getForm($t["type"],$t["revision"]);
+      if (false === $form) continue;
+      $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
+      if (!hasPermission($form, $t, "canRead")) continue;
+      if (!hasCategory($form, $t, "")) continue;
+      $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
+      foreach (array_keys($form["_categories"]) as $cat) {
+        if (!hasCategory($form, $t, $cat)) continue;
+        $antraege[$cat][$t["type"]][$t["revision"]][$t["id"]] = $t;
+      }
+    }
     require "../template/hibiscus.sct.tpl";
   break;
   default:

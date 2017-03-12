@@ -11,6 +11,9 @@ $config = [
   "validate" => [
     "checkSum" => true,
   ],
+  "categories" => [
+    "_variable_booking_reason" => false,
+  ],
 ];
 
 $layout = [

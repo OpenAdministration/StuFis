@@ -23,6 +23,13 @@ $config = [
     "need-payment" => [
       [ "state" => "ok", "group" => "ref-finanzen" ],
     ],
+    "_export_sct" => [
+      [ "state" => "ok", "group" => "ref-finanzen" ],
+    ],
+    "_need_booking_payment" => [
+      [ "state" => "ok", "group" => "ref-finanzen" ],
+      [ "state" => "instructed", "group" => "ref-finanzen" ],
+    ],
     "finished" => [
       [ "state" => "instructed" ],
       [ "state" => "payed" ],

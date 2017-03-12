@@ -13,7 +13,10 @@ $config = [
   "createState" => "payed",
   "categories" => [
     "need-booking" => [
-       [ "state" => "payed", "group" => "ref-finanzen" ],
+       [ "state" => "payed", "group" => "ref-finanzen", "hasCategory" => "_variable_booking_reason" ],
+    ],
+    "_need_booking_reason" => [
+       [ "state" => "payed", "group" => "ref-finanzen", "hasCategory" => "_variable_booking_reason" ],
     ],
   ],
   "validate" => [

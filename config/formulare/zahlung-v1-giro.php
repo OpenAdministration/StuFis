@@ -18,6 +18,9 @@ $config = [
       ],
     ],
   ],
+  "categories" => [
+    "_variable_booking_reason" => true,
+  ],
 ];
 
 $layout = [
