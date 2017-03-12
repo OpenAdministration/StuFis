@@ -1093,7 +1093,7 @@ if (isset($_REQUEST["action"])) {
             $rowGeldFieldName = "zahlung.grund.einnahmen[{$rowNumber}]";
           }
           $inhalt = [ "fieldname" => $rowGeldFieldName, "contenttype" => "money", "antrag_id" => $zId ];
-          $inhalt["value"] = convertUserValueToDBValue($value, $inhalt["contenttype"]);
+          $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
           $ret0 = dbInsert("inhalt", $inhalt);
           if ($ret0 === false) $ret = false;
 
