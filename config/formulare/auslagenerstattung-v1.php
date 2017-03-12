@@ -28,6 +28,36 @@ $config = [
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.konto" ] ],
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
   ],
+  "validate" => [
+    "checkRichtigkeit" => [
+      [ "id" => "genehmigung.sachlicheRichtigkeit", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.rechnerischeRichtigkeit", "value" => "is:notEmpty" ],
+    ],
+    "checkRechtsgrundlage" => [
+      [ "id" => "genehmigung.recht", "value" => "is:notEmpty" ],
+      [ "or" => [
+          [ "id" => "genehmigung.recht", "value" => "notEquals:stura" ],
+          [ "doValidate" => "checkBeschlussStura" ],
+        ]
+      ],
+      [ "or" => [
+          [ "id" => "genehmigung.recht", "value" => "notEquals:fsr" ],
+          [ "doValidate" => "checkBeschlussHV" ],
+        ]
+      ],
+    ],
+    "checkBeschlussStura" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:stura" ],
+      [ "id" => "genehmigung.recht.stura.beschluss", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.stura.datum", "value" => "is:notEmpty" ],
+    ],
+    "checkBeschlussHV" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:fsr" ],
+      [ "id" => "genehmigung.recht.int.sturabeschluss", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
+      [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
+    ],
+  ],
 ];
 
 $layout = [

@@ -452,6 +452,18 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
       return false;
     }
   }
+  if (isset($p["or"])) { # it sufficies if any of these match
+    $found = 0;
+    foreach ($p["or"] as $c) {
+      $ret = checkValidLine($c, $antrag, $ctrl, $form, $msgs);
+      if ($ret === true) {
+        $found++;
+        break;
+      }
+    }
+    if ($found == 0)
+      return false;
+  }
   return true;
 }
 
@@ -523,6 +535,9 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
       break;
       case "equals":
         if (((string) $inhalt["value"]) != $remainder) return false;
+      break;
+      case "notEquals":
+        if (((string) $inhalt["value"]) == $remainder) return false;
       break;
       default:
         die("not implemented validation: value \"$prefix\" \"$remainer\"");

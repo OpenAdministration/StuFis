@@ -1,8 +1,5 @@
 <?php
 
-# FIXME: Status zwischen "Anzahlung angewiesen" und "Gezahlt und verbucht" (aka Zahlung auf Kontoauszug erledigt) unterscheiden
-# FIXME: Wenn in lezterem Status dann validateInput mit Summe Einnahmen = Summe Einnahmen.Zahlung analog Ausgaben
-
 $config = [
   "title" => "Auslagenerstattung",
   "shortTitle" => "Auslagenerstattung",
@@ -31,14 +28,25 @@ $config = [
   ],
   "validate" => [
     "postEdit" => [
+      # richtige Summen bezahlt
       [ "state" => "payed", "doValidate" => "checkZahlung", ], # hier sollten die Beträge stimmen
 #      [ "state" => "ok", "doValidate" => "checkZahlung", ], # hier kann es noch über- oder unterzahlt sein
+      # richtige Formularversion aka Haushaltsjahr
       [ "doValidate" => "checkKostenstellenplan", ],
       [ "doValidate" => "checkHaushaltsplan", ],
+      # sachliche und rechnerische Richtigkeit (Unterschrift)
+      [ "state" => "ok", "doValidate" => "checkRichtigkeit", ],
+      [ "state" => "instructed", "doValidate" => "checkRichtigkeit", ],
+      [ "state" => "payed", "doValidate" => "checkRichtigkeit", ],
+      # Rechtsgrundlage ausgewählt
+      [ "state" => "ok", "doValidate" => "checkRechtsgrundlage", ],
+      [ "state" => "instructed", "doValidate" => "checkRechtsgrundlage", ],
+      [ "state" => "payed", "doValidate" => "checkRechtsgrundlage", ],
     ],
     "checkZahlung" => [
       [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung + %einnahmen.beleg - %ausgaben.beleg",
         "maxValue" => 0.00,
+        "minValue" => 0.00,
       ],
     ],
     "checkKostenstellenplan" => [
@@ -55,8 +63,6 @@ $config = [
        ],
      ],
     ],
-# FIXME check rechnerische und sachliche Richtigkeit if state ok or later
-# FIXME check rechtsgrundlage gesetzt
   ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
