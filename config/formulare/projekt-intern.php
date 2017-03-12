@@ -30,6 +30,8 @@ $config = [
       [ "state" => "ok-by-hv", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "done-hv", "doValidate" => "checkRechtsgrundlage", ],
 
+      [ "state" => "ok-by-stura", "doValidate" => "checkSturaBeschluss", ],
+
       [ "state" => "done-hv", "doValidate" => "checkSturaBeschlussHV", ],
       [ "state" => "done-hv", "doValidate" => "checkGremiumBeschlussHV", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkGremiumBeschlussHV", ],
