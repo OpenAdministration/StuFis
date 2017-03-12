@@ -1125,6 +1125,8 @@ function renderFormItemRadio($layout,$ctrl) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
+  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:fullname") {
+    $value = getUserFullName();
   } elseif (!$noForm && isset($layout["prefill"]) && substr($layout["prefill"],0,6) == "value:") {
     $value = substr($layout["prefill"],6);
   }
@@ -1288,6 +1290,8 @@ function renderFormItemText($layout, $ctrl) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
     $value = getUserMail();
+  } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:fullname") {
+    $value = getUserFullName();
   }
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
 

@@ -310,6 +310,9 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
        case "user:mail":
          $value = getUserMail();
        break;
+       case "user:fullname":
+         $value = getUserFullName();
+       break;
        case "otherForm":
          $fieldValue = false;
          $fieldName = false;
@@ -1399,6 +1402,7 @@ switch($_REQUEST["tab"]) {
       $antrag["_inhalt"] = $inhalt;
       $form = getForm($antrag["type"], $antrag["revision"]);
 
+      if (!hasPermission($form, $antrag, "canRead")) continue;
       if (!hasCategory($form, $antrag, "_need_booking_payment")) continue;
 
       $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
@@ -1432,6 +1436,7 @@ switch($_REQUEST["tab"]) {
       $antrag["_inhalt"] = $inhalt;
       $form = getForm($antrag["type"], $antrag["revision"]);
 
+      if (!hasPermission($form, $antrag, "canRead")) continue;
       if (!hasCategory($form, $antrag, "_need_booking_reason")) continue;
 
       $ctrl = ["_values" => $antrag, "render" => [ "no-form"] ];
@@ -1472,19 +1477,48 @@ switch($_REQUEST["tab"]) {
     require "../template/booking.tpl";
   break;
   case "hibiscus.sct":
-    $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
+    $tmp = dbFetchAll("antrag", [], ["id" => false]);
     $antraege = [];
     foreach ($tmp as $t) {
       $form = getForm($t["type"],$t["revision"]);
       if (false === $form) continue;
       $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
+
       if (!hasPermission($form, $t, "canRead")) continue;
-      if (!hasCategory($form, $t, "")) continue;
-      $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
-      foreach (array_keys($form["_categories"]) as $cat) {
-        if (!hasCategory($form, $t, $cat)) continue;
-        $antraege[$cat][$t["type"]][$t["revision"]][$t["id"]] = $t;
+      if (!hasCategory($form, $t, "_export_sct")) continue;
+
+      $ctrl = ["_values" => $t, "render" => [ "no-form"] ];
+      ob_start();
+      $success = renderFormImpl($form, $ctrl);
+      ob_end_clean();
+
+      $value = 0.00;
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
+        $value += $ctrl["_render"]->addToSumValue["ausgaben"];
       }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen"])) {
+        $value -= $ctrl["_render"]->addToSumValue["einnahmen"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben.zahlung"])) {
+        $value -= $ctrl["_render"]->addToSumValue["ausgaben.beleg"];
+      }
+      if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.zahlung"])) {
+        $value += $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
+      }
+
+      if ($value <= 0.0) continue; # keine Überweisung notwendig hier
+
+      $destIBAN = getFormValueInt("iban", null, $t["_inhalt"], false);
+      $destEmpfaenger = getFormValueInt("antragsteller.name", null, $t["_inhalt"], false);
+      $destEmpfaengerMail = getFormValueInt("antragsteller.email", null, $t["_inhalt"], false);
+
+      $t["_value"] = $value;
+      $t["_iban"] = $destIBAN;
+      $t["_empfname"] = $destEmpfaenger;
+      $t["_ctrl"] = $ctrl;
+      $t["_form"] = $form;
+
+      $antraege[$t["id"]] = $t;
     }
     require "../template/hibiscus.sct.tpl";
   break;
