@@ -192,6 +192,9 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
   if ($ret === false)
     return false;
 
+  if (!isValid($antrag["id"], "postEdit", $msgs))
+    return false;
+
   $antrag = getAntrag($antrag["id"]);
   $ret = doNewStateActions($form, $transition, $antrag, $newState, $msgs, $filesCreated, $filesRemoved, $target);
   if ($ret === false)
@@ -382,6 +385,9 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     if (false === writeState($oldAntragNewState, $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $target))
       return false;
   }
+
+  if (!isValid($antrag_id, "postEdit", $msgs))
+    return false;
 
   $newAntrag = getAntrag($antrag_id);
   $ret = doNewStateActions($form, "create.$createState", $newAntrag, $createState, $msgs, $filesCreated, $filesRemoved, $target);
@@ -777,6 +783,8 @@ if (isset($_REQUEST["action"])) {
       }
 
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
+      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+        $ret = false;
       if ($ret) {
         $antrag = getAntrag($antrag_id); // report new version to user
         $ret = doNewStateActions($form, "create.$createState", $antrag, $createState, $msgs, $filesCreated, $filesRemoved, $target);
@@ -789,8 +797,6 @@ if (isset($_REQUEST["action"])) {
         $ret = writeState($newState, $antrag, $form, $msgs, $filesCreated, $filesRemoved, $target);
         if ($ret === false) $msgs[] = "Mit Status verknüpfte Aktion fehlgeschlagen.";
       }
-      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
-        $ret = false;
 
       if ($ret)
         $ret = dbCommit();

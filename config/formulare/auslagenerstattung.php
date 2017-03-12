@@ -94,6 +94,8 @@ $config = [
     "canStateChange.from.draft.to.ok" => [
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.ok.to.draft" => [
+    ],
     "canStateChange.from.ok.to.instructed" => [
       [ "group" => "ref-finanzen" ],
     ],
