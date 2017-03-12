@@ -1,0 +1,93 @@
+STURA FINANZ UI
+===============
+
+Dieses System - auch als Aktenordner++ bezeichnet - speichert Formulare (auch als Anträge bezeichnet).
+
+Konzeptuelles
+-------------
+
+Jedes Formular besteht aus Feldern, welche durch eine ID eindeutig identifiziert werden. Ihr Inhalt wird mit Hilfe von Layout-Informationen gerendert.
+Ein Formular hat außerdem einen Zustand, welcher den Bearbeitungsstatus kennzeichnet. Gleichartige Formulare werden mittels Typenbezeichnung zusammengefasst und einheitlich dargestellt.
+
+Zu jedem Formular gehören daher:
+
+An allgemeinen Metadaten:
+
+ 0. ein Layout
+ 1. eine Definition von Berechtigungen
+ 2. eine Definition von Kategoriezuordnungen
+ 3. eine Definition für die Validierung
+ 4. Informationen für die Benachrichtigung (eMail)
+ 5. mögliche Zustände
+ 6. weitere Metadaten
+
+An konkreten Daten:
+ 0. ein Zustand
+ 1. die Belegung der Formularfelder
+ 2. ein Verweis auf die Metadaten
+
+Jedes Formular ist einer sog. "Klasse" von Formularen (beispw. Auslagenerstattung) und einer Formularrevision zugeordnet.
+Damit soll erreicht werden, dass nacheinander neue Formularrevisionen eingeführt werden können, die Darstellung der alten Formulare aber unverändert erfolgt.
+
+Die Metadaten werden in Klasse / Revision gespeichert, die konkreten Daten in der Datenbank.
+
+Die Formularelemente
+--------------------
+
+0. Elemente ohne Inhalt
+   Beispielsweise Informationstexte für den Formularersteller oder -leser
+ 
+1. Einfache Elemente
+   Diese speichern einen Wert, der ggf. noch konvertiert oder besonders dargestellt wird.
+
+2. Container
+   Diese beinhalten mehrere Elemente und können die enthaltenen Elemente außerdem ggf. jeweils mehrfach replizieren (beispw. dynamische Tabelle).
+
+3. Verweise
+   Verweiselemente verweisen auf eine Tabellenzeile, typ. in einer anderen Tabelle.
+   Inverse-Verweiselemente zeigen an, welche Verweiselemente auf die aktuelle Tabellenzeile oder das aktuelle Dokument verweisen
+   OtherForm-Verweise verweisen auf ein anderes Formular.
+
+   Dabei ist es auch möglich, auf eine Tabellenzeile in einem anderen Formular zu verweisen oder die Verweise anhand von Eigenschaften des zug. Verweiselementes zu filtern.
+  
+Besondere Funktionen
+--------------------
+
+0. Summen und Berechnungen
+
+   Bestimmte Formularelemente können ihren Wert zu seiner Summe addieren.
+   Tabellen können die jeweiligen Teilsummen über die Elemente einer Zeile ermitteln sowie Spaltensummen bilden und andere Tabellen-Summen in der Fußzeile anzeigen.
+   Inverse Verweise können Summen aus den Tabellenzeilen oder Formularen mit dem Verweis ermitteln.
+   Bestimmte Elemente ohne Inhalt können Summen oder Berechnungsergebnisse darstellen.
+
+1. Abweichende Editier/Leseansicht
+
+   Formularelemente können abhängig vom Inhalt eines anderen Formularelementes auf read-only gesetzt werden. (nur Browserbasiert implementiert)
+
+   Formularelemente können beim editieren ausgeblendet oder mit einer anderen Größe angezeigt werden.
+
+   Formularelemente können ausklappbar gestaltet werden.
+
+   Tabellenspalten können dem Nutzer zum Ausblenden angeboten werden.
+
+2. Datenübernahme
+
+   Wird ein Verweis-Elemente ausgewählt, können ggf. weitere Daten aus dem anderen Formular verwendet werden, um das aktuelle Elemente vorauszufüllen.
+
+   Wird ein neues Dokument erzeugt, können Daten aus dem alten Dokument übernommen werden - beispw. auch bei der Erstellung von Auslagenerstattungen anhang von Projektgenehmigungen.
+
+Aktionen bei Zustandsübergängen
+-------------------------------
+
+Benachrichtigungen sind an Zustandsübergänge gekoppelt. Sie können automatisch eine eMail auslösen - beispw. an das jeweilige Gremium.
+
+Außerdem kann bei einem Zustandsübergang automatisch ein weiteres Formular erzeugt werden.
+
+Buchhaltung
+-----------
+
+0. Import aus Hibiscus-Payment-Server
+1. Zuordnung von Buchungen, Tool
+   FIXME automatische Zuordnung anhand der ID
+2. Export von Überweisungen
+
