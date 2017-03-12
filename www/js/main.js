@@ -115,6 +115,13 @@ $(document).ready(function() {
   });
   $(".select-picker-container").each(function(i,e) { $(e).triggerHandler("clone-post"); });
 
+  $('[data-provide="datepicker"]').on("clone-pre.datepicker", function(evt) {
+    $(this).datepicker('destroy');
+  });
+  $('[data-provide="datepicker"]').on("clone-post.datepicker", function(evt) {
+    $(this).datepicker();
+  });
+
   $(".single-file-container").on("clone-post.single-file cloned.file", function(evt) {
     var cfg = {
       'showUpload':false, // magically appears in fileinput
