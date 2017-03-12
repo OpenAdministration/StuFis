@@ -3,6 +3,7 @@
 $catList = [
   "need-action" => "zu erledigen",
   "need-booking" => "zu buchen",
+  "need-payment" => "zu bezahlen",
   "wait-stura" => "durch StuRa beschließen",
   "report-stura" => "im StuRa berichten",
   "running-project" => "laufende Projekte",

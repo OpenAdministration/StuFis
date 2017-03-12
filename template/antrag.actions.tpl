@@ -5,6 +5,9 @@ global $HIBISCUSGROUP;
 if (!hasGroup($HIBISCUSGROUP)) return;
 
 ?>
+    <a href="<?php echo $URIBASE; ?>?tab=hibiscus.sct" class="btn btn-primary pull-right">Überweisungen exportieren</a>
+
+<span class="pull-right">&nbsp;</span>
 
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
       <input type="submit" name="absenden" value="Kontoauszug abrufen" class="btn btn-primary pull-right">

@@ -20,6 +20,9 @@ $config = [
       [ "state" => "draft", "group" => "ref-finanzen" ],
       [ "state" => "ok", "group" => "ref-finanzen" ],
     ],
+    "need-payment" => [
+      [ "state" => "ok", "group" => "ref-finanzen" ],
+    ],
     "finished" => [
       [ "state" => "instructed" ],
       [ "state" => "payed" ],

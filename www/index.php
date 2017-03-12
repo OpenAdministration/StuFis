@@ -1465,9 +1465,10 @@ switch($_REQUEST["tab"]) {
 
     require "../template/booking.tpl";
   break;
-#  case "antrag.submitted":
-#    require "../template/antrag.submitted.tpl";
-#  break;
+  case "hibiscus.sct":
+    # FIXME offene Zahlungen ermitteln
+    require "../template/hibiscus.sct.tpl";
+  break;
   default:
     echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
 }

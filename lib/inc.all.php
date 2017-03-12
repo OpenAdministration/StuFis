@@ -17,6 +17,7 @@ require_once SYSBASE.'/lib/inc.printable.php';
 require_once SYSBASE.'/lib/inc.sni.php';
 require_once SYSBASE.'/lib/inc.dokuwiki.php';
 require_once SYSBASE.'/lib/inc.hibiscus.php';
+require_once SYSBASE.'/lib/php-sepa-xml/SepaTransferFile.php';
 require_once 'XML/RPC2/Client.php';
 
 if (!extension_loaded("zip")) die("Missing ZIP support");
