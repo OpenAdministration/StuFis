@@ -7,10 +7,12 @@
  <thead><tr><th class="col-xs-2">Betrag</th><th>Empfänger</th><th>IBAN</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
  <tbody>
 <?php
+$sum = 0.00;
 
 foreach ($antraege as $a) {
   $value = $a["_value"];
   $fvalue = convertDBValueToUserValue($value, "money");
+  $sum += $value;
 
   echo "<tr>";
   echo "<td class=\"text-right\">";
@@ -53,11 +55,16 @@ foreach ($antraege as $a) {
 
  </tbody>
  <tfoot>
- <tr><td colspan="5">
+ <tr><th class="text-right">
+<?php
+  $fsum = convertDBValueToUserValue($sum, "money");
+  echo htmlspecialchars("Σ ".$fsum." €");
+?>
+ </th><th colspan="4">
 <?php
 echo count($antraege)." Überweisungen";
 ?>
- </td></tr>
+ </th></tr>
  </tfoot>
  </table>
 
