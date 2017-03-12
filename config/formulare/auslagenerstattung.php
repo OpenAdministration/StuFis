@@ -94,8 +94,6 @@ $config = [
     "canStateChange.from.draft.to.ok" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.ok.to.draft" => [
-    ],
     "canStateChange.from.ok.to.instructed" => [
       [ "group" => "ref-finanzen" ],
     ],
@@ -110,6 +108,12 @@ $config = [
     ],
     "canStateChange.from.payed.to.ok" => [
       [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.draft.to.revoked" => [
+      [ "group" => "ref-finanzen" ],
+      [ "hasPermission" => "isProjektLeitung" ],
+      [ "hasPermission" => "isEigenerAntrag" ],
+      [ "creator" => "self" ],
     ],
   ],
   "newStateActions" => [

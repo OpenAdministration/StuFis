@@ -228,6 +228,16 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
 
   $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
 
+  if ($oldAntragNewState !== false && $oldAntragNewState != "") {
+    if (false === writeState($oldAntragNewState, $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $target))
+      return false;
+    $oldAntrag = getAntrag($oldAntragId);
+    if ($oldAntrag === false) {
+      $msgs[] = "Unknown / unreadable source antrag.";
+      return false;
+    }
+  }
+
   $antrag = [];
   $antrag["type"] = $newType;
   $antrag["revision"] = $newRevision;
@@ -273,7 +283,7 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
       $foundBuildFrom &&
       isset($form["config"]["referenceField"]))
   {
-     if (!hasPermission($form, $oldAntrag, "canBeLinked")) {
+     if (!hasPermission($oldForm, $oldAntrag, "canBeLinked")) {
        $msgs[] = "Dieses Formular darf nicht verlinkt werden.";
        return false;
      }
@@ -378,11 +388,6 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
 
     $ret1 = dbInsert("anhang", $row);
     if (($ret0 === false) || ($ret1 === false))
-      return false;
-  }
-
-  if ($oldAntragNewState !== false && $oldAntragNewState != "") {
-    if (false === writeState($oldAntragNewState, $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $target))
       return false;
   }
 
