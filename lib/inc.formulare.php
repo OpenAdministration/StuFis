@@ -400,7 +400,7 @@ function isValidImpl(&$form, &$antrag, &$ctrl, &$pp, &$validateName, &$msgs) {
   if (is_array($pp)) {
     foreach($pp as $i => $p) {
       $tmp = checkValidLine($p, $antrag, $ctrl, $form, $msgs);
-#      echo "\n<!-- checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
+#      echo "\n<!-- checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i name=$validateName p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
       if ($tmp)
         continue;
       $ret = false;
@@ -426,7 +426,7 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
         $msgs[] = "{$inhalt0["fieldname"]} validation failed";
         return false;
       }
-      if ($ret === null)
+      if ($ret !== null)
         $found++;
     }
     if ($found == 0) {
@@ -454,15 +454,18 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
   }
   if (isset($p["or"])) { # it sufficies if any of these match
     $found = 0;
+    $extraMsgs = [];
     foreach ($p["or"] as $c) {
-      $ret = checkValidLine($c, $antrag, $ctrl, $form, $msgs);
+      $ret = checkValidLine($c, $antrag, $ctrl, $form, $extraMsgs);
       if ($ret === true) {
         $found++;
         break;
       }
     }
-    if ($found == 0)
+    if ($found == 0) {
+      foreach($extraMsgs as $msg) $msgs[] = $msg;
       return false;
+    }
   }
   return true;
 }

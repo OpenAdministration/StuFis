@@ -891,8 +891,10 @@ if (isset($_REQUEST["action"])) {
       }
 
       // commitTx
-      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+      if ($ret && !isValid($antrag["id"], "postEdit", $msgs)) {
+        $msgs[] = "Validation failed";
         $ret = false;
+      }
       if ($ret)
         $ret = dbCommit();
       if (!$ret) {
