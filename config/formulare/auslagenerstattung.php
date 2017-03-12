@@ -42,6 +42,14 @@ $config = [
       [ "state" => "ok", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "instructed", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "payed", "doValidate" => "checkRechtsgrundlage", ],
+      # Titel ausgewählt
+      [ "state" => "ok", "doValidate" => "checkTitel", ],
+      [ "state" => "instructed", "doValidate" => "checkTitel", ],
+      [ "state" => "payed", "doValidate" => "checkTitel", ],
+      # Derzeit nicht erzwungen: Kostenstelle ausgewählt
+#      [ "state" => "ok", "doValidate" => "checkKonto", ],
+#      [ "state" => "instructed", "doValidate" => "checkKonto", ],
+#      [ "state" => "payed", "doValidate" => "checkKonto", ],
     ],
     "checkZahlung" => [
       [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung + %einnahmen.beleg - %ausgaben.beleg",

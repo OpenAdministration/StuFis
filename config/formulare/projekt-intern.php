@@ -25,10 +25,22 @@ $config = [
   ],
   "validate" => [
     "postEdit" => [
-      [ "state" => "ok-by-stura", "doValidate" => "checkSturaBeschluss", ],
+      # passende Rechtsgrundlage ausgewählt
+      [ "state" => "ok-by-stura", "doValidate" => "checkRechtsgrundlage", ],
+      [ "state" => "ok-by-hv", "doValidate" => "checkRechtsgrundlage", ],
+      [ "state" => "done-hv", "doValidate" => "checkRechtsgrundlage", ],
+
       [ "state" => "done-hv", "doValidate" => "checkSturaBeschlussHV", ],
       [ "state" => "done-hv", "doValidate" => "checkGremiumBeschlussHV", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkGremiumBeschlussHV", ],
+      # Titel ausgewählt
+      [ "state" => "ok-by-stura", "doValidate" => "checkTitel", ],
+      [ "state" => "ok-by-hv", "doValidate" => "checkTitel", ],
+      [ "state" => "done-hv", "doValidate" => "checkTitel", ],
+      # Derzeit nicht erzwungen: Kostenstelle ausgewählt
+#      [ "state" => "ok-by-stura", "doValidate" => "checkKonto", ],
+#      [ "state" => "ok-by-hv", "doValidate" => "checkKonto", ],
+#      [ "state" => "done-hv", "doValidate" => "checkKonto", ],
     ],
   ],
   "categories" => [

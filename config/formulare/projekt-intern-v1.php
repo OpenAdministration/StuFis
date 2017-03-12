@@ -30,6 +30,9 @@ $config = [
   "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],
   "citeFieldsInMailIfNotEmpty" => [ "genehmigung.hinweis" => "Auflagen", "genehmigung.modified" => "Genehmigtes Projekt weicht vom Antrag ab"],
   "validate" => [
+    "checkRechtsgrundlage" => [
+      [ "id" => "genehmigung.recht", "value" => "is:notEmpty" ],
+    ],
     "checkSturaBeschluss" => [
       [ "id" => "genehmigung.recht", "value" => "equals:stura" ],
       [ "id" => "genehmigung.recht.stura.beschluss", "value" => "is:notEmpty" ],
@@ -42,6 +45,20 @@ $config = [
       [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht", "value" => "equals:fsr" ],
+    ],
+    "checkTitel" => [
+      [ "or" => [
+          [ "id" => "genehmigung.titel", "value" => "is:notEmpty" ],
+          [ "id" => "geld.titel", "value" => "is:notEmpty" ],
+        ]
+      ],
+    ],
+    "checkKonto" => [
+      [ "or" => [
+          [ "id" => "genehmigung.konto", "value" => "is:notEmpty" ],
+          [ "id" => "geld.konto", "value" => "is:notEmpty" ],
+        ]
+      ],
     ],
   ],
 ];

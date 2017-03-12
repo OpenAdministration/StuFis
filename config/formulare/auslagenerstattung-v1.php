@@ -29,6 +29,20 @@ $config = [
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
   ],
   "validate" => [
+    "checkTitel" => [
+      [ "or" => [
+          [ "id" => "genehmigung.titel", "value" => "is:notEmpty" ],
+          [ "id" => "geld.titel", "value" => "is:notEmpty" ],
+        ]
+      ],
+    ],
+    "checkKonto" => [
+      [ "or" => [
+          [ "id" => "genehmigung.konto", "value" => "is:notEmpty" ],
+          [ "id" => "geld.konto", "value" => "is:notEmpty" ],
+        ]
+      ],
+    ],
     "checkRichtigkeit" => [
       [ "id" => "genehmigung.sachlicheRichtigkeit", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.rechnerischeRichtigkeit", "value" => "is:notEmpty" ],
