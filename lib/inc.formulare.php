@@ -1316,7 +1316,7 @@ function renderFormItemText($layout, $ctrl) {
   }
 
   if (!$noFormMarkup && $noForm) {
-    echo "<div class=\"form-control\"";
+    echo "<div class=\"form-control-static\"";
   } elseif (!$noForm) {
     if ($isWikiUrl || $isDS) {
       $cls = ["input-group"];
