@@ -66,7 +66,7 @@ $config = [
     "need-action" => [
        [ "state" => "draft", "group" => "ref-finanzen" ],
        [ "state" => "wip", "group" => "ref-finanzen" ],
-       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ],
+#       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ], # im StuRa Tab
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
     ],
