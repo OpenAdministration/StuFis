@@ -1249,7 +1249,7 @@ function renderFormItemSignBox($layout, $ctrl) {
 
   if ($noForm) {
     if (!$noFormMarkup) {
-      echo "<div class=\"form-control signbox\">";
+      echo "<div class=\"form-control-static signbox\">";
     }
     echo $tPattern;
     if (!$noFormMarkup) {
@@ -1551,7 +1551,7 @@ function renderFormItemMoney($layout, $ctrl) {
   if ($noForm && ($noFormMarkup || $noFormCompress)) {
     echo "<div class=\"text-right visible-inline\"";
   } else if ($noForm) {
-    echo "<div class=\"form-control text-right\"";
+    echo "<div class=\"form-control-static text-right\"";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
@@ -1921,7 +1921,7 @@ function renderFormItemSelect($layout, $ctrl) {
       if ($noFormMarkup)
         echo "<div class=\"visible-inline\">";
       else
-        echo "<div class=\"form-control\">";
+        echo "<div class=\"form-control-static\">";
       echo newTemplatePattern($ctrl, htmlspecialchars($value));
       if ($value == "")
         echo "&nbsp;"; # prevent collapsing
@@ -1957,7 +1957,7 @@ function renderFormItemSelect($layout, $ctrl) {
         $ctrl["_render"]->templates[$tPattern] = $txtTr;
       };
     } else {
-      echo "<div class=\"form-control\">";
+      echo "<div class=\"form-control-static\">";
       echo "**not implemented**";
       echo "</div>";
     }
@@ -2253,9 +2253,9 @@ function renderFormItemDateRange($layout, $ctrl) {
   if ($noForm && !$noFormMarkup) {
     echo '<div class="input-daterange input-group">';
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">von</div>';
-    echo "<div class=\"form-control\">{$tPatternStart}</div>";
+    echo "<div class=\"form-control-static\">{$tPatternStart}</div>";
     echo '<div class="input-group-addon" style="background-color: transparent; border: none;">bis</div>';
-    echo "<div class=\"form-control\">{$tPatternEnd}</div>";
+    echo "<div class=\"form-control-static\">{$tPatternEnd}</div>";
     echo "</div>";
     return;
   } else if ($noForm && $noFormMarkup) {
