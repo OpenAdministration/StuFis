@@ -58,7 +58,7 @@ $config = [
   ],
   "permission" => [
     "canRead" => [
-      [ "group" => "konsul" ],
+      [ "group" => "ref-finanzen", ],
     ],
     "canEditPartiell" => [
       [ "group" => "ref-finanzen", ],

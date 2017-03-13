@@ -1594,7 +1594,7 @@ function renderFormItemTextarea($layout, $ctrl) {
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
 
   if (!$noForm && $ctrl["readonly"]) {
-    $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
+    $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
     echo "<textarea style=\"display:none;\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\">";
     echo $tPattern;
     echo '</textarea>';

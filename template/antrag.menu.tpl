@@ -11,6 +11,7 @@ $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"]).
 $targetEditPartiell = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/editPartiell";
 $targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 $targetExport = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/export";
+$targetExportBank = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/exportBank";
 
 if (!hasPermission($form, $antrag, "canEdit"))
   $targetEdit = false;
@@ -22,6 +23,9 @@ if (!hasPermission($form, $antrag, "canEditPartiell"))
 
 $canBeCloned = hasPermission($form, $antrag, "canBeCloned", false);
 $canBeLinked = hasPermission($form, $antrag, "canBeLinked", false);
+
+if (!hasCategory($form, $antrag, "_export_bank"))
+  $targetExportBank = false;
 
 if (isset($antrag))
   $h = "[{$antrag["id"]}] {$classTitle}";
@@ -45,6 +49,9 @@ else
 <?php } ?>
         <li><a href="<?php echo htmlspecialchars($targetPrint); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li>
         <li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>
+<?php if ($targetExportBank !== false) { ?>
+        <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
+<?php } ?>
 <?php if ($canBeCloned !== false) { ?>
         <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
 <?php } ?>

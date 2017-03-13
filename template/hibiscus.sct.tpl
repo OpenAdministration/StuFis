@@ -4,7 +4,7 @@
 
 
 <table class="table table-striped">
- <thead><tr><th class="col-xs-2">Betrag</th><th>Empfänger</th><th>IBAN</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
+ <thead><tr><th>Betrag</th><th>Empfänger</th><th>IBAN</th><th>ID</th><th>Verwendungszweck</th></tr></thead>
  <tbody>
 <?php
 $sum = 0.00;
@@ -30,6 +30,8 @@ foreach ($antraege as $a) {
   echo "<td valign=\"top\">";
   echo $a["id"];
   echo "<input type=\"hidden\" name=\"ueberweisung[".$a["id"]."][eref]\" value=\"StuRa-".htmlspecialchars($a["id"])."\">";
+  echo "<input type=\"hidden\" name=\"ueberweisung[".$a["id"]."][id]\" value=\"".htmlspecialchars($a["id"])."\">";
+  echo "<input type=\"hidden\" name=\"ueberweisung[".$a["id"]."][version]\" value=\"".htmlspecialchars($a["version"])."\">";
   echo "</td>";
   $revConfig = $a["_form"]["config"];
   $classConfig = $a["_form"]["_class"];
@@ -68,7 +70,7 @@ echo count($antraege)." Überweisungen";
  </tfoot>
  </table>
 
-<input type="submit" name="absenden" value="Buchungen zuordnen" class="btn btn-primary pull-right">
+<input type="submit" name="absenden" value="Zahlungsanweisung (Überweisung) erstellen" class="btn btn-primary pull-right">
 
 </form>
 

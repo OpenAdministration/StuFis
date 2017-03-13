@@ -117,6 +117,8 @@ $config = [
     "canStateChange.from.ok.to.instructed" => [
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.instructed.to.ok" => [
+    ],
     "canStateChange.from.instructed.to.payed" => [
       [ "group" => "ref-finanzen" ],
     ],

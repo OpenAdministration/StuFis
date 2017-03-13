@@ -1157,6 +1157,161 @@ if (isset($_REQUEST["action"])) {
         $target = "$URIBASE?tab=booking";
       }
     break;
+    case "hibiscus.sct":
+      if (!isset($_REQUEST["ueberweisung"])) {
+        $forceClose = true;
+        $target = "$URIBASE?tab=hibiscus.sct";
+        $msgs[] = "Keine Zahlung übermittelt.";
+        break;
+      }
+
+      if (!dbBegin()) {
+        $msgs[] = "Cannot start DB transaction";
+        $ret = false;
+        break;
+      } else {
+        $ret = true;
+      }
+
+      $filesCreated = []; $filesRemoved = [];
+
+      $antrag = [];
+      $antrag["type"] = "zahlung-anweisung";
+      $antrag["revision"] = "v1-giro";
+      $antrag["creator"] = getUsername();
+      $antrag["creatorFullName"] = getUserFullName();
+      $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
+      $antrag["createdat"] = date("Y-m-d H:i:s");
+      $antrag["lastupdated"] = date("Y-m-d H:i:s");
+      $form = getForm($antrag["type"], $antrag["revision"]);
+      $createState = "draft";
+      if (isset($form["_class"]["createState"]))
+        $createState = $form["_class"]["createState"];
+      $antrag["state"] = $createState;
+      $antrag["stateCreator"] = getUsername();
+      if (!hasPermission($form, $antrag, "canCreate")) {
+        $forceClose = true;
+        $target = "$URIBASE?tab=hibiscus.sct";
+        $msgs[] = "Zahlungsanweisung kann nicht erstellt werden: keine Berechtigung.";
+        $ret = false;
+        break;
+      }
+      $antrag_id = dbInsert("antrag", $antrag);
+      if ($antrag_id === false) {
+        $forceClose = true;
+        $target = "$URIBASE?tab=hibiscus.sct";
+        $msgs[] = "Zahlungsanweisung kann nicht erstellt werden.";
+        $ret = false;
+        break;
+      }
+
+      $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
+      $antrag_id = (int) $antrag_id;
+
+      $rowCountFieldName =  "zahlung.table[rowCount]";
+      $rowNumber = 0;
+      $rowIdCountFieldName =  "zahlung.table[rowIdCount]";
+      $rowIdNumber = 0;
+
+      $map = [
+        "id" => [ "zahlung.beleg", "otherForm" ],
+        "betrag" => [ "zahlung.ausgaben", "money" ],
+        "empfname" => [ "zahlung.empfname", "text" ],
+        "empfiban" => [ "zahlung.empfiban", "iban" ],
+        "eref" => [ "zahlung.eref", "text" ],
+        "vzw" => [ "zahlung.verwendungszweck", "textarea" ],
+      ];
+
+      foreach ($_REQUEST["ueberweisung"] as $id => $u) {
+        $rowIdFieldName = "zahlung.table[rowId][{$rowNumber}]";
+        $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $antrag_id ];
+        $inhalt["value"] = $rowIdNumber;
+        $ret0 = dbInsert("inhalt", $inhalt);
+        if ($ret0 === false) {
+          $ret = false;
+          break 2;
+        }
+
+        foreach ($map as $reqFieldName => $dbFieldDesc) {
+          $rowFieldName = "{$dbFieldDesc[0]}[{$rowNumber}]";
+          $inhalt = [ "fieldname" => $rowFieldName, "contenttype" => $dbFieldDesc[1], "antrag_id" => $antrag_id ];
+          $value = $u[$reqFieldName];
+          if (is_array($value)) $value = implode("\n", $value);
+          $inhalt["value"] = $value;
+          $ret0 = dbInsert("inhalt", $inhalt);
+          if ($ret0 === false) {
+            $ret = false;
+            break 3;
+          }
+        }
+
+        $oldAntrag = getAntrag($id);
+        $oldForm = getForm($oldAntrag["type"], $oldAntrag["revision"]);
+        if ($oldAntrag === false) {
+          $ret = false;
+          break 2;
+        }
+        if ($u["version"] !== $oldAntrag["version"]) {
+          $msgs[] = "Die Zahlungsgründe wurden editiert.";
+          $ret = false;
+          break 2;
+        }
+        if (false === writeState("instructed", $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $altTarget)) {
+          $ret = false;
+          break 2;
+        }
+
+        $rowNumber++;
+        $rowIdNumber++;
+      }
+
+      $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowNumber ] );
+      if ($ret0 === false) { $ret = false; break; }
+
+      $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowIdNumber ] );
+      if ($ret0 === false) { $ret = false; break; }
+
+      $datum = date("Y-m-d");
+      $ret0 = dbInsert("inhalt", [ "fieldname" => "zahlung.datum", "contenttype" => "date", "value" => $datum, "antrag_id" => $antrag_id]);
+      if ($ret0 === false) { $ret = false; break; }
+
+      $ret0 = dbInsert("inhalt", [ "fieldname" => "zahlung.konto", "contenttype" => "ref", "value" => "01 01", "antrag_id" => $antrag_id]);
+      if ($ret0 === false) { $ret = false; break; }
+
+      $f = ["type" => "kontenplan"];
+      $f["state"] = "final";
+      $f["revision"] = substr($datum,0,4); // year
+      $al = dbFetchAll("antrag", $f);
+      if (count($al) != 1) die("Kontenplan nicht gefunden: ".print_r($f,true));
+      $kpId = $al[0]["id"];
+      $ret0 = dbInsert("inhalt", [ "fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
+      if ($ret0 === false) { $ret = false; break; }
+
+      if ($ret && !isValid($antrag_id, "postEdit", $msgs))
+        $ret = false;
+
+      if ($ret)
+        $ret = dbCommit();
+      if (!$ret) {
+        dbRollBack();
+        foreach ($filesCreated as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      } else {
+        // delete files from disk after successfull commit
+        foreach ($filesRemoved as $f) {
+          if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+        }
+      }
+      if ($ret) {
+        $forceClose = true;
+#        $target = "$URIBASE?tab=booking";
+      }
+
+# FIXME alter state of old antrag
+
+#      print_r($_REQUEST); die();
+    break;
     default:
       logAppend($logId, "__result", "invalid action");
       die("Aktion nicht bekannt.");
@@ -1304,6 +1459,66 @@ deleteZip:
     else
       exit;
   break;
+  case "antrag.exportBank":
+    $antrag = getAntrag();
+    $form = getForm($antrag["type"], $antrag["revision"]);
+    if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+
+    $sepa_file = new SepaTransferFile();
+    $sepa_file->messageIdentification = "StuRa-".$antrag["id"];
+    $sepa_file->initiatingPartyName = "Studierendenrat der TU Ilmenau";
+    $payment1 = $sepa_file->addPaymentInfo(array(
+      'id'                     => "Stura-{$antrag["id"]}-pymnt",
+      'debtorName'             => "Studierendenrat",
+#      'debtorAccountIBAN'      => "",
+#      'debtorAgentBIC'         => "NOTPROVIDED",
+      'debtorAccountCurrency'  => 'EUR',
+      'requestedExecutionDate' => date("Y-m-d"),
+      'BtchBookg'              => false,
+    ));
+
+    $numTx = getFormValueInt("zahlung.table[rowCount]", null, $antrag["_inhalt"], 0);
+    for ($rowNumber = 0; $rowNumber < $numTx; $rowNumber++) {
+
+      $map = [
+        "id" => [ "zahlung.beleg", "otherForm" ],
+        "betrag" => [ "zahlung.ausgaben", "money" ],
+        "empfname" => [ "zahlung.empfname", "text" ],
+        "empfiban" => [ "zahlung.empfiban", "iban" ],
+        "eref" => [ "zahlung.eref", "text" ],
+        "vzw" => [ "zahlung.verwendungszweck", "textarea" ],
+      ];
+
+      foreach ($map as $reqFieldName => $dbFieldDesc) {
+        $rowFieldName = "{$dbFieldDesc[0]}[{$rowNumber}]";
+        $$reqFieldName = getFormValueInt($rowFieldName, $dbFieldDesc[1], $antrag["_inhalt"], "");
+      }
+
+      $empfiban = str_replace(" ", "", $empfiban);
+
+      $payment1->addCreditTransfer(array(
+        'id'                    => "StuRa-{$antrag["id"]}-$rowNumber-$id",
+        'currency'              => 'EUR',
+        'amount'                => (float) $betrag,
+        'creditorBIC'           => "NOTPROVIDED",
+        'creditorName'          => sanitizeName($empfname),
+        'creditorAccountIBAN'   => $empfiban,
+        'remittanceInformation' => sanitizeName($vzw),
+      ));
+    }
+
+    $xmlout = $sepa_file->asXML();
+
+#    if (false === writeState("payed", $antrag, $form, $msgs, $filesCreated, $filesRemoved, $target))
+
+    header("Content-Type: application/force-download");
+    header('Content-Disposition: attachment; filename="' . $antrag["id"].'-sepa.xml"');
+    header('Content-Transfer-Encoding: binary');
+    echo $xmlout;
+
+    exit(0);
+
+  break;
 }
 
 require "../template/header.tpl";
@@ -1362,10 +1577,8 @@ switch($_REQUEST["tab"]) {
   case "antrag.edit":
     $antrag = getAntrag();
     $form = getForm($antrag["type"], $antrag["revision"]);
-    if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
-
-    $form = getForm($antrag["type"],$antrag["revision"]);
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+    if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.edit.tpl";
@@ -1373,10 +1586,8 @@ switch($_REQUEST["tab"]) {
   case "antrag.editPartiell":
     $antrag = getAntrag();
     $form = getForm($antrag["type"], $antrag["revision"]);
-    if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag ist nicht partiell editierbar");
-
-    $form = getForm($antrag["type"],$antrag["revision"]);
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
+    if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag ist nicht partiell editierbar");
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.editPartiell.tpl";

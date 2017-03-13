@@ -102,3 +102,7 @@ function hexEscape($string) {
   return $return;
 }
 
+function sanitizeName($name) {
+ return preg_replace(Array("#ä#","#ö#","#ü#","#Ä#","#Ö#","#Ü#","#ß#", "#[^A-Za-z0-9\+\?/\-:\(\)\.,' ]#"), Array("ae","oe","ue","Ae","Oe","Ue","sz","."), $name);
+}
+
