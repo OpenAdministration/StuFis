@@ -15,6 +15,9 @@ $config = [
     "need-booking" => [
        [ "state" => "payed", "group" => "ref-finanzen", "hasCategory" => "_variable_booking_reason" ],
     ],
+    "finished" => [
+       [ "state" => "booked", "group" => "ref-finanzen" ],
+    ],
     "_need_booking_reason" => [
        [ "state" => "payed", "group" => "ref-finanzen", "hasCategory" => "_variable_booking_reason" ],
     ],
