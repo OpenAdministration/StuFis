@@ -189,7 +189,7 @@ $config = [
     "canUnterminate" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.terminted.to.ok-by-stura" => [
+    "canStateChange.from.terminated.to.ok-by-stura" => [
       [ "hasPermission" => [ "canTerminate", "isBeschlussStuRa" ] ],
     ],
     "canStateChange.from.terminated.to.done-hv" => [
@@ -197,15 +197,16 @@ $config = [
     ],
   ],
   "newStateActions" => [
-    "create.draft"                => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.draft.to.need-stura"    => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.need-stura.to.ok-by-stura" => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
-    "from.ok-by-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
-    "from.need-stura.to.revoked" => [ [ "sendMail" => true, "attachForm" => false ] ],
-    "from.done-hv.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],
-    "from.done-hv.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "create.draft"                    => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.ok-by-hv"          => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.draft.to.need-stura"        => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.need-stura.to.ok-by-stura"  => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.need-stura.to.ok-by-hv"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.ok-by-hv.to.revoked"        => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.ok-by-stura.to.revoked"     => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.need-stura.to.revoked"      => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-hv.to.revoked"         => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-hv.to.terminated"      => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
   ],
 ];
