@@ -147,6 +147,9 @@ $config = [
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
     ],
+    "canStateChange.from.draft.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
     "canStateChange.from.ok-by-hv.to.revoked" => [
       [ "hasPermission" => "canRevoke" ],
     ],
@@ -167,6 +170,9 @@ $config = [
     ],
     "canStateChange.from.revoked.to.done-hv" => [
       [ "hasPermission" => [ "canUnrevoke", "isBeschlussHV" ] ],
+    ],
+    "canStateChange.from.revoked.to.draft" => [
+      [ "hasPermission" => [ "canUnrevoke" ] ],
     ],
     # Beendung
     "canTerminate" => [
