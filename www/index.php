@@ -791,7 +791,7 @@ if (isset($_REQUEST["action"])) {
       }
 
       if (count($filesRemoved) > 0) die("ups files removed during antrag.create");
-      if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
+      if ($ret && !isValid($antrag_id, "postEdit", $msgs))
         $ret = false;
       if ($ret) {
         $antrag = getAntrag($antrag_id); // report new version to user
