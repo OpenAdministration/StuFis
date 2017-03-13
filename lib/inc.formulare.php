@@ -2344,7 +2344,7 @@ function renderFormItemDate($layout, $ctrl) {
   if ($noForm) {
     $cls = [];
     if (!$noFormMarkup)
-      $cls[] = "form-control";
+      $cls[] = "form-control-static";
     else
       $cls[] = "visible-inline";
     echo "<div class=\"".htmlspecialchars(implode(" ", $cls))."\">";
