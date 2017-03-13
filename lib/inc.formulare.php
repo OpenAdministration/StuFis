@@ -809,7 +809,13 @@ function renderFormItem($layout,$ctrl = false) {
 
   if (isset($layout["editWidth"]) && !$noForm)
     $layout["width"] = $layout["editWidth"];
-  if (isset($layout["width"]))
+  if (isset($layout["width"]) && is_array($layout["width"])) {
+    $classes[] = "col-xs-{$layout["width"][0]}";
+    $classes[] = "col-sm-{$layout["width"][1]}";
+    $classes[] = "col-md-{$layout["width"][2]}";
+    $classes[] = "col-lg-{$layout["width"][3]}";
+  }
+  if (isset($layout["width"]) && !is_array($layout["width"]))
     $classes[] = "col-xs-{$layout["width"]}";
 
   $ctrl["id"] = $layout["id"];
@@ -1029,7 +1035,7 @@ function renderFormItemGroup($layout, $ctrl) {
       $rowTxt[] = $ctrl["_render"]->displayValue;
     }
   }
-  if (in_array("well", $layout["opts"]))
+  if (in_array("well", $layout["opts"]) || in_array("clear", $layout["opts"]))
     echo "<div class=\"clearfix\"></div></div>";
 
   $ctrl["_render"]->displayValue = implode(", ", $rowTxt);

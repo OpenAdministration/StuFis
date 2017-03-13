@@ -223,3 +223,12 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   background-color: transparent;
   font-weight: inherit;
 }
+
+.radio > span.glyphicon {
+  width: 10px;
+}
+
+.radio > span.glyphicon + label {
+  width: calc( 100% - 10px);
+}
+
