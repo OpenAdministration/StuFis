@@ -109,6 +109,7 @@ $config = [
     ],
     "canEdit" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
+      [ "state" => "need-stura", "group" => "ref-finanzen", ],
     ],
     "canBeLinked" => [
       [ "state" => "ok-by-hv", ],

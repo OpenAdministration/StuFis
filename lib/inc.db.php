@@ -2,8 +2,11 @@
 global $pdo;
 global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX;
 global $scheme;
+global $dbWriteCounter;
 
 $pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
+
+$dbWriteCounter = 0;
 
 $scheme = [];
 
@@ -174,8 +177,16 @@ function dbRollBack() {
   return $pdo->rollBack();
 }
 
+function dbGetWriteCounter() {
+  global $dbWriteCounter;
+
+  return $dbWriteCounter;
+}
+
 function dbInsert($table, $fields) {
-   global $pdo, $DB_PREFIX, $scheme;
+   global $pdo, $DB_PREFIX, $scheme, $dbWriteCounter;
+   $dbWriteCounter++;
+
    if (!isset($scheme[$table])) die("Unkown table $table");
 
    if (isset($fields["id"])) unset($fields["id"]);
@@ -192,7 +203,9 @@ function dbInsert($table, $fields) {
 }
 
 function dbUpdate($table, $filter, $fields) {
-   global $pdo, $DB_PREFIX, $scheme;
+   global $pdo, $DB_PREFIX, $scheme, $dbWriteCounter;
+   $dbWriteCounter++;
+
    if (!isset($scheme[$table])) die("Unkown table $table");
    $validFilterFields = ["id","token","antrag_id","fieldname","contenttype"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
@@ -219,7 +232,9 @@ function dbUpdate($table, $filter, $fields) {
 }
 
 function dbDelete($table, $filter) {
-   global $pdo, $DB_PREFIX, $scheme;
+   global $pdo, $DB_PREFIX, $scheme, $dbWriteCounter;
+   $dbWriteCounter++;
+
    if (!isset($scheme[$table])) die("Unkown table $table");
    $validFilterFields = ["id","token","antrag_id","fieldname"];
    $filter = array_intersect_key($filter, $scheme[$table], array_flip($validFilterFields)); # only fetch using id and url

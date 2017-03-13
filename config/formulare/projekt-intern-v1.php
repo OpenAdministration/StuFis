@@ -61,6 +61,21 @@ $config = [
       ],
     ],
   ],
+  "fillBeforeStateTransitionIfEmpty" => [
+    "ok-by-hv" => [
+      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
+    ],
+    "done-hv" => [
+      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
+    ],
+    "ok-by-stura" => [
+      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "stura" ],
+    ],
+  ],
+  "fillOnCopy" => [
+    [ "name" => "genehmigung.recht.int.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung.antrag", "projekt.org.name" ] ],
+    [ "name" => "genehmigung.recht.int.datum",   "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung.antrag", "projekt.protokoll", 'pattern' => '\d\d\d\d-\d\d-\d\d' ] ],
+  ],
 ];
 
 $layout = [];
@@ -81,19 +96,18 @@ $layout[] = [
      [ "id" => "genehmigung.recht.grp",   "title" =>"Rechtsgrundlage",        "type" => "group",    "width" => 12, "children" => [
 
        [ "id" => "genehmigung.recht.grp.0", "type" => "group",    "width" => 12, "children" => [
-         [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, "opts" => ["required"], ],
+         [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, ],
        ], ],
        [ "id" => "genehmigung.recht.grp.1", "type" => "group",    "width" => 12, "children" => [
-         [ "id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, "opts" => ["required"], ],
+         [ "id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, ],
        ], ],
        [ "id" => "genehmigung.recht.grp.2", "type" => "group",    "width" => 12, "children" => [
-         [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, "opts" => ["required"], ],
+         [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, ],
        ], ],
 
        [ "id" => "genehmigung.recht.grp.3", "type" => "group",    "width" => 12, "children" => [
          [ "id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura",
-           "width" => [12, 12, 6, 6],
-           "opts" => ["required"], ],
+           "width" => [12, 12, 6, 6],  ],
          [ "id" => "genehmigung.recht.stura.beschluss", "title" => "Beschluss-Nr", "type" => "text",
            "width" => [ 6, 6, 2, 2], ],
          [ "id" => "genehmigung.recht.stura.datum", "title" => "vom", "type" => "date",
@@ -103,8 +117,7 @@ $layout[] = [
 
        [ "id" => "genehmigung.recht.grp.4", "type" => "group",    "width" => 12, "children" => [
          [ "id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR\nMuss auf der nächsten StuRa Sitzung bekannt gemacht werden\nund erhält dann eine StuRa-Beschluss-Nr.", "type" => "radio", "value" => "fsr",
-          "width" => [12, 12, 6, 6, ],
-          "opts" => ["required"], ],
+          "width" => [12, 12, 6, 6, ], ],
          [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text",
            "width" => [ 4, 4, 2, 2, ],
            "onClickFillFrom" => "projekt.org.name"],

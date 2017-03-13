@@ -384,7 +384,7 @@ function isValid0(&$form, &$ctrl, &$antrag, $validateName, &$msgs = []) {
     return true; # nothing to violate anyway
   $pp = $form["_validate"][$validateName];
 
-  $validateId = $antragId.".".$validateName;
+  $validateId = $antrag["id"].".".$validateName;
   if ($stack === false)
     $stack = [];
   if (in_array($validateId, $stack))
@@ -452,7 +452,8 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
   }
   if (isset($p["requiredIsNotEmpty"]) && $p["requiredIsNotEmpty"] && !isset($p["id"])) { # requiredIsNotEmpty without field selector
     if (count($ctrl["_render"]->requiredButEmpty) > 0) {
-      $msgs[] = "Some required fields are empty.";
+#      $msgs[] = "Some required fields are empty.";
+      $msgs[] = "Empty but required fields: ".implode(" ", $ctrl["_render"]->requiredButEmpty);
       return false;
     }
   }
@@ -463,7 +464,8 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
       $requiredButEmpty[] = $fieldId;
     }
     if (count($requiredButEmpty) > 0) {
-      $msgs[] = "Some required fields filter by id are empty.";
+      #$msgs[] = "Some required fields filter by id are empty.";
+      $msgs[] = "Empty but required fields: ".implode(" ", $requiredButEmpty);
       return false;
     }
   }
@@ -786,6 +788,8 @@ function renderFormImpl(&$form, &$ctrl) {
     array_pop($stack);
   }
 
+  $ctrl["_render"]->requiredButEmpty = array_unique($ctrl["_render"]->requiredButEmpty);
+
   return true;
 }
 
@@ -1081,7 +1085,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   }
@@ -1167,7 +1171,7 @@ function renderFormItemRadio($layout,$ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
@@ -1223,7 +1227,7 @@ function renderFormItemCheckbox($layout,$ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   }
 
   if (!$noForm && $ctrl["readonly"]) {
@@ -1285,7 +1289,7 @@ function renderFormItemSignBox($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   }
 
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
@@ -1338,7 +1342,7 @@ function renderFormItemText($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
@@ -1529,7 +1533,7 @@ function renderFormItemMoney($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   }
@@ -1645,7 +1649,7 @@ function renderFormItemTextarea($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   } elseif (isset($layout["value"])) {
     $value = $layout["value"];
   }
@@ -1910,7 +1914,7 @@ function renderFormItemSelect($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   }
   if ($layout["type"] == "ref" && is_array($layout["references"]) && isset($layout["refValueIfEmpty"]) && $value == "" && isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"])) {
     $fvalue = getFormValueInt($layout["refValueIfEmpty"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -2103,7 +2107,12 @@ function renderFormItemSelect($layout, $ctrl) {
 
 function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "") {
   static $cache = false;
-  if ($cache === false) $cache = [];
+  static $cacheVersion = false;
+  if ($cache === false || $cacheVersion !== dbGetWriteCounter()) {
+    $cache = [];
+    $cacheVersion = dbGetWriteCounter();
+  }
+
   $renderOpts = explode(",", $renderOpts);
 
   if (isset($ctrl["render"]) && in_array("no-nesting", $ctrl["render"])) return false;
@@ -2301,9 +2310,9 @@ function renderFormItemDateRange($layout, $ctrl) {
     $valueStart = getFormValue($ctrl["name"]."[start]", $layout["type"], $ctrl["_values"]["_inhalt"], $valueStart);
     $valueEnd = getFormValue($ctrl["name"]."[end]", $layout["type"], $ctrl["_values"]["_inhalt"], $valueEnd);
     if (in_array("required", $layout["opts"]) && $valueStart == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
     if (in_array("required", $layout["opts"]) && $valueEnd == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   }
   $tPatternStart = newTemplatePattern($ctrl, htmlspecialchars($valueStart));
   $tPatternEnd =  newTemplatePattern($ctrl, htmlspecialchars($valueEnd));
@@ -2396,7 +2405,7 @@ function renderFormItemDate($layout, $ctrl) {
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
-      $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+      $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   }
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
   $ctrl["_render"]->displayValue = htmlspecialchars($value);
@@ -2496,7 +2505,7 @@ function renderFormItemTable($layout, $ctrl) {
     $rowCount = (int) getFormValue($rowCountFieldName, $layout["type"], $ctrl["_values"]["_inhalt"], $rowCount);
   }
   if (in_array("required", $layout["opts"]) && $rowCount == 0)
-    $ctrl["_render"]->requiredButEmpty = $ctrl["id"];
+    $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
   if ($noForm && $rowCount == 0) return false; //empty table
 
   $myParent = $ctrl["_render"]->currentParent;

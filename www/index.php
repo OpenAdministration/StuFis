@@ -179,6 +179,21 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
   if ($ret !== 1)
     return false;
 
+  $fillBeforeStateTransitionIfEmpty = [];
+  if (isset($form["config"]["fillBeforeStateTransitionIfEmpty"]) && isset($form["config"]["fillBeforeStateTransitionIfEmpty"][$newState]))
+    $fillBeforeStateTransitionIfEmpty = $form["config"]["fillBeforeStateTransitionIfEmpty"][$newState];
+#$msgs[] = "fillUps: ".print_r($fillBeforeStateTransitionIfEmpty,true);
+  foreach ($fillBeforeStateTransitionIfEmpty as $fillUp) {
+    $antrag = getAntrag($antrag["id"]);
+    $value = getFormValueInt($fillUp["name"], $fillUp["type"], $antrag["_inhalt"], "");
+    if ($value != "") continue;
+#$msgs[] = "insert fillUp: ".print_r($fillUp,true);
+#$msgs[] = print_r( [ "fieldname" => $fillUp["name"], "contenttype" => $fillUp["type"], "antrag_id" => $antrag["id"], "value" => $fillUp["value"] ],true );
+    $ret = dbInsert("inhalt", [ "fieldname" => $fillUp["name"], "contenttype" => $fillUp["type"], "antrag_id" => $antrag["id"], "value" => $fillUp["value"] ] );
+    if ($ret === false)
+      return false;
+  }
+
   $comment = [];
   $comment["antrag_id"] = $antrag["id"];
   $comment["creator"] = getUsername();
@@ -354,6 +369,15 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
            break;
 
          $value = $f["value"];
+
+         if (isset($rec["otherForm"]["pattern"])) {
+           $m = [];
+           if (preg_match("/{$rec["otherForm"]["pattern"]}/", $value, $m) === false) {
+             $value = "";
+           } else {
+             $value = $m[0];
+           }
+         }
 
        break;
        default:
