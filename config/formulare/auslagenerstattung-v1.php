@@ -154,6 +154,7 @@ $layout = [
    "opts" => ["with-row-number"],
    "width" => 12,
    "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
+   "renderOptRead" => [ "no-form-compress" ],
    "columns" => [
      [ "id" => "geld",
        "type" => "group", /* renderer */
@@ -225,6 +226,7 @@ $layout = [
    "printSumWidth" => 2,
    "orderBy" => [ "field:zahlung.datum", "id" ],
    "title" => "Zahlungen",
+   "renderOptRead" => [ "no-form-compress" ],
    "otherForms" => [
      ["type" => "zahlung", "referenceFormField" => "zahlung.grund.beleg",
       "addToSum" => [ "ausgaben.beleg" => [ "ausgaben.zahlung" ], "einnahmen.beleg" => [ "einnahmen.zahlung" ] ],

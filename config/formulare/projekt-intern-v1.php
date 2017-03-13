@@ -155,7 +155,7 @@ $layout[] = [
          ],
          [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], "addToSum" => ["einnahmen"]],
          [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], "addToSum" => ["ausgaben"] ],
-         [ "id" => "geld.invref.grp", "type" => "group", "width" => 12, "opts" => ["well"],
+         [ "id" => "geld.invref.grp", "type" => "group", "width" => 12, "opts" => ["well"], "renderOptRead" => [ "no-form-compress" ],
            "children" => [
              [ "id" => "geld.invref.0",      "name" => "Verwendung",                         "type" => "invref", "width" => 12, "opts" => ["with-headline","aggregate-by-otherForm"],
                "printSum" => [ "einnahmen", "ausgaben" ], "printSumWidth" => 2,

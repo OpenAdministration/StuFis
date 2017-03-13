@@ -788,6 +788,11 @@ function renderFormItem($layout,$ctrl = false) {
   if (!isset($layout["opts"]))
    $layout["opts"] = [];
 
+  $oldRenderOpts = $ctrl["render"];
+  if (in_array("no-form", $oldRenderOpts) && isset($layout["renderOptRead"])) {
+    $ctrl["render"] = array_merge($oldRenderOpts, $layout["renderOptRead"]);
+  }
+
   list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   if (!isset($ctrl["wrapper"])) {
@@ -961,6 +966,8 @@ function renderFormItem($layout,$ctrl = false) {
     else
       echo "</$wrapper>";
   }
+
+  $ctrl["render"] = $oldRenderOpts;
 
   return $isNotEmpty;
 

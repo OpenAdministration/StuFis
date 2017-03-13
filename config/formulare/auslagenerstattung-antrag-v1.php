@@ -47,6 +47,7 @@ $layout = [
    "type" => "table", /* renderer */
    "id" => "finanzauslagen",
    "opts" => ["with-row-number"],
+   "renderOptRead" => [ "no-form-compress" ],
    "width" => 12,
    "columns" => [
      [ "id" => "geld",
