@@ -25,6 +25,11 @@ $config = [
   ],
   "validate" => [
     "postEdit" => [
+      [ "state" => "ok-by-hv", "requiredIsNotEmpty" => true ],
+      [ "state" => "need-stura", "requiredIsNotEmpty" => true ],
+      [ "state" => "ok-by-stura", "requiredIsNotEmpty" => true ],
+      [ "state" => "done-hv", "requiredIsNotEmpty" => true ],
+      [ "state" => "terminated", "requiredIsNotEmpty" => true ],
       # passende Rechtsgrundlage ausgewählt
       [ "state" => "ok-by-stura", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkRechtsgrundlage", ],

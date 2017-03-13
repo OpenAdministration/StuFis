@@ -21,18 +21,6 @@ if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewStat
   $proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
 }
 
-$removeList = [];
-foreach($proposeNewState as $state) {
-  // filter out states that transit from editable to non-editable to "enforce" html5 client validation
-  $antragAfterEdit = $antrag;
-  $antragAfterEdit["state"] = $state;
-  if (!$canEdit || hasPermission($form, $antragAfterEdit, "canEdit")) continue;
-  $removeList[] = $state;
-}
-
-$newStates = array_diff($newStates, $removeList);
-$proposeNewState = array_diff($proposeNewState, $removeList);
-
 if (count($newStates) > 0) {
 
 ?>

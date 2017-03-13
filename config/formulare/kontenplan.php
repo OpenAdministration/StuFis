@@ -12,6 +12,11 @@ $config = [
       [],
     ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "final", "requiredIsNotEmpty" => true ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

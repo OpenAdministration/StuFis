@@ -24,6 +24,10 @@ $config = [
   ],
   "validate" => [
     "postEdit" => [
+      [ "state" => "payed", "requiredIsNotEmpty" => true ],
+      [ "state" => "booked", "requiredIsNotEmpty" => true ],
+      [ "state" => "canceled", "requiredIsNotEmpty" => true ],
+
       [ "state" => "payed", "doValidate" => "checkBeleg", ],
       [ "state" => "payed", "doValidate" => "checkKontenplan", ],
       [ "state" => "booked", "doValidate" => "checkBeleg", ],

@@ -17,6 +17,11 @@ $config = [
       [ "state" => "draft", "hasPermissionNoAdmin" => "isProjektLeitung" ],
     ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "new", "requiredIsNotEmpty" => true ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

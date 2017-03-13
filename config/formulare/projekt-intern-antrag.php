@@ -15,6 +15,11 @@ $config = [
        [ "state" => "draft", "hasPermission" => "isCorrectGremium" ],
     ],
   ],
+  "validate" => [
+    "postEdit" => [
+      [ "state" => "new", "requiredIsNotEmpty" => true ],
+    ],
+  ],
   "permission" => [
     /* each permission has a name and a list of sufficient conditions.
      * Each condition is an AND clause.

@@ -38,6 +38,9 @@ $config = [
   ],
   "validate" => [
     "postEdit" => [
+      [ "state" => "ok", "requiredIsNotEmpty" => true ],
+      [ "state" => "instructed", "requiredIsNotEmpty" => true ],
+      [ "state" => "payed", "requiredIsNotEmpty" => true ],
       # richtige Summen bezahlt
       [ "state" => "payed", "doValidate" => "checkZahlung", ], # hier sollten die Beträge stimmen
 #      [ "state" => "ok", "doValidate" => "checkZahlung", ], # hier kann es noch über- oder unterzahlt sein
