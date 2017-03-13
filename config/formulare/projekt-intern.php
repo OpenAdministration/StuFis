@@ -135,9 +135,6 @@ $config = [
     "canStateChange.from.ok-by-hv.to.done-hv" => [
       [ "hasPermission" => "canEditState" ],
     ],
-    "canStateChange.from.draft.to.done-hv" => [
-      [ "hasPermission" => "canEditState" ],
-    ],
     # Rücknahme
     "canRevoke" => [
       [ "creator" => "self" ],
@@ -190,7 +187,6 @@ $config = [
   "newStateActions" => [
     "create.draft"                => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.ok-by-hv"      => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.draft.to.done-hv"       => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.need-stura"    => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.need-stura.to.ok-by-stura" => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.ok-by-hv.to.revoked"    => [ [ "sendMail" => true, "attachForm" => false ] ],
