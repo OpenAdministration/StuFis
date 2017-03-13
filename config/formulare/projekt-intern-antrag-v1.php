@@ -50,6 +50,7 @@ $layout = [
    "type" => "table", /* renderer */
    "id" => "finanzgruppentbl",
    "opts" => ["with-row-number","with-headline"],
+   "renderOptRead" => [ "no-form-compress" ],
    "width" => 12,
    "columns" => [
      [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",                 "opts" => [ "required" ] ],
