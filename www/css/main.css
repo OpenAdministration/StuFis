@@ -218,3 +218,8 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   min-width: 4em;
 }
 
+.input-group.input-group-static .input-group-addon {
+  border: none;
+  background-color: transparent;
+  font-weight: inherit;
+}

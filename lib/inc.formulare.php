@@ -1536,7 +1536,9 @@ function renderFormItemMoney($layout, $ctrl) {
   } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0 && $noForm && ($noFormCompress || $noFormMarup))
     return false;
 
-  if (!($noFormMarkup || $noFormCompress) || !$noForm)
+  if (!($noFormMarkup || $noFormCompress) && $noForm)
+    echo "<div class=\"input-group input-group-static\">";
+  else if (!$noForm)
     echo "<div class=\"input-group\">";
   else
     echo "<div class=\"text-right\">";
