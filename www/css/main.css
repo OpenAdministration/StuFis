@@ -232,3 +232,7 @@ input[readonly="readonly"] ~ .dropdown-toggle .caret {
   width: calc( 100% - 10px);
 }
 
+a.disabled-option span {
+  text-decoration: line-through;
+}
+

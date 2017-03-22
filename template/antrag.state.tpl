@@ -27,8 +27,6 @@ foreach($proposeNewState as $state) {
   $removeList[] = $state;
 }
 
-$newStates = array_diff($newStates, $removeList);
-
 if (count($newStates) > 0) {
 
 ?>
@@ -55,7 +53,9 @@ if (count($newStates) > 0) {
   <?php
     foreach ($newStates as $state) {
       $txt2 = $classConfig["state"][$state][0];
-      echo "            <option value=\"".htmlspecialchars($state)."\">".htmlspecialchars($txt2)."</option>\n";
+      $cls = [];
+      if (in_array($state, $removeList)) $cls[] = "disabled-option";
+      echo "            <option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls)."\">".htmlspecialchars($txt2)."</option>\n";
     }
   ?>
             </select>
