@@ -27,11 +27,11 @@ if ($DEV)
    echo " TESTSYSTEM";
 ?>
                     </a>
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="<?php echo htmlspecialchars($logoutUrl); ?>">Logout</a></li>
-          <li><a target="_blank" href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a></li>
-        </ul>
                 </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a target="_blank" href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a></li>
+          <li><a href="<?php echo htmlspecialchars($logoutUrl); ?>">Logout</a></li>
+        </ul>
             </div>
         </nav>
 
