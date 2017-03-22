@@ -21,6 +21,14 @@ if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewStat
   $proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
 }
 
+$removeList = [];
+foreach($proposeNewState as $state) {
+  if (isValidNewState($antrag["id"], "postEdit", $state)) continue;
+  $removeList[] = $state;
+}
+
+$newStates = array_diff($newStates, $removeList);
+
 if (count($newStates) > 0) {
 
 ?>
@@ -106,7 +114,7 @@ echo htmlspecialchars($txt);
       <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
       <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
       <input type="hidden" name="state" value="<?php echo $newState; ?>"/>
-      <button type="submit" name="absenden" class="btn btn-primary btn-sm"><?php echo $txt3; ?></button>
+      <button type="submit" name="absenden" class="btn btn-primary btn-sm" <?php if (in_array($newState, $removeList)) { echo "disabled title=\"Es werden noch Angaben im Formular benötigt.\" "; } ?>><?php echo $txt3; ?></button>
     </form>
 
 <?php
