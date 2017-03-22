@@ -25,6 +25,7 @@ $config = [
     [ "name" => "genehmigung.recht.int.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.gremium" ] ],
     [ "name" => "genehmigung.recht.int.datum", "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.datum" ] ],
     [ "name" => "genehmigung.recht.int.sturabeschluss", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.sturabeschluss" ] ],
+    [ "name" => "genehmigung.recht.other.reason", "type" => "radio", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.other.reason" ] ],
     [ "name" => "genehmigung.titel", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.titel" ] ],
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.konto" ] ],
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
@@ -60,6 +61,11 @@ $config = [
           [ "doValidate" => "checkBeschlussHV" ],
         ]
       ],
+      [ "or" => [
+          [ "id" => "genehmigung.recht", "value" => "notEquals:other" ],
+          [ "doValidate" => "checkBeschlussOther" ],
+        ]
+      ],
     ],
     "checkBeschlussStura" => [
       [ "id" => "genehmigung.recht", "value" => "equals:stura" ],
@@ -71,6 +77,10 @@ $config = [
       [ "id" => "genehmigung.recht.int.sturabeschluss", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
+    ],
+    "checkBeschlussOther" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:other" ],
+      [ "id" => "genehmigung.recht.other.reason", "value" => "is:notEmpty" ],
     ],
   ],
 ];
@@ -130,6 +140,14 @@ $layout = [
          [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
            "width" => [ 4, 4, 2, 2, ], ],
        ], ],
+
+       [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [
+         [ "id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",
+           "width" => [12, 12, 6, 6],  ],
+         [ "id" => "genehmigung.recht.other.reason", "title" => "Grund", "type" => "text",
+           "width" => [ 12, 12, 6, 6], ],
+       ], ],
+
      ], ],
      [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref", "edit-skip-referencesId" ], "placeholder" => "optional",
        "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], [ "titel.einnahmen" => "Einnahmen", "titel.ausgaben" => "Ausgaben" ] ],

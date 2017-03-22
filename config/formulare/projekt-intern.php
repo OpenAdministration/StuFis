@@ -8,15 +8,17 @@ $config = [
                "need-stura" => [ "Warte auf StuRa-Beschluss", ],
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
                "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
+               "done-other" => [ "Genehmigt ohne Verkündung", ],
                "revoked" => [ "Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen", ],
                "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
              ],
   "proposeNewState" => [
-    "draft" => [ "need-stura", "ok-by-hv", "revoked", "wip" ],
-    "wip" => [ "need-stura", "ok-by-hv", "revoked", "draft" ],
+    "draft" => [ "need-stura", "ok-by-hv", "revoked", "wip", "done-other" ],
+    "wip" => [ "need-stura", "ok-by-hv", "revoked", "draft", "done-other" ],
     "ok-by-hv" => [ "done-hv" ],
     "need-stura" => [ "ok-by-stura", "revoked" ],
     "done-hv" => ["terminated"],
+    "done-other" => ["terminated"],
     "ok-by-stura" => [ "terminated" ],
   ],
   "createState" => "draft",
@@ -29,25 +31,31 @@ $config = [
       [ "state" => "need-stura", "requiredIsNotEmpty" => true ],
       [ "state" => "ok-by-stura", "requiredIsNotEmpty" => true ],
       [ "state" => "done-hv", "requiredIsNotEmpty" => true ],
+      [ "state" => "done-other", "requiredIsNotEmpty" => true ],
       [ "state" => "terminated", "requiredIsNotEmpty" => true ],
       # passende Rechtsgrundlage ausgewählt
       [ "state" => "ok-by-stura", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkRechtsgrundlage", ],
       [ "state" => "done-hv", "doValidate" => "checkRechtsgrundlage", ],
+      [ "state" => "done-other", "doValidate" => "checkRechtsgrundlage", ],
 
       [ "state" => "ok-by-stura", "doValidate" => "checkSturaBeschluss", ],
 
       [ "state" => "done-hv", "doValidate" => "checkSturaBeschlussHV", ],
       [ "state" => "done-hv", "doValidate" => "checkGremiumBeschlussHV", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkGremiumBeschlussHV", ],
+
+      [ "state" => "done-other", "doValidate" => "checkOtherBeschluss", ],
       # Titel ausgewählt
       [ "state" => "ok-by-stura", "doValidate" => "checkTitel", ],
       [ "state" => "ok-by-hv", "doValidate" => "checkTitel", ],
       [ "state" => "done-hv", "doValidate" => "checkTitel", ],
+      [ "state" => "done-other", "doValidate" => "checkTitel", ],
       # Derzeit nicht erzwungen: Kostenstelle ausgewählt
 #      [ "state" => "ok-by-stura", "doValidate" => "checkKonto", ],
 #      [ "state" => "ok-by-hv", "doValidate" => "checkKonto", ],
 #      [ "state" => "done-hv", "doValidate" => "checkKonto", ],
+#      [ "state" => "done-other", "doValidate" => "checkKonto", ],
     ],
   ],
   "categories" => [
@@ -62,11 +70,13 @@ $config = [
        [ "state" => "ok-by-hv", "notHasCategory" => "_isExpiredProject2W" ],
        [ "state" => "ok-by-stura", "notHasCategory" => "_isExpiredProject2W" ],
        [ "state" => "done-hv", "notHasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "done-other", "notHasCategory" => "_isExpiredProject2W" ],
     ],
     "expired-project" => [
        [ "state" => "ok-by-hv", "hasCategory" => "_isExpiredProject2W" ],
        [ "state" => "ok-by-stura", "hasCategory" => "_isExpiredProject2W" ],
        [ "state" => "done-hv", "hasCategory" => "_isExpiredProject2W" ],
+       [ "state" => "done-other", "hasCategory" => "_isExpiredProject2W" ],
     ],
     "need-action" => [
        [ "state" => "draft", "group" => "ref-finanzen" ],
@@ -115,6 +125,7 @@ $config = [
       [ "state" => "ok-by-hv", ],
       [ "state" => "ok-by-stura", ],
       [ "state" => "done-hv", ],
+      [ "state" => "done-other", ],
       [ "state" => "terminated", "group" => "ref-finanzen" ],
     ],
     "canCreate" => [
@@ -141,6 +152,9 @@ $config = [
     "canStateChange.from.ok-by-hv.to.done-hv" => [
       [ "hasPermission" => "canEditState" ],
     ],
+    "canStateChange.from.draft.to.done-other" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
     # Rücknahme
     "canRevoke" => [
       [ "creator" => "self" ],
@@ -159,6 +173,9 @@ $config = [
     "canStateChange.from.done-hv.to.revoked" => [
       [ "hasPermission" => "canRevoke" ],
     ],
+    "canStateChange.from.done-other.to.revoked" => [
+      [ "hasPermission" => "canRevoke" ],
+    ],
     "canUnrevoke" => [
       [ "group" => "ref-finanzen" ],
     ],
@@ -170,6 +187,9 @@ $config = [
     ],
     "canStateChange.from.revoked.to.done-hv" => [
       [ "hasPermission" => [ "canUnrevoke", "isBeschlussHV" ] ],
+    ],
+    "canStateChange.from.revoked.to.done-other" => [
+      [ "hasPermission" => [ "canUnrevoke", "isBeschlussOther" ] ],
     ],
     "canStateChange.from.revoked.to.draft" => [
       [ "hasPermission" => [ "canUnrevoke" ] ],
@@ -186,6 +206,9 @@ $config = [
     "canStateChange.from.done-hv.to.terminated" => [
       [ "hasPermission" => "canTerminate" ],
     ],
+    "canStateChange.from.done-other.to.terminated" => [
+      [ "hasPermission" => "canTerminate" ],
+    ],
     "canUnterminate" => [
       [ "group" => "ref-finanzen" ],
     ],
@@ -194,6 +217,9 @@ $config = [
     ],
     "canStateChange.from.terminated.to.done-hv" => [
       [ "hasPermission" => [ "canTerminate", "isBeschlussHV" ] ],
+    ],
+    "canStateChange.from.terminated.to.done-other" => [
+      [ "hasPermission" => [ "canTerminate", "isBeschlussOther" ] ],
     ],
   ],
   "newStateActions" => [
@@ -207,6 +233,8 @@ $config = [
     "from.need-stura.to.revoked"      => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.revoked"         => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.done-hv.to.terminated"      => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-other.to.revoked"      => [ [ "sendMail" => true, "attachForm" => false ] ],
+    "from.done-other.to.terminated"   => [ [ "sendMail" => true, "attachForm" => false ] ],
     "from.ok-by-stura.to.terminated"  => [ [ "sendMail" => true, "attachForm" => false ] ],
   ],
 ];

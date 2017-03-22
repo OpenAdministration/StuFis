@@ -25,6 +25,12 @@ $config = [
     "isBeschlussHV" => [
       [ "field:genehmigung.recht" => "==fsr" ],
     ],
+    "isBeschlussOther" => [
+      [ "field:genehmigung.recht" => "==other" ],
+      [ "field:genehmigung.recht" => "==buero" ],
+      [ "field:genehmigung.recht" => "==fahrt" ],
+      [ "field:genehmigung.recht" => "==verbrauch" ],
+    ],
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
   "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],
@@ -32,6 +38,18 @@ $config = [
   "validate" => [
     "checkRechtsgrundlage" => [
       [ "id" => "genehmigung.recht", "value" => "is:notEmpty" ],
+    ],
+    "checkOtherBeschlussOther" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:other" ],
+      [ "id" => "genehmigung.recht.other.reason", "value" => "is:notEmpty" ],
+    ],
+    "checkOtherBeschluss" => [
+      [ "or" => [
+        [ "doValidate" => "checkOtherBeschlussOther" ],
+        [ "id" => "genehmigung.recht", "value" => "equals:buero" ],
+        [ "id" => "genehmigung.recht", "value" => "equals:fahrt" ],
+        [ "id" => "genehmigung.recht", "value" => "equals:verbrauch" ],
+      ] ],
     ],
     "checkSturaBeschluss" => [
       [ "id" => "genehmigung.recht", "value" => "equals:stura" ],
@@ -127,6 +145,14 @@ $layout[] = [
          [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
            "width" => [ 4, 4, 2, 2, ], ],
        ], ],
+
+       [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [
+         [ "id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",
+           "width" => [12, 12, 6, 6],  ],
+         [ "id" => "genehmigung.recht.other.reason", "title" => "Grund", "type" => "text",
+           "width" => [ 12, 12, 6, 6], ],
+       ], ],
+
      ], ],
 
      [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref" ], "placeholder" => "optional",
