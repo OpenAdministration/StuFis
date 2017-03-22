@@ -27,6 +27,8 @@ foreach($proposeNewState as $state) {
   $removeList[] = $state;
 }
 
+$newStates = array_diff($newStates, $proposeNewState);
+
 if (count($newStates) > 0) {
 
 ?>
