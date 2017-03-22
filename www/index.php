@@ -372,7 +372,7 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
 
          if (isset($rec["otherForm"]["pattern"])) {
            $m = [];
-           if (preg_match("/{$rec["otherForm"]["pattern"]}/", $value, $m) === false) {
+           if (!preg_match("/{$rec["otherForm"]["pattern"]}/", $value, $m)) {
              $value = "";
            } else {
              $value = $m[0];
