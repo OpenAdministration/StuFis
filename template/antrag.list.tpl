@@ -17,6 +17,10 @@ $tabList = [
     "title" => "StuRa-Sitzung",
     "category" => [ "wait-stura" => "durch StuRa beschließen",
                     "report-stura" => "im StuRa berichten", ],
+    "wiki" => [
+      "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
+      "wait-stura"   => "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
+    ],
   ],
   "running-project" => [
     "title" => "laufende Projekte",
@@ -126,6 +130,7 @@ foreach ($tabHead as $tabId => $tabDesc) {
   $wikiBeschlussliste = [];
 
   foreach ($tabDesc["category"] as $catId => $caption) {
+    if (!isset($antraege[$catId])) continue;
     foreach ($antraege[$catId] as $type => $l1) {
       $classConfig = getFormClass($type);
       if ($classConfig === false) continue;
@@ -173,7 +178,8 @@ foreach ($tabHead as $tabId => $tabDesc) {
           echo "</td>";
           echo "<td>".htmlspecialchars($antrag["lastupdated"])."</td>";
           echo "</tr>\n";
-          if ($cat == "report-stura" || $cat == "wait-stura") {
+
+          if (isset($tabDesc["wiki"]) && isset($tabDesc["wiki"][$catId])) {
             $gremium = getAntragDisplayTitle($antrag, $revConfig, [ "projekt.org.name" ]);
             $gremium = trim(implode(" ", $gremium));
   
@@ -216,12 +222,8 @@ foreach ($tabHead as $tabId => $tabDesc) {
                 $betrag = $value;
               }
             }
-            if ($cat == "report-stura")
-              $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von $betrag für das Projekt \"{$caption}\" von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
-  
-            if ($cat == "wait-stura")
-              $wikiBeschlussliste[] = "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von $betrag für das Projekt \"{$caption}\" von $gremium.|J=|N=|E=|S=angenommen oder abgelehnt}}";
-            
+            $map = [ "%betrag%" => $betrag, "%caption%" => $caption, "%gremium" => $gremium ];
+            $wikiBeschlussliste[] = str_replace(array_keys($map), array_values($map), $tabDesc["wiki"][$catId]);
           }
         }
       }
