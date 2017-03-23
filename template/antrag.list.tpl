@@ -4,16 +4,18 @@ $tabList = [
   "need-action" => [
     "title" => "zu erledigen",
     "category" => [ "need-action" => null, ],
+    "showIfEmpty" => true,
   ],
   "need-booking" => [
     "title" => "zu buchen",
     "category" => [ "need-booking" => null, ],
     "otherTemplate" => "antrag.actions",
-    "showIfEmpty" => true,
+    "showIfGroup" => [ "ref-finanzen" ],
   ],
   "need-payment" => [
     "title" => "zu bezahlen",
     "category" => [ "need-payment" => null, ],
+    "showIfGroup" => [ "ref-finanzen" ],
   ],
   "stura" => [
     "title" => "StuRa-Sitzung",
@@ -23,14 +25,17 @@ $tabList = [
       "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
       "wait-stura"   => "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
     ],
+    "showIfEmptyGroup" => [ "stura", "ref-finanzen" ],
   ],
   "running-project" => [
     "title" => "laufende Projekte",
     "category" => [ "running-project" => null, ],
+    "showIfEmpty" => true,
   ],
   "expired-project" => [
     "title" => "abgelaufende Projekte",
     "category" => [ "expired-project" => null, ],
+    "showIfEmpty" => true,
   ],
   "wait-action" => [
     "title" => "wartet",
@@ -43,6 +48,7 @@ $tabList = [
   "plan" => [
     "title" => "HHP/KP",
     "category" => [ "plan" => null, ],
+    "showIfEmpty" => true,
   ],
   "all" => [
     "title" => "alle",
@@ -73,7 +79,11 @@ foreach ($tabList as $tabId => $tabDesc) {
       }
     } 
   }
-  $showIfEmpty = isset($tabDesc["showIfEmpty"]) ? $tabDesc["showIfEmpty"] : true;
+  $showIfEmpty = isset($tabDesc["showIfEmpty"]) ? $tabDesc["showIfEmpty"] : false;
+  if (isset($tabDesc["showIfEmptyGroup"])) {
+    foreach ($tabDesc["showIfEmptyGroup"] as $grp)
+      $showIfEmpty |= hasGroup($grp);
+  }
   if ($num == 0 && !$showIfEmpty) continue;
   $tabDesc["_num"] = $num;
   $tabHead[$tabId] = $tabDesc;
