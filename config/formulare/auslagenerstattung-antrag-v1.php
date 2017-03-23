@@ -78,7 +78,7 @@ $layout = [
              [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"] ],
              [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"] ],
              [ "id" => "geld.titel",        "name" => "Titel",                  "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => [ "hasFeedback", "hideable" ],
-               "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "state" => "final" ], [ "titel.einnahmen" => "Einnahmen", "titel.ausgaben" => "Ausgaben" ] ],
+               "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "state" => "final" ], [ "titel.ausgaben" => "Ausgaben", "titel.einnahmen" => "Einnahmen" ] ],
                "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
                "referencesId" => "haushaltsplan.otherForm",
              ],
