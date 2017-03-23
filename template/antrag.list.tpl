@@ -73,7 +73,7 @@ foreach ($tabList as $tabId => $tabDesc) {
       }
     } 
   }
-  $showIfEmpty = isset($tabDesc["showIfEmpty"]) && $tabDesc["showIfEmpty"];
+  $showIfEmpty = isset($tabDesc["showIfEmpty"]) ? $tabDesc["showIfEmpty"] : true;
   if ($num == 0 && !$showIfEmpty) continue;
   $tabDesc["_num"] = $num;
   $tabHead[$tabId] = $tabDesc;
