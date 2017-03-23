@@ -1564,7 +1564,6 @@ switch($_REQUEST["tab"]) {
     }
     require "../template/antrag.createpanel.tpl";
     require "../template/antrag.list.tpl";
-    require "../template/antrag.actions.tpl";
   break;
   case "antrag":
     $antrag = getAntrag();

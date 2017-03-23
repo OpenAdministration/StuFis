@@ -3,15 +3,17 @@
 $tabList = [
   "need-action" => [
     "title" => "zu erledigen",
-    "category" => [ "need-action" => null, ]
+    "category" => [ "need-action" => null, ],
   ],
   "need-booking" => [
     "title" => "zu buchen",
-    "category" => [ "need-booking" => null, ]
+    "category" => [ "need-booking" => null, ],
+    "otherTemplate" => "antrag.actions",
+    "showIfEmpty" => true,
   ],
   "need-payment" => [
     "title" => "zu bezahlen",
-    "category" => [ "need-payment" => null, ]
+    "category" => [ "need-payment" => null, ],
   ],
   "stura" => [
     "title" => "StuRa-Sitzung",
@@ -24,33 +26,33 @@ $tabList = [
   ],
   "running-project" => [
     "title" => "laufende Projekte",
-    "category" => [ "running-project" => null, ]
+    "category" => [ "running-project" => null, ],
   ],
   "expired-project" => [
     "title" => "abgelaufende Projekte",
-    "category" => [ "expired-project" => null, ]
+    "category" => [ "expired-project" => null, ],
   ],
   "wait-action" => [
     "title" => "wartet",
-    "category" => [ "wait-action" => null, ]
+    "category" => [ "wait-action" => null, ],
   ],
   "finished" => [
     "title" => "erledigt",
-    "category" => [ "finished" => null, ]
+    "category" => [ "finished" => null, ],
   ],
   "plan" => [
     "title" => "HHP/KP",
-    "category" => [ "plan" => null, ]
+    "category" => [ "plan" => null, ],
   ],
   "all" => [
     "title" => "alle",
-    "category" => [ "all" => null, ]
+    "category" => [ "all" => null, ],
   ],
 ];
 
 ?>
 
-<ul class="nav nav-tabs">
+<ul class="nav nav-tabs" role="tablist">
 <?php
 $activeTab = false;
 
@@ -71,7 +73,8 @@ foreach ($tabList as $tabId => $tabDesc) {
       }
     } 
   }
-  if ($num == 0) continue;
+  $showIfEmpty = isset($tabDesc["showIfEmpty"]) && $tabDesc["showIfEmpty"];
+  if ($num == 0 && !$showIfEmpty) continue;
   $tabDesc["_num"] = $num;
   $tabHead[$tabId] = $tabDesc;
   $usedCats = array_diff($usedCats, array_keys($tabDesc["category"]));
@@ -110,9 +113,13 @@ foreach ($tabHead as $tabId => $tabDesc) {
 
 foreach ($tabHead as $tabId => $tabDesc) {
   $title = $tabDesc["title"];
+  $num = $tabDesc["_num"];
 
-  echo '<div id="'.htmlspecialchars($tabId).'" class="tab-pane fade'.($activeTab == $tabId ? ' in active':'').'">';
+  echo '<div id="'.htmlspecialchars($tabId).'" class="tab-pane fade'.($activeTab == $tabId ? ' in active':'').'" role="tabpanel">';
 
+  if (isset($tabDesc["otherTemplate"])) {
+    include "../template/{$tabDesc["otherTemplate"]}.tpl";
+  } else if ($num > 0) {
 ?>
 
 <table class="table table-striped">
@@ -240,6 +247,8 @@ if (count($wikiBeschlussliste) > 0) {
   echo strip_tags(implode("\n", $wikiBeschlussliste));
   echo "</pre>";
 }
+
+} /* if num > 0 */
 
 ?>
 

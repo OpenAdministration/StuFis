@@ -236,3 +236,6 @@ a.disabled-option span {
   text-decoration: line-through;
 }
 
+.d-inline-block {
+  display: inline-block;
+}
