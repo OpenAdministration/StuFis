@@ -88,6 +88,7 @@ $config = [
     "wait-stura" => [
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
+       [ "state" => "need-stura", "group" => "ref-finanzen" ],
     ],
   ],
   "permission" => [
