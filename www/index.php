@@ -430,7 +430,6 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     if ($ret0 === false)
       $ret0 = copy($srcPath, $destPath);
     $filesCreated[] = $destPath;
-    $msgs[] = "Created $destPath";
 
     $ret1 = dbInsert("anhang", $row);
     if (($ret0 === false) || ($ret1 === false))
