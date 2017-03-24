@@ -219,7 +219,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
 }
 
 function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newType, $newRevision, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
-  global $URIBASE;
+  global $URIBASE,$STORAGE;
 
   $form = getForm($newType, $newRevision);
   if ($form === false) {
