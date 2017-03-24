@@ -89,6 +89,7 @@ $config = [
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
        [ "state" => "need-stura", "group" => "ref-finanzen" ],
+       [ "state" => "need-stura", "group" => "stura" ],
     ],
   ],
   "permission" => [
@@ -104,6 +105,7 @@ $config = [
       [ "hasPermission" => "isCorrectGremium" ],
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
+      [ "state" => "need-stura", "group" => "stura" ],
     ],
     "canBeCloned" => [
       [ "group" => "ref-finanzen", ],
