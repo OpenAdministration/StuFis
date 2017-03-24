@@ -12,7 +12,7 @@ $config = [
                "revoked" => [ "Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
              ],
   "proposeNewState" => [
-    "draft" => [ "ok", "revoked" ],
+    "draft" => [ "ok-hv", "ok-kv", "revoked" ],
   ],
   "createState" => "draft",
   "buildFrom" => [ [ "auslagenerstattung-antrag", "ok" ] ],
