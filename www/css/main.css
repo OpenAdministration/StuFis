@@ -239,3 +239,8 @@ a.disabled-option span {
 .d-inline-block {
   display: inline-block;
 }
+
+.select-on-click {
+  cursor:pointer;
+}
+

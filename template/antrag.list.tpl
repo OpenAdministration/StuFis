@@ -255,7 +255,7 @@ foreach ($tabHead as $tabId => $tabDesc) {
 <?php
 
 foreach ($wikiBeschlussliste as $lines) {
-  echo "<pre>";
+  echo "<pre class=\"select-on-click\">";
   echo strip_tags(implode("\n", $lines));
   echo "</pre>";
 }
