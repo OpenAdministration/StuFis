@@ -291,7 +291,7 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
 
   $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
   $antrag_id = (int) $antrag_id;
-  $msgs[] = "Antrag wurde erstellt.";
+  #$msgs[] = "Antrag wurde erstellt.";
 
   # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
   foreach($oldAntrag["_inhalt"] as $row) {
