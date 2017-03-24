@@ -13,7 +13,7 @@ foreach ($formulare as $type => $list) {
   ksort($list);
 
   $classConfig = getFormClass($type);
-  if (isset($classConfig["buildFrom"])) continue;
+  if (isset($classConfig["buildFrom"]) && !in_array("", $classConfig["buildFrom"])) continue;
 
   $title = $type;
   if (isset($classConfig["title"]))
