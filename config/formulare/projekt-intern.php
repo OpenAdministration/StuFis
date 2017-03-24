@@ -143,6 +143,13 @@ $config = [
     "canStateChange.from.need-stura.to.ok-by-stura" => [
       [ "hasPermission" => "canEditState" ],
     ],
+    # Undo
+    "canStateChange.from.need-stura.to.draft" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
+    "canStateChange.from.ok-by-stura.to.draft" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
     # Genehmigung durch HV
     "canStateChange.from.need-stura.to.ok-by-hv" => [
       [ "hasPermission" => "canEditState" ],
@@ -154,6 +161,16 @@ $config = [
       [ "hasPermission" => "canEditState" ],
     ],
     "canStateChange.from.draft.to.done-other" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
+    # Undo
+    "canStateChange.from.ok-by-hv.to.draft" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
+    "canStateChange.from.done-hv.to.draft" => [
+      [ "hasPermission" => "canEditState" ],
+    ],
+    "canStateChange.from.done-other.to.draft" => [
       [ "hasPermission" => "canEditState" ],
     ],
     # Rücknahme
