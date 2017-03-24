@@ -51,7 +51,7 @@ $config = [
       [ "hasPermission" => "canEdit" ],
     ],
   ],
-  "newStateActions" => [
+  "postNewStateActions" => [
     "from.draft.to.new" => [ [ "copy" => true, "type" => "projekt-intern", "revision" => "v1", "redirect" => true ] ],
   ],
 ];

@@ -142,12 +142,12 @@ function writeFormdataFiles($antrag_id, &$msgs, &$filesRemoved, &$filesCreated, 
 }
 
 function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
-  if (!isset($form["_class"]["newStateActions"]))
+  if (!isset($form["_class"]["postNewStateActions"]))
     return true;
-  if (!isset($form["_class"]["newStateActions"][$transition]))
+  if (!isset($form["_class"]["postNewStateActions"][$transition]))
     return true;
 
-  $actions = $form["_class"]["newStateActions"][$transition];
+  $actions = $form["_class"]["postNewStateActions"][$transition];
   foreach ($actions as $action) {
     if (isset($action["sendMail"]) && $action["sendMail"]) {
       notifyStateTransition($antrag, $newState, getUsername(), $action);
@@ -179,17 +179,36 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
   if ($ret !== 1)
     return false;
 
-  $fillBeforeStateTransitionIfEmpty = [];
-  if (isset($form["config"]["fillBeforeStateTransitionIfEmpty"]) && isset($form["config"]["fillBeforeStateTransitionIfEmpty"][$newState]))
-    $fillBeforeStateTransitionIfEmpty = $form["config"]["fillBeforeStateTransitionIfEmpty"][$newState];
-#$msgs[] = "fillUps: ".print_r($fillBeforeStateTransitionIfEmpty,true);
-  foreach ($fillBeforeStateTransitionIfEmpty as $fillUp) {
+  $preNewStateActions = [];
+  if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]))
+    $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]);
+  if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["to.{$newState}"]))
+    $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["to.{$newState}"]);
+  foreach ($preNewStateActions as $action) {
+    if (!isset($action["writeField"])) continue;
+
     $antrag = getAntrag($antrag["id"]);
-    $value = getFormValueInt($fillUp["name"], $fillUp["type"], $antrag["_inhalt"], "");
-    if ($value != "") continue;
-#$msgs[] = "insert fillUp: ".print_r($fillUp,true);
-#$msgs[] = print_r( [ "fieldname" => $fillUp["name"], "contenttype" => $fillUp["type"], "antrag_id" => $antrag["id"], "value" => $fillUp["value"] ],true );
-    $ret = dbInsert("inhalt", [ "fieldname" => $fillUp["name"], "contenttype" => $fillUp["type"], "antrag_id" => $antrag["id"], "value" => $fillUp["value"] ] );
+    $value = getFormValueInt($action["name"], $action["type"], $antrag["_inhalt"], "");
+
+    switch ($action["writeField"]) {
+      case "always":
+        break;
+      case "ifEmpty":
+        if ($value != "") continue;
+        break;
+      default:
+        die("preNewStateActions writeField={$action["writeField"]} invalid value");
+    }
+
+    if (isset($action["value"])) {
+      $newValue = $action["value"];
+    } elseif ($action["type"] == "signbox") {
+      $newValue = getUserFullName()." am ".date("Y-m-d");
+    } else
+      die("cannot autogenerate value for preNewStateActions");
+
+    dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"] ]);
+    $ret = dbInsert("inhalt", [ "fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue ] );
     if ($ret === false)
       return false;
   }

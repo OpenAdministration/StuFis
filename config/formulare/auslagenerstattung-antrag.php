@@ -60,7 +60,7 @@ $config = [
       [ "hasPermission" => [ "isProjektLeitung" ], ],
     ],
   ],
-  "newStateActions" => [
+  "postNewStateActions" => [
     "from.draft.to.new" => [ [ "copy" => true, "type" => "auslagenerstattung", "revision" => "v1", "redirect" => true ] ],
   ],
 ];

@@ -242,7 +242,7 @@ $config = [
       [ "hasPermission" => [ "canTerminate", "isBeschlussOther" ] ],
     ],
   ],
-  "newStateActions" => [
+  "postNewStateActions" => [
     "create.draft"                    => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.ok-by-hv"          => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.draft.to.need-stura"        => [ [ "sendMail" => true, "attachForm" => true ] ],

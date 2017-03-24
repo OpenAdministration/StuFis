@@ -4,6 +4,8 @@ $config = [
   "title" => "Auslagenerstattung",
   "shortTitle" => "Auslagenerstattung",
   "state" => [ "draft" => [ "Beantragt" ],
+               "ok-hv" => [ "KV fehlt", "als Haushaltsverantwortlicher genehmigen", ],
+               "ok-kv" => [ "HV fehlt", "als Kassenverantwortlicher genehmigen", ],
                "ok" => [ "Genehmigt", "genehmigen", ],
                "instructed" => [ "Angewiesen", ],
                "payed" => [ "Bezahlt (Kontoauszug)", ],
@@ -17,6 +19,8 @@ $config = [
   "categories" => [
     "need-action" => [
       [ "state" => "draft", "group" => "ref-finanzen" ],
+      [ "state" => "ok-hv", "group" => "ref-finanzen-kv" ],
+      [ "state" => "ok-kv", "group" => "ref-finanzen-hv" ],
       [ "state" => "ok", "group" => "ref-finanzen" ],
     ],
     "need-payment" => [
@@ -111,10 +115,31 @@ $config = [
     "canBeCloned" => [
       [ "group" => "ref-finanzen", ],
     ],
-    "canStateChange.from.draft.to.ok" => [
-      [ "group" => "ref-finanzen" ],
+    "canStateChange.from.draft.to.ok-hv" => [
+      [ "group" => "ref-finanzen-hv" ],
+    ],
+    "canStateChange.from.draft.to.ok-kv" => [
+      [ "group" => "ref-finanzen-kv" ],
+    ],
+    "canStateChange.from.ok-hv.to.ok" => [
+      [ "group" => "ref-finanzen-kv" ],
+    ],
+    "canStateChange.from.ok-kv.to.ok" => [
+      [ "group" => "ref-finanzen-hv" ],
     ],
     "canStateChange.from.ok.to.draft" => [
+    ],
+    "canStateChange.from.ok.to.ok-kv" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.ok.to.ok-hv" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.ok-kv.to.draft" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.ok-hv.to.draft" => [
+      [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.ok.to.instructed" => [
       [ "group" => "ref-finanzen" ],
@@ -145,8 +170,9 @@ $config = [
       [ "hasPermission" => "isProjektLeitung" ],
     ],
   ],
-  "newStateActions" => [
-    "from.draft.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+  "postNewStateActions" => [
+    "from.ok-hv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.ok-kv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.ok.to.revoked"   => [ [ "sendMail" => true, "attachForm" => true ] ],
   ],
 ];

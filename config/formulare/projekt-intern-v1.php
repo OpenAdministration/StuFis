@@ -79,15 +79,15 @@ $config = [
       ],
     ],
   ],
-  "fillBeforeStateTransitionIfEmpty" => [
-    "ok-by-hv" => [
-      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
+  "preNewStateActions" => [
+    "to.ok-by-hv" => [
+      [ "writeField" => "ifEmpty", "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
     ],
-    "done-hv" => [
-      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
+    "to.done-hv" => [
+      [ "writeField" => "ifEmpty", "name" => "genehmigung.recht",   "type" => "radio", "value" => "fsr" ],
     ],
-    "ok-by-stura" => [
-      [ "name" => "genehmigung.recht",   "type" => "radio", "value" => "stura" ],
+    "to.ok-by-stura" => [
+      [ "writeField" => "ifEmpty", "name" => "genehmigung.recht",   "type" => "radio", "value" => "stura" ],
     ],
   ],
   "fillOnCopy" => [
@@ -261,6 +261,12 @@ $layout[] = [
                "title" => "Beantragte Auslagenerstattungen",
                "otherForms" => [
                  ["type" => "auslagenerstattung", "state" => "draft", "referenceFormField" => "genehmigung", 
+                  "addToSum" => [ "einnahmen" => ["einnahmen.beantragt"], "ausgaben" => ["ausgaben.beantragt"] ],
+                 ],
+                 ["type" => "auslagenerstattung", "state" => "ok-hv", "referenceFormField" => "genehmigung", 
+                  "addToSum" => [ "einnahmen" => ["einnahmen.beantragt"], "ausgaben" => ["ausgaben.beantragt"] ],
+                 ],
+                 ["type" => "auslagenerstattung", "state" => "ok-kv", "referenceFormField" => "genehmigung", 
                   "addToSum" => [ "einnahmen" => ["einnahmen.beantragt"], "ausgaben" => ["ausgaben.beantragt"] ],
                  ],
                ],

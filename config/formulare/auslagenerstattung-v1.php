@@ -30,6 +30,19 @@ $config = [
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.konto" ] ],
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
   ],
+  "preNewStateActions" => [
+    "from.draft.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
+    "from.ok-kv.to.draft"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox", "value" => "" ] ],
+
+    "from.draft.to.ok-hv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox" ] ],
+    "from.ok-hv.to.draft"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox", "value" => "" ] ],
+
+    "from.ok-hv.to.ok"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
+    "from.ok.to.ok-hv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox", "value" => "" ] ],
+
+    "from.ok-kv.to.ok"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox" ] ],
+    "from.ok.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox", "value" => "" ] ],
+  ],
   "validate" => [
     "checkTitel" => [
       [ "or" => [
@@ -161,8 +174,8 @@ $layout = [
      ],
      [ "id" => "genehmigung.antrag",  "title" =>"Antrag auf Erstattung war",  "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback", "readonly"] ],
      [ "id" => "genehmigung.modified", "text" =>"Genehmigte Erstattung weicht vom Antrag ab", "type" => "checkbox", "width" => 12, "opts" => [ "toggleReadOnly" ], "value" => "yes" ],
-     [ "id" => "genehmigung.sachlicheRichtigkeit", "title" =>"Sachliche Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required" ]],
-     [ "id" => "genehmigung.rechnerischeRichtigkeit", "title" =>"Rechnerische Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required" ] ],
+     [ "id" => "genehmigung.sachlicheRichtigkeit", "title" =>"Sachliche Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required", "readonly" ]],
+     [ "id" => "genehmigung.rechnerischeRichtigkeit", "title" =>"Rechnerische Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required", "readonly" ] ],
    ],
  ],
 
