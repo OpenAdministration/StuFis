@@ -22,8 +22,8 @@ $tabList = [
     "category" => [ "wait-stura" => "durch StuRa beschließen",
                     "report-stura" => "im StuRa berichten", ],
     "wiki" => [
-      "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
-      "wait-stura"   => "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|J=|N=|E=|S=angenommen oder abgelehnt}}",
+      "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|L=%link%|J=|N=|E=|S=angenommen oder abgelehnt}}",
+      "wait-stura"   => "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|L=%link%|J=|N=|E=|S=angenommen oder abgelehnt}}",
     ],
     "showIfEmptyGroup" => [ "stura", "ref-finanzen" ],
   ],
@@ -239,8 +239,10 @@ foreach ($tabHead as $tabId => $tabDesc) {
                 $betrag = $value;
               }
             }
-            $map = [ "%betrag%" => $betrag, "%caption%" => $caption, "%gremium" => $gremium ];
-            $wikiBeschlussliste[] = str_replace(array_keys($map), array_values($map), $tabDesc["wiki"][$catId]);
+            $link =  $URIBASEREF.$url;
+            $map = [ "%betrag%" => trim($betrag), "%caption%" => trim($caption), "%gremium%" => trim($gremium), "%link%" => $link ];
+            $template = $tabDesc["wiki"][$catId];
+            $wikiBeschlussliste[$template][] = str_replace(array_keys($map), array_values($map), $template);
           }
         }
       }
@@ -252,9 +254,9 @@ foreach ($tabHead as $tabId => $tabDesc) {
 
 <?php
 
-if (count($wikiBeschlussliste) > 0) {
+foreach ($wikiBeschlussliste as $lines) {
   echo "<pre>";
-  echo strip_tags(implode("\n", $wikiBeschlussliste));
+  echo strip_tags(implode("\n", $lines));
   echo "</pre>";
 }
 
