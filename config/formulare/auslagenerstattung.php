@@ -11,7 +11,6 @@ $config = [
              ],
   "proposeNewState" => [
     "draft" => [ "ok", "revoked" ],
-    "ok" => [ "instructed", ],
   ],
   "createState" => "draft",
   "buildFrom" => [ [ "auslagenerstattung-antrag", "ok" ] ],
@@ -121,6 +120,7 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.instructed.to.ok" => [
+      [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.instructed.to.payed" => [
       [ "group" => "ref-finanzen" ],
