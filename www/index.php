@@ -1752,10 +1752,10 @@ switch($_REQUEST["tab"]) {
         $value -= $ctrl["_render"]->addToSumValue["einnahmen"];
       }
       if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben.zahlung"])) {
-        $value -= $ctrl["_render"]->addToSumValue["ausgaben.beleg"];
+        $value -= $ctrl["_render"]->addToSumValue["ausgaben.zahlung"];
       }
       if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.zahlung"])) {
-        $value += $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
+        $value += $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
       }
 
       if ($value <= 0.0) continue; # keine Überweisung notwendig hier

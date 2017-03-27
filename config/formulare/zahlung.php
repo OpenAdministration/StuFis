@@ -37,6 +37,21 @@ $config = [
     "checkBeleg" => [
       [ "id" => "zahlung.grund.beleg",
         "otherForm" => [
+          [ "type" => "rechnung-zuordnung", "state" => "ok", "validate" => "postEdit",
+            "fieldMatch" => [
+              [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
+            ],
+          ],
+          [ "type" => "rechnung-zuordnung", "state" => "instructed", "validate" => "postEdit",
+            "fieldMatch" => [
+              [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
+            ],
+          ],
+          [ "type" => "rechnung-zuordnung", "state" => "payed", "validate" => "postEdit",
+            "fieldMatch" => [
+              [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
+            ],
+          ],
           [ "type" => "auslagenerstattung", "state" => "ok", "validate" => "postEdit",
             "fieldMatch" => [
               [ "otherFormFieldName" => "genehmigung.jahr", "thisFormFieldName" => "zahlung.datum", "condition" => "matchYear", ],
