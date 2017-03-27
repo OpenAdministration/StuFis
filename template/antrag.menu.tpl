@@ -42,7 +42,8 @@ else
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
 <?php if ($targetEditPartiell !== false) { ?>
-        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li>
+<!--        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li> -->
+        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
 <?php } ?>
 <?php if ($targetEdit !== false) { ?>
         <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>

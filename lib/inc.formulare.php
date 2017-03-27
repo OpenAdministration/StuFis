@@ -219,6 +219,12 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
         if ($value === null) return false;
         if ($in == "data-source:own-orgs") {
           $permittedValues = $attributes["gremien"];
+        } elseif ($in == "data-source:all-orgs") {
+          $permittedValues = $attributes["alle-gremien"];
+        } elseif ($in == "data-source:own-mailinglists") {
+          $permittedValues = $attributes["mailinglists"];
+        } elseif ($in == "data-source:all-mailinglists") {
+          $permittedValues = $attributes["alle-mailinglists"];
         } else if ($in == "data-source:own-mail") {
           $permittedValues = array_values($attributes["mail"]);
           if (isset($attributes["extra-mail"]))
@@ -239,6 +245,10 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
       } elseif (substr($c,0,2) == "==") {
         $cmpVal = substr($c,2);
         if ($value != $cmpVal)
+          return false;
+      } elseif (substr($c,0,2) == "!=") {
+        $cmpVal = substr($c,2);
+        if ($value == $cmpVal)
           return false;
       } elseif (substr($c,0,1) == "<") {
         $cmpVal = substr($c,1);
@@ -1475,8 +1485,14 @@ function renderFormItemText($layout, $ctrl) {
 ?>
      <ul id="<?php echo htmlspecialchars($dsId); ?>" class="dropdown-menu" role="menu">
 <?php
-       if ($layout["data-source"] == "own-orgs") {
-         $gremien = $attributes["gremien"];
+       if (in_array($layout["data-source"], [ "own-orgs", "all-orgs" ])) {
+         if ($layout["data-source"] == "own-orgs")
+           $gremien = $attributes["gremien"];
+         elseif ($layout["data-source"] == "all-orgs")
+           $gremien = $attributes["alle-gremien"];
+         else
+           die("{$layout["data-source"]} not implemented data source");
+
          if ($value != "" && !in_array($value, $attributes["gremien"]))
            $gremien[] = $value;
          sort($gremien, SORT_STRING | SORT_FLAG_CASE);
@@ -1496,8 +1512,14 @@ function renderFormItemText($layout, $ctrl) {
            $lastNotEmpty |= $thisNotEmpty;
          }
        }
-       if ($layout["data-source"] == "own-mailinglists") {
-         $mailinglists = $attributes["mailinglists"];
+       if (in_array($layout["data-source"], [ "own-mailinglists", "all-mailinglists"] )) {
+         if ($layout["data-source"] == "own-mailinglists")
+           $mailinglists = $attributes["mailinglists"];
+         elseif ($layout["data-source"] == "all-mailinglists")
+           $mailinglists = $attributes["alle-mailinglists"];
+         else
+           die("{$layout["data-source"]} not implemented data source");
+         
          if ($value != "" && !in_array($value, $attributes["mailinglists"]))
            $mailinglists[] = $value;
          sort($mailinglists, SORT_STRING | SORT_FLAG_CASE);
@@ -1982,7 +2004,7 @@ function renderFormItemSelect($layout, $ctrl) {
   }
 
   if ($noForm) {
-    if (isset($layout["data-source"]) && in_array($layout["data-source"], [ "own-orgs", "own-mailinglists" ]) && $layout["type"] != "ref") {
+    if (isset($layout["data-source"]) && in_array($layout["data-source"], [ "own-orgs", "own-mailinglists", "all-orgs", "all-mailinglists" ]) && $layout["type"] != "ref") {
       if ($noFormMarkup)
         echo "<div class=\"visible-inline\">";
       else
@@ -2061,8 +2083,13 @@ function renderFormItemSelect($layout, $ctrl) {
   }
   echo ">";
 
-  if (isset($layout["data-source"]) && $layout["data-source"] == "own-orgs" && $layout["type"] != "ref") {
-    $gremien = $attributes["gremien"];
+  if (isset($layout["data-source"]) && in_array($layout["data-source"], ["own-orgs","all-orgs"]) && $layout["type"] != "ref") {
+    if ($layout["data-source"] == "own-orgs")
+      $gremien = $attributes["gremien"];
+    elseif ($layout["data-source"] == "all-orgs")
+      $gremien = $attributes["alle-gremien"];
+    else
+      die("{$layout["data-source"]} not implemented data source");
     if ($value != "" && !in_array($value, $attributes["gremien"]))
       $gremien[] = $value;
     sort($gremien, SORT_STRING | SORT_FLAG_CASE);
@@ -2075,7 +2102,13 @@ function renderFormItemSelect($layout, $ctrl) {
       echo "</optgroup>";
     }
   }
-  if (isset($layout["data-source"]) && $layout["data-source"] == "own-mailinglists" && $layout["type"] != "ref") {
+  if (isset($layout["data-source"]) && in_array($layout["data-source"], [ "own-mailinglists", "all-mailinglists" ]) && $layout["type"] != "ref") {
+    if ($layout["data-source"] == "own-mailinglists")
+      $mailinglists = $attributes["mailinglists"];
+    elseif ($layout["data-source"] == "all-mailinglists")
+      $mailinglists = $attributes["alle-mailinglists"];
+    else
+      die("{$layout["data-source"]} not implemented data source");
     $mailinglists = $attributes["mailinglists"];
     if ($value != "" && !in_array($value, $attributes["mailinglists"]))
       $mailinglists[] = $value;
@@ -2406,6 +2439,8 @@ function renderFormItemDate($layout, $ctrl) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
     if (in_array("required", $layout["opts"]) && $value == "")
       $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
+  } elseif (isset($layout["value"])) {
+    $value = $layout["value"];
   }
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
   $ctrl["_render"]->displayValue = htmlspecialchars($value);

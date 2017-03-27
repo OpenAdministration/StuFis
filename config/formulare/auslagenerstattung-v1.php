@@ -258,7 +258,7 @@ $layout = [
  [
    "type" => "multifile", /* renderer */
    "id" => "upload",
-   "title" => "Anhänge hochladen",
+   "title" => "Mehrere Belege hochladen (werden automatisch oben als neue Zeilen ergänzt)",
    "width" => 12,
    "destination" => "geld.file",
    "toggleReadOnly" => [ "genehmigung.modified", "yes" ],

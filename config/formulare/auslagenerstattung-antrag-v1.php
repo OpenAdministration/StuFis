@@ -97,7 +97,7 @@ $layout = [
  [
    "type" => "multifile", /* renderer */
    "id" => "upload",
-   "title" => "Belege hochladen",
+   "title" => "Mehrere Belege hochladen (werden automatisch oben als neue Zeilen ergänzt)",
    "width" => 12,
    "destination" => "geld.file",
  ],
