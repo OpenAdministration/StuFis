@@ -194,7 +194,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
       case "always":
         break;
       case "ifEmpty":
-        if ($value != "") continue;
+        if ($value != "") continue 2;
         break;
       default:
         die("preNewStateActions writeField={$action["writeField"]} invalid value");

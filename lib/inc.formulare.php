@@ -380,7 +380,7 @@ function isValid($antragId, $validateName, &$msgs = []) {
 
 function isValidNewState($antragId, $validateName, $newState) {
   $ctrl = [ "render" => [ "no-form" ] ];
-  $tmp = renderOtherAntrag($antragId, $ctrl);
+  $tmp = renderOtherAntrag($antragId, $ctrl, "", $newState);
   if ($tmp === false) return false;
 
   $antrag = $tmp["antrag"];
@@ -2140,7 +2140,7 @@ function renderFormItemSelect($layout, $ctrl) {
   echo "</div>";
 }
 
-function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "") {
+function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "", $newState = false) {
   static $cache = false;
   static $cacheVersion = false;
   if ($cache === false || $cacheVersion !== dbGetWriteCounter()) {
@@ -2158,14 +2158,57 @@ function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "") {
   sort($renderOpts);
   $renderOpts = implode(",", $renderOpts);
 
-  $key = "a:{$antragId},r:{$renderOpts}";
+  $key = "a:{$antragId},r:{$renderOpts},s:{$newState}";
 
   if (!isset($cache[$key])) {
     $otherAntrag = getAntrag($antragId);
     if ($otherAntrag === false) return false; # not readable. Ups.
     $otherForm =  getForm($otherAntrag["type"], $otherAntrag["revision"]);
-    $otherCtrl = ["_values" => $otherAntrag, "render" => explode(",", "no-form,{$renderOpts}")];
 
+    if ($newState !== false && $otherAntrag["state"] != $newState) {
+      #  we have a state transition before
+      $preNewStateActions = [];
+      if (isset($otherForm["config"]["preNewStateActions"]) && isset($otherForm["config"]["preNewStateActions"]["from.{$otherAntrag["state"]}.to.{$newState}"]))
+        $preNewStateActions = array_merge($preNewStateActions, $otherForm["config"]["preNewStateActions"]["from.{$otherAntrag["state"]}.to.{$newState}"]);
+      if (isset($otherForm["config"]["preNewStateActions"]) && isset($otherForm["config"]["preNewStateActions"]["to.{$newState}"]))
+        $preNewStateActions = array_merge($preNewStateActions, $otherForm["config"]["preNewStateActions"]["to.{$newState}"]);
+      foreach ($preNewStateActions as $action) {
+        if (!isset($action["writeField"])) continue;
+
+        $value = getFormValueInt($action["name"], $action["type"], $otherAntrag["_inhalt"], "");
+
+        switch ($action["writeField"]) {
+          case "always":
+            break;
+          case "ifEmpty":
+            if ($value != "") continue 2;
+            break;
+          default:
+            die("preNewStateActions writeField={$action["writeField"]} invalid value");
+        }
+
+        if (isset($action["value"])) {
+          $newValue = $action["value"];
+        } elseif ($action["type"] == "signbox") {
+          $newValue = getUserFullName()." am ".date("Y-m-d");
+        } else
+          die("cannot autogenerate value for preNewStateActions");
+
+        $updated = false;
+        foreach($otherAntrag["_inhalt"] as $i => $row) {
+          if ($row["fieldname"] != $action["name"])
+            continue;
+          $row["contenttype"] = $action["type"];
+          $row["value"] = $newValue;
+          $otherAntrag["_inhalt"][$i] = $row;
+          $updated = true;
+        }
+        if (!$updated)
+          $otherAntrag["_inhalt"][] = [ "fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $otherAntrag["id"], "value" => $newValue ];
+      } /* foreach $preNewStateActions */
+    } /* if newState != current state */
+
+    $otherCtrl = ["_values" => $otherAntrag, "render" => explode(",", "no-form,{$renderOpts}")];
     ob_start();
     $success = renderFormImpl($otherForm, $otherCtrl);
     ob_end_clean();
