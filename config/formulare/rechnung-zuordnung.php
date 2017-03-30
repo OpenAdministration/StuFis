@@ -20,7 +20,6 @@ $config = [
     "submitted" => [ "ok-by-hv", "ok-by-kv", "revoked" ],
     "ok-by-hv" => [ "ok", "revoked" ],
     "ok-by-kv" => [ "ok", "revoked" ],
-    "ok" => [ "instructed", ],
   ],
   "buildFrom" => [ "rechnung-beleg" ],
   "createState" => "draft",

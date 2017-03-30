@@ -13,6 +13,8 @@ $config = [
              ],
   "proposeNewState" => [
     "draft" => [ "ok-hv", "ok-kv", "revoked" ],
+    "ok-hv" => [ "ok", "revoked" ],
+    "ok-kv" => [ "ok", "revoked" ],
   ],
   "createState" => "draft",
   "buildFrom" => [ [ "auslagenerstattung-antrag", "ok" ] ],
