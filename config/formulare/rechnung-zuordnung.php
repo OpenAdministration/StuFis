@@ -22,7 +22,7 @@ $config = [
     "ok-by-kv" => [ "ok", "revoked" ],
     "ok" => [ "instructed", ],
   ],
-  "buildFrom" => [ "projekt-intern", "" ],
+  "buildFrom" => [ "rechnung-beleg" ],
   "createState" => "draft",
   "categories" => [
     "need-action" => [
