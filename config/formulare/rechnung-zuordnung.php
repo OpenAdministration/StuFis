@@ -26,7 +26,7 @@ $config = [
   "createState" => "draft",
   "categories" => [
     "need-action" => [
-      [ "hasPermission" => "isResponsible", "id" => "rechnung.leistung", "value:isEmpty" ],
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==" ], # empty field
       [ "state" => "draft", "hasPermission" => "isResponsible" ],
       [ "state" => "draft", "group" => "ref-finanzen" ],
       [ "state" => "submitted", "group" => "ref-finanzen" ],

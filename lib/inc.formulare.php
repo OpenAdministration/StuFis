@@ -266,7 +266,9 @@ echo "\n<!-- $fieldName = $value < $cmpVal -->\n";
     /* antrag === null -> muss erst noch passend ausgefüllt werden (e.g. bei canCreate) */
     /* antrag !== null aber !isset(_inhalt) -> muss erst noch passend ausgefüllt werden (e.g. can alter state before create) */
   } else {
-    die("permission type $i not implemented");
+    echo "<h2>permission or category condition type \"$i\" not implemented in {$form["type"]}-{$form["revision"]}</h2>";
+#    echo "<pre>".htmlspecialchars(print_r($form,true))."</pre>";
+    die();
   }
   return true;
 }

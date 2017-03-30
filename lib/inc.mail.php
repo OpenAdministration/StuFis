@@ -25,10 +25,8 @@ function notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action) 
   $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
   $caption = getAntragDisplayTitle($antrag, $revConfig);
   $antragtitle = preg_replace('/\s+/', ' ', strip_tags(implode(" ", $caption)));
-  $classConfig = getFormClass($antrag["type"]);
-  if (isset($classConfig["title"]))
-    $classTitle = "{$classConfig["title"]}";
-  $msg = $classTitle . "\n" . $antragtitle . "\n Neuer Status: " . $classConfig["state"][$newState][0] . "\n von: " . $newStateCreator . "\n" . $url;
+  $classConfig = getFormClass($antrag["shortType"]);
+  $msg = "*".$classTitle . "*\n \[" . $antragtitle . "\]($url)\n" . $classConfig["state"][$newState][0] . " von " . $newStateCreator . "\n";
   sendToAllTGUser($msg);
 }
 
