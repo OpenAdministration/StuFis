@@ -56,7 +56,7 @@ $config = [
     "canDelete" => false,
     "canBeCloned" => false,
     "canCreate" => [
-      [ "hasPermission" => [ "group" => "ref-finanzen", "isCreateable" ] ],
+      [ "hasPermission" => "isCreateable", "group" => "ref-finanzen" ],
     ],
     # Genehmigung durch StuRa
     "canStateChange.from.ok.to.payed" => [

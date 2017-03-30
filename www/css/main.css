@@ -244,3 +244,8 @@ a.disabled-option span {
   cursor:pointer;
 }
 
+#server-message-content pre {
+ overflow: scroll;
+ max-width: 70vw;
+ max-height: 50vh;
+}
