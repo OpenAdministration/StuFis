@@ -1347,12 +1347,7 @@ if (isset($_REQUEST["action"])) {
       }
       if ($ret) {
         $forceClose = true;
-#        $target = "$URIBASE?tab=booking";
       }
-
-# FIXME alter state of old antrag
-
-#      print_r($_REQUEST); die();
     break;
     default:
       logAppend($logId, "__result", "invalid action");
