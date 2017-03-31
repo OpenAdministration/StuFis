@@ -25,7 +25,7 @@ $config = [
     [ "name" => "genehmigung.titel", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.titel" ] ],
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.konto" ] ],
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
-    [ "name" => "projekt.leitung", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.leitung" ] ],
+    [ "name" => "projekt.leitung", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.leitung" ] ],
   ],
   "preNewStateActions" => [
     "from.draft.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
