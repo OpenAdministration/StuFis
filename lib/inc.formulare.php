@@ -1093,6 +1093,9 @@ function renderFormItemOtherForm($layout,$ctrl) {
   global $URIBASE, $nonce;
 
   list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
+  $isReloadFirst = in_array("refreshFormBeforeChange", $layout["opts"]);
+  $isTriggerFillOnCopy = in_array("triggerFillOnCopy", $layout["opts"]);
+
   $value = "";
   if (isset($ctrl["_values"])) {
     $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
@@ -1161,9 +1164,16 @@ function renderFormItemOtherForm($layout,$ctrl) {
   $tPattern =  newTemplatePattern($ctrl, htmlspecialchars($value));
   echo "<div class=\"input-group\">";
   echo "<span class=\"input-group-addon extra-text\"></span>";
-  echo "<input class=\"form-control\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
+  $cls = [ "form-control" ];
+  if ($isReloadFirst)
+    $cls[] = "reload-first";
+  if ($isTriggerFillOnCopy)
+    $cls[] = "trigger-fill-on-copy";
+  echo "<input class=\"".implode(" ", $cls)."\" type=\"{$layout["type"]}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   if (in_array("required", $layout["opts"]))
     echo " required=\"required\"";
+  if ($isReloadFirst)
+    echo " data-oldValue=\"{$tPattern}\"";
 
   echo " data-remote=\"".htmlspecialchars(str_replace("//","/",$URIBASE."/")."validate.php?ajax=1&action=validate.otherForm&nonce=".urlencode($nonce))."\"";
   echo " data-remote-error=\"Ungültige Formularnummer\"";
@@ -1349,6 +1359,7 @@ function renderFormItemText($layout, $ctrl) {
   $isWikiUrl = ($layout["type"] == "url" && in_array("wikiUrl", $layout["opts"]));
   $isDS = isset($layout["data-source"]);
   $isReloadFirst = in_array("refreshFormBeforeChange", $layout["opts"]);
+  $isTriggerFillOnCopy = in_array("triggerFillOnCopy", $layout["opts"]);
 
   $value = "";
   if (isset($ctrl["_values"])) {
@@ -1405,6 +1416,8 @@ function renderFormItemText($layout, $ctrl) {
     $cls = ["form-control"];
     if ($isReloadFirst)
       $cls[] = "reload-first";
+    if ($isTriggerFillOnCopy)
+      $cls[] = "trigger-fill-on-copy";
     echo "<input class=\"".implode(" ", $cls)."\" type=\"{$fType}\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
 

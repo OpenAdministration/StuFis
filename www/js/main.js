@@ -1037,7 +1037,6 @@ $(document).ready(function() {
       $btnOpen.show();
       $btnClose.hide();
     });
-    
   });
 
   $( "input.reload-first[data-oldValue]").on("change.reload-first", function (evt) {
@@ -1060,7 +1059,25 @@ $(document).ready(function() {
     });
     $("#please-reload-dlg").modal("show");
     return false;
-   
+  });
+
+  $( "input.trigger-fill-on-copy").on("change.trigger-fill-on-copy", function (evt) {
+    var $el = $(this);
+    var $form = $el.closest("form.ajax");
+    if ($form.length < 1) return;
+    var oldState = $form.find('input[name="state"]').attr("state");
+    $form.find('input[name="state"]').val(oldState);
+
+    $("#please-reload-btn").off("click");
+    $("#please-reload-btn").on("click.dosubmit", function (evt) {
+      $("#please-reload-dlg").modal("hide");
+      handleSubmitForm($form, evt, false, function(data) {
+        data.append('subaction', 'resumeEdit');
+        data.append('triggerFillOnCopy', '1');
+      });
+    });
+    $("#please-reload-dlg").modal("show");
+    return false;
   });
 
   $( "form.ajax a.submit-form" ).on("click.submit-form", function(e) {

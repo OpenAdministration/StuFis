@@ -26,6 +26,9 @@ $config = [
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.konto" ] ],
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
     [ "name" => "projekt.leitung", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.leitung" ] ],
+    [ "name" => "projekt.name", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.name" ] ],
+    [ "name" => "projekt.org.name", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.org.name" ] ],
+    [ "name" => "projekt.org.mail", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.org.mail" ] ],
   ],
   "preNewStateActions" => [
     "from.draft.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
@@ -46,7 +49,7 @@ $config = [
       [ "sum" => "expr:%ausgaben.teilrechnung - %ausgaben.zugeordnet + %einnahmen.zugeordnet", "maxValue" => 0.00, "minValue" => "0.00" ],
     ],
     "checkZahlung" => [
-      [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung + - %ausgaben.teilrechnung",
+      [ "sum" => "expr: %ausgaben.zahlung - %einnahmen.zahlung - %ausgaben.teilrechnung",
         "maxValue" => 0.00,
         "minValue" => 0.00,
       ],
@@ -201,7 +204,7 @@ $layout = [
      [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"], ],
      [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"], ],
      [ "id" => "projekt.leitung",     "title" =>"Projektverantwortlich (eMail)",      "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"], ],
-     [ "id" => "teilrechnung.projekt","title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback"], ],
+     [ "id" => "teilrechnung.projekt","title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","triggerFillOnCopy"], ],
      [ "id" => "teilrechnung.beleg",  "title" =>"Rechnungsbeleg",              "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","readonly"], ],
      [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) bei Zahlung per Überweisung",       "type" => "iban",  "width" => 12, ],
    ],
@@ -216,8 +219,8 @@ $layout = [
    "children" => [
      [ "id" => "rechnung.datum",        "title" => "Rechnungsdatum",                      "type" => "date",      "width" => 6,  "opts" => ["required", "hasFeedback"], ],
      [ "id" => "rechnung.eingang",      "title" => "Posteingang beim StuRa",              "type" => "date",      "width" => 6,  "opts" => ["required", "hasFeedback"], "value" => date("Y-m-d") ],
-     [ "id" => "rechnung.firma",        "title" => "Rechnung von (Firma)",                "type" => "text",      "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
-     [ "id" => "rechnung.ausgaben",     "title" => "Geforderter Betrag",                  "type" => "money",     "width" => 12, "opts" => ["required", "hasFeedback"], "currency" => "€", "addToSum" => ["ausgaben.teilrechnung"] ],
+     [ "id" => "rechnung.firma",        "title" => "Rechnung von (Firma)",                "type" => "text",      "width" => 6, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+     [ "id" => "rechnung.ausgaben",     "title" => "Geforderter Betrag",                  "type" => "money",     "width" => 6, "opts" => ["required", "hasFeedback"], "currency" => "€", "addToSum" => ["ausgaben.teilrechnung"] ],
      [ "id" => "rechnung.zahlungsart",  "title" => "Zahlung per Überweisung",             "type" => "checkbox",  "width" => 6,  "value" => "transfer", "text" => "Zahlung per Überweisung" ],
      [ "id" => "rechnung.frist",        "title" => "Zahlung bis",                         "type" => "date",      "width" => 6,  ],
      [ "id" => "rechnung.leistung",     "title" => "Leistung wurde erbracht",             "type" => "checkbox",  "width" => 12,  "value" => "yes", "text" => "Leistung wurde erbracht"],
@@ -233,7 +236,7 @@ $layout = [
    "renderOptRead" => [ "no-form-compress" ],
    "columns" => [
      [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",
-       "references" => ["field:genehmigung", "finanzgruppentbl"],
+       "references" => ["field:teilrechnung.projekt", "finanzgruppentbl"],
        "updateByReference" => [
          # fallback not really needed due to refValueIfEmpty
          #"geld.titel" /* destination */ => /* remote source */ [ "geld.titel", "genehmigung.titel" /* fallback */ ],

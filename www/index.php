@@ -5,6 +5,93 @@ ob_start('ob_gzhandler');
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
 
+function writeFillOnCopy($antrag_id, $form) {
+  $fillOnCopy = [];
+  if (isset($form["config"]["fillOnCopy"]))
+    $fillOnCopy = $form["config"]["fillOnCopy"];
+  foreach ($fillOnCopy as $rec) {
+     $row = Array();
+     $row["antrag_id"] = $antrag_id;
+     $row["contenttype"] = $rec["type"];
+     $row["fieldname"] = $rec["name"];
+     $value = "";
+     switch ($rec["prefill"]) {
+       case "user:mail":
+         $value = getUserMail();
+       break;
+       case "user:fullname":
+         $value = getUserFullName();
+       break;
+       case "otherForm":
+         $fieldValue = false;
+         $fieldName = false;
+         if ($rec["otherForm"][0] == "referenceField" && isset($form["config"]["referenceField"])) {
+           $fieldName = $form["config"]["referenceField"]["name"];
+         } elseif (substr($rec["otherForm"][0],0,6) == "field:") {
+           $fieldName = substr($rec["otherForm"][0],6);
+         } else {
+           die("Unknown otherForm reference in fillOnCopy: {$rec["otherForm"][0]}");
+         }
+         if ($fieldValue === false && $fieldName !== false) {
+           $f = dbGet("inhalt", [ "antrag_id" => $antrag_id, "fieldname" => $fieldName, "type" => "otherForm" ] );
+           if ($f !== false)
+             $fieldValue = $f["value"];
+         }
+         if ($fieldValue === false || $fieldValue == "") {
+           // no other form provided
+           break;
+         }
+         $otherAntrag = dbGet("antrag", ["id" => (int) $fieldValue]);
+         if ($otherAntrag === false) {
+           // invalid value
+           break;
+         }
+
+         $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+         $otherAntrag["_inhalt"] = $otherInhalt;
+
+         $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
+         $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
+
+         if (!$readPermitted) {
+           break;
+         }
+
+         $f = dbGet("inhalt", [ "antrag_id" => $otherAntrag["id"], "fieldname" => $rec["otherForm"][1], "type" => "otherForm" ] );
+         if ($f === false)
+           // other field not in other form
+           break;
+
+         $value = $f["value"];
+
+         if (isset($rec["otherForm"]["pattern"])) {
+           $m = [];
+           if (!preg_match("/{$rec["otherForm"]["pattern"]}/", $value, $m)) {
+             $value = "";
+           } else {
+             $value = $m[0];
+           }
+         }
+
+       break;
+       default:
+         if (substr($rec["prefill"],0,6) == "value:") {
+           $value = substr($rec["prefill"],6);
+         } else {
+           $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
+           return false;
+           break 2; # abort foreach fillOnCopy
+         }
+     }
+     $row["value"] = $value;
+     dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);
+     $ret0 = dbInsert("inhalt", $row);
+     if ($ret0 === false)
+       return false;
+  }
+  return true;
+}
+
 function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
   if (!isset($_REQUEST["formdata"]))
     $_REQUEST["formdata"] = [];
@@ -331,89 +418,10 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
        return false;
   }
 
-  $fillOnCopy = [];
-  if (isset($form["config"]["fillOnCopy"]))
-    $fillOnCopy = $form["config"]["fillOnCopy"];
-  foreach ($fillOnCopy as $rec) {
-     $row = Array();
-     $row["antrag_id"] = $antrag_id;
-     $row["contenttype"] = $rec["type"];
-     $row["fieldname"] = $rec["name"];
-     $value = "";
-     switch ($rec["prefill"]) {
-       case "user:mail":
-         $value = getUserMail();
-       break;
-       case "user:fullname":
-         $value = getUserFullName();
-       break;
-       case "otherForm":
-         $fieldValue = false;
-         $fieldName = false;
-         if ($rec["otherForm"][0] == "referenceField" && isset($form["config"]["referenceField"])) {
-           $fieldName = $form["config"]["referenceField"]["name"];
-         } elseif (substr($rec["otherForm"][0],0,6) == "field:") {
-           $fieldName = substr($rec["otherForm"][0],6);
-         } else {
-           die("Unknown otherForm reference in fillOnCopy: {$rec["otherForm"][0]}");
-         }
-         if ($fieldValue === false && $fieldName !== false) {
-           $f = dbGet("inhalt", [ "antrag_id" => $antrag_id, "fieldname" => $fieldName, "type" => "otherForm" ] );
-           if ($f !== false)
-             $fieldValue = $f["value"];
-         }
-         if ($fieldValue === false || $fieldValue == "") {
-           // no other form provided
-           break;
-         }
-         $otherAntrag = dbGet("antrag", ["id" => (int) $fieldValue]);
-         if ($otherAntrag === false) {
-           // invalid value
-           break;
-         }
+  $ret0 = writeFillOnCopy($antrag_id, $form);
+  if ($ret0 === false)
+    return false;
 
-         $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
-         $otherAntrag["_inhalt"] = $otherInhalt;
-
-         $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
-         $readPermitted = hasPermission($otherForm, $otherAntrag, "canRead");
-
-         if (!$readPermitted) {
-           break;
-         }
-
-         $f = dbGet("inhalt", [ "antrag_id" => $otherAntrag["id"], "fieldname" => $rec["otherForm"][1], "type" => "otherForm" ] );
-         if ($f === false)
-           // other field not in other form
-           break;
-
-         $value = $f["value"];
-
-         if (isset($rec["otherForm"]["pattern"])) {
-           $m = [];
-           if (!preg_match("/{$rec["otherForm"]["pattern"]}/", $value, $m)) {
-             $value = "";
-           } else {
-             $value = $m[0];
-           }
-         }
-
-       break;
-       default:
-         if (substr($rec["prefill"],0,6) == "value:") {
-           $value = substr($rec["prefill"],6);
-         } else {
-           $msgs[] = "FillOnCopy fehlgeschlagen: prefill={$rec["prefill"]} nicht implementiert.";
-           return false;
-           break 2; # abort foreach fillOnCopy
-         }
-     }
-     $row["value"] = $value;
-     dbDelete("inhalt", ["antrag_id" => $row["antrag_id"], "fieldname" => $row["fieldname"] ]);
-     $ret0 = dbInsert("inhalt", $row);
-     if ($ret0 === false)
-       return false;
-  }
   # füge alle Felder ein, überflüssige Felder werden beim nächsten Speichern entfernt.
   foreach($oldAntrag["_anhang"] as $row) {
 
@@ -660,6 +668,11 @@ if (isset($_REQUEST["action"])) {
       // add or replace (or delete) new files (tbl anhang) and write files to disk
       $ret1 = writeFormdataFiles($antrag["id"], $msgs, $filesRemoved, $filesCreated, $isPartiell, $form, $antrag);
       $ret = $ret && $ret1;
+      // post-fill on otherForm change
+      if (isset($_REQUEST["triggerFillOnCopy"]) && $_REQUEST["triggerFillOnCopy"]) {
+        $ret1 = writeFillOnCopy($antrag["id"], $form);
+        $ret = $ret && $ret1;
+      }
       // commitTx
       if ($ret && isset($_REQUEST["state"]) && $_REQUEST["state"] != "") {
         $newState = $_REQUEST["state"];

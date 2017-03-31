@@ -42,6 +42,7 @@ $layout = [
      [ "id" => "rechnung.org.name",     "title" => "Rechnung für Projekt von Gremium",    "type" => "text",      "width" =>  6, "data-source" => "all-orgs", "placeholder" => "Institution wählen", ],
      [ "id" => "rechnung.org.mail",     "title" => "Benachrichtigung (Mailingliste zu \"Rechnung für Projekt von Gremium\")", "type" => "email", "width" =>  6, "data-source" => "all-mailinglists", "placeholder" => "Mailingliste wählen", ],
      [ "id" => "rechnung.proforma",     "title" => "Pro-Forma Beleg für Vorkasse",        "type" => "checkbox",  "width" => 12,  "value" => "yes", "text" => "Pro-Forma Beleg für Vorkasse"],
+     [ "id" => "teilrechnung.projekt",  "title" => "Vorschlag für Projektzuordnung",      "type" => "otherForm", "width" => 12, "opts" => ["readonly"], ],
    ],
  ],
 
