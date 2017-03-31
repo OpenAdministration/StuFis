@@ -28,8 +28,10 @@ function notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action) 
   $classConfig = getFormClass($antrag["type"]);
   $classTitle = "{$antrag["type"]}";
   if (isset($classConfig["title"]))
-    $classTitle = "[{$type}] {$classConfig["title"]}";
-  $txt = $antrag["state"];
+    $classTitle = "{$classConfig["title"]}";
+  if (isset($classConfig["shortTitle"]))
+    $classTitle = "{$classConfig["shortTitle"]}";
+  $txt = $newState;
   if (isset($classConfig["state"]) && isset($classConfig["state"][$newState]))
     $txt = $classConfig["state"][$newState][0];
   $msg = "*".$classTitle . "*\n \[" . $antragtitle . "\]($url)\n" . $txt . " von " . $newStateCreator . "\n";

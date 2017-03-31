@@ -523,7 +523,7 @@ if (isset($_REQUEST["action"])) {
       if ($ret) {
         if (file_exists($STORAGE."/".$antrag["id"])) {
           if (@rmdir($STORAGE."/".$antrag["id"]) === false)
-            $msgs[] = "Kann Order nicht löschen: {$antrag["id"]}";
+            $msgs[] = "Kann Ordner nicht löschen: {$antrag["id"]}";
         }
         $forceClose = true;
         $target = $URIBASE;
