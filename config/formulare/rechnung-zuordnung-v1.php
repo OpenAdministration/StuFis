@@ -220,7 +220,7 @@ $layout = [
      [ "id" => "rechnung.ausgaben",     "title" => "Geforderter Betrag",                  "type" => "money",     "width" => 12, "opts" => ["required", "hasFeedback"], "currency" => "€", "addToSum" => ["ausgaben.teilrechnung"] ],
      [ "id" => "rechnung.zahlungsart",  "title" => "Zahlung per Überweisung",             "type" => "checkbox",  "width" => 6,  "value" => "transfer", "text" => "Zahlung per Überweisung" ],
      [ "id" => "rechnung.frist",        "title" => "Zahlung bis",                         "type" => "date",      "width" => 6,  ],
-     [ "id" => "rechnung.leistung",     "title" => "Leistung wurde erbracht",             "type" => "checkbox",  "width" => 12,  "value" => "yes", ],
+     [ "id" => "rechnung.leistung",     "title" => "Leistung wurde erbracht",             "type" => "checkbox",  "width" => 12,  "value" => "yes", "text" => "Leistung wurde erbracht"],
    ],
  ],
 

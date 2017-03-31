@@ -45,18 +45,24 @@ function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false) {
       $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
       $antraege[$type][$revision][$i] = $antrag;
     }
-    foreach ($captionField as $j => $fname) {
+    foreach ($captionField as $j => $fdesc) {
+      $fdesc = explode("|", $fdesc);
+      $fname = $fdesc[0];
       $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
       $row = count($rows) > 0 ? $rows[0] : false;
       if ($row !== false) {
         ob_start();
         $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
+        for($k = 1; $k < count($fdesc); $k++) {
+          list($fdk, $fdv) = explode("=", $fdesc[$k], 2);
+          $formlayout[0][$fdk] = $fdv;
+        }
         $form = [ "layout" => $formlayout, "config" => [] ];
         $ret = renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
         if ($ret === false) $renderOk = false;
         $val = ob_get_contents();
         ob_end_clean();
-        $caption[] = $val;
+        $caption[] = strip_tags($val);
       }
     }
   }

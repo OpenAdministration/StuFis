@@ -1563,6 +1563,9 @@ function renderFormItemMoney($layout, $ctrl) {
   }
   $fvalue = convertDBValueToUserValue($value, $layout["type"]);
   $tPattern = newTemplatePattern($ctrl, htmlspecialchars($fvalue));
+  if (!isset($layout["currency"])) {
+    echo "Missing currency in: "; print_r($layout);
+  }
   $tPatternC = newTemplatePattern($ctrl, htmlspecialchars($layout["currency"]));
   $tPatternS = newTemplatePattern($ctrl, "Σ");
 
