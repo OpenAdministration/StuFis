@@ -27,6 +27,8 @@ $config = [
     [ "name" => "genehmigung.jahr", "type" => "text", "prefill" => "value:".date("Y") ],
     [ "name" => "projekt.leitung", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.leitung" ] ],
     [ "name" => "projekt.name", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.name" ] ],
+    [ "name" => "projekt.org.name", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.beleg", "rechnung.org.name" ] ],
+    [ "name" => "projekt.org.mail", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.beleg", "rechnung.org.mail" ] ],
     [ "name" => "projekt.org.name", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.org.name" ] ],
     [ "name" => "projekt.org.mail", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.org.mail" ] ],
   ],
