@@ -33,7 +33,7 @@ $config = [
       [ "state" => "ok", "id" => "rechnung.proforma", "value" => "is:empty" ],
     ],
     "checkTeilbetrag" => [
-      [ "sum" => "expr:%ausgaben - %ausgaben.zuordnet + %einnahmen.zugeordnet", "maxValue" => 0.00, ],
+      [ "sum" => "expr:%ausgaben - %ausgaben.zugeordnet + %einnahmen.zugeordnet", "minValue" => 0.00, ],
     ],
   ],
   "permission" => [
