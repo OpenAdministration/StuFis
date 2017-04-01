@@ -491,7 +491,7 @@ if (isset($_REQUEST["action"])) {
       if ($_REQUEST["revision"] !== $antrag["revision"]) die("Unerlaubte Version");
 
       $form = getForm($antrag["type"], $antrag["revision"]);
-      if (!hasPermission($form, $antrag, "canDelete")) die("Antrag ist nicht editierbar");
+      if (!hasPermission($form, $antrag, "canDelete")) die("Antrag {$antrag["id"]} ist nicht löschbar.");
 
       if ($_REQUEST["version"] !== $antrag["version"]) {
         $ret = false;
@@ -554,9 +554,9 @@ if (isset($_REQUEST["action"])) {
 
       $form = getForm($antrag["type"], $antrag["revision"]);
       if ($isPartiell) {
-        if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag ist nicht editierbar");
+        if (!hasPermission($form, $antrag, "canEditPartiell")) die("Antrag {$antrag["id"]} ist nicht (partiell-)editierbar");
       } else {
-        if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+        if (!hasPermission($form, $antrag, "canEdit")) die("Antrag {$antrag["id"]} ist nicht editierbar");
       }
 
       if ($_REQUEST["version"] !== $antrag["version"]) {
@@ -1113,7 +1113,16 @@ if (isset($_REQUEST["action"])) {
           break;
         }
         $form = getForm($z["type"], $z["revision"]);
-        if (!hasPermission($form, $z, "canEdit")) die("Antrag ist nicht editierbar");
+        $canEditZahlung = hasPermission($form, $z, "canEdit");
+        $canEditPartiellZahlung = hasPermission($form, $z, "canEditPartiell") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.table") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.group2") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.beleg") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.hinweis") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.einnahmen") &&
+          hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.ausgaben");
+
+        if (!$canEditZahlung && !$canEditPartiellZahlung) die("Antrag (Zahlung) $zId ist nicht (partiell-)editierbar");
 
         $rowCountFieldName =  "zahlung.grund.table[rowCount]";
         $rowNumber = getFormValueInt($rowCountFieldName, null, $z["_inhalt"], false);
@@ -1176,7 +1185,7 @@ if (isset($_REQUEST["action"])) {
           $ret = false;
       }
 
-      // alle Zahlungen wechseln nach state payed
+      // alle Buchungen wechseln nach state booked
       foreach($_REQUEST["zahlungId"] as $aId) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
@@ -1185,7 +1194,7 @@ if (isset($_REQUEST["action"])) {
         $ret = $ret && $ret0;
       }
 
-      // alle Buchungen wechseln nach state booked
+      // alle Zahlungen wechseln nach state payed
       foreach($_REQUEST["grundId"] as $aId) {
         $a = dbGet("antrag", ["id" => $aId]);
         $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
@@ -1627,7 +1636,7 @@ switch($_REQUEST["tab"]) {
     $antrag = getAntrag();
     $form = getForm($antrag["type"], $antrag["revision"]);
     if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
-    if (!hasPermission($form, $antrag, "canEdit")) die("Antrag ist nicht editierbar");
+    if (!hasPermission($form, $antrag, "canEdit")) die("Antrag {$antrag["id"]} ist nicht editierbar");
 
     require "../template/antrag.head.tpl";
     require "../template/antrag.edit.tpl";

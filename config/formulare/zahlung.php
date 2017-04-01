@@ -85,7 +85,22 @@ $config = [
     "canEditPartiell" => [
       [ "group" => "ref-finanzen", ],
     ],
-    "canEditPartiell.field.genehmigung.recht.int.sturabeschluss" => [
+    "canEditPartiell.field.zahlung.grund.table" => [
+      [ "state" => "payed", "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.zahlung.group2" => [
+      [ "state" => "payed", "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.zahlung.grund.beleg" => [
+      [ "state" => "payed", "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.zahlung.grund.hinweis" => [
+      [ "state" => "payed", "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.zahlung.grund.einnahmen" => [
+      [ "state" => "payed", "group" => "ref-finanzen", ],
+    ],
+    "canEditPartiell.field.zahlung.grund.ausgaben" => [
       [ "state" => "payed", "group" => "ref-finanzen", ],
     ],
     "canEdit" => [
