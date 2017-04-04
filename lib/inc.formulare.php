@@ -1732,7 +1732,7 @@ function renderFormItemFile($layout, $ctrl) {
   list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
   $file = false;
-  if (isset($ctrl["_values"])) {
+  if (isset($ctrl["_values"]) && isset($ctrl["_values"]["_anhang"])) {
     $file = getFormFile($ctrl["name"], $ctrl["_values"]["_anhang"]);
   }
   $html = "";

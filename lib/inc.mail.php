@@ -34,7 +34,7 @@ function notifyStateTransitionTG($antrag, $newState, $newStateCreator, $action) 
   $txt = $newState;
   if (isset($classConfig["state"]) && isset($classConfig["state"][$newState]))
     $txt = $classConfig["state"][$newState][0];
-  $msg = "*".$classTitle . "*\n [" . $antragtitle . "]($url)\n" . $txt . " von " . $newStateCreator . "\n";
+  $msg = "*".$classTitle . "*\n [" .html_entity_decode($antragtitle) . "]($url)\n" . $txt . " von " . $newStateCreator . "\n";
   sendToAllTGUser($msg);
 }
 

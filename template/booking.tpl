@@ -27,7 +27,7 @@ foreach ($alZahlung as $a) {
   echo "<td>";
   echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"".$fvalue."\" name=\"zahlungId[]\" value=\"".htmlspecialchars($a["id"])."\">";
   echo "</td>";
-  echo "<td class=\"text-right\">";
+  echo "<td class=\"text-right nowrap\">";
   echo htmlspecialchars($fvalue." €");
   echo "<input type=\"hidden\" name=\"zahlungValue[".$a["id"]."]\" value=\"$value\">";
   echo "</td>";
@@ -66,7 +66,7 @@ foreach ($alGrund as $a) {
   echo "<td>";
   echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"".$fvalue."\" name=\"grundId[]\" value=\"".htmlspecialchars($a["id"])."\">";
   echo "</td>";
-  echo "<td class=\"text-right\">";
+  echo "<td class=\"text-right nowrap\">";
   echo htmlspecialchars($fvalue." €");
   echo "<input type=\"hidden\" name=\"grundValue[".$a["id"]."]\" value=\"$value\">";
   echo "</td>";
@@ -91,7 +91,7 @@ foreach ($alGrund as $a) {
 </tbody>
 </table>
 
-
+<div style="height:5cm;">&nbsp;</div>
 
 <nav class="navbar navbar-default navbar-fixed-bottom"
 <?php

@@ -1073,11 +1073,11 @@ if (isset($_REQUEST["action"])) {
       }
 
       foreach($_REQUEST["zahlungId"] as $aId)
-        $zahlungSum += $_REQUEST["zahlungValue"][$aId];
+        $zahlungSum += (float) $_REQUEST["zahlungValue"][$aId];
       foreach($_REQUEST["grundId"] as $aId)
-        $grundSum += $_REQUEST["grundValue"][$aId];
+        $grundSum += (float) $_REQUEST["grundValue"][$aId];
 
-      if ($zahlungSum != $grundSum) {
+      if (abs($zahlungSum - $grundSum) > 0.001) {
         $msgs[] = "Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.";
         $ret = false;
         break;

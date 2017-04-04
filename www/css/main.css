@@ -249,3 +249,7 @@ a.disabled-option span {
  max-width: 70vw;
  max-height: 50vh;
 }
+
+.nowrap {
+ white-space: nowrap;
+}
