@@ -1640,7 +1640,7 @@ function renderFormItemMoney($layout, $ctrl) {
   else if (!$noForm)
     echo "<div class=\"input-group\">";
   else
-    echo "<div class=\"text-right\">";
+    echo "<div class=\"nowrap text-right\">";
 
   if (in_array("is-sum", $layout["opts"])) {
     if (!($noFormMarkup || $noFormCompress))
@@ -1650,9 +1650,9 @@ function renderFormItemMoney($layout, $ctrl) {
   }
 
   if ($noForm && ($noFormMarkup || $noFormCompress)) {
-    echo "<div class=\"text-right visible-inline\"";
+    echo "<div class=\"nowrap text-right visible-inline\"";
   } else if ($noForm) {
-    echo "<div class=\"form-control-static text-right\"";
+    echo "<div class=\"form-control-static nowrap text-right\"";
   } else {
     echo "<input type=\"text\" class=\"form-control text-right\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
   }
@@ -2718,7 +2718,7 @@ function renderFormItemTable($layout, $ctrl) {
           if ($layout["columns"][$i]["_hideable_isHidden"])
             $cls[] = "hide-column-manual";
           if ($col["type"] == "money")
-            $cls[] = "text-right";
+            $cls[] = "nowrap text-right";
           echo "<th class=\"".implode(" ", $cls)."\">";
           if ($withHeadline) {
             if ($col["name"] === true) {
@@ -2734,7 +2734,7 @@ function renderFormItemTable($layout, $ctrl) {
                   $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
                   $childCls = [ "dynamic-table-caption" ];
                   if ($child["type"] == "money")
-                    $childCls[] = "text-right";
+                    $childCls[] = "nowrap text-right";
                   if (isset($child["width"])) {
                     $colWidthSum += $child["width"];
                     $childCls[] = "col-xs-{$child["width"]}";
@@ -3466,7 +3466,7 @@ function renderFormItemInvRef($layout,$ctrl) {
           if (isset($newMeta["name"])) $title = $newMeta["name"];
           if (isset($newMeta["title"])) $title = $newMeta["title"];
           if ($newMeta["type"] == "money")
-            $thCls[] = "text-right";
+            $thCls[] = "nowrap text-right";
         } else {
           $title = $psId;
         }
