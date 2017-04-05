@@ -137,6 +137,10 @@ $config = [
     "canStateChange.from.submitted.to.ok-kv" => [
       [ "group" => "ref-finanzen-kv" ],
     ],
+# fixup state identifiers
+    "canStateChange.from.ok-by-kv.to.ok-kv" => [
+      [ "group" => "ref-finanzen-kv" ],
+    ],
     "canStateChange.from.ok-kv.to.submitted" => [
       [ "group" => "ref-finanzen" ],
     ],

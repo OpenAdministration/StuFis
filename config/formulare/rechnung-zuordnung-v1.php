@@ -36,6 +36,7 @@ $config = [
   ],
   "preNewStateActions" => [
     "from.submitted.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
+    "from.ok-by-kv.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ], #  fixup old broken state identifiers
     "from.ok-kv.to.submitted"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox", "value" => "" ] ],
 
     "from.submitted.to.ok-hv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox" ] ],
