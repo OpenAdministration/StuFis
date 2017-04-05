@@ -30,6 +30,7 @@ $config = [
       [ "field:genehmigung.recht" => "==buero" ],
       [ "field:genehmigung.recht" => "==fahrt" ],
       [ "field:genehmigung.recht" => "==verbrauch" ],
+      [ "field:genehmigung.recht" => "==kleidung"],
     ],
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung" ],
@@ -43,9 +44,14 @@ $config = [
       [ "id" => "genehmigung.recht", "value" => "equals:other" ],
       [ "id" => "genehmigung.recht.other.reason", "value" => "is:notEmpty" ],
     ],
+    "checkOtherBeschlussKleidung" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:kleidung" ],
+      [ "id" => "genehmigung.recht.kleidung.gremium", "value" => "is:notEmpty" ],
+    ],
     "checkOtherBeschluss" => [
       [ "or" => [
         [ "doValidate" => "checkOtherBeschlussOther" ],
+        [ "doValidate" => "checkOtherBeschlussKleidung"],
         [ "id" => "genehmigung.recht", "value" => "equals:buero" ],
         [ "id" => "genehmigung.recht", "value" => "equals:fahrt" ],
         [ "id" => "genehmigung.recht", "value" => "equals:verbrauch" ],
@@ -144,6 +150,17 @@ $layout[] = [
            "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
          [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
            "width" => [ 4, 4, 2, 2, ], ],
+       ], ],
+       [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width" => 12, "children" => [
+         [ "id" => "genehmigung.recht", "text" => "Gremienkleidung: \n StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.", "type" => "radio", "value" => "kleidung",
+          "width" => [12, 12, 6, 6, ], ],
+         [ "id" => "genehmigung.recht.kleidung.gremium", "title" => "Gremium", "type" => "text",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.org.name"],
+         [ "id" => "genehmigung.recht.kleidung.datum", "title" => "vom", "type" => "date",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
+         [ "id" => "genehmigung.recht.kleidung.empty", "type" => "plaintext", "width" => 2, ],
        ], ],
 
        [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [

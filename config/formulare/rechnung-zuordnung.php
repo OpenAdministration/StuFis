@@ -8,8 +8,8 @@ $config = [
   "shortTitle" => "Rechnung direkt an den StuRa (Projektzuordnung)",
   "state" => [ "draft"          => [ "Noch keine Zahlung benötigt" ],
                "submitted"      => [ "Zahlung beantragt", "Zahlung beantragen", ],
-               "ok-by-hv"       => [ "KV fehlt", "als Haushaltsverantwortlicher genehmigen" ],
-               "ok-by-kv"       => [ "HV fehlt", "als Kassenverantwortlicher genehmigen" ],
+               "ok-hv"       => [ "KV fehlt", "als Haushaltsverantwortlicher genehmigen" ],
+               "ok-kv"       => [ "HV fehlt", "als Kassenverantwortlicher genehmigen" ],
                "ok"             => [ "Zahlung genehmigt" ],
                "instructed"     => [ "Zahlung angewiesen", ],
                "payed"          => [ "Bezahlt (Kontoauszug)", ],
@@ -17,9 +17,9 @@ $config = [
              ],
   "proposeNewState" => [
     "draft" => [ "submitted" ],
-    "submitted" => [ "ok-by-hv", "ok-by-kv", "revoked" ],
-    "ok-by-hv" => [ "ok", "revoked" ],
-    "ok-by-kv" => [ "ok", "revoked" ],
+    "submitted" => [ "ok-hv", "ok-kv", "revoked" ],
+    "ok-hv" => [ "ok", "revoked" ],
+    "ok-kv" => [ "ok", "revoked" ],
   ],
   "buildFrom" => [ "rechnung-beleg" ],
   "createState" => "draft",
@@ -29,8 +29,8 @@ $config = [
       [ "state" => "draft", "hasPermission" => "isResponsible" ],
       [ "state" => "draft", "group" => "ref-finanzen" ],
       [ "state" => "submitted", "group" => "ref-finanzen" ],
-      [ "state" => "ok-by-hv", "group" => "ref-finanzen-kv" ],
-      [ "state" => "ok-by-kv", "group" => "ref-finanzen-hv" ],
+      [ "state" => "ok-hv", "group" => "ref-finanzen-kv" ],
+      [ "state" => "ok-kv", "group" => "ref-finanzen-hv" ],
       [ "hasPermission" => [ "isUnvollstaendig", "isResponsible" ], ],
     ],
     "need-payment" => [
@@ -61,12 +61,16 @@ $config = [
       # richtige Summen bezahlt
       [ "state" => "payed", "doValidate" => "checkZahlung", ], # hier sollten die Beträge stimmen
       [ "state" => "submitted", "doValidate" => "checkBetragZugeordnet"],
+      [ "state" => "ok-hv", "doValidate" => "checkBetragZugeordnet"],
+      [ "state" => "ok-kv", "doValidate" => "checkBetragZugeordnet"],
       [ "state" => "ok", "doValidate" => "checkBetragZugeordnet"],
       [ "state" => "payed", "doValidate" => "checkBetragZugeordnet"],
       # richtige Formularversion aka Haushaltsjahr
       [ "doValidate" => "checkKostenstellenplan", ],
       [ "doValidate" => "checkHaushaltsplan", ],
       # sachliche und rechnerische Richtigkeit (Unterschrift)
+      [ "state" => "ok-hv", "doValidate" => "checkRichtigkeitHV", ],
+      [ "state" => "ok-kv", "doValidate" => "checkRichtigkeitKV", ],
       [ "state" => "ok", "doValidate" => "checkRichtigkeit", ],
       [ "state" => "instructed", "doValidate" => "checkRichtigkeit", ],
       [ "state" => "payed", "doValidate" => "checkRichtigkeit", ],
@@ -78,6 +82,12 @@ $config = [
       [ "state" => "ok", "doValidate" => "checkTitel", ],
       [ "state" => "instructed", "doValidate" => "checkTitel", ],
       [ "state" => "payed", "doValidate" => "checkTitel", ],
+      # Projekt gesetzt
+      [ "state" => "submitted", "doValidate" => "checkProjekt"],
+      [ "state" => "ok-hv", "doValidate" => "checkProjekt"],
+      [ "state" => "ok-kv", "doValidate" => "checkProjekt"],
+      [ "state" => "ok", "doValidate" => "checkProjekt"],
+      [ "state" => "payed", "doValidate" => "checkProjekt"],
       # Derzeit nicht erzwungen: Kostenstelle ausgewählt
 #      [ "state" => "ok", "doValidate" => "checkKonto", ],
 #      [ "state" => "instructed", "doValidate" => "checkKonto", ],
@@ -118,16 +128,22 @@ $config = [
     "canStateChange.from.draft.to.submitted" => [
       [ "hasPermission" => "isResponsible" ],
     ],
-    "canStateChange.from.submitted.to.ok-by-hv" => [
+    "canStateChange.from.submitted.to.ok-hv" => [
       [ "group" => "ref-finanzen-hv" ],
     ],
-    "canStateChange.from.submitted.to.ok-by-kv" => [
+    "canStateChange.from.ok-hv.to.submitted" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.submitted.to.ok-kv" => [
       [ "group" => "ref-finanzen-kv" ],
     ],
-    "canStateChange.from.ok-by-kv.to.ok" => [
+    "canStateChange.from.ok-kv.to.submitted" => [
+      [ "group" => "ref-finanzen" ],
+    ],
+    "canStateChange.from.ok-kv.to.ok" => [
       [ "group" => "ref-finanzen-hv" ],
     ],
-    "canStateChange.from.ok-by-hv.to.ok" => [
+    "canStateChange.from.ok-hv.to.ok" => [
       [ "group" => "ref-finanzen-kv" ],
     ],
     "canStateChange.from.ok.to.instructed" => [
@@ -142,10 +158,10 @@ $config = [
     "canStateChange.from.submitted.to.revoked" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.ok-by-hv.to.revoked" => [
+    "canStateChange.from.ok-hv.to.revoked" => [
       [ "group" => "ref-finanzen" ],
     ],
-    "canStateChange.from.ok-by-kv.to.revoked" => [
+    "canStateChange.from.ok-kv.to.revoked" => [
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.ok.to.revoked" => [
@@ -165,8 +181,8 @@ $config = [
   ],
   "postNewStateActions" => [
     "from.draft.to.submitted" => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.ok-by-hv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
-    "from.ok-by-kv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.ok-hv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
+    "from.ok-kv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
     "from.ok.to.revoked"      => [ [ "sendMail" => true, "attachForm" => true ] ],
   ],
 ];

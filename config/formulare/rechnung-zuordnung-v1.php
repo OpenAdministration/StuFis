@@ -1,7 +1,7 @@
 <?php
 
 $config = [
-  "captionField" => [ "projekt.name", "projekt.org.name" ],
+  "captionField" => [ "rechnung.datum", "rechnung.firma", "rechnung.ausgaben|currency=€", "projekt.name", "projekt.org.name" ],
   "revisionTitle" => "Version 20170131",
   "permission" => [
     "isCorrectGremium" => [
@@ -21,6 +21,8 @@ $config = [
     [ "name" => "genehmigung.recht.int.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.int.gremium" ] ],
     [ "name" => "genehmigung.recht.int.datum", "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.int.datum" ] ],
     [ "name" => "genehmigung.recht.int.sturabeschluss", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.int.sturabeschluss" ] ],
+    [ "name" => "genehmigung.recht.kleidung.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.kleidung.gremium" ] ],
+    [ "name" => "genehmigung.recht.kleidung.datum", "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.kleidung.datum" ] ],
     [ "name" => "genehmigung.recht.other.reason", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.recht.other.reason" ] ],
     [ "name" => "genehmigung.titel", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.titel" ] ],
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "genehmigung.konto" ] ],
@@ -33,10 +35,10 @@ $config = [
     [ "name" => "projekt.org.mail", "type" => "email", "prefill" => "otherForm", "otherForm" => [ "field:teilrechnung.projekt", "projekt.org.mail" ] ],
   ],
   "preNewStateActions" => [
-    "from.draft.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
-    "from.ok-kv.to.draft"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox", "value" => "" ] ],
+    "from.submitted.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
+    "from.ok-kv.to.submitted"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox", "value" => "" ] ],
 
-    "from.draft.to.ok-hv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox" ] ],
+    "from.submitted.to.ok-hv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox" ] ],
     "from.ok-hv.to.draft"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox", "value" => "" ] ],
 
     "from.ok-hv.to.ok"  => [ [ "writeField" => "always", "name" => "genehmigung.rechnerischeRichtigkeit", "type" => "signbox" ] ],
@@ -46,7 +48,30 @@ $config = [
     "from.ok.to.ok-kv"  => [ [ "writeField" => "always", "name" => "genehmigung.sachlicheRichtigkeit", "type" => "signbox", "value" => "" ] ],
   ],
   "validate" => [
-
+    "checkProjekt" => [
+     [ "id" => "teilrechnung.projekt",
+       "otherForm" => [
+         [ "type" => "projekt-intern", "state" => "ok-by-hv" ],
+         [ "type" => "projekt-intern", "state" => "ok-by-stura" ],
+         [ "type" => "projekt-intern", "state" => "done-hv" ],
+         [ "type" => "projekt-intern", "state" => "done-other" ],
+       ],
+     ],
+    ],
+    "checkKostenstellenplan" => [
+     [ "id" => "kostenstellenplan.otherForm",
+       "otherForm" => [
+         [ "type" => "kostenstellenplan", "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ],
+       ],
+     ],
+    ],
+    "checkHaushaltsplan" => [
+     [ "id" => "haushaltsplan.otherForm",
+       "otherForm" => [
+         [ "type" => "haushaltsplan", "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ],
+       ],
+     ],
+    ],
     "checkBetragZugeordnet" => [
       [ "sum" => "expr:%ausgaben.teilrechnung - %ausgaben.zugeordnet + %einnahmen.zugeordnet", "maxValue" => 0.00, "minValue" => "0.00" ],
     ],
@@ -72,7 +97,13 @@ $config = [
       ],
     ],
     "checkRichtigkeit" => [
+      [ "doValidate" => "checkRichtigkeitHV" ],
+      [ "doValidate" => "checkRichtigkeitKV" ],
+    ],
+    "checkRichtigkeitHV" => [
       [ "id" => "genehmigung.sachlicheRichtigkeit", "value" => "is:notEmpty" ],
+    ],
+    "checkRichtigkeitKV" => [
       [ "id" => "genehmigung.rechnerischeRichtigkeit", "value" => "is:notEmpty" ],
     ],
     "checkRechtsgrundlage" => [
@@ -87,6 +118,12 @@ $config = [
           [ "doValidate" => "checkBeschlussHV" ],
         ]
       ],
+      [ "or" => [
+          [ "id" => "genehmigung.recht", "value" => "notEquals:kleidung" ],
+          [ "doValidate" => "checkBeschlussKleidung" ],
+        ]
+      ],
+
       [ "or" => [
           [ "id" => "genehmigung.recht", "value" => "notEquals:other" ],
           [ "doValidate" => "checkBeschlussOther" ],
@@ -104,6 +141,11 @@ $config = [
       [ "id" => "genehmigung.recht.int.datum", "value" => "is:notEmpty" ],
       [ "id" => "genehmigung.recht.int.gremium", "value" => "is:notEmpty" ],
     ],
+    "checkBeschlussKleidung" => [
+      [ "id" => "genehmigung.recht", "value" => "equals:kleidung" ],
+      [ "id" => "genehmigung.recht.kleidung.gremium", "value" => "is:notEmpty" ],
+    ],
+
     "checkBeschlussOther" => [
       [ "id" => "genehmigung.recht", "value" => "equals:other" ],
       [ "id" => "genehmigung.recht.other.reason", "value" => "is:notEmpty" ],
@@ -141,7 +183,6 @@ $layout = [
        [ "id" => "genehmigung.recht.grp.2", "type" => "group",    "width" => 12, "children" => [
          [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, "opts" => ["required"], ],
        ], ],
-
        [ "id" => "genehmigung.recht.grp.3", "type" => "group",    "width" => 12, "children" => [
          [ "id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura",
            "width" => [12, 12, 6, 6],
@@ -165,6 +206,17 @@ $layout = [
            "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
          [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
            "width" => [ 4, 4, 2, 2, ], ],
+       ], ],
+       [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width" => 12, "children" => [
+         [ "id" => "genehmigung.recht", "text" => "Gremienkleidung: \n StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.", "type" => "radio", "value" => "kleidung",
+          "width" => [12, 12, 6, 6, ],
+          "opts" => ["required"], ],
+         [ "id" => "genehmigung.recht.kleidung.gremium", "title" => "Gremium", "type" => "text",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.org.name"],
+         [ "id" => "genehmigung.recht.kleidung.datum", "title" => "vom", "type" => "date",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
        ], ],
 
        [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [

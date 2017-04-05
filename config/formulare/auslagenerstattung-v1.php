@@ -25,6 +25,8 @@ $config = [
     [ "name" => "genehmigung.recht.int.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.gremium" ] ],
     [ "name" => "genehmigung.recht.int.datum", "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.datum" ] ],
     [ "name" => "genehmigung.recht.int.sturabeschluss", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.int.sturabeschluss" ] ],
+    [ "name" => "genehmigung.recht.kleidung.gremium", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.kleidung.gremium" ] ],
+    [ "name" => "genehmigung.recht.kleidung.datum", "type" => "date", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.kleidung.datum" ] ],
     [ "name" => "genehmigung.recht.other.reason", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.other.reason" ] ],
     [ "name" => "genehmigung.titel", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.titel" ] ],
     [ "name" => "genehmigung.konto", "type" => "ref", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.konto" ] ],
@@ -153,6 +155,18 @@ $layout = [
          [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
            "width" => [ 4, 4, 2, 2, ], ],
        ], ],
+
+       [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width" => 12, "children" => [
+         [ "id" => "genehmigung.recht", "text" => "Gremienkleidung: \n StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.", "type" => "radio", "value" => "kleidung",
+          "width" => [12, 12, 6, 6, ],
+          "opts" => ["required"], ],
+         [ "id" => "genehmigung.recht.kleidung.gremium", "title" => "Gremium", "type" => "text",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.org.name"],
+         [ "id" => "genehmigung.recht.kleidung.datum", "title" => "vom", "type" => "date",
+           "width" => [ 4, 4, 2, 2, ],
+           "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
+       ], ],	
 
        [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [
          [ "id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",

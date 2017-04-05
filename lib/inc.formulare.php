@@ -392,8 +392,13 @@ function isValidNewState($antragId, $validateName, $newState) {
 function isValid0(&$form, &$ctrl, &$antrag, $validateName, &$msgs = []) {
   static $stack = false;
 
-  if (!isset($form["_validate"][$validateName]))
-    return true; # nothing to violate anyway
+  if (!isset($form["_validate"][$validateName])) {
+    #echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => undefined, pass -->\n";
+    $msgs[] = "Validierungsregel $validateName für {$form["type"]} {$form["revision"]} nicht definiert";
+    #return true; # nothing to violate anyway
+    return false; # this probably is a bug
+  }
+
   $pp = $form["_validate"][$validateName];
 
   $validateId = $antrag["id"].".".$validateName;
@@ -403,13 +408,13 @@ function isValid0(&$form, &$ctrl, &$antrag, $validateName, &$msgs = []) {
     return false;
   array_push($stack, $validateId);
 
-#  echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => to be evaluated -->\n";
+  #echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => to be evaluated -->\n";
 
   $ret = isValidImpl($form, $antrag, $ctrl, $pp, $validateName, $msgs);
 
   array_pop($stack);
 
-#  echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
+  #echo "\n<!-- isValid: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
 
   return $ret;
 }
@@ -424,7 +429,8 @@ function isValidImpl(&$form, &$antrag, &$ctrl, &$pp, &$validateName, &$msgs) {
   if (is_array($pp)) {
     foreach($pp as $i => $p) {
       $tmp = checkValidLine($p, $antrag, $ctrl, $form, $msgs);
-#      echo "\n<!-- checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i name=$validateName p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
+ #     echo "\n<!-- checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i name=$validateName p=".json_encode($p)." => ".($tmp ? "true":"false")." -->\n";
+ # $msgs[] = "checkValidLine: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i name=$validateName p=".json_encode($p)." => ".($tmp ? "true":"false");
       if ($tmp)
         continue;
       $ret = false;
@@ -432,7 +438,8 @@ function isValidImpl(&$form, &$antrag, &$ctrl, &$pp, &$validateName, &$msgs) {
     }
   }
 
-#  echo "\n<!-- hasValidImpl: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
+  #echo "\n<!-- hasValidImpl: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." $validateName => ".($ret ? "true":"false")." -->\n";
+  #$msgs[]= "hasValidImpl: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag state {$antrag["state"]}")." $validateName => ".($ret ? "true":"false")."";
 
   return $ret;
 }
@@ -446,6 +453,7 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
     $found = 0;
     foreach ($antrag["_inhalt"] as $inhalt0) {
       $ret = checkValidLineField($p, $antrag, $ctrl, $form, $inhalt0, $msgs);
+#$msgs[] = "checkValidLineField(".print_r($inhalt0,true)." => ".($ret ? "true":"false");
       if ($ret === false) {
         $msgs[] = "{$inhalt0["fieldname"]} validation failed";
         return false;
@@ -455,6 +463,7 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
     }
     if ($found == 0) {
       $inhalt0 = [ "fieldname" => $p["id"], "contenttype" => null, "value" => null ];
+#$msgs[] = "checkValidLineField(".print_r($inhalt0,true)." => ".($ret ? "true":"false");
       $ret = checkValidLineField($p, $antrag, $ctrl, $form, $inhalt0, $msgs);
       if ($ret === false) {
         $msgs[] = "{$inhalt0["fieldname"]} validation failed";
