@@ -35,7 +35,8 @@ $config = [
       [ "id" => "zahlung.beleg",
         "otherForm" => [
           [ "type" => "auslagenerstattung", "state" => "instructed", "validate" => "postEdit",  ],
-          [ "type" => "auslagenerstattung", "state" => "payed", "validate" => "postEdit",       ],
+          [ "type" => "auslagenerstattung", "state" => "payed", "validate" => "postEdit",      ],
+          [ "type" => "rechnung-zuordnung", "state" => "instructed", "validate" => "postEdit", ],
           [ "type" => "rechnung-zuordnung", "state" => "payed", "validate" => "postEdit",       ],
         ],
       ],
