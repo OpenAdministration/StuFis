@@ -79,8 +79,8 @@ $config = [
        [ "state" => "done-other", "hasCategory" => "_isExpiredProject2W" ],
     ],
     "need-action" => [
-       [ "state" => "draft", "group" => "ref-finanzen" ],
-       [ "state" => "wip", "group" => "ref-finanzen" ],
+       [ "state" => "draft", "group" => "ref-finanzen-hv" ],
+       [ "state" => "wip", "group" => "ref-finanzen-hv" ],
 #       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ], # im StuRa Tab
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
@@ -88,7 +88,7 @@ $config = [
     "wait-stura" => [
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
        [ "state" => "need-stura", "creator" => "self" ],
-       [ "state" => "need-stura", "group" => "ref-finanzen" ],
+       [ "state" => "need-stura", "group" => "ref-finanzen-hv" ],
        [ "state" => "need-stura", "group" => "stura" ],
     ],
   ],

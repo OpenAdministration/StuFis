@@ -25,13 +25,18 @@ $config = [
   "createState" => "draft",
   "categories" => [
     "need-action" => [
-      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "draft" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "submitted" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "ok-kv" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "ok-hv" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "ok" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "instructed" ], # empty field
+      [ "hasPermission" => "isResponsible", "field:rechnung.leistung" => "==", "state" => "payed" ], # empty field
       [ "state" => "draft", "hasPermission" => "isResponsible" ],
       [ "state" => "draft", "group" => "ref-finanzen" ],
       [ "state" => "submitted", "group" => "ref-finanzen" ],
       [ "state" => "ok-hv", "group" => "ref-finanzen-kv" ],
       [ "state" => "ok-kv", "group" => "ref-finanzen-hv" ],
-      [ "hasPermission" => [ "isUnvollstaendig", "isResponsible" ], ],
     ],
     "need-payment" => [
       [ "state" => "ok", "group" => "ref-finanzen", "field:iban" => "!=" ], # wenn IBAN nicht leer dann überweisen
