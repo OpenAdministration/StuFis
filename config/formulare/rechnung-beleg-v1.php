@@ -57,13 +57,13 @@ $layout = [
 
  [ "id" => "zahlungen.invref1", "type" => "invref", "width" => 12,
    "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
-   "printSum" => [ "einnahmen.beleg", "ausgaben.beleg" ],
+   "printSum" => [ "einnahmen.zugeordnet", "ausgaben.zugeordnet" ],
    "printSumWidth" => 2,
    "orderBy" => [ "field:zahlung.datum", "id" ],
    "title" => "Zahlungen",
    "renderOptRead" => [ "no-form-compress" ],
    "otherForms" => [
-     ["type" => "rechnung-zuordnung", "referenceFormField" => "rechnung.beleg",
+     ["type" => "rechnung-zuordnung", "referenceFormField" => "teilrechnung.beleg",
       "addToSum" => [ "ausgaben.rechnung" => [ "ausgaben.zugeordnet" ], "einnahmen.rechnung" => [ "einnahmen.zugeordnet" ] ],
      ],
    ],

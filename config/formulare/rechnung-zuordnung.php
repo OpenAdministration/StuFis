@@ -116,6 +116,10 @@ $config = [
       [ "hasPermission" => "isProjektLeitung" ],
       [ "field:teilrechnung.org.name" => "==" ],
     ],
+    "canDelete" => [
+      [ "state" => "draft", "group" => "ref-finanzen", ],
+      [ "state" => "draft", "hasPermission" => "isResponsible", ],
+    ],
     "canEdit" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
       [ "state" => "draft", "hasPermission" => "isResponsible", ],

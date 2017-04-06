@@ -275,7 +275,7 @@ $layout = [
      [ "id" => "rechnung.datum",        "title" => "Rechnungsdatum",                      "type" => "date",      "width" => 6,  "opts" => ["required", "hasFeedback"], ],
      [ "id" => "rechnung.eingang",      "title" => "Posteingang beim StuRa",              "type" => "date",      "width" => 6,  "opts" => ["required", "hasFeedback"], "value" => date("Y-m-d") ],
      [ "id" => "rechnung.firma",        "title" => "Rechnung von (Firma)",                "type" => "text",      "width" => 6, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
-     [ "id" => "rechnung.ausgaben",     "title" => "Geforderter Betrag",                  "type" => "money",     "width" => 6, "opts" => ["required", "hasFeedback"], "currency" => "€", "addToSum" => ["ausgaben.teilrechnung"] ],
+     [ "id" => "rechnung.ausgaben",     "title" => "Geforderter Betrag",                  "type" => "money",     "width" => 6, "opts" => ["required", "hasFeedback"], "currency" => "€", "addToSum" => ["ausgaben.teilrechnung", "ausgaben.rechnung"] ],
      [ "id" => "rechnung.zahlungsart",  "title" => "Zahlung per Überweisung",             "type" => "checkbox",  "width" => 6,  "value" => "transfer", "text" => "Zahlung per Überweisung" ],
      [ "id" => "rechnung.frist",        "title" => "Zahlung bis",                         "type" => "date",      "width" => 6,  ],
      [ "id" => "rechnung.leistung",     "title" => "Leistung wurde erbracht",             "type" => "checkbox",  "width" => 12,  "value" => "yes", "text" => "Leistung wurde erbracht"],

@@ -50,6 +50,9 @@ $config = [
       [ "state" => "draft", "group" => "ref-finanzen", ],
       [ "state" => "draft", "hasPermission" => "isCorrectGremium" ],
     ],
+    "canEditPartiell.field.rechnung.ausgaben" => [
+      [ "state" => "ok", "group" => "ref-finanzen", ],
+    ],
     "canDelete" => [
       [ "state" => "draft", "group" => "ref-finanzen", ],
       [ "state" => "draft", "hasPermission" => "isCorrectGremium" ],
