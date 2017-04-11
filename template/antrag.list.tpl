@@ -22,7 +22,7 @@ $tabList = [
     "category" => [ "wait-stura" => "durch StuRa beschließen",
                     "report-stura" => "im StuRa berichten", ],
     "wiki" => [
-      "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|L=%link%|J=|N=|E=|S=angenommen oder abgelehnt}}",
+      "report-stura" => "{{template>:vorlagen:stimmen|Titel=Der Haushaltsverantwortliche beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|L=%link%|J=1|N=0|E=0|S=angenommen}}",
       "wait-stura"   => "{{template>:vorlagen:stimmen|Titel=Der Studierendenrat beschließt ein Budget in Höhe von %betrag% für das Projekt %caption% von %gremium%.|L=%link%|J=|N=|E=|S=angenommen oder abgelehnt}}",
     ],
     "showIfEmptyGroup" => [ "stura", "ref-finanzen" ],
