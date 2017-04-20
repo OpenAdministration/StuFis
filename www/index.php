@@ -1485,6 +1485,7 @@ switch($_REQUEST["tab"]) {
     exit;
   case "antrag.export":
     $antrag = getAntrag();
+    if (!file_exists(SYSBASE.'/tmp')) { mkdir(SYSBASE.'/tmp'); }; # else tempnam fails
     $zipFileName = tempnam(SYSBASE.'/tmp', 'exp');
     if ($zipFileName === false) die("Out of space.");
 
