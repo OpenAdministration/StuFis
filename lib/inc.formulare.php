@@ -2743,7 +2743,9 @@ function renderFormItemTable($layout, $ctrl) {
                   $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
                   $childCls = [ "dynamic-table-caption" ];
                   if ($child["type"] == "money")
-                    $childCls[] = "nowrap text-right";
+                    $childCls[] = "text-right";
+                  if ($child["type"] == "money" && !in_array("canWrap", $child["opts"]))
+                    $childCls[] = "nowrap";
                   if (isset($child["width"])) {
                     $colWidthSum += $child["width"];
                     $childCls[] = "col-xs-{$child["width"]}";

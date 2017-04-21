@@ -28,22 +28,22 @@ $children = [
 if ($year == date("Y")) {
   $children[] =
     [ "id" => "kosten.einnahmen.offen",   "name" => "offene Einnahmen",  "type" => "money",  "width" => 1,
-      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit", "canWrap"],
       "printSumDefer" => "einnahmen.offen"
     ];
   $children[] =
     [ "id" => "kosten.ausgaben.offen",   "name" => "offene Ausgaben",  "type" => "money",  "width" => 1,
-      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit","canWrap"],
       "printSumDefer" => "ausgaben.offen"
     ];
   $children[] =
     [ "id" => "kosten.einnahmen",   "name" => "getätigte Einnahmen",  "type" => "money",  "width" => 1,
-      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit","canWrap"],
       "printSumDefer" => "einnahmen.brutto"
     ];
   $children[] =
     [ "id" => "kosten.ausgaben",   "name" => "getätigte Ausgaben",  "type" => "money",  "width" => 1,
-      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit"],
+      "currency" => "€", "opts" => ["hide-if-zero","sum-over-table-bottom","hide-edit","canWrap"],
       "printSumDefer" => "ausgaben.brutto"
     ];
 } else {
