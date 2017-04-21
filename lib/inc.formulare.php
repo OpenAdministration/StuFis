@@ -2927,16 +2927,6 @@ function renderFormItemTable($layout, $ctrl) {
     $ctrl["_render"]->addToSumValueByRowRecursive[$refname] = $addToSumDifference;
 
     if ($hasPrintSumFooter) {
-
-?>
-       </tr>
-<?php
-     }
-?>
-    </tbody>
-<?php
-    if ($hasPrintSumFooter) {
-        $addToSumDifference = [];
 ?>
     <tfoot>
       <tr>
