@@ -253,3 +253,7 @@ a.disabled-option span {
 .nowrap {
  white-space: nowrap;
 }
+
+.text-white{
+    color: white !important;
+}

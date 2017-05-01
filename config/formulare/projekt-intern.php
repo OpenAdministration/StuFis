@@ -1,13 +1,13 @@
 <?php
 
 $config = [
-  "title" => "Projekt der Studierendenschaft (internes Projekt)",
+  "title" => "Internes Projekt",
   "shortTitle" => "Projekt (intern)",
   "state" => [ "draft" => [ "Beantragt", ],
-               "ok-by-hv" => [ "Genehmigt durch HV (muss noch verkündet werden)", ],
+               "ok-by-hv" => [ "Genehmigt durch HV (nicht verkündet)", ],
                "need-stura" => [ "Warte auf StuRa-Beschluss", ],
                "ok-by-stura" => [ "Genehmigt durch StuRa-Beschluss", ],
-               "done-hv" => [ "Genehmigt durch HV und protokolliert in StuRa Sitzung", ],
+               "done-hv" => [ "Genehmigt durch HV und verkündet in StuRa Sitzung", ],
                "done-other" => [ "Genehmigt ohne Verkündung", ],
                "revoked" => [ "Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen", ],
                "terminated" => [ "Abgeschlossen (keine weiteren Ausgaben)", "beenden", ],
