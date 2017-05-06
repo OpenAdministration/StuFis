@@ -5,7 +5,7 @@
 
 $config = [
   "title" => "Rechnung direkt an den StuRa (Projektzuordnung)",
-  "shortTitle" => "Rechnung direkt an den StuRa (Projektzuordnung)",
+  "shortTitle" => "Rechnung (Zuordnung)",
   "state" => [ "draft"          => [ "Noch keine Zahlung benötigt" ],
                "submitted"      => [ "Zahlung beantragt", "Zahlung beantragen", ],
                "ok-hv"       => [ "KV fehlt", "als Haushaltsverantwortlicher genehmigen" ],

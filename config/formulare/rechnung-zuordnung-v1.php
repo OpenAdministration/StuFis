@@ -1,7 +1,7 @@
 <?php
 
 $config = [
-  "captionField" => [ "rechnung.datum", "rechnung.firma", "rechnung.ausgaben|currency=€", "projekt.name", "projekt.org.name" ],
+  "captionField" => [ "rechnung.datum", "rechnung.firma", "rechnung.ausgaben|currency=<U+20AC>", "projekt.name", "projekt.org.name" ],
   "revisionTitle" => "Version 20170131",
   "permission" => [
     "isCorrectGremium" => [

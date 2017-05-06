@@ -26,107 +26,111 @@
  */
 class SepaCreditTransfer extends SepaFileBlock
 {
-	/**
+    /**
 	 * @var string Payment ID.
 	 */
-	public $id;
-	/**
+    public $id;
+    /**
 	 * @var string
 	 */
-	public $endToEndId;
-	/**
+    public $endToEndId;
+    /**
 	 * @var string Account bank's BIC
 	 */
-	public $creditorBIC;
-	/**
+    public $creditorBIC;
+    /**
 	 * @var string Name
 	 */
-	public $creditorName;
-	/**
+    public $creditorName;
+    /**
 	 * @var string account IBAN
 	 */
-	public $creditorAccountIBAN;
-	/**
+    public $creditorAccountIBAN;
+    /**
 	 * @var string Remittance information.
 	 */
-	public $remittanceInformation;
+    public $remittanceInformation;
 
-	/**
+    /**
 	 * @var string ISO currency code
 	 */
-	protected $currency;
-	/**
+    protected $currency;
+    /**
 	 * @var integer Transfer amount in cents.
 	 */
-	protected $amountCents = 0;
+    protected $amountCents = 0;
 
-	/**
+    /**
 	 * Set the transfer amount.
 	 * @param mixed $amount
 	 */
-	public function setAmount($amount)
-	{
-		$amount += 0;
-		if (is_float($amount))
-			$amount = (integer) ($amount * 100);
+    public function setAmount($amount)
+    {
+        $amount += 0;
+        if (is_float($amount))
+            $amount = (integer) ($amount * 100);
 
-		$this->amountCents = $amount;
-	}
+        $this->amountCents = $amount;
+    }
 
-	/**
+    /**
 	 * Get the transfer amount in cents.
 	 * @return integer
 	 */
-	public function getAmountCents()
-	{
-		return $this->amountCents;
-	}
-	
-	/**
+    public function getAmountCents()
+    {
+        return $this->amountCents;
+    }
+
+    /**
 	 * Set the debtor's account currency code.
 	 * @param string $code currency ISO code
 	 * @throws Exception
 	 */
-	public function setCurrency($code)
-	{
-		$this->currency = $this->validateCurrency($code);
-	}
-	
-	/**
+    public function setCurrency($code)
+    {
+        $this->currency = $this->validateCurrency($code);
+    }
+
+    /**
 	 * DO NOT CALL THIS FUNCTION DIRECTLY!
 	 * 
 	 * @param SimpleXMLElement $xml
 	 * @return SimpleXMLElement
 	 */
-	public function generateXml(SimpleXMLElement $xml)
-	{
-    if (strlen($this->remittanceInformation) < 1 or strlen($this->remittanceInformation) > 140)
-     die("invalid subject length: $this->remittanceInformation");
-    # Sparkasse Arnstadt-Ilmenau erlaubt hier nur a-zA-Z0-9 sowie -':?,+()/. und Leerzeichen
-    if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#", $this->remittanceInformation))
-      die("invalid this->remittanceInformation $this->remittanceInformation: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#");
-    if (strlen($this->creditorName) < 1 or strlen($this->creditorName) > 70)
-     die("invalid name length: $this->creditorName");
-    # Sparkasse Arnstadt-Ilmenau erlaubt hier nur a-zA-Z0-9 sowie -':?,+()/. und Leerzeichen
-    if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#", $this->creditorName))
-      die("invalid name $this->creditorName: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#");
-		// -- Credit Transfer Transaction Information --\\
-		
-		$amount = $this->intToCurrency($this->getAmountCents());
+    public function generateXml(SimpleXMLElement $xml)
+    {
+        $vwz = $this->remittanceInformation;
+        if (strlen($vwz) < 1)
+            die("invalid subject length: $vwz");
+        if(strlen($vwz) > 140){
+            $vwz = substr($vwz,0,139);
+        }
+        # Sparkasse Arnstadt-Ilmenau erlaubt hier nur a-zA-Z0-9 sowie -':?,+()/. und Leerzeichen
+        if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#", $vwz))
+            die("invalid special char: this->remittanceInformation $vwz: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#");
+        if (strlen($this->creditorName) < 1 or strlen($this->creditorName) > 70)
+            die("invalid name length: $this->creditorName");
+        # Sparkasse Arnstadt-Ilmenau erlaubt hier nur a-zA-Z0-9 sowie -':?,+()/. und Leerzeichen
+        if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#", $this->creditorName))
+            die("invalid name $this->creditorName: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#");
+        // -- Credit Transfer Transaction Information --\\
 
-		$CdtTrfTxInf = $xml->addChild('CdtTrfTxInf');
-		$PmtId = $CdtTrfTxInf->addChild('PmtId');
-		$PmtId->addChild('InstrId', $this->id);
-		$PmtId->addChild('EndToEndId', $this->endToEndId);
-		$CdtTrfTxInf->addChild('Amt')->addChild('InstdAmt', $amount)->addAttribute('Ccy', $this->currency);
-		if ($this->creditorBIC) {
-			$CdtTrfTxInf->addChild('CdtrAgt')->addChild('FinInstnId')->addChild('BIC', $this->creditorBIC);
-		}
-		$CdtTrfTxInf->addChild('Cdtr')->addChild('Nm', $this->creditorName);
-		$CdtTrfTxInf->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $this->creditorAccountIBAN);
-		$CdtTrfTxInf->addChild('RmtInf')->addChild('Ustrd', $this->remittanceInformation);
-		
-		return $xml;
-	}
+        $amount = $this->intToCurrency($this->getAmountCents());
+
+        $CdtTrfTxInf = $xml->addChild('CdtTrfTxInf');
+        $PmtId = $CdtTrfTxInf->addChild('PmtId');
+        $PmtId->addChild('InstrId', $this->id);
+        $PmtId->addChild('EndToEndId', $this->endToEndId);
+        $CdtTrfTxInf->addChild('Amt')->addChild('InstdAmt', $amount)->addAttribute('Ccy', $this->currency);
+        if ($this->creditorBIC) {
+            $CdtTrfTxInf->addChild('CdtrAgt')->addChild('FinInstnId')->addChild('BIC', $this->creditorBIC);
+        }
+        $CdtTrfTxInf->addChild('Cdtr')->addChild('Nm', $this->creditorName);
+        $CdtTrfTxInf->addChild('CdtrAcct')->addChild('Id')->addChild('IBAN', $this->creditorAccountIBAN);
+        $CdtTrfTxInf->addChild('RmtInf')->addChild('Ustrd', $vwz);
+
+        return $xml;
+    }
 
 }
