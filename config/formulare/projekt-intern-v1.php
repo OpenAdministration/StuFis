@@ -122,14 +122,14 @@ $layout[] = [
             [ "id" => "genehmigung.recht.grp.0", "type" => "group",    "width"=>12,"opts"=>[""], "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, ],
             ], ],
-            [ "id" => "genehmigung.recht.grp.1", "type" => "group",    "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.1", "type" => "group",    "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, ],
             ], ],
-            [ "id" => "genehmigung.recht.grp.2", "type" => "group",     "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.2", "type" => "group",     "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, ],
             ], ],
 
-            [ "id" => "genehmigung.recht.grp.3", "type" => "group",     "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.3", "type" => "group",     "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura",
                  "width" => [12, 12, 6, 6],  ],
                 [ "id" => "genehmigung.recht.stura.empty", "type" => "plaintext", "width" => 2, ],
@@ -141,7 +141,7 @@ $layout[] = [
 
             ], ],
 
-            [ "id" => "genehmigung.recht.grp.4", "type" => "group",   "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.4", "type" => "group",   "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR\nMuss auf der nächsten StuRa Sitzung bekannt gemacht werden\nund erhält dann eine StuRa-Beschluss-Nr.", "type" => "radio", "value" => "fsr",
                  "width" => [12, 12, 6, 6, ], ],
                 [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text",
@@ -153,7 +153,7 @@ $layout[] = [
                 [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
                  "width" => [ 4, 4, 2, 2, ], ],
             ], ],
-            [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Gremienkleidung: \n StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.", "type" => "radio", "value" => "kleidung",
                  "width" => [12, 12, 6, 6, ], ],
                 [ "id" => "genehmigung.recht.kleidung.gremium", "title" => "Gremium", "type" => "text",
@@ -165,7 +165,7 @@ $layout[] = [
                 [ "id" => "genehmigung.recht.kleidung.empty", "type" => "plaintext", "width" => 2, ],
             ], ],
 
-            [ "id" => "genehmigung.recht.grp.5", "type" => "group",     "width"=>12,"opts"=>["dontShowIfChildRadioNotPicked"], "children" => [
+            [ "id" => "genehmigung.recht.grp.5", "type" => "group",     "width"=>12,/*"opts"=>["dontShowIfChildRadioNotPicked"],*/ "children" => [
                 [ "id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",
                  "width" => [12, 12, 6, 6],  ],
                 [ "id" => "genehmigung.recht.other.reason", "title" => "Grund", "type" => "text",
