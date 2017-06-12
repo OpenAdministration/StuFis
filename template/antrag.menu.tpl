@@ -88,7 +88,7 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
                                                                if (in_array($newState, $removeList)) {
                                                                    echo "disabled ";
                                                                }
-                                                               echo "value=\"".htmlspecialchars($state)."\">".htmlspecialchars($newStateName)."</option>\n";
+                                                               echo "value=\"".htmlspecialchars($newState)."\">".htmlspecialchars($newStateName)."</option>\n";
 
                                                            }
                                 ?>
