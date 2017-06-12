@@ -83,7 +83,7 @@ class SepaPaymentInfo extends SepaFileBlock
 	 * @var boolean indication whether batch booking is requested (per tx booking if false)
 	 */
 	protected $BtchBookg = NULL;
-	
+
 	/**
 	 * Constructor.
 	 * @param SepaTransferFile $transferFile
@@ -110,10 +110,10 @@ class SepaPaymentInfo extends SepaFileBlock
 		}
 		if (isset($paymentInfo['localInstrumentCode']))
 			$this->setLocalInstrumentCode($paymentInfo['localInstrumentCode']);
-		
+
 		if (isset($paymentInfo['paymentMethod']))
 			$this->setPaymentMethod($paymentInfo['paymentMethod']);
-		
+
 		if (isset($paymentInfo['debtorAccountCurrency']))
 			$this->setDebtorAccountCurrency($paymentInfo['debtorAccountCurrency']);
 	}
@@ -145,7 +145,7 @@ class SepaPaymentInfo extends SepaFileBlock
 		}
 		$this->localInstrumentCode = $code;
 	}
-	
+
 	/**
 	 * Set the debtor's account currency code.
 	 * @param string $code currency ISO code
@@ -171,7 +171,7 @@ class SepaPaymentInfo extends SepaFileBlock
 	{
 		return $this->controlSumCents;
 	}
-	
+
 	/**
 	 * Set the transfer file.
 	 * @param SepaTransferFile $transferFile
@@ -198,10 +198,10 @@ class SepaPaymentInfo extends SepaFileBlock
 		}
 		if (isset($transferInfo['amount']))
 			$transfer->setAmount($transferInfo['amount']);
-		
+
 		if (isset($transferInfo['currency']))
 			$transfer->setCurrency($transferInfo['currency']);
-		
+
 		$transfer->endToEndId = $this->transferFile->messageIdentification . '/' . $this->getNumberOfTransactions();
 
 		$this->creditTransfers[] = $transfer;
@@ -213,7 +213,7 @@ class SepaPaymentInfo extends SepaFileBlock
 	 * DO NOT CALL THIS FUNCTION DIRECTLY!
 	 *
 	 * Generate the XML structure for this "Payment Info" block.
-	 * 
+	 *
 	 * @param SimpleXMLElement $xml
 	 * @return SimpleXMLElement
 	 */
@@ -238,7 +238,7 @@ class SepaPaymentInfo extends SepaFileBlock
 		$PmtInf->addChild('PmtTpInf')->addChild('SvcLvl')->addChild('Cd', 'SEPA');
 		if ($this->localInstrumentCode)
 			$PmtInf->PmtTpInf->addChild('LclInstrm')->addChild('Cd', $this->localInstrumentCode);
-		
+
 		$PmtInf->addChild('ReqdExctnDt', $requestedExecutionDate);
 		$PmtInf->addChild('Dbtr')->addChild('Nm', $this->debtorName);
 

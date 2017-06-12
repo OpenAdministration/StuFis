@@ -68,7 +68,7 @@ class SepaCreditTransfer extends SepaFileBlock
     {
         $amount += 0;
         if (is_float($amount))
-            $amount = (integer) ($amount * 100);
+            $amount = (integer) round($amount * 100);
 
         $this->amountCents = $amount;
     }
@@ -110,7 +110,7 @@ class SepaCreditTransfer extends SepaFileBlock
         if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#", $vwz))
             die("invalid special char: this->remittanceInformation $vwz: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,140}$#");
         if (strlen($this->creditorName) < 1 or strlen($this->creditorName) > 70)
-            die("invalid name length: $this->creditorName");
+            die("invalid name length von emfaenger name: $this->creditorName");
         # Sparkasse Arnstadt-Ilmenau erlaubt hier nur a-zA-Z0-9 sowie -':?,+()/. und Leerzeichen
         if (!preg_match("#^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#", $this->creditorName))
             die("invalid name $this->creditorName: #^[A-Za-z0-9\+\?/\-:\(\)\.,' ]{1,70}$#");
