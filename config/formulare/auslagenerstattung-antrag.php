@@ -34,6 +34,7 @@ $config = [
       [ "creator" => "self" ],
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
+      [ "hasPermission" => [ "isProjektLeitung" ], ], # Projektverantwortlicher muss lesen können, sonst kann er nicht zustimmen
 # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
 # FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
     ],
