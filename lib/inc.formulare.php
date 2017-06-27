@@ -2337,7 +2337,7 @@ function otherFormTrOptions($layout, $ctrl) {
 
     $tableNames = $layout["references"][1];
     if (!isset($otherCtrl["_render"])) {
-        return "Rendering skipped due to nesting";
+        return [ "Rendering skipped due to nesting", NULL ];
     }
 
     if (!is_array($tableNames)) $tableNames = [ $tableNames => $tableNames ];
