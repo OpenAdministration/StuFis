@@ -30,10 +30,12 @@ $config = [
      * group: true if all given groups are present
      * field: true if all given checks are ok
      */
+
         "canRead" => [
             [ "creator" => "self" ],
             [ "group" => "ref-finanzen" ],
             [ "group" => "konsul" ],
+            [ "hasPermission" => [ "isProjektLeitung" ], ], # Projektverantwortlicher muss lesen können, sonst kann er nicht zustimmen
             # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
             # FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
         ],
@@ -53,6 +55,7 @@ $config = [
         ],
         "canBeLinked" => [
             [ "state" => "new", ],
+
         ],
         "canStateChange.from.draft.to.new" => [
             [ "group" => "ref-finanzen" ],
@@ -63,6 +66,7 @@ $config = [
     "postNewStateActions" => [
         "from.draft.to.new" => [ [ "copy" => true, "type" => "auslagenerstattung", "revision" => "v1", "redirect" => true ] ],
     ],
+
 ];
 
 registerFormClass( "auslagenerstattung-antrag", $config );

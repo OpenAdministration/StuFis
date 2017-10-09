@@ -82,6 +82,10 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
            "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
                            "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
           ],
+          ["type" => "projekt-intern", "state" => "done-other",
+           "addToSum" => [ "expr: %einnahmen - %einnahmen.erstattet" => [ "einnahmen.offen" ] ,
+                           "expr: %ausgaben - %ausgaben.erstattet" => [ "ausgaben.offen" ] ],
+          ],
         ],
       ];
   }

@@ -83,10 +83,12 @@ $config = [
        [ "state" => "wip", "group" => "ref-finanzen-hv" ],
 #       [ "state" => "ok-by-hv", "group" => "ref-finanzen" ], # im StuRa Tab
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
+       [ "state" => "need-stura", "hasPermission" => "isProjektLeitung" ],
        [ "state" => "need-stura", "creator" => "self" ],
     ],
     "wait-stura" => [
        [ "state" => "need-stura", "hasPermission" => "isCorrectGremium" ],
+       [ "state" => "need-stura", "hasPermission" => "isProjektLeitung" ],
        [ "state" => "need-stura", "creator" => "self" ],
        [ "state" => "need-stura", "group" => "ref-finanzen-hv" ],
        [ "state" => "need-stura", "group" => "stura" ],
@@ -103,6 +105,7 @@ $config = [
     "canRead" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
+      [ "hasPermission" => "isProjektLeitung" ],
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
       [ "state" => "need-stura", "group" => "stura" ],
@@ -179,6 +182,7 @@ $config = [
     "canRevoke" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
+      [ "hasPermission" => "isProjektLeitung" ],
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.draft.to.revoked" => [
@@ -218,6 +222,7 @@ $config = [
     "canTerminate" => [
       [ "creator" => "self" ],
       [ "hasPermission" => "isCorrectGremium" ],
+      [ "hasPermission" => "isProjektLeitung" ],
       [ "group" => "ref-finanzen" ],
     ],
     "canStateChange.from.ok-by-stura.to.terminated" => [
