@@ -208,10 +208,10 @@ $layout = [
      [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10",  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
      [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
      [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "antragsteller.name",  "title" =>"Antragsteller (Name)",        "type" => "text",  "width" => 12, "placeholder" => "Vorname Nachname", "prefill" => "user:fullname", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "antragsteller.email", "title" =>"Antragsteller (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+     [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 12, "placeholder" => "Vorname Nachname", "prefill" => "user:fullname", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+     [ "id" => "antragsteller.email", "title" =>"Benachrichtigung bei Überweisung (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
      [ "id" => "genehmigung",         "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","readonly"], ],
-     [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Antragstellers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+     [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
    ],
  ],
 
