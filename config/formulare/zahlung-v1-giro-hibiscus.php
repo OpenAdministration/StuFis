@@ -44,7 +44,7 @@ $layout = [
      [ "id" => "zahlung.ausgaben",         "title" => "Ausgaben",            "type" => "money",    "width" => 3, "opts" => ["required"], "addToSum" => [ "ausgaben" ], "currency" => "€"],
      [ "id" => "zahlung.grp.1",                                              "type" => "group",     "width" => 6,
        "children" => [
-         [ "id" => "zahlung.verwendungszweck", "title" => "Verwendungszweck",    "type" => "textarea", "width" => 12, "opts" => ["required"], ],
+         [ "id" => "zahlung.verwendungszweck", "title" => "Verwendungszweck",    "type" => "textarea", "width" => 12, ],
          [ "id" => "zahlung.hibiscus",         "title" => "Hibiscus",            "type" => "number",   "width" => 4, "opts" => ["readonly"], ],
          [ "id" => "zahlung.saldo",            "title" => "Hibiscus-Saldo",      "type" => "money",    "width" => 8, "opts" => ["readonly"], "currency" => "€"],
        ],

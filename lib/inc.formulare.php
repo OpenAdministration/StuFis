@@ -524,8 +524,10 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
 
 # once per field
 function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
+
     if (($p["id"] != $inhalt["fieldname"]) && (substr($inhalt["fieldname"], 0, strlen($p["id"]) + 1) != $p["id"]."[") )
         return null; # not selected
+
     if (($inhalt["contenttype"] === "otherForm") && isset($p["otherForm"])) {
         # check if a valid other form is selected
         if ($inhalt["value"] == "") return false;
@@ -575,6 +577,16 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
     if (isset($p["value"]) && (($pos = strpos($p["value"],":")) !== false)) {
         $prefix = substr($p["value"],0,$pos);
         $remainder = substr($p["value"],$pos+1);
+        if($remainder{0} == '#'){
+            //falls der Remainer eine #id ist suche im selben formular nach dieser id und ersetze remainder
+            foreach($antrag["_inhalt"] as $field){
+                if($field['fieldname'] == substr($remainder,1)){
+                    $remainder = $field['value'];
+                    break;
+                }
+            }
+        }
+
         switch ($prefix) {
             case "is":
                 switch ($remainder) {
@@ -593,6 +605,18 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
                 break;
             case "notEquals":
                 if (((string) $inhalt["value"]) == $remainder) return false;
+                break;
+            case "bigger":
+                if (((float) $inhalt["value"]) <= (float) $remainder) return false;
+                break;
+            case "biggerEquals":
+                if (((float) $inhalt["value"]) < (float) $remainder) return false;
+                break;
+            case "smaller":
+                if (((float) $inhalt["value"]) >= (float) $remainder) return false;
+                break;
+            case "smallerEquals":
+                if (((float) $inhalt["value"]) > (float) $remainder) return false;
                 break;
             default:
                 die("not implemented validation: value \"$prefix\" \"$remainer\"");
