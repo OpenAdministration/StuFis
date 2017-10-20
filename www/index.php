@@ -1470,18 +1470,128 @@ switch($_REQUEST["tab"]) {
 
         exit;
     case "antrag.print":
-        global $inlineCSS;
-        $inlineCSS = true;
-        require "../template/header-print.tpl";
+
 
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
-        require "../template/antrag.head.tpl";
-        require "../template/antrag.tpl";
-        require "../template/antrag.foot-print.tpl";
-        require "../template/footer-print.tpl";
+        if($antrag['type']=="auslagenerstattung"){
+
+            $inhalt = $antrag["_inhalt"];
+            $antrag_id = $antrag['id'];
+            //var_dump($antrag);
+            //suche IBAN, Antragsteller und
+            foreach($inhalt as $fields){
+                switch(explode("[",$fields['fieldname'])[0]){
+                    case 'iban':
+                        $iban = $fields['value'];
+                        break;
+                    case 'antragsteller.name':
+                        $empf = $fields['value'];
+                        break;
+                    case 'genehmigung.recht':
+                        $recht = $fields['value'];
+                        //TODO switch case
+                        break;
+                    case 'genehmigung.sachlicheRichtigkeit':
+                        $hv = $fields['value'];
+                        break;
+                    case 'genehmigung.rechnerischeRichtigkeit':
+                        $kv = $fields['value'];
+                        break;
+                    case 'genehmigung.titel':
+                        $hhp = $fields['value'];
+                        break;
+                    case 'genehmigung.konto':
+                        $konto = $fields['value'];
+                        break;
+                    case 'projekt.name':
+                        $projName = $fields['value'];
+                        break;
+                    case 'genehmigung':
+                        $genID = $fields['value'];
+                        break;
+                    case 'geld.titel':
+                        $titeln[] = $fields['value'];
+                        break;
+                    case 'geld.konto':
+                        $kontos[] = $fields['value'];
+                        break;
+                    case 'geld.ausgaben':
+                        $ausgaben[] = $fields['value'];
+                        break;
+                    case 'geld.einnahmen':
+                        $einnahmen[] = $fields['value'];
+                        break;
+                    case 'finanzauslagenposten':
+                        $posten[] = $fields['value'];
+                        break;
+                    default:
+                        break;
+                }
+            }
+            $posten = array_filter($posten,function($val){
+                return (strpos($val, '-') !== false);
+            });
+            $posten = array_map(function($val){
+                return "B".strrev($val);
+            },$posten);
+            $titeln = array_map(function($value) {
+                global $hhp;
+                return $value === "" ? $hhp : $value;
+            }, $titeln);
+            $kontos = array_map(function($value) {
+                global $konto;
+                return $value === "" ? $konto : $value;
+            }, $kontos);
+            //insert default hhp titel
+            foreach($antrag['_anhang'] as $key => $anhang){
+                $paths[] = $key."/".$anhang['path'];
+            }
+            $betrag = array_sum($ausgaben)-array_sum($einnahmen);
+            //
+            //send pdfs
+            //
+            $target_url = 'https://box.stura.tu-ilmenau.de/FUI2PDF/acceptFile.php';
+            //This needs to be the full path to the file you want to send.
+            foreach($paths as $p){
+                $full_paths[]=$STORAGE."/".$antrag_id."/".(explode("/",$p)[1]);
+            }
+            /* curl will accept an array here too.
+         * Many examples I found showed a url-encoded string instead.
+         * Take note that the 'key' in the array will be the key that shows up in the
+         * $_FILES array of the accept script. and the at sign '@' is required before the
+         * file name.
+         */
+
+
+
+            //send data
+            $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
+            echo $sendToPrint;
+            echo "Test";
+            var_dump($sendToPrint);
+?>
+<form id="myForm" target="" action="https://box.stura.tu-ilmenau.de/FUI2PDF/index.php" method="post">
+    <?php
+            foreach ($sendToPrint as $a => $b) {
+                echo '<input type="hidden" name="'.htmlentities($a).'"value="'.htmlentities($b).'">';
+            }
+    ?> </form>
+<script type="text/javascript">
+    document.getElementById('myForm').submit();
+</script>
+<?php
+        }else{
+            global $inlineCSS;
+            $inlineCSS = true;
+            require "../template/header-print.tpl";
+            require "../template/antrag.head.tpl";
+            require "../template/antrag.tpl";
+            require "../template/antrag.foot-print.tpl";
+            require "../template/footer-print.tpl";
+        }
         exit;
     case "antrag.export":
         $antrag = getAntrag();
