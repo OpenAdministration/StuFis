@@ -6,14 +6,16 @@ $config = [
     "state" => [
         "draft"             => [ "Entwurf", "als Entwurf speichern" ],
         "beschlossen"       => [ "Beschlossen", "als beschlossen speichern" ],
-        "terminated"        => [ "Abgerechnet", "als abgerechnet speichern" ],
-        "no-need"        => [ "Antragsteller verzichtet", "Antragsteller verzichtet" ],
+        "vorkasse-bezahlt"  => [ "Vorkasse ausgezahlt + Gebucht"],
+        "abrechnung-ok"     => [ "Korrekt Abgerechnet", "als abgerechnet speichern" ],
+        "terminated"        => [ "Abgeschlossen und Gebucht"],
+        "no-need"           => [ "Antragsteller verzichtet", "Antragsteller verzichtet" ],
     ],
     "createState" => "draft",
 
     "proposeNewState" => [
-        "draft" => [ "beschlossen","terminated"],
-        "beschlossen" => [ "terminated","no-need"],
+        "draft" => [ "beschlossen","abrechnung-ok"],
+        "beschlossen" => [ "abrechnung-ok","no-need"],
     ],
     "categories" => [
         "need-action" => [
@@ -21,11 +23,15 @@ $config = [
             [ "state" => "draft", "hasPermission" => "canRead" ],
             [ "state" => "beschlossen", "hasPermission" => "canRead"  ],
         ],
+        "_need_booking_payment" => [
+            [ "state" => "beschlossen", "group" => "ref-finanzen" ],
+            [ "state" => "abrechnung-ok", "group" => "ref-finanzen" ],
+        ],
     ],
     "validate" => [
         "postEdit" => [
             [ "state" => "beschlossen","requiredIsNotEmpty" => true,"doValidate" => "checkBeschlossen"],
-            [ "state" => "terminated","doValidate" => "checkAbrechnung","requiredIsNotEmpty" => true,
+            [ "state" => "abrechnung-ok","doValidate" => "checkAbrechnung","requiredIsNotEmpty" => true,
             ],
         ],
 
@@ -64,19 +70,19 @@ $config = [
         "canStateChange.from.draft.to.beschlossen" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.beschlossen.to.terminated" => [
+        "canStateChange.from.beschlossen.to.abrechnung-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.draft.to.terminated" => [
+        "canStateChange.from.draft.to.abrechnung-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
         "canStateChange.from.beschlossen.to.draft" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.terminated.to.draft" => [
+        "canStateChange.from.abrechnung-ok.to.draft" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.terminated.to.beschlossen" => [
+        "canStateChange.from.abrechnung-ok.to.beschlossen" => [
             [ "hasPermission" => "canRead" ],
         ],
         "canStateChange.from.beschlossen.to.no-need" => [

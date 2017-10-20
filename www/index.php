@@ -1569,20 +1569,59 @@ switch($_REQUEST["tab"]) {
 
             //send data
             $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
-            echo $sendToPrint;
-            echo "Test";
-            var_dump($sendToPrint);
-?>
+
+            // Code um POST zu senden
+            $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
+            $content = json_encode($sendToPrint);
+            //echo $content;
+            //Test
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_HTTPHEADER,
+                        array("Content-type: application/json"));
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
+
+            //Wo ist die Datei erstellt worden
+            $Ort = curl_exec($curl);
+            //echo $Ort;
+
+            //Dann lade sie runter
+            header("Content-type: application/pdf");
+            header("Content-disposition: attachment; filename=Ausdruck.pdf");
+            readfile($Ort);
+
+            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            //$response = json_decode($json_response, true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            /*?>
 <form id="myForm" target="" action="https://box.stura.tu-ilmenau.de/FUI2PDF/index.php" method="post">
     <?php
             foreach ($sendToPrint as $a => $b) {
                 echo '<input type="hidden" name="'.htmlentities($a).'"value="'.htmlentities($b).'">';
             }
-    ?> </form>
+?> </form>
 <script type="text/javascript">
     document.getElementById('myForm').submit();
 </script>
-<?php
+<?php */
         }else{
             global $inlineCSS;
             $inlineCSS = true;
@@ -1789,7 +1828,12 @@ switch($_REQUEST["tab"]) {
             ob_start();
             $success = renderFormImpl($form, $ctrl);
             ob_end_clean();
-
+            $inhalt_better = [];
+            array_walk($inhalt, function (& $item) {
+                global $inhalt_better;
+                $inhalt_better[$item['fieldname']] = $item['value'];
+            });
+            $inhalt = $inhalt_better;
             $value = 0.00;
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
                 $value -= $ctrl["_render"]->addToSumValue["ausgaben"];
@@ -1804,6 +1848,24 @@ switch($_REQUEST["tab"]) {
                 $value -= $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
             }
 
+            if($antrag['type'] == 'extern-express'){
+                $value = -1;
+                if($antrag['state'] == 'beschlossen'){
+                    if($inhalt['geld.vorkasse'] > 0){
+                        $value = -$inhalt['geld.vorkasse'];
+                    }else continue;
+                }
+                if($antrag['state'] == 'abrechnung-ok'){
+                    if($inhalt['geld.vorkasse'] > 0 && (!isset($inhalt['vorkasse.buchung']) || $inhalt['vorkasse.buchung'] == "")){
+
+                        echo $value = $inhalt['geld.vorkasse'];
+                    }else{
+                        if($inhalt['geld.abgerechnet'] > 0 && (!isset($inhalt['abrechnung.buchung']) || $inhalt['abrechnung.buchung'] == "")){
+                            $value = -$inhalt['geld.abgerechnet'];
+                        }
+                    }
+                }
+            }
             $antrag["_value"] = $value;
             $antrag["_ctrl"] = $ctrl;
             $antrag["_form"] = $form;
@@ -1838,6 +1900,8 @@ switch($_REQUEST["tab"]) {
                 $value -= $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
             }
 
+
+
             $antrag["_value"] = $value;
             $antrag["_ctrl"] = $ctrl;
             $antrag["_form"] = $form;
@@ -1853,7 +1917,6 @@ switch($_REQUEST["tab"]) {
             if ($a["_value"] > $b["_value"]) return 1;
             return 0;
         });
-
         require "../template/booking.tpl";
         break;
     case "hibiscus.sct":
