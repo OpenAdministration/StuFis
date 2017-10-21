@@ -1,9 +1,15 @@
+
+#force https
 RewriteEngine On
-RewriteRule ^telegrambot - [L,NC]
 RewriteCond %{HTTPS} !=on
-RewriteRule ^download.php - [L,NC]
 RewriteRule ^(.*)$ https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
 Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+#Do not redirect here:
+RewriteRule ^telegrambot - [L,NC]
+RewriteRule ^download.php - [L,NC]
+
+#Redirect everythin else to index.php
 RewriteCond   %{REQUEST_FILENAME}   !-f
 RewriteCond   %{REQUEST_FILENAME}   !-d
 RewriteRule   ^(.*)$                index.php/$1  [L]
