@@ -29,6 +29,12 @@ $config = [
         "to.no-need" => [
             [ "writeField" => "always", "name" => "geld.abgerechnet",   "type" => "money", "value" => "0" ],
         ],
+        "to.vorkasse-bezahlt" => [
+            ["writeField" => "always", "name" => "vorkasse.buchung","type" => "plaintext", "value" => "Bereits gebucht" ],
+        ],
+        "to.vorkasse-bezahlt" => [
+            ["writeField" => "always", "name" => "abrechnung.buchung","type" => "plaintext", "value" => "Bereits gebucht" ],
+        ],
     ],
 ];
 
@@ -61,6 +67,7 @@ $layout = [
              "referencesKey" => [ "kosten" => "kosten.nummer" ],
              "referencesId" => "kostenstellenplan.otherForm",
             ],
+            [ "id" => "org.iban", "title" =>"IBAN" ,"type" => "iban",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
         ],
     ],
     [
@@ -108,11 +115,22 @@ $layout = [
              "width" => 3,
              "opts"=>["required", "hasFeedback"],
             ],
-
+            [ "id" => "vorkasse.buchung",
+             "type" => "text",
+             "title" => "Vorkasse ausgezahlt:",
+             "value" => "",
+             "width" => 3,
+             "opts" => ['readonly'],
+            ],
+            [ "id" => "abrechnung.buchung",
+             "type" => "text",
+             "title" => "Abrechung ausgezahlt:",
+             "value" => "",
+             "width" => 3,
+             "opts" => ['readonly'],
+            ],
         ],
-
     ],
-
 ];
 
 /* formname , formrevision */
