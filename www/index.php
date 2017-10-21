@@ -1482,6 +1482,8 @@ switch($_REQUEST["tab"]) {
             $antrag_id = $antrag['id'];
             //var_dump($antrag);
             //suche IBAN, Antragsteller und
+            $hv ="Haushaltsverantwortliche/r";
+            $kv ="Kassenverantwortliche/r";
             foreach($inhalt as $fields){
                 switch(explode("[",$fields['fieldname'])[0]){
                     case 'iban':
@@ -1535,7 +1537,11 @@ switch($_REQUEST["tab"]) {
                 return (strpos($val, '-') !== false);
             });
             $posten = array_map(function($val){
-                return "B".strrev($val);
+                $s = strrev($val);
+                $ar = explode("-",$s);
+                $ar[0] = intval($ar[0])+1;
+                $ar[1] = intval($ar[1])+1;
+                return "B".$ar[0]."-P".$ar[1];
             },$posten);
             $titeln = array_map(function($value) {
                 global $hhp;
@@ -1547,25 +1553,13 @@ switch($_REQUEST["tab"]) {
             }, $kontos);
             //insert default hhp titel
             foreach($antrag['_anhang'] as $key => $anhang){
-                $paths[] = $key."/".$anhang['path'];
+                $paths[] = ($key+1)."/".$anhang['path'];
             }
             $betrag = array_sum($ausgaben)-array_sum($einnahmen);
             //
             //send pdfs
             //
-            $target_url = 'https://box.stura.tu-ilmenau.de/FUI2PDF/acceptFile.php';
             //This needs to be the full path to the file you want to send.
-            foreach($paths as $p){
-                $full_paths[]=$STORAGE."/".$antrag_id."/".(explode("/",$p)[1]);
-            }
-            /* curl will accept an array here too.
-         * Many examples I found showed a url-encoded string instead.
-         * Take note that the 'key' in the array will be the key that shows up in the
-         * $_FILES array of the accept script. and the at sign '@' is required before the
-         * file name.
-         */
-
-
 
             //send data
             $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
@@ -1573,8 +1567,7 @@ switch($_REQUEST["tab"]) {
             // Code um POST zu senden
             $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
             $content = json_encode($sendToPrint);
-            //echo $content;
-            //Test
+
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_HEADER, false);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -1584,44 +1577,24 @@ switch($_REQUEST["tab"]) {
             curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
 
             //Wo ist die Datei erstellt worden
-            $Ort = curl_exec($curl);
+            ///*
+            $ort = curl_exec($curl);
             //echo $Ort;
 
             //Dann lade sie runter
             header("Content-type: application/pdf");
-            header("Content-disposition: attachment; filename=Ausdruck.pdf");
-            readfile($Ort);
+            header("Content-disposition: attachment; filename=Auslagenerstattun-".$antrag_id.".pdf");
+            readfile($ort);
 
             $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             curl_close($curl);
 
-            //$response = json_decode($json_response, true);
+            //lösche pdf auf remote system
+            $ch = curl_init("https://box.stura.tu-ilmenau.de/FUI2PDF/index.php?del=1");
+            curl_exec($ch);
+            curl_close($ch);
+            //*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            /*?>
-<form id="myForm" target="" action="https://box.stura.tu-ilmenau.de/FUI2PDF/index.php" method="post">
-    <?php
-            foreach ($sendToPrint as $a => $b) {
-                echo '<input type="hidden" name="'.htmlentities($a).'"value="'.htmlentities($b).'">';
-            }
-?> </form>
-<script type="text/javascript">
-    document.getElementById('myForm').submit();
-</script>
-<?php */
         }else{
             global $inlineCSS;
             $inlineCSS = true;
