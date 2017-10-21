@@ -1475,7 +1475,8 @@ switch($_REQUEST["tab"]) {
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
-
+        $kv="";
+        $hv="";
         if($antrag['type']=="auslagenerstattung"){
 
             $inhalt = $antrag["_inhalt"];
@@ -1585,14 +1586,46 @@ switch($_REQUEST["tab"]) {
             foreach($antrag['_anhang'] as $key => $anhang){
                 $paths[] = ($key+1)."/".$anhang['path'];
             }
+            //echo count($titeln);
             //sum everything with same titel and same posten
-
+            $posten = array_values($posten);
+            $tmp_a = array_fill_keys($posten,array_fill_keys($titeln,0));
+            $tmp_e = array_fill_keys($posten,array_fill_keys($titeln,0));
+            for($i = 0; $i < count($titeln); $i++){
+                $tmp_a[$posten[$i]][$titeln[$i]] += $ausgaben[$i];
+                $tmp_e[$posten[$i]][$titeln[$i]] += $einnahmen[$i];
+            }
+            $posten = array();
+            $titeln = array();
+            $ausgaben = array();
+            $einnahmen = array();
+            foreach($tmp_a as $bel => $ar){
+                foreach($ar as $tit => $aus){
+                    if($aus != 0){
+                        $posten[]=$bel;
+                        $titeln[] = $tit;
+                        $ausgaben[]=$aus;
+                        $einnahmen[]=0;
+                    }
+                }
+            }
+            foreach($tmp_e as $bel => $ar){
+                foreach($ar as $tit => $ein){
+                    if($ein != 0){
+                        $posten[]=$bel;
+                        $titeln[]=$tit;
+                        $einnahmen[]=$ein;
+                        $ausgaben[]=0;
+                    }
+                }
+            }
 
             $betrag = array_sum($ausgaben)-array_sum($einnahmen);
             //
             //send pdfs
             //
             //send data
+            ///* <-- uncomment for Debuggin Print here
             $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
 
             // Code um POST zu senden
@@ -1607,8 +1640,7 @@ switch($_REQUEST["tab"]) {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
 
-            //Wo ist die Datei erstellt worden
-            ///* <-- uncomment for Debuggin Print here
+            //execute Latex on external drive
             $ret = curl_exec($curl);
 
             //Dann lade sie runter
