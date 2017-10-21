@@ -109,6 +109,7 @@ $config = [
       [ "group" => "ref-finanzen" ],
       [ "group" => "konsul" ],
       [ "state" => "need-stura", "group" => "stura" ],
+      [ "state" => "ok-by-hv", "group" => "stura" ],
     ],
     "canBeCloned" => [
       [ "group" => "ref-finanzen", ],
