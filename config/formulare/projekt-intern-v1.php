@@ -221,7 +221,8 @@ $layout[] = [
             "name" => true,
             "opts" => [ "title", "sum-over-table-bottom" ],
             "children" => [
-                [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 4, "opts" => [ "required", "title" ],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+                [ "id" => "geld.name",        "name" => "Ein/Ausgabengruppe",                 "type" => "text",   "width" => 2, "opts" => [ "required", "title" ],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+                [ "id" => "geld.bemerkung",  "width" => 2,      "name" => "Bemerkung",                 "type" => "text", "placeholder"=>"optional", "toggleReadOnly" => [ "genehmigung.modified", "yes" ]],
                 [ "id" => "geld.titel",       "name" => "Titel",                              "type" => "ref",     "width" => 2, "placeholder" => "s. Genehmigung",
                  "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "state" => "final" ], [ "titel.ausgaben" => "Ausgaben", "titel.einnahmen" => "Einnahmen" ] ],
                  "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
