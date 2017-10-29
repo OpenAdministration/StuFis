@@ -8,7 +8,7 @@ $config = [
       [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
       [ "field:projekt.org.name" => "==" ], # empty
     ],
-    "isCreateable" => true,
+    "isCreateable" => false,
   ],
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", ],
   "referenceField" => [ "name" => "teilrechnung.projekt", "type" => "otherForm" ], # also pass-through for create.$state copy action
