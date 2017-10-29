@@ -1,80 +1,80 @@
 <?php
 
 function getAntrag($id = null) {
-  if ($id === null) {
-    $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
-  } else {
-    $antrag = dbGet("antrag", ["id" => $id]);
-  }
-  if ($antrag === false) {
-    if ($id === null) die("Unknown antrag.");
-    return false;
-  }
-  $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
-  $antrag["_inhalt"] = $inhalt;
+    if ($id === null) {
+        $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+    } else {
+        $antrag = dbGet("antrag", ["id" => $id]);
+    }
+    if ($antrag === false) {
+        if ($id === null) die("Unknown antrag.");
+        return false;
+    }
+    $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+    $antrag["_inhalt"] = $inhalt;
 
-  $form = getForm($antrag["type"], $antrag["revision"]);
-  $readPermitted = hasPermission($form, $antrag, "canRead");
-  if (!$readPermitted) {
-    if ($id === null) die("Permission denied");
-    return false;
-  }
+    $form = getForm($antrag["type"], $antrag["revision"]);
+    $readPermitted = hasPermission($form, $antrag, "canRead");
+    if (!$readPermitted) {
+        if ($id === null) die("Permission denied");
+        return false;
+    }
 
-  $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
-  $antrag["_anhang"] = $anhang;
-  $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], [ "id" => false]);
-  $antrag["_comments"] = $comments;
+    $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
+    $antrag["_anhang"] = $anhang;
+    $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], [ "id" => false]);
+    $antrag["_comments"] = $comments;
 
-  return $antrag;
+    return $antrag;
 }
 
 function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false) {
-  static $cache = false;
-  if ($cache === false) $cache = [];
-  $cacheMe = ($captionField === false);
-  if (isset($antrag["id"]) && isset($cache[$antrag["id"]]) && $cacheMe)
-    return $cache[$antrag["id"]];
-  $renderOk = true;
+    static $cache = false;
+    if ($cache === false) $cache = [];
+    $cacheMe = ($captionField === false);
+    if (isset($antrag["id"]) && isset($cache[$antrag["id"]]) && $cacheMe)
+        return $cache[$antrag["id"]];
+    $renderOk = true;
 
-  $caption = [ ];
-  if ($captionField === false && isset($revConfig["captionField"]) && count($revConfig["captionField"]) > 0) {
-    $captionField = $revConfig["captionField"];
-  }
-  if ($captionField !== false) {
-    if (!isset($antrag["_inhalt"])) {
-      $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
-      $antraege[$type][$revision][$i] = $antrag;
+    $caption = [ ];
+    if ($captionField === false && isset($revConfig["captionField"]) && count($revConfig["captionField"]) > 0) {
+        $captionField = $revConfig["captionField"];
     }
-    foreach ($captionField as $j => $fdesc) {
-      $fdesc = explode("|", $fdesc);
-      $fname = $fdesc[0];
-      $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
-      $row = count($rows) > 0 ? $rows[0] : false;
-      if ($row !== false) {
-        ob_start();
-        $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
-        for($k = 1; $k < count($fdesc); $k++) {
-          list($fdk, $fdv) = explode("=", $fdesc[$k], 2);
-          $formlayout[0][$fdk] = $fdv;
+    if ($captionField !== false) {
+        if (!isset($antrag["_inhalt"])) {
+            $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"] ]);
+            $antraege[$type][$revision][$i] = $antrag;
         }
-        $form = [ "layout" => $formlayout, "config" => [] ];
-        $ret = renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
-        if ($ret === false) $renderOk = false;
-        $val = ob_get_contents();
-        ob_end_clean();
-        $caption[] = strip_tags($val);
-      }
+        foreach ($captionField as $j => $fdesc) {
+            $fdesc = explode("|", $fdesc);
+            $fname = $fdesc[0];
+            $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
+            $row = count($rows) > 0 ? $rows[0] : false;
+            if ($row !== false) {
+                ob_start();
+                $formlayout = [ [ "type" => $row["contenttype"], "id" => $fname ] ];
+                for($k = 1; $k < count($fdesc); $k++) {
+                    list($fdk, $fdv) = explode("=", $fdesc[$k], 2);
+                    $formlayout[0][$fdk] = $fdv;
+                }
+                $form = [ "layout" => $formlayout, "config" => [] ];
+                $ret = renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]] );
+                if ($ret === false) $renderOk = false;
+                $val = ob_get_contents();
+                ob_end_clean();
+                $caption[] = strip_tags($val);
+            }
+        }
     }
-  }
-  if (isset($revConfig["caption"]) > 0 && $cacheMe) {
-    $caption[] = $revConfig["caption"];
-  }
-  if (trim(strip_tags(implode(" ", $caption))) == "")
-    array_unshift($caption, htmlspecialchars($antrag["token"]));
+    if (isset($revConfig["caption"]) > 0 && $cacheMe) {
+        $caption[] = $revConfig["caption"];
+    }
+    if (trim(strip_tags(implode(" ", $caption))) == "")
+        array_unshift($caption, htmlspecialchars($antrag["token"]));
 
-  if (isset($antrag["id"]) && $renderOk && $cacheMe)
-    $cache[$antrag["id"]] = $caption;
-  return $caption;
+    if (isset($antrag["id"]) && $renderOk && $cacheMe)
+        $cache[$antrag["id"]] = $caption;
+    return $caption;
 }
 
 function human_filesize($bytes, $decimals = 2) {
@@ -84,31 +84,45 @@ function human_filesize($bytes, $decimals = 2) {
 }
 
 function escapeMe($d, $row) {
-  return htmlspecialchars($d);
+    return htmlspecialchars($d);
 }
 
 function trimMe($d) {
-  if (is_array($d)) {
-    return array_map("trimMe", $d);
-  } else {
-    return trim($d);
-  }
+    if (is_array($d)) {
+        return array_map("trimMe", $d);
+    } else {
+        return trim($d);
+    }
 }
 
 function add_message($msg) {
-  global $msgs;
-  $msgs[] = $msg;
+    global $msgs;
+    $msgs[] = $msg;
 }
 
 function hexEscape($string) {
-  $return = '';
-  for ($x=0; $x < strlen($string); $x++) {
-    $return .= '\x' . bin2hex($string[$x]);
-  }
-  return $return;
+    $return = '';
+    for ($x=0; $x < strlen($string); $x++) {
+        $return .= '\x' . bin2hex($string[$x]);
+    }
+    return $return;
 }
 
 function sanitizeName($name) {
- return preg_replace(Array("#ä#","#ö#","#ü#","#Ä#","#Ö#","#Ü#","#ß#", "#[^A-Za-z0-9\+\?/\-:\(\)\.,' ]#"), Array("ae","oe","ue","Ae","Oe","Ue","sz","."), $name);
+    return preg_replace(Array("#ä#","#ö#","#ü#","#Ä#","#Ö#","#Ü#","#ß#", "#[^A-Za-z0-9\+\?/\-:\(\)\.,' ]#"), Array("ae","oe","ue","Ae","Oe","Ue","sz","."), $name);
+}
+
+function betterValues($inhalt,$newValueKey = "fieldname",$oldValueKey = "value"){
+    global $inhalt_better;
+    $inhalt_better = [];
+    $params = array("0"=>$newValueKey,"1"=>$oldValueKey);
+    array_walk($inhalt, function (& $item,$k, $params) {
+        global $inhalt_better;
+        $newValueKey = $params["0"];
+        $oldValueKey = $params["1"];
+        $val =  $item[$oldValueKey];
+        $inhalt_better[$item[$newValueKey]] = $val;
+    },$params);
+    return $inhalt_better;
 }
 

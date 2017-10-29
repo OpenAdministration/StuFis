@@ -1138,11 +1138,13 @@ if (isset($_REQUEST["action"])) {
                 $rowIdNumberPresent = false;
                 $rowIdNumber = 0;
             }
+
             foreach ($appendGrund as $i => $a) {
 
                 $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
                 $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId ];
                 $inhalt["value"] = $rowIdNumber;
+
                 $ret0 = dbInsert("inhalt", $inhalt);
                 if ($ret0 === false) $ret = false;
 
@@ -1163,27 +1165,31 @@ if (isset($_REQUEST["action"])) {
                 $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
                 $ret0 = dbInsert("inhalt", $inhalt);
                 if ($ret0 === false) $ret = false;
-
                 $rowNumber++;
                 $rowIdNumber++;
             }
+
             if ($rowNumberPresent) {
                 $ret0 = dbUpdate("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowNumber ] );
             } else {
                 $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowNumber ] );
+
             }
+
             if ($ret0 === false) $ret = false;
 
             if ($rowIdNumberPresent) {
                 $ret0 = dbUpdate("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowIdNumber ] );
             } else {
                 $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowIdNumber ] );
+
             }
+            $msgs[] = $ret;
             if ($ret0 === false) $ret = false;
 
             if ($ret && !isValid($zId, "postEdit", $msgs))
                 $ret = false;
-        }
+        }//iteration über alle zahlungsgründe
 
         // alle Buchungen wechseln nach state booked
         foreach($_REQUEST["zahlungId"] as $aId) {
@@ -1199,7 +1205,17 @@ if (isset($_REQUEST["action"])) {
             $a = dbGet("antrag", ["id" => $aId]);
             $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
             $form = getForm($a["type"], $a["revision"]);
-            $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+            if($a['type']=='extern-express'){
+                //Extern Express anträge
+                if(isValid($a['id'],"vorkasse-zu-zahlen")){
+                    $ret0 = writeState("vorkasse-bezahlt", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }else{
+                    $ret0 = writeState("terminated", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }
+            }else{
+                //jeder anderer Typ
+                $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+            }
             $ret = $ret && $ret0;
         }
 
@@ -1221,6 +1237,7 @@ if (isset($_REQUEST["action"])) {
             $target = "$URIBASE?tab=booking";
         }
         break;
+        //action
         case "hibiscus.sct":
         if (!isset($_REQUEST["ueberweisung"])) {
             $forceClose = true;
@@ -1801,11 +1818,8 @@ switch($_REQUEST["tab"]) {
             ob_start();
             $success = renderFormImpl($form, $ctrl);
             ob_end_clean();
-            $inhalt_better = [];
-            array_walk($inhalt, function (& $item) {
-                global $inhalt_better;
-                $inhalt_better[$item['fieldname']] = $item['value'];
-            });
+            $inhalt_better = betterValues($inhalt, "fieldname","value");
+
             $inhalt = $inhalt_better;
             $value = 0.00;
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
@@ -1939,7 +1953,8 @@ switch($_REQUEST["tab"]) {
         require "../template/hibiscus.sct.tpl";
         break;
     case "bookingHistory":
-        require "../template/bookingHistory.tpl";
+        echo "to be implemented";
+        //require "../template/bookingHistory.tpl";
         break;
     default:
         echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);

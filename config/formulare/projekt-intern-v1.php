@@ -107,7 +107,7 @@ $layout = [];
 $layout[] = [
     "type" => "h2", /* renderer */
     "id" => "head1",
-    "autoValue" => "class:title",
+    "autoValue" => "value:projekt.name",
 ];
 
 $layout[] = [

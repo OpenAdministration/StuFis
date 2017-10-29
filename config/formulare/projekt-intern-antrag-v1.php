@@ -14,9 +14,10 @@ $config = [
 
 $layout = [
     [
-        "type" => "h2", /* renderer */
-        "id" => "head1",
-        "autoValue" => "class:title",
+        "type" => "alert-warning", /* renderer */
+        "id" => "info",
+        "width" => 12,
+        "value" => "Der Projektantrag muss rechtzeitig vor Projektbeginn eingereicht werden. Das Projekt darf erst durchgeführt werden, wenn der Antrag genehmigt wurde.",
     ],
 
     [
