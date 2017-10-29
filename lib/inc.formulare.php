@@ -948,6 +948,10 @@ function renderFormItem($layout,$ctrl = false) {
         case "h4":
         case "h5":
         case "h6":
+        case "alert-warning":
+        case "alert-info":
+        case "alert-danger":
+        case "alert-success":
         case "plaintext":
             $isNotEmpty = renderFormItemPlainText($layout,$ctrl);
             break;
@@ -1060,6 +1064,7 @@ function renderFormItem($layout,$ctrl = false) {
 
 function renderFormItemPlainText($layout, $ctrl) {
     $value = "";
+    $classes = [];
     if (isset($layout["value"]))
         $value = $layout["value"];
     if (isset($layout["autoValue"])) {
@@ -1067,6 +1072,10 @@ function renderFormItemPlainText($layout, $ctrl) {
             $field = substr($layout["autoValue"], 6);
             if (isset($ctrl["_class"]) && $ctrl["_class"][$field])
                 $value = $ctrl["_class"][$field];
+        }else if(substr($layout["autoValue"],0,6) == "value:"){
+            $field = substr($layout["autoValue"], 6);
+            $inhalt = betterValues($ctrl['_values']['_inhalt'],"fieldname","value");
+            $value = $inhalt[$field];
         }
     }
     $value = htmlspecialchars($value);
@@ -1084,7 +1093,29 @@ function renderFormItemPlainText($layout, $ctrl) {
             $elem = "div";
     }
     $tPattern = newTemplatePattern($ctrl, $value);
-    echo "<${elem}>{$tPattern}</${elem}>";
+    if(strpos($layout["type"], "alert") === 0){
+        $classes[] = "alert";
+        $classes[] = $layout["type"];
+        switch($layout["type"]){
+            case "alert-warning":
+                $tPattern = "<strong>Hinweis: </strong> " . $tPattern;
+                break;
+            case "alert-danger":
+                $tPattern = "<strong>Fehler!</strong> " . $tPattern;
+                break;
+            case "alert-success":
+                $tPattern = "<strong>Erfolgreich!</strong> " . $tPattern;
+                break;
+            case "alert-info":
+                $tPattern = "<strong>Information: </strong> " . $tPattern;
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    echo "<${elem} class='".implode(" ",$classes)."'>{$tPattern}</${elem}>";
 }
 
 function renderFormItemGroup($layout, $ctrl) {
