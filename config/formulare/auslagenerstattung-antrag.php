@@ -1,7 +1,7 @@
 <?php
 
 $config = [
-    "title" => "Antrag auf Auslagenerstattung",
+    "title" => "Antrag auf Auslagenerstattung / Rechnung",
     "shortTitle" => "Auslagenerstattung (Antrag)",
     "state" => [ "draft" => [ "Entwurf" ],
                 "new" => [ "Beantragt", "beantragen" ],

@@ -6,7 +6,7 @@ if (count($antrag["_comments"]) == 0) return;
 <div class="clearfix"> </div>
 
 <div class="panel panel-default">
-<div class="panel-heading">Kommentare</div>
+<div class="panel-heading">Statusverlauf</div>
 <div class="panel-body">
 
 <table class="table table-striped">
