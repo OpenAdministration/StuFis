@@ -1138,11 +1138,13 @@ if (isset($_REQUEST["action"])) {
                 $rowIdNumberPresent = false;
                 $rowIdNumber = 0;
             }
+
             foreach ($appendGrund as $i => $a) {
 
                 $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
                 $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId ];
                 $inhalt["value"] = $rowIdNumber;
+
                 $ret0 = dbInsert("inhalt", $inhalt);
                 if ($ret0 === false) $ret = false;
 
@@ -1163,27 +1165,31 @@ if (isset($_REQUEST["action"])) {
                 $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
                 $ret0 = dbInsert("inhalt", $inhalt);
                 if ($ret0 === false) $ret = false;
-
                 $rowNumber++;
                 $rowIdNumber++;
             }
+
             if ($rowNumberPresent) {
                 $ret0 = dbUpdate("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowNumber ] );
             } else {
                 $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowNumber ] );
+
             }
+
             if ($ret0 === false) $ret = false;
 
             if ($rowIdNumberPresent) {
                 $ret0 = dbUpdate("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowIdNumber ] );
             } else {
                 $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowIdNumber ] );
+
             }
+            $msgs[] = $ret;
             if ($ret0 === false) $ret = false;
 
             if ($ret && !isValid($zId, "postEdit", $msgs))
                 $ret = false;
-        }
+        }//iteration über alle zahlungsgründe
 
         // alle Buchungen wechseln nach state booked
         foreach($_REQUEST["zahlungId"] as $aId) {
@@ -1199,7 +1205,17 @@ if (isset($_REQUEST["action"])) {
             $a = dbGet("antrag", ["id" => $aId]);
             $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
             $form = getForm($a["type"], $a["revision"]);
-            $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+            if($a['type']=='extern-express'){
+                //Extern Express anträge
+                if(isValid($a['id'],"vorkasse-zu-zahlen")){
+                    $ret0 = writeState("vorkasse-bezahlt", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }else{
+                    $ret0 = writeState("terminated", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }
+            }else{
+                //jeder anderer Typ
+                $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+            }
             $ret = $ret && $ret0;
         }
 
@@ -1221,6 +1237,7 @@ if (isset($_REQUEST["action"])) {
             $target = "$URIBASE?tab=booking";
         }
         break;
+        //action
         case "hibiscus.sct":
         if (!isset($_REQUEST["ueberweisung"])) {
             $forceClose = true;
@@ -1470,18 +1487,140 @@ switch($_REQUEST["tab"]) {
 
         exit;
     case "antrag.print":
-        global $inlineCSS;
-        $inlineCSS = true;
-        require "../template/header-print.tpl";
+
 
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
 
-        require "../template/antrag.head.tpl";
-        require "../template/antrag.tpl";
-        require "../template/antrag.foot-print.tpl";
-        require "../template/footer-print.tpl";
+        if($antrag['type']=="auslagenerstattung"){
+
+            $inhalt = $antrag["_inhalt"];
+            $antrag_id = $antrag['id'];
+            //var_dump($antrag);
+            //suche IBAN, Antragsteller und
+            $hv ="Haushaltsverantwortliche/r";
+            $kv ="Kassenverantwortliche/r";
+            foreach($inhalt as $fields){
+                switch(explode("[",$fields['fieldname'])[0]){
+                    case 'iban':
+                        $iban = $fields['value'];
+                        break;
+                    case 'antragsteller.name':
+                        $empf = $fields['value'];
+                        break;
+                    case 'genehmigung.recht':
+                        $recht = $fields['value'];
+                        //TODO switch case
+                        break;
+                    case 'genehmigung.sachlicheRichtigkeit':
+                        $hv = $fields['value'];
+                        break;
+                    case 'genehmigung.rechnerischeRichtigkeit':
+                        $kv = $fields['value'];
+                        break;
+                    case 'genehmigung.titel':
+                        $hhp = $fields['value'];
+                        break;
+                    case 'genehmigung.konto':
+                        $konto = $fields['value'];
+                        break;
+                    case 'projekt.name':
+                        $projName = $fields['value'];
+                        break;
+                    case 'genehmigung':
+                        $genID = $fields['value'];
+                        break;
+                    case 'geld.titel':
+                        $titeln[] = $fields['value'];
+                        break;
+                    case 'geld.konto':
+                        $kontos[] = $fields['value'];
+                        break;
+                    case 'geld.ausgaben':
+                        $ausgaben[] = $fields['value'];
+                        break;
+                    case 'geld.einnahmen':
+                        $einnahmen[] = $fields['value'];
+                        break;
+                    case 'finanzauslagenposten':
+                        $posten[] = $fields['value'];
+                        break;
+                    default:
+                        break;
+                }
+            }
+            $posten = array_filter($posten,function($val){
+                return (strpos($val, '-') !== false);
+            });
+            $posten = array_map(function($val){
+                $s = strrev($val);
+                $ar = explode("-",$s);
+                $ar[0] = intval($ar[0])+1;
+                $ar[1] = intval($ar[1])+1;
+                return "B".$ar[0]."-P".$ar[1];
+            },$posten);
+            $titeln = array_map(function($value) {
+                global $hhp;
+                return $value === "" ? $hhp : $value;
+            }, $titeln);
+            $kontos = array_map(function($value) {
+                global $konto;
+                return $value === "" ? $konto : $value;
+            }, $kontos);
+            //insert default hhp titel
+            foreach($antrag['_anhang'] as $key => $anhang){
+                $paths[] = ($key+1)."/".$anhang['path'];
+            }
+            $betrag = array_sum($ausgaben)-array_sum($einnahmen);
+            //
+            //send pdfs
+            //
+            //This needs to be the full path to the file you want to send.
+
+            //send data
+            $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
+
+            // Code um POST zu senden
+            $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
+            $content = json_encode($sendToPrint);
+
+            $curl = curl_init($url);
+            curl_setopt($curl, CURLOPT_HEADER, false);
+            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($curl, CURLOPT_HTTPHEADER,
+                        array("Content-type: application/json"));
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
+
+            //Wo ist die Datei erstellt worden
+            ///*
+            $ort = curl_exec($curl);
+            //echo $Ort;
+
+            //Dann lade sie runter
+            header("Content-type: application/pdf");
+            header("Content-disposition: attachment; filename=Auslagenerstattun-".$antrag_id.".pdf");
+            readfile($ort);
+
+            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            curl_close($curl);
+
+            //lösche pdf auf remote system
+            $ch = curl_init("https://box.stura.tu-ilmenau.de/FUI2PDF/index.php?del=1");
+            curl_exec($ch);
+            curl_close($ch);
+            //*/
+
+        }else{
+            global $inlineCSS;
+            $inlineCSS = true;
+            require "../template/header-print.tpl";
+            require "../template/antrag.head.tpl";
+            require "../template/antrag.tpl";
+            require "../template/antrag.foot-print.tpl";
+            require "../template/footer-print.tpl";
+        }
         exit;
     case "antrag.export":
         $antrag = getAntrag();
@@ -1679,7 +1818,9 @@ switch($_REQUEST["tab"]) {
             ob_start();
             $success = renderFormImpl($form, $ctrl);
             ob_end_clean();
+            $inhalt_better = betterValues($inhalt, "fieldname","value");
 
+            $inhalt = $inhalt_better;
             $value = 0.00;
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
                 $value -= $ctrl["_render"]->addToSumValue["ausgaben"];
@@ -1694,6 +1835,24 @@ switch($_REQUEST["tab"]) {
                 $value -= $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
             }
 
+            if($antrag['type'] == 'extern-express'){
+                $value = -1;
+                if($antrag['state'] == 'beschlossen'){
+                    if($inhalt['geld.vorkasse'] > 0){
+                        $value = -$inhalt['geld.vorkasse'];
+                    }else continue;
+                }
+                if($antrag['state'] == 'abrechnung-ok'){
+                    if($inhalt['geld.vorkasse'] > 0 && (!isset($inhalt['vorkasse.buchung']) || $inhalt['vorkasse.buchung'] == "")){
+
+                        echo $value = $inhalt['geld.vorkasse'];
+                    }else{
+                        if($inhalt['geld.abgerechnet'] > 0 && (!isset($inhalt['abrechnung.buchung']) || $inhalt['abrechnung.buchung'] == "")){
+                            $value = -$inhalt['geld.abgerechnet'];
+                        }
+                    }
+                }
+            }
             $antrag["_value"] = $value;
             $antrag["_ctrl"] = $ctrl;
             $antrag["_form"] = $form;
@@ -1728,6 +1887,8 @@ switch($_REQUEST["tab"]) {
                 $value -= $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
             }
 
+
+
             $antrag["_value"] = $value;
             $antrag["_ctrl"] = $ctrl;
             $antrag["_form"] = $form;
@@ -1743,7 +1904,6 @@ switch($_REQUEST["tab"]) {
             if ($a["_value"] > $b["_value"]) return 1;
             return 0;
         });
-
         require "../template/booking.tpl";
         break;
     case "hibiscus.sct":
@@ -1793,7 +1953,8 @@ switch($_REQUEST["tab"]) {
         require "../template/hibiscus.sct.tpl";
         break;
     case "bookingHistory":
-        require "../template/bookingHistory.tpl";
+        echo "to be implemented";
+        //require "../template/bookingHistory.tpl";
         break;
     default:
         echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
