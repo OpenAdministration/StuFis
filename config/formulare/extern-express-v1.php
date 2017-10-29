@@ -14,7 +14,6 @@ $config = [
             ["id" => "geld.abgerechnet",
              "value" => "bigger:0"
             ],
-
         ],
         "checkBeschlossen" => [
             ["id" => "geld.stura",
@@ -23,17 +22,26 @@ $config = [
             ["id" => "geld.vorkasse",
              "value" => "smallerEquals:#geld.stura"
             ],
-        ]
+        ],
+        //wird beim buchen geprüft
+        "vorkasse-zu-zahlen" => [
+            ["id" => "geld.vorkasse",
+             "value" => "bigger:0"
+            ],
+            ["id" => "vorkasse.buchung",
+             "value" => "is:empty"
+            ],
+        ],
     ],
     "preNewStateActions" => [
         "to.no-need" => [
             [ "writeField" => "always", "name" => "geld.abgerechnet",   "type" => "money", "value" => "0" ],
         ],
         "to.vorkasse-bezahlt" => [
-            ["writeField" => "always", "name" => "vorkasse.buchung","type" => "plaintext", "value" => "Bereits gebucht" ],
+            ["writeField" => "always", "name" => "vorkasse.buchung","type" => "text", "value" => "Bereits gebucht" ],
         ],
-        "to.vorkasse-bezahlt" => [
-            ["writeField" => "always", "name" => "abrechnung.buchung","type" => "plaintext", "value" => "Bereits gebucht" ],
+        "to.terminated" => [
+            ["writeField" => "always", "name" => "abrechnung.buchung","type" => "text", "value" => "Bereits gebucht" ],
         ],
     ],
 ];
@@ -130,6 +138,19 @@ $layout = [
              "opts" => ['readonly'],
             ],
         ],
+    ],
+    [ "id" => "zahlungen.invref1", "type" => "invref", "width" => 12,
+     "opts" => ["with-headline","aggregate-by-otherForm","hide-edit"],
+     "printSum" => [ "einnahmen.beleg", "ausgaben.beleg" ],
+     "printSumWidth" => 2,
+     "orderBy" => [ "field:zahlung.datum", "id" ],
+     "title" => "Zahlungen",
+     "renderOptRead" => [ "no-form-compress" ],
+     "otherForms" => [
+         ["type" => "zahlung", "referenceFormField" => "zahlung.grund.beleg",
+          "addToSum" => [ "ausgaben.beleg" => [ "ausgaben.zahlung" ], "einnahmen.beleg" => [ "einnahmen.zahlung" ] ],
+         ],
+     ],
     ],
 ];
 
