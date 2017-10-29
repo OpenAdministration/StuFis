@@ -524,8 +524,10 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
 
 # once per field
 function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
+
     if (($p["id"] != $inhalt["fieldname"]) && (substr($inhalt["fieldname"], 0, strlen($p["id"]) + 1) != $p["id"]."[") )
         return null; # not selected
+
     if (($inhalt["contenttype"] === "otherForm") && isset($p["otherForm"])) {
         # check if a valid other form is selected
         if ($inhalt["value"] == "") return false;
@@ -575,6 +577,16 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
     if (isset($p["value"]) && (($pos = strpos($p["value"],":")) !== false)) {
         $prefix = substr($p["value"],0,$pos);
         $remainder = substr($p["value"],$pos+1);
+        if($remainder{0} == '#'){
+            //falls der Remainer eine #id ist suche im selben formular nach dieser id und ersetze remainder
+            foreach($antrag["_inhalt"] as $field){
+                if($field['fieldname'] == substr($remainder,1)){
+                    $remainder = $field['value'];
+                    break;
+                }
+            }
+        }
+
         switch ($prefix) {
             case "is":
                 switch ($remainder) {
@@ -593,6 +605,18 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
                 break;
             case "notEquals":
                 if (((string) $inhalt["value"]) == $remainder) return false;
+                break;
+            case "bigger":
+                if (((float) $inhalt["value"]) <= (float) $remainder) return false;
+                break;
+            case "biggerEquals":
+                if (((float) $inhalt["value"]) < (float) $remainder) return false;
+                break;
+            case "smaller":
+                if (((float) $inhalt["value"]) >= (float) $remainder) return false;
+                break;
+            case "smallerEquals":
+                if (((float) $inhalt["value"]) > (float) $remainder) return false;
                 break;
             default:
                 die("not implemented validation: value \"$prefix\" \"$remainer\"");
@@ -924,6 +948,10 @@ function renderFormItem($layout,$ctrl = false) {
         case "h4":
         case "h5":
         case "h6":
+        case "alert-warning":
+        case "alert-info":
+        case "alert-danger":
+        case "alert-success":
         case "plaintext":
             $isNotEmpty = renderFormItemPlainText($layout,$ctrl);
             break;
@@ -1036,6 +1064,7 @@ function renderFormItem($layout,$ctrl = false) {
 
 function renderFormItemPlainText($layout, $ctrl) {
     $value = "";
+    $classes = [];
     if (isset($layout["value"]))
         $value = $layout["value"];
     if (isset($layout["autoValue"])) {
@@ -1043,6 +1072,10 @@ function renderFormItemPlainText($layout, $ctrl) {
             $field = substr($layout["autoValue"], 6);
             if (isset($ctrl["_class"]) && $ctrl["_class"][$field])
                 $value = $ctrl["_class"][$field];
+        }else if(substr($layout["autoValue"],0,6) == "value:"){
+            $field = substr($layout["autoValue"], 6);
+            $inhalt = betterValues($ctrl['_values']['_inhalt'],"fieldname","value");
+            $value = $inhalt[$field];
         }
     }
     $value = htmlspecialchars($value);
@@ -1060,7 +1093,29 @@ function renderFormItemPlainText($layout, $ctrl) {
             $elem = "div";
     }
     $tPattern = newTemplatePattern($ctrl, $value);
-    echo "<${elem}>{$tPattern}</${elem}>";
+    if(strpos($layout["type"], "alert") === 0){
+        $classes[] = "alert";
+        $classes[] = $layout["type"];
+        switch($layout["type"]){
+            case "alert-warning":
+                $tPattern = "<strong>Hinweis: </strong> " . $tPattern;
+                break;
+            case "alert-danger":
+                $tPattern = "<strong>Fehler!</strong> " . $tPattern;
+                break;
+            case "alert-success":
+                $tPattern = "<strong>Erfolgreich!</strong> " . $tPattern;
+                break;
+            case "alert-info":
+                $tPattern = "<strong>Information: </strong> " . $tPattern;
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    echo "<${elem} class='".implode(" ",$classes)."'>{$tPattern}</${elem}>";
 }
 
 function renderFormItemGroup($layout, $ctrl) {
@@ -2337,7 +2392,7 @@ function otherFormTrOptions($layout, $ctrl) {
 
     $tableNames = $layout["references"][1];
     if (!isset($otherCtrl["_render"])) {
-        return "Rendering skipped due to nesting";
+        return [ "Rendering skipped due to nesting", NULL ];
     }
 
     if (!is_array($tableNames)) $tableNames = [ $tableNames => $tableNames ];

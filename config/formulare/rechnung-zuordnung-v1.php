@@ -7,7 +7,7 @@ $config = [
     "isCorrectGremium" => [
       [ "field:projekt.org.name" => "isIn:data-source:own-orgs" ],
     ],
-    "isCreateable" => true,
+    "isCreateable" => false,
     "isProjektLeitung" => [
       [ "inOtherForm:referenceField" => [ "isProjektLeitung", ], ],
     ],

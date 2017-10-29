@@ -1488,19 +1488,17 @@ switch($_REQUEST["tab"]) {
         exit;
     case "antrag.print":
 
-
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
-
+        $kv="";
+        $hv="";
         if($antrag['type']=="auslagenerstattung"){
 
             $inhalt = $antrag["_inhalt"];
             $antrag_id = $antrag['id'];
             //var_dump($antrag);
-            //suche IBAN, Antragsteller und
-            $hv ="Haushaltsverantwortliche/r";
-            $kv ="Kassenverantwortliche/r";
+            //suche IBAN, Antragsteller und so
             foreach($inhalt as $fields){
                 switch(explode("[",$fields['fieldname'])[0]){
                     case 'iban':
@@ -1510,8 +1508,7 @@ switch($_REQUEST["tab"]) {
                         $empf = $fields['value'];
                         break;
                     case 'genehmigung.recht':
-                        $recht = $fields['value'];
-                        //TODO switch case
+                        $radio_val = $fields['value'];
                         break;
                     case 'genehmigung.sachlicheRichtigkeit':
                         $hv = $fields['value'];
@@ -1550,6 +1547,37 @@ switch($_REQUEST["tab"]) {
                         break;
                 }
             }
+            $inhalt_better = array();
+            array_map(function($val){
+                global $inhalt_better;
+                $inhalt_better[$val['fieldname']] = $val['value'];
+            },$inhalt);
+            switch($radio_val){
+                case "buero":
+                    $recht = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
+                    break;
+                case "fahrt":
+                    $recht = "Fahrtkosten: StuRa-Beschluss 21/20-08";
+                    break;
+                case "verbrauch":
+                    $recht = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
+                    break;
+                case "stura":
+                    $recht = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
+                    break;
+                case "fsr":
+                    $recht = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
+                    break;
+                case "kleidung":
+                    $recht = "Gremienkleidung: StuRa Beschluss 24/04-09";
+                    break;
+                case "other":
+                    $recht = $inhalt_better['genehmigung.recht.other.reason'];
+                    break;
+                default:
+                    $recht ="";
+                    break;
+            }
             $posten = array_filter($posten,function($val){
                 return (strpos($val, '-') !== false);
             });
@@ -1558,27 +1586,63 @@ switch($_REQUEST["tab"]) {
                 $ar = explode("-",$s);
                 $ar[0] = intval($ar[0])+1;
                 $ar[1] = intval($ar[1])+1;
-                return "B".$ar[0]."-P".$ar[1];
+                return "B".$ar[0];//."-P".$ar[1];
             },$posten);
+            //fill up all empty with default titel
             $titeln = array_map(function($value) {
                 global $hhp;
                 return $value === "" ? $hhp : $value;
             }, $titeln);
+            //fill up all empty with default konto
             $kontos = array_map(function($value) {
                 global $konto;
                 return $value === "" ? $konto : $value;
             }, $kontos);
-            //insert default hhp titel
+            //special format for latex (on external host)
             foreach($antrag['_anhang'] as $key => $anhang){
                 $paths[] = ($key+1)."/".$anhang['path'];
             }
+            //echo count($titeln);
+            //sum everything with same titel and same posten
+            $posten = array_values($posten);
+            $tmp_a = array_fill_keys($posten,array_fill_keys($titeln,0));
+            $tmp_e = array_fill_keys($posten,array_fill_keys($titeln,0));
+            for($i = 0; $i < count($titeln); $i++){
+                $tmp_a[$posten[$i]][$titeln[$i]] += $ausgaben[$i];
+                $tmp_e[$posten[$i]][$titeln[$i]] += $einnahmen[$i];
+            }
+            $posten = array();
+            $titeln = array();
+            $ausgaben = array();
+            $einnahmen = array();
+            foreach($tmp_a as $bel => $ar){
+                foreach($ar as $tit => $aus){
+                    if($aus != 0){
+                        $posten[]=$bel;
+                        $titeln[] = $tit;
+                        $ausgaben[]=$aus;
+                        $einnahmen[]=0;
+                    }
+                }
+            }
+            foreach($tmp_e as $bel => $ar){
+                foreach($ar as $tit => $ein){
+                    if($ein != 0){
+                        $posten[]=$bel;
+                        $titeln[]=$tit;
+                        $einnahmen[]=$ein;
+                        $ausgaben[]=0;
+                    }
+                }
+            }
+
             $betrag = array_sum($ausgaben)-array_sum($einnahmen);
             //
             //send pdfs
             //
-            //This needs to be the full path to the file you want to send.
 
             //send data
+            ///* <-- uncomment for Debuggin Print here
             $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
 
             // Code um POST zu senden
@@ -1593,15 +1657,14 @@ switch($_REQUEST["tab"]) {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
 
-            //Wo ist die Datei erstellt worden
-            ///*
-            $ort = curl_exec($curl);
-            //echo $Ort;
+
+            //execute Latex on external drive
+            $ret = curl_exec($curl);
 
             //Dann lade sie runter
             header("Content-type: application/pdf");
-            header("Content-disposition: attachment; filename=Auslagenerstattun-".$antrag_id.".pdf");
-            readfile($ort);
+            header("Content-disposition: inline; filename=Auslagenerstattung-".$antrag_id.".pdf");
+            echo $ret;
 
             $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             curl_close($curl);
@@ -1610,8 +1673,7 @@ switch($_REQUEST["tab"]) {
             $ch = curl_init("https://box.stura.tu-ilmenau.de/FUI2PDF/index.php?del=1");
             curl_exec($ch);
             curl_close($ch);
-            //*/
-
+            //*/ // <-- end debugging print
         }else{
             global $inlineCSS;
             $inlineCSS = true;
@@ -1620,6 +1682,7 @@ switch($_REQUEST["tab"]) {
             require "../template/antrag.tpl";
             require "../template/antrag.foot-print.tpl";
             require "../template/footer-print.tpl";
+
         }
         exit;
     case "antrag.export":
