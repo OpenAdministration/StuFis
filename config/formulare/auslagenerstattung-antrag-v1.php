@@ -108,7 +108,7 @@ $layout = [
         "id" => "info",
         "width" => 12,
         "opts" => ["well"],
-        "value" => "\nDie Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. \nDie Auslagenerstattung kann nur vom Projektverantwortlichen eingereicht werden, jeder andere kann nur als Entwurf speichern.\nDirekt nach dem speichern muss dieser Antrag ausgedruckt (Druckerbutton rechts oben - nicht die Druckfunktion des Browsers nutzen!) und mit den Originalbelegen in den vorgesehenen Feldern ins Fach des Referat Finanzen im StuRa Büro gelegt werden. ",
+        "value" => "\nDie Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. \nDie Auslagenerstattung kann nur vom Projektverantwortlichen eingereicht werden, jeder andere kann nur als Entwurf speichern.\nDirekt nach dem speichern muss dieser Antrag ausgedruckt (Druckerbutton rechts oben - nicht die Druckfunktion des Browsers nutzen!) und mit den Originalbelegen in den vorgesehenen Feldern ins Fach des Referat Finanzen im StuRa Büro gelegt werden. \nAuch online Belege sind auszudrucken und im Stura Büro abzugeben",
     ],
 
 ];
