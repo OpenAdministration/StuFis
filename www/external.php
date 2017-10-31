@@ -6,7 +6,6 @@ include "../lib/inc.all.php";
 global $attributes;
 $attributes["eduPersonPrincipalName"][0] = "Gremienwiki";
 
-
 //Angefordererte Pdfs von FUI2PDF
 if(isset($_GET['fname'])){
     $fname = $_GET['fname'];
@@ -24,9 +23,10 @@ if(isset($_GET['fname'])){
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 if(!count($data)){
-    echo "invalid JSON!";
+    header("HTTP/1.0 400 invalid JSON");
     exit;
 }
+//var_dump($data);
 
 foreach($data as $token => $beschluss){
     $antrag = dbGet("antrag", ["token" => $token]);

@@ -26,12 +26,17 @@ $menu = [];
 
 foreach ($formulare as $type => $list) {
     foreach ($list as $revision => $lForm) {
-        if ($revision != "_class" && hasPermission($lForm, null, "canCreate")) continue;
+        if ($revision != "_class" && hasPermission($lForm, null, "canCreate")){
+            //echo $type.$revision."</br>";
+            continue;
+        }
         unset($list[$revision]);
     }
+    //var_dump(array_keys($list));
     if (count($list) == 0) continue;
 
     $classConfig = getFormClass($type);
+
     if (!isset($classConfig["buildFrom"])) continue;
     $found = false;
     $newState = "";
@@ -62,6 +67,7 @@ foreach ($formulare as $type => $list) {
 
     $menu[] = [ "value" => $type, "text" => $title, "submenu" => $submenu ];
 }
+//var_dump($menu);
 
 if (count($menu) == 0)
     return;
