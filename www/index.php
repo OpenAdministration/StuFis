@@ -5,6 +5,8 @@ ob_start('ob_gzhandler');
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
 
+
+
 function writeFillOnCopy($antrag_id, $form) {
     $fillOnCopy = [];
     if (isset($form["config"]["fillOnCopy"]))
@@ -92,42 +94,10 @@ function writeFillOnCopy($antrag_id, $form) {
     return true;
 }
 
+
 function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
     if (!isset($_REQUEST["formdata"]))
         $_REQUEST["formdata"] = [];
-
-    function storeInhalt($inhalt, $isPartiell) {
-        if (is_array($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach ($inhalt["value"] as $i => $value) {
-                $inhalt["fieldname"] = $fieldname . "[{$i}]";
-                $inhalt["value"] = $value;
-                $ret1 = storeInhalt($inhalt, $isPartiell);
-                $ret = $ret && $ret1;
-            }
-            return $ret;
-        }
-        if (is_object($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach (get_object_vars($inhalt["value"]) as $i => $value) {
-                $inhalt["fieldname"] = $fieldname . "[{$i}]";
-                $inhalt["value"] = $value;
-                $ret1 = storeInhalt($inhalt);
-                $ret = $ret && $ret1;
-            }
-            return $ret;
-        }
-        if ($isPartiell)
-            dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"] ]);
-        $inhalt["value"] = convertUserValueToDBValue($inhalt["value"], $inhalt["contenttype"]);
-        $ret = dbInsert("inhalt", $inhalt);
-        if (!$ret) {
-            $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
-        }
-        return $ret;
-    }
 
     $ret = true;
     foreach($_REQUEST["formdata"] as $fieldname => $value) {
@@ -252,77 +222,6 @@ function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$f
     return true;
 }
 
-function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
-    if ($antrag["state"] == $newState) return true;
-
-    $transition = "from.{$antrag["state"]}.to.{$newState}";
-    $perm = "canStateChange.{$transition}";
-    if (!hasPermission($form, $antrag, $perm)) {
-        $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung): {$antrag["state"]} -> {$newState}";
-        return false;
-    }
-
-    $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => getUsername() ]);
-    if ($ret !== 1)
-        return false;
-
-    $preNewStateActions = [];
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]);
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["to.{$newState}"]);
-    foreach ($preNewStateActions as $action) {
-        if (!isset($action["writeField"])) continue;
-
-        $antrag = getAntrag($antrag["id"]);
-        $value = getFormValueInt($action["name"], $action["type"], $antrag["_inhalt"], "");
-
-        switch ($action["writeField"]) {
-            case "always":
-                break;
-            case "ifEmpty":
-                if ($value != "") continue 2;
-                break;
-            default:
-                die("preNewStateActions writeField={$action["writeField"]} invalid value");
-        }
-
-        if (isset($action["value"])) {
-            $newValue = $action["value"];
-        } elseif ($action["type"] == "signbox") {
-            $newValue = getUserFullName()." am ".date("Y-m-d");
-        } else
-            die("cannot autogenerate value for preNewStateActions");
-
-        dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"] ]);
-        $ret = dbInsert("inhalt", [ "fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue ] );
-        if ($ret === false)
-            return false;
-    }
-
-    $comment = [];
-    $comment["antrag_id"] = $antrag["id"];
-    $comment["creator"] = getUsername();
-    $comment["creatorFullName"] = getUserFullName();
-    $comment["timestamp"] = date("Y-m-d H:i:s");
-    $txt = $newState;
-    if (isset($form["_class"]["state"][$newState]))
-        $txt = $form["_class"]["state"][$newState][0];
-    $comment["text"] = "Status nach [$newState] ".$txt." geändert";
-    $ret = dbInsert("comments", $comment);
-    if ($ret === false)
-        return false;
-
-    if (!isValid($antrag["id"], "postEdit", $msgs))
-        return false;
-
-    $antrag = getAntrag($antrag["id"]);
-    $ret = doNewStateActions($form, $transition, $antrag, $newState, $msgs, $filesCreated, $filesRemoved, $target);
-    if ($ret === false)
-        return false;
-
-    return true;
-}
 
 function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newType, $newRevision, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
     global $URIBASE,$STORAGE;
@@ -455,6 +354,11 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     return $antrag_id;
 }
 
+if(isset($_REQUEST['id'])){
+    $antrag = dbGet("antrag", ["id" => $_REQUEST['id']]);
+    header("Location: ".$antrag['token']);
+    exit;
+}
 if (isset($_REQUEST["action"])) {
     global $msgs;
     $msgs = Array();
@@ -1499,31 +1403,24 @@ switch($_REQUEST["tab"]) {
             $antrag_id = $antrag['id'];
             //var_dump($antrag);
             //suche IBAN, Antragsteller und so
+
+            $inhalt_better = betterValues($inhalt);
+
+            $dataToPrint['ID'] = $antrag_id;
+            $dataToPrint['IBAN'] = $inhalt_better['iban'];
+            $dataToPrint['empfaenger'] = $inhalt_better['antragsteller.name'];
+            $dataToPrint['hv'] = $inhalt_better['genehmigung.sachlicheRichtigkeit'];
+            $dataToPrint['kv'] = $inhalt_better['genehmigung.rechnerischeRichtigkeit'];
+            $dataToPrint['projektname'] = $inhalt_better['projekt.name'];
+
+            //$dataToPrint['kostenstelle'] = $inhalt_better['genehmigung.konto'];
+            $radio_val = $inhalt_better['genehmigung.recht'];
+            $hhp = $inhalt_better['genehmigung.titel'];
+
             foreach($inhalt as $fields){
                 switch(explode("[",$fields['fieldname'])[0]){
-                    case 'iban':
-                        $iban = $fields['value'];
-                        break;
-                    case 'antragsteller.name':
-                        $empf = $fields['value'];
-                        break;
-                    case 'genehmigung.recht':
-                        $radio_val = $fields['value'];
-                        break;
-                    case 'genehmigung.sachlicheRichtigkeit':
-                        $hv = $fields['value'];
-                        break;
-                    case 'genehmigung.rechnerischeRichtigkeit':
-                        $kv = $fields['value'];
-                        break;
-                    case 'genehmigung.titel':
-                        $hhp = $fields['value'];
-                        break;
                     case 'genehmigung.konto':
                         $konto = $fields['value'];
-                        break;
-                    case 'projekt.name':
-                        $projName = $fields['value'];
                         break;
                     case 'genehmigung':
                         $genID = $fields['value'];
@@ -1547,35 +1444,31 @@ switch($_REQUEST["tab"]) {
                         break;
                 }
             }
-            $inhalt_better = array();
-            array_map(function($val){
-                global $inhalt_better;
-                $inhalt_better[$val['fieldname']] = $val['value'];
-            },$inhalt);
+
             switch($radio_val){
                 case "buero":
-                    $recht = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
+                    $dataToPrint['recht'] = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
                     break;
                 case "fahrt":
-                    $recht = "Fahrtkosten: StuRa-Beschluss 21/20-08";
+                    $dataToPrint['recht'] = "Fahrtkosten: StuRa-Beschluss 21/20-08";
                     break;
                 case "verbrauch":
-                    $recht = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
+                    $dataToPrint['recht'] = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
                     break;
                 case "stura":
-                    $recht = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
+                    $dataToPrint['recht'] = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
                     break;
                 case "fsr":
-                    $recht = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
+                    $dataToPrint['recht'] = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
                     break;
                 case "kleidung":
-                    $recht = "Gremienkleidung: StuRa Beschluss 24/04-09";
+                    $dataToPrint['recht'] = "Gremienkleidung: StuRa Beschluss 24/04-09";
                     break;
                 case "other":
-                    $recht = $inhalt_better['genehmigung.recht.other.reason'];
+                    $dataToPrint['recht'] = $inhalt_better['genehmigung.recht.other.reason'];
                     break;
                 default:
-                    $recht ="";
+                    $dataToPrint['recht'] ="";
                     break;
             }
             $posten = array_filter($posten,function($val){
@@ -1598,10 +1491,8 @@ switch($_REQUEST["tab"]) {
                 global $konto;
                 return $value === "" ? $konto : $value;
             }, $kontos);
-            //special format for latex (on external host)
-            foreach($antrag['_anhang'] as $key => $anhang){
-                $paths[] = ($key+1)."/".$anhang['path'];
-            }
+
+
             //echo count($titeln);
             //sum everything with same titel and same posten
             $posten = array_values($posten);
@@ -1636,26 +1527,27 @@ switch($_REQUEST["tab"]) {
                 }
             }
 
-            $betrag = array_sum($ausgaben)-array_sum($einnahmen);
-            //
-            //send pdfs
-            //
-
-            //send data
-            ///* <-- uncomment for Debuggin Print here
-            $sendToPrint =json_decode('{"hv":"'.$hv.'","kv":"'.$kv.'","hhptitel":"'.implode(",",$titeln).'","empfaenger":"'.$empf.'","IBAN":"'.$iban.'","projektname":"'.$projName.'","ID":"'.$antrag_id.'","ausgaben":"'.implode(",",$ausgaben).'","einnahmen":"'.implode(",",$einnahmen).'","recht":"'.$recht.'","picpaths":"'.implode(",", $paths).'","datumauszahlung":"","posten":"'.implode(",",$posten).'", "betrag": "'.$betrag.'"}',true);
+            $dataToPrint['betrag'] = array_sum($ausgaben)-array_sum($einnahmen);
+            $dataToPrint['posten'] = implode(",",$posten);
+            $dataToPrint['einnahmen'] = implode(",",$einnahmen);
+            $dataToPrint['ausgaben'] = implode(",",$ausgaben);
+            $dataToPrint['hhptitel'] = implode(",",$titeln);
+            $dataToPrint['datumauszahlung'] = "";
 
             // Code um POST zu senden
             $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
-            $content = json_encode($sendToPrint);
-
+            $content['data'] = $dataToPrint;
+            $content['meta']['type'] = $antrag['type'];
+            $content['meta']['domain'] = $_SERVER["SERVER_NAME"];
+            foreach($antrag['_anhang'] as $anhang){
+                $content['pdfs'][] = $anhang['path'];
+            }
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_HEADER, false);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_HTTPHEADER,
-                        array("Content-type: application/json"));
+            curl_setopt($curl, CURLOPT_HTTPHEADER,array("Content-type: application/json"));
             curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
 
 
             //execute Latex on external drive
@@ -1682,7 +1574,6 @@ switch($_REQUEST["tab"]) {
             require "../template/antrag.tpl";
             require "../template/antrag.foot-print.tpl";
             require "../template/footer-print.tpl";
-
         }
         exit;
     case "antrag.export":
@@ -1829,7 +1720,9 @@ switch($_REQUEST["tab"]) {
 
         require "../template/antrag.menu.tpl";
         require "../template/antrag.state.tpl";
+
         require "../template/antrag.subcreate.tpl";
+
         require "../template/antrag.copy.tpl";
         require "../template/antrag.tpl";
         require "../template/antrag.ref.tpl";

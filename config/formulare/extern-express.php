@@ -79,6 +79,9 @@ $config = [
         "canStateChange.from.beschlossen.to.draft" => [
             [ "hasPermission" => "canRead" ],
         ],
+        "canStateChange.from.beschlossen.to.vorkasse-bezahlt" => [
+            [ "hasPermission" => "canRead" ],
+        ],
         "canStateChange.from.abrechnung-ok.to.draft" => [
             [ "hasPermission" => "canRead" ],
         ],
