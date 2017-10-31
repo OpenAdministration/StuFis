@@ -92,42 +92,10 @@ function writeFillOnCopy($antrag_id, $form) {
     return true;
 }
 
+
 function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
     if (!isset($_REQUEST["formdata"]))
         $_REQUEST["formdata"] = [];
-
-    function storeInhalt($inhalt, $isPartiell) {
-        if (is_array($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach ($inhalt["value"] as $i => $value) {
-                $inhalt["fieldname"] = $fieldname . "[{$i}]";
-                $inhalt["value"] = $value;
-                $ret1 = storeInhalt($inhalt, $isPartiell);
-                $ret = $ret && $ret1;
-            }
-            return $ret;
-        }
-        if (is_object($inhalt["value"])) {
-            $fieldname = $inhalt["fieldname"];
-            $ret = true;
-            foreach (get_object_vars($inhalt["value"]) as $i => $value) {
-                $inhalt["fieldname"] = $fieldname . "[{$i}]";
-                $inhalt["value"] = $value;
-                $ret1 = storeInhalt($inhalt);
-                $ret = $ret && $ret1;
-            }
-            return $ret;
-        }
-        if ($isPartiell)
-            dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"] ]);
-        $inhalt["value"] = convertUserValueToDBValue($inhalt["value"], $inhalt["contenttype"]);
-        $ret = dbInsert("inhalt", $inhalt);
-        if (!$ret) {
-            $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: ".print_r($inhalt,true);
-        }
-        return $ret;
-    }
 
     $ret = true;
     foreach($_REQUEST["formdata"] as $fieldname => $value) {
@@ -252,77 +220,6 @@ function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$f
     return true;
 }
 
-function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
-    if ($antrag["state"] == $newState) return true;
-
-    $transition = "from.{$antrag["state"]}.to.{$newState}";
-    $perm = "canStateChange.{$transition}";
-    if (!hasPermission($form, $antrag, $perm)) {
-        $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung): {$antrag["state"]} -> {$newState}";
-        return false;
-    }
-
-    $ret = dbUpdate("antrag", [ "id" => $antrag["id"] ], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => getUsername() ]);
-    if ($ret !== 1)
-        return false;
-
-    $preNewStateActions = [];
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]);
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["to.{$newState}"]);
-    foreach ($preNewStateActions as $action) {
-        if (!isset($action["writeField"])) continue;
-
-        $antrag = getAntrag($antrag["id"]);
-        $value = getFormValueInt($action["name"], $action["type"], $antrag["_inhalt"], "");
-
-        switch ($action["writeField"]) {
-            case "always":
-                break;
-            case "ifEmpty":
-                if ($value != "") continue 2;
-                break;
-            default:
-                die("preNewStateActions writeField={$action["writeField"]} invalid value");
-        }
-
-        if (isset($action["value"])) {
-            $newValue = $action["value"];
-        } elseif ($action["type"] == "signbox") {
-            $newValue = getUserFullName()." am ".date("Y-m-d");
-        } else
-            die("cannot autogenerate value for preNewStateActions");
-
-        dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"] ]);
-        $ret = dbInsert("inhalt", [ "fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue ] );
-        if ($ret === false)
-            return false;
-    }
-
-    $comment = [];
-    $comment["antrag_id"] = $antrag["id"];
-    $comment["creator"] = getUsername();
-    $comment["creatorFullName"] = getUserFullName();
-    $comment["timestamp"] = date("Y-m-d H:i:s");
-    $txt = $newState;
-    if (isset($form["_class"]["state"][$newState]))
-        $txt = $form["_class"]["state"][$newState][0];
-    $comment["text"] = "Status nach [$newState] ".$txt." geändert";
-    $ret = dbInsert("comments", $comment);
-    if ($ret === false)
-        return false;
-
-    if (!isValid($antrag["id"], "postEdit", $msgs))
-        return false;
-
-    $antrag = getAntrag($antrag["id"]);
-    $ret = doNewStateActions($form, $transition, $antrag, $newState, $msgs, $filesCreated, $filesRemoved, $target);
-    if ($ret === false)
-        return false;
-
-    return true;
-}
 
 function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newType, $newRevision, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
     global $URIBASE,$STORAGE;
@@ -1829,7 +1726,9 @@ switch($_REQUEST["tab"]) {
 
         require "../template/antrag.menu.tpl";
         require "../template/antrag.state.tpl";
+
         require "../template/antrag.subcreate.tpl";
+
         require "../template/antrag.copy.tpl";
         require "../template/antrag.tpl";
         require "../template/antrag.ref.tpl";

@@ -7,7 +7,7 @@ Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
 #Do not redirect here:
 RewriteRule ^telegrambot - [L,NC]
-RewriteRule ^download.php - [L,NC]
+RewriteRule ^external.php - [L,NC]
 
 #Redirect everythin else to index.php
 RewriteCond   %{REQUEST_FILENAME}   !-f
