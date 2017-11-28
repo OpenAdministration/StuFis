@@ -193,28 +193,34 @@ $layout = [
         ],
     ],
 
+
     [
-        "type" => "h2", /* renderer */
-        "id" => "head1",
-        "value" => "Erstattungsantrag",
+        "type" => "group", /* renderer */
+        "width" => 12,
+        "opts" => ["well"],
+        "id" => "group1",
+        "title" => "zugehöriges Projekt",
+        "children" => [
+            [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10",  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+            [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+            [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+
+            [ "id" => "genehmigung",         "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 6, "opts" => ["hasFeedback","readonly"], ],
+            [ "id" => "antragsteller.email", "title" =>"Person für Rückfragen (eMail)",       "type" => "email",  "width" => 6, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+        ],
     ],
-
-
- [
-   "type" => "group", /* renderer */
-   "width" => 12,
-   "opts" => ["well"],
-   "id" => "group1",
-   "children" => [
-     [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10",  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 12, "placeholder" => "Vorname Nachname", "prefill" => "user:fullname", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "antragsteller.email", "title" =>"Benachrichtigung bei Überweisung (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-     [ "id" => "genehmigung",         "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","readonly"], ],
-     [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-   ],
- ],
+    [
+        "type" => "group", /* renderer */
+        "width" => 12,
+        "opts" => ["well"],
+        "id" => "group2",
+        "title" => "Informationen zur Zahlung",
+        "children" => [
+            [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 6, "placeholder" => "Vorname Nachname", /*"prefill" => "user:fullname",*/ "opts" => ["required", "hasFeedback"],"toggleReadOnly" => [ "genehmigung.modified", "yes" ] ],
+            [ "id" => "vwzk",                "title" =>"Zusätzlicher Verwendungszeck (z.B. Rechnungsnummer)",       "type" => "text",  "width" => 6,  "placeholder" => "optional","toggleReadOnly" => [ "genehmigung.modified", "yes" ]],
+            [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+        ],
+    ],
 
 
     [
@@ -222,6 +228,7 @@ $layout = [
         "id" => "finanzauslagen",
         "opts" => ["with-row-number"],
         "width" => 12,
+        "title" => "Eingereichte Belege",
         "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
         "renderOptRead" => [ "no-form-compress" ],
         "columns" => [
@@ -306,5 +313,5 @@ $layout = [
 ];
 
 /* formname , formrevision */
-registerForm( "auslagenerstattung", "v1", $layout, $config );
+registerForm("auslagenerstattung", "v1", $layout, $config );
 
