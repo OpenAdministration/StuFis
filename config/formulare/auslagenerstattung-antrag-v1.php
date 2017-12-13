@@ -34,7 +34,7 @@ $layout = [
         "id" => "group1",
         "children" => [
             [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 8, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
-            [ "id" => "projekt.name.zusatz",        "title" =>"Projekt",                     "type" => "text",   "width" => 4, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+            [ "id" => "projekt.name.zusatz",        "title" =>"Projekt",                     "type" => "text",   "width" => 4,"placeholder" => "optional"],
             [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"] ],
             [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"] ],
             [ "id" => "antragsteller.email", "title" => "Person für Rückfragen (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"] ],
