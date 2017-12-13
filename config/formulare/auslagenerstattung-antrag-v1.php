@@ -16,7 +16,7 @@ $config = [
     "referenceField" => [ "name" => "genehmigung", "type" => "otherForm" ],
     "fillOnCopy" => [
         [ "name" => "antragsteller.email", "type" => "email", "prefill" => "user:mail" ],
-        [ "name" => "antragsteller.name", "type" => "text", "prefill" => "user:fullname" ],
+        //[ "name" => "antragsteller.name", "type" => "text", "prefill" => "user:fullname" ],
     ],
 ];
 
@@ -27,21 +27,25 @@ $layout = [
         "autoValue" => "class:title",
     ],
 
- [
-   "type" => "group", /* renderer */
-   "width" => 12,
-   "opts" => ["well"],
-   "id" => "group1",
-   "children" => [
-     [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
-     [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"] ],
-     [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"] ],
-     [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 12, "placeholder" => "Vorname Nachname", "prefill" => "user:fullname", "opts" => ["required", "hasFeedback"] ],
-     [ "id" => "antragsteller.email", "title" =>"Benachrichtigung bei Überweisung (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"] ],
-     [ "id" => "genehmigung",         "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","readonly"], ],
-     [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"] ],
-   ],
- ],
+    [
+        "type" => "group", /* renderer */
+        "width" => 12,
+        "opts" => ["well"],
+        "id" => "group1",
+        "children" => [
+            [ "id" => "projekt.name",        "title" =>"Projekt",                     "type" => "text",   "width" => 8, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+            [ "id" => "projekt.name.zusatz",        "title" =>"Projekt",                     "type" => "text",   "width" => 4, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+            [ "id" => "projekt.org.name",    "title" =>"Projekt von",                 "type" => "text", "width" =>  6, "data-source" => "own-orgs", "placeholder" => "Institution wählen", "opts" => ["required", "hasFeedback"] ],
+            [ "id" => "projekt.org.mail",    "title" =>"Benachrichtigung (Mailingliste zu \"Projekt von\")",  "type" => "email",  "width" =>  6, "data-source" => "own-mailinglists", "placeholder" => "Mailingliste wählen", "opts" => ["required", "hasFeedback"] ],
+            [ "id" => "antragsteller.email", "title" => "Person für Rückfragen (eMail)",       "type" => "email",  "width" => 12, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"] ],
+
+            [ "id" => "genehmigung",         "title" =>"Projektgenehmigung",          "type" => "otherForm", "width" => 12, "opts" => ["hasFeedback","readonly"], ],
+            [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 6, "placeholder" => "Vorname Nachname", /*"prefill" => "user:fullname",*/ "opts" => ["required", "hasFeedback"] ],
+            [ "id" => "vwzk",                "title" =>"Zusätzlicher Verwendungszeck (z.B. Rechnungsnummer)",       "type" => "text",  "width" => 6,  "placeholder" => "optional"],
+            [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 12, "opts" => ["required", "hasFeedback"] ],
+
+        ],
+    ],
 
 
     [
@@ -108,7 +112,7 @@ $layout = [
         "id" => "info",
         "width" => 12,
         "opts" => ["well"],
-        "value" => "\nDie Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. \nDie Auslagenerstattung kann nur vom Projektverantwortlichen eingereicht werden, jeder andere kann nur als Entwurf speichern.\nDirekt nach dem speichern muss dieser Antrag ausgedruckt (Druckerbutton rechts oben - nicht die Druckfunktion des Browsers nutzen!) und mit den Originalbelegen in den vorgesehenen Feldern ins Fach des Referat Finanzen im StuRa Büro gelegt werden. \nAuch online Belege sind auszudrucken und im Stura Büro abzugeben",
+        "value" => "\nDie Auslagenerstattung muss zeitnah nach Tätigung der Ausgabe eingereicht werden. \nDie Auslagenerstattung kann nur vom Projektverantwortlichen eingereicht werden, jeder andere kann nur als Entwurf speichern.\nDirekt nach dem speichern muss dieser Antrag ausgedruckt (Druckerbutton rechts oben - nicht die Druckfunktion des Browsers nutzen!) und mit den Originalbelegen in den vorgesehenen Feldern ins Fach des Referat Finanzen im StuRa Büro gelegt werden. Auch online Belege sind auszudrucken und als Belege abzugeben",
     ],
 
 ];
