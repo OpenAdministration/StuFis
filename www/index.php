@@ -1466,13 +1466,12 @@ switch($_REQUEST["tab"]) {
                     $content['data']['recht'] ="";
                     break;
             }
-
             //$content['data']['kostenstelle'] = $inhalt_better['genehmigung.konto'];
             switch($antrag['type']){ // einige Daten müssen unterschiedlich geholt werden
                 case "auslagenerstattung":
                     $content['data']['empfaenger'] = $inhalt_better['antragsteller.name'];
                     $content['data']['projektid'] = $inhalt_better['genehmigung'];
-                    break;
+                    $content['meta']['belegid'] = $antrag_id;
                     $posten = array_filter($posten,function($val){
                         return (strpos($val, '-') !== false);
                     });
