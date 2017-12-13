@@ -5,8 +5,6 @@ ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
-prof_flag("Start");
-
 
 function writeFillOnCopy($antrag_id, $form) {
     $fillOnCopy = [];
@@ -1686,9 +1684,7 @@ switch($_REQUEST["tab"]) {
 
         break;
 }
-prof_flag("Pre Header");
 require "../template/header.tpl";
-prof_flag("Header erstellt");
 switch($_REQUEST["tab"]) {
     case "antrag.listing":
         $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
@@ -1928,9 +1924,7 @@ switch($_REQUEST["tab"]) {
     default:
         echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
 }
-prof_flag("Vor footer");
+
 require "../template/footer.tpl";
-prof_flag("Nach Footer");
-prof_print();
 exit;
 
