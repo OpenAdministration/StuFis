@@ -8,18 +8,18 @@ $attributes["eduPersonPrincipalName"][0] = "Gremienwiki";
 
 //Angefordererte Pdfs von FUI2PDF
 if(isset($_GET['fname'])){
-    $fname = $_GET['fname'];
-    $id = $_GET['id'];
+    $fname = str_replace("/","",str_replace("..", "",$_GET['fname']));
+    $id = str_replace("/","",str_replace("..", "",$_GET['id']));
     $file = SYSBASE.'/storage/'.$id.'/'.$fname;
 
-    #echo $file;
+    //echo $file;
     header('Content-Disposition: attachment; filename="'. basename($file) . '"');
     header("Content-type: application/pdf");
     header('Content-Length: ' . filesize($file));
     readfile($file);
     exit;
 }
-
+//daten aus post request auslesen
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
 if(!count($data)){

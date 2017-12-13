@@ -1,10 +1,11 @@
 <?php
+
 global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
-
+prof_flag("Start");
 
 
 function writeFillOnCopy($antrag_id, $form) {
@@ -1391,32 +1392,28 @@ switch($_REQUEST["tab"]) {
 
         exit;
     case "antrag.print":
-
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
         $kv="";
         $hv="";
-        if($antrag['type']=="auslagenerstattung"){
-
+        if($antrag['type']=="auslagenerstattung" || $antrag['type'] == "rechnung-zuordnung"){ // vieles ist gleich, daher zusammengefasst
+            //baue content[] das an FUI2PDF geschickt wird
+            $content['meta']['type'] = $antrag['type'];
+            $content['meta']['domain'] = $_SERVER["SERVER_NAME"];
             $inhalt = $antrag["_inhalt"];
             $antrag_id = $antrag['id'];
+            $content['data']['id'] = $antrag_id;
             //var_dump($antrag);
             //suche IBAN, Antragsteller und so
-
             $inhalt_better = betterValues($inhalt);
+            $content['data']['iban'] = $inhalt_better['iban'];
+            $content['data']['hv'] = $inhalt_better['genehmigung.sachlicheRichtigkeit'];
+            $content['data']['kv'] = $inhalt_better['genehmigung.rechnerischeRichtigkeit'];
+            $content['data']['projektname'] = $inhalt_better['projekt.name'];
 
-            $dataToPrint['ID'] = $antrag_id;
-            $dataToPrint['IBAN'] = $inhalt_better['iban'];
-            $dataToPrint['empfaenger'] = $inhalt_better['antragsteller.name'];
-            $dataToPrint['hv'] = $inhalt_better['genehmigung.sachlicheRichtigkeit'];
-            $dataToPrint['kv'] = $inhalt_better['genehmigung.rechnerischeRichtigkeit'];
-            $dataToPrint['projektname'] = $inhalt_better['projekt.name'];
-
-            //$dataToPrint['kostenstelle'] = $inhalt_better['genehmigung.konto'];
             $radio_val = $inhalt_better['genehmigung.recht'];
             $hhp = $inhalt_better['genehmigung.titel'];
-
             foreach($inhalt as $fields){
                 switch(explode("[",$fields['fieldname'])[0]){
                     case 'genehmigung.konto':
@@ -1437,50 +1434,75 @@ switch($_REQUEST["tab"]) {
                     case 'geld.einnahmen':
                         $einnahmen[] = $fields['value'];
                         break;
-                    case 'finanzauslagenposten':
+                    case 'finanzauslagenposten': //Auslagenerstattung
                         $posten[] = $fields['value'];
                         break;
                     default:
                         break;
                 }
             }
-
+            // Rechtsgrundlage im System 'schönen' Fließtext zuordnen
             switch($radio_val){
                 case "buero":
-                    $dataToPrint['recht'] = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
+                    $content['data']['recht'] = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
                     break;
                 case "fahrt":
-                    $dataToPrint['recht'] = "Fahrtkosten: StuRa-Beschluss 21/20-08";
+                    $content['data']['recht'] = "Fahrtkosten: StuRa-Beschluss 21/20-08";
                     break;
                 case "verbrauch":
-                    $dataToPrint['recht'] = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
+                    $content['data']['recht'] = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
                     break;
                 case "stura":
-                    $dataToPrint['recht'] = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
+                    $content['data']['recht'] = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
                     break;
                 case "fsr":
-                    $dataToPrint['recht'] = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
+                    $content['data']['recht'] = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
                     break;
                 case "kleidung":
-                    $dataToPrint['recht'] = "Gremienkleidung: StuRa Beschluss 24/04-09";
+                    $content['data']['recht'] = "Gremienkleidung: StuRa Beschluss 24/04-09";
                     break;
                 case "other":
-                    $dataToPrint['recht'] = $inhalt_better['genehmigung.recht.other.reason'];
+                    $content['data']['recht'] = $inhalt_better['genehmigung.recht.other.reason'];
                     break;
                 default:
-                    $dataToPrint['recht'] ="";
+                    $content['data']['recht'] ="";
                     break;
             }
-            $posten = array_filter($posten,function($val){
-                return (strpos($val, '-') !== false);
-            });
-            $posten = array_map(function($val){
-                $s = strrev($val);
-                $ar = explode("-",$s);
-                $ar[0] = intval($ar[0])+1;
-                $ar[1] = intval($ar[1])+1;
-                return "B".$ar[0];//."-P".$ar[1];
-            },$posten);
+
+            //$content['data']['kostenstelle'] = $inhalt_better['genehmigung.konto'];
+            switch($antrag['type']){ // einige Daten müssen unterschiedlich geholt werden
+                case "auslagenerstattung":
+                    $content['data']['empfaenger'] = $inhalt_better['antragsteller.name'];
+                    $content['data']['projektid'] = $inhalt_better['genehmigung'];
+                    break;
+                    $posten = array_filter($posten,function($val){
+                        return (strpos($val, '-') !== false);
+                    });
+                    $posten = array_map(function($val){
+                        $s = strrev($val);
+                        $ar = explode("-",$s);
+                        $ar[0] = intval($ar[0])+1;
+                        $ar[1] = intval($ar[1])+1;
+                        return "B".$ar[0];//."-P".$ar[1];
+                    },$posten);
+                    foreach($antrag['_anhang'] as $anhang){
+                        $content['pdfs'][] = $anhang['path'];
+                    }
+                    break;
+                case "rechnung-zuordnung":
+                    $content['data']['empfaenger'] = $inhalt_better['rechnung.firma'];
+                    $posten = array_fill(0,count($ausgaben),'B1');
+                    $id_beleg = $inhalt_better['teilrechnung.beleg'];
+                    $content['meta']['belegid'] = $id_beleg;
+                    $content['data']['projektid'] = $inhalt_better['teilrechnung.projekt'];
+                    $antrag_beleg = getAntrag($id_beleg);
+                    foreach($antrag_beleg['_anhang'] as $anhang){
+                        $content['pdfs'][] = $anhang['path'];
+                    }
+                    break;
+                default:
+                    break;
+            }
             //fill up all empty with default titel
             $titeln = array_map(function($value) {
                 global $hhp;
@@ -1491,10 +1513,7 @@ switch($_REQUEST["tab"]) {
                 global $konto;
                 return $value === "" ? $konto : $value;
             }, $kontos);
-
-
-            //echo count($titeln);
-            //sum everything with same titel and same posten
+            //sum everything with same titel and same beleg
             $posten = array_values($posten);
             $tmp_a = array_fill_keys($posten,array_fill_keys($titeln,0));
             $tmp_e = array_fill_keys($posten,array_fill_keys($titeln,0));
@@ -1527,28 +1546,22 @@ switch($_REQUEST["tab"]) {
                 }
             }
 
-            $dataToPrint['betrag'] = array_sum($ausgaben)-array_sum($einnahmen);
-            $dataToPrint['posten'] = implode(",",$posten);
-            $dataToPrint['einnahmen'] = implode(",",$einnahmen);
-            $dataToPrint['ausgaben'] = implode(",",$ausgaben);
-            $dataToPrint['hhptitel'] = implode(",",$titeln);
-            $dataToPrint['datumauszahlung'] = "";
+            $content['data']['betrag'] = array_sum($ausgaben)-array_sum($einnahmen);
+            $content['data']['posten'] = implode(",",$posten);
+            $content['data']['einnahmen'] = implode(",",$einnahmen);
+            $content['data']['ausgaben'] = implode(",",$ausgaben);
+            $content['data']['hhptitel'] = implode(",",$titeln);
+            $content['data']['datumauszahlung'] = "";
+            //var_dump($content['data']);
 
             // Code um POST zu senden
             $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
-            $content['data'] = $dataToPrint;
-            $content['meta']['type'] = $antrag['type'];
-            $content['meta']['domain'] = $_SERVER["SERVER_NAME"];
-            foreach($antrag['_anhang'] as $anhang){
-                $content['pdfs'][] = $anhang['path'];
-            }
             $curl = curl_init($url);
             curl_setopt($curl, CURLOPT_HEADER, false);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($curl, CURLOPT_HTTPHEADER,array("Content-type: application/json"));
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
-
 
             //execute Latex on external drive
             $ret = curl_exec($curl);
@@ -1673,9 +1686,9 @@ switch($_REQUEST["tab"]) {
 
         break;
 }
-
+prof_flag("Pre Header");
 require "../template/header.tpl";
-
+prof_flag("Header erstellt");
 switch($_REQUEST["tab"]) {
     case "antrag.listing":
         $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
@@ -1915,8 +1928,9 @@ switch($_REQUEST["tab"]) {
     default:
         echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
 }
-
+prof_flag("Vor footer");
 require "../template/footer.tpl";
-
+prof_flag("Nach Footer");
+prof_print();
 exit;
 
