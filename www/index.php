@@ -1527,8 +1527,8 @@ switch($_REQUEST["tab"]) {
                     if($aus != 0){
                         $posten[]=$bel;
                         $titeln[] = $tit;
-                        $ausgaben[]=$aus;
-                        $einnahmen[]=0;
+                        $ausgaben[]=number_format($aus,2);
+                        $einnahmen[]=number_format(0,2);
                     }
                 }
             }
@@ -1537,13 +1537,13 @@ switch($_REQUEST["tab"]) {
                     if($ein != 0){
                         $posten[]=$bel;
                         $titeln[]=$tit;
-                        $einnahmen[]=$ein;
-                        $ausgaben[]=0;
+                        $einnahmen[]=number_format($ein,2);
+                        $ausgaben[]=number_format(0,2);
                     }
                 }
             }
 
-            $content['data']['betrag'] = array_sum($ausgaben)-array_sum($einnahmen);
+            $content['data']['betrag'] = number_format(array_sum($ausgaben)-array_sum($einnahmen),2);
             $content['data']['posten'] = implode(",",$posten);
             $content['data']['einnahmen'] = implode(",",$einnahmen);
             $content['data']['ausgaben'] = implode(",",$ausgaben);
