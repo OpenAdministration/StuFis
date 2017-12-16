@@ -72,7 +72,7 @@ $layout = [
     [
         "type" => "table", /* renderer */
         "id" => "zahlung.grund.table",
-        "opts" => ["with-row-number","with-headline"],
+        "opts" => ["with-row-number","with-headline","hide-edit"],
         "width" => 12,
         "columns" => [
             [
@@ -80,12 +80,12 @@ $layout = [
                 "width" => 12,
                 "id" => "group2",
                 "name" => true,
-                "opts" => ["sum-over-table-bottom","readonly"],
+                "opts" => ["sum-over-table-bottom"],
                 "children" => [
-                    [ "id" => "zahlung.grund.beleg", "name" => "Beleg", "type" => "otherForm", "width" => 4, "opts" => ["readonly"],],
-                    [ "id" => "zahlung.grund.hinweis", "name" => "Hinweis", "type" => "text", "width" => 4 , "opts" => ["readonly"],],
-                    [ "id" => "zahlung.grund.einnahmen", "name" => "Einnahmen", "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom","readonly"],   "addToSum" => ["einnahmen.beleg"], ],
-                    [ "id" => "zahlung.grund.ausgaben", "name" => "Ausgaben", "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["readonly","sum-over-table-bottom"],   "addToSum" => ["ausgaben.beleg"] ,],
+                    [ "id" => "zahlung.grund.beleg", "name" => "Beleg", "type" => "otherForm", "width" => 4,],
+                    [ "id" => "zahlung.grund.hinweis", "name" => "Hinweis", "type" => "text", "width" => 4 ,],
+                    [ "id" => "zahlung.grund.einnahmen", "name" => "Einnahmen", "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom",],   "addToSum" => ["einnahmen.beleg"], ],
+                    [ "id" => "zahlung.grund.ausgaben", "name" => "Ausgaben", "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"],   "addToSum" => ["ausgaben.beleg"] ,],
                 ],
             ],
         ],
