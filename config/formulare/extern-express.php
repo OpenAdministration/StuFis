@@ -5,36 +5,56 @@ $config = [
     "shortTitle" => "Externes Projekt",
     "state" => [
         "draft"             => [ "Entwurf", "als Entwurf speichern" ],
-        "beschlossen"       => [ "Beschlossen", "als beschlossen speichern" ],
-        "vorkasse-bezahlt"  => [ "Vorkasse ausgezahlt + Gebucht"],
-        "abrechnung-ok"     => [ "Korrekt Abgerechnet", "als abgerechnet speichern" ],
+        "stura-ok"          => [ "Beschlossen", "als beschlossen speichern" ],
+        "prepaymnt-payed"   => [ "Vorkasse ausgezahlt"],
+        "prepaymnt-booked"  => [ "Vorkasse ausgezahlt  und gebucht"],
+        "balancing-ok"      => [ "korrekt Abgerechnet", "als korrekt abgerechnet speichern" ],
+        "balancing-payed"   => [ "korrekt Abgerechnet und ausgezahlt"],
         "terminated"        => [ "Abgeschlossen und Gebucht"],
         "no-need"           => [ "Antragsteller verzichtet", "Antragsteller verzichtet" ],
     ],
     "createState" => "draft",
 
     "proposeNewState" => [
-        "draft" => [ "beschlossen","abrechnung-ok"],
-        "beschlossen" => [ "abrechnung-ok","no-need"],
+        "draft" => [ "stura-ok"],
+        "stura-ok" => [ "balancing-ok"],
+        "balancing-ok" => ["balancing-payed"],
+        "prepayment-booked" => ["balancing-ok"],
     ],
     "categories" => [
         "need-action" => [
             //TODO FIXME
             [ "state" => "draft", "hasPermission" => "canRead" ],
-            [ "state" => "beschlossen", "hasPermission" => "canRead"  ],
+            [ "state" => "stura-ok", "hasPermission" => "canRead"  ],
         ],
         "_need_booking_payment" => [
-            [ "state" => "beschlossen", "group" => "ref-finanzen" ],
-            [ "state" => "abrechnung-ok", "group" => "ref-finanzen" ],
+            [ "state" => "prepaymnt-payed", "group" => "ref-finanzen" ],
+            [ "state" => "balancing-payed", "group" => "ref-finanzen" ],
+        ],
+        "need-payment" => [
+            [ "state" => "stura-ok", "group" => "ref-finanzen", "passValidation" => "prepaymnt-exists" ],
+            [ "state" => "balancing-ok", "group" => "ref-finanzen", "passValidation" => "balancing-exists" ],
+        ],
+        "_export_sct" => [
+            [ "state" => "stura-ok", "group" => "ref-finanzen", "passValidation" => "prepaymnt-exists" ],
+            [ "state" => "balancing-ok", "group" => "ref-finanzen", "passValidation" => "balancing-exists" ],
         ],
     ],
     "validate" => [
         "postEdit" => [
-            [ "state" => "beschlossen","requiredIsNotEmpty" => true,"doValidate" => "checkBeschlossen"],
-            [ "state" => "abrechnung-ok","doValidate" => "checkAbrechnung","requiredIsNotEmpty" => true,
+            [ "state" => "stura-ok","requiredIsNotEmpty" => true,"doValidate" => "checkBeschlossen"],
+            [ "state" => "prepaymnt-payed", "doValidate" => "prepaymnt-exists", ],
+            [ "state" => "balancing-ok",
+             "or" => [
+                 ["doValidate" => "no-prepaymnt",],
+                 ["doValidate" => "prepaymnt-payed"],
+             ],
+             ["doValidate" => "balancing-exists"],
             ],
-        ],
+            [ "state" => "balancing-ok", "doValidate" => "balancing-exists", ],
+            [ "state" => "balancing-payed", "doValidate" => "balancing-payed", ],
 
+        ],
     ],
     "permission" => [
         /* each permission has a name and a list of sufficient conditions.
@@ -55,10 +75,12 @@ $config = [
             [ "state" => "draft", "hasPermission" => "canRead" ],
         ],
         "canEditPartiell" => [
-            [ "state" => "beschlossen","group" => "ref-finanzen", ],
+            [ "state" => "stura-ok","group" => "ref-finanzen", ],
+            [ "state" => "prepaymnt-booked", "group" => "ref-finanzen", ],
         ],
         "canEditPartiell.field.geld.abgerechnet" => [
-            [ "state" => "beschlossen", "group" => "ref-finanzen", ],
+            [ "state" => "stura-ok", "group" => "ref-finanzen", ],
+            [ "state" => "prepaymnt-booked", "group" => "ref-finanzen", ],
         ],
 
         "canDelete" => [
@@ -67,31 +89,41 @@ $config = [
         "canCreate" => [
             [ "hasPermission" => [ "canRead", "isCreateable" ] ],
         ],
-        "canStateChange.from.draft.to.beschlossen" => [
+        "canStateChange.from.draft.to.stura-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.beschlossen.to.abrechnung-ok" => [
+        "canStateChange.from.stura-ok.to.balancing-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.draft.to.abrechnung-ok" => [
+        "canStateChange.from.prepaymnt-payed.to.prepaymnt-booked" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.beschlossen.to.draft" => [
+        "canStateChange.from.prepaymnt-booked.to.balancing-ok" => [
+            [ "hasPermission" => "canRead" ],
+            ["id" => "geld.abgerechnet","value" => "biggerEquals:0"],
+        ],
+        "canStateChange.from.balancing-ok.to.balancing-payed" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.beschlossen.to.vorkasse-bezahlt" => [
+        "canStateChange.from.balancing-payed.to.terminated" => [
+            [ "hasPermission" => "canRead"],
+        ],
+        "canStateChange.from.draft.to.balancing-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.abrechnung-ok.to.draft" => [
+        "canStateChange.from.stura-ok.to.draft" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.abrechnung-ok.to.beschlossen" => [
+        "canStateChange.from.stura-ok.to.prepaymnt-payed" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.beschlossen.to.no-need" => [
+        "canStateChange.from.balancing-ok.to.stura-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
-        "canStateChange.from.no-need.to.beschlossen" => [
+        "canStateChange.from.stura-ok.to.no-need" => [
+            [ "hasPermission" => "canRead" ],
+        ],
+        "canStateChange.from.no-need.to.stura-ok" => [
             [ "hasPermission" => "canRead" ],
         ],
     ],

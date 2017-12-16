@@ -1094,7 +1094,7 @@ if (isset($_REQUEST["action"])) {
                 $ret = false;
         }//iteration über alle zahlungsgründe
 
-        // alle Buchungen wechseln nach state booked
+        // alle zahlungen wechseln nach state booked
         foreach($_REQUEST["zahlungId"] as $aId) {
             $a = dbGet("antrag", ["id" => $aId]);
             $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
@@ -1103,16 +1103,16 @@ if (isset($_REQUEST["action"])) {
             $ret = $ret && $ret0;
         }
 
-        // alle Zahlungen wechseln nach state payed
+        // alle Belege wechseln nach state payed
         foreach($_REQUEST["grundId"] as $aId) {
             $a = dbGet("antrag", ["id" => $aId]);
             $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
             $form = getForm($a["type"], $a["revision"]);
+            //Extern Express anträge
             if($a['type']=='extern-express'){
-                //Extern Express anträge
-                if(isValid($a['id'],"vorkasse-zu-zahlen")){
-                    $ret0 = writeState("vorkasse-bezahlt", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
-                }else{
+                if($a["state"] == "prepaymnt-payed" && isValid($aId,"prepaymnt-exists")){
+                    $ret0 = writeState("prepaymnt-booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }else if($a['state'] == "balancing-payed" && isValid($aId, "balancing-exists")){
                     $ret0 = writeState("terminated", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
                 }
             }else{
@@ -1140,6 +1140,7 @@ if (isset($_REQUEST["action"])) {
             $target = "$URIBASE?tab=booking";
         }
         break;
+
         //action
         case "hibiscus.sct":
         if (!isset($_REQUEST["ueberweisung"])) {
@@ -1158,7 +1159,7 @@ if (isset($_REQUEST["action"])) {
         }
 
         $filesCreated = []; $filesRemoved = [];
-
+        //build zahlungsanweisung
         $antrag = [];
         $antrag["type"] = "zahlung-anweisung";
         $antrag["revision"] = "v1-giro";
@@ -1240,9 +1241,23 @@ if (isset($_REQUEST["action"])) {
                 $ret = false;
                 break 2;
             }
-            if (false === writeState("instructed", $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $altTarget)) {
-                $ret = false;
-                break 2;
+            if($oldAntrag['type'] == "extern-express"){
+                if($oldAntrag['state'] == "stura-ok" && isValid($oldAntrag["id"],"prepaymnt-exists")){
+                    if(false === writeState("prepaymnt-payed", $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $altTarget)){
+                        $ret = false;
+                        break 2;
+                    }
+                }else if ($oldAntrag['state'] == "balancing-ok"){
+                    if(false === writeState("balancing-payed", $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $altTarget)){
+                        $ret = false;
+                        break 2;
+                    }
+                }
+            }else {//alle anderen
+                if (false === writeState("instructed", $oldAntrag, $oldForm, $msgs, $filesCreated, $filesRemoved, $altTarget)) {
+                    $ret = false;
+                    break 2;
+                }
             }
 
             $rowNumber++;
@@ -1270,7 +1285,6 @@ if (isset($_REQUEST["action"])) {
         $kpId = $al[0]["id"];
         $ret0 = dbInsert("inhalt", [ "fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
         if ($ret0 === false) { $ret = false; break; }
-
         if ($ret && !isValid($antrag_id, "postEdit", $msgs))
             $ret = false;
 
@@ -1782,9 +1796,7 @@ switch($_REQUEST["tab"]) {
             ob_start();
             $success = renderFormImpl($form, $ctrl);
             ob_end_clean();
-            $inhalt_better = betterValues($inhalt, "fieldname","value");
 
-            $inhalt = $inhalt_better;
             $value = 0.00;
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
                 $value -= $ctrl["_render"]->addToSumValue["ausgaben"];
@@ -1801,20 +1813,14 @@ switch($_REQUEST["tab"]) {
 
             if($antrag['type'] == 'extern-express'){
                 $value = -1;
-                if($antrag['state'] == 'beschlossen'){
-                    if($inhalt['geld.vorkasse'] > 0){
-                        $value = -$inhalt['geld.vorkasse'];
+                if($antrag['state'] == 'prepaymnt-payed'){
+                    if(isValid($antrag['id'],'prepaymnt-exists')){
+                        $value = -getFormValueInt("geld.vorkasse", null, $inhalt, false);
                     }else continue;
-                }
-                if($antrag['state'] == 'abrechnung-ok'){
-                    if($inhalt['geld.vorkasse'] > 0 && (!isset($inhalt['vorkasse.buchung']) || $inhalt['vorkasse.buchung'] == "")){
-
-                        echo $value = $inhalt['geld.vorkasse'];
-                    }else{
-                        if($inhalt['geld.abgerechnet'] > 0 && (!isset($inhalt['abrechnung.buchung']) || $inhalt['abrechnung.buchung'] == "")){
-                            $value = -$inhalt['geld.abgerechnet'];
-                        }
-                    }
+                }else if($antrag['state'] == 'balancing-payed'){
+                    if(isValid($antrag['id'],'balancing-exists')){
+                        $value = -getFormValueInt("geld.abgerechnet", null, $inhalt, false)+getFormValueInt("geld.vorkasse", null, $inhalt, false);
+                    }else continue;
                 }
             }
             $antrag["_value"] = $value;
@@ -1887,6 +1893,7 @@ switch($_REQUEST["tab"]) {
             ob_end_clean();
 
             $value = 0.00;
+
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])) {
                 $value += $ctrl["_render"]->addToSumValue["ausgaben"];
             }
@@ -1899,12 +1906,33 @@ switch($_REQUEST["tab"]) {
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.zahlung"])) {
                 $value += $ctrl["_render"]->addToSumValue["einnahmen.zahlung"];
             }
+            if($t['type'] == "extern-express"){
+                $vorkasse = getFormValueInt("geld.vorkasse", null, $t["_inhalt"], false);
+                $abrechnung = getFormValueInt("geld.abgerechnet", null, $t["_inhalt"], false);
+                if($t['state'] == "stura-ok" && isValid($t["id"], "prepaymnt-exists")){
+                    $value = $vorkasse;
+                }else if($t['state'] == "balancing-ok" && isValid($t["id"], "balancing-exists")){
+                    $value = $abrechnung -$vorkasse;
+                }
+            }
+
 
             if ($value <= 0.0) continue; # keine Überweisung notwendig hier
 
-            $destIBAN = getFormValueInt("iban", null, $t["_inhalt"], false);
-            $destEmpfaenger = getFormValueInt("antragsteller.name", null, $t["_inhalt"], false);
-            $destEmpfaengerMail = getFormValueInt("antragsteller.email", null, $t["_inhalt"], false);
+
+            if($t['type'] == "extern-express"){
+                $destEmpfaenger = getFormValueInt("projekt.org", null, $t["_inhalt"], false);
+                $destIBAN = getFormValueInt("org.iban", null, $t["_inhalt"], false);
+                $destEmpfaengerMail = getFormValueInt("org.mail", null, $t["_inhalt"], false);
+            }else if($t['type'] == "rechnung-zuordnung"){
+                $destEmpfaenger = getFormValueInt("rechnung.firma", null, $t["_inhalt"], false);
+                $destIBAN = getFormValueInt("iban", null, $t["_inhalt"], false);
+                $destEmpfaengerMail = getFormValueInt("projekt.org.mail", null, $t["_inhalt"], false);
+            }else{
+                $destEmpfaenger = getFormValueInt("antragsteller.name", null, $t["_inhalt"], false);
+                $destIBAN = getFormValueInt("iban", null, $t["_inhalt"], false);
+                $destEmpfaengerMail = getFormValueInt("antragsteller.email", null, $t["_inhalt"], false);
+            }
 
             $t["_value"] = $value;
             $t["_iban"] = $destIBAN;

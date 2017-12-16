@@ -23,7 +23,6 @@ $config = [
       [ "state" => "draft", "group" => "ref-finanzen" ],
       [ "state" => "ok-hv", "group" => "ref-finanzen-kv" ],
       [ "state" => "ok-kv", "group" => "ref-finanzen-hv" ],
-      [ "state" => "ok", "group" => "ref-finanzen" ],
     ],
     "need-payment" => [
       [ "state" => "ok", "group" => "ref-finanzen" ],

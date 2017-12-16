@@ -23,25 +23,47 @@ $config = [
              "value" => "smallerEquals:#geld.stura"
             ],
         ],
-        //wird beim buchen geprüft
-        "vorkasse-zu-zahlen" => [
+        "prepaymnt-exists" => [
             ["id" => "geld.vorkasse",
              "value" => "bigger:0"
             ],
-            ["id" => "vorkasse.buchung",
-             "value" => "is:empty"
+        ],
+
+        "balancing-exists" => [
+            ["id" => "geld.abgerechnet",
+             "value" => "biggerEquals:0"
+            ],
+        ],
+        "no-prepaymnt" =>[
+            ["id" => "geld.vorkasse",
+             "value" => "equals:0"
+            ],
+        ],
+        "prepaymnt-payed" => [
+            ["id" => "geld.abgerechnet",
+             "value" => "biggerEquals:0"
+            ],
+        ],
+        "balancing-payed" => [
+            ["id" => "geld.abgerechnet",
+             "value" => "smallerEquals:#geld.stura"
+            ],
+            ["id" => "geld.abgerechnet",
+             "value" => "bigger:0"
+            ],
+        ],
+        "balancing-exists" => [
+            ["id" => "geld.abgerechnet",
+             "value" => "smallerEquals:#geld.stura"
+            ],
+            ["id" => "geld.abgerechnet",
+             "value" => "bigger:0"
             ],
         ],
     ],
     "preNewStateActions" => [
         "to.no-need" => [
             [ "writeField" => "always", "name" => "geld.abgerechnet",   "type" => "money", "value" => "0" ],
-        ],
-        "to.vorkasse-bezahlt" => [
-            ["writeField" => "always", "name" => "vorkasse.buchung","type" => "text", "value" => "Bereits gebucht" ],
-        ],
-        "to.terminated" => [
-            ["writeField" => "always", "name" => "abrechnung.buchung","type" => "text", "value" => "Bereits gebucht" ],
         ],
     ],
 ];
@@ -59,7 +81,8 @@ $layout = [
         "id" => "group1",
         "title" => "Allgemeine Angaben",
         "children" => [
-            [ "id" => "projekt.name", "title" =>"Projektname" ,"type" => "text",   "width" => 12, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+            [ "id" => "projekt.name", "title" =>"Projektname" ,"type" => "text",   "width" => 6, "opts" => ["required", "hasFeedback"], "minLength" => "10" ],
+            [ "id" => "org.mail", "title" =>"Kontakt (Mail)" ,"type" => "email",   "width" => 6,],
 
             [ "id" => "projekt.zeitraum",    "title" =>"Projektdauer", "type" => "daterange", "width" => 6,  "opts" => ["required"] ],
 
@@ -85,11 +108,22 @@ $layout = [
         "id" => "group0",
         "title" => "Beschluss StuRa-Sitzung",
         "children" => [
+            [ "id" => "genehmigung.recht.stura.beschluss",
+             "title" => "StuRa-Beschluss-Nr",
+             "type" => "text",
+             "width" => 2,
+             "opts"=>["required", "hasFeedback"],
+            ],
+            [ "id" => "stura.datum",
+             "title" => "Beschluss vom", "type" => "date",
+             "width" => 2,
+             "opts" => ["required", "hasFeedback"],
+            ],
             [ "id" => "geld.stura",
              "name" => "StuRa",
-             "title" =>"beschlossene StuRa-Förderung",
+             "title" =>"beschl. Förderung",
              "type" => "money",
-             "width" => 4,
+             "width" => 2,
              "currency" => "€",
              "opts"=>["required", "hasFeedback",],
              "addToSum" => ["stura"], //nur für ,00 vervolständigung
@@ -98,45 +132,22 @@ $layout = [
              "name" => "Vorkasse",
              "title" =>"davon auf Vorkasse",
              "type" => "money",
-             "width" => 4,
+             "width" => 2,
              "currency" => "€",
              "opts"=>["required", "hasFeedback"],
              "addToSum" => ["vorkasse"], //nur für ,00 vervolständigung
             ],
             [ "id" => "geld.abgerechnet",
              "name" => "abgerechnet",
-             "title" =>"davon korrekt abgerechnet",
+             "title" =>"korrekt abgerechnet",
              "type" => "money",
-             "width" => 4,
+             "width" => 2,
              "currency" => "€",
-             "addToSum" => ["abrechnung"],//nur für ,00 vervolständigung und addition hhp
-             "value" => "-1"
+             "addToSum" => ["abrechnung"],//nur für ,00 vervolständigung (und addition hhp?)
+             "value" => "-1",
             ],
-            [ "id" => "stura.datum",
-             "title" => "vom", "type" => "date",
-             "width" => 3,
-             "opts" => ["required", "hasFeedback"],
-            ],
-            [ "id" => "genehmigung.recht.stura.beschluss",
-             "title" => "StuRa-Beschluss-Nr",
-             "type" => "text",
-             "width" => 3,
-             "opts"=>["required", "hasFeedback"],
-            ],
-            [ "id" => "vorkasse.buchung",
-             "type" => "text",
-             "title" => "Vorkasse ausgezahlt:",
-             "value" => "",
-             "width" => 3,
-             "opts" => ['readonly'],
-            ],
-            [ "id" => "abrechnung.buchung",
-             "type" => "text",
-             "title" => "Abrechung ausgezahlt:",
-             "value" => "",
-             "width" => 3,
-             "opts" => ['readonly'],
-            ],
+
+
         ],
     ],
     [ "id" => "zahlungen.invref1", "type" => "invref", "width" => 12,
@@ -144,7 +155,7 @@ $layout = [
      "printSum" => [ "einnahmen.beleg", "ausgaben.beleg" ],
      "printSumWidth" => 2,
      "orderBy" => [ "field:zahlung.datum", "id" ],
-     "title" => "Zahlungen",
+     "title" => "Bisherige Zahlungen zu diesem Projekt",
      "renderOptRead" => [ "no-form-compress" ],
      "otherForms" => [
          ["type" => "zahlung", "referenceFormField" => "zahlung.grund.beleg",

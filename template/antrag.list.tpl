@@ -10,12 +10,14 @@ $tabList = [
     "title" => "zu buchen",
     "category" => [ "need-booking" => null, ],
     "otherTemplate" => "antrag.actions",
+    "showTemplateOnly" => true,
     "showIfGroup" => [ "ref-finanzen" ],
   ],
   "need-payment" => [
     "title" => "zu bezahlen",
     "category" => [ "need-payment" => null, ],
     "showIfGroup" => [ "ref-finanzen" ],
+    "otherTemplate" => "antrag.actions.create.zahlung",
   ],
   "stura" => [
     "title" => "StuRa-Sitzung",
@@ -127,9 +129,10 @@ foreach ($tabHead as $tabId => $tabDesc) {
 
   echo '<div id="'.htmlspecialchars($tabId).'" class="tab-pane fade'.($activeTab == $tabId ? ' in active':'').'" role="tabpanel">';
 
-  if (isset($tabDesc["otherTemplate"])) {
-    include "../template/{$tabDesc["otherTemplate"]}.tpl";
-  } else if ($num > 0) {
+
+if(isset($tabDesc["showTemplateOnly"]) && $tabDesc["showTemplateOnly"]){
+
+}else if ($num > 0) {
 ?>
 
 <table class="table table-striped">
@@ -261,6 +264,9 @@ foreach ($wikiBeschlussliste as $lines) {
 }
 
 } /* if num > 0 */
+if (isset($tabDesc["otherTemplate"])) {
+    include "../template/{$tabDesc["otherTemplate"]}.tpl";
+}
 
 ?>
 
