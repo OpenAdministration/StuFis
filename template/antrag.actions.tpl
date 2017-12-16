@@ -8,8 +8,6 @@ if (!hasGroup($HIBISCUSGROUP)) return;
 <div>
 <br/>
 
-    <a href="<?php echo $URIBASE; ?>?tab=hibiscus.sct" class="btn btn-primary">Überweisungen exportieren</a>
-
     <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary">Zahlungen verbuchen</a>
 
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
