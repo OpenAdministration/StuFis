@@ -15,6 +15,7 @@ $config = [
       ],
     ],
   ],
+  "createState" => "payed",
   "categories" => [
     "_variable_booking_reason" => true,
   ],

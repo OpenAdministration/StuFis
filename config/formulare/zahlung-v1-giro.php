@@ -9,6 +9,7 @@ $config = [
       [ "group" => "ref-finanzen" ],
     ],
   ],
+  "createState" => "payed",
   "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de" ],
   "validate" => [
     "checkSum" => [
