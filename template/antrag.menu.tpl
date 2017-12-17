@@ -15,45 +15,45 @@ $targetExportBank = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["tok
 
 $canEdit = hasPermission($form, $antrag, "canEdit");
 if (!$canEdit)
-    $targetEdit = false;
+$targetEdit = false;
 else
-    $targetEditPartiell = false;
+$targetEditPartiell = false;
 
 if (!hasPermission($form, $antrag, "canEditPartiell"))
-    $targetEditPartiell = false;
+$targetEditPartiell = false;
 
 $canBeCloned = hasPermission($form, $antrag, "canBeCloned", false);
 $canBeLinked = hasPermission($form, $antrag, "canBeLinked", false);
 
 if (!hasCategory($form, $antrag, "_export_bank"))
-    $targetExportBank = false;
+$targetExportBank = false;
 
 if (isset($antrag))
-    $h = "[{$antrag["id"]}] {$classTitle}";
+$h = "[{$antrag["id"]}] {$classTitle}";
 else
-    $h = "{$classTitle}";
+$h = "{$classTitle}";
 
 $stateString = $antrag["state"];
 if (isset($classConfig["state"][$antrag["state"]]))
-    $stateString = $classConfig["state"][$antrag["state"]][0];
+$stateString = $classConfig["state"][$antrag["state"]][0];
 $stateString .= " ({$antrag["stateCreator"]})";
 
 $newStates = [];
 foreach (array_keys($classConfig["state"]) as $newState) {
-    $perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
-    if (!hasPermission($form, $antrag, $perm)) continue;
-    $newStates[] = $newState;
+$perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
+if (!hasPermission($form, $antrag, $perm)) continue;
+$newStates[] = $newState;
 }
 
 $proposeNewState = [];
 if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewState"][$antrag["state"]])) {
-    $proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
+$proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
 }
 
 $removeList = [];
 foreach($proposeNewState as $state) {
-    if (isValidNewState($antrag["id"], "postEdit", $state)) continue;
-    $removeList[] = $state;
+if (isValidNewState($antrag["id"], "postEdit", $state)) continue;
+$removeList[] = $state;
 }
 $newStates = array_diff($newStates, $proposeNewState);
 
@@ -81,29 +81,29 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
                         <select class="selectpicker form-control" name="state" size="1" title="Neuer Bearbeitungsstatus" required="required" id="newantragstate">
                             <optgroup label="Empfohlen">
                                 <?php
-                                                           foreach ($proposeNewState as $newState) {
-                                                               $newStateName = $classConfig["state"][$newState][0];
+foreach ($proposeNewState as $newState) {
+$newStateName = $classConfig["state"][$newState][0];
 
-                                                               echo "<option ";
-                                                               if (in_array($newState, $removeList)) {
-                                                                   echo "disabled ";
-                                                               }
-                                                               echo "value=\"".htmlspecialchars($newState)."\">".htmlspecialchars($newStateName)."</option>\n";
+echo "<option ";
+if (in_array($newState, $removeList)) {
+echo "disabled ";
+}
+echo "value=\"".htmlspecialchars($newState)."\">".htmlspecialchars($newStateName)."</option>\n";
 
-                                                           }
-                                ?>
+}
+?>
                             </optgroup>
                             <optgroup label="Sonstige">
                                 <?php
 
-                                                           foreach ($newStates as $state) {
-                                                               $newStateName = $classConfig["state"][$state][0];
-                                                               $cls = [];
-                                                               if (in_array($state, $removeList))
-                                                                   $cls[] = "disabled-option";
-                                                               echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls)."\">".htmlspecialchars($newStateName)."</option>\n";
-                                                           }
-                                ?>
+foreach ($newStates as $state) {
+$newStateName = $classConfig["state"][$state][0];
+$cls = [];
+if (in_array($state, $removeList))
+$cls[] = "disabled-option";
+echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls)."\">".htmlspecialchars($newStateName)."</option>\n";
+}
+?>
                             </optgroup>
                         </select>
                         <div class="help-block with-errors"></div>
@@ -120,7 +120,7 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 </form>
 
 <?php
-                                                          }
+}
 ?>
 
 <nav class="navbar navbar-default">
@@ -130,11 +130,14 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
             <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>
             <h4 class="navbar-text navbar-left"><span class="label label-primary">
                 <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?>
-                <a class="text-white" href="#" data-toggle="modal" data-target="#editStateModal">
+                <a title="Aktuellen Status ändern" class="text-white" href="#" data-toggle="modal" data-target="#editStateModal">
                     <i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
-                </a>
-                <?php } ?>
-                <?php echo htmlspecialchars($stateString);?></span></h4>
+
+                    <?php } ?>
+                    <?php echo htmlspecialchars($stateString);?>
+                <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
+                </span>
+            </h4>
 
         </div><!-- /.navbar-collapse -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -168,11 +171,11 @@ if (count($proposeNewState) > 0) {
 <div class="well">
     <?php
 
-    foreach ($proposeNewState as $newState) {
-        $txt3 = "Wechseln nach {$classConfig["state"][$newState][0]}";
-        if (isset($classConfig["state"][$newState][1])) {
-            $txt3 = ucfirst($classConfig["state"][$newState][1]);
-        }
+foreach ($proposeNewState as $newState) {
+$txt3 = "Wechseln nach {$classConfig["state"][$newState][0]}";
+if (isset($classConfig["state"][$newState][1])) {
+$txt3 = ucfirst($classConfig["state"][$newState][1]);
+}
 
 ?>
     <form id="stateantrag<?php echo htmlspecialchars($newState); ?>" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax" data-toggle="validator" style="display:inline-block;">
@@ -185,8 +188,8 @@ if (count($proposeNewState) > 0) {
         <button type="submit" name="absenden" class="btn btn-primary btn-sm" <?php if (in_array($newState, $removeList)) { echo "disabled title=\"Es werden noch Angaben im Formular benötigt.\" "; } ?>><?php echo $txt3; ?></button>
     </form>
 
-    <?php
-    } /* foreach */ /*
+<?php
+} /* foreach */ /*
 ?>
 </div>
 <!-- well -->
