@@ -15,45 +15,45 @@ $targetExportBank = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["tok
 
 $canEdit = hasPermission($form, $antrag, "canEdit");
 if (!$canEdit)
-$targetEdit = false;
+    $targetEdit = false;
 else
-$targetEditPartiell = false;
+    $targetEditPartiell = false;
 
 if (!hasPermission($form, $antrag, "canEditPartiell"))
-$targetEditPartiell = false;
+    $targetEditPartiell = false;
 
 $canBeCloned = hasPermission($form, $antrag, "canBeCloned", false);
 $canBeLinked = hasPermission($form, $antrag, "canBeLinked", false);
 
 if (!hasCategory($form, $antrag, "_export_bank"))
-$targetExportBank = false;
+    $targetExportBank = false;
 
 if (isset($antrag))
-$h = "[{$antrag["id"]}] {$classTitle}";
+    $h = "[{$antrag["id"]}] {$classTitle}";
 else
-$h = "{$classTitle}";
+    $h = "{$classTitle}";
 
 $stateString = $antrag["state"];
 if (isset($classConfig["state"][$antrag["state"]]))
-$stateString = $classConfig["state"][$antrag["state"]][0];
+    $stateString = $classConfig["state"][$antrag["state"]][0];
 $stateString .= " ({$antrag["stateCreator"]})";
 
 $newStates = [];
 foreach (array_keys($classConfig["state"]) as $newState) {
-$perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
-if (!hasPermission($form, $antrag, $perm)) continue;
-$newStates[] = $newState;
+    $perm = "canStateChange.from.{$antrag["state"]}.to.{$newState}";
+    if (!hasPermission($form, $antrag, $perm)) continue;
+    $newStates[] = $newState;
 }
 
 $proposeNewState = [];
 if (isset($classConfig["proposeNewState"]) && isset($classConfig["proposeNewState"][$antrag["state"]])) {
-$proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
+    $proposeNewState = array_unique(array_values(array_intersect($newStates, $classConfig["proposeNewState"][$antrag["state"]])));
 }
 
 $removeList = [];
 foreach($proposeNewState as $state) {
-if (isValidNewState($antrag["id"], "postEdit", $state)) continue;
-$removeList[] = $state;
+    if (isValidNewState($antrag["id"], "postEdit", $state)) continue;
+    $removeList[] = $state;
 }
 $newStates = array_diff($newStates, $proposeNewState);
 
@@ -81,29 +81,29 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
                         <select class="selectpicker form-control" name="state" size="1" title="Neuer Bearbeitungsstatus" required="required" id="newantragstate">
                             <optgroup label="Empfohlen">
                                 <?php
-foreach ($proposeNewState as $newState) {
-$newStateName = $classConfig["state"][$newState][0];
+                                                           foreach ($proposeNewState as $newState) {
+                                                               $newStateName = $classConfig["state"][$newState][0];
 
-echo "<option ";
-if (in_array($newState, $removeList)) {
-echo "disabled ";
-}
-echo "value=\"".htmlspecialchars($newState)."\">".htmlspecialchars($newStateName)."</option>\n";
+                                                               echo "<option ";
+                                                               if (in_array($newState, $removeList)) {
+                                                                   echo "disabled ";
+                                                               }
+                                                               echo "value=\"".htmlspecialchars($newState)."\">".htmlspecialchars($newStateName)."</option>\n";
 
-}
-?>
+                                                           }
+                                ?>
                             </optgroup>
                             <optgroup label="Sonstige">
                                 <?php
 
-foreach ($newStates as $state) {
-$newStateName = $classConfig["state"][$state][0];
-$cls = [];
-if (in_array($state, $removeList))
-$cls[] = "disabled-option";
-echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls)."\">".htmlspecialchars($newStateName)."</option>\n";
-}
-?>
+                                                           foreach ($newStates as $state) {
+                                                               $newStateName = $classConfig["state"][$state][0];
+                                                               $cls = [];
+                                                               if (in_array($state, $removeList))
+                                                                   $cls[] = "disabled-option";
+                                                               echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls)."\">".htmlspecialchars($newStateName)."</option>\n";
+                                                           }
+                                ?>
                             </optgroup>
                         </select>
                         <div class="help-block with-errors"></div>
@@ -120,7 +120,7 @@ echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls
 </form>
 
 <?php
-}
+                                                          }
 ?>
 
 <nav class="navbar navbar-default">
@@ -135,7 +135,7 @@ echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls
 
                     <?php } ?>
                     <?php echo htmlspecialchars($stateString);?>
-                <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
+                    <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
                 </span>
             </h4>
 
@@ -150,7 +150,7 @@ echo "<option value=\"".htmlspecialchars($state)."\" class=\"".implode(" ", $cls
                 <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
                 <?php } ?>
                 <li><a href="<?php echo htmlspecialchars($targetPrint); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li>
-                <li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>
+                <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
                 <?php if ($targetExportBank !== false) { ?>
                 <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
                 <?php } ?>
