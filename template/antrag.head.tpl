@@ -9,23 +9,24 @@ $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $
 $targetRead = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."";
 
 if (isset($antrag))
-  $h = "[{$antrag["id"]}] {$classTitle}";
+    $h = "[{$antrag["id"]}] {$classTitle}";
 else
-  $h = "{$classTitle}";
+    $h = "{$classTitle}";
 
 ?>
-<nav class="navbar navbar-default no-print">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
-    </div>
-    <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <p class="navbar-text navbar-right"><?php echo htmlspecialchars($revTitle); ?></p>
-    </div><!-- /.navbar-collapse -->
-  </div><!-- /.container-fluid -->
-</nav>
+<div class="container">
+    <nav class="navbar navbar-default no-print">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <p class="navbar-text navbar-right"><?php echo htmlspecialchars($revTitle); ?></p>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
 
-<?php
+    <?php
 
-# vim:syntax=php
+    # vim:syntax=php

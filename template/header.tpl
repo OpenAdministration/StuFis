@@ -35,7 +35,6 @@
             </div>
         </nav>
 
-        <div class="container">
 
-            <?php
-            # vim: set syntax=php:
+        <?php
+        # vim: set syntax=php:

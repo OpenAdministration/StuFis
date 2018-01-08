@@ -139,57 +139,57 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 <?php
                                                           }
 ?>
+<div class="container">
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
+                <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>
+                <h4 class="navbar-text navbar-left"><span class="label label-primary">
+                    <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?>
+                    <a title="Aktuellen Status ändern" class="text-white" href="#" data-toggle="modal" data-target="#editStateModal">
+                        <i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
 
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
-            <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>
-            <h4 class="navbar-text navbar-left"><span class="label label-primary">
-                <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?>
-                <a title="Aktuellen Status ändern" class="text-white" href="#" data-toggle="modal" data-target="#editStateModal">
-                    <i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
+                        <?php } ?>
+                        <?php echo htmlspecialchars($stateString);?>
+                        <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
+                    </span>
+                </h4>
 
+            </div><!-- /.navbar-collapse -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <?php if ($targetEditPartiell !== false) { ?>
+                    <!--        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li> -->
+                    <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
                     <?php } ?>
-                    <?php echo htmlspecialchars($stateString);?>
-                    <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
-                </span>
-            </h4>
-
-        </div><!-- /.navbar-collapse -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">
-                <?php if ($targetEditPartiell !== false) { ?>
-                <!--        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li> -->
-                <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-                <?php } ?>
-                <?php if ($targetEdit !== false) { ?>
-                <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-                <?php }
-                foreach($printModes as $name => $printMode){
-                    echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'><i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
-                }
-                ?>
-                <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
-                <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
-                <?php if ($targetExportBank !== false) { ?>
-                <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
-                <?php } ?>
-                <?php if ($canBeCloned !== false) { ?>
-                <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
-                <?php } ?>
-                <?php if ($canBeLinked !== false) { ?>
-                <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen"><i class="fa fw fa-plus-square"></i></a></li>
-                <?php } ?>
-            </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-</nav>
+                    <?php if ($targetEdit !== false) { ?>
+                    <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
+                    <?php }
+                    foreach($printModes as $name => $printMode){
+                        echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'><i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
+                    }
+                    ?>
+                    <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
+                    <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
+                    <?php if ($targetExportBank !== false) { ?>
+                    <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
+                    <?php } ?>
+                    <?php if ($canBeCloned !== false) { ?>
+                    <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
+                    <?php } ?>
+                    <?php if ($canBeLinked !== false) { ?>
+                    <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen"><i class="fa fw fa-plus-square"></i></a></li>
+                    <?php } ?>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
 
 
-<?php /*
+    <?php /*
 if (count($proposeNewState) > 0) {
-?>
+    ?>
 <div class="well">
     <?php
 
@@ -199,7 +199,7 @@ if (isset($classConfig["state"][$newState][1])) {
 $txt3 = ucfirst($classConfig["state"][$newState][1]);
 }
 
-?>
+    ?>
     <form id="stateantrag<?php echo htmlspecialchars($newState); ?>" role="form" action="<?php echo $_SERVER["PHP_SELF"];?>" method="POST"  enctype="multipart/form-data" class="ajax" data-toggle="validator" style="display:inline-block;">
         <input type="hidden" name="action" value="antrag.state"/>
         <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
@@ -212,13 +212,13 @@ $txt3 = ucfirst($classConfig["state"][$newState][1]);
 
 <?php
 } /* foreach */ /*
-?>
+    ?>
 </div>
 <!-- well -->
 <?php
 } /* if count proposeNewState */
-?>
+    ?>
 
-<?php
+    <?php
 
-# vim:syntax=php
+    # vim:syntax=php
