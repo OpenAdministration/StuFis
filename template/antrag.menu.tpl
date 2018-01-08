@@ -61,11 +61,11 @@ $newStates = array_diff($newStates, $proposeNewState);
 $printModes = [];
 
 if(isset($classConfig["printMode"])){
-   foreach($classConfig["printMode"] as $printModeName => $printConf){
-       if(isPrintable($antrag,$form,$printModeName)){
-          $printModes[$printModeName] = $printConf;
-       }
-   }
+    foreach($classConfig["printMode"] as $printModeName => $printConf){
+        if(isPrintable($antrag,$form,$printModeName)){
+            $printModes[$printModeName] = $printConf;
+        }
+    }
 
 }
 var_dump($printModes);
@@ -185,6 +185,7 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
+
 
 <?php /*
 if (count($proposeNewState) > 0) {
