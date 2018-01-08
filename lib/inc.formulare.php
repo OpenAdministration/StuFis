@@ -125,6 +125,17 @@ function loadForms() {
 
 }
 
+function isPrintable(&$antrag, &$form, $printModeName){
+    $classConfig = $form["_class"];
+    if(!isset($classConfig['printMode'])) return false;
+    $printModes = $classConfig['printMode'];
+    if(!isset($printModes[$printModeName])) return false;
+    if(!isset($printModes[$printModeName]["condition"])) return true;
+    $ctrl = [];
+    $msgs = [];
+    return checkValidLine($printModes[$printModeName]["condition"],$antrag, $ctrl,$form, $msgs);
+}
+
 function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) {
     global $attributes;
     if ($i == "state") {

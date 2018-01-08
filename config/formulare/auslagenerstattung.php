@@ -94,7 +94,12 @@ $config = [
         ["title"=> "Titelseite drucken",
          "condition" =>
          ["state" => ["draft"],"group" => "ref-finanzen"],
-        ]
+        ],
+        "zahlungsanweisung2" =>
+        ["title"=> "Titelseite drucken",
+         "condition" =>
+         ["state" => ["draft"],"group" => "ref-finanzen"],
+        ],
     ],
     "permission" => [
         /* each permission has a name and a list of sufficient conditions.

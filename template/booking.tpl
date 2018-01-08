@@ -1,3 +1,9 @@
+<form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
+        <input type="submit" name="absenden" value="neue Kontoauszüge abrufen" class="btn btn-primary">
+        <input type="hidden" name="action" value="hibiscus">
+        <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
+    </form>
+
 <div class="alert alert-info">
 Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugehörige Gründe bzw. Zahlungen aus.
 </div>

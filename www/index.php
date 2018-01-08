@@ -1741,7 +1741,6 @@ switch($_REQUEST["tab"]) {
         }
 
         require "../template/antrag.menu.tpl";
-        require "../template/antrag.state.tpl";
 
         require "../template/antrag.subcreate.tpl";
 
@@ -1916,7 +1915,6 @@ switch($_REQUEST["tab"]) {
                 }
             }
 
-
             if ($value <= 0.0) continue; # keine Überweisung notwendig hier
 
 
@@ -1944,12 +1942,18 @@ switch($_REQUEST["tab"]) {
         }
         require "../template/hibiscus.sct.tpl";
         break;
-    case "bookingHistory":
-        echo "to be implemented";
-        //require "../template/bookingHistory.tpl";
+    case "booking.history":
+        //$rev = ["v1-giro"];
+        //$zahlungen = dbFetchAll("antrag", ["type" => "zahlung", "state" => "payed","lastupdated" => 0]);
+        /*$zahlungen = array_filter($zahlungen, function ($field){
+           global $rev;
+           return in_array($field["revision"],$rev);
+        });*/
+        $content = dbFetchBookingHistory("02 01","2017-01-01", "2017-12-31");
+        require "../template/booking.history.tpl";
         break;
     default:
-        echo "invalid tab name: ".htmlspecialchars($_REQUEST["tab"]);
+        echo "invalid tab name:".htmlspecialchars($_REQUEST["tab"]);
 }
 
 require "../template/footer.tpl";

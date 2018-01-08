@@ -9,7 +9,7 @@ $revTitle = isset($revConfig["revisionTitle"]) ? $revConfig["revisionTitle"] : $
 $targetRead = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."";
 $targetEdit = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/edit";
 $targetEditPartiell = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/editPartiell";
-$targetPrint = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
+$targetprintbase = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 $targetExport = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/export";
 $targetExportBank = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/exportBank";
 
@@ -56,6 +56,23 @@ foreach($proposeNewState as $state) {
     $removeList[] = $state;
 }
 $newStates = array_diff($newStates, $proposeNewState);
+
+
+$printModes = [];
+
+if(isset($classConfig["printMode"])){
+   foreach($classConfig["printMode"] as $printModeName => $printConf){
+       if(isPrintable($antrag,$form,$printModeName)){
+          $printModes[$printModeName] = $printConf;
+       }
+   }
+
+}
+var_dump($printModes);
+//testdata
+//$printModes = ["zahlungsanweisung" => ["title"=> "Titelseite drucken", "condition" => ["state" => ["draft"],"group" => "ref-finanzen"],]];
+
+
 
 if (count($newStates) > 0 || count($proposeNewState) > 0) {
 ?>
@@ -148,8 +165,12 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
                 <?php } ?>
                 <?php if ($targetEdit !== false) { ?>
                 <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-                <?php } ?>
-                <li><a href="<?php echo htmlspecialchars($targetPrint); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li>
+                <?php }
+                foreach($printModes as $name => $printMode){
+                    echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'><i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
+                }
+                ?>
+                <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
                 <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
                 <?php if ($targetExportBank !== false) { ?>
                 <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
