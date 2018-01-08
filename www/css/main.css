@@ -1,259 +1,267 @@
 @media not print {
-  body {
-    padding-top: 80px;
-  }
+    body {
+        padding-top: 80px;
+    }
 }
 
 td .content {
-  border: none;
+    border: none;
 }
 
 tr [data-status="0"] {
-  background: red;
+    background: red;
 }
 
 pre {
-  white-space: pre-wrap;
-  word-break: normal;
+    white-space: pre-wrap;
+    word-break: normal;
 }
 
 .dynamic-table > tbody > tr.new-table-row > td.delete-row a.delete-row {
-  display: none;
+    display: none;
 }
 
 .dynamic-table-readonly.dynamic-table > tbody > tr > td.delete-row a.delete-row {
-  display: none;
+    display: none;
 }
 
 .dynamic-table-readonly.dynamic-table > tbody > tr.new-table-row {
-  display: none;
+    display: none;
 }
 
 /* Adjust feedback icon position */
 
 .select-picker-container.hasFeedback {
-  padding-right: 20px;
-  position: relative;
+    padding-right: 20px;
+    position: relative;
 }
 
 .select-picker-container .form-control-feedback {
-  right: -15px;
-  position: absolute;
+    right: -15px;
+    position: absolute;
 }
 
 
 /* green border for bootstrap-select */
 
 .form-group.has-success > .select-picker-container > .btn-group.bootstrap-select > .btn.btn-default {
-  border-color: #3c763d;
+    border-color: #3c763d;
 }
 
 .form-group.has-error > .select-picker-container > .btn-group.bootstrap-select > .btn.btn-default {
-  border-color: #a94442;
+    border-color: #a94442;
 }
 
 
 /* invref */
 
 table.invref > tbody > tr.invref-template {
-  display: none;
+    display: none;
 }
 
 .fixed-width-table {
-  table-layout: fixed;
+    table-layout: fixed;
 }
 
 .visible-inline-block {
-  display: inline-block;
+    display: inline-block;
 }
 
 .visible-inline {
-  display: inline;
+    display: inline;
 }
 
 @media print {
-  .no-print {
-    display: none;
-  }
-  a[href].link-shows-url::after {
-    display: none;
-    content: "";
-  }
+    .no-print {
+        display: none;
+    }
+    a[href].link-shows-url::after {
+        display: none;
+        content: "";
+    }
 }
 
 hr.blackhr {
-  border-color: black;
+    border-color: black;
 }
 
 .tree-view {
-  display: none;
+    display: none;
 }
 
 .tree-view.tree-view-visible,
 .tree-view.tree-view-wip {
-  display: initial;
+    display: initial;
 }
 
 .input-daterange div.form-control {
-  border-radius: 4px !important;
+    border-radius: 4px !important;
 }
 
 .custom-combobox ul.dropdown-menu {
-  right: 0px;
+    right: 0px;
 }
 
 .custom-combobox ul.dropdown-menu li a.opt {
-  padding-left: 2.25em;
+    padding-left: 2.25em;
 }
 
 .custom-combobox ul.dropdown-menu li a {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .caret.mycaret-up {
-  border: 4px solid transparent;
-  border-bottom: 4px solid;
-  margin-bottom: 4px;
+    border: 4px solid transparent;
+    border-bottom: 4px solid;
+    margin-bottom: 4px;
 }
 .caret.mycaret-right {
-  border: 4px solid transparent;
-  border-left: 4px solid;
+    border: 4px solid transparent;
+    border-left: 4px solid;
 }
 .caret.mycaret-down {
-  border: 4px solid transparent;
-  border-top: 4px solid;
+    border: 4px solid transparent;
+    border-top: 4px solid;
 }
 .caret.mycaret-left {
-  border: 4px solid transparent;
-  border-right: 4px solid;
+    border: 4px solid transparent;
+    border-right: 4px solid;
 }
 
 .table.small-table th, .table.small-table td {
-  font-size: 8px;
+    font-size: 8px;
 }
 
 .form-inline select.selectpicker option {
-  width: .5px !important;
+    width: .5px !important;
 }
 
 .form-inline .bootstrap-select.form-control:not([class*="col-"]),
 .form-inline .bootstrap-select > .dropdown-toggle,
 .form-inline .bootstrap-select.btn-group .dropdown-toggle .filter-option {
-  width: initial !important;
+    width: initial !important;
 }
 
 .align-top {
-  vertical-align: top;
+    vertical-align: top;
 }
 
 .glyphicon.align-top {
-  margin-top: 1px;
+    margin-top: 1px;
 }
 
 #editantragpartiell input:not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]),
 #editantragpartiell textarea,
 #editantragpartiell select
 {
-   border-color: #ff80ff;
-   box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 100, 255, 0.5);
-   padding-left: 26px;
+    border-color: #ff80ff;
+    box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.075) inset, 0px 0px 8px rgba(255, 100, 255, 0.5);
+    padding-left: 26px;
 }
 
 #editantragpartiell .form-grp {
-  position: relative;
+    position: relative;
 }
 
 #editantragpartiell .form-grp::after {
-  content: "\f040";
-  font-family: FontAwesome;
-  z-index:100;
-  position: absolute;
-  left: 10px;
-  top: 32px;
+    content: "\f040";
+    font-family: FontAwesome;
+    z-index:100;
+    position: absolute;
+    left: 10px;
+    top: 32px;
 }
 
 a.btn.disabled {
-  pointer-events: initial; /* fixes cursor on Firefox */
+    pointer-events: initial; /* fixes cursor on Firefox */
 }
 
 td.hide-column-manual,
 td.hide-column-manual > *,
 th.hide-column-manual,
 th.hide-column-manual > * {
-  display: none !important;
+    display: none !important;
 }
 
 .dynamic-table-readonly > * > tr > *.row-number,
 .dynamic-table-readonly > * > tr > *.delete-row,
 .dynamic-table > * > tr > *.row-number,
 .dynamic-table > * > tr > *.delete-row {
-  width: 15px;
+    width: 15px;
 }
 
 input[readonly="readonly"] ~ .dropdown-menu {
-  display: none;
+    display: none;
 }
 
 input[readonly="readonly"] ~ .dropdown-toggle .caret {
-  display: none !important;
+    display: none !important;
 }
 
 .form-control.signbox {
-  height: 3cm;
+    height: 3cm;
 }
 
 .expand-toggle-expand, .expand-toggle-compress {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .no-form-grp > .well {
-  margin-top: 5px;
+    margin-top: 5px;
 }
 
 .dynamic-table-cell[data-formitemtype="otherForm"] > .form-group {
-  overflow: auto;
+    overflow: auto;
 }
 
 .dynamic-table-cell[data-formitemtype="otherForm"] > .form-group > .input-group > input {
-  min-width: 4em;
+    min-width: 4em;
 }
 
 .input-group.input-group-static .input-group-addon {
-  border: none;
-  background-color: transparent;
-  font-weight: inherit;
+    border: none;
+    background-color: transparent;
+    font-weight: inherit;
 }
 
 .radio > span.glyphicon {
-  width: 10px;
+    width: 10px;
 }
 
 .radio > span.glyphicon + label {
-  width: calc( 100% - 10px);
+    width: calc( 100% - 10px);
 }
 
 a.disabled-option span {
-  text-decoration: line-through;
+    text-decoration: line-through;
 }
 
 .d-inline-block {
-  display: inline-block;
+    display: inline-block;
 }
 
 .select-on-click {
-  cursor:pointer;
+    cursor:pointer;
 }
 
 #server-message-content pre {
- overflow: auto;
- max-width: 70vw;
- max-height: 50vh;
+    overflow: auto;
+    max-width: 70vw;
+    max-height: 50vh;
 }
 
 .nowrap {
- white-space: nowrap;
+    white-space: nowrap;
 }
 
 .text-white{
     color: white !important;
+}
+
+.navbar-fixed-right {
+    position: fixed;
+    right: 30px;
+    top: 30%;
+    float:right;
+    text-align: right;
 }

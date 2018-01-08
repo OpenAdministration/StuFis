@@ -66,9 +66,8 @@ if(isset($classConfig["printMode"])){
             $printModes[$printModeName] = $printConf;
         }
     }
-
 }
-var_dump($printModes);
+//var_dump($printModes);
 //testdata
 //$printModes = ["zahlungsanweisung" => ["title"=> "Titelseite drucken", "condition" => ["state" => ["draft"],"group" => "ref-finanzen"],]];
 
@@ -139,51 +138,61 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 <?php
                                                           }
 ?>
+
+<div class="">
+    <ul class="nav nav-pills nav-stacked navbar-right navbar-fixed-right">
+        <li><a href="">
+                    <?php echo htmlspecialchars($stateString);?>
+            </a>
+        </li>
+
+
+
+        <?php if (count($newStates) > 0 || count($proposeNewState) > 0){?>
+        <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i class="fa fw fa-refresh"></i></a></li>
+        <?php }?>
+
+        <?php if ($targetExportBank !== false) { ?>
+        <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank">Exportiere Überweisung <i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
+        <?php } ?>
+
+        <?php if ($targetEditPartiell !== false) { ?>
+        <!--        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li> -->
+        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten">Bearbeiten <i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
+        <?php } ?>
+        <?php if ($targetEdit !== false) { ?>
+        <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten">Bearbeiten <i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
+        <?php }
+        foreach($printModes as $name => $printMode){
+            echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'>{$printMode["title"]} <i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
+        }
+        ?>
+
+        <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
+        <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
+
+
+        <?php if ($canBeLinked !== false) { ?>
+        <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen">Zugehöriges Formular anlegen <i class="fa fw fa-plus-square"></i></a></li>
+        <?php } ?>
+
+        <li><a href="history" title="Verlauf">Historie <i class="fa fa-fw fa-history" aria-hidden="true"></i></a></li>
+        <?php if ($canBeCloned !== false) { ?>
+        <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen">Verwende als Vorlage <i class="fa fw fa-clone"></i></a></li>
+        <?php } ?>
+        <li><a href="https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege">Hilfe <i class="fa fa-question" aria-hidden="true"></i></a></li>
+
+    </ul>
+</div>
+
 <div class="container">
     <nav class="navbar navbar-default">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
-                <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>
-                <h4 class="navbar-text navbar-left"><span class="label label-primary">
-                    <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?>
-                    <a title="Aktuellen Status ändern" class="text-white" href="#" data-toggle="modal" data-target="#editStateModal">
-                        <i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
 
-                        <?php } ?>
-                        <?php echo htmlspecialchars($stateString);?>
-                        <?php if (count($newStates) > 0 || count($proposeNewState) > 0) { ?></a><?php }?>
-                    </span>
-                </h4>
+        <div class="navbar-header">
+            <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
+            <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>
 
-            </div><!-- /.navbar-collapse -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <?php if ($targetEditPartiell !== false) { ?>
-                    <!--        <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil-square" aria-hidden="true"></i></a></li> -->
-                    <li><a href="<?php echo htmlspecialchars($targetEditPartiell); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-                    <?php } ?>
-                    <?php if ($targetEdit !== false) { ?>
-                    <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten"><i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-                    <?php }
-                    foreach($printModes as $name => $printMode){
-                        echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'><i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
-                    }
-                    ?>
-                    <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
-                    <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
-                    <?php if ($targetExportBank !== false) { ?>
-                    <li><a href="<?php echo htmlspecialchars($targetExportBank); ?>" title="Exportieren für Bank"><i class="fa fa-fw fa-money" aria-hidden="true"></i></a></li>
-                    <?php } ?>
-                    <?php if ($canBeCloned !== false) { ?>
-                    <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen"><i class="fa fw fa-clone"></i></a></li>
-                    <?php } ?>
-                    <?php if ($canBeLinked !== false) { ?>
-                    <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen"><i class="fa fw fa-plus-square"></i></a></li>
-                    <?php } ?>
-                </ul>
-            </div><!-- /.navbar-collapse -->
-        </div><!-- /.container-fluid -->
+        </div><!-- /.navbar-collapse -->
     </nav>
 
 
