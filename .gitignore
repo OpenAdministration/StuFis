@@ -13,3 +13,4 @@ lib/inc.db.person.php
 lib/inc.db.rolle-mailingliste.php
 lib/inc.db.rolle.php
 lib/Gremienbesetzung Studierende.csv
+.idea/*
