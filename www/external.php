@@ -7,7 +7,7 @@ global $attributes;
 $attributes["eduPersonPrincipalName"][0] = "Gremienwiki";
 
 //Angefordererte Pdfs von FUI2PDF
-if(isset($_GET['fname'])){
+if (isset($_GET['fname']) && isset($_GET['id'])){
     $fname = str_replace("/","",str_replace("..", "",$_GET['fname']));
     $id = str_replace("/","",str_replace("..", "",$_GET['id']));
     $file = SYSBASE.'/storage/'.$id.'/'.$fname;
