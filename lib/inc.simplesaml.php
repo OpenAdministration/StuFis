@@ -20,7 +20,6 @@ function requireAuth() {
 
   require_once($SIMPLESAML.'/lib/_autoload.php');
   $as = new SimpleSAML_Auth_Simple($SIMPLESAMLAUTHSOURCE);
-
   if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$as->isAuthenticated()) {
     header('HTTP/1.0 401 Unauthorized');
     die();

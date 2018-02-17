@@ -39,6 +39,7 @@
       $antrag["_inhalt"][$i]["value"] = $overrides[$row["fieldname"]];
       unset($append[$row["fieldname"]]);
     }
+
     foreach ($append as $k => $v) {
       $antrag["_inhalt"][] = [ "value" => $v, "fieldname" => $k, "contenttype" => null ];
     }
@@ -53,7 +54,6 @@
   <input type="hidden" name="revision" value="<?php echo $antrag["revision"]; ?>"/>
   <input type="hidden" name="version" value="<?php echo $antrag["version"]; ?>"/>
   <input type="hidden" name="state" value="<?php echo $antrag["state"]; ?>"/>
-
 <?php
 
 renderForm($form, ["_values" => $antrag] );
@@ -80,7 +80,10 @@ renderForm($form, ["_values" => $antrag] );
       $btnTxt = "Speichern als {$stateTxt}";
 
 ?>
-    <a href="javascript:void(false);" class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate"; else echo "validate"; ?>' data-name="state" data-value="<?php echo htmlspecialchars($state); ?>" id="state-<?php echo htmlspecialchars($state); ?>"><?php echo $btnTxt; ?></a>
+      <a href="javascript:void(false);"
+         class='btn btn-success submit-form <?php if ($isEditable) echo "no-validate";else echo "validate"; ?>'
+         data-name="state" data-value="<?php echo htmlspecialchars($state); ?>"
+         id="state-<?= htmlspecialchars($state); ?>"><?= $btnTxt; ?></a>
     &nbsp;
 <?php
   }
