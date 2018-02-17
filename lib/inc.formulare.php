@@ -3109,10 +3109,6 @@ function renderFormItemTable($layout, $ctrl) {
                     $children = [];
                     $colWidthSum = 0;
                     foreach ($col["children"] as $child) {
-    
-                        if (isset($child["type"]) && $child["type"] == "ref"){
-                            echo "ok";
-                        }
                         if (isset($child["editWidth"]) && !$noForm)
                             $child["width"] = $child["editWidth"];
                         if (isset($child["width"]) && $child["width"] == -1) continue;
