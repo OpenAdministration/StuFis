@@ -1,7 +1,7 @@
 <?php
 
 $config = [
-  "captionField" => [ "zahlung.datum", "zahlung.empfaenger_name", "zahlung.art", "zahlung.verwendungszweck" ],
+    "captionField" => ["zahlung.datum", "zahlung.empfaenger_name", "zahlung.art"/*, "zahlung.verwendungszweck" */],
   "revisionTitle" => "Bank.Hibiscus (Version 20170302)",
   "permission" => [
     "isCreateable" => false,
