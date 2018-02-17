@@ -3,8 +3,8 @@
 include "../lib/inc.all.php";
 
 //Angezeigter NAme in Tool bei Auto Status Change
-global $attributes;
-$attributes["eduPersonPrincipalName"][0] = "Gremienwiki";
+//$attributes["eduPersonPrincipalName"][0] = "Gremienwiki";
+//TODO: fix possible error(s) through not via saml authentificated request
 
 //Angefordererte Pdfs von FUI2PDF
 if (isset($_GET['fname']) && isset($_GET['id'])){

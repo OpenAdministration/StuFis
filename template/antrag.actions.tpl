@@ -2,7 +2,7 @@
 
 global $HIBISCUSGROUP, $URIBASE;
 
-if (!hasGroup($HIBISCUSGROUP)) return;
+if (!AuthHandler::getInstance()->hasGroup($HIBISCUSGROUP)) return;
 
 ?>
 <div>

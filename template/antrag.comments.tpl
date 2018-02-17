@@ -12,10 +12,10 @@ global $ADMINGROUP;
                   enctype="multipart/form-data" class="ajax">
                 <input type="hidden" name="action" value="antrag.comment"/>
                 <input type="hidden" name="nonce" value="<?= $nonce; ?>"/>
-                <input type="hidden" name="userFullName" value="<?= getUserFullName(); ?>"/>
-                <input type="hidden" name="username" value="<?= getUsername(); ?>"/>
+                <input type="hidden" name="userFullName" value="<?= AuthHandler::getInstance()->getUserFullName(); ?>"/>
+                <input type="hidden" name="username" value="<?= AuthHandler::getInstance()->getUsername(); ?>"/>
                 <div class="chat-container chat-own">
-                    <b><?= htmlspecialchars(getUserFullName() . " (" . getUsername() . ")") ?></b>
+                    <b><?= htmlspecialchars(AuthHandler::getInstance()->getUserFullName() . " (" . AuthHandler::getInstance()->getUsername() . ")") ?></b>
                     <span class="chat-time">Jetzt gerade</span>
                     <textarea name="new-comment" class="chat-textarea form-control col-xs-10" rows="3"
                               required="required"></textarea>
@@ -28,7 +28,7 @@ global $ADMINGROUP;
             
             <?php
             foreach ($antrag["_comments"] as $c){
-                $owner = ($c["creator"] === getUsername() ? "own" : "other");
+                $owner = ($c["creator"] === AuthHandler::getInstance()->getUsername() ? "own" : "other");
                 $creatorStr = ((($c["creator"] == $c["creatorFullName"]) || empty($c["creatorFullName"])) ?
                     $c["creator"] :
                     ($c["creatorFullName"] . " (" . $c["creator"] . ")")
@@ -43,7 +43,7 @@ global $ADMINGROUP;
                         <?php
                         break;
                     case 2: //admin only
-                        if (!hasGroup($ADMINGROUP)) continue;
+                        if (!AuthHandler::getInstance()->hasGroup($ADMINGROUP)) continue;
                     //fall-through
                     case 1: //comment
                         ?>

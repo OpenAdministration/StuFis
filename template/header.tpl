@@ -30,7 +30,7 @@
             <li><a target="_blank"
                    href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a>
             </li>
-            <li><a href="<?php echo htmlspecialchars($logoutUrl); ?>">Logout</a></li>
+            <li><a href="<?php echo htmlspecialchars(AuthHandler::getInstance()->getLogoutURL()); ?>">Logout</a></li>
         </ul>
     </div>
 </nav>
@@ -40,13 +40,13 @@
         <!-- SIDEBAR USER TITLE -->
         <div class="profile-usertitle">
             <div class="profile-usertitle-name">
-                <?php echo getUserfullname(); ?>
+                <?php echo AuthHandler::getInstance()->getUserfullname(); ?>
             </div>
-            <?php if (hasGroup($ADMINGROUP)){ ?>
+            <?php if (AuthHandler::getInstance()->hasGroup($ADMINGROUP)){ ?>
                 <div class="profile-usertitle-job">
                     Admin
                 </div>
-            <?php }else if (hasGroup("ref-finanzen")){ ?>
+            <?php }else if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){ ?>
                 <div class="profile-usertitle-job">
                     Ref-Finanzen
                 </div>
@@ -78,7 +78,7 @@
                     </a>
                 </li>
                 <?php
-                if (hasGroup("ref-finanzen")){
+                if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                     ?>
                     <li <?php if ($_REQUEST["tab"] == "hv") echo "class='active'"; ?>>
                         <a href="<?php echo htmlspecialchars($URIBASE . "?tab=hv"); ?>">

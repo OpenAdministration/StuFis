@@ -1,10 +1,11 @@
 <?php
-global $attributes, $logoutUrl, $AUTHGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
+global $AUTHGROUP, $nonce, $URIBASE, $antrag, $STORAGE;
 ob_start('ob_gzhandler');
 
 require_once "../lib/inc.all.php";
 
 requireGroup($AUTHGROUP);
+$attributes = AuthHandler::getInstance()->getAttributes();
 
 $msgs = Array();
 $ret = false;

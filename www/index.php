@@ -1,10 +1,10 @@
 <?php
 
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP, $FUI2PDF_URL;
+global $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP, $FUI2PDF_URL;
 ob_start('ob_gzhandler');
 require_once "../lib/inc.all.php";
-requireGroup($AUTHGROUP);
-
+AuthHandler::getInstance()->requireGroup($AUTHGROUP);
+$attributes = AuthHandler::getInstance()->getAttributes();
 prof_flag("init-done");
 
 function writeFillOnCopy($antrag_id, $form) {
@@ -22,7 +22,7 @@ function writeFillOnCopy($antrag_id, $form) {
                 $value = getUserMail();
                 break;
             case "user:fullname":
-                $value = getUserFullName();
+                $value = AuthHandler::getInstance()->getUserFullName();
                 break;
             case "otherForm":
                 $fieldValue = false;
@@ -206,7 +206,7 @@ function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$f
     $actions = $form["_class"]["postNewStateActions"][$transition];
     foreach ($actions as $action) {
         if (isset($action["sendMail"]) && $action["sendMail"]) {
-            notifyStateTransition($antrag, $newState, getUsername(), $action);
+            notifyStateTransition($antrag, $newState, AuthHandler::getInstance()->getUsername(), $action);
         }
         if (isset($action["copy"]) && $action["copy"]) {
             $newTarget = "";
@@ -259,8 +259,8 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     $antrag = [];
     $antrag["type"] = $newType;
     $antrag["revision"] = $newRevision;
-    $antrag["creator"] = getUsername();
-    $antrag["creatorFullName"] = getUserFullName();
+    $antrag["creator"] = AuthHandler::getInstance()->getUsername();
+    $antrag["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
     $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
     $antrag["createdat"] = date("Y-m-d H:i:s");
     $antrag["lastupdated"] = date("Y-m-d H:i:s");
@@ -268,7 +268,7 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     if (isset($form["_class"]["createState"]))
         $createState = $form["_class"]["createState"];
     $antrag["state"] = $createState;
-    $antrag["stateCreator"] = getUsername();
+    $antrag["stateCreator"] = AuthHandler::getInstance()->getUsername();
     $antrag_id = dbInsert("antrag", $antrag);
     if ($antrag_id === false)
         return false;
@@ -672,8 +672,8 @@ if (isset($_REQUEST["action"])) {
         $antrag = [];
         $antrag["type"] = $_REQUEST["type"];
         $antrag["revision"] = $_REQUEST["revision"];
-        $antrag["creator"] = getUsername();
-        $antrag["creatorFullName"] = getUserFullName();
+            $antrag["creator"] = AuthHandler::getInstance()->getUsername();
+            $antrag["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
         $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
         $antrag["createdat"] = date("Y-m-d H:i:s");
         $antrag["lastupdated"] = date("Y-m-d H:i:s");
@@ -681,7 +681,7 @@ if (isset($_REQUEST["action"])) {
         if (isset($form["_class"]["createState"]))
             $createState = $form["_class"]["createState"];
         $antrag["state"] = $createState; // FIXME custom default state
-        $antrag["stateCreator"] = getUsername();
+            $antrag["stateCreator"] = AuthHandler::getInstance()->getUsername();
         $ret = dbInsert("antrag", $antrag);
         if ($ret !== false) {
             $target = str_replace("//","/",$URIBASE."/").rawurlencode($token);
@@ -912,8 +912,8 @@ if (isset($_REQUEST["action"])) {
             $antrag = [];
             $antrag["type"] = "zahlung";
             $antrag["revision"] = "v1-anfangsbestand";
-            $antrag["creator"] = getUsername();
-            $antrag["creatorFullName"] = getUserFullName();
+            $antrag["creator"] = AuthHandler::getInstance()->getUsername();
+            $antrag["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
             $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
             $antrag["createdat"] = date("Y-m-d H:i:s");
             $antrag["lastupdated"] = date("Y-m-d H:i:s");
@@ -922,7 +922,7 @@ if (isset($_REQUEST["action"])) {
             if (isset($form["_class"]["createState"]))
                 $createState = $form["_class"]["createState"];
             $antrag["state"] = $createState; // FIXME custom default state
-            $antrag["stateCreator"] = getUsername();
+            $antrag["stateCreator"] = AuthHandler::getInstance()->getUsername();
             $ret0 = dbInsert("antrag", $antrag);
             if ($ret0 === false) {
                 $msgs[] = "antrag.create failed";
@@ -947,8 +947,8 @@ if (isset($_REQUEST["action"])) {
             $antrag = [];
             $antrag["type"] = "zahlung";
             $antrag["revision"] = "v1-giro-hibiscus";
-            $antrag["creator"] = getUsername();
-            $antrag["creatorFullName"] = getUserFullName();
+            $antrag["creator"] = AuthHandler::getInstance()->getUsername();
+            $antrag["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
             $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
             $antrag["createdat"] = date("Y-m-d H:i:s");
             $antrag["lastupdated"] = date("Y-m-d H:i:s");
@@ -957,7 +957,7 @@ if (isset($_REQUEST["action"])) {
             if (isset($form["_class"]["createState"]))
                 $createState = $form["_class"]["createState"];
             $antrag["state"] = $createState; // FIXME custom default state
-            $antrag["stateCreator"] = getUsername();
+            $antrag["stateCreator"] = AuthHandler::getInstance()->getUsername();
             $ret0 = dbInsert("antrag", $antrag);
             if ($ret0 === false) {
                 $msgs[] = "antrag.create failed";
@@ -1265,8 +1265,8 @@ if (isset($_REQUEST["action"])) {
         $antrag = [];
         $antrag["type"] = "zahlung-anweisung";
         $antrag["revision"] = "v1-giro";
-        $antrag["creator"] = getUsername();
-        $antrag["creatorFullName"] = getUserFullName();
+            $antrag["creator"] = AuthHandler::getInstance()->getUsername();
+            $antrag["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
         $antrag["token"] = $token = substr(sha1(sha1(mt_rand())),0,16);
         $antrag["createdat"] = date("Y-m-d H:i:s");
         $antrag["lastupdated"] = date("Y-m-d H:i:s");
@@ -1275,7 +1275,7 @@ if (isset($_REQUEST["action"])) {
         if (isset($form["_class"]["createState"]))
             $createState = $form["_class"]["createState"];
         $antrag["state"] = $createState;
-        $antrag["stateCreator"] = getUsername();
+            $antrag["stateCreator"] = AuthHandler::getInstance()->getUsername();
         if (!hasPermission($form, $antrag, "canCreate")) {
             $forceClose = true;
             $target = "$URIBASE?tab=hibiscus.sct";
@@ -1417,9 +1417,9 @@ if (isset($_REQUEST["action"])) {
                 }
         
                 if (getUserIBAN() !== false)
-                    $ret = dbUpdate("user", ["username" => getUsername()], ["fullname" => getUserFullName(), "iban" => $newIBAN]);
+                    $ret = dbUpdate("user", ["username" => AuthHandler::getInstance()->getUsername()], ["fullname" => AuthHandler::getInstance()->getUserFullName(), "iban" => $newIBAN]);
                 else
-                    $ret = dbInsert("user", ["fullname" => getUserFullName(), "username" => getUsername(), "iban" => $newIBAN]);
+                    $ret = dbInsert("user", ["fullname" => AuthHandler::getInstance()->getUserFullName(), "username" => AuthHandler::getInstance()->getUsername(), "iban" => $newIBAN]);
         
                 if ($ret){
                     $msgs[] = "IBAN $newIBAN wurde erfolgreich gespeichert";

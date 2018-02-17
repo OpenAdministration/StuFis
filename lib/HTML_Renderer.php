@@ -16,7 +16,7 @@ class HTML_Renderer
     public static function renderProjekte($gremien)
     {
         $projekte = getProjectFromGremium($gremien,"projekt-intern");
-        if(hasGroup("ref-finanzen")){
+        if(AuthHandler::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*",".*KuKo.*",".*ILSC.*","Market Team.*",".*Second Unit Jazz.*", "hsf.*","hfc.*", "FuLM.*","KSG.*"];
             $ret = getProjectFromGremium($extVereine,"extern-express");
             if($ret !== false){

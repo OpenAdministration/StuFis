@@ -139,7 +139,7 @@ function isPrintable(&$antrag, &$form, $printModeName){
 }
 
 function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) {
-    global $attributes;
+    $attributes = AuthHandler::getInstance()->getAttributes();
     if ($i == "state") {
         $currentState = "draft";
         if (isset($form["_class"]["createState"]))
@@ -150,7 +150,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
             return false;
     } else if ($i == "creator") {
         if ($c == "self") {
-            if ($antrag !== null && isset($antrag["creator"]) && ($antrag["creator"] != getUsername()))
+            if ($antrag !== null && isset($antrag["creator"]) && ($antrag["creator"] != AuthHandler::getInstance()->getUsername()))
                 return false;
         } else {
             die("unkown creator test: $c");
@@ -219,7 +219,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
     } else if ($i == "group") {
         if (!is_array($c)) $c = [$c];
         foreach ($c as $groupName) {
-            if (!hasGroup($groupName))
+            if (!AuthHandler::getInstance()->hasGroup($groupName))
                 return false;
         }
     } else if (substr($i, 0, 6) == "field:") {
@@ -358,8 +358,8 @@ function hasCategory(&$form, $antrag, $permName) {
 
 function hasPermissionImpl(&$form, &$antrag, &$pp, $permName = "anonymous", $adminOk = true, $isCategory = false) {
     global $ADMINGROUP;
-
-    if ($adminOk && hasGroup($ADMINGROUP))
+    
+    if ($adminOk && AuthHandler::getInstance()->hasGroup($ADMINGROUP))
         return true;
 
     $ret = false;
@@ -1332,9 +1332,9 @@ function renderFormItemRadio($layout,$ctrl) {
     } elseif (isset($layout["value"])) {
         $value = $layout["value"];
     } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
-        $value = getUserMail();
+        $value = AuthHandler::getInstance()->getUserMail();
     } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:fullname") {
-        $value = getUserFullName();
+        $value = AuthHandler::getInstance()->getUserFullName();
     } elseif (!$noForm && isset($layout["prefill"]) && substr($layout["prefill"],0,6) == "value:") {
         $value = substr($layout["prefill"],6);
     }
@@ -1440,8 +1440,6 @@ function printSumId($psIds) {
 }
 
 function renderFormItemSignBox($layout, $ctrl) {
-    global $nonce, $URIBASE, $attributes, $GremiumPrefix;
-
     list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
 
     $value = "";
@@ -1471,7 +1469,7 @@ function renderFormItemSignBox($layout, $ctrl) {
         }
     } else {
         $isChecked = ($value != "");
-        $newValue = ($isChecked ? $value : getUserFullName()." am ".date("Y-m-d"));
+        $newValue = ($isChecked ? $value : AuthHandler::getInstance()->getUserFullName() . " am " . date("Y-m-d"));
         $tPatternNew = newTemplatePattern($ctrl, htmlspecialchars($newValue));
         echo "<div class=\"checkbox\"><label>";
         echo "<input type=\"checkbox\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\"";
@@ -1489,7 +1487,8 @@ function renderFormItemSignBox($layout, $ctrl) {
 }
 
 function renderFormItemText($layout, $ctrl) {
-    global $nonce, $URIBASE, $attributes, $GremiumPrefix;
+    global $nonce, $URIBASE, $GremiumPrefix;
+    $attributes = AuthHandler::getInstance()->getAttributes();
 
     list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
     $noFormMarkup |= $noFormCompress;
@@ -1506,9 +1505,9 @@ function renderFormItemText($layout, $ctrl) {
     } elseif (isset($layout["value"])) {
         $value = $layout["value"];
     } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:mail") {
-        $value = getUserMail();
+        $value = AuthHandler::getInstance()->getUserMail();
     } elseif (!$noForm && isset($layout["prefill"]) && $layout["prefill"] == "user:fullname") {
-        $value = getUserFullName();
+        $value = AuthHandler::getInstance()->getUserFullName();
     }
     $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
 
@@ -2084,9 +2083,10 @@ function getTrText($trId, $ctrl) {
 }
 
 function renderFormItemSelect($layout, $ctrl) {
-    global $attributes, $GremiumPrefix;
-
-    list ($noForm, $noFormMarkup, $noFormCompress) = isNoForm($layout, $ctrl);
+    global $GremiumPrefix;
+    $attributes = AuthHandler::getInstance()->getAttributes();
+    
+    list ($noForm, $noFormMarkup,/* $noFormCompress is not needed here*/) = isNoForm($layout, $ctrl);
 
     $value = "";
     if (isset($ctrl["_values"])) {
@@ -2344,7 +2344,7 @@ function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "", $newState = fals
                 if (isset($action["value"])) {
                     $newValue = $action["value"];
                 } elseif ($action["type"] == "signbox") {
-                    $newValue = getUserFullName()." am ".date("Y-m-d");
+                    $newValue = AuthHandler::getInstance()->getUserFullName() . " am " . date("Y-m-d");
                 } else
                     die("cannot autogenerate value for preNewStateActions");
 

@@ -211,7 +211,7 @@ function quoteIdent($field){
 function logThisAction(){
     global $pdo, $DB_PREFIX;
     $query = $pdo->prepare("INSERT INTO {$DB_PREFIX}log (action, responsible) VALUES (?, ?)");
-    $query->execute(Array($_REQUEST["action"], getUsername())) or httperror(print_r($query->errorInfo(), true));
+    $query->execute(Array($_REQUEST["action"], AuthHandler::getInstance()->getUsername())) or httperror(print_r($query->errorInfo(), true));
     $logId = $pdo->lastInsertId();
     foreach ($_REQUEST as $key => $value){
         $key = "request_$key";
@@ -615,7 +615,7 @@ function dbHasAnfangsbestand($ktoId, $kpId){
 }
 
 function getUserIBAN(){
-    $ret = dbGet("user", ["username" => getUsername()]);
+    $ret = dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
     if ($ret === false){
         return false;
     }else{
