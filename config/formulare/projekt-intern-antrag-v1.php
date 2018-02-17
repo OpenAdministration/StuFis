@@ -54,7 +54,7 @@ $layout = [
         "renderOptRead" => [ "no-form-compress" ],
         "width" => 12,
         "columns" => [
-            [ "id" => "geld.name",  "width" => 3,      "name" => "Ein/Ausgabengruppe",                 "type" => "text",                 "opts" => [ "required" ] ],
+            ["id" => "geld.name", "width" => 3, "name" => "Ein/Ausgabengruppe", "type" => "text", "opts" => ["required"],],
             [ "id" => "geld.bemerkung",        "name" => "Bemerkung",                 "type" => "text","placeholder"=>"optional"],
             [ "id" => "geld.einnahmen",   "name" => "Einnahmen",                          "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "addToSum" => ["einnahmen"] ],
             [ "id" => "geld.ausgaben",    "name" => "Ausgaben",                           "type" => "money",  "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "addToSum" => ["ausgaben"] ],

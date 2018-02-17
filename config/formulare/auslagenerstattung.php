@@ -90,15 +90,27 @@ $config = [
         ],
     ],
     "printMode" => [
-        "zahlungsanweisung" =>
-        ["title"=> "Titelseite drucken",
+        "zahlungsanweisung-belege" =>
+        
+            ["title" => "Belege drucken", "condition" =>
+                [
+                    ["state" => "draft"],
+                    ["state" => "wip"],
+                    ["state" => "hv-fehlt"],
+                    ["state" => "kv-fehlt"],
+                    ["state" => "ok"],
+                    ["state" => "instructed"],
+                    ["state" => "payed"],
+                ],
+            ],
+        "zahlungsanweisung-auslagenerstattung" =>
+            ["title" => "Titelseite drucken",
          "condition" =>
-         ["state" => ["draft"],"group" => "ref-finanzen"],
-        ],
-        "zahlungsanweisung2" =>
-        ["title"=> "Titelseite drucken",
-         "condition" =>
-         ["state" => ["draft"],"group" => "ref-finanzen"],
+             [
+                 ["state" => "ok", "group" => "ref-finanzen"],
+                 ["state" => "instructed", "group" => "ref-finanzen"],
+                 ["state" => "payed", "group" => "ref-finanzen"],
+             ],
         ],
     ],
     "permission" => [

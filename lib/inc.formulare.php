@@ -8,6 +8,10 @@ function convertDBValueToUserValue($value, $type) {
             $value = (string) $value;
             if ($value === false || $value == "") return $value;
             return number_format($value, 2, ',', ' ');
+        case "date":
+        case "daterange":
+            return date("d.m.Y", strtotime($value));
+            break;
         default:
             return $value;
     }
@@ -131,9 +135,7 @@ function isPrintable(&$antrag, &$form, $printModeName){
     $printModes = $classConfig['printMode'];
     if(!isset($printModes[$printModeName])) return false;
     if(!isset($printModes[$printModeName]["condition"])) return true;
-    $ctrl = [];
-    $msgs = [];
-    return checkValidLine($printModes[$printModeName]["condition"],$antrag, $ctrl,$form, $msgs);
+    return hasPermissionImpl($form, $antrag, $printModes[$printModeName]["condition"]);
 }
 
 function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) {
@@ -163,7 +165,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
         } elseif (substr($fieldDesc,0,6) == "field:") {
             $fieldName = substr($fieldDesc,6);
         } else {
-            die ("inOtherForm: fieldDesc=$fildDesc not implemented");
+            die ("inOtherForm: fieldDesc=$fieldDesc not implemented");
         }
         if ($fieldValue === false && $fieldName !== false && $antrag !== null && isset($antrag["_inhalt"]))
             $fieldValue = getFormValueInt($fieldName, null, $antrag["_inhalt"], $fieldValue);
@@ -287,7 +289,7 @@ function checkSinglePermission(&$i, &$c, &$antrag, &$form, $isCategory = false) 
 function checkPermissionLine(&$p, &$antrag, &$form, $isCategory) {
     foreach ($p as $i => $c) {
         $tmp = checkSinglePermission($i, $c, $antrag, $form, $isCategory);
-        #    echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c)." => ".($tmp ? "true":"false")." -->\n";
+        //echo "\n<!-- checkSinglePermission: {$form["type"]} {$form["revision"]} ".($antrag === null ? "w/o antrag":"w antrag")." i=$i c=".json_encode($c)." => ".($tmp ? "true":"false")." -->\n";
         if (!$tmp)
             return false;
     }
@@ -492,7 +494,7 @@ function checkValidLine(&$p, &$antrag, &$ctrl, &$form, &$msgs) {
     if (isset($p["requiredIsNotEmpty"]) && $p["requiredIsNotEmpty"] && isset($p["id"])) { # requiredIsNotEmpty with field selector, we cannot only do it for fields actually stored in db (incomplete if empty)
         $requiredButEmpty = [];
         foreach ($ctrl["_render"]->requiredButEmpty as $fieldId) {
-            if (($p["id"] != $id) && (substr($inhalt["fieldname"], 0, strlen($id) + 1) != $id."[") ) continue;
+            if (($p["id"] != $fieldId) && (substr($p["id"], 0, strlen($fieldId) + 1) != $fieldId . "[")) continue;
             $requiredButEmpty[] = $fieldId;
         }
         if (count($requiredButEmpty) > 0) {
@@ -608,7 +610,7 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
                         if ($inhalt["value"] != "") return false;
                         break;
                     default:
-                        die("not implemented validation: value \"$prefix\" \"$remainer\"");
+                        die("not implemented validation: value \"$prefix\" \"$remainder\"");
                 }
                 break;
             case "equals":
@@ -630,7 +632,7 @@ function checkValidLineField(&$p, &$antrag, &$ctrl, &$form, &$inhalt, &$msgs) {
                 if (((float) $inhalt["value"]) > (float) $remainder) return false;
                 break;
             default:
-                die("not implemented validation: value \"$prefix\" \"$remainer\"");
+                die("not implemented validation: value \"$prefix\" \"$remainder\"");
         }
     }
     return true;
@@ -661,6 +663,16 @@ function getFormConfig($type, $revision) {
     if (!isset($formulare[$type][$revision])) return false;
 
     return $formulare[$type][$revision]["config"];
+}
+
+function getStateString($type, $revision, $state){
+    global $formulare;
+    if (!isset($formulare[$type])) return false;
+    if (!isset($formulare[$type][$revision])) return false;
+    if (!isset($formulare[$type][$revision]["_class"])) return false;
+    if (!isset($formulare[$type][$revision]["_class"]["state"])) return false;
+    if (!isset($formulare[$type][$revision]["_class"]["state"][$state])) return false;
+    return $formulare[$type]["_class"]["state"][$state][0];
 }
 
 function getBaseName($name) {
@@ -778,12 +790,11 @@ function renderForm($form, $ctrl = false) {
 }
 
 function renderFormImpl(&$form, &$ctrl) {
-    global $renderFormTrace;
 
     static $stack = false;
 
     if ($stack === false) $stack = [];
-    if (isset($ctrl["_values"])) {
+    if (isset($ctrl["_values"]) && isset($ctrl["_values"]["id"])){
         if (in_array($ctrl["_values"]["id"], $stack)) {
             echo "form {$ctrl["_values"]["id"]} already on stack<br>\n";
             return false;
@@ -874,6 +885,25 @@ function renderFormItem($layout,$ctrl = false) {
         print_r($layout);
         die();
     }
+    
+    if (isset($layout["hideInStates"])){
+        if (is_array($layout["hideInStates"]))
+            if (isset($ctrl["_values"]) && isset($ctrl["_values"]["state"])){
+                if (in_array($ctrl["_values"]["state"], $layout["hideInStates"])){
+                    return true;
+                }
+            }else if (in_array($ctrl["state"], $layout["hideInStates"])){
+                return true;
+            }else{
+                if (isset($ctrl["_values"]) && isset($ctrl["_values"]["state"])){
+                    if ($ctrl["_values"]["state"] == $layout["hideInStates"]){
+                        return true;
+                    }
+                }else if ($ctrl["state"] == $layout["hideInStates"]){
+                    return true;
+                }
+            }
+    }
 
     if (!isset($layout["opts"]))
         $layout["opts"] = [];
@@ -943,13 +973,20 @@ function renderFormItem($layout,$ctrl = false) {
         /* check readonly state of element, needs to be checkbox or radio */
         list ($elId, $elVal) = $layout["toggleReadOnly"];
         $value = "";
-        if (isset($ctrl["_values"])) {
+        if (isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"])){
             $value = getFormValueInt($elId, null, $ctrl["_values"]["_inhalt"], $value);
         }
         $isReadOnly = ($elVal != $value);
         $ctrl["readonly"] = $isReadOnly;
-    } elseif (in_array("readonly", $layout["opts"]))
+    }else if (in_array("readonly", $layout["opts"])){
         $ctrl["readonly"] = true;
+    }else if (isset($layout["onlyEditableInStates"]) && is_array($layout["onlyEditableInStates"])){
+        if (isset($ctrl["state"]) && !in_array($ctrl["state"], $layout["onlyEditableInStates"])){
+            $ctrl["readonly"] = true;
+        }else if (isset($ctrl["_values"]) && isset($ctrl["_values"]["state"]) && !in_array($ctrl["_values"]["state"], $layout["onlyEditableInStates"])){
+            $ctrl["readonly"] = true;
+        }
+    }
 
     ob_start();
     switch ($layout["type"]) {
@@ -1017,7 +1054,9 @@ function renderFormItem($layout,$ctrl = false) {
             $isNotEmpty = renderFormItemMultiFile($layout,$ctrl);
             break;
         case "invref":
+            prof_flag("start invref");
             $isNotEmpty = renderFormItemInvRef($layout,$ctrl);
+            prof_flag("done invref");
             break;
         default:
             ob_end_flush();
@@ -1085,8 +1124,11 @@ function renderFormItemPlainText($layout, $ctrl) {
                 $value = $ctrl["_class"][$field];
         }else if(substr($layout["autoValue"],0,6) == "value:"){
             $field = substr($layout["autoValue"], 6);
-            $inhalt = betterValues($ctrl['_values']['_inhalt'],"fieldname","value");
-            $value = $inhalt[$field];
+            if (isset($ctrl['_values']) && isset($ctrl['_values']['_inhalt'])){
+                $inhalt = betterValues($ctrl['_values']['_inhalt'], "fieldname", "value");
+                if (isset($inhalt[$field]))
+                    $value = $inhalt[$field];
+            }
         }
     }
     $value = htmlspecialchars($value);
@@ -1457,7 +1499,7 @@ function renderFormItemText($layout, $ctrl) {
     $isTriggerFillOnCopy = in_array("triggerFillOnCopy", $layout["opts"]);
 
     $value = "";
-    if (isset($ctrl["_values"])) {
+    if (isset($ctrl["_values"]) && isset($ctrl["_values"]["_inhalt"])){
         $value = getFormValue($ctrl["name"], $layout["type"], $ctrl["_values"]["_inhalt"], $value);
         if (in_array("required", $layout["opts"]) && $value == "")
             $ctrl["_render"]->requiredButEmpty[] = $ctrl["id"];
@@ -1486,6 +1528,7 @@ function renderFormItemText($layout, $ctrl) {
         echo '>';
         $noForm = true;
     }
+    
     if (isset($layout["printSum"])) { # filter based on [data-printSum~={$printSumId}]
         $noForm = true;
     }
@@ -1720,14 +1763,14 @@ function renderFormItemMoney($layout, $ctrl) {
                 $fvalue = "";
                 $ctrl["_render"]->templates[$tPatternC] = "";
                 $ctrl["_render"]->templates[$tPatternS] = "";
-            } else
+            }else
                 $fvalue = convertDBValueToUserValue($value, $layout["type"]);
             $ctrl["_render"]->templates[$tPattern] = $fvalue;
         };
         $psId = $layout["printSumDefer"];
         if (!isset($ctrl["_render"]->addToSumMeta[$psId]))
             $ctrl["_render"]->addToSumMeta[$psId] = $layout;
-    } else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0 && $noForm && ($noFormCompress || $noFormMarup))
+    }else if (in_array("hide-if-zero", $layout["opts"]) && $value == 0 && $noForm && ($noFormCompress || $noFormMarkup))
         return false;
 
     if (!($noFormMarkup || $noFormCompress) && $noForm)
@@ -1790,8 +1833,8 @@ function renderFormItemTextarea($layout, $ctrl) {
     }
 
     $ctrl["_render"]->displayValue = htmlspecialchars($value);
-
-    if (!$noForm && $ctrl["readonly"]) {
+    
+    if ((!$noForm && $ctrl["readonly"]) || (isset($ctrl["_values"]["state"]) && isset($layout["editOnlyInStates"]) && !in_array($ctrl["_values"]["state"], $layout["editOnlyInStates"]))){
         $tPattern = newTemplatePattern($ctrl, htmlspecialchars($value));
         echo "<textarea style=\"display:none;\" name=\"".htmlspecialchars($ctrl["name"])."\" orig-name=\"".htmlspecialchars($ctrl["orig-name"])."\" id=\"".htmlspecialchars($ctrl["id"])."\">";
         echo $tPattern;
@@ -2719,8 +2762,11 @@ function renderFormItemTable($layout, $ctrl) {
 <table class="<?php echo implode(" ", $cls); ?>" id="<?php echo htmlspecialchars($ctrl["id"]); ?>" orig-id="<?php echo htmlspecialchars($ctrl["orig-id"]); ?>" name="<?php echo htmlspecialchars($ctrl["name"]); ?>" orig-name="<?php echo htmlspecialchars($ctrl["orig-name"]); ?>">
 
     <?php
-    if (!$noForm) {
-        echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowCount)."\" name=\"".htmlspecialchars($rowCountFieldName)."\" orig-name=\"".htmlspecialchars($rowCountFieldNameOrig)."\" class=\"store-row-count\"/>";
+    if (!$noForm){
+        echo "<input type=\"hidden\" value=\"" . htmlspecialchars($rowCount) .
+            "\" name=\"" . htmlspecialchars($rowCountFieldName) .
+            "\" orig-name=\"" . htmlspecialchars($rowCountFieldNameOrig) .
+            "\" class=\"store-row-count\"/>";
         echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowCountFieldTypeName)."\"/>";
         echo "<input type=\"hidden\" value=\"".htmlspecialchars($rowIdCount)."\" name=\"".htmlspecialchars($rowIdCountFieldName)."\" orig-name=\"".htmlspecialchars($rowIdCountFieldNameOrig)."\" class=\"store-row-id-count\"/>";
         echo "<input type=\"hidden\" value=\"".htmlspecialchars($layout["type"])."\" name=\"".htmlspecialchars($rowIdCountFieldTypeName)."\"/>";
@@ -2731,6 +2777,12 @@ function renderFormItemTable($layout, $ctrl) {
         $layout["columns"][$i]["_hideable_isHidden"] = false;
         if (!isset($col["opts"]) || !in_array("hideable", $col["opts"]))
             continue;
+        if (isset($col["hideInStates"]) &&
+            ((isset($ctrl["state"]) && in_array($ctrl["state"], $col["hideInStates"]))
+                || (isset($ctrl["_inhalt"]) && isset($ctrl["_inhalt"]["state"]) && in_array($ctrl["_inhalt"]["state"], $col["hideInStates"])))){
+            continue;
+        }
+
         $name = "[$i]";
         if (isset($col["name"]))
             $name = $col["name"];
@@ -2795,7 +2847,6 @@ function renderFormItemTable($layout, $ctrl) {
                     </li>
                     <?php
             }
-
                     ?>
                 </ul>
             </div>
@@ -2803,6 +2854,7 @@ function renderFormItemTable($layout, $ctrl) {
         }
         echo "</th>";
         foreach ($layout["columns"] as $i => $col) {
+
             if (isset($col["editWidth"]) && !$noForm)
                 $col["width"] = $col["editWidth"];
             if (isset($col["width"]) && $col["width"] == -1)
@@ -2825,6 +2877,8 @@ function renderFormItemTable($layout, $ctrl) {
                             if (isset($child["width"]) && $child["width"] == -1)
                                 continue;
                             if (!$noForm && isset($child["opts"]) && in_array("hide-edit", $child["opts"]))
+                                continue;
+                            if (isset($ctrl["state"]) && isset($child["hideInStates"]) && in_array($ctrl["state"], $child["hideInStates"]))
                                 continue;
                             $title = (isset($child["title"]) ? $child["title"] : ( isset($child["name"]) ? $child["name"] : "{$child["id"]}") );
                             $childCls = [ "dynamic-table-caption" ];
@@ -3034,6 +3088,7 @@ function renderFormItemTable($layout, $ctrl) {
             if (!$noForm && in_array("hide-edit", $col["opts"]))
                 continue;
             $sumOverTableBottom = false;
+    
             if (in_array("sum-over-table-bottom", $col["opts"])) {
                 $sumOverTableBottom = "col-sum-".$layout["id"]."-".$i;
                 if (!isset($col["printSumFooter"]))
@@ -3054,9 +3109,15 @@ function renderFormItemTable($layout, $ctrl) {
                     $children = [];
                     $colWidthSum = 0;
                     foreach ($col["children"] as $child) {
+    
+                        if (isset($child["type"]) && $child["type"] == "ref"){
+                            echo "ok";
+                        }
                         if (isset($child["editWidth"]) && !$noForm)
                             $child["width"] = $child["editWidth"];
                         if (isset($child["width"]) && $child["width"] == -1) continue;
+                        if (isset($ctrl["state"]) && isset($child["hideInStates"]) && in_array($ctrl["state"], $child["hideInStates"]))
+                            continue;
                         if (!$noForm && isset($child["opts"]) && in_array("hide-edit", $child["opts"]))
                             continue;
                         if (isset($child["width"])) {
@@ -3078,7 +3139,7 @@ function renderFormItemTable($layout, $ctrl) {
                     $psId = $childMeta[0];
                     $child = $childMeta[1];
                     $clearWidth = $childMeta[2];
-
+    
                     if ($psId == null) {
                         $childCls = [];
                         if (isset($child["editWidth"]) && !$noForm)
@@ -3286,7 +3347,7 @@ function renderFormItemInvRef($layout,$ctrl) {
                 # we're not in a table
                 if ($currentFormId === false || $currentFormId == "") die("empty form id");
                 if ($currentFormId === false || $currentFormId == "") continue;
-                if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId])) die("no reference to this form $currentFormid");
+                if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int)$currentFormId])) die("no reference to this form $currentFormId");
                 if (!isset($otherCtrl["_render"]->referencedByOtherForm[(int) $currentFormId])) continue;
                 $referenceFormFields = array_unique($forms[$aId]["_referenceFormField"]);
                 $addToSum = $forms[$aId]["_addToSum"];

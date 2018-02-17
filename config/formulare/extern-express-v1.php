@@ -67,6 +67,38 @@ $config = [
         ],
     ],
 ];
+$config["printMode"]["bewilligungsbescheid"]["mapping"] = [
+    "komaVar" => [
+        "vereinName" => "projekt.org",
+        "vereinPerson" => "Sektion BD Club",
+        "vereinAdresse" => "A-Keller",
+        "vereinOrt" => "98693 Ilmenau",
+        "datum" => "stura.datum",/*time() - für aktuelle Zeit; stura.datum für Beschlussdatum*/
+        "projId" => "autovalue:id",
+        "projName" => "projekt.name",
+        "projDauer" => "autovalue:daterange:projekt.zeitraum",
+        "sturaBeschluss" => "genehmigung.recht.stura.beschluss",
+        "sturaBetrag" => "geld.stura",
+        "sturaVorkasse" => "geld.vorkasse",
+        "iban" => "org.iban"
+    ],
+];
+$config["printMode"]["pruefbescheid"]["mapping"] = [
+    "komaVar" => [
+        "vereinName" => "projekt.org.name",
+        "vereinPerson" => "Sektion BD Club",
+        "vereinAdresse" => "A-Keller",
+        "vereinOrt" => "98693 Ilmenau",
+        "datum" => "autovalue:today",/*time() - für aktuelle Zeit; stura.datum für Beschlussdatum*/
+        "projId" => "autovalue:id",
+        "projName" => "projekt.name",
+        "projAbrechnungDatum" => "hmm...",
+        "sturaBetrag" => "geld.stura",
+        "sturaVorkasse" => "geld.vorkasse",
+        "sturaAbrechnung" => "geld.abgerechnet",
+        "iban" => "org.iban",
+    ],
+];
 
 $layout = [
     [
@@ -85,8 +117,8 @@ $layout = [
             [ "id" => "org.mail", "title" =>"Kontakt (Mail)" ,"type" => "email",   "width" => 6,],
 
             [ "id" => "projekt.zeitraum",    "title" =>"Projektdauer", "type" => "daterange", "width" => 6,  "opts" => ["required"] ],
-
-            [ "id" => "projekt.org",        "title" =>"Organisation/Verein",                        "type" => "text",   "width" => 6, "opts" => ["required", "hasFeedback"],],
+    
+            ["id" => "projekt.org.name", "title" => "Organisation/Verein", "type" => "text", "width" => 6, "opts" => ["required", "hasFeedback"],],
 
             [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref" ], "placeholder" => "optional",
              "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "state" => "final" ], [ "titel.ausgaben" => "Ausgaben", "titel.einnahmen" => "Einnahmen" ] ],
@@ -137,7 +169,7 @@ $layout = [
              "opts"=>["required", "hasFeedback"],
              "addToSum" => ["vorkasse"], //nur für ,00 vervolständigung
             ],
-            [ "id" => "geld.abgerechnet",
+            ["id" => "geld.abgerechnet",
              "name" => "abgerechnet",
              "title" =>"korrekt abgerechnet",
              "type" => "money",

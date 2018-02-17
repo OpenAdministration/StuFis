@@ -5,9 +5,10 @@ $config = [
     "shortTitle" => "Externes Projekt",
     "state" => [
         "draft"             => [ "Entwurf", "als Entwurf speichern" ],
+        "need-stura" => ["Eingereicht", "als eingereicht speichern"],
         "stura-ok"          => [ "Beschlossen", "als beschlossen speichern" ],
         "prepaymnt-payed"   => [ "Vorkasse ausgezahlt"],
-        "prepaymnt-booked"  => [ "Vorkasse ausgezahlt  und gebucht"],
+        "prepaymnt-booked" => ["Vorkasse ausgezahlt  und gebucht"],
         "balancing-ok"      => [ "korrekt Abgerechnet", "als korrekt abgerechnet speichern" ],
         "balancing-payed"   => [ "korrekt Abgerechnet und ausgezahlt"],
         "terminated"        => [ "Abgeschlossen und Gebucht"],
@@ -16,7 +17,7 @@ $config = [
     "createState" => "draft",
 
     "proposeNewState" => [
-        "draft" => [ "stura-ok"],
+        "draft" => ["need-stura", "stura-ok"],
         "stura-ok" => [ "balancing-ok"],
         "balancing-ok" => ["balancing-payed"],
         "prepayment-booked" => ["balancing-ok"],
@@ -39,6 +40,30 @@ $config = [
             [ "state" => "stura-ok", "group" => "ref-finanzen", "passValidation" => "prepaymnt-exists" ],
             [ "state" => "balancing-ok", "group" => "ref-finanzen", "passValidation" => "balancing-exists" ],
         ],
+    ],
+    "printMode" => [
+        "bewilligungsbescheid" =>
+            ["title" => "Bewilligungsbescheid drucken", "condition" =>
+                [
+                    ["state" => "stura-ok", "group" => "ref-finanzen"],
+                    ["state" => "prepaymnt-payed", "group" => "ref-finanzen"],
+                    ["state" => "prepaymnt-booked", "group" => "ref-finanzen"],
+                    ["state" => "balancing-ok", "group" => "ref-finanzen"],
+                    ["state" => "balancing-payed", "group" => "ref-finanzen"],
+                    ["state" => "terminated", "group" => "ref-finanzen"],
+                    ["state" => "no-need", "group" => "ref-finanzen"],
+                ],
+            ],
+        "pruefbescheid" =>
+            ["title" => "Prüfbescheid drucken",
+                "condition" =>
+                    [
+                        ["state" => "balancing-ok", "group" => "ref-finanzen"],
+                        ["state" => "balancing-payed", "group" => "ref-finanzen"],
+                        ["state" => "terminated", "group" => "ref-finanzen"],
+                        ["state" => "no-need", "group" => "ref-finanzen"],
+                    ],
+            ],
     ],
     "validate" => [
         "postEdit" => [
@@ -125,6 +150,12 @@ $config = [
         ],
         "canStateChange.from.no-need.to.stura-ok" => [
             [ "hasPermission" => "canRead" ],
+        ],
+        "canStateChange.from.draft.to.need-stura" => [
+            ["hasPermission" => "canRead"],
+        ],
+        "canStateChange.from.need-stura.to.stura-ok" => [
+            ["hasPermission" => "canRead"],
         ],
     ],
 ];
