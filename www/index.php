@@ -1,10 +1,11 @@
 <?php
 
-global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP;
+global $attributes, $logoutUrl, $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP, $FUI2PDF_URL;
 ob_start('ob_gzhandler');
-
 require_once "../lib/inc.all.php";
 requireGroup($AUTHGROUP);
+
+prof_flag("init-done");
 
 function writeFillOnCopy($antrag_id, $form) {
     $fillOnCopy = [];
@@ -92,7 +93,6 @@ function writeFillOnCopy($antrag_id, $form) {
     }
     return true;
 }
-
 
 function writeFormdata($antrag_id, $isPartiell, $form, $antrag) {
     if (!isset($_REQUEST["formdata"]))
@@ -220,7 +220,6 @@ function doNewStateActions(&$form, $transition, &$antrag, $newState, &$msgs, &$f
     }
     return true;
 }
-
 
 function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newType, $newRevision, &$msgs, &$filesCreated, &$filesRemoved, &$target) {
     global $URIBASE,$STORAGE;
@@ -355,9 +354,10 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
 
 if(isset($_REQUEST['id'])){
     $antrag = dbGet("antrag", ["id" => $_REQUEST['id']]);
-    header("Location: ".$antrag['token']);
+    header("Location: " . $antrag['token']);
     exit;
 }
+
 if (isset($_REQUEST["action"])) {
     global $msgs;
     $msgs = Array();
@@ -440,6 +440,28 @@ if (isset($_REQUEST["action"])) {
             $target = $URIBASE;
         }
         break;
+            case "antrag.comment":
+                if (!(isset($_REQUEST["token"]) && isset($_REQUEST["username"]) && isset($_REQUEST["userFullName"]) && isset($_REQUEST["new-comment"]))){
+                    $msgs[] = "Nicht genügend Daten übermittelt";
+                    $ret = false;
+                    break;
+                }
+                $antrag = getAntrag();
+                if ($antrag === false){
+                    $msgs[] = "Antrag {$_REQUEST["token"]} kann nicht gefunden werden!";
+                    $ret = false;
+                    break;
+                }
+                if (trim($_REQUEST["new-comment"]) === ""){
+                    $msgs[] = "";
+                    $ret = false;
+                    break;
+                }
+                $antrag_id = $antrag["id"];
+                $ret = dbInsert("comments", ["antrag_id" => $antrag_id, "creator" => $_REQUEST["username"], "creatorFullName" => $_REQUEST["userFullName"], "text" => $_REQUEST["new-comment"], "type" => 1]);
+                $forceClose = true;
+                $target = str_replace("//", "/", $URIBASE . "/") . rawurlencode($antrag["token"]);
+                break;
         case "antrag.update":
         case "antrag.updatePartiell":
         $isPartiell = ($_POST["action"] == "antrag.updatePartiell");
@@ -964,183 +986,263 @@ if (isset($_REQUEST["action"])) {
         break;
         case "booking":
         requireGroup($HIBISCUSGROUP);
-        $zahlungSum = 0.00;
-        $grundSum = 0.00;
-
-        if (!isset($_REQUEST["zahlungId"])) $_REQUEST["zahlungId"] = [];
-        if (!isset($_REQUEST["grundId"])) $_REQUEST["grundId"] = [];
-        if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) {
-            $msgs[] = "Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele oder keine Buchungen ausgewählt.";
-            $ret = false;
-            break;
-        }
-
-        foreach($_REQUEST["zahlungId"] as $aId)
-            $zahlungSum += (float) $_REQUEST["zahlungValue"][$aId];
-        foreach($_REQUEST["grundId"] as $aId)
-            $grundSum += (float) $_REQUEST["grundValue"][$aId];
-
-        if (abs($zahlungSum - $grundSum) > 0.001) {
-            $msgs[] = "Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.";
-            $ret = false;
-            break;
-        }
-
-        if (!dbBegin()) {
-            $msgs[] = "Cannot start DB transaction";
-            $ret = false;
-            break;
-        } else {
-            $ret = true;
-        }
-
-        $filesCreated = []; $filesRemoved = [];
-
-        foreach($_REQUEST["zahlungId"] as $zId) {
-            $appendGrund = [];
-            foreach($_REQUEST["grundId"] as $gId) {
-                if (count($_REQUEST["zahlungId"]) == 1) {
-                    # alle Gründe zusammen addieren auf diese Zahlung
-                    $appendGrund[] = [ $gId, $_REQUEST["grundValue"][$gId] ];
-                } elseif (count($_REQUEST["grundId"]) == 1) {
-                    # alle Zahlungen zusammen addieren auf diesen Grund
-                    $appendGrund[] = [ $gId, $_REQUEST["zahlungValue"][$zId] ];
-                } else {
-                    die("ups cannot compute this");
+    
+            //check if input ist correct
+            if (!isset($_REQUEST["matches"])){
+                foreach ($_REQUEST["matches"] as $match){
+                    if (count($match) != 2){
+                        $msgs[] = "Nur 1:1 Zuordnungen pro Zeile erlaubt. Zu viele oder keine Buchungen ausgewählt.";
+                        break 2;
+                    }
+                    $zahlungId = $match["0"];
+                    $belegId = $match["1"];
+                    $z = getAntrag($zahlungId);
+                    if ($z === false){
+                        $msgs[] = "Zahlung $zahlungId war nicht lesbar.";
+                        $ret = false;
+                        break;
+                    }
+                    $b = getAntrag($belegId);
+                    if ($b === false){
+                        $msgs[] = "Beleg $belegId war nicht lesbar.";
+                        $ret = false;
+                        break;
+                    }
+                    //prüfe ob user beleg in zahlung hinzufügen darf
+                    $form = getForm($z["type"], $z["revision"]);
+                    $canEditZahlung = hasPermission($form, $z, "canEdit");
+                    $canEditPartiellZahlung = hasPermission($form, $z, "canEditPartiell") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.table") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.group2") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.beleg") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.hinweis") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.einnahmen") &&
+                        hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.ausgaben");
+            
+                    if (!$canEditZahlung && !$canEditPartiellZahlung) die("Zahlung $zId ist nicht (partiell-)editierbar");
+                    //füge beleg in liste der Belege hinzu
+            
+                    $rowCountFieldName = "zahlung.grund.table[rowCount]";
+                    $rowNumber = getFormValueInt($rowCountFieldName, null, $z["_inhalt"], false);
+                    $rowNumberPresent = true;
+                    if ($rowNumber === false){
+                        $rowNumberPresent = false;
+                        $rowNumber = 0;
+                    }
+                    $rowIdNumberPresent = true;
+                    $rowIdCountFieldName = "zahlung.grund.table[rowIdCount]";
+                    $rowIdNumber = getFormValueInt($rowIdCountFieldName, null, $z["_inhalt"], false);
+                    if ($rowIdNumber === false){
+                        $rowIdNumberPresent = false;
+                        $rowIdNumber = 0;
+                    }
+            
+                    $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
+                    $inhalt = ["fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId];
+                    $inhalt["value"] = $rowIdNumber;
+            
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
+            
+                    $rowBelegFieldName = "zahlung.grund.beleg[{$rowNumber}]";
+                    $inhalt = ["fieldname" => $rowBelegFieldName, "contenttype" => "otherForm", "antrag_id" => $zId];
+                    $inhalt["value"] = $a[0];
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
+            
+                    $value = $a[1];//FIXME - Wert muss neu bestimmt werden
+                    if ($value < 0){
+                        $value *= -1.0;
+                        $rowGeldFieldName = "zahlung.grund.ausgaben[{$rowNumber}]";
+                    }else{
+                        $rowGeldFieldName = "zahlung.grund.einnahmen[{$rowNumber}]";
+                    }
+                    $inhalt = ["fieldname" => $rowGeldFieldName, "contenttype" => "money", "antrag_id" => $zId];
+                    $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
                 }
             }
-            $z = getAntrag($zId);
-            if ($z === false) {
-                $msgs[] = "Zahlung $zId war nicht lesbar.";
+    
+            break;
+    
+            /*$zahlungSum = 0.00;
+            $grundSum = 0.00;
+    
+            if (!isset($_REQUEST["zahlungId"])) $_REQUEST["zahlungId"] = [];
+            if (!isset($_REQUEST["grundId"])) $_REQUEST["grundId"] = [];
+            if (count($_REQUEST["grundId"]) != 1 && count($_REQUEST["zahlungId"]) != 1 ) {
+                $msgs[] = "Nur 1:n oder n:1 Zuordnungen erlaubt. Zu viele oder keine Buchungen ausgewählt.";
                 $ret = false;
                 break;
             }
-            $form = getForm($z["type"], $z["revision"]);
-            $canEditZahlung = hasPermission($form, $z, "canEdit");
-            $canEditPartiellZahlung = hasPermission($form, $z, "canEditPartiell") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.table") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.group2") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.beleg") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.hinweis") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.einnahmen") &&
-                hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.ausgaben");
-
-            if (!$canEditZahlung && !$canEditPartiellZahlung) die("Antrag (Zahlung) $zId ist nicht (partiell-)editierbar");
-
-            $rowCountFieldName =  "zahlung.grund.table[rowCount]";
-            $rowNumber = getFormValueInt($rowCountFieldName, null, $z["_inhalt"], false);
-            $rowNumberPresent = true;
-            if ($rowNumber === false) {
-                $rowNumberPresent = false;
-                $rowNumber = 0;
-            }
-            $rowIdNumberPresent = true;
-            $rowIdCountFieldName =  "zahlung.grund.table[rowIdCount]";
-            $rowIdNumber = getFormValueInt($rowIdCountFieldName, null, $z["_inhalt"], false);
-            if ($rowIdNumber === false) {
-                $rowIdNumberPresent = false;
-                $rowIdNumber = 0;
-            }
-
-            foreach ($appendGrund as $i => $a) {
-
-                $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
-                $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId ];
-                $inhalt["value"] = $rowIdNumber;
-
-                $ret0 = dbInsert("inhalt", $inhalt);
-                if ($ret0 === false) $ret = false;
-
-                $rowBelegFieldName = "zahlung.grund.beleg[{$rowNumber}]";
-                $inhalt = [ "fieldname" => $rowBelegFieldName, "contenttype" => "otherForm", "antrag_id" => $zId ];
-                $inhalt["value"] = $a[0];
-                $ret0 = dbInsert("inhalt", $inhalt);
-                if ($ret0 === false) $ret = false;
-
-                $value = $a[1];
-                if ($value < 0) {
-                    $value *= -1.0;
-                    $rowGeldFieldName = "zahlung.grund.ausgaben[{$rowNumber}]";
-                } else {
-                    $rowGeldFieldName = "zahlung.grund.einnahmen[{$rowNumber}]";
-                }
-                $inhalt = [ "fieldname" => $rowGeldFieldName, "contenttype" => "money", "antrag_id" => $zId ];
-                $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
-                $ret0 = dbInsert("inhalt", $inhalt);
-                if ($ret0 === false) $ret = false;
-                $rowNumber++;
-                $rowIdNumber++;
-            }
-
-            if ($rowNumberPresent) {
-                $ret0 = dbUpdate("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowNumber ] );
-            } else {
-                $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowNumber ] );
-
-            }
-
-            if ($ret0 === false) $ret = false;
-
-            if ($rowIdNumberPresent) {
-                $ret0 = dbUpdate("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowIdNumber ] );
-            } else {
-                $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowIdNumber ] );
-
-            }
-            $msgs[] = $ret;
-            if ($ret0 === false) $ret = false;
-
-            if ($ret && !isValid($zId, "postEdit", $msgs))
+    
+            foreach($_REQUEST["zahlungId"] as $aId)
+                $zahlungSum += (float) $_REQUEST["zahlungValue"][$aId];
+            foreach($_REQUEST["grundId"] as $aId)
+                $grundSum += (float) $_REQUEST["grundValue"][$aId];
+    
+            if (abs($zahlungSum - $grundSum) > 0.001) {
+                $msgs[] = "Die Beträge stimmen nicht überein: $zahlungSum != $grundSum.";
                 $ret = false;
-        }//iteration über alle zahlungsgründe
-
-        // alle zahlungen wechseln nach state booked
-        foreach($_REQUEST["zahlungId"] as $aId) {
-            $a = dbGet("antrag", ["id" => $aId]);
-            $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
-            $form = getForm($a["type"], $a["revision"]);
-            $ret0 = writeState("booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
-            $ret = $ret && $ret0;
-        }
-
-        // alle Belege wechseln nach state payed
-        foreach($_REQUEST["grundId"] as $aId) {
-            $a = dbGet("antrag", ["id" => $aId]);
-            $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
-            $form = getForm($a["type"], $a["revision"]);
-            //Extern Express anträge
-            if($a['type']=='extern-express'){
-                if($a["state"] == "prepaymnt-payed" && isValid($aId,"prepaymnt-exists")){
-                    $ret0 = writeState("prepaymnt-booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
-                }else if($a['state'] == "balancing-payed" && isValid($aId, "balancing-exists")){
-                    $ret0 = writeState("terminated", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                break;
+            }
+    
+            if (!dbBegin()) {
+                $msgs[] = "Cannot start DB transaction";
+                $ret = false;
+                break;
+            } else {
+                $ret = true;
+            }
+    
+            $filesCreated = []; $filesRemoved = [];
+    
+            foreach($_REQUEST["zahlungId"] as $zId) {
+                $appendGrund = [];
+                foreach($_REQUEST["grundId"] as $gId) {
+                    if (count($_REQUEST["zahlungId"]) == 1) {
+                        # alle Gründe zusammen addieren auf diese Zahlung
+                        $appendGrund[] = [ $gId, $_REQUEST["grundValue"][$gId] ];
+                    } elseif (count($_REQUEST["grundId"]) == 1) {
+                        # alle Zahlungen zusammen addieren auf diesen Grund
+                        $appendGrund[] = [ $gId, $_REQUEST["zahlungValue"][$zId] ];
+                    } else {
+                        die("ups cannot compute this");
+                    }
                 }
-            }else{
-                //jeder anderer Typ
-                $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                $z = getAntrag($zId);
+                if ($z === false) {
+                    $msgs[] = "Zahlung $zId war nicht lesbar.";
+                    $ret = false;
+                    break;
+                }
+                $form = getForm($z["type"], $z["revision"]);
+                $canEditZahlung = hasPermission($form, $z, "canEdit");
+                $canEditPartiellZahlung = hasPermission($form, $z, "canEditPartiell") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.table") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.group2") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.beleg") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.hinweis") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.einnahmen") &&
+                    hasPermission($form, $z, "canEditPartiell.field.zahlung.grund.ausgaben");
+    
+                if (!$canEditZahlung && !$canEditPartiellZahlung) die("Antrag (Zahlung) $zId ist nicht (partiell-)editierbar");
+    
+                $rowCountFieldName =  "zahlung.grund.table[rowCount]";
+                $rowNumber = getFormValueInt($rowCountFieldName, null, $z["_inhalt"], false);
+                $rowNumberPresent = true;
+                if ($rowNumber === false) {
+                    $rowNumberPresent = false;
+                    $rowNumber = 0;
+                }
+                $rowIdNumberPresent = true;
+                $rowIdCountFieldName =  "zahlung.grund.table[rowIdCount]";
+                $rowIdNumber = getFormValueInt($rowIdCountFieldName, null, $z["_inhalt"], false);
+                if ($rowIdNumber === false) {
+                    $rowIdNumberPresent = false;
+                    $rowIdNumber = 0;
+                }
+    
+                foreach ($appendGrund as $i => $a) {
+    
+                    $rowIdFieldName = "zahlung.grund.table[rowId][{$rowNumber}]";
+                    $inhalt = [ "fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $zId ];
+                    $inhalt["value"] = $rowIdNumber;
+    
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
+    
+                    $rowBelegFieldName = "zahlung.grund.beleg[{$rowNumber}]";
+                    $inhalt = [ "fieldname" => $rowBelegFieldName, "contenttype" => "otherForm", "antrag_id" => $zId ];
+                    $inhalt["value"] = $a[0];
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
+    
+                    $value = $a[1];
+                    if ($value < 0) {
+                        $value *= -1.0;
+                        $rowGeldFieldName = "zahlung.grund.ausgaben[{$rowNumber}]";
+                    } else {
+                        $rowGeldFieldName = "zahlung.grund.einnahmen[{$rowNumber}]";
+                    }
+                    $inhalt = [ "fieldname" => $rowGeldFieldName, "contenttype" => "money", "antrag_id" => $zId ];
+                    $inhalt["value"] = $value; # this already is a php float, so convertUserValueToDBValue($value, $inhalt["contenttype"]) is not needed
+                    $ret0 = dbInsert("inhalt", $inhalt);
+                    if ($ret0 === false) $ret = false;
+                    $rowNumber++;
+                    $rowIdNumber++;
+                }
+    
+                if ($rowNumberPresent) {
+                    $ret0 = dbUpdate("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowNumber ] );
+                } else {
+                    $ret0 = dbInsert("inhalt", [ "fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowNumber ] );
+    
+                }
+    
+                if ($ret0 === false) $ret = false;
+    
+                if ($rowIdNumberPresent) {
+                    $ret0 = dbUpdate("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId ], [ "value" => $rowIdNumber ] );
+                } else {
+                    $ret0 = dbInsert("inhalt", [ "fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $zId, "value" => $rowIdNumber ] );
+    
+                }
+                $msgs[] = $ret;
+                if ($ret0 === false) $ret = false;
+    
+                if ($ret && !isValid($zId, "postEdit", $msgs))
+                    $ret = false;
+            }//iteration über alle zahlungsgründe
+    
+            // alle zahlungen wechseln nach state booked
+            foreach($_REQUEST["zahlungId"] as $aId) {
+                $a = dbGet("antrag", ["id" => $aId]);
+                $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+                $form = getForm($a["type"], $a["revision"]);
+                $ret0 = writeState("booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                $ret = $ret && $ret0;
             }
-            $ret = $ret && $ret0;
-        }
-
-        if ($ret)
-            $ret = dbCommit();
-        if (!$ret) {
-            dbRollBack();
-            foreach ($filesCreated as $f) {
-                if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+    
+            // alle Belege wechseln nach state payed
+            foreach($_REQUEST["grundId"] as $aId) {
+                $a = dbGet("antrag", ["id" => $aId]);
+                $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+                $form = getForm($a["type"], $a["revision"]);
+                //Extern Express anträge
+                if($a['type']=='extern-express'){
+                    if($a["state"] == "prepaymnt-payed" && isValid($aId,"prepaymnt-exists")){
+                        $ret0 = writeState("prepaymnt-booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                    }else if($a['state'] == "balancing-payed" && isValid($aId, "balancing-exists")){
+                        $ret0 = writeState("terminated", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                    }
+                }else{
+                    //jeder anderer Typ
+                    $ret0 = writeState("payed", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
+                }
+                $ret = $ret && $ret0;
             }
-        } else {
-            // delete files from disk after successfull commit
-            foreach ($filesRemoved as $f) {
-                if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+    
+            if ($ret)
+                $ret = dbCommit();
+            if (!$ret) {
+                dbRollBack();
+                foreach ($filesCreated as $f) {
+                    if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+                }
+            } else {
+                // delete files from disk after successfull commit
+                foreach ($filesRemoved as $f) {
+                    if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
+                }
             }
-        }
-        if ($ret) {
-            $forceClose = true;
-            $target = "$URIBASE?tab=booking";
-        }
-        break;
-
+            if ($ret) {
+                $forceClose = true;
+                $target = "$URIBASE?tab=booking";
+            }
+            break;
+            */
         //action
         case "hibiscus.sct":
         if (!isset($_REQUEST["ueberweisung"])) {
@@ -1303,11 +1405,33 @@ if (isset($_REQUEST["action"])) {
         }
         if ($ret) {
             $forceClose = true;
+            $target = "";
         }
-        break;
+            break;
+            case "mykonto.update":
+                $newIBAN = str_replace(" ", "", $_REQUEST["formdata"]["myiban"]);
+                if (!checkIBAN($newIBAN)){
+                    $ret = false;
+                    $msgs[] = "Konnte Daten nicht speichern - IBAN ist nicht gültig!";
+                    break;
+                }
+        
+                if (getUserIBAN() !== false)
+                    $ret = dbUpdate("user", ["username" => getUsername()], ["fullname" => getUserFullName(), "iban" => $newIBAN]);
+                else
+                    $ret = dbInsert("user", ["fullname" => getUserFullName(), "username" => getUsername(), "iban" => $newIBAN]);
+        
+                if ($ret){
+                    $msgs[] = "IBAN $newIBAN wurde erfolgreich gespeichert";
+                    $forceClose = true;
+                    $target = $URIBASE;
+                }else{
+                    $msgs[] = "Konnte Daten nicht speichern - bitte versuchen sie es später erneut!";
+                }
+                break;
         default:
         logAppend($logId, "__result", "invalid action");
-        die("Aktion nicht bekannt.");
+            die("{$_REQUEST["action"]}Aktion nicht bekannt.");
         endswitch;
     } /* switch */
 
@@ -1333,10 +1457,15 @@ if (isset($_REQUEST["action"])) {
 }
 
 if (!isset($_REQUEST["tab"])) {
-    $_REQUEST["tab"] = "antrag.listing";
+    $_REQUEST["tab"] = "mygremium";
 }
+//switch on substring until the second ocurance of "."
+$tmp = explode(".", $_REQUEST["tab"], 3);
+if (count($tmp) > 2)
+    array_pop($tmp);
+$tabName = implode(".", $tmp);
 
-switch($_REQUEST["tab"]) {
+switch ($tabName){
     case "antrag.anhang":
         if (count($_REQUEST["__args"]) == 0)
             break;
@@ -1407,190 +1536,239 @@ switch($_REQUEST["tab"]) {
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
-        $kv="";
-        $hv="";
-        if($antrag['type']=="auslagenerstattung" || $antrag['type'] == "rechnung-zuordnung"){ // vieles ist gleich, daher zusammengefasst
-            //baue content[] das an FUI2PDF geschickt wird
-            $content['meta']['type'] = $antrag['type'];
-            $content['meta']['domain'] = $_SERVER["SERVER_NAME"];
-            $inhalt = $antrag["_inhalt"];
-            $antrag_id = $antrag['id'];
-            $content['data']['id'] = $antrag_id;
-            //var_dump($antrag);
-            //suche IBAN, Antragsteller und so
-            $inhalt_better = betterValues($inhalt);
-            $content['data']['iban'] = $inhalt_better['iban'];
-            $content['data']['hv'] = $inhalt_better['genehmigung.sachlicheRichtigkeit'];
-            $content['data']['kv'] = $inhalt_better['genehmigung.rechnerischeRichtigkeit'];
-            $content['data']['projektname'] = $inhalt_better['projekt.name'];
-
-            $radio_val = $inhalt_better['genehmigung.recht'];
-            $hhp = $inhalt_better['genehmigung.titel'];
-            foreach($inhalt as $fields){
-                switch(explode("[",$fields['fieldname'])[0]){
-                    case 'genehmigung.konto':
-                        $konto = $fields['value'];
-                        break;
-                    case 'genehmigung':
-                        $genID = $fields['value'];
-                        break;
-                    case 'geld.titel':
-                        $titeln[] = $fields['value'];
-                        break;
-                    case 'geld.konto':
-                        $kontos[] = $fields['value'];
-                        break;
-                    case 'geld.ausgaben':
-                        $ausgaben[] = $fields['value'];
-                        break;
-                    case 'geld.einnahmen':
-                        $einnahmen[] = $fields['value'];
-                        break;
-                    case 'finanzauslagenposten': //Auslagenerstattung
-                        $posten[] = $fields['value'];
-                        break;
-                    default:
-                        break;
-                }
-            }
-            // Rechtsgrundlage im System 'schönen' Fließtext zuordnen
-            switch($radio_val){
-                case "buero":
-                    $content['data']['recht'] = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
-                    break;
-                case "fahrt":
-                    $content['data']['recht'] = "Fahrtkosten: StuRa-Beschluss 21/20-08";
-                    break;
-                case "verbrauch":
-                    $content['data']['recht'] = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
-                    break;
-                case "stura":
-                    $content['data']['recht'] = "Beschluss vom ".$inhalt_better['genehmigung.recht.stura.datum']."(".$inhalt_better['genehmigung.recht.stura.beschluss'].")";
-                    break;
-                case "fsr":
-                    $content['data']['recht'] = $inhalt_better['genehmigung.recht.int.gremium']."/".$inhalt_better['genehmigung.recht.int.datum']." (StuRa: ".$inhalt_better['genehmigung.recht.int.sturabeschluss'].")";
-                    break;
-                case "kleidung":
-                    $content['data']['recht'] = "Gremienkleidung: StuRa Beschluss 24/04-09";
-                    break;
-                case "other":
-                    $content['data']['recht'] = $inhalt_better['genehmigung.recht.other.reason'];
-                    break;
-                default:
-                    $content['data']['recht'] ="";
-                    break;
-            }
-            //$content['data']['kostenstelle'] = $inhalt_better['genehmigung.konto'];
-            switch($antrag['type']){ // einige Daten müssen unterschiedlich geholt werden
-                case "auslagenerstattung":
-                    $content['data']['empfaenger'] = $inhalt_better['antragsteller.name'];
-                    $content['data']['projektid'] = $inhalt_better['genehmigung'];
-                    $content['meta']['belegid'] = $antrag_id;
-                    $posten = array_filter($posten,function($val){
-                        return (strpos($val, '-') !== false);
-                    });
-                    $posten = array_map(function($val){
-                        $s = strrev($val);
-                        $ar = explode("-",$s);
-                        $ar[0] = intval($ar[0])+1;
-                        $ar[1] = intval($ar[1])+1;
-                        return "B".$ar[0];//."-P".$ar[1];
-                    },$posten);
-                    foreach($antrag['_anhang'] as $anhang){
-                        $content['pdfs'][] = $anhang['path'];
+        $printModeName = substr($_REQUEST["tab"], strlen("antrag.print."));
+        if (!isPrintable($antrag, $form, $printModeName))
+            die("Dieser Antrag kann printmode '$printModeName' nicht drucken!");
+        $kv = "";
+        $hv = "";
+        $inhalt = betterValues($antrag["_inhalt"]);
+        $contentType = betterValues($antrag["_inhalt"], "fieldname", "contenttype");
+        //var_dump($inhalt_better);
+        //if($antrag['type'] == "auslagenerstattung" || $antrag['type'] == "rechnung-zuordnung"){ // vieles ist gleich, daher zusammengefasst
+        // baue content[] das an FUI2PDF geschickt wird
+        $content['meta']['type'] = $printModeName;
+        $content['meta']['id'] = $antrag["id"];
+        $content['meta']['subdomain'] = explode(".", $_SERVER["SERVER_NAME"])[0];
+        $content['meta']['apikey'] = $FUI2PDF_APIKEY;
+        if (isset($form["config"]["printMode"][$printModeName]['mapping'])){
+            $mapping = $form["config"]["printMode"][$printModeName]['mapping'];
+            foreach ($mapping as $vartype => $vars){
+                $content[$vartype] = [];
+                foreach ($vars as $name => $var){
+                    $content[$vartype][$name] = $var;
+                    if (isset($inhalt[$var])){
+                        $content[$vartype][$name] = convertDBValueToUserValue($inhalt[$var], $contentType[$var]);
                     }
-                    break;
-                case "rechnung-zuordnung":
-                    $content['data']['empfaenger'] = $inhalt_better['rechnung.firma'];
-                    $posten = array_fill(0,count($ausgaben),'B1');
-                    $id_beleg = $inhalt_better['teilrechnung.beleg'];
-                    $content['meta']['belegid'] = $id_beleg;
-                    $content['data']['projektid'] = $inhalt_better['teilrechnung.projekt'];
-                    $antrag_beleg = getAntrag($id_beleg);
-                    foreach($antrag_beleg['_anhang'] as $anhang){
-                        $content['pdfs'][] = $anhang['path'];
-                    }
-                    break;
-                default:
-                    break;
-            }
-            //fill up all empty with default titel
-            $titeln = array_map(function($value) {
-                global $hhp;
-                return $value === "" ? $hhp : $value;
-            }, $titeln);
-            //fill up all empty with default konto
-            $kontos = array_map(function($value) {
-                global $konto;
-                return $value === "" ? $konto : $value;
-            }, $kontos);
-            //sum everything with same titel and same beleg
-            $posten = array_values($posten);
-            $tmp_a = array_fill_keys($posten,array_fill_keys($titeln,0));
-            $tmp_e = array_fill_keys($posten,array_fill_keys($titeln,0));
-            for($i = 0; $i < count($titeln); $i++){
-                $tmp_a[$posten[$i]][$titeln[$i]] += $ausgaben[$i];
-                $tmp_e[$posten[$i]][$titeln[$i]] += $einnahmen[$i];
-            }
-            $posten = array();
-            $titeln = array();
-            $ausgaben = array();
-            $einnahmen = array();
-            foreach($tmp_a as $bel => $ar){
-                foreach($ar as $tit => $aus){
-                    if($aus != 0){
-                        $posten[]=$bel;
-                        $titeln[] = $tit;
-                        $ausgaben[]=number_format($aus,2);
-                        $einnahmen[]=number_format(0,2);
+                    $arr = explode(":", $var);
+                    if ($arr[0] === "autovalue"){
+                        switch ($arr[1]){
+                            case "id":
+                                $content[$vartype][$name] = $antrag["id"];
+                                break;
+                            case "daterange":
+                                $von = convertDBValueToUserValue($inhalt[$arr[2] . "[start]"], $contentType[$arr[2] . "[start]"]);
+                                $bis = convertDBValueToUserValue($inhalt[$arr[2] . "[end]"], $contentType[$arr[2] . "[end]"]);
+                                $content[$vartype][$name] = "von $von bis $bis";
+                                break;
+                            case "today":
+                                $content[$vartype][$name] = date("d.m.Y");
+                                break;
+                            default:
+                                $content[$vartype][$name] = "Autovalue {$arr[1]} not known";
+                                break;
+                        }
                     }
                 }
             }
-            foreach($tmp_e as $bel => $ar){
-                foreach($ar as $tit => $ein){
-                    if($ein != 0){
-                        $posten[]=$bel;
-                        $titeln[]=$tit;
-                        $einnahmen[]=number_format($ein,2);
-                        $ausgaben[]=number_format(0,2);
-                    }
-                }
-            }
-
-            $content['data']['betrag'] = number_format(array_sum($ausgaben)-array_sum($einnahmen),2);
-            $content['data']['posten'] = implode(",",$posten);
-            $content['data']['einnahmen'] = implode(",",$einnahmen);
-            $content['data']['ausgaben'] = implode(",",$ausgaben);
-            $content['data']['hhptitel'] = implode(",",$titeln);
-            $content['data']['datumauszahlung'] = "";
-            //var_dump($content['data']);
-
-            // Code um POST zu senden
-            $url = "https://box.stura.tu-ilmenau.de/FUI2PDF/index.php";
-            $curl = curl_init($url);
+            $curl = curl_init($FUI2PDF_URL);
             curl_setopt($curl, CURLOPT_HEADER, false);
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($curl, CURLOPT_HTTPHEADER,array("Content-type: application/json"));
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-type: application/json"));
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
-
+        
             //execute Latex on external drive
             $ret = curl_exec($curl);
-
-            //Dann lade sie runter
-            header("Content-type: application/pdf");
-            header("Content-disposition: inline; filename=Auslagenerstattung-".$antrag_id.".pdf");
-            echo $ret;
-
-            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $json = json_decode($ret, true);
+            if (isset($json) && $json !== false){
+                if (isset($json["status"]) && $json["status"] === "ok" && isset($json["pdf"])){
+                    header("Content-type: application/pdf");
+                    header("Content-disposition: inline; filename=" . $antrag["id"] . "-" . ucwords($printModeName) . ".pdf");
+                    echo "<!DOCTYPE html><html><head><title>HTML Reference</title></head>";
+                    echo base64_decode($json["pdf"]);
+                }else{
+                    ini_set('xdebug.var_display_max_data', 1500);
+                    var_dump($json);
+                }
+            }else{
+                var_dump("JSON wurde nicht korrekt übertragen!");
+                var_dump(json_last_error_msg());
+                echo $ret;
+            }
             curl_close($curl);
-
-            //lösche pdf auf remote system
-            $ch = curl_init("https://box.stura.tu-ilmenau.de/FUI2PDF/index.php?del=1");
-            curl_exec($ch);
-            curl_close($ch);
-            //*/ // <-- end debugging print
+        
+            exit;
         }else{
+            die("Mapping nicht definiert :(");
+        }
+        //var_dump($content);
+        //exit;
+        // Code um POST zu senden
+    
+    
+        $antrag_id = $antrag['id'];
+        $content['command']['id'] = $antrag_id;
+        //var_dump($antrag);
+        //suche IBAN, Antragsteller und so
+    
+        $content['command']['iban'] = $inhalt_better['iban'];
+        $content['command']['hv'] = $inhalt_better['genehmigung.sachlicheRichtigkeit'];
+        $content['command']['kv'] = $inhalt_better['genehmigung.rechnerischeRichtigkeit'];
+        $content['command']['projektname'] = $inhalt_better['projekt.name'];
+    
+        $radio_val = $inhalt_better['genehmigung.recht'];
+        $hhp = $inhalt_better['genehmigung.titel'];
+        foreach ($inhalt as $fields){
+            switch (explode("[", $fields['fieldname'])[0]){
+                case 'genehmigung.konto':
+                    $konto = $fields['value'];
+                    break;
+                case 'genehmigung':
+                    $genID = $fields['value'];
+                    break;
+                case 'geld.titel':
+                    $titeln[] = $fields['value'];
+                    break;
+                case 'geld.konto':
+                    $kontos[] = $fields['value'];
+                    break;
+                case 'geld.ausgaben':
+                    $ausgaben[] = $fields['value'];
+                    break;
+                case 'geld.einnahmen':
+                    $einnahmen[] = $fields['value'];
+                    break;
+                case 'finanzauslagenposten': //Auslagenerstattung
+                    $posten[] = $fields['value'];
+                    break;
+                default:
+                    break;
+            }
+        }
+        // Rechtsgrundlage im System 'schönen' Fließtext zuordnen
+        switch ($radio_val){
+            case "buero":
+                $content['command']['recht'] = "Büromaterial: Beschluss 21/20-07: bis zu 50 EUR";
+                break;
+            case "fahrt":
+                $content['command']['recht'] = "Fahrtkosten: StuRa-Beschluss 21/20-08";
+                break;
+            case "verbrauch":
+                $content['command']['recht'] = "Verbrauchsmaterial lt. Finanzordnung (11) bis zu 150 EUR";
+                break;
+            case "stura":
+                $content['command']['recht'] = "Beschluss vom " . $inhalt_better['genehmigung.recht.stura.datum'] . "(" . $inhalt_better['genehmigung.recht.stura.beschluss'] . ")";
+                break;
+            case "fsr":
+                $content['command']['recht'] = $inhalt_better['genehmigung.recht.int.gremium'] . "/" . $inhalt_better['genehmigung.recht.int.datum'] . " (StuRa: " . $inhalt_better['genehmigung.recht.int.sturabeschluss'] . ")";
+                break;
+            case "kleidung":
+                $content['command']['recht'] = "Gremienkleidung: StuRa Beschluss 24/04-09";
+                break;
+            case "other":
+                $content['command']['recht'] = $inhalt_better['genehmigung.recht.other.reason'];
+                break;
+            default:
+                $content['command']['recht'] = "";
+                break;
+        }
+        //$content['command']['kostenstelle'] = $inhalt_better['genehmigung.konto'];
+        switch ($antrag['type']){ // einige Daten müssen unterschiedlich geholt werden
+            case "auslagenerstattung":
+                $content['command']['empfaenger'] = $inhalt_better['antragsteller.name'];
+                $content['command']['projektid'] = $inhalt_better['genehmigung'];
+                $content['meta']['belegid'] = $antrag_id;
+                $posten = array_filter($posten, function($val){
+                    return (strpos($val, '-') !== false);
+                });
+                $posten = array_map(function($val){
+                    $s = strrev($val);
+                    $ar = explode("-", $s);
+                    $ar[0] = intval($ar[0]) + 1;
+                    $ar[1] = intval($ar[1]) + 1;
+                    return "B" . $ar[0];//."-P".$ar[1];
+                }, $posten);
+                foreach ($antrag['_anhang'] as $anhang){
+                    $content['pdfs'][] = $anhang['path'];
+                }
+                break;
+            case "rechnung-zuordnung":
+                $content['command']['empfaenger'] = $inhalt_better['rechnung.firma'];
+                $posten = array_fill(0, count($ausgaben), 'B1');
+                $id_beleg = $inhalt_better['teilrechnung.beleg'];
+                $content['meta']['belegid'] = $id_beleg;
+                $content['command']['projektid'] = $inhalt_better['teilrechnung.projekt'];
+                $antrag_beleg = getAntrag($id_beleg);
+                foreach ($antrag_beleg['_anhang'] as $anhang){
+                    $content['pdfs'][] = $anhang['path'];
+                }
+                break;
+            default:
+                break;
+        }
+        //fill up all empty with default titel
+        $titeln = array_map(function($value){
+            global $hhp;
+            return $value === "" ? $hhp : $value;
+        }, $titeln);
+        //fill up all empty with default konto
+        $kontos = array_map(function($value){
+            global $konto;
+            return $value === "" ? $konto : $value;
+        }, $kontos);
+        //sum everything with same titel and same beleg
+        $posten = array_values($posten);
+        $tmp_a = array_fill_keys($posten, array_fill_keys($titeln, 0));
+        $tmp_e = array_fill_keys($posten, array_fill_keys($titeln, 0));
+        for ($i = 0; $i < count($titeln); $i++){
+            $tmp_a[$posten[$i]][$titeln[$i]] += $ausgaben[$i];
+            $tmp_e[$posten[$i]][$titeln[$i]] += $einnahmen[$i];
+        }
+        $posten = array();
+        $titeln = array();
+        $ausgaben = array();
+        $einnahmen = array();
+        foreach ($tmp_a as $bel => $ar){
+            foreach ($ar as $tit => $aus){
+                if ($aus != 0){
+                    $posten[] = $bel;
+                    $titeln[] = $tit;
+                    $ausgaben[] = number_format($aus, 2);
+                    $einnahmen[] = number_format(0, 2);
+                }
+            }
+        }
+        foreach ($tmp_e as $bel => $ar){
+            foreach ($ar as $tit => $ein){
+                if ($ein != 0){
+                    $posten[] = $bel;
+                    $titeln[] = $tit;
+                    $einnahmen[] = number_format($ein, 2);
+                    $ausgaben[] = number_format(0, 2);
+                }
+            }
+        }
+    
+        $content['command']['betrag'] = number_format(array_sum($ausgaben) - array_sum($einnahmen), 2);
+        $content['command']['posten'] = implode(",", $posten);
+        $content['command']['einnahmen'] = implode(",", $einnahmen);
+        $content['command']['ausgaben'] = implode(",", $ausgaben);
+        $content['command']['hhptitel'] = implode(",", $titeln);
+        $content['command']['datumauszahlung'] = "";
+        //var_dump($content);
+    
+        //*/ // <-- end debugging print
+        /*}else{
             global $inlineCSS;
             $inlineCSS = true;
             require "../template/header-print.tpl";
@@ -1598,7 +1776,7 @@ switch($_REQUEST["tab"]) {
             require "../template/antrag.tpl";
             require "../template/antrag.foot-print.tpl";
             require "../template/footer-print.tpl";
-        }
+        }*/
         exit;
     case "antrag.export":
         $antrag = getAntrag();
@@ -1698,7 +1876,70 @@ switch($_REQUEST["tab"]) {
         break;
 }
 require "../template/header.tpl";
-switch($_REQUEST["tab"]) {
+$groups = [];
+//switches to substring until second orcurance of "."
+
+switch ($tabName){
+    case "mygremium":
+    case "allgremium":
+        if ($_REQUEST["tab"] === "allgremium")
+            $gremien = $attributes["alle-gremien"];
+        if ($_REQUEST["tab"] === "mygremium")
+            $gremien = $attributes["gremien"];
+        
+        $gremien = array_filter($gremien, function($val){
+            global $GremiumPrefix;
+            foreach ($GremiumPrefix as $prefix){
+                if (substr($val, 0, strlen($prefix)) === $prefix){
+                    return true;
+                }
+            }
+            return false;
+        });
+        rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
+        prof_flag("start-rendering");
+        HTML_Renderer::renderProjekte($gremien);
+        break;
+    
+    case "mykonto":
+        HTML_Renderer::renderMyProfile($nonce);
+        break;
+    case "stura":
+        $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
+        $groups[] = ["name" => "Interne Projekte", "fields" => ["type" => "projekt-intern", "state" => "need-stura",]];
+        $groups[] = ["name" => "Beschlossen von Haushahaltsverantwortlichen, zur Verkündung",
+            "fields" => ["type" => "projekt-intern", "state" => "ok-by-hv",]];
+        
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        HTML_Renderer::renderTable($groups, $mapping);
+        break;
+    case "hv":
+        $groups[] = ["name" => "zu Bearbeitende Interne Projekte", "fields" => ["type" => "projekt-intern", "state" => "wip",]];
+        $groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+        $groups[] = ["name" => "Auslagenerstattungen nur noch HV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-kv",]];
+        $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "draft",]];
+        
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        
+        //TODO: Externe abrechnungen
+        HTML_Renderer::renderTable($groups, $mapping);
+        
+        break;
+    case "kv":
+        $groups[] = ["name" => "Noch zu tätigende Zahlungen", "fields" => ["type" => "zahlung-anweisung", "state" => "ok",]];
+        $groups[] = ["name" => "Auslagenerstattungen nur noch KV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-hv",]];
+        $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
+        
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
+        HTML_Renderer::renderTable($groups, $mapping);
+        break;
     case "antrag.listing":
         $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
         $antraege = [];
@@ -1713,8 +1954,10 @@ switch($_REQUEST["tab"]) {
                 $antraege[$cat][$t["type"]][$t["revision"]][$t["id"]] = $t;
             }
         }
-        require "../template/antrag.createpanel.tpl";
         require "../template/antrag.list.tpl";
+        break;
+    case "hhp":
+        HTML_Renderer::renderHaushaltsplan();
         break;
     case "antrag":
         $antrag = getAntrag();
@@ -1778,6 +2021,9 @@ switch($_REQUEST["tab"]) {
 
         require "../template/antrag.head.tpl";
         require "../template/antrag.create.tpl";
+        break;
+    case "antrag.history":
+        echo "TODO History";
         break;
     case "booking":
         requireGroup($HIBISCUSGROUP);
@@ -1855,8 +2101,6 @@ switch($_REQUEST["tab"]) {
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["einnahmen.beleg"])) {
                 $value -= $ctrl["_render"]->addToSumValue["einnahmen.beleg"];
             }
-
-
 
             $antrag["_value"] = $value;
             $antrag["_ctrl"] = $ctrl;
@@ -1953,8 +2197,10 @@ switch($_REQUEST["tab"]) {
         require "../template/booking.history.tpl";
         break;
     default:
-        echo "invalid tab name:".htmlspecialchars($_REQUEST["tab"]);
+        echo "invalid tab name: " . htmlspecialchars($_REQUEST["tab"]);
 }
+
+prof_flag("index.php done");
 
 require "../template/footer.tpl";
 exit;
