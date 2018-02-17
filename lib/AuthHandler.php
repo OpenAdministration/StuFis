@@ -54,7 +54,7 @@ class  AuthHandler{
      * @param string $group     String of groups
      * @param string $delimiter Delimiter of the groups in $group
      *
-     * @return bool
+     * @return bool true if the user has one or more groups from $group
      */
     function hasGroup($group, $delimiter = ","){
         $attributes = $this->getAttributes();
