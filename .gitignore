@@ -1,5 +1,4 @@
 storage
-TODO
 tmp/*
 PHP_errors.log
 config/config.php

@@ -1926,7 +1926,6 @@ switch ($tabName){
         $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
         $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
         
-        //TODO: Externe abrechnungen
         HTML_Renderer::renderTable($groups, $mapping);
         
         break;

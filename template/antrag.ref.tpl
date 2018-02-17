@@ -3,7 +3,7 @@
 if (count($antraegeRef) == 0) return;
 
 ?>
-
+    <div class="clearfix"></div>
 <div class="panel panel-default">
     <div class="panel-heading">Verweise auf dieses Formular</div>
     <div class="panel-body">
