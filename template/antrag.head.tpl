@@ -1,4 +1,7 @@
 <?php
+if ($DEV){
+    echo "<!-- antrag.head.tpl -->";
+}
 
 $classConfig = $form["_class"];
 $classTitle = isset($classConfig["title"]) ? $classConfig["title"] : $form["type"];
@@ -14,7 +17,8 @@ else
     $h = "{$classTitle}";
 
 ?>
-<div class="container">
+
+    <div class="container main col-md-10">
     <nav class="navbar navbar-default no-print">
         <div class="container-fluid">
             <div class="navbar-header">

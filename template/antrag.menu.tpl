@@ -1,4 +1,7 @@
 <?php
+if ($DEV){
+    echo "<!-- antrag.menu.tpl -->";
+}
 
 $classConfig = $form["_class"];
 $classTitle = isset($classConfig["title"]) ? $classConfig["title"] : $form["type"];
@@ -12,7 +15,8 @@ $targetEditPartiell = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["t
 $targetprintbase = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/print";
 $targetExport = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/export";
 $targetExportBank = str_replace("//","/",$URIBASE."/").rawurlencode($antrag["token"])."/exportBank";
-
+$targetDelete = str_replace("//", "/", $URIBASE . "/") . rawurlencode($antrag["token"]) . "/delete";
+$targetHistory = str_replace("//", "/", $URIBASE . "/") . rawurlencode($antrag["token"]) . "/history";
 $canEdit = hasPermission($form, $antrag, "canEdit");
 if (!$canEdit)
     $targetEdit = false;
@@ -36,7 +40,7 @@ else
 $stateString = $antrag["state"];
 if (isset($classConfig["state"][$antrag["state"]]))
     $stateString = $classConfig["state"][$antrag["state"]][0];
-$stateString .= " ({$antrag["stateCreator"]})";
+//$stateString .= " ({$antrag["stateCreator"]})";
 
 $newStates = [];
 foreach (array_keys($classConfig["state"]) as $newState) {
@@ -56,7 +60,6 @@ foreach($proposeNewState as $state) {
     $removeList[] = $state;
 }
 $newStates = array_diff($newStates, $proposeNewState);
-
 
 $printModes = [];
 
@@ -124,7 +127,6 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
                         </select>
                         <div class="help-block with-errors"></div>
                     </div>
-                    <!-- form-group -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -141,12 +143,9 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 
 <div class="">
     <ul class="nav nav-pills nav-stacked navbar-right navbar-fixed-right">
-        <li><a href="">
-                    <?php echo htmlspecialchars($stateString);?>
-            </a>
+        <li class="label-info">
+            <?php echo htmlspecialchars($stateString); ?>
         </li>
-
-
 
         <?php if (count($newStates) > 0 || count($proposeNewState) > 0){?>
         <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i class="fa fw fa-refresh"></i></a></li>
@@ -162,11 +161,7 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
         <?php } ?>
         <?php if ($targetEdit !== false) { ?>
         <li><a href="<?php echo htmlspecialchars($targetEdit); ?>" title="Bearbeiten">Bearbeiten <i class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-        <?php }
-        foreach($printModes as $name => $printMode){
-            echo "<li><a href='". htmlspecialchars($targetprintbase."/{$name}"). "' title='{$printMode["title"]}'>{$printMode["title"]} <i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
-        }
-        ?>
+        <?php } ?>
 
         <!--<li><a href="<?php echo htmlspecialchars($targetprintbase); ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
         <!--<li><a href="<?php echo htmlspecialchars($targetExport); ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
@@ -174,20 +169,24 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 
         <?php if ($canBeLinked !== false) { ?>
         <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen">Zugehöriges Formular anlegen <i class="fa fw fa-plus-square"></i></a></li>
-        <?php } ?>
+        <?php }
+        foreach ($printModes as $name => $printMode){
+            echo "<li><a href='" . htmlspecialchars($targetprintbase . ".{$name}") . "' title='{$printMode["title"]}'>{$printMode["title"]} <i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
+        }
+        ?>
 
-        <li><a href="history" title="Verlauf">Historie <i class="fa fa-fw fa-history" aria-hidden="true"></i></a></li>
+        <li><a href="<?php echo $targetHistory ?>" title="Verlauf">Historie <i class="fa fa-fw fa-history"
+                                                                               aria-hidden="true"></i></a></li>
         <?php if ($canBeCloned !== false) { ?>
         <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen">Verwende als Vorlage <i class="fa fw fa-clone"></i></a></li>
         <?php } ?>
+        <li><a href="<?php echo $targetDelete ?>">Antrag löschen <i class="fa fa-trash" aria-hidden="true"></i></a></li>
         <li><a href="https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege">Hilfe <i class="fa fa-question" aria-hidden="true"></i></a></li>
-
     </ul>
 </div>
 
-<div class="container">
+    <div class="container col-md-9 main">
     <nav class="navbar navbar-default">
-
         <div class="navbar-header">
             <a class="navbar-brand" href="<?php echo htmlspecialchars($targetRead); ?>"><?php echo htmlspecialchars($h); ?></a>
             <p class="navbar-text navbar-left"><?php echo htmlspecialchars($revTitle); ?></p>

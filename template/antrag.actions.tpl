@@ -1,18 +1,16 @@
 <?php
 
-global $HIBISCUSGROUP;
+global $HIBISCUSGROUP, $URIBASE;
 
 if (!hasGroup($HIBISCUSGROUP)) return;
 
 ?>
 <div>
     <br/>
+    <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary"><i class="fa fw fa-inbox "></i> Zahlungen
+        verbuchen</a>
 
-    <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary">Zahlungen verbuchen</a>
 
-
-
-    <a href="<?php echo $URIBASE; ?>?tab=booking.history" class="btn btn-primary">Buchungsübersicht</a>
 </div>
 <?php
 # vim:syntax=php

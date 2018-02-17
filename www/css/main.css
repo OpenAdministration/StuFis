@@ -265,3 +265,226 @@ a.disabled-option span {
     float:right;
     text-align: right;
 }
+
+.panel > .panel-heading[data-toggle=collapse] {
+    cursor: pointer;
+}
+
+.panel > .empty.panel-heading[data-toggle=collapse] {
+    cursor: default;
+}
+
+.panel.panel-default i.fa-togglebox::before {
+    /* minus */
+    content: "\f147";
+    margin-right: 75px;
+    color: black;
+}
+
+.panel.panel-default > .collapsed i.fa-togglebox::before {
+    /* plus */
+    content: "\f196";
+    margin-right: 75px;
+    color: black;
+}
+
+.panel.panel-default > .empty.collapsed i.fa-togglebox::before {
+    /* falls leer */
+    color: transparent;
+    cursor: default;
+}
+
+.profiling-output {
+    position: fixed;
+    top: calc(100% - 50px);
+    left: 10px;
+    z-index: 10;
+}
+
+.profiling-output:hover {
+    position: fixed;
+    bottom: 0;
+    top: inherit;
+    max-height: 35%;
+    overflow-y: auto;
+}
+
+.fa-angle-toggle::before {
+    content: "\f106";
+}
+
+.profiling-output:hover .fa-angle-toggle::before {
+    content: "\f107";
+}
+
+.panel-link {
+    position: absolute;
+    margin-left: 40px;
+    margin-top: 11px;
+}
+
+.project-state-label {
+    display: inline-block;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.11111;
+    max-width: 25%;
+}
+
+.panel-projekt-name {
+    display: inline-block;
+    overflow-x: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    width: 60%;
+    vertical-align: top;
+}
+
+.container.main {
+    padding-left: 20%;
+}
+
+/* Profile sidebar */
+.profile-sidebar {
+    position: fixed;
+    margin-top: 0px;
+    margin-left: 10px;
+    max-width: 275px;
+    min-width: 15%;
+    z-index: 1000;
+
+}
+
+.profile-usertitle {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.profile-usertitle-name {
+    color: #5a7391;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 7px;
+}
+
+.profile-usertitle-job {
+    text-transform: uppercase;
+    color: #5b9bd1;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.profile-userbuttons {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.profile-userbuttons .btn {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 15px;
+    margin-right: 5px;
+}
+
+.profile-userbuttons .btn:last-child {
+    margin-right: 0px;
+}
+
+.profile-usermenu {
+    margin-top: 30px;
+}
+
+.profile-usermenu ul li {
+    border-bottom: 1px solid #f0f4f7;
+}
+
+.profile-usermenu ul li:last-child {
+    border-bottom: none;
+}
+
+.profile-usermenu ul li a {
+    color: #93a3b5;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.profile-usermenu ul li a i {
+    margin-right: 8px;
+    font-size: 14px;
+}
+
+.profile-usermenu ul li a:hover {
+    background-color: #fafcfd;
+    color: #5b9bd1;
+}
+
+.profile-usermenu ul li.active {
+    border-bottom: none;
+}
+
+.profile-usermenu ul li.active a {
+    color: #5b9bd1;
+    background-color: #f6f9fb;
+    border-left: 2px solid #5b9bd1;
+    margin-left: -2px;
+}
+
+ul.nav-pills.nav-stacked > li.label-info {
+    display: block;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.chat {
+    text-align: center;
+}
+
+.chat-textarea {
+    margin: 10px 0;
+    max-width: 100%;
+    min-width: 100%;
+    min-height: 7em;
+}
+
+.chat-container {
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: left;
+    width: 80%;
+}
+
+.chat-own {
+    float: left;
+    border: 1px solid #DDDDDD;
+    background-color: #F5F5F5;
+}
+
+.chat-other {
+    float: right;
+    border: 1px solid #DDDDDD;
+    background-color: #E0E0E0;
+}
+
+/* Style time text */
+.chat-time {
+    float: right;
+    color: #aaa;
+}
+
+.chat-info {
+    display: inline-block;
+    padding: 3px 10px;
+    margin: 0 auto 5px;
+    background-color: #5BC0DE;
+    font-size: 75%;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    vertical-align: middle;
+}
