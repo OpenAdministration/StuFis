@@ -34,7 +34,7 @@ $config = [
         ],
     ],
     "mailTo" => ["mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:projekt.leitung"],
-    "referenceField" => ["name" => "genehmigung.antrag", "type" => "otherForm"],
+    
     //"citeFieldsInMailIfNotEmpty" => ["genehmigung.hinweis" => "Auflagen", "genehmigung.modified" => "Genehmigtes Projekt weicht vom Antrag ab"],
     "validate" => [
         "checkRechtsgrundlage" => [

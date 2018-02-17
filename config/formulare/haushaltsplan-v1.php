@@ -158,6 +158,6 @@ foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $capt
 }; // foreach
 
 /* formname , formrevision */
-registerForm( "haushaltsplan", "$year", $layout, $config );
+    registerForm("haushaltsplan", "old-$year", $layout, $config);
 
 endfor;

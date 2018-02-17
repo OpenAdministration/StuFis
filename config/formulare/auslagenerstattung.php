@@ -3,7 +3,8 @@
 $config = [
     "title" => "Auslagenerstattung",
     "shortTitle" => "Auslagenerstattung",
-    "state" => [ "draft" => [ "Beantragt" ],
+    "state" => ["draft" => ["Entwurf"],
+        "wip" => ["Beantrag", "als beantragt speichern"],
                 "ok-hv" => [ "KV fehlt", "als Haushaltsverantwortlicher genehmigen", ],
                 "ok-kv" => [ "HV fehlt", "als Kassenverantwortlicher genehmigen", ],
                 "ok" => [ "Genehmigt", "genehmigen", ],
@@ -12,12 +13,14 @@ $config = [
                 "revoked" => [ "Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen", ],
                ],
     "proposeNewState" => [
-        "draft" => [ "ok-hv", "ok-kv", "revoked" ],
+        "draft" => ["wip"],
+        "wip" => ["ok-hv", "ok-kv", "revoked"],
         "ok-hv" => [ "ok", "revoked" ],
         "ok-kv" => [ "ok", "revoked" ],
     ],
     "createState" => "draft",
-    "buildFrom" => [ [ "auslagenerstattung-antrag", "ok" ] ],
+    "buildFrom" => ["projekt-intern"],
+    //"buildFrom" => [ [ "auslagenerstattung-antrag", "ok" ] ],
     "categories" => [
         "need-action" => [
             [ "state" => "draft", "group" => "ref-finanzen" ],
@@ -94,7 +97,6 @@ $config = [
         
             ["title" => "Belege drucken", "condition" =>
                 [
-                    ["state" => "draft"],
                     ["state" => "wip"],
                     ["state" => "hv-fehlt"],
                     ["state" => "kv-fehlt"],
@@ -128,10 +130,10 @@ $config = [
             [ "hasPermission" => "isEigenerAntrag" ],
             [ "hasPermission" => "isProjektLeitung" ],
             # FIXME können wir das lesbar machen falls sich die zugehörige Genehmigung auf das richtige Gremium bezieht?
-            # FIXME können wir einzelne Felder unlesbar machen (Bankverbindung) für bestimmte Gruppen -> externes Dictionary
         ],
         "canEdit" => [
-            [ "state" => "draft", "group" => "ref-finanzen", ],
+            ["state" => "draft", "hasPermission" => ["canRead"]],
+            ["state" => "wip", "group" => "ref-finanzen"],
         ],
         "canCreate" => [
             [ "hasPermission" => [ "canEdit", "isCreateable" ] ],
@@ -140,19 +142,33 @@ $config = [
         "canBeCloned" => [
             [ "group" => "ref-finanzen", ],
         ],
-        "canStateChange.from.draft.to.ok-hv" => [
+        "canStateChange.from.draft.to.wip" => [
+            ["hasPermission" => "isProjektLeitung"],
+            ["group" => "ref-finanzen"],
+        ],
+        "canStateChange.from.wip.to.ok-hv" => [
             [ "group" => "ref-finanzen-hv" ],
         ],
-        "canStateChange.from.draft.to.ok-kv" => [
+        "canStateChange.from.wip.to.ok-kv" => [
             [ "group" => "ref-finanzen-kv" ],
         ],
         "canStateChange.from.ok-hv.to.ok" => [
             [ "group" => "ref-finanzen-kv" ],
         ],
+        "canStateChange.from.ok-hv.to.wip" => [
+            ["group" => "ref-finanzen-kv"],
+        ],
         "canStateChange.from.ok-kv.to.ok" => [
             [ "group" => "ref-finanzen-hv" ],
         ],
+        "canStateChange.from.ok-kv.to.wip" => [
+            ["group" => "ref-finanzen-hv"],
+        ],
         "canStateChange.from.ok.to.draft" => [
+            ["group" => "ref-finanzen"],
+        ],
+        "canStateChange.from.ok.to.wip" => [
+            ["group" => "ref-finanzen"],
         ],
         "canStateChange.from.ok.to.ok-kv" => [
             [ "group" => "ref-finanzen" ],
@@ -195,6 +211,7 @@ $config = [
             [ "hasPermission" => "isProjektLeitung" ],
         ],
     ],
+    
     "postNewStateActions" => [
         "from.ok-hv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],
         "from.ok-kv.to.ok"     => [ [ "sendMail" => true, "attachForm" => true ] ],

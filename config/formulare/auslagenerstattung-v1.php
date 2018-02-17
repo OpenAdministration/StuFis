@@ -17,7 +17,7 @@ $config = [
         ],
     ],
     "mailTo" => [ "mailto:ref-finanzen@tu-ilmenau.de", "field:projekt.org.mail", "field:antragsteller.email" ],
-    "referenceField" => [ "name" => "genehmigung.antrag", "type" => "otherForm" ],
+    "referenceField" => ["name" => "genehmigung", "type" => "otherForm"],
     "fillOnCopy" => [
         [ "name" => "genehmigung.recht", "type" => "radio", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht" ] ],
         [ "name" => "genehmigung.recht.stura.beschluss", "type" => "text", "prefill" => "otherForm", "otherForm" => [ "field:genehmigung", "genehmigung.recht.stura.beschluss" ] ],
@@ -104,7 +104,14 @@ $layout = [
     [
         "type" => "h2", /* renderer */
         "id" => "head1",
-        "autoValue" => "value:projekt.name",
+        "autoValue" => "value:antragsteller.name",
+        "hideInStates" => ["draft"],
+    ],
+    [
+        "type" => "h2", /* renderer */
+        "id" => "head2",
+        "value" => "Neue Auslagenerstattung erstellen",
+        "hideInStates" => ["wip", "ok-hv", "ok-kv", "ok", "instructed", "payed", "revoked",],
     ],
 
     [
@@ -113,6 +120,7 @@ $layout = [
         "opts" => ["well"],
         "id" => "group0",
         "title" => "Genehmigung",
+    
         "children" => [
             # Änderungen an diesem Feld brauchen eine Aktualisierung der *.titel und *.konto Felder und dort neben haushaltsplan.otherForm/kostenstellenplan.otherForm auch neue Select-Inhalte.
             # Ansatz: *alten* Wert speichern und Formular neuladen mit einem passenden Override
@@ -122,60 +130,61 @@ $layout = [
             [ "id" => "genehmigung.recht.grp",   "title" =>"Rechtsgrundlage",        "type" => "group",    "width" => 12, "children" => [
 
                 [ "id" => "genehmigung.recht.grp.0", "type" => "group",    "width" => 12, "children" => [
-                    [ "id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, "opts" => ["required"], ],
+                    ["id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12, "opts" => ["readonly", "required"],],
                 ], ],
                 [ "id" => "genehmigung.recht.grp.1", "type" => "group",    "width" => 12, "children" => [
-                    [ "id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, "opts" => ["required"], ],
+                    ["id" => "genehmigung.recht", "text" => "Fahrtkosten: StuRa-Beschluss 21/20-08: Fahrtkosten", "type" => "radio", "value" => "fahrt", "width" => 12, "opts" => ["readonly", "required"],],
                 ], ],
                 [ "id" => "genehmigung.recht.grp.2", "type" => "group",    "width" => 12, "children" => [
-                    [ "id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, "opts" => ["required"], ],
+                    ["id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12, "opts" => ["readonly", "required"],],
                 ], ],
 
                 [ "id" => "genehmigung.recht.grp.3", "type" => "group",    "width" => 12, "children" => [
                     [ "id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura",
                      "width" => [12, 12, 6, 6],
-                     "opts" => ["required"], ],
+                        "opts" => ["readonly", "required"],],
                     [ "id" => "genehmigung.recht.stura.beschluss", "title" => "Beschluss-Nr", "type" => "text",
-                     "width" => [ 6, 6, 2, 2], ],
+                        "width" => [6, 6, 2, 2], "opts" => ["readonly"],],
                     [ "id" => "genehmigung.recht.stura.datum", "title" => "vom", "type" => "date",
-                     "width" => [ 6, 6, 2, 2], ],
+                        "width" => [6, 6, 2, 2], "opts" => ["readonly"],],
                     [ "id" => "genehmigung.recht.stura.empty", "type" => "plaintext", "width" => 2, ],
                 ], ],
 
                 [ "id" => "genehmigung.recht.grp.4", "type" => "group",    "width" => 12, "children" => [
                     [ "id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR\nMuss auf der nächsten StuRa Sitzung bekannt gemacht werden\nund erhält dann eine StuRa-Beschluss-Nr.", "type" => "radio", "value" => "fsr",
                      "width" => [12, 12, 6, 6, ],
-                     "opts" => ["required"], ],
+                        "opts" => ["readonly", "required"],],
                     [ "id" => "genehmigung.recht.int.gremium", "title" => "Gremium", "type" => "text",
-                     "width" => [ 4, 4, 2, 2, ],
+                        "width" => [4, 4, 2, 2,], "opts" => ["readonly"],
                      "onClickFillFrom" => "projekt.org.name"],
                     [ "id" => "genehmigung.recht.int.datum", "title" => "vom", "type" => "date",
-                     "width" => [ 4, 4, 2, 2, ],
+                        "width" => [4, 4, 2, 2,], "opts" => ["readonly"],
                      "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
                     [ "id" => "genehmigung.recht.int.sturabeschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
-                     "width" => [ 4, 4, 2, 2, ], ],
+                        "width" => [4, 4, 2, 2,], "opts" => ["readonly"],],
                 ], ],
 
                 [ "id" => "genehmigung.recht.grp.4b", "type" => "group",    "width" => 12, "children" => [
                     [ "id" => "genehmigung.recht", "text" => "Gremienkleidung: \n StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.", "type" => "radio", "value" => "kleidung",
                      "width" => [12, 12, 6, 6, ],
-                     "opts" => ["required"], ],
+                        "opts" => ["readonly", "required"],],
                     [ "id" => "genehmigung.recht.kleidung.gremium", "title" => "Gremium", "type" => "text",
-                     "width" => [ 4, 4, 2, 2, ],
+                        "width" => [4, 4, 2, 2,], "opts" => ["readonly"],
                      "onClickFillFrom" => "projekt.org.name"],
                     [ "id" => "genehmigung.recht.kleidung.datum", "title" => "vom", "type" => "date",
-                     "width" => [ 4, 4, 2, 2, ],
+                        "width" => [4, 4, 2, 2,], "opts" => ["readonly"],
                      "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
                 ], ],
 
                 [ "id" => "genehmigung.recht.grp.5", "type" => "group",    "width" => 12, "children" => [
                     [ "id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",
-                     "width" => [12, 12, 6, 6],  ],
+                        "width" => [12, 12, 6, 6], "opts" => ["readonly"],],
                     [ "id" => "genehmigung.recht.other.reason", "title" => "Grund", "type" => "text",
-                     "width" => [ 12, 12, 6, 6], ],
+                        "width" => [12, 12, 6, 6], "opts" => ["readonly"],],
                 ], ],
 
             ], ],
+            ["id" => "genehmigung.titel2", "type" => "otherForm"],
             [ "id" => "genehmigung.titel",   "title" =>"Titel im Haushaltsplan",             "type" => "ref",       "width" => 6, "opts" => [ "hasFeedback", "no-invref", "edit-skip-referencesId" ], "placeholder" => "optional",
              "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], [ "titel.ausgaben" => "Ausgaben", "titel.einnahmen" => "Einnahmen" ] ],
              "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
@@ -186,14 +195,12 @@ $layout = [
              "referencesKey" => ["kosten" => "kosten.nummer" ],
              "referencesId" => "kostenstellenplan.otherForm",
             ],
-            [ "id" => "genehmigung.antrag",  "title" =>"Antrag auf Erstattung war",  "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback", "readonly"] ],
-            [ "id" => "genehmigung.modified", "text" =>"Genehmigte Erstattung weicht vom Antrag ab", "type" => "checkbox", "width" => 12, "opts" => [ "toggleReadOnly" ], "value" => "yes" ],
-            [ "id" => "genehmigung.sachlicheRichtigkeit", "title" =>"Sachliche Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required", "readonly" ]],
-            [ "id" => "genehmigung.rechnerischeRichtigkeit", "title" =>"Rechnerische Richtigkeit", "type" => "signbox", "width" => 6, "opts" => [ "required", "readonly" ] ],
+            /*[ "id" => "genehmigung.antrag",  "title" =>"Antrag auf Erstattung war",  "type" => "otherForm",     "width" => 12, "opts" => ["required", "hasFeedback", "readonly"] ],
+            [ "id" => "genehmigung.modified", "text" =>"Genehmigte Erstattung weicht vom Antrag ab", "type" => "checkbox", "width" => 12, "opts" => [ "toggleReadOnly" ], "value" => "yes" ],*/
+            ["id" => "genehmigung.sachlicheRichtigkeit", "title" => "Sachliche Richtigkeit", "type" => "signbox", "width" => 6, "opts" => ["required", "readonly"], "hideInStates" => ["draft", "wip",],],
+            ["id" => "genehmigung.rechnerischeRichtigkeit", "title" => "Rechnerische Richtigkeit", "type" => "signbox", "width" => 6, "opts" => ["required", "readonly"], "hideInStates" => ["draft", "wip",],],
         ],
     ],
-
-
     [
         "type" => "group", /* renderer */
         "width" => 12,
@@ -214,10 +221,11 @@ $layout = [
         "id" => "group2",
         "title" => "Informationen zur Zahlung",
         "children" => [
-            [ "id" => "antragsteller.name",  "title" =>"Zahlungsempfänger (Name)",        "type" => "text",  "width" => 6, "placeholder" => "Vorname Nachname", /*"prefill" => "user:fullname",*/ "opts" => ["required", "hasFeedback"],"toggleReadOnly" => [ "genehmigung.modified", "yes" ] ],
-            [ "id" => "vwzk",                "title" =>"Zusätzlicher Verwendungszeck (z.B. Rechnungsnummer)",       "type" => "text",  "width" => 6,  "placeholder" => "optional","toggleReadOnly" => [ "genehmigung.modified", "yes" ]],
-            [ "id" => "iban",                "title" =>"Bankverbindung (IBAN) des Zahlungsempfängers",       "type" => "iban",  "width" => 6, "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-            [ "id" => "antragsteller.email", "title" =>"Person für Rückfragen (eMail)",       "type" => "email",  "width" => 6, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+            ["id" => "antragsteller.name", "title" => "Zahlungsempfänger (Name)", "type" => "text", "width" => 6, "placeholder" => "Vorname Nachname", /*"prefill" => "user:fullname",*/
+                "opts" => ["required", "hasFeedback"], "onlyEditableInStates" => ["wip", "draft"],],
+            ["id" => "vwzk", "title" => "Zusätzlicher Verwendungszeck (z.B. Rechnungsnummer)", "type" => "text", "width" => 6, "placeholder" => "optional", "onlyEditableInStates" => ["wip", "draft"],],
+            ["id" => "iban", "title" => "Bankverbindung (IBAN) des Zahlungsempfängers", "type" => "iban", "width" => 6, "opts" => ["required", "hasFeedback"], "onlyEditableInStates" => ["wip", "draft"],],
+            ["id" => "antragsteller.email", "title" => "Person für Rückfragen (eMail)", "type" => "email", "width" => 6, "placeholder" => "Vorname.Nachname@tu-ilmenau.de", "prefill" => "user:mail", "opts" => ["required", "hasFeedback"], "onlyEditableInStates" => ["wip", "draft"],],
         ],
     ],
 
@@ -228,7 +236,7 @@ $layout = [
         "opts" => ["with-row-number"],
         "width" => 12,
         "title" => "Eingereichte Belege",
-        "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
+        "onlyEditableInStates" => ["wip", "draft"],
         "renderOptRead" => [ "no-form-compress" ],
         "columns" => [
             [ "id" => "geld",
@@ -236,15 +244,15 @@ $layout = [
              "width" => 12,
              "printSumFooter" => ["einnahmen","ausgaben"],
              "children" => [
-                 [ "id" => "geld.datum",        "title" => "Belegdatum",                  "type" => "date",   "width" => 3, "opts" => [ "required" ],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-                 [ "id" => "geld.beschreibung", "title" => "Beschreibung",           "type" => "text",   "width" => 3, "placeholder" => "Hinweis",  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-                 [ "id" => "geld.file",         "title" => "Beleg",                  "type" => "file",   "width" => 6,  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+                 ["id" => "geld.datum", "title" => "Belegdatum", "type" => "date", "width" => 3, "opts" => ["required"], "onlyEditableInStates" => ["wip", "draft"],],
+                 ["id" => "geld.beschreibung", "title" => "Beschreibung", "type" => "text", "width" => 3, "placeholder" => "Hinweis", "onlyEditableInStates" => ["wip", "draft"],],
+                 ["id" => "geld.file", "title" => "Beleg", "type" => "file", "width" => 6, "onlyEditableInStates" => ["wip", "draft"],],
                  [
                      "type" => "table", /* renderer */
                      "id" => "finanzauslagenposten",
                      "opts" => ["with-row-number", "with-headline"],
                      "width" => 12,
-                     "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
+                     "onlyEditableInStates" => ["wip", "draft"],
                      "columns" => [
                          [ "id" => "geld.posten",       "name" => "Posten aus Genehmigung", "type" => "ref",
                           "references" => ["field:genehmigung", "finanzgruppentbl"],
@@ -256,19 +264,22 @@ $layout = [
                               "geld.konto" /* destination */ => /* remote source */ [ "geld.konto" ],
                           ]
                          ],
-                         [ "id" => "geld.einnahmen",    "name" => "Einnahmen",              "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
-                         [ "id" => "geld.ausgaben",     "name" => "Ausgaben",               "type" => "money",  "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"],   "opts" => ["sum-over-table-bottom"],  "toggleReadOnly" => [ "genehmigung.modified", "yes" ], ],
+                         ["id" => "geld.einnahmen", "name" => "Einnahmen", "type" => "money", "width" => 2, "currency" => "€", "addToSum" => ["einnahmen", "einnahmen.beleg"], "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["wip", "draft"],],
+                         ["id" => "geld.ausgaben", "name" => "Ausgaben", "type" => "money", "width" => 2, "currency" => "€", "addToSum" => ["ausgaben", "ausgaben.beleg"], "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["wip", "draft"],],
                          [ "id" => "geld.titel",       "name" => "Titel",                   "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["edit-skip-referencesId"],
                           "references" => [ [ "type" => "haushaltsplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], [ "titel.ausgaben" => "Ausgaben", "titel.einnahmen" => "Einnahmen" ] ],
                           "referencesKey" => [ "titel.einnahmen" => "titel.einnahmen.nummer", "titel.ausgaben" => "titel.ausgaben.nummer" ],
                           "referencesId" => "haushaltsplan.otherForm",
                           "refValueIfEmpty" => "genehmigung.titel",
+                             "hideInStates" => ["draft",],
                          ],
                          [ "id" => "geld.konto",       "name" => "Kostenstelle",            "type" => "ref",    "width" => 2, "placeholder" => "s. Genehmigung", "opts" => ["edit-skip-referencesId"],
                           "references" => [ [ "type" => "kostenstellenplan", "revision" => date("Y"), "revisionIsYearFromField" => "genehmigung.jahr", "state" => "final" ], "kosten" ],
                           "referencesKey" => [ "kosten" => "kosten.nummer" ],
                           "referencesId" => "kostenstellenplan.otherForm",
                           "refValueIfEmpty" => "genehmigung.konto",
+                             "hideInStates" => ["draft",],
+                            
                          ],
                      ],
                  ],
@@ -283,7 +294,7 @@ $layout = [
         "title" => "Mehrere Belege hochladen (werden automatisch oben als neue Zeilen ergänzt)",
         "width" => 12,
         "destination" => "geld.file",
-        "toggleReadOnly" => [ "genehmigung.modified", "yes" ],
+        "onlyEditableInStates" => ["wip", "draft"],
     ],
 
     [

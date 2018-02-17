@@ -10,7 +10,7 @@ $config = [
     "proposeNewState" => [
         "draft" => [ "new", ],
     ],
-    "buildFrom" => [ "projekt-intern" ],
+    //"buildFrom" => [ "projekt-intern" ],
     "categories" => [
         "need-action" => [
             [ "state" => "draft", "creator" => "self" ],

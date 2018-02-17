@@ -101,6 +101,6 @@ for ($year = 2017; $year <= date("Y") + 1; $year++):
     }; // foreach
     
     /* formname , formrevision */
-    registerForm("haushaltsplan", "v2-$year", $layout, $config);
+    registerForm("haushaltsplan", "$year", $layout, $config);
 
 endfor;
