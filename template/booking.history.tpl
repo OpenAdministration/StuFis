@@ -1,8 +1,8 @@
 <?php
 //var_dump($content);
-
+if (!isset($content)) return;
 ?>
-<div class="container">
+<div class="container col-md-8">
     <table class="table" align="right">
 
         <?php
@@ -12,12 +12,12 @@
 
         <thead>
             <tr>
-                <th>Lfd. Nr</th>
+                <th class="col-xs-1">Buchungs Nr</th>
                 <th>Datum</th>
                 <th>Beleg ID</th>
                 <th>Betrag (EUR)</th>
                 <th>Titel</th>
-                <th>Zahlungs ID</th>
+                <th>Konto-ZahlungsID</th>
                 <th>Kommentar</th>
             </tr>
         </thead>
@@ -32,7 +32,7 @@
                 echo $res['datum'];
                 echo "</td>";
                 echo "<td>";
-                echo $res['belegId'];
+                echo generateLinkFromID($res['belegId'], "");
                 echo "</td>";
                 echo "<td align='right'>";
                 echo number_format(abs($res['ausgaben']-$res['einnahmen']),2). "€";
@@ -41,7 +41,7 @@
                 echo $res['titel'];
                 echo "</td>";
                 echo "<td>";
-                echo $res['zahlungId'];
+                echo generateLinkFromID($res['zahlungId'], "");
                 echo "</td>";
                 echo "<td>";
                 //echo $res['zahlungId'];
