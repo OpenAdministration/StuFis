@@ -42,6 +42,7 @@ function notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action
   global $URIBASE, $URIBASEREF, $ANTRAGMAILTO, $mail_object, $STORAGE;
 
   $attachAnhang = (bool) $action["attachForm"];
+    $config = (String)$action["text"];
 
   $classConfig = getFormClass($antrag["type"]);
   $revConfig = getFormConfig($antrag["type"], $antrag["revision"]);
@@ -57,7 +58,7 @@ function notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action
 
   if (!isset($revConfig["mailTo"])) {
     $mailTo = "ref-it@tu-ilmenau.de";
-    $subject = "[KEINE MAILTO ANGABE] $subject";
+      $subject = "[KEINE MAILTO ANGABE]";
   } else {
     $mailTo = $revConfig["mailTo"];
   }
@@ -91,21 +92,22 @@ function notifyStateTransitionMail($antrag, $newState, $newStateCreator, $action
   $subject = "Information zu {$antragtitle} ({$classTitle})";
 
   $newStateTxt = $classConfig["state"][$newState][0];
-
-  $txt = "";
-  $txt .= "Hallo,\n";
-  $txt .= "\n";
-  $txt .= "der Antrag\n";
-  $txt .= "  {$classTitle}\n";
-  $txt .= "  {$antragtitle}\n";
-  $txt .= "wurde in den Bearbeitungsstatus \"{$newStateTxt}\" verschoben.\n";
-  $txt .= "\n";
-  $txt .= $citeText;
-  $txt .= "Mit freundlichen Grüßen,\n";
-  $txt .= "Referat Finanzen\n";
-  $txt .= "\n";
-  $txt .= "{$antragurl}";
-
+    /*
+    $txt = "";
+    $txt .= "Hallo,\n";
+    $txt .= "\n";
+    $txt .= "der Antrag\n";
+    $txt .= "  {$classTitle}\n";
+    $txt .= "  {$antragtitle}\n";
+    $txt .= "wurde in den Bearbeitungsstatus \"{$newStateTxt}\" verschoben.\n";
+    $txt .= "\n";
+    $txt .= $citeText;
+    $txt .= "Mit freundlichen Grüßen,\n";
+    $txt .= "Referat Finanzen\n";
+    $txt .= "\n";
+    $txt .= "{$antragurl}";
+    */
+    $txt = $config;
   $boundary = strtoupper(md5(uniqid(time())));
   $message = "This is a multi-part message in MIME format -- Dies ist eine mehrteilige Nachricht im MIME-Format" . "\r\n" .
              "--$boundary" ."\r\n" .
