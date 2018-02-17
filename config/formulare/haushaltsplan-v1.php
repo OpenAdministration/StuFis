@@ -18,7 +18,6 @@ $layout = [
         "id" => "head1",
         "value" => "Haushaltsplan $year",
     ],
-
 ];
 
 foreach ( ["einnahmen" => "Einnahmen", "ausgaben" => "Ausgaben"] as $id => $caption) {
