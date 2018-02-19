@@ -37,7 +37,7 @@ class HTML_Renderer
                                  href="#collapse<?php echo $i; ?>">
 
                                 <h4 class="panel-title">
-                                    <i class="fa fw fa-togglebox"></i> <?= $gremium ?>
+                                    <i class="fa fa-fw fa-togglebox"></i> <?= $gremium ?>
                                 </h4>
                             </div>
                             <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">
@@ -52,7 +52,7 @@ class HTML_Renderer
                                                      data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
                                                      href="#collapse<?php echo $i . "-" . $j; ?>">
                                                     <h4 class="panel-title">
-                                                        <i class="fa fw fa-togglebox"></i><span
+                                                        <i class="fa fa-fw fa-togglebox"></i><span
                                                                 class="panel-projekt-name"><?= $projekt["_inhalt"]["projekt.name"] ?></span>
                                                         <span class="label label-info project-state-label"><?php echo getStateString($projekt["type"], $projekt["revision"], $projekt["state"]); ?></span>
                                                     </h4>
@@ -107,47 +107,88 @@ class HTML_Renderer
         </div>
         <?php
     }
-    public static function renderHaushaltsplan(){ ?>
-        <div class="main container col-md-10">
-            <!--<form>
-                <div class="input-group col-md-3 pull-right">
-                    <input type="number" class="form-control" name="year" value=<?=date("Y")?>>
+    /**
+    * @param int $selected_id default: oldest HHP with state final
+    *
+    * @return bool|void false if error else void
+    */
+    public static function renderHaushaltsplan($selected_id = null){?>
+        <div class="main container col-md-11"> <?php
+        $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
+        if(!isset($selected_id)){
+            foreach ($hhps as $id => $hhp){
+                if($hhp["state"] === "final"){
+                    $selected_id = $id;
+                }
+            }
+        } ?>
+            <form>
+                <div class="input-group col-xs-2 pull-right">
+                    <!--<input type="number" class="form-control" name="year" value=<?=date("Y")?>>-->
+                    <input type="hidden" name="tab" value="hhp">
+                    <select class="selectpicker" name="id"><?php
+                    foreach($hhps as $id => $hhp){?>
+                        <option value="<?=$id?>" <?= $id == $selected_id ? "selected" : ""?> data-subtext="<?= getStateString($hhp["type"],$hhp["revision"],$hhp["state"])?>"><?=$hhp["revision"]?></option>
+                    <?php } ?>
+                    </select>
                     <div class="input-group-btn">
-                        <button type="submit" class="btn btn-primary"><i class="fa fw fa-refresh"></i> Aktualisieren</button>
+                        <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i> Aktualisieren</button>
                     </div>
                 </div>
-            </form>-->
-            <h1>Haushaltspläne</h1>
-            <?php
-
-            $res = dbFetchAll("antrag",["type" => "haushaltsplan"],["lastupdated"]);
-            $header = ["ID", "Jahr", "Status","zuletzt geändert"];
+            </form>
+            <?php if(array_search($selected_id,array_keys($hhps)) === false){
+                die("Konnte zugehörigen HHP nicht finden. :(");
+                return false;
+            }
+            $editable = ($hhps[$selected_id]["state"] !== "final");
             ?>
-               <table class="table">
+            <button class="btn btn-danger">Diesen HHP löschen</button>
+            <button class="btn btn-primary">neuen HHP anlegen</button>
+            <button class="btn btn-warning">Statuswechsel</button>
+            <?php
+            $hhp = $hhps[$selected_id];
+            $groups = dbFetchAll("haushaltstitel", ["hhpgruppen_id","gruppen_name","titel_nr","titel_name","einnahmen","ausgaben"], ["hhp_id" => $selected_id], [["table" => "haushaltsgruppen","on" => ["haushaltstitel.hhpgruppen_id","haushaltsgruppen.id"], "type" => "inner"]], ["titel_nr" => true], true, false);
+            //var_dump($groups);
+            ?>
+            <h1>Haushaltsplan <?= $hhp["revision"]." (".getStateString($hhp["type"],$hhp["revision"],$hhp["state"]). ")" ?></h1>
+            <table class="table table-striped">
                 <thead>
                     <tr>
-                        <?php
-                        foreach ($header as $titel){
-                            echo "<th>$titel</th>";
-                        }
-                        ?>
+                        <th></th>
+                        <th>Titel Nr</th>
+                        <th>Titel Name</th>
+                        <th class="money">soll-Einnahmen</th>
+                        <th class="money">ist-Einnahmen</th>
+                        <th class="money">soll-Ausgaben</th>
+                        <th class="money">ist-Ausgaben</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($res as $row){ ?>
-                <?php if(count($row) === 0) continue;?>
-                    <tr>
-                        <td><?php echo $row["id"];?></td>
-                        <td><?php echo generateLinkFromID($row["revision"],$row["token"]); ?></td>
-                        <td><div class="label label-primary"><?php echo getStateString($row["type"],$row["revision"],$row["state"]);?></div></td>
-                        <td><?php echo $row["lastupdated"];?></td>
-                    </tr>
-                <?php }?>
-
+                <?php
+                foreach ($groups as $group){
+                    if(count($group) === 0) continue;
+                    ?>
+                <tr>
+                    <th class="bg-info" colspan="7"><?= $group[0]["gruppen_name"] ?></th>
+                </tr>
+                    <?php
+                    foreach ($group as $row){ ?>
+                        <tr>
+                            <td></td>
+                            <td><?= $row["titel_nr"]?></td>
+                            <td><?= $row["titel_name"]?></td>
+                            <td class="money"><?= $row["einnahmen"] != 0? convertDBValueToUserValue($row["einnahmen"],"money"):""?></td>
+                            <td class="money"><?= 0 != 0? convertDBValueToUserValue($row["einnahmen"],"money"):""?></td>
+                            <td class="money"><?= $row["ausgaben"] != 0 ? convertDBValueToUserValue($row["ausgaben"],"money"):""?></td>
+                            <td class="money"><?= 0 != 0 ? convertDBValueToUserValue($row["ausgaben"],"money"):""?></td>
+                        </tr>
+                    <?php
+                    }
+                } ?>
                 </tbody>
             </table>
-        </div>
-        <?php
+        </div> <?php
+        return;
     }
 
     public static function renderMyProfile($nonce)
@@ -191,10 +232,10 @@ class HTML_Renderer
         foreach($groups as $nr => $data){
             $name2Nr[$data["name"]] = $nr;
             $fields = $data["fields"];
-            $res[$data["name"]] = dbFetchAll("antrag",$fields,[],[],true,true);
+            $res[$data["name"]] = dbFetchAll("antrag", [], $fields, [], [], true, true);
             $ids = array_keys($res[$data["name"]]);
             foreach($ids as $id){
-                $res[$data["name"]][$id]["_inhalt"] = betterValues(dbFetchAll("inhalt",["antrag_id" => $id]));
+                $res[$data["name"]][$id]["_inhalt"] = betterValues(dbFetchAll("inhalt",[],["antrag_id" => $id]));
                 //var_dump($res[$data["name"]]);
             }
             //var_dump($res);
