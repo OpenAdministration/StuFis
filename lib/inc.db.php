@@ -56,28 +56,18 @@ $scheme["comments"] = [
 ];
 
 $scheme["booking"] = [
-    "id" => "INT NOT NULL AUTO_INCREMENT",
+    "id" => "INT NOT NULL PRIMARY KEY AUTO_INCREMENT",
+    "titel_id" => "varchar(256) NOT NULL",
     "zahlung_id" => "INT NOT NULL",
     "beleg_id" => "INT NOT NULL",
     "timestamp" => "DATETIME NOT NULL",
     "creatorFullName" => "VARCHAR(256) NOT NULL",
     "comment" => "varchar(2048) NOT NULL",
-    "value" => "INT NOT NULL",
-    "titel" => "varchar(256) NOT NULL",
+    "value" => "FLOAT NOT NULL",
     "kostenstelle" => "varchar(256) NOT NULL",
     "canceled" => "INT NOT NULL DEFAULT 0",
 ];
-/*
-$scheme["money"] = [
-    "antrag_id" => "INT NOT NULL",
-    "antrag_version" => "BIGINT NOT NULL",
-    "idx" => "INT NOT NULL",
-    "ausgaben" => "INT NOT NULL DEFAULT 0",
-    "einnahmen" => "INT NOT NULL DEFAULT 0",
-    "titel" => "varchar(256) NOT NULL",
-    "kostenstelle" => "varchar(256) NOT NULL",
-];
-*/
+
 $scheme["user"] = [
     "id" => "INT NOT NULL AUTO_INCREMENT",
     "fullname" => "varchar(255) NOT NULL",
@@ -99,7 +89,21 @@ $scheme['haushaltsgruppen'] = [
     "hhp_id" => " int NOT NULL",
     "gruppen_name" => " varchar(128) NOT NULL",
 ];
-
+$scheme["projektposten"] = [
+    "id" => " INT NOT NULL AUTO_INCREMENT",
+    "project_id" => " INT NOT NULL",
+    "title_id" => " INT NOT NULL",
+    "einnahmen" => " FLOAT NULL",
+    "ausgaben" => " FLOAT NULL",
+    "name" => " VARCHAR(128) NOT NULL",
+];
+$scheme["beleg_posten"] = [
+    "beleg_nr" => "INT NOT NULL",
+    "posten_id" => "INT NOT NULL",
+    "antrag_id" => "INT NOT NULL",
+    "einnahmen" => "FLOAT NULL",
+    "ausgaben" => "FLOAT NULL",
+];
 
 global $validFields;
 $validFields = ["*"];

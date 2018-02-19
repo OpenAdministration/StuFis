@@ -96,9 +96,10 @@ $r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}booking");
 if ($r === false){
     $pdo->query("CREATE TABLE {$DB_PREFIX}booking (" .
         buildColDef($scheme["booking"]) . "
-                PRIMARY KEY (id),
                 FOREIGN KEY (beleg_id) REFERENCES {$DB_PREFIX}antrag(id),
-                FOREIGN KEY (zahlung_id) REFERENCES {$DB_PREFIX}antrag(id)
+                FOREIGN KEY (zahlung_id) REFERENCES {$DB_PREFIX}antrag(id),
+                FOREIGN KEY (titel_id) REFERENCES {$DB_PREFIX}haushaltstitel(id),
+                FOREIGN KEY (user_id) REFERENCES {$DB_PREFIX}user(id)
               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
 }
 
@@ -127,3 +128,19 @@ if ($r === false){
                 FOREIGN KEY (`hhpgruppen_id`) REFERENCES {$DB_PREFIX}haushaltsgruppen(`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;") or httperror(print_r($pdo->errorInfo(), true));
 }
+
+$pdo->query("
+CREATE TABLE IF NOT EXISTS {$DB_PREFIX}projektposten (" .
+    buildColDef($scheme["projektposten"]) . "
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`title_id`) REFERENCES {$DB_PREFIX}haushaltsplanposten` (`id`)
+)ENGINE = InnoDB DEFAULT CHARSET=utf8;");
+
+$pdo->query("
+CREATE TABLE IF NOT EXISTS {$DB_PREFIX}beleg_posten (" .
+    buildColDef($scheme["beleg_posten"]) . "
+  PRIMARY KEY (`posten_id`, `beleg_nr`, `antrag_id`),
+    FOREIGN KEY (posten_id) REFERENCES {$DB_PREFIX}posten (id)
+    )ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+");

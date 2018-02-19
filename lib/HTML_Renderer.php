@@ -116,7 +116,7 @@ class HTML_Renderer
         <div class="main container col-md-11"> <?php
         $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
         if(!isset($selected_id)){
-            foreach ($hhps as $id => $hhp){
+            foreach (array_reverse($hhps,true) as $id => $hhp){
                 if($hhp["state"] === "final"){
                     $selected_id = $id;
                 }
@@ -147,7 +147,11 @@ class HTML_Renderer
             <button class="btn btn-warning">Statuswechsel</button>
             <?php
             $hhp = $hhps[$selected_id];
-            $groups = dbFetchAll("haushaltstitel", ["hhpgruppen_id","gruppen_name","titel_nr","titel_name","einnahmen","ausgaben"], ["hhp_id" => $selected_id], [["table" => "haushaltsgruppen","on" => ["haushaltstitel.hhpgruppen_id","haushaltsgruppen.id"], "type" => "inner"]], ["titel_nr" => true], true, false);
+            $groups = dbFetchAll("haushaltstitel",
+                ["hhpgruppen_id","gruppen_name","titel_nr","titel_name","einnahmen","ausgaben"],
+                ["hhp_id" => $selected_id],
+                [["table" => "haushaltsgruppen","on" => ["haushaltstitel.hhpgruppen_id","haushaltsgruppen.id"], "type" => "inner"]], ["titel_nr" => true],
+                true, false);
             //var_dump($groups);
             ?>
             <h1>Haushaltsplan <?= $hhp["revision"]." (".getStateString($hhp["type"],$hhp["revision"],$hhp["state"]). ")" ?></h1>
