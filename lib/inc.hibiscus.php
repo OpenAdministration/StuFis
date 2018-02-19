@@ -144,7 +144,7 @@ function fetchFromHibiscus() {
     $f = ["type" => "kontenplan"];
     $f["state"] = "final";
     $f["revision"] = substr($datum,0,4); // year
-    $al = dbFetchAll("antrag", $f);
+      $al = dbFetchAll("antrag", $f, []);
     if (count($al) != 1) die("Kontenplan nicht gefunden: ".print_r($f,true));
     $kpId = $al[0]["id"];
     $inhalt[] = [ "fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId];
@@ -163,7 +163,7 @@ function fetchFromHibiscusAnfangsbestand() {
   $f = ["type" => "kontenplan"];
   $f["state"] = "final";
   $f["revision"] = $year;
-  $al = dbFetchAll("antrag", $f);
+    $al = dbFetchAll("antrag", $f, []);
   if (count($al) != 1) die("Kontenplan nicht gefunden: ".print_r($f,true));
   $kpId = $al[0]["id"];
 

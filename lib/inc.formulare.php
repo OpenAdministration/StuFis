@@ -1266,7 +1266,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
 
         $readPermitted = false;
         if ($otherAntrag !== false) {
-            $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+            $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]], []);
             $otherAntrag["_inhalt"] = $otherInhalt;
 
             $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
@@ -2397,7 +2397,7 @@ function otherForm(&$layout, &$ctrl, $renderOpts = "") {
                 }
             }
         }
-        $al = dbFetchAll("antrag", $f);
+        $al = dbFetchAll("antrag", $f, []);
         $currentFormId = false;
         if (isset($ctrl["_values"])) {
             $currentFormId = $ctrl["_values"]["id"];
@@ -3281,13 +3281,13 @@ function renderFormItemInvRef($layout,$ctrl) {
                 $f = ["type" => $formFilterDef["type"]];
                 if (isset($formFilterDef["state"]))
                     $f["state"] = $formFilterDef["state"];
-                $al = dbFetchAll("antrag", $f);
+                $al = dbFetchAll("antrag", $f, []);
                 foreach ($al as $a) {
                     if (isset($formFilterDef["referenceFormField"])) {
                         $r0 = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId ]);
                         $r1 = false;
                         if ($refId === false) # we're not in a table so lookup otherForm in-Table references (this is unsupported if we're in table)
-                            $r1 = dbFetchAll("inhalt", ["antrag_id" => $a["id"], "fieldname" => [ "LIKE", $formFilterDef["referenceFormField"]."[%" ], "contenttype" => "otherForm", "value" => $currentFormId ]);
+                            $r1 = dbFetchAll("inhalt", ["antrag_id" => $a["id"], "fieldname" => ["LIKE", $formFilterDef["referenceFormField"] . "[%"], "contenttype" => "otherForm", "value" => $currentFormId], []);
                         if ($r0 === false && ($r1 === false || count($r1) == 0)) continue;
                     }
                     $forms[$a["id"]]["antrag"] = $a;

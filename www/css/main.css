@@ -296,6 +296,7 @@ a.disabled-option span {
 
 .profiling-output {
     position: fixed;
+    background-color: white;
     top: calc(100% - 50px);
     left: 10px;
     z-index: 10;
@@ -487,4 +488,8 @@ ul.nav-pills.nav-stacked > li.label-info {
     text-align: center;
     border-radius: 5px;
     vertical-align: middle;
+}
+
+.money {
+    text-align: right;
 }

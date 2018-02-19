@@ -3,7 +3,7 @@ global $pdo;
 global $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX;
 global $scheme;
 global $dbWriteCounter;
-
+prof_flag("init-db-connection");
 $pdo = new PDO($DB_DSN, $DB_USERNAME, $DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
 
 $dbWriteCounter = 0;
@@ -85,106 +85,39 @@ $scheme["user"] = [
     "iban" => "varchar(32) NOT NULL",
 ];
 
-#foreach(array_reverse(array_keys($scheme)) as $k)
-#  $pdo->query("DROP TABLE {$DB_PREFIX}{$k}") or httperror(print_r($pdo->errorInfo(),true));
+$scheme['haushaltstitel'] = [
+    "id" => " int NOT NULL AUTO_INCREMENT",
+    "hhpgruppen_id" => " int NOT NULL",
+    "titel_name" => " varchar(128) NOT NULL",
+    "titel_nr" => " varchar(10) NOT NULL",
+    "einnahmen" => " int DEFAULT NULL",
+    "ausgaben" => " int DEFAULT NULL",
+];
 
-function buildColDef($fields){
-    $r = "";
-    foreach ($fields as $key => $val){
-        $r .= "$key $val,";
-    }
-    return $r;
-}
+$scheme['haushaltsgruppen'] = [
+    "id" => "int NOT NULL AUTO_INCREMENT",
+    "hhp_id" => " int NOT NULL",
+    "gruppen_name" => " varchar(128) NOT NULL",
+];
 
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}antrag");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}antrag (" .
-        buildColDef($scheme["antrag"]) . "
-                PRIMARY KEY (id,version),
-                UNIQUE (token)
-               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
 
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}inhalt");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}inhalt (" .
-        buildColDef($scheme["inhalt"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES {$DB_PREFIX}antrag(id) ON DELETE CASCADE
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
+global $validFields;
+$validFields = ["*"];
+$blacklist = ["log", "log_property"];
+foreach ($scheme as $tblname => $content){
+    $validFields[] = "$tblname.*";
+    if (!is_array($content)) continue;
+    if (in_array($tblname, $blacklist)) continue;
+    $colnames = array_keys($content);
+    $validFields = array_merge($colnames, $validFields);
+    $func = function(&$val, $key) use ($tblname){
+        $val = $tblname . "." . $val;
+    };
+    array_walk($colnames, $func);
+    $validFields = array_merge($colnames, $validFields);
 }
+$validFields = array_unique($validFields);
 
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}anhang");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}anhang (" .
-        buildColDef($scheme["anhang"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES {$DB_PREFIX}antrag(id) ON DELETE CASCADE
-               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
-
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}comments");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}comments (" .
-        buildColDef($scheme["comments"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES {$DB_PREFIX}antrag(id) ON DELETE CASCADE
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-    
-}
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}user");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}user (" .
-        buildColDef($scheme["user"]) . "
-                PRIMARY KEY (id),
-                UNIQUE (username)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
-
-# Log
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}log");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}log (
-                id INT NOT NULL AUTO_INCREMENT,
-                action VARCHAR(254) NOT NULL,
-                evtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                responsible VARCHAR(254),
-                PRIMARY KEY(id)
-               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
-
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}log_property");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}log_property (
-                id INT NOT NULL AUTO_INCREMENT,
-                log_id INT NOT NULL,
-                name VARCHAR(128) NOT NULL,
-                value LONGTEXT,
-                INDEX(log_id),
-                INDEX(name),
-                INDEX(name, value(256)),
-                PRIMARY KEY(id),
-                FOREIGN KEY (log_id) REFERENCES {$DB_PREFIX}log(id) ON DELETE CASCADE
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}booking");
-if ($r === false){
-    $pdo->query("CREATE TABLE {$DB_PREFIX}booking (" .
-        buildColDef($scheme["booking"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (beleg_id) REFERENCES {$DB_PREFIX}antrag(id),
-                FOREIGN KEY (zahlung_id) REFERENCES {$DB_PREFIX}antrag(id)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(), true));
-}
-
-$r = $pdo->query("SELECT COUNT(*) FROM {$DB_PREFIX}money");
-if ($r === false){
-    /*$pdo->query("CREATE TABLE {$DB_PREFIX}money (".
-                buildColDef($scheme["money"])."
-                PRIMARY KEY (antrag_id,antrag_version,idx),
-                FOREIGN KEY (antrag_id,antrag_version) REFERENCES {$DB_PREFIX}antrag(id,version)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($pdo->errorInfo(),true));*/
-}
 /*
  CREATE TABLE `finanzen-spielwiese`.`finanzformular__haushaltstitel`
 ( `id` INT NOT NULL AUTO_INCREMENT ,
@@ -196,6 +129,8 @@ if ($r === false){
   PRIMARY KEY (`id`,`hhp_id`)
 ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci
 */
+
+prof_flag("db-connection established");
 function dbQuote($string, $parameter_type = null){
     global $pdo;
     if ($parameter_type === null)
@@ -348,29 +283,116 @@ function dbGet($table, $fields){
 }
 
 /**
- * @param string $table
- * @param array  $fields
- * @param array  $sort
- * @param array  $showColumns
- * @param bool   $groupByFirstCol
- * @param bool   $unique
+ * @param string $tables            table which should be used in FROM statement
+ *                                  if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
+ * @param array  $showColumns       if [] there will be all coulums (*) shown
+ * @param array  $fields            val no array [colname => val,...]: WHERE colname = val AND ...
+ *
+ *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value AND ...
+ *
+ *                                  if value is array [colname => [operator,[v1,v2,...]],...]: WHERE colname operator (v1,v2,...) AND ...
+ * @param array  $joins             Fields which should be joined:
+ *                                  ["type"="inner",table => "tblname","on" => [["tbl1.col","tbl2.col"],...],"operator" => ["=",...]]
+ *                                  Will be: FROM $table INNER JOIN tblname ON (tbl1.col = tbl2.col AND ... )
+ *
+ *                                  accepted values (<u>default</u>):
+ *
+ *                                   * type: <u>inner</u>, natural, left, right
+ *
+ *                                   * operator: <u>=</u>, <, >,<>, <=, >=
+ *
+ *                                  There can be multiple arrays of the above structure, there will be processed in original order from php
+ * @param array  $sort              Order by key (field) with val===true ? asc : desc
+ * @param bool   $groupByFirstCol   First coloum will be row idx
+ * @param bool   $unique            First column is unique (better output with $groupByFirstCol=true)
  *
  * @return array|bool
  */
-function dbFetchAll($table, $fields, $sort = [], $showColumns = [], $groupByFirstCol = false, $unique = false){
-    global $pdo, $DB_PREFIX, $scheme;
+function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false){
+    global $pdo, $DB_PREFIX, $scheme, $validFields;
+    //check if all tables are known
+    if (!isset($tables)){
+        die("table not set");
+    }
+    if (!is_array($tables)){
+        $tables = [$tables];
+    }
+    foreach ($tables as &$table){
+        if (!isset($scheme[$table])) die("Unkown table $table");
+        $table = $DB_PREFIX . $table;
+    }
     
-    if (!isset($scheme[$table])) die("Unkown table $table");
-    $validFields = ["id", "antrag_id", "fieldname", "value", "contenttype", "state", "type", "value", "revision"];
-    $fields = array_intersect_key($fields, $scheme[$table], array_flip($validFields));
-    $sort = array_intersect_key($sort, $scheme[$table]);
+    //check if content of fields and sort are valid
+    $fields = array_intersect_key($fields, array_flip($validFields));
+    $sort = array_intersect_key($sort, array_flip($validFields));
+    //check join
+    $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
+    foreach ($joins as $key => &$join){
+        if (!isset($join["table"])){
+            die("no Jointable set!");
+        }else if (!in_array($join["table"], array_keys($scheme))){
+            die("Unknown Table " . $join["table"]);
+        }else if (isset($join["type"]) && !in_array(strtolower($join["type"]), ["inner", "left", "natural", "right"])){
+            die("Unknown Join type " . $join["type"]);
+        }
+        if (!isset($join["on"])) $join["on"] = [];
+        if (!is_array($join["on"])){
+            die("on '{$join["on"]}' has to be an array!");
+        }
+        if (count($join["on"]) === 2 && count($join["on"][0]) === 1){
+            $join["on"] = [$join["on"]];
+        }
+        foreach ($join["on"] as &$pair){
+            if (!is_array($pair)){
+                die("Join on '$pair' is not an array");
+            }
+            $newpair = array_intersect($pair, $validFields);
+            if (count($newpair) !== 2){
+                die("unvalid joinon pair:" . $pair[0] . " and " . $pair[1]);
+            }
+            $pair = $newpair;
+        }
+        if (isset($join["operator"])){
+            if (!is_array($join["operator"])) $join["operator"] = [$join["operator"]];
+            foreach ($join["operator"] as $op){
+                if (!in_array($op, $validJoinOnOperators)){
+                    die("unallowed join operator '$op' in {$key}th join");
+                }
+            }
+        }else{
+            $join["operator"] = array_fill(0, count($join["on"]), "=");
+        }
+        if (count($join["on"]) !== count($join["operator"])){
+            die("not same amount of on-pairs(" . count($join["on"]) . ") and operators (" . count($join["operator"]) . ")!");
+        }
+        
+    }
+    //
+    //prebuild sql
+    //
+    if (!empty($showColumns)){
+        $cols = [];
+        foreach ($showColumns as $col){
+            if (in_array($col, $validFields)){
+                if (strpos($col, ".")){
+                    $cols[] = $DB_PREFIX . $col;
+                }else{
+                    $cols[] = $col;
+                }
+                
+            }
+            
+        }
+    }else{
+        $cols = ["*"];
+    }
     $c = [];
     $vals = [];
     foreach ($fields as $k => $v){
         if (is_array($v)){
-            if (strcasecmp($v[0], "in") == 0 && is_array($v[1])){
+            if (is_array($v[1])){
                 $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                $c[] = quoteIdent($k) . " in (" . $tmp . ")";
+                $c[] = quoteIdent($k) . " $v[0] (" . $tmp . ")";
                 $vals = array_merge($vals, $v[1]);
             }else{
                 $c[] = quoteIdent($k) . " " . $v[0] . " ?";
@@ -381,33 +403,47 @@ function dbFetchAll($table, $fields, $sort = [], $showColumns = [], $groupByFirs
             $vals[] = $v;
         }
     }
+    $j = [];
+    foreach ($joins as $join){
+        $jtype = isset($join["type"]) ? (strtoupper($join["type"]) . " JOIN") : "NATURAL JOIN";
+        if (strcmp($jtype, "NATURAL JOIN") === true){
+            $j[] = "NATURAL JOIN " . $DB_PREFIX . $join["table"];
+        }else{
+            $jon = [];
+            for ($i = 0; $i < count($join["on"]); $i++){
+                if (strpos($join["on"][$i][0], ".") !== 0){
+                    $join["on"][$i][0] = $DB_PREFIX . $join["on"][$i][0];
+                }
+                if (strpos($join["on"][$i][1], ".") !== 0){
+                    $join["on"][$i][1] = $DB_PREFIX . $join["on"][$i][1];
+                }
+                $jon[] = $join["on"][$i][0] . " " . $join["operator"][$i] . " " . $join["on"][$i][1];
+            }
+            $j[] = $jtype . " " . $DB_PREFIX . $join["table"] . " ON " . implode(" AND ", $jon);
+        }
+    }
+    
     $o = [];
     foreach ($sort as $k => $v){
         $o[] = quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
     }
     
-    if (!empty($showColumns)){
-        $cols = [];
-        foreach ($showColumns as $col){
-            if (in_array($col, $validFields))
-                $cols[] = $col;
-        }
-        $cols = implode(",", $cols);
-    }else{
-        $cols = "*";
+    
+    $sql = "SELECT " . implode(",", $cols) . " FROM " . implode(",", $tables);
+    if (count($j) > 0){
+        $sql .= " " . implode(" ", $j) . " ";
     }
-    $sql = "SELECT " . $cols . " FROM {$DB_PREFIX}{$table}";
     if (count($c) > 0){
         $sql .= " WHERE " . implode(" AND ", $c);
     }
     if (count($o) > 0){
         $sql .= " ORDER BY " . implode(", ", $o);
     }
-    //var_dump($sql);
+    prof_flag($sql);
     //var_dump($vals);
     $query = $pdo->prepare($sql);
     $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
-    
+    prof_flag("sql-done");
     if ($ret === false)
         return false;
     if ($groupByFirstCol && $unique)

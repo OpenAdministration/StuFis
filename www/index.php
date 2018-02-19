@@ -3,9 +3,11 @@
 global $ADMINGROUP, $nonce, $URIBASE, $antrag, $STORAGE, $HIBISCUSGROUP, $FUI2PDF_URL;
 ob_start('ob_gzhandler');
 require_once "../lib/inc.all.php";
+prof_flag("inc-done");
 AuthHandler::getInstance()->requireGroup($AUTHGROUP);
 $attributes = AuthHandler::getInstance()->getAttributes();
-prof_flag("init-done");
+//var_dump(AuthHandler::getInstance()->getSAML()->getAuthDataArray());
+prof_flag("auth-done");
 
 function writeFillOnCopy($antrag_id, $form) {
     $fillOnCopy = [];
@@ -48,8 +50,8 @@ function writeFillOnCopy($antrag_id, $form) {
                     // invalid value
                     break;
                 }
-
-                $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]]);
+    
+                $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]], []);
                 $otherAntrag["_inhalt"] = $otherInhalt;
 
                 $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
@@ -352,7 +354,7 @@ function copyAntrag($oldAntragId, $oldAntragVersion, $oldAntragNewState, $newTyp
     return $antrag_id;
 }
 
-if(isset($_REQUEST['id'])){
+if (isset($_REQUEST['id']) && !isset($_REQUEST["tab"])){
     $antrag = dbGet("antrag", ["id" => $_REQUEST['id']]);
     header("Location: " . $antrag['token']);
     exit;
@@ -403,8 +405,8 @@ if (isset($_REQUEST["action"])) {
             $ret = true;
         }
         $filesCreated = []; $filesRemoved = [];
-
-        $anhaenge = dbFetchAll("anhang", [ "antrag_id" => $antrag["id"] ]);
+    
+            $anhaenge = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
         foreach($anhaenge as $anhang) {
             $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
             $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
@@ -531,8 +533,8 @@ if (isset($_REQUEST["action"])) {
                 $ret1 = buildAnhangRenameMap($antrag["id"], $fieldname, $value["oldFieldName"], $fieldNameMap);
                 $ret = $ret && $ret1;
             }
-
-            $anhaenge = dbFetchAll("anhang", [ "antrag_id" => $antrag["id"] ]);
+    
+            $anhaenge = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
             foreach($anhaenge as $anhang) {
                 $oldFieldName = $anhang["fieldname"];
                 if (isset($fieldNameMap[$oldFieldName])) {
@@ -898,7 +900,7 @@ if (isset($_REQUEST["action"])) {
         }
         break;
         case "hibiscus":
-        requireGroup($HIBISCUSGROUP);
+            AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
 
         $ret = true;
         if (!dbBegin()) {
@@ -985,7 +987,7 @@ if (isset($_REQUEST["action"])) {
         }
         break;
         case "booking":
-        requireGroup($HIBISCUSGROUP);
+            AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
     
             //check if input ist correct
             if (!isset($_REQUEST["matches"])){
@@ -1382,7 +1384,7 @@ if (isset($_REQUEST["action"])) {
         $f = ["type" => "kontenplan"];
         $f["state"] = "final";
         $f["revision"] = substr($datum,0,4); // year
-        $al = dbFetchAll("antrag", $f);
+            $al = dbFetchAll("antrag", $f, []);
         if (count($al) != 1) die("Kontenplan nicht gefunden: ".print_r($f,true));
         $kpId = $al[0]["id"];
         $ret0 = dbInsert("inhalt", [ "fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
@@ -1455,7 +1457,7 @@ if (isset($_REQUEST["action"])) {
     echo json_encode($result);
     exit;
 }
-
+prof_flag("start-tab-selection");
 if (!isset($_REQUEST["tab"])) {
     $_REQUEST["tab"] = "mygremium";
 }
@@ -1875,10 +1877,11 @@ switch ($tabName){
 
         break;
 }
+prof_flag("start-include header");
 require "../template/header.tpl";
 $groups = [];
 //switches to substring until second orcurance of "."
-
+prof_flag("start-tab-selection2");
 switch ($tabName){
     case "mygremium":
     case "allgremium":
@@ -1919,7 +1922,7 @@ switch ($tabName){
         $groups[] = ["name" => "zu Bearbeitende Interne Projekte", "fields" => ["type" => "projekt-intern", "state" => "wip",]];
         $groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
         $groups[] = ["name" => "Auslagenerstattungen nur noch HV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-kv",]];
-        $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "draft",]];
+        $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
         
         $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
         $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
@@ -1940,12 +1943,12 @@ switch ($tabName){
         HTML_Renderer::renderTable($groups, $mapping);
         break;
     case "antrag.listing":
-        $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false]);
+        $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false], []);
         $antraege = [];
         foreach ($tmp as $t) {
             $form = getForm($t["type"],$t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
+            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"]], []);
             if (!hasPermission($form, $t, "canRead")) continue;
             $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
             foreach (array_keys($form["_categories"]) as $cat) {
@@ -1956,14 +1959,19 @@ switch ($tabName){
         require "../template/antrag.list.tpl";
         break;
     case "hhp":
-        HTML_Renderer::renderHaushaltsplan();
+        $antrag_id = null;
+        if (isset($_REQUEST["id"])){
+            $antrag_id = $_REQUEST["id"];
+        }
+        prof_flag("renderhhp-start");
+        HTML_Renderer::renderHaushaltsplan($antrag_id);
         break;
     case "antrag":
         $antrag = getAntrag();
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
-
-        $tmp = dbFetchAll("inhalt", ["contenttype" => "otherForm", "value" => $antrag["id"]], ["antrag_id" => true]);
+    
+        $tmp = dbFetchAll("inhalt", ["contenttype" => "otherForm", "value" => $antrag["id"]], ["antrag_id" => true], []);
         $idx = [];
         $antraegeRef = [];
         foreach ($tmp as $t) {
@@ -1975,8 +1983,8 @@ switch ($tabName){
             $a = dbGet("antrag", ["id" => $antrag_id]);
             $f = getForm($a["type"],$a["revision"]);
             if (false === $f) continue;
-
-            $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $a["id"] ]);
+    
+            $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $a["id"]], []);
             if (!hasPermission($f, $a, "canRead")) continue;
 
             $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
@@ -2025,11 +2033,11 @@ switch ($tabName){
         echo "TODO History";
         break;
     case "booking":
-        requireGroup($HIBISCUSGROUP);
-        $alGrund = dbFetchAll("antrag", [ ] );
+        AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
+        /*$alGrund = dbFetchAll("antrag", [], []);
         foreach(array_keys($alGrund) as $i) {
             $antrag = $alGrund[$i]; unset($alGrund[$i]);
-            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
             $antrag["_inhalt"] = $inhalt;
             $form = getForm($antrag["type"], $antrag["revision"]);
 
@@ -2072,10 +2080,10 @@ switch ($tabName){
             $antrag["_form"] = $form;
             $alGrund[$i] = $antrag;
         }
-        $alZahlung = dbFetchAll("antrag", [ ] );
+        $alZahlung = dbFetchAll("antrag", [], []);
         foreach(array_keys($alZahlung) as $i) {
             $antrag = $alZahlung[$i]; unset($alZahlung[$i]);
-            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
             $antrag["_inhalt"] = $inhalt;
             $form = getForm($antrag["type"], $antrag["revision"]);
 
@@ -2115,16 +2123,17 @@ switch ($tabName){
             if ($a["_value"] < $b["_value"]) return -1;
             if ($a["_value"] > $b["_value"]) return 1;
             return 0;
-        });
-        require "../template/booking.tpl";
+        });*/
+        //require "../template/booking.tpl";
+        //TODO: FIXME!;
         break;
     case "hibiscus.sct":
-        $tmp = dbFetchAll("antrag", [], ["id" => false]);
+        $tmp = dbFetchAll("antrag", [], ["id" => false], []);
         $antraege = [];
         foreach ($tmp as $t) {
             $form = getForm($t["type"],$t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"] ]);
+            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"]], []);
 
             if (!hasPermission($form, $t, "canRead")) continue;
             if (!hasCategory($form, $t, "_export_sct")) continue;
@@ -2192,8 +2201,9 @@ switch ($tabName){
            global $rev;
            return in_array($field["revision"],$rev);
         });*/
-        $content = dbFetchBookingHistory("02 01","2017-01-01", "2017-12-31");
-        require "../template/booking.history.tpl";
+        //$content = dbFetchBookingHistory("02 01","2017-01-01", "2017-12-31");
+        //require "../template/booking.history.tpl";
+        //TODO FIXME;
         break;
     default:
         echo "invalid tab name: " . htmlspecialchars($_REQUEST["tab"]);

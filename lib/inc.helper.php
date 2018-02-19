@@ -7,7 +7,11 @@
  */
 function getAntrag($id = null){
     if ($id === null){
-        $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+        if (isset($_REQUEST["token"]))
+            $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+        else{
+            return false;
+        }
     }else{
         $antrag = dbGet("antrag", ["id" => $id]);
     }
@@ -15,7 +19,7 @@ function getAntrag($id = null){
         if ($id === null) die("Unknown antrag.");
         return false;
     }
-    $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+    $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
     $antrag["_inhalt"] = $inhalt;
     
     $form = getForm($antrag["type"], $antrag["revision"]);
@@ -25,9 +29,9 @@ function getAntrag($id = null){
         return false;
     }
     
-    $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]]);
+    $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
     $antrag["_anhang"] = $anhang;
-    $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], ["id" => false]);
+    $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], ["id" => false], []);
     $antrag["_comments"] = $comments;
     
     return $antrag;
@@ -48,7 +52,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false){
     }
     if ($captionField !== false){
         if (!isset($antrag["_inhalt"])){
-            $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]]);
+            $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
             $antraege[$antrag['type']][$antrag['revision']][$antrag['id']] = $antrag;
         }
         foreach ($captionField as $j => $fdesc){
@@ -278,14 +282,14 @@ function prof_print(){
         $out .= sprintf("&nbsp;&nbsp;&nbsp;%f<br>", $prof_timing[$i + 1] - $prof_timing[$i]);
     }
     $out .= "<b>{$prof_names[$size-1]}</b><br>";
-    $out = '<div class="profiling-output"><h3><i class="fa fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
+    $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
     $out .= "</div>";
     echo $out;
 }
 
 function generateLinkFromID($text, $token){
     global $URIBASE;
-    return "<a href='" . htmlspecialchars($URIBASE . $token) . "'><i class='fa fw fa-link'></i> $text </a>";
+    return "<a href='" . htmlspecialchars($URIBASE . $token) . "'><i class='fa fa-fw fa-link'></i> $text </a>";
 }
 
 

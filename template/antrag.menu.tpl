@@ -148,7 +148,8 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
         </li>
 
         <?php if (count($newStates) > 0 || count($proposeNewState) > 0){?>
-        <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i class="fa fw fa-refresh"></i></a></li>
+            <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i
+                            class="fa fa-fw fa-refresh"></i></a></li>
         <?php }?>
 
         <?php if ($targetExportBank !== false) { ?>
@@ -168,7 +169,9 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
 
 
         <?php if ($canBeLinked !== false) { ?>
-        <li><a href="#" data-toggle="modal" data-target="#linkFormModal" title="Zugehöriges Formular / Antrag anlegen">Zugehöriges Formular anlegen <i class="fa fw fa-plus-square"></i></a></li>
+            <li><a href="#" data-toggle="modal" data-target="#linkFormModal"
+                   title="Zugehöriges Formular / Antrag anlegen">Zugehöriges Formular anlegen <i
+                            class="fa fa-fw fa-plus-square"></i></a></li>
         <?php }
         foreach ($printModes as $name => $printMode){
             echo "<li><a href='" . htmlspecialchars($targetprintbase . ".{$name}") . "' title='{$printMode["title"]}'>{$printMode["title"]} <i class='fa fa-fw fa-print' aria-hidden='true'></i></a></li>";
@@ -178,7 +181,9 @@ if (count($newStates) > 0 || count($proposeNewState) > 0) {
         <li><a href="<?php echo $targetHistory ?>" title="Verlauf">Historie <i class="fa fa-fw fa-history"
                                                                                aria-hidden="true"></i></a></li>
         <?php if ($canBeCloned !== false) { ?>
-        <li><a href="#" data-toggle="modal" data-target="#cloneFormModal" title="Neues (gleiches) Formular / Antrag anlegen">Verwende als Vorlage <i class="fa fw fa-clone"></i></a></li>
+            <li><a href="#" data-toggle="modal" data-target="#cloneFormModal"
+                   title="Neues (gleiches) Formular / Antrag anlegen">Verwende als Vorlage <i
+                            class="fa fa-fw fa-clone"></i></a></li>
         <?php } ?>
         <li><a href="<?php echo $targetDelete ?>">Antrag löschen <i class="fa fa-trash" aria-hidden="true"></i></a></li>
         <li><a href="https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege">Hilfe <i class="fa fa-question" aria-hidden="true"></i></a></li>

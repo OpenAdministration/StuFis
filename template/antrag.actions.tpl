@@ -7,7 +7,7 @@ if (!AuthHandler::getInstance()->hasGroup($HIBISCUSGROUP)) return;
 ?>
 <div>
     <br/>
-    <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary"><i class="fa fw fa-inbox "></i> Zahlungen
+    <a href="<?php echo $URIBASE; ?>?tab=booking" class="btn btn-primary"><i class="fa fa-fw fa-inbox "></i> Zahlungen
         verbuchen</a>
 
 

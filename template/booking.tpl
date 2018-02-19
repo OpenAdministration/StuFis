@@ -8,13 +8,14 @@ global $URIBASE, $nonce;
         Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugehörige Gründe bzw. Zahlungen aus.
     </div>
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
-        <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fw fa-refresh"></i> neue Kontoauszüge
+        <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fa-fw fa-refresh"></i> neue
+            Kontoauszüge
             abrufen
         </button>
         <input type="hidden" name="action" value="hibiscus">
         <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
     </form>
-    <a href="<?php echo $URIBASE; ?>?tab=booking.history" class="btn btn-primary"><i class="fa fw fa-list "></i>
+    <a href="<?php echo $URIBASE; ?>?tab=booking.history" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
         Buchungsübersicht</a>
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
         <input type="hidden" name="action" value="booking">
