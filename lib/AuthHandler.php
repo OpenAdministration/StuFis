@@ -5,14 +5,8 @@ class  AuthHandler{
     private $saml;
     
     private function __construct($SIMPLESAML, $SIMPLESAMLAUTHSOURCE){
-        
         require_once($SIMPLESAML . '/lib/_autoload.php');
         $this->saml = new SimpleSAML_Auth_Simple($SIMPLESAMLAUTHSOURCE);
-        if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && $this->saml->isAuthenticated()){
-            header('HTTP/1.0 401 Unauthorized');
-            die();
-        }
-        
     }
     
     public static function getInstance(){
@@ -24,25 +18,38 @@ class  AuthHandler{
     }
     
     function getUserFullName(){
-        $this->saml->requireAuth();
-        return $this->saml->getAttributes()["displayName"][0];
+        $this->requireAuth();
+        return $this->getAttributes()["displayName"][0];
     }
     
     function getUserMail(){
-        $this->saml->requireAuth();
+        $this->requireAuth();
         return $this->getAttributes()["mail"][0];
     }
     
     function getAttributes(){
-        return $this->saml->getAttributes();
+        global $DEV;
+        $attributes = $this->saml->getAttributes();
+        if (!$DEV)
+            return $attributes;
+        else{
+            $removeGroups = [];
+            //$removeGroups = ["ref-finanzen","ref-finanzen-hv",];
+            $attributes["groups"] = array_diff($attributes["groups"], $removeGroups);
+            return $attributes;
+        }
     }
     
     function requireAuth(){
+        if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$this->saml->isAuthenticated()){
+            header('HTTP/1.0 401 Unauthorized');
+            die();
+        }
         $this->saml->requireAuth();
     }
     
     function requireGroup($group){
-        $this->saml->requireAuth();
+        $this->requireAuth();
         if (!$this->hasGroup($group)){
             header('HTTP/1.0 401 Unauthorized');
             include SYSBASE . "/template/permission-denied.tpl";
@@ -65,7 +72,7 @@ class  AuthHandler{
     }
     
     function getUsername(){
-        $attributes = $this->saml->getAttributes();
+        $attributes = $this->getAttributes();
         if (isset($attributes["eduPersonPrincipalName"]) && isset($attributes["eduPersonPrincipalName"][0]))
             return $attributes["eduPersonPrincipalName"][0];
         if (isset($attributes["mail"]) && isset($attributes["mail"][0]))
