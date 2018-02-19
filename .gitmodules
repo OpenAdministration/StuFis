@@ -1,0 +1,6 @@
+[submodule "sql/mysqldump-php"]
+	path = sql/mysqldump-php
+	url = https://github.com/ifsnop/mysqldump-php
+[submodule "sql/SQLBackup"]
+	path = sql/SQLBackup
+	url = https://github.com/lu-kors/SQLBackup.git
