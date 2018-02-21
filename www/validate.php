@@ -24,7 +24,7 @@ if (!isset($_REQUEST["action"])) {
 
       $otherAntrag = dbGet("antrag", ["id" => $value]);
       if ($otherAntrag === false) return false;
-         $inhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]], []);
+         $inhalt = dbFetchAll("inhalt", [], ["antrag_id" => $otherAntrag["id"]]);
       $otherAntrag["_inhalt"] = $inhalt;
 
       $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
@@ -60,7 +60,7 @@ if (!isset($_REQUEST["action"])) {
 
       $otherAntrag = dbGet("antrag", ["id" => $otherForms]);
       if ($otherAntrag === false) return false;
-         $inhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]], []);
+         $inhalt = dbFetchAll("inhalt", [], ["antrag_id" => $otherAntrag["id"]]);
       $otherAntrag["_inhalt"] = $inhalt;
 
       $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);

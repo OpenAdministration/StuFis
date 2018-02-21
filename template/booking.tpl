@@ -20,7 +20,6 @@ global $URIBASE, $nonce;
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
         <input type="hidden" name="action" value="booking">
         <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-    
         <?php //var_dump($alZahlung);?>
         <table class="table table-striped">
             <thead>

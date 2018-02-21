@@ -584,7 +584,7 @@ function dbFetchBookingHistory($konto, $fromDate, $toDate){
         die('Eingabe der Daten war nicht korrekt!');
     }
 
-    $kontenplanID = dbFetchAll("antrag", ["type"=>"kontenplan", "revision" => "2017", "state" => "final"])[0]['id'];
+    $kontenplanID = dbFetchAll("antrag", [],["type"=>"kontenplan", "revision" => "2017", "state" => "final"])[0]['id'];
 
     //$zahlungIDs =
 

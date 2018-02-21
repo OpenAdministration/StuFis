@@ -51,7 +51,7 @@ function writeFillOnCopy($antrag_id, $form) {
                     break;
                 }
     
-                $otherInhalt = dbFetchAll("inhalt", ["antrag_id" => $otherAntrag["id"]], []);
+                $otherInhalt = dbFetchAll("inhalt", [], ["antrag_id" => $otherAntrag["id"]]);
                 $otherAntrag["_inhalt"] = $otherInhalt;
 
                 $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
@@ -406,7 +406,7 @@ if (isset($_REQUEST["action"])) {
         }
         $filesCreated = []; $filesRemoved = [];
     
-            $anhaenge = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
+            $anhaenge = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
         foreach($anhaenge as $anhang) {
             $msgs[] = "Lösche Anhang ".$anhang["fieldname"]." / ".$anhang["filename"];
             $ret1 = dbDelete("anhang", [ "antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"] ]);
@@ -534,7 +534,7 @@ if (isset($_REQUEST["action"])) {
                 $ret = $ret && $ret1;
             }
     
-            $anhaenge = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
+            $anhaenge = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
             foreach($anhaenge as $anhang) {
                 $oldFieldName = $anhang["fieldname"];
                 if (isset($fieldNameMap[$oldFieldName])) {
@@ -1201,7 +1201,7 @@ if (isset($_REQUEST["action"])) {
             // alle zahlungen wechseln nach state booked
             foreach($_REQUEST["zahlungId"] as $aId) {
                 $a = dbGet("antrag", ["id" => $aId]);
-                $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+                $a["_inhalt"] = dbFetchAll("inhalt",[], ["antrag_id" => $aId]);
                 $form = getForm($a["type"], $a["revision"]);
                 $ret0 = writeState("booked", $a, $form, $msgs, $filesCreated, $filesRemoved, $target);
                 $ret = $ret && $ret0;
@@ -1210,7 +1210,7 @@ if (isset($_REQUEST["action"])) {
             // alle Belege wechseln nach state payed
             foreach($_REQUEST["grundId"] as $aId) {
                 $a = dbGet("antrag", ["id" => $aId]);
-                $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $aId]);
+                $a["_inhalt"] = dbFetchAll("inhalt",[], ["antrag_id" => $aId]);
                 $form = getForm($a["type"], $a["revision"]);
                 //Extern Express anträge
                 if($a['type']=='extern-express'){
@@ -1384,7 +1384,7 @@ if (isset($_REQUEST["action"])) {
         $f = ["type" => "kontenplan"];
         $f["state"] = "final";
         $f["revision"] = substr($datum,0,4); // year
-            $al = dbFetchAll("antrag", $f, []);
+            $al = dbFetchAll("antrag", [], $f);
         if (count($al) != 1) die("Kontenplan nicht gefunden: ".print_r($f,true));
         $kpId = $al[0]["id"];
         $ret0 = dbInsert("inhalt", [ "fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
@@ -1948,7 +1948,7 @@ switch ($tabName){
         foreach ($tmp as $t) {
             $form = getForm($t["type"],$t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"]], []);
+            $t["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
             if (!hasPermission($form, $t, "canRead")) continue;
             $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
             foreach (array_keys($form["_categories"]) as $cat) {
@@ -1971,7 +1971,7 @@ switch ($tabName){
         $form = getForm($antrag["type"],$antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
     
-        $tmp = dbFetchAll("inhalt", ["contenttype" => "otherForm", "value" => $antrag["id"]], ["antrag_id" => true], []);
+        $tmp = dbFetchAll("inhalt", [], ["contenttype" => "otherForm", "value" => $antrag["id"]], [], ["antrag_id" => true]);
         $idx = [];
         $antraegeRef = [];
         foreach ($tmp as $t) {
@@ -1984,7 +1984,7 @@ switch ($tabName){
             $f = getForm($a["type"],$a["revision"]);
             if (false === $f) continue;
     
-            $a["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $a["id"]], []);
+            $a["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $a["id"]]);
             if (!hasPermission($f, $a, "canRead")) continue;
 
             $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
@@ -2034,10 +2034,10 @@ switch ($tabName){
         break;
     case "booking":
         AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
-        /*$alGrund = dbFetchAll("antrag", [], []);
+        /*$alGrund = dbFetchAll("antrag");
         foreach(array_keys($alGrund) as $i) {
             $antrag = $alGrund[$i]; unset($alGrund[$i]);
-            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
+            $inhalt = dbFetchAll("inhalt",[], ["antrag_id" => $antrag["id"]]);
             $antrag["_inhalt"] = $inhalt;
             $form = getForm($antrag["type"], $antrag["revision"]);
 
@@ -2080,10 +2080,10 @@ switch ($tabName){
             $antrag["_form"] = $form;
             $alGrund[$i] = $antrag;
         }
-        $alZahlung = dbFetchAll("antrag", [], []);
+        $alZahlung = dbFetchAll("antrag");
         foreach(array_keys($alZahlung) as $i) {
             $antrag = $alZahlung[$i]; unset($alZahlung[$i]);
-            $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
+            $inhalt = dbFetchAll("inhalt",[], ["antrag_id" => $antrag["id"]]);
             $antrag["_inhalt"] = $inhalt;
             $form = getForm($antrag["type"], $antrag["revision"]);
 
@@ -2124,7 +2124,7 @@ switch ($tabName){
             if ($a["_value"] > $b["_value"]) return 1;
             return 0;
         });*/
-        //require "../template/booking.tpl";
+        require "../template/booking.tpl";
         //TODO: FIXME!;
         break;
     case "hibiscus.sct":
@@ -2133,7 +2133,7 @@ switch ($tabName){
         foreach ($tmp as $t) {
             $form = getForm($t["type"],$t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $t["id"]], []);
+            $t["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
 
             if (!hasPermission($form, $t, "canRead")) continue;
             if (!hasCategory($form, $t, "_export_sct")) continue;
@@ -2196,7 +2196,7 @@ switch ($tabName){
         break;
     case "booking.history":
         //$rev = ["v1-giro"];
-        //$zahlungen = dbFetchAll("antrag", ["type" => "zahlung", "state" => "payed","lastupdated" => 0]);
+        //$zahlungen = dbFetchAll("antrag",[], ["type" => "zahlung", "state" => "payed","lastupdated" => 0]);
         /*$zahlungen = array_filter($zahlungen, function ($field){
            global $rev;
            return in_array($field["revision"],$rev);

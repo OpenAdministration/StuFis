@@ -19,7 +19,7 @@ function getAntrag($id = null){
         if ($id === null) die("Unknown antrag.");
         return false;
     }
-    $inhalt = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
+    $inhalt = dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
     $antrag["_inhalt"] = $inhalt;
     
     $form = getForm($antrag["type"], $antrag["revision"]);
@@ -29,9 +29,9 @@ function getAntrag($id = null){
         return false;
     }
     
-    $anhang = dbFetchAll("anhang", ["antrag_id" => $antrag["id"]], []);
+    $anhang = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
     $antrag["_anhang"] = $anhang;
-    $comments = dbFetchAll("comments", ["antrag_id" => $antrag["id"]], ["id" => false], []);
+    $comments = dbFetchAll("comments", [], ["antrag_id" => $antrag["id"]], [], ["id" => false]);
     $antrag["_comments"] = $comments;
     
     return $antrag;
@@ -52,7 +52,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false){
     }
     if ($captionField !== false){
         if (!isset($antrag["_inhalt"])){
-            $antrag["_inhalt"] = dbFetchAll("inhalt", ["antrag_id" => $antrag["id"]], []);
+            $antrag["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
             $antraege[$antrag['type']][$antrag['revision']][$antrag['id']] = $antrag;
         }
         foreach ($captionField as $j => $fdesc){
