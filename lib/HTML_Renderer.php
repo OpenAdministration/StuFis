@@ -52,13 +52,12 @@ class HTML_Renderer
                                                      data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
                                                      href="#collapse<?php echo $i . "-" . $j; ?>">
                                                     <h4 class="panel-title">
-                                                        <i class="fa fa-fw fa-togglebox"></i><span
+                                                        <i class="fa fa-togglebox"></i><span
                                                                 class="panel-projekt-name"><?= $projekt["_inhalt"]["projekt.name"] ?></span>
                                                         <span class="label label-info project-state-label"><?php echo getStateString($projekt["type"], $projekt["revision"], $projekt["state"]); ?></span>
                                                     </h4>
                                                 </div>
-                                                <?php if (count($projekt["_ref"]) !== 0) {
-                                                    ; ?>
+                                                <?php if (count($projekt["_ref"]) !== 0) { ?>
                                                     <div id="collapse<?php echo $i . "-" . $j; ?>"
                                                          class="panel-collapse collapse">
                                                         <div class="panel-body">
@@ -68,7 +67,7 @@ class HTML_Renderer
                                                                 <thead>
                                                                 <th>ID</th>
                                                                 <th>Type</th>
-                                                                <th>Antragsteller</th>
+                                                                <th>Zahlungsempfänger</th>
                                                                 <th>Betrag</th>
                                                                 <th>Status</th>
                                                                 </thead>
@@ -77,7 +76,7 @@ class HTML_Renderer
                                                                     <tr>
                                                                         <td><?= generateLinkFromID($a_id, $a_inhalt["token"]) ?></td>
                                                                         <td><?= $a_inhalt["type"] ?></td>
-                                                                        <td><?= $a_inhalt["_inhalt"]["antragsteller.name"] ?></td>
+                                                                        <td><?= isset($a_inhalt["_inhalt"]["antragsteller.name"]) ? $a_inhalt["_inhalt"]["antragsteller.name"] : ""?></td>
                                                                         <td>FIXME</td>
                                                                         <td>
                                                                             <span class="label label-info"><?php echo getStateString($a_inhalt["type"], $a_inhalt["revision"], $a_inhalt["state"]); ?></span>
@@ -112,7 +111,26 @@ class HTML_Renderer
     *
     * @return bool|void false if error else void
     */
-    public static function renderHaushaltsplan($selected_id = null){?>
+    public static function renderHaushaltsplan($selected_id = null){
+        /**
+        * @param $should
+        * @param $is
+        *
+        * @return string
+        */
+        function checkTitelBudget($should,$is){
+            if($is > $should){
+                if($is > $should * 1.5){
+                    return "hhp-danger";
+                }else{
+                    return "hhp-warning";
+                }
+            }else{
+                return "";
+            }
+            
+        }
+        ?>
         <div class="main container col-md-11"> <?php
         $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
         if(!isset($selected_id)){
@@ -147,49 +165,62 @@ class HTML_Renderer
             <button class="btn btn-warning">Statuswechsel</button>
             <?php
             $hhp = $hhps[$selected_id];
-            $groups = dbFetchAll("haushaltstitel",
-                ["hhpgruppen_id","gruppen_name","titel_nr","titel_name","einnahmen","ausgaben"],
-                ["hhp_id" => $selected_id],
-                [["table" => "haushaltsgruppen","on" => ["haushaltstitel.hhpgruppen_id","haushaltsgruppen.id"], "type" => "inner"]], ["titel_nr" => true],
-                true, false);
+            $groups = dbgetHHP($selected_id);
             //var_dump($groups);
             ?>
             <h1>Haushaltsplan <?= $hhp["revision"]." (".getStateString($hhp["type"],$hhp["revision"],$hhp["state"]). ")" ?></h1>
             <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Titel Nr</th>
-                        <th>Titel Name</th>
-                        <th class="money">soll-Einnahmen</th>
-                        <th class="money">ist-Einnahmen</th>
-                        <th class="money">soll-Ausgaben</th>
-                        <th class="money">ist-Ausgaben</th>
-                    </tr>
-                </thead>
-                <tbody>
                 <?php
+                
                 foreach ($groups as $group){
                     if(count($group) === 0) continue;
                     ?>
-                <tr>
-                    <th class="bg-info" colspan="7"><?= $group[0]["gruppen_name"] ?></th>
-                </tr>
+                <thead>
+                    <tr>
+                        <th class="bg-info" colspan="42"><?= array_values($group)[0]["gruppen_name"] ?></th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th>Titelnr</th>
+                        <th>Titelname</th>
+                        <th class="money"><?= "soll-".(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben") ?></th>
+                        <th class="money"><?= "ist-" .(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben")." (gebucht)" ?></th>
+                        <th class="money"><?= "ist-" .(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben")." (beschlossen)" ?></th>
+                    </tr>
+                </thead>
+                <tbody>
                     <?php
-                    foreach ($group as $row){ ?>
+                    $gsum_soll = 0;
+                    $gsum_ist = 0;
+                    foreach ($group as $row){
+                        if(!isset($row["_booked"]))
+                            $row["_booked"] = 0;
+                        $gsum_soll += $row["value"];
+                        $gsum_ist+= $row["_booked"];
+                        ?>
                         <tr>
                             <td></td>
                             <td><?= $row["titel_nr"]?></td>
                             <td><?= $row["titel_name"]?></td>
-                            <td class="money"><?= $row["einnahmen"] != 0? convertDBValueToUserValue($row["einnahmen"],"money"):""?></td>
-                            <td class="money"><?= 0 != 0? convertDBValueToUserValue($row["einnahmen"],"money"):""?></td>
-                            <td class="money"><?= $row["ausgaben"] != 0 ? convertDBValueToUserValue($row["ausgaben"],"money"):""?></td>
-                            <td class="money"><?= 0 != 0 ? convertDBValueToUserValue($row["ausgaben"],"money"):""?></td>
+                            <td class="money"><?= convertDBValueToUserValue($row["value"],"money")?></td>
+                            <td class="money <?= checkTitelBudget($row["value"],$row["_booked"]) ?>">
+                                <?= convertDBValueToUserValue($row["_booked"],"money")?>
+                             </td>
                         </tr>
+                
+                
                     <?php
-                    }
-                } ?>
+                    } ?>
+                     <tr class="table-sum-footer">
+                        <td colspan="3"></td>
+                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_soll,"money") ?></td>
+                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_ist,"money")?></td>
+                    </tr>
                 </tbody>
+                
+                <?php
+                } ?>
+               
             </table>
         </div> <?php
         return;

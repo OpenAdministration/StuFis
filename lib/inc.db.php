@@ -57,14 +57,14 @@ $scheme["comments"] = [
 
 $scheme["booking"] = [
     "id" => "INT NOT NULL PRIMARY KEY AUTO_INCREMENT",
-    "titel_id" => "varchar(256) NOT NULL",
+    "titel_id" => "int NOT NULL",
+    "kostenstelle" => "int NOT NULL",
     "zahlung_id" => "INT NOT NULL",
     "beleg_id" => "INT NOT NULL",
-    "timestamp" => "DATETIME NOT NULL",
-    "creatorFullName" => "VARCHAR(256) NOT NULL",
+    "user_id" => "int NOT NULL",
+    "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
     "comment" => "varchar(2048) NOT NULL",
     "value" => "FLOAT NOT NULL",
-    "kostenstelle" => "varchar(256) NOT NULL",
     "canceled" => "INT NOT NULL DEFAULT 0",
 ];
 
@@ -80,25 +80,26 @@ $scheme['haushaltstitel'] = [
     "hhpgruppen_id" => " int NOT NULL",
     "titel_name" => " varchar(128) NOT NULL",
     "titel_nr" => " varchar(10) NOT NULL",
-    "einnahmen" => " int DEFAULT NULL",
-    "ausgaben" => " int DEFAULT NULL",
+    "value" => "float NOT NULL",
 ];
 
 $scheme['haushaltsgruppen'] = [
     "id" => "int NOT NULL AUTO_INCREMENT",
     "hhp_id" => " int NOT NULL",
     "gruppen_name" => " varchar(128) NOT NULL",
+    "type" => "tinyint(1) NOT NULL",
 ];
 $scheme["projektposten"] = [
-    "id" => " INT NOT NULL AUTO_INCREMENT",
-    "project_id" => " INT NOT NULL",
-    "title_id" => " INT NOT NULL",
+    "id" => " INT NOT NULL AUTO_INCREMENT PRIMARY KEY",
+    "projekt_id" => " INT NOT NULL",
+    "titel_id" => " INT NOT NULL",
     "einnahmen" => " FLOAT NULL",
     "ausgaben" => " FLOAT NULL",
     "name" => " VARCHAR(128) NOT NULL",
+    "bemerkung" => " VARCHAR(256) NOT NULL",
 ];
 $scheme["beleg_posten"] = [
-    "beleg_nr" => "INT NOT NULL",
+    "beleg_id" => "INT NOT NULL",
     "posten_id" => "INT NOT NULL",
     "antrag_id" => "INT NOT NULL",
     "einnahmen" => "FLOAT NULL",
@@ -122,19 +123,11 @@ foreach ($scheme as $tblname => $content){
 }
 $validFields = array_unique($validFields);
 
-/*
- CREATE TABLE `finanzen-spielwiese`.`finanzformular__haushaltstitel`
-( `id` INT NOT NULL AUTO_INCREMENT ,
-  `hhp_id` VARCHAR(128) NOT NULL ,
-  `titel_name` VARCHAR(128) NOT NULL ,
-  `titel_nr` INT NOT NULL ,
-  `einnahmen` INT NULL DEFAULT NULL,
-  `ausgaben` INT  NULL DEFAULT NULL,
-  PRIMARY KEY (`id`,`hhp_id`)
-) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci
-*/
+if ($BUILD_DB){
+    include "../sql/buildDB.php";
+    prof_flag("build-db-finished");
+}
 
-prof_flag("db-connection established");
 function dbQuote($string, $parameter_type = null){
     global $pdo;
     if ($parameter_type === null)
@@ -331,22 +324,22 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
     $sort = array_intersect_key($sort, array_flip($validFields));
     //check join
     $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
-    foreach ($joins as $key => &$join){
-        if (!isset($join["table"])){
-            die("no Jointable set!");
-        }else if (!in_array($join["table"], array_keys($scheme))){
-            die("Unknown Table " . $join["table"]);
-        }else if (isset($join["type"]) && !in_array(strtolower($join["type"]), ["inner", "left", "natural", "right"])){
-            die("Unknown Join type " . $join["type"]);
+    foreach (array_keys($joins) as $nr){
+        if (!isset($joins[$nr]["table"])){
+            die("no Jointable set in '" . $nr . "' use !");
+        }else if (!in_array($joins[$nr]["table"], array_keys($scheme))){
+            die("Unknown Table " . $joins[$nr]["table"]);
+        }else if (isset($joins[$nr]["type"]) && !in_array(strtolower($joins[$nr]["type"]), ["inner", "left", "natural", "right"])){
+            die("Unknown Join type " . $joins[$nr]["type"]);
         }
-        if (!isset($join["on"])) $join["on"] = [];
-        if (!is_array($join["on"])){
-            die("on '{$join["on"]}' has to be an array!");
+        if (!isset($joins[$nr]["on"])) $joins[$nr]["on"] = [];
+        if (!is_array($joins[$nr]["on"])){
+            die("on '{$joins[$nr]["on"]}' has to be an array!");
         }
-        if (count($join["on"]) === 2 && count($join["on"][0]) === 1){
-            $join["on"] = [$join["on"]];
+        if (count($joins[$nr]["on"]) === 2 && count($joins[$nr]["on"][0]) === 1){
+            $joins[$nr]["on"] = [$joins[$nr]["on"]]; //if only 1 "on" set bring it into an array-form
         }
-        foreach ($join["on"] as &$pair){
+        foreach ($joins[$nr]["on"] as $pkey => $pair){
             if (!is_array($pair)){
                 die("Join on '$pair' is not an array");
             }
@@ -354,20 +347,20 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
             if (count($newpair) !== 2){
                 die("unvalid joinon pair:" . $pair[0] . " and " . $pair[1]);
             }
-            $pair = $newpair;
+            $joins[$nr]["on"][$pkey] = $newpair;
         }
-        if (isset($join["operator"])){
-            if (!is_array($join["operator"])) $join["operator"] = [$join["operator"]];
-            foreach ($join["operator"] as $op){
+        if (isset($joins[$nr]["operator"])){
+            if (!is_array($joins[$nr]["operator"])) $joins[$nr]["operator"] = [$joins[$nr]["operator"]];
+            foreach ($joins[$nr]["operator"] as $op){
                 if (!in_array($op, $validJoinOnOperators)){
-                    die("unallowed join operator '$op' in {$key}th join");
+                    die("unallowed join operator '$op' in {$nr}th join");
                 }
             }
         }else{
-            $join["operator"] = array_fill(0, count($join["on"]), "=");
+            $joins[$nr]["operator"] = array_fill(0, count($joins[$nr]["on"]), "=");
         }
-        if (count($join["on"]) !== count($join["operator"])){
-            die("not same amount of on-pairs(" . count($join["on"]) . ") and operators (" . count($join["operator"]) . ")!");
+        if (count($joins[$nr]["on"]) !== count($joins[$nr]["operator"])){
+            die("not same amount of on-pairs(" . count($joins[$nr]["on"]) . ") and operators (" . count($joins[$nr]["operator"]) . ")!");
         }
         
     }
@@ -408,10 +401,11 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
         }
     }
     $j = [];
-    foreach ($joins as $join){
+    //var_dump($joins);
+    foreach ($joins as $nr => $join){
         $jtype = isset($join["type"]) ? (strtoupper($join["type"]) . " JOIN") : "NATURAL JOIN";
         if (strcmp($jtype, "NATURAL JOIN") === true){
-            $j[] = "NATURAL JOIN " . $DB_PREFIX . $join["table"];
+            $j[] = PHP_EOL . "NATURAL JOIN " . $DB_PREFIX . $join["table"];
         }else{
             $jon = [];
             for ($i = 0; $i < count($join["on"]); $i++){
@@ -423,7 +417,7 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
                 }
                 $jon[] = $join["on"][$i][0] . " " . $join["operator"][$i] . " " . $join["on"][$i][1];
             }
-            $j[] = $jtype . " " . $DB_PREFIX . $join["table"] . " ON " . implode(" AND ", $jon);
+            $j[] = PHP_EOL . $jtype . " " . $DB_PREFIX . $join["table"] . " ON " . implode(" AND ", $jon);
         }
     }
     
@@ -433,17 +427,18 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
     }
     
     
-    $sql = "SELECT " . implode(",", $cols) . " FROM " . implode(",", $tables);
+    $sql = PHP_EOL . "SELECT " . implode(",", $cols) . PHP_EOL . "FROM " . implode(",", $tables);
     if (count($j) > 0){
         $sql .= " " . implode(" ", $j) . " ";
     }
     if (count($c) > 0){
-        $sql .= " WHERE " . implode(" AND ", $c);
+        $sql .= PHP_EOL . "WHERE " . implode(" AND ", $c);
     }
     if (count($o) > 0){
-        $sql .= " ORDER BY " . implode(", ", $o);
+        $sql .= PHP_EOL . "ORDER BY " . implode(", ", $o);
     }
     prof_flag($sql);
+    //var_dump($sql);
     //var_dump($vals);
     $query = $pdo->prepare($sql);
     $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
@@ -483,8 +478,7 @@ function getProjectFromGremium($gremiumNames, $antrag_type){
           {$DB_PREFIX}inhalt as i2
           WHERE 
             i2.antrag_id = a.id
-          ORDER BY a.gremium desc, a.id desc
-        ";
+          ORDER BY a.gremium desc, a.id desc";
     //var_dump($sql);
     $query = $pdo->prepare($sql);
     $ret = $query->execute([implode("|", $gremiumNames), $antrag_type]);
@@ -520,11 +514,16 @@ function getProjectFromGremium($gremiumNames, $antrag_type){
     {$DB_PREFIX}inhalt as i2,
     {$DB_PREFIX}antrag as a
     WHERE i.auslagen_id = i2.antrag_id
-    AND a.id = i.auslagen_id;";
+    AND a.id = i.auslagen_id
+    ;";
     
-    $query = $pdo->query($sql);
-    if ($query === false)
-        return groupArrayByRegExpArray($projects, $gremiumNames);
+    $query = $pdo->query($sql) or httperror(print_r($pdo->errorInfo(), true));
+    if ($query === false){
+        return groupArrayKeysByRegExpArray($projects, $gremiumNames);
+    }
+    
+    
+    //fetch results in own structure
     while ($row = $query->fetch(PDO::FETCH_ASSOC)){
         $gremium = $projekt_ids[$row["projekt_id"]];
         $projects[$gremium][$row["projekt_id"]]["_ref"][$row["antrag_id"]]["token"] = $row["token"];
@@ -534,14 +533,15 @@ function getProjectFromGremium($gremiumNames, $antrag_type){
         $projects[$gremium][$row["projekt_id"]]["_ref"][$row["antrag_id"]]["_inhalt"][$row["fieldname"]] = $row["value"];
     }
     
-    return groupArrayByRegExpArray($projects, $gremiumNames);
+    
+    return groupArrayKeysByRegExpArray($projects, $gremiumNames);
 }
 
 /**
  * @param $array
  * @param $regexpArray
  */
-function groupArrayByRegExpArray($array, $regexpArray){
+function groupArrayKeysByRegExpArray($array, $regexpArray){
     $retArray = [];
     
     foreach ($array as $gremium => $content){
@@ -661,4 +661,59 @@ function getUserIBAN(){
     }else{
         return $ret["iban"];
     }
+}
+
+
+function dbgetHHP($id){
+    global $pdo, $DB_PREFIX;
+    $sql = "
+    SELECT t.hhpgruppen_id,t.id,g.type,g.gruppen_name,t.titel_nr,t.titel_name,t.value
+    FROM {$DB_PREFIX}haushaltstitel AS t
+    INNER JOIN {$DB_PREFIX}haushaltsgruppen AS g ON t.hhpgruppen_id = g.id
+    WHERE `hhp_id` = ?
+    ORDER BY `titel_nr` ASC";
+    $query = $pdo->prepare($sql);
+    $query->execute([$id]) or httperror(print_r($query->errorInfo(), true));
+    $groups = [];
+    $titelIdsToGroupId = [];
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)){
+        $gId = array_shift($row); //hhpgruppen_id
+        $tId = array_shift($row); //t.id
+        $groups[$gId][$tId] = $row;
+        $titelIdsToGroupId[$tId] = $gId;
+    }
+    if (empty($titelIdsToGroupId)){
+        return $groups;
+    }
+    $sql = "
+    SELECT b.titel_id, b.value, b.canceled
+    FROM {$DB_PREFIX}booking as b
+    WHERE b.titel_id IN (" . implode(",", array_fill(0, count($titelIdsToGroupId), "?")) . ")
+    ";
+    $query = $pdo->prepare($sql);
+    $query->execute(array_keys($titelIdsToGroupId)) or httperror(print_r($query->errorInfo(), true));
+    while ($row = $query->fetch(PDO::FETCH_ASSOC)){
+        $tId = array_shift($row);
+        $val = $row["value"];
+        if ($row["canceled"] == 1)
+            $val = -$val;
+        if (isset($groups[$titelIdsToGroupId[$tId]][$tId]["_booked"])){
+            $groups[$titelIdsToGroupId[$tId]][$tId]["_booked"] += $val;
+        }else{
+            $groups[$titelIdsToGroupId[$tId]][$tId]["_booked"] = $val;
+        }
+    }
+    /* ermittle alle buchungen von projekten die beendet sind + alle offenen Projekte
+    $sql = "SELECT a.state, b.titel_id, b.value, p.titel_id,p.ausgaben
+    FROM finanzformular__booking as b
+      RIGHT JOIN finanzformular__beleg_posten as bp ON bp.beleg_id = b.beleg_id
+      RIGHT JOIN finanzformular__projektposten as p ON bp.posten_id = p.id
+      INNER JOIN finanzformular__antrag as a ON p.projekt_id = a.id
+    WHERE b.titel_id IN (7)
+    ";
+    $query = $pdo->prepare($sql);
+    $query->execute(array_keys($titelIdsToGroupId)) or httperror(print_r($query->errorInfo(), true));
+    var_dump($query->fetchAll(PDO::FETCH_ASSOC));
+    //var_dump($groups);*/
+    return $groups;
 }

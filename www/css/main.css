@@ -294,6 +294,14 @@ a.disabled-option span {
     cursor: default;
 }
 
+.profiling-source {
+    font-size: 75%;
+}
+
+.profiling-names {
+
+}
+
 .profiling-output {
     position: fixed;
     background-color: white;
@@ -490,6 +498,31 @@ ul.nav-pills.nav-stacked > li.label-info {
     vertical-align: middle;
 }
 
+/* hhp code */
 .money {
     text-align: right;
+}
+
+tbody > tr > td.money::after {
+    content: " €";
+}
+
+tbody > tr > td.money {
+
+}
+
+tbody > tr > td.money.table-sum-hhpgroup::before {
+    content: "Σ ";
+}
+
+tbody > tr > td.money.table-sum-hhpgroup {
+    font-weight: bold;
+}
+
+.hhp-danger {
+    color: red;
+}
+
+.hhp-warning {
+    color: orange;
 }

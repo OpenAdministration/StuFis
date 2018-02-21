@@ -8,7 +8,7 @@
  * Execute this file to build the database, scheme definition in: /lib/inc.db.php
  */
 
-include "../lib/inc.all.php";
+require_once "../lib/inc.all.php";
 
 #foreach(array_reverse(array_keys($scheme)) as $k)
 #  $pdo->query("DROP TABLE {$DB_PREFIX}{$k}") or httperror(print_r($pdo->errorInfo(),true));
@@ -132,15 +132,16 @@ if ($r === false){
 $pdo->query("
 CREATE TABLE IF NOT EXISTS {$DB_PREFIX}projektposten (" .
     buildColDef($scheme["projektposten"]) . "
-    PRIMARY KEY (`id`),
-    FOREIGN KEY (`title_id`) REFERENCES {$DB_PREFIX}haushaltsplanposten` (`id`)
-)ENGINE = InnoDB DEFAULT CHARSET=utf8;");
+    FOREIGN KEY (`title_id`) REFERENCES {$DB_PREFIX}haushaltstitel (`id`),
+    FOREIGN KEY (`project_id`) REFERENCES {$DB_PREFIX}antrag(`id`)
+)ENGINE = InnoDB DEFAULT CHARSET=utf8;") or httperror(print_r($pdo->errorInfo(), true));
 
 $pdo->query("
 CREATE TABLE IF NOT EXISTS {$DB_PREFIX}beleg_posten (" .
     buildColDef($scheme["beleg_posten"]) . "
-  PRIMARY KEY (`posten_id`, `beleg_nr`, `antrag_id`),
-    FOREIGN KEY (posten_id) REFERENCES {$DB_PREFIX}posten (id)
+      PRIMARY KEY (`posten_id`, `beleg_id`, `antrag_id`),
+      FOREIGN KEY (`posten_id`) REFERENCES {$DB_PREFIX}projektposten(id),
+      FOREIGN KEY (`antrag_id`) REFERENCES {$DB_PREFIX}antrag(id),
+      FOREIGN KEY (`beleg_id`)  REFERENCES {$DB_PREFIX}anhang(id)
     )ENGINE = InnoDB DEFAULT CHARSET=utf8;
-
-");
+") or httperror(print_r($pdo->errorInfo(), true));
