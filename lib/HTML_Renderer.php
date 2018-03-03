@@ -6,22 +6,20 @@
  * Time: 14:43
  */
 
-class HTML_Renderer
-{
-    private function __construct()
+class HTML_Renderer{
+    /*private function __construct()
     {
         //This is a (static) singelton. This cannot be called from Outside.
-    }
-
-    public static function renderProjekte($gremien)
-    {
-        $projekte = getProjectFromGremium($gremien,"projekt-intern");
-        if(AuthHandler::getInstance()->hasGroup("ref-finanzen")){
-            $extVereine = ["Bergfest.*",".*KuKo.*",".*ILSC.*","Market Team.*",".*Second Unit Jazz.*", "hsf.*","hfc.*", "FuLM.*","KSG.*"];
-            $ret = getProjectFromGremium($extVereine,"extern-express");
-            if($ret !== false){
+    }*/
+    
+    public static function renderProjekte($gremien){
+        $projekte = getProjectFromGremium($gremien, "projekt-intern");
+        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
+            $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*"];
+            $ret = getProjectFromGremium($extVereine, "extern-express");
+            if ($ret !== false){
                 //var_dump($ret);
-                $projekte = array_merge($projekte,$ret);
+                $projekte = array_merge($projekte, $ret);
             }
         }
         //var_dump($projekte);
@@ -29,8 +27,8 @@ class HTML_Renderer
         <div class="col-md-9 container main">
             <div class="panel-group" id="accordion">
                 <?php $i = 0;
-                if (isset($projekte)) {
-                    foreach ($projekte as $gremium => $inhalt) {
+                if (isset($projekte)){
+                    foreach ($projekte as $gremium => $inhalt){
                         if (count($inhalt) == 0) continue; ?>
                         <div class="panel panel-default">
                             <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
@@ -44,7 +42,7 @@ class HTML_Renderer
                                 <div class="panel-body">
                                     <?php $j = 0; ?>
                                     <div class="panel-group" id="accordion<?php echo $i; ?>">
-                                        <?php foreach ($inhalt as $id => $projekt) { ?>
+                                        <?php foreach ($inhalt as $id => $projekt){ ?>
                                             <div class="panel panel-default">
                                                 <div class="panel-link"><?php echo generateLinkFromID($id, $projekt["token"]) ?>
                                                 </div>
@@ -57,7 +55,7 @@ class HTML_Renderer
                                                         <span class="label label-info project-state-label"><?php echo getStateString($projekt["type"], $projekt["revision"], $projekt["state"]); ?></span>
                                                     </h4>
                                                 </div>
-                                                <?php if (count($projekt["_ref"]) !== 0) { ?>
+                                                <?php if (count($projekt["_ref"]) !== 0){ ?>
                                                     <div id="collapse<?php echo $i . "-" . $j; ?>"
                                                          class="panel-collapse collapse">
                                                         <div class="panel-body">
@@ -72,11 +70,11 @@ class HTML_Renderer
                                                                 <th>Status</th>
                                                                 </thead>
                                                                 <tbody>
-                                                                <?php foreach ($projekt["_ref"] as $a_id => $a_inhalt) { ?>
+                                                                <?php foreach ($projekt["_ref"] as $a_id => $a_inhalt){ ?>
                                                                     <tr>
                                                                         <td><?= generateLinkFromID($a_id, $a_inhalt["token"]) ?></td>
                                                                         <td><?= $a_inhalt["type"] ?></td>
-                                                                        <td><?= isset($a_inhalt["_inhalt"]["antragsteller.name"]) ? $a_inhalt["_inhalt"]["antragsteller.name"] : ""?></td>
+                                                                        <td><?= isset($a_inhalt["_inhalt"]["antragsteller.name"]) ? $a_inhalt["_inhalt"]["antragsteller.name"] : "" ?></td>
                                                                         <td>FIXME</td>
                                                                         <td>
                                                                             <span class="label label-info"><?php echo getStateString($a_inhalt["type"], $a_inhalt["revision"], $a_inhalt["state"]); ?></span>
@@ -90,7 +88,7 @@ class HTML_Renderer
                                                     </div>
                                                 <?php } ?>
                                             </div>
-
+        
                                             <?php $j++;
                                         } ?>
                                     </div>
@@ -106,58 +104,18 @@ class HTML_Renderer
         </div>
         <?php
     }
+    
     /**
-    * @param int $selected_id default: oldest HHP with state final
-    *
-    * @return bool|void false if error else void
-    */
+     * @param int $selected_id default: oldest HHP with state final
+     *
+     * @return bool|void false if error else void
+     */
     public static function renderHaushaltsplan($selected_id = null){
-        /**
-        * @param $should
-        * @param $is
-        *
-        * @return string
-        */
-        function checkTitelBudget($should,$is){
-            if($is > $should){
-                if($is > $should * 1.5){
-                    return "hhp-danger";
-                }else{
-                    return "hhp-warning";
-                }
-            }else{
-                return "";
-            }
-            
-        }
+    
+    
         ?>
         <div class="main container col-md-11"> <?php
-        $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
-        if(!isset($selected_id)){
-            foreach (array_reverse($hhps,true) as $id => $hhp){
-                if($hhp["state"] === "final"){
-                    $selected_id = $id;
-                }
-            }
-        } ?>
-            <form>
-                <div class="input-group col-xs-2 pull-right">
-                    <!--<input type="number" class="form-control" name="year" value=<?=date("Y")?>>-->
-                    <input type="hidden" name="tab" value="hhp">
-                    <select class="selectpicker" name="id"><?php
-                    foreach($hhps as $id => $hhp){?>
-                        <option value="<?=$id?>" <?= $id == $selected_id ? "selected" : ""?> data-subtext="<?= getStateString($hhp["type"],$hhp["revision"],$hhp["state"])?>"><?=$hhp["revision"]?></option>
-                    <?php } ?>
-                    </select>
-                    <div class="input-group-btn">
-                        <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i> Aktualisieren</button>
-                    </div>
-                </div>
-            </form>
-            <?php if(array_search($selected_id,array_keys($hhps)) === false){
-                die("Konnte zugehörigen HHP nicht finden. :(");
-                return false;
-            }
+            list($hhps, $selected_id) = HTML_Renderer::renderHHPSelector("hhp", $selected_id);
             $editable = ($hhps[$selected_id]["state"] !== "final");
             ?>
             <button class="btn btn-danger">Diesen HHP löschen</button>
@@ -168,14 +126,15 @@ class HTML_Renderer
             $groups = dbgetHHP($selected_id);
             //var_dump($groups);
             ?>
-            <h1>Haushaltsplan <?= $hhp["revision"]." (".getStateString($hhp["type"],$hhp["revision"],$hhp["state"]). ")" ?></h1>
+            <h1>
+                Haushaltsplan <?= $hhp["revision"] . " (" . getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) . ")" ?></h1>
             <table class="table table-striped">
                 <?php
                 
                 foreach ($groups as $group){
-                    if(count($group) === 0) continue;
+                    if (count($group) === 0) continue;
                     ?>
-                <thead>
+                    <thead>
                     <tr>
                         <th class="bg-info" colspan="42"><?= array_values($group)[0]["gruppen_name"] ?></th>
                     </tr>
@@ -183,58 +142,95 @@ class HTML_Renderer
                         <th></th>
                         <th>Titelnr</th>
                         <th>Titelname</th>
-                        <th class="money"><?= "soll-".(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben") ?></th>
-                        <th class="money"><?= "ist-" .(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben")." (gebucht)" ?></th>
-                        <th class="money"><?= "ist-" .(array_values($group)[0]["type"]== 0 ? "Einnahmen" : "Ausgaben")." (beschlossen)" ?></th>
+                        <th class="money"><?= "soll-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") ?></th>
+                        <th class="money"><?= "ist-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") . " (gebucht)" ?></th>
+                        <th class="money"><?= "ist-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") . " (beschlossen)" ?></th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <?php
                     $gsum_soll = 0;
                     $gsum_ist = 0;
                     foreach ($group as $row){
-                        if(!isset($row["_booked"]))
+                        if (!isset($row["_booked"]))
                             $row["_booked"] = 0;
                         $gsum_soll += $row["value"];
-                        $gsum_ist+= $row["_booked"];
+                        $gsum_ist += $row["_booked"];
                         ?>
                         <tr>
                             <td></td>
-                            <td><?= $row["titel_nr"]?></td>
-                            <td><?= $row["titel_name"]?></td>
-                            <td class="money"><?= convertDBValueToUserValue($row["value"],"money")?></td>
-                            <td class="money <?= checkTitelBudget($row["value"],$row["_booked"]) ?>">
-                                <?= convertDBValueToUserValue($row["_booked"],"money")?>
-                             </td>
+                            <td><?= $row["titel_nr"] ?></td>
+                            <td><?= $row["titel_name"] ?></td>
+                            <td class="money"><?= convertDBValueToUserValue($row["value"], "money") ?></td>
+                            <td class="money <?= checkTitelBudget($row["value"], $row["_booked"]) ?>">
+                                <?= convertDBValueToUserValue($row["_booked"], "money") ?>
+                            </td>
                         </tr>
-                
-                
-                    <?php
+    
+    
+                        <?php
                     } ?>
-                     <tr class="table-sum-footer">
+                    <tr class="table-sum-footer">
                         <td colspan="3"></td>
-                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_soll,"money") ?></td>
-                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_ist,"money")?></td>
+                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_soll, "money") ?></td>
+                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_ist, "money") ?></td>
                     </tr>
-                </tbody>
-                
-                <?php
+                    </tbody>
+    
+                    <?php
                 } ?>
-               
+
             </table>
         </div> <?php
         return;
     }
-
-    public static function renderMyProfile($nonce)
-    {
+    
+    private static function renderHHPSelector($tabname, $selected_id){
+        $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
+        if (!isset($selected_id)){
+            foreach (array_reverse($hhps, true) as $id => $hhp){
+                if ($hhp["state"] === "final"){
+                    $selected_id = $id;
+                }
+            }
+        } ?>
+        <form>
+            <div class="input-group col-xs-2 pull-right">
+                <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
+                <input type="hidden" name="tab" value="<?= $tabname ?>">
+                <select class="selectpicker" name="id"><?php
+                    foreach ($hhps as $id => $hhp){
+                        ?>
+                        <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
+                                data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <div class="input-group-btn">
+                    <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
+                        Aktualisieren
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <?php if (array_search($selected_id, array_keys($hhps)) === false){
+            var_dump($selected_id);
+            var_dump($hhps);
+            die("Konnte zugehörigen HHP nicht finden. :(");
+            return false;
+        }
+        return [$hhps, $selected_id];
+    }
+    
+    public static function renderMyProfile($nonce){
         $iban = getUserIBAN();
         $form = [
             "layout" => [
                 ["id" => "myiban",
                     "type" => "iban",
                     "title" => "meine IBAN",
-                    "value" => $iban ? $iban: "",
+                    "value" => $iban ? $iban : "",
                     "placeholder" => "DE ...",
                     "width" => 12,
                     "opts" => ["required"],
@@ -242,7 +238,7 @@ class HTML_Renderer
             ],
         ];
         ?>
-    
+
         <div class="container main col-md-6">
         <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
               enctype="multipart/form-data" class="ajax">
@@ -256,21 +252,22 @@ class HTML_Renderer
         <?php
         
     }
-    public static function renderTable($groups,$mapping){
+    
+    public static function renderTable($groups, $mapping){
         $res = [];
-        $header =  ["ID","Name","Organisation","Summe","Status","letzte Änderung"];
-
-        if(!isset($groups)) return "groups leer";
-        if(!isset($mapping)) return "Mapping leer";
-        if(count($mapping) !== count($groups)) return "Mapping stimmt nicht mit Groups überein (Anzahl)";
+        $header = ["ID", "Name", "Organisation", "Summe", "Status", "letzte Änderung"];
+        
+        if (!isset($groups)) return "groups leer";
+        if (!isset($mapping)) return "Mapping leer";
+        if (count($mapping) !== count($groups)) return "Mapping stimmt nicht mit Groups überein (Anzahl)";
         $name2Nr = [];
-        foreach($groups as $nr => $data){
+        foreach ($groups as $nr => $data){
             $name2Nr[$data["name"]] = $nr;
             $fields = $data["fields"];
             $res[$data["name"]] = dbFetchAll("antrag", [], $fields, [], [], true, true);
             $ids = array_keys($res[$data["name"]]);
-            foreach($ids as $id){
-                $res[$data["name"]][$id]["_inhalt"] = betterValues(dbFetchAll("inhalt",[],["antrag_id" => $id]));
+            foreach ($ids as $id){
+                $res[$data["name"]][$id]["_inhalt"] = betterValues(dbFetchAll("inhalt", [], ["antrag_id" => $id]));
                 //var_dump($res[$data["name"]]);
             }
             //var_dump($res);
@@ -281,33 +278,109 @@ class HTML_Renderer
         <div class="col-md-9 container main">
             <table class="table">
                 <thead>
-                    <tr>
-                        <?php
-                        foreach ($header as $titel){
-                            echo "<th>$titel</th>";
-                        }
-                        ?>
-                    </tr>
+                <tr>
+                    <?php
+                    foreach ($header as $titel){
+                        echo "<th>$titel</th>";
+                    }
+                    ?>
+                </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($res as $name => $inhalt){ ?>
-                <tr><th id="par" colspan="6"><?php echo $name;?></th></tr>
-                <?php foreach($inhalt as $id => $row){ ?>
                     <tr>
-                        <td><?php echo $id;?></td>
-                        <td><?php echo generateLinkFromID($row["_inhalt"][$mapping[$name2Nr[$name]]["p-name"]],$row["token"]); ?></td>
-                        <td><?php echo $row["_inhalt"][$mapping[$name2Nr[$name]]["org-name"]]; ?></td>
-                        <td>Beantragte Summe</td>
-                        <td><div class="label label-primary"><?php echo getStateString($row["type"],$row["revision"],$row["state"]);?></div></td>
-                        <td><?php echo $row["lastupdated"];?></td>
+                        <th id="par" colspan="6"><?php echo $name; ?></th>
                     </tr>
-                <?php }?>
-            <?php }?>
+                    <?php foreach ($inhalt as $id => $row){ ?>
+                        <tr>
+                            <td><?php echo $id; ?></td>
+                            <td><?php echo generateLinkFromID($row["_inhalt"][$mapping[$name2Nr[$name]]["p-name"]], $row["token"]); ?></td>
+                            <td><?php echo $row["_inhalt"][$mapping[$name2Nr[$name]]["org-name"]]; ?></td>
+                            <td>Beantragte Summe</td>
+                            <td>
+                                <div class="label label-primary"><?php echo getStateString($row["type"], $row["revision"], $row["state"]); ?></div>
+                            </td>
+                            <td><?php echo $row["lastupdated"]; ?></td>
+                        </tr>
+                    <?php } ?>
+                <?php } ?>
 
                 </tbody>
             </table>
         </div>
-    <?php
+        <?php
     }
+    
+    public static function renderBookingHistory($selected_hhp_id = null){
+        
+        HTML_Renderer::renderHHPSelector("booking.history", $selected_hhp_id);
+        
+        $ret = dbFetchAll("booking",
+            ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
+            ["hhp_id" => $selected_hhp_id],
+            [
+                ["type" => "left", "table" => "user", "on" => ["booking.user_id", "user.id"]],
+                ["type" => "left", "table" => "haushaltstitel", "on" => ["booking.titel_id", "haushaltstitel.id"]],
+                ["type" => "left", "table" => "haushaltsgruppen", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]]
+            ],
+            ["timestamp" => true, "id" => true]
+        );
+        
+        ?>
+        <div class="container main col-md-11">
+        <?php
+        //var_dump(reset($ret));
+        ?>
+        <table class="table" align="right">
+            <thead>
+            <tr>
+                <th>B-Nr</th>
+                <th>Beleg</th>
+                <th>Betrag (EUR)</th>
+                <th>Titel</th>
+                <th>Zahlung</th>
+                <th>Datum</th>
+                <th>Kommentar</th>
+                <th>Stornieren</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php
+            foreach ($ret as $lfdNr => $row){ ?>
+                <tr>
+                    <td><?= $lfdNr + 1 ?></td>
+                    <td><?= generateLinkFromID($row['beleg_id'], "") ?></td>
+                    <td class="money"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
+                    <td><?= $row['titel_nr'] ?></td>
+                    <td><?= generateLinkFromID($row['zahlung_id'], "") ?></td>
+                    <td><?= $row['timestamp'] ?></td>
+                    <td><?= substr($row['comment'], 0, 50) ?></td>
+                    <td><?= $row["canceled"] != 1 ? "want to cancel?" : "already canceled" ?></td>
+                </tr>
+            <?php } ?>
+            </tbody>
 
+        </table>
+        <?php
+    }
+    
+    /**
+     * @param $should
+     * @param $is
+     *
+     * @return string
+     */
+    private function checkTitelBudget($should, $is){
+        if ($is > $should){
+            if ($is > $should * 1.5){
+                return "hhp-danger";
+            }else{
+                return "hhp-warning";
+            }
+        }else{
+            return "";
+        }
+        
+    }
+    
 }

@@ -2195,14 +2195,11 @@ switch ($tabName){
         require "../template/hibiscus.sct.tpl";
         break;
     case "booking.history":
-        //$rev = ["v1-giro"];
-        //$zahlungen = dbFetchAll("antrag",[], ["type" => "zahlung", "state" => "payed","lastupdated" => 0]);
-        /*$zahlungen = array_filter($zahlungen, function ($field){
-           global $rev;
-           return in_array($field["revision"],$rev);
-        });*/
-        //$content = dbFetchBookingHistory("02 01","2017-01-01", "2017-12-31");
-        //require "../template/booking.history.tpl";
+        $selected_hhp_id = null;
+        if (isset($_REQUEST["id"])){
+            $selected_hhp_id = $_REQUEST["id"];
+        }
+        HTML_Renderer::renderBookingHistory($selected_hhp_id);
         //TODO FIXME;
         break;
     default:

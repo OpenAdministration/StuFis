@@ -388,9 +388,22 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
     foreach ($fields as $k => $v){
         if (is_array($v)){
             if (is_array($v[1])){
-                $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                $c[] = quoteIdent($k) . " $v[0] (" . $tmp . ")";
+                switch (strtolower($v[0])){
+                    case "in":
+                        $tmp = implode(',', array_fill(0, count($v[1]), '?'));
+                        $c[] = quoteIdent($k) . " $v[0] (" . $tmp . ")";
+                        break;
+                    case "between":
+                        $c[] = quoteIdent($k) . " $v[0] ? AND ?";
+                        if (count($v[1]) !== 2){
+                            die("To many values for " . $v[0]);
+                        }
+                        break;
+                    default:
+                        die("unknown identifier " . $v[0]);
+                }
                 $vals = array_merge($vals, $v[1]);
+    
             }else{
                 $c[] = quoteIdent($k) . " " . $v[0] . " ?";
                 $vals[] = $v[1];
