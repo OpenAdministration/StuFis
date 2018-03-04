@@ -39,7 +39,7 @@ class ConfigHandler{
 
 abstract class Singelton{
     private static $hasCredentials = false;
-    private static $__instance;
+    private static $instance;
     
     
     /**
@@ -51,12 +51,12 @@ abstract class Singelton{
     final public static function getInstance(...$pars){
         if (!self::$hasCredentials)
             throw new Exception("Credentials not set!");
-        if (!isset(self::$__instance)){
+        if (!isset(self::$instance)){
             $c = get_called_class();
-            self::$__instance = new $c(...$pars);
-            return self::$__instance;
+            self::$instance = new $c(...$pars);
+            return self::$instance;
         }else{
-            return self::$__instance;
+            return self::$instance;
         }
     }
     
