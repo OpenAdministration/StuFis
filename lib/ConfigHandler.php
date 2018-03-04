@@ -66,7 +66,7 @@ abstract class Singelton{
         foreach ($confArray as $varName => $value){
             if (property_exists(static::class, $varName))
                 if (!in_array($varName, array_keys($visVars)))
-                    static::__static_set($varName, $value);
+                    static::static__set($varName, $value);
                 else
                     throw new Exception("static \$$varName ist nicht private in Klasse " . static::class);
             else
@@ -76,7 +76,7 @@ abstract class Singelton{
         
     }
     
-    abstract static protected function __static_set($name, $value);
+    abstract static protected function static__set($name, $value);
     
     final public function __clone(){
         //No cloning possible
@@ -87,7 +87,7 @@ abstract class Singelton{
     }
     /* wanted Implementation in child*/
     /*
-    final static protected function  __static_set($name, $value){
+    final static protected function  static__set($name, $value){
         if(property_exists(get_class(), $name))
             self::$$name = $value;
         else
@@ -98,7 +98,7 @@ abstract class Singelton{
 /*
 class Test extends Singelton {
     private static $test;
-    final static protected function  __static_set($name, $value){
+    final static protected function  static__set($name, $value){
         if(property_exists(get_class(), $name))
             self::$$name = $value;
         else
