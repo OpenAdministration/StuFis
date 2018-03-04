@@ -526,3 +526,45 @@ tbody > tr > td.money.table-sum-hhpgroup {
 .hhp-warning {
     color: orange;
 }
+
+a.link-anchor {
+    display: block;
+    position: relative;
+    top: -60px;
+    visibility: hidden;
+}
+
+.text-color__black {
+    color: #333 !important; /* bootstrap normal font color */
+}
+
+.text-color__primary {
+    color: #337AB7 !important;
+}
+
+.text-color__secondary {
+    color: grey !important;
+}
+
+.text-color__danger-dark {
+    color: #c9302c;
+}
+
+.text-color__danger {
+    color: #d9534f !important;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+tr.booking__canceled-row {
+    color: grey;
+}
+
+tr.booking__canceled-row > td > a {
+    color: grey;
+}
+
+
+
