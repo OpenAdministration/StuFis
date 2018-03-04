@@ -1251,6 +1251,49 @@ if (isset($_REQUEST["action"])){
             break;
             */
             //action
+    
+    
+            case "booking.history.cancel":
+                AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
+                if (!isset($_REQUEST["booking_id"])){
+                    $msgs[] = "Daten wurden nicht korrekt übermittelt";
+                    break;
+                }
+                $booking_id = $_REQUEST["booking_id"];
+                $ret = dbGet("booking", ["id" => $booking_id]);
+                if ($ret !== false){
+                    if ($ret["canceled"] !== 0){
+                        dbBegin();
+                        $user = dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
+                        if ($user !== false){
+                            $user_id = $user["id"];
+                        }else{
+                            $user_id = dbInsert("user", ["username" => AuthHandler::getInstance()->getUsername(),
+                                "fullname" => AuthHandler::getInstance()->getUserFullName()]);
+                        }
+                        $newId = dbInsert("booking",
+                            ["comment" => "Gegenbuchung zu B-Nr: " . $booking_id,
+                                "titel_id" => $ret["titel_id"],
+                                "beleg_id" => $ret["beleg_id"],
+                                "zahlung_id" => $ret["zahlung_id"],
+                                "kostenstelle" => $ret["kostenstelle"],
+                                "user_id" => $user_id,
+                                "value" => -$ret["value"], //negative old Value
+                                "titel_id" => $ret["titel_id"],
+                                "canceled" => $booking_id,]);
+                        dbUpdate("booking", ["id" => $booking_id], ["canceled" => $newId]);
+                        if (!dbCommit()){
+                            dbRollBack();
+                            $forceClose = true;
+                            $target = "";
+                            $msgs[] = "Konnte nicht erfolgreich canceln";
+                        }else{
+                            $forceClose = true;
+                            $target = "$URIBASE?tab=booking.history&id={$_REQUEST['hhp_id']}";
+                        }
+                    }
+                }
+                break;
             case "hibiscus.sct":
                 if (!isset($_REQUEST["ueberweisung"])){
                     $forceClose = true;
@@ -1513,17 +1556,17 @@ switch ($tabName){
             list($a, $range) = explode('=', $_SERVER['HTTP_RANGE'], 2);
             list($range) = explode(',', $range, 2);
             list($range, $rangeEnd) = explode('-', $range);
-        
+    
             $range = intval($range);
-        
+    
             if (!$rangeEnd){
                 $rangeEnd = $fileSize - 1;
             }else{
                 $rangeEnd = intval($rangeEnd);
             }
-        
+    
             $newLength = $rangeEnd - $range + 1;
-        
+    
             // Send Headers
             header('HTTP/1.1 206 Partial Content');
             header('Content-Length: ' . $newLength);
@@ -1866,14 +1909,14 @@ switch ($tabName){
                 "eref" => ["zahlung.eref", "text"],
                 "vzw" => ["zahlung.verwendungszweck", "textarea"],
             ];
-        
+    
             foreach ($map as $reqFieldName => $dbFieldDesc){
                 $rowFieldName = "{$dbFieldDesc[0]}[{$rowNumber}]";
                 $$reqFieldName = getFormValueInt($rowFieldName, $dbFieldDesc[1], $antrag["_inhalt"], "");
             }
-        
+    
             $empfiban = str_replace(" ", "", $empfiban);
-        
+    
             $payment1->addCreditTransfer(array(
                 'id' => "StuRa-{$antrag["id"]}-$rowNumber-$id",
                 'currency' => 'EUR',
@@ -1997,17 +2040,17 @@ switch ($tabName){
         $antraegeRef = [];
         foreach ($tmp as $t){
             $antrag_id = $t["antrag_id"];
-        
+    
             if (isset($idx[$antrag_id])) continue;
             $idx[$antrag_id] = true;
-        
+    
             $a = dbGet("antrag", ["id" => $antrag_id]);
             $f = getForm($a["type"], $a["revision"]);
             if (false === $f) continue;
-        
+    
             $a["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $a["id"]]);
             if (!hasPermission($f, $a, "canRead")) continue;
-        
+    
             $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
         }
     
@@ -2155,17 +2198,17 @@ switch ($tabName){
             $form = getForm($t["type"], $t["revision"]);
             if (false === $form) continue;
             $t["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
-        
+    
             if (!hasPermission($form, $t, "canRead")) continue;
             if (!hasCategory($form, $t, "_export_sct")) continue;
-        
+    
             $ctrl = ["_values" => $t, "render" => ["no-form"]];
             ob_start();
             $success = renderFormImpl($form, $ctrl);
             ob_end_clean();
-        
+    
             $value = 0.00;
-        
+    
             if (isset($ctrl["_render"]) && isset($ctrl["_render"]->addToSumValue["ausgaben"])){
                 $value += $ctrl["_render"]->addToSumValue["ausgaben"];
             }
@@ -2187,10 +2230,10 @@ switch ($tabName){
                     $value = $abrechnung - $vorkasse;
                 }
             }
-        
+    
             if ($value <= 0.0) continue; # keine Überweisung notwendig hier
-        
-        
+    
+    
             if ($t['type'] == "extern-express"){
                 $destEmpfaenger = getFormValueInt("projekt.org", null, $t["_inhalt"], false);
                 $destIBAN = getFormValueInt("org.iban", null, $t["_inhalt"], false);
@@ -2204,13 +2247,13 @@ switch ($tabName){
                 $destIBAN = getFormValueInt("iban", null, $t["_inhalt"], false);
                 $destEmpfaengerMail = getFormValueInt("antragsteller.email", null, $t["_inhalt"], false);
             }
-        
+    
             $t["_value"] = $value;
             $t["_iban"] = $destIBAN;
             $t["_empfname"] = $destEmpfaenger;
             $t["_ctrl"] = $ctrl;
             $t["_form"] = $form;
-        
+    
             $antraege[$t["id"]] = $t;
         }
         require "../template/hibiscus.sct.tpl";

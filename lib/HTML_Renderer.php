@@ -12,6 +12,7 @@ class HTML_Renderer{
         //This is a (static) singelton. This cannot be called from Outside.
     }*/
     
+    
     public static function renderProjekte($gremien){
         $projekte = getProjectFromGremium($gremien, "projekt-intern");
         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
@@ -88,7 +89,7 @@ class HTML_Renderer{
                                                     </div>
                                                 <?php } ?>
                                             </div>
-        
+    
                                             <?php $j++;
                                         } ?>
                                     </div>
@@ -162,7 +163,7 @@ class HTML_Renderer{
                             <td><?= $row["titel_nr"] ?></td>
                             <td><?= $row["titel_name"] ?></td>
                             <td class="money"><?= convertDBValueToUserValue($row["value"], "money") ?></td>
-                            <td class="money <?= checkTitelBudget($row["value"], $row["_booked"]) ?>">
+                            <td class="money <?= HTML_Renderer::checkTitelBudget($row["value"], $row["_booked"]) ?>">
                                 <?= convertDBValueToUserValue($row["_booked"], "money") ?>
                             </td>
                         </tr>
@@ -221,6 +222,25 @@ class HTML_Renderer{
             return false;
         }
         return [$hhps, $selected_id];
+    }
+    
+    /**
+     * @param $should
+     * @param $is
+     *
+     * @return string
+     */
+    private static function checkTitelBudget($should, $is){
+        if ($is > $should){
+            if ($is > $should * 1.5){
+                return "hhp-danger";
+            }else{
+                return "hhp-warning";
+            }
+        }else{
+            return "";
+        }
+        
     }
     
     public static function renderMyProfile($nonce){
@@ -312,7 +332,7 @@ class HTML_Renderer{
     }
     
     public static function renderBookingHistory($selected_hhp_id = null){
-        
+        global $nonce;
         HTML_Renderer::renderHHPSelector("booking.history", $selected_hhp_id);
         
         $ret = dbFetchAll("booking",
@@ -335,52 +355,55 @@ class HTML_Renderer{
             <thead>
             <tr>
                 <th>B-Nr</th>
+                <th class="col-xs-1">Betrag (EUR)</th>
+                <th class="col-xs-1">Titel</th>
                 <th>Beleg</th>
-                <th>Betrag (EUR)</th>
-                <th>Titel</th>
-                <th>Zahlung</th>
                 <th>Datum</th>
-                <th>Kommentar</th>
+                <th>Zahlung</th>
                 <th>Stornieren</th>
+                <th>Kommentar</th>
             </tr>
             </thead>
             <tbody>
             <?php
-            foreach ($ret as $lfdNr => $row){ ?>
-                <tr>
-                    <td><?= $lfdNr + 1 ?></td>
-                    <td><?= generateLinkFromID($row['beleg_id'], "") ?></td>
-                    <td class="money"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
-                    <td><?= $row['titel_nr'] ?></td>
-                    <td><?= generateLinkFromID($row['zahlung_id'], "") ?></td>
-                    <td><?= $row['timestamp'] ?></td>
-                    <td><?= substr($row['comment'], 0, 50) ?></td>
-                    <td><?= $row["canceled"] != 1 ? "want to cancel?" : "already canceled" ?></td>
+            foreach ($ret as $lfdNr => $row){
+                $userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
+                ?>
+                <tr class="<?= $row["canceled"] == 1 ? "booking__canceled-row" : "" ?>">
+                    <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
+
+                    <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::BLACK ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
+                    <td class="<?= TextStyle::PRIMARY ?> <?= TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
+                    <td><?= generateLinkFromID($row['beleg_id'], "", TextStyle::BLACK) ?></td>
+                    <td value="<?= $row['timestamp'] ?>">
+                        <?= date("d.m.Y", strtotime($row['timestamp'])) ?><!--
+                        --><i title="<?= $row['timestamp'] . " von " . $userStr ?>"
+                              class="fa fa-fw fa-question-circle"></i>
+                    </td>
+                    <td><?= generateLinkFromID($row['zahlung_id'], "", TextStyle::BLACK) ?></td>
+                    <?php if ($row["canceled"] == 0){ ?>
+                        <td>
+                            <form id="cancel" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
+                                  enctype="multipart/form-data" class="ajax">
+                                <input type="hidden" name="action" value="booking.history.cancel"/>
+                                <input type="hidden" name="nonce" value="<?= $nonce; ?>"/>
+                                <input type="hidden" name="booking.id" value="<?= $row["id"]; ?>"/>
+                                <input type="hidden" name="hhp.id" value="<?= $selected_hhp_id; ?>"/>
+
+                                <a href="javascript:void(false);" class='submit-form <?= TextStyle::DANGER ?>'>
+                                    <i class='fa fa-fw fa-ban'></i> Stornieren
+                                </a>
+                            </form>
+                        </td>
+                    <?php }else{
+                        ?>
+                        <td>Durch B-Nr: <a href='#<?= $row['canceled'] ?>'><?= $row['canceled'] ?></a> gegengebucht</td>
+                    <?php } ?>
+                    <td class="col-xs-4 <?= TextStyle::SECONDARY ?>"><?= htmlspecialchars($row['comment']) ?></td>
                 </tr>
             <?php } ?>
             </tbody>
-
         </table>
         <?php
     }
-    
-    /**
-     * @param $should
-     * @param $is
-     *
-     * @return string
-     */
-    private function checkTitelBudget($should, $is){
-        if ($is > $should){
-            if ($is > $should * 1.5){
-                return "hhp-danger";
-            }else{
-                return "hhp-warning";
-            }
-        }else{
-            return "";
-        }
-        
-    }
-    
 }

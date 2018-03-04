@@ -179,6 +179,12 @@ function dbGetWriteCounter(){
     return $dbWriteCounter;
 }
 
+/**
+ * @param $table    table in db
+ * @param $fields   all fields which should be filled
+ *
+ * @return bool|string
+ */
 function dbInsert($table, $fields){
     global $pdo, $DB_PREFIX, $scheme, $dbWriteCounter;
     $dbWriteCounter++;
@@ -198,6 +204,13 @@ function dbInsert($table, $fields){
     return $pdo->lastInsertId();
 }
 
+/**
+ * @param $table    table of db without prefix
+ * @param $filter   after WHERE clause
+ * @param $fields   fields which will be new set
+ *
+ * @return bool|int
+ */
 function dbUpdate($table, $filter, $fields){
     global $pdo, $DB_PREFIX, $scheme, $dbWriteCounter;
     $dbWriteCounter++;
@@ -450,7 +463,8 @@ function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort
     if (count($o) > 0){
         $sql .= PHP_EOL . "ORDER BY " . implode(", ", $o);
     }
-    prof_flag($sql);
+    //prof_flag($sql);
+    prof_flag("sql-start");
     //var_dump($sql);
     //var_dump($vals);
     $query = $pdo->prepare($sql);

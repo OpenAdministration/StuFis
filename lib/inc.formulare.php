@@ -7,10 +7,10 @@ function convertDBValueToUserValue($value, $type) {
         case "money":
             $value = (string) $value;
             if ($value === false || $value == "") return $value;
-            return number_format($value, 2, ',', ' ');
+            return htmlspecialchars(number_format($value, 2, ',', ' '));
         case "date":
         case "daterange":
-            return date("d.m.Y", strtotime($value));
+            return htmlspecialchars(date("d.m.Y", strtotime($value)));
             break;
         default:
             return $value;
