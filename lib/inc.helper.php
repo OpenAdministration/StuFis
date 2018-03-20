@@ -8,18 +8,18 @@
 function getAntrag($id = null){
     if ($id === null){
         if (isset($_REQUEST["token"]))
-            $antrag = dbGet("antrag", ["token" => $_REQUEST["token"]]);
+            $antrag = DBConnector::getInstance()->dbGet("antrag", ["token" => $_REQUEST["token"]]);
         else{
             return false;
         }
     }else{
-        $antrag = dbGet("antrag", ["id" => $id]);
+        $antrag = DBConnector::getInstance()->dbGet("antrag", ["id" => $id]);
     }
     if ($antrag === false){
         if ($id === null) die("Unknown antrag.");
         return false;
     }
-    $inhalt = dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
+    $inhalt = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
     $antrag["_inhalt"] = $inhalt;
     
     $form = getForm($antrag["type"], $antrag["revision"]);
@@ -29,9 +29,9 @@ function getAntrag($id = null){
         return false;
     }
     
-    $anhang = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
+    $anhang = DBConnector::getInstance()->dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
     $antrag["_anhang"] = $anhang;
-    $comments = dbFetchAll("comments", [], ["antrag_id" => $antrag["id"]], [], ["id" => false]);
+    $comments = DBConnector::getInstance()->dbFetchAll("comments", [], ["antrag_id" => $antrag["id"]], [], ["id" => false]);
     $antrag["_comments"] = $comments;
     
     return $antrag;
@@ -52,7 +52,7 @@ function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false){
     }
     if ($captionField !== false){
         if (!isset($antrag["_inhalt"])){
-            $antrag["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
+            $antrag["_inhalt"] = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
             $antraege[$antrag['type']][$antrag['revision']][$antrag['id']] = $antrag;
         }
         foreach ($captionField as $j => $fdesc){
@@ -148,9 +148,9 @@ function storeInhalt($inhalt, $isPartiell){
         return $ret;
     }
     if ($isPartiell)
-        dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"]]);
+        DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"]]);
     $inhalt["value"] = convertUserValueToDBValue($inhalt["value"], $inhalt["contenttype"]);
-    $ret = dbInsert("inhalt", $inhalt);
+    $ret = DBConnector::getInstance()->dbInsert("inhalt", $inhalt);
     if (!$ret){
         $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: " . print_r($inhalt, true);
     }
@@ -167,7 +167,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
         return false;
     }
     
-    $ret = dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => AuthHandler::getInstance()->getUsername()]);
+    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => AuthHandler::getInstance()->getUsername()]);
     
     if ($ret !== 1)
         return false;
@@ -199,9 +199,9 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
             $newValue = AuthHandler::getInstance()->getUserFullName() . " am " . date("Y-m-d");
         }else
             die("cannot autogenerate value for preNewStateActions");
-        
-        dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"]]);
-        $ret = dbInsert("inhalt", ["fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue]);
+    
+        DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"]]);
+        $ret = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue]);
         if ($ret === false)
             return false;
     }
@@ -215,7 +215,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
     if (isset($form["_class"]["state"][$newState]))
         $txt = $form["_class"]["state"][$newState][0];
     $comment["text"] = "Status nach [$newState] " . $txt . " geändert";
-    $ret = dbInsert("comments", $comment);
+    $ret = DBConnector::getInstance()->dbInsert("comments", $comment);
     if ($ret === false)
         return false;
     
@@ -337,6 +337,7 @@ class TextStyle extends Enum{
     const DANGER = "text-color__danger";
     const DANGER_DARK = "text-color__danger-dark";
     const BOLD = "text-bold";
+    const GREEN = "text-color__green";
     
     
 }
@@ -344,9 +345,8 @@ class TextStyle extends Enum{
 function generateLinkFromID($text, $token, $linkColor = TextStyle::__default){
     global $URIBASE;
     
-    return "<a class='$linkColor' href='" . htmlspecialchars($URIBASE . $token) . "'><i class='fa fa-fw fa-link'></i>$text</a>";
+    return "<a class='$linkColor' href='" . htmlspecialchars($URIBASE . $token) . "'><i class='fa fa-fw fa-link' aria-hidden='true'></i>&nbsp;$text</a>";
 }
-
 
 /**
  * https://stackoverflow.com/questions/20983339/validate-iban-php

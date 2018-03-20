@@ -1,20 +1,20 @@
 <?php
 
-class  AuthHandler{
-    private static $instance; //singelton instance of this class
+class  AuthHandler extends Singelton{
+    private static $SIMPLESAMLDIR;
+    private static $SIMPLESAMLAUTHSOURCE;
     private $saml;
     
-    private function __construct($SIMPLESAML, $SIMPLESAMLAUTHSOURCE){
-        require_once($SIMPLESAML . '/lib/_autoload.php');
-        $this->saml = new SimpleSAML_Auth_Simple($SIMPLESAMLAUTHSOURCE);
+    final static protected function static__set($name, $value){
+        if (property_exists(get_class(), $name))
+            self::$$name = $value;
+        else
+            throw new Exception("$name ist keine Variable in " . get_class());
     }
     
-    public static function getInstance(){
-        if (!isset($instance)){
-            global $SIMPLESAML, $SIMPLESAMLAUTHSOURCE;
-            self::$instance = new AuthHandler($SIMPLESAML, $SIMPLESAMLAUTHSOURCE);
-        }
-        return self::$instance;
+    protected function __construct(){
+        require_once(self::$SIMPLESAMLDIR . '/lib/_autoload.php');
+        $this->saml = new SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
     }
     
     function getUserFullName(){
@@ -30,9 +30,9 @@ class  AuthHandler{
     function getAttributes(){
         global $DEV;
         $attributes = $this->saml->getAttributes();
-        if (!$DEV)
+        if (!$DEV){
             return $attributes;
-        else{
+        }else{
             $removeGroups = [];
             //$removeGroups = ["ref-finanzen","ref-finanzen-hv",];
             $attributes["groups"] = array_diff($attributes["groups"], $removeGroups);
@@ -61,7 +61,7 @@ class  AuthHandler{
      * @param string $group     String of groups
      * @param string $delimiter Delimiter of the groups in $group
      *
-     * @return bool true if the user has one or more groups from $group
+     * @return bool  true if the user has one or more groups from $group
      */
     function hasGroup($group, $delimiter = ","){
         $attributes = $this->getAttributes();

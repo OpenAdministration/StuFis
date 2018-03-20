@@ -12,12 +12,11 @@ class HTML_Renderer{
         //This is a (static) singelton. This cannot be called from Outside.
     }*/
     
-    
     public static function renderProjekte($gremien){
-        $projekte = getProjectFromGremium($gremien, "projekt-intern");
+        $projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*"];
-            $ret = getProjectFromGremium($extVereine, "extern-express");
+            $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
             if ($ret !== false){
                 //var_dump($ret);
                 $projekte = array_merge($projekte, $ret);
@@ -25,7 +24,7 @@ class HTML_Renderer{
         }
         //var_dump($projekte);
         ?>
-        <div class="col-md-9 container main">
+        <div class="col-lg-9 col-xs-11 container main">
             <div class="panel-group" id="accordion">
                 <?php $i = 0;
                 if (isset($projekte)){
@@ -124,7 +123,7 @@ class HTML_Renderer{
             <button class="btn btn-warning">Statuswechsel</button>
             <?php
             $hhp = $hhps[$selected_id];
-            $groups = dbgetHHP($selected_id);
+            $groups = DBConnector::getInstance()->dbgetHHP($selected_id);
             //var_dump($groups);
             ?>
             <h1>
@@ -187,7 +186,7 @@ class HTML_Renderer{
     }
     
     private static function renderHHPSelector($tabname, $selected_id){
-        $hhps = dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
+        $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
         if (!isset($selected_id)){
             foreach (array_reverse($hhps, true) as $id => $hhp){
                 if ($hhp["state"] === "final"){
@@ -240,11 +239,10 @@ class HTML_Renderer{
         }else{
             return "";
         }
-        
     }
     
     public static function renderMyProfile($nonce){
-        $iban = getUserIBAN();
+        $iban = DBConnector::getInstance()->getUserIBAN();
         $form = [
             "layout" => [
                 ["id" => "myiban",
@@ -284,10 +282,10 @@ class HTML_Renderer{
         foreach ($groups as $nr => $data){
             $name2Nr[$data["name"]] = $nr;
             $fields = $data["fields"];
-            $res[$data["name"]] = dbFetchAll("antrag", [], $fields, [], [], true, true);
+            $res[$data["name"]] = DBConnector::getInstance()->dbFetchAll("antrag", [], $fields, [], [], true, true);
             $ids = array_keys($res[$data["name"]]);
             foreach ($ids as $id){
-                $res[$data["name"]][$id]["_inhalt"] = betterValues(dbFetchAll("inhalt", [], ["antrag_id" => $id]));
+                $res[$data["name"]][$id]["_inhalt"] = betterValues(DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $id]));
                 //var_dump($res[$data["name"]]);
             }
             //var_dump($res);
@@ -334,8 +332,8 @@ class HTML_Renderer{
     public static function renderBookingHistory($selected_hhp_id = null){
         global $nonce;
         HTML_Renderer::renderHHPSelector("booking.history", $selected_hhp_id);
-        
-        $ret = dbFetchAll("booking",
+    
+        $ret = DBConnector::getInstance()->dbFetchAll("booking",
             ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
             ["hhp_id" => $selected_hhp_id],
             [
@@ -347,7 +345,7 @@ class HTML_Renderer{
         );
         
         ?>
-        <div class="container main col-md-11">
+        <div class="container main col-xs-12 col-lg-11">
         <?php
         //var_dump(reset($ret));
         ?>
@@ -369,17 +367,22 @@ class HTML_Renderer{
             foreach ($ret as $lfdNr => $row){
                 $userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
                 ?>
-                <tr class="<?= $row["canceled"] == 1 ? "booking__canceled-row" : "" ?>">
+                <tr class="<?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
+
                     <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
 
-                    <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::BLACK ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
-                    <td class="<?= TextStyle::PRIMARY ?> <?= TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
+                    <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::GREEN ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
+
+                    <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
+
                     <td><?= generateLinkFromID($row['beleg_id'], "", TextStyle::BLACK) ?></td>
+
                     <td value="<?= $row['timestamp'] ?>">
-                        <?= date("d.m.Y", strtotime($row['timestamp'])) ?><!--
+                        <?= date("d.m.Y", strtotime($row['timestamp'])) ?>&nbsp;<!--
                         --><i title="<?= $row['timestamp'] . " von " . $userStr ?>"
-                              class="fa fa-fw fa-question-circle"></i>
+                              class="fa fa-fw fa-question-circle" aria-hidden="true"></i>
                     </td>
+
                     <td><?= generateLinkFromID($row['zahlung_id'], "", TextStyle::BLACK) ?></td>
                     <?php if ($row["canceled"] == 0){ ?>
                         <td>
@@ -391,13 +394,13 @@ class HTML_Renderer{
                                 <input type="hidden" name="hhp.id" value="<?= $selected_hhp_id; ?>"/>
 
                                 <a href="javascript:void(false);" class='submit-form <?= TextStyle::DANGER ?>'>
-                                    <i class='fa fa-fw fa-ban'></i> Stornieren
+                                    <i class='fa fa-fw fa-ban'></i>&nbsp;Stornieren
                                 </a>
                             </form>
                         </td>
                     <?php }else{
                         ?>
-                        <td>Durch B-Nr: <a href='#<?= $row['canceled'] ?>'><?= $row['canceled'] ?></a> gegengebucht</td>
+                        <td>Durch <a href='#<?= $row['canceled'] ?>'>B-Nr: <?= $row['canceled'] ?></a></td>
                     <?php } ?>
                     <td class="col-xs-4 <?= TextStyle::SECONDARY ?>"><?= htmlspecialchars($row['comment']) ?></td>
                 </tr>

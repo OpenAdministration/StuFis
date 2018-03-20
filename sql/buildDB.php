@@ -5,7 +5,7 @@
  * Date: 19.02.18
  * Time: 02:20
  *
- * Execute this file to build the database, scheme definition in: /lib/inc.db.php
+ * Execute this file to build the database, scheme definition in: /lib/DBConnector.php
  */
 
 require_once "../lib/inc.all.php";

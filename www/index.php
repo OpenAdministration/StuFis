@@ -371,7 +371,7 @@ if (isset($_REQUEST["action"])){
         $msgs[] = "Formular veraltet - CSRF Schutz aktiviert.";
         $logId = false;
     }else{
-        $logId = logThisAction();
+        $logId = DBConnector::getInstance()->logThisAction();
         if (strpos($_POST["action"], "insert") !== false ||
             strpos($_POST["action"], "update") !== false ||
             strpos($_POST["action"], "delete") !== false){
@@ -383,7 +383,7 @@ if (isset($_REQUEST["action"])){
         switch ($_POST["action"]):
             case "antrag.delete":
                 // beginTx
-                if (!dbBegin()){
+                if (!DBConnector::getInstance()->dbBegin()){
                     $msgs[] = "Cannot start DB transaction";
                     $ret = false;
                     break;
@@ -405,25 +405,25 @@ if (isset($_REQUEST["action"])){
                 }
                 $filesCreated = [];
                 $filesRemoved = [];
-                
-                $anhaenge = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
+    
+                $anhaenge = DBConnector::getInstance()->dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
                 foreach ($anhaenge as $anhang){
                     $msgs[] = "Lösche Anhang " . $anhang["fieldname"] . " / " . $anhang["filename"];
-                    $ret1 = dbDelete("anhang", ["antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"]]);
+                    $ret1 = DBConnector::getInstance()->dbDelete("anhang", ["antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"]]);
                     $ret = $ret && ($ret1 === 1);
                     $filesRemoved[] = $STORAGE . "/" . $anhang["antrag_id"] . "/" . $anhang["path"];
                 }
-                dbDelete("inhalt", ["antrag_id" => $antrag["id"]]);
-                dbDelete("comments", ["antrag_id" => $antrag["id"]]);
-                dbDelete("anhang", ["antrag_id" => $antrag["id"]]);
-                dbDelete("antrag", ["id" => $antrag["id"]]);
+                DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $antrag["id"]]);
+                DBConnector::getInstance()->dbDelete("comments", ["antrag_id" => $antrag["id"]]);
+                DBConnector::getInstance()->dbDelete("anhang", ["antrag_id" => $antrag["id"]]);
+                DBConnector::getInstance()->dbDelete("antrag", ["id" => $antrag["id"]]);
                 
                 if (count($filesCreated) > 0) die("ups files created during antrag.delete");
                 // commitTx
                 if ($ret)
-                    $ret = dbCommit();
+                    $ret = DBConnector::getInstance()->dbCommit();
                 if (!$ret){
-                    dbRollBack();
+                    DBConnector::getInstance()->dbRollBack();
                     foreach ($filesCreated as $f){
                         if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
                     }
@@ -460,7 +460,7 @@ if (isset($_REQUEST["action"])){
                     break;
                 }
                 $antrag_id = $antrag["id"];
-                $ret = dbInsert("comments", ["antrag_id" => $antrag_id, "creator" => $_REQUEST["username"], "creatorFullName" => $_REQUEST["userFullName"], "text" => $_REQUEST["new-comment"], "type" => 1]);
+                $ret = DBConnector::getInstance()->dbInsert("comments", ["antrag_id" => $antrag_id, "creator" => $_REQUEST["username"], "creatorFullName" => $_REQUEST["userFullName"], "text" => $_REQUEST["new-comment"], "type" => 1]);
                 $forceClose = true;
                 $target = str_replace("//", "/", $URIBASE . "/") . rawurlencode($antrag["token"]);
                 break;
@@ -469,7 +469,7 @@ if (isset($_REQUEST["action"])){
                 $isPartiell = ($_POST["action"] == "antrag.updatePartiell");
                 
                 // beginTx
-                if (!dbBegin()){
+                if (!DBConnector::getInstance()->dbBegin()){
                     $msgs[] = "Cannot start DB transaction";
                     $ret = false;
                     break;
@@ -495,10 +495,10 @@ if (isset($_REQUEST["action"])){
                 $filesCreated = [];
                 $filesRemoved = [];
                 // update last-modified timestamp
-                dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1]);
+                DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1]);
                 // clear all old values (tbl inhalt)
                 if (!$isPartiell)
-                    dbDelete("inhalt", ["antrag_id" => $antrag["id"]]);
+                    DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $antrag["id"]]);
                 // add new values
                 $ret1 = writeFormdata($antrag["id"], $isPartiell, $form, $antrag);
                 $ret = $ret && $ret1;
@@ -534,8 +534,8 @@ if (isset($_REQUEST["action"])){
                         $ret1 = buildAnhangRenameMap($antrag["id"], $fieldname, $value["oldFieldName"], $fieldNameMap);
                         $ret = $ret && $ret1;
                     }
-                    
-                    $anhaenge = dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
+    
+                    $anhaenge = DBConnector::getInstance()->dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
                     foreach ($anhaenge as $anhang){
                         $oldFieldName = $anhang["fieldname"];
                         if (isset($fieldNameMap[$oldFieldName])){
@@ -546,7 +546,7 @@ if (isset($_REQUEST["action"])){
                             }
                         }else{
                             $msgs[] = "Lösche Anhang " . $anhang["fieldname"] . " / " . $anhang["filename"];
-                            $ret1 = dbDelete("anhang", ["antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"]]);
+                            $ret1 = DBConnector::getInstance()->dbDelete("anhang", ["antrag_id" => $anhang["antrag_id"], "id" => $anhang["id"]]);
                             $ret = $ret && ($ret1 === 1);
                             $filesRemoved[] = $STORAGE . "/" . $anhang["antrag_id"] . "/" . $anhang["path"];
                         }
@@ -611,9 +611,9 @@ if (isset($_REQUEST["action"])){
                 if ($ret && !isValid($antrag["id"], "postEdit", $msgs))
                     $ret = false;
                 if ($ret)
-                    $ret = dbCommit();
+                    $ret = DBConnector::getInstance()->dbCommit();
                 if (!$ret){
-                    dbRollBack();
+                    DBConnector::getInstance()->dbRollBack();
                     foreach ($filesCreated as $f){
                         if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
                     }
@@ -1260,18 +1260,18 @@ if (isset($_REQUEST["action"])){
                     break;
                 }
                 $booking_id = $_REQUEST["booking_id"];
-                $ret = dbGet("booking", ["id" => $booking_id]);
+                $ret = DBConnector::getInstance()->dbGet("booking", ["id" => $booking_id]);
                 if ($ret !== false){
                     if ($ret["canceled"] !== 0){
-                        dbBegin();
-                        $user = dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
+                        DBConnector::getInstance()->dbBegin();
+                        $user = DBConnector::getInstance()->dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
                         if ($user !== false){
                             $user_id = $user["id"];
                         }else{
-                            $user_id = dbInsert("user", ["username" => AuthHandler::getInstance()->getUsername(),
+                            $user_id = DBConnector::getInstance()->dbInsert("user", ["username" => AuthHandler::getInstance()->getUsername(),
                                 "fullname" => AuthHandler::getInstance()->getUserFullName()]);
                         }
-                        $newId = dbInsert("booking",
+                        $newId = DBConnector::getInstance()->dbInsert("booking",
                             ["comment" => "Gegenbuchung zu B-Nr: " . $booking_id,
                                 "titel_id" => $ret["titel_id"],
                                 "beleg_id" => $ret["beleg_id"],
@@ -1281,9 +1281,9 @@ if (isset($_REQUEST["action"])){
                                 "value" => -$ret["value"], //negative old Value
                                 "titel_id" => $ret["titel_id"],
                                 "canceled" => $booking_id,]);
-                        dbUpdate("booking", ["id" => $booking_id], ["canceled" => $newId]);
-                        if (!dbCommit()){
-                            dbRollBack();
+                        DBConnector::getInstance()->dbUpdate("booking", ["id" => $booking_id], ["canceled" => $newId]);
+                        if (!DBConnector::getInstance()->dbCommit()){
+                            DBConnector::getInstance()->dbRollBack();
                             $forceClose = true;
                             $target = "";
                             $msgs[] = "Konnte nicht erfolgreich canceln";
@@ -1301,8 +1301,8 @@ if (isset($_REQUEST["action"])){
                     $msgs[] = "Keine Zahlung übermittelt.";
                     break;
                 }
-                
-                if (!dbBegin()){
+    
+                if (!DBConnector::getInstance()->dbBegin()){
                     $msgs[] = "Cannot start DB transaction";
                     $ret = false;
                     break;
@@ -1334,7 +1334,7 @@ if (isset($_REQUEST["action"])){
                     $ret = false;
                     break;
                 }
-                $antrag_id = dbInsert("antrag", $antrag);
+                $antrag_id = DBConnector::getInstance()->dbInsert("antrag", $antrag);
                 if ($antrag_id === false){
                     $forceClose = true;
                     $target = "$URIBASE?tab=hibiscus.sct";
@@ -1364,7 +1364,7 @@ if (isset($_REQUEST["action"])){
                     $rowIdFieldName = "zahlung.table[rowId][{$rowNumber}]";
                     $inhalt = ["fieldname" => $rowIdFieldName, "contenttype" => "table", "antrag_id" => $antrag_id];
                     $inhalt["value"] = $rowIdNumber;
-                    $ret0 = dbInsert("inhalt", $inhalt);
+                    $ret0 = DBConnector::getInstance()->dbInsert("inhalt", $inhalt);
                     if ($ret0 === false){
                         $ret = false;
                         break 2;
@@ -1376,7 +1376,7 @@ if (isset($_REQUEST["action"])){
                         $value = $u[$reqFieldName];
                         if (is_array($value)) $value = implode("\n", $value);
                         $inhalt["value"] = $value;
-                        $ret0 = dbInsert("inhalt", $inhalt);
+                        $ret0 = DBConnector::getInstance()->dbInsert("inhalt", $inhalt);
                         if ($ret0 === false){
                             $ret = false;
                             break 3;
@@ -1416,27 +1416,27 @@ if (isset($_REQUEST["action"])){
                     $rowNumber++;
                     $rowIdNumber++;
                 }
-                
-                $ret0 = dbInsert("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowNumber]);
+    
+                $ret0 = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => $rowCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowNumber]);
                 if ($ret0 === false){
                     $ret = false;
                     break;
                 }
-                
-                $ret0 = dbInsert("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowIdNumber]);
+    
+                $ret0 = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => $rowIdCountFieldName, "contenttype" => "table", "antrag_id" => $antrag_id, "value" => $rowIdNumber]);
                 if ($ret0 === false){
                     $ret = false;
                     break;
                 }
                 
                 $datum = date("Y-m-d");
-                $ret0 = dbInsert("inhalt", ["fieldname" => "zahlung.datum", "contenttype" => "date", "value" => $datum, "antrag_id" => $antrag_id]);
+                $ret0 = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => "zahlung.datum", "contenttype" => "date", "value" => $datum, "antrag_id" => $antrag_id]);
                 if ($ret0 === false){
                     $ret = false;
                     break;
                 }
-                
-                $ret0 = dbInsert("inhalt", ["fieldname" => "zahlung.konto", "contenttype" => "ref", "value" => "01 01", "antrag_id" => $antrag_id]);
+    
+                $ret0 = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => "zahlung.konto", "contenttype" => "ref", "value" => "01 01", "antrag_id" => $antrag_id]);
                 if ($ret0 === false){
                     $ret = false;
                     break;
@@ -1445,10 +1445,10 @@ if (isset($_REQUEST["action"])){
                 $f = ["type" => "kontenplan"];
                 $f["state"] = "final";
                 $f["revision"] = substr($datum, 0, 4); // year
-                $al = dbFetchAll("antrag", [], $f);
+                $al = DBConnector::getInstance()->dbFetchAll("antrag", [], $f);
                 if (count($al) != 1) die("Kontenplan nicht gefunden: " . print_r($f, true));
                 $kpId = $al[0]["id"];
-                $ret0 = dbInsert("inhalt", ["fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
+                $ret0 = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId, "antrag_id" => $antrag_id]);
                 if ($ret0 === false){
                     $ret = false;
                     break;
@@ -1457,9 +1457,9 @@ if (isset($_REQUEST["action"])){
                     $ret = false;
                 
                 if ($ret)
-                    $ret = dbCommit();
+                    $ret = DBConnector::getInstance()->dbCommit();
                 if (!$ret){
-                    dbRollBack();
+                    DBConnector::getInstance()->dbRollBack();
                     foreach ($filesCreated as $f){
                         if (@unlink($f) === false) $msgs[] = "Kann Datei nicht löschen: {$f}";
                     }
@@ -1482,10 +1482,10 @@ if (isset($_REQUEST["action"])){
                     break;
                 }
     
-                if (getUserIBAN() !== false)
-                    $ret = dbUpdate("user", ["username" => AuthHandler::getInstance()->getUsername()], ["fullname" => AuthHandler::getInstance()->getUserFullName(), "iban" => $newIBAN]);
+                if (DBConnector::getInstance()->getUserIBAN() !== false)
+                    $ret = DBConnector::getInstance()->dbUpdate("user", ["username" => AuthHandler::getInstance()->getUsername()], ["fullname" => AuthHandler::getInstance()->getUserFullName(), "iban" => $newIBAN]);
                 else
-                    $ret = dbInsert("user", ["fullname" => AuthHandler::getInstance()->getUserFullName(), "username" => AuthHandler::getInstance()->getUsername(), "iban" => $newIBAN]);
+                    $ret = DBConnector::getInstance()->dbInsert("user", ["fullname" => AuthHandler::getInstance()->getUserFullName(), "username" => AuthHandler::getInstance()->getUsername(), "iban" => $newIBAN]);
     
                 if ($ret){
                     $msgs[] = "IBAN $newIBAN wurde erfolgreich gespeichert";
@@ -1496,14 +1496,14 @@ if (isset($_REQUEST["action"])){
                 }
                 break;
             default:
-                logAppend($logId, "__result", "invalid action");
+                DBConnector::getInstance()->logAppend($logId, "__result", "invalid action");
                 die("{$_REQUEST["action"]} Aktion nicht bekannt.");
         endswitch;
     } /* switch */
     
     if ($logId !== false){
-        logAppend($logId, "__result", ($ret !== false) ? "ok" : "failed");
-        logAppend($logId, "__result_msg", $msgs);
+        DBConnector::getInstance()->logAppend($logId, "__result", ($ret !== false) ? "ok" : "failed");
+        DBConnector::getInstance()->logAppend($logId, "__result_msg", $msgs);
     }
     
     $result = Array();
@@ -1621,7 +1621,7 @@ switch ($tabName){
                 foreach ($vars as $name => $var){
                     $content[$vartype][$name] = $var;
                     if (isset($inhalt[$var])){
-                        $content[$vartype][$name] = convertDBValueToUserValue($inhalt[$var], $contentType[$var]);
+                        $content[$vartype][$name] = $inhalt[$var];
                     }
                     $arr = explode(":", $var);
                     if ($arr[0] === "autovalue"){
@@ -1678,7 +1678,7 @@ switch ($tabName){
         //var_dump($content);
         //exit;
         // Code um POST zu senden
-    
+        //FIXME: Following code is unreachable
     
         $antrag_id = $antrag['id'];
         $content['command']['id'] = $antrag_id;
@@ -2007,12 +2007,12 @@ switch ($tabName){
         HTML_Renderer::renderTable($groups, $mapping);
         break;
     case "antrag.listing":
-        $tmp = dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false], []);
+        $tmp = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => true, "revision" => true, "lastupdated" => false], []);
         $antraege = [];
         foreach ($tmp as $t){
             $form = getForm($t["type"], $t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
+            $t["_inhalt"] = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
             if (!hasPermission($form, $t, "canRead")) continue;
             $antraege["all"][$t["type"]][$t["revision"]][$t["id"]] = $t;
             foreach (array_keys($form["_categories"]) as $cat){
@@ -2035,7 +2035,7 @@ switch ($tabName){
         $form = getForm($antrag["type"], $antrag["revision"]);
         if ($form === false) die("Unbekannter Formulartyp/-revision, kann nicht dargestellt werden.");
     
-        $tmp = dbFetchAll("inhalt", [], ["contenttype" => "otherForm", "value" => $antrag["id"]], [], ["antrag_id" => true]);
+        $tmp = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["contenttype" => "otherForm", "value" => $antrag["id"]], [], ["antrag_id" => true]);
         $idx = [];
         $antraegeRef = [];
         foreach ($tmp as $t){
@@ -2044,11 +2044,11 @@ switch ($tabName){
             if (isset($idx[$antrag_id])) continue;
             $idx[$antrag_id] = true;
     
-            $a = dbGet("antrag", ["id" => $antrag_id]);
+            $a = DBConnector::getInstance()->dbGet("antrag", ["id" => $antrag_id]);
             $f = getForm($a["type"], $a["revision"]);
             if (false === $f) continue;
     
-            $a["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $a["id"]]);
+            $a["_inhalt"] = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $a["id"]]);
             if (!hasPermission($f, $a, "canRead")) continue;
     
             $antraegeRef[$a["type"]][$a["revision"]][$a["id"]] = $a;
@@ -2197,7 +2197,7 @@ switch ($tabName){
         foreach ($tmp as $t){
             $form = getForm($t["type"], $t["revision"]);
             if (false === $form) continue;
-            $t["_inhalt"] = dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
+            $t["_inhalt"] = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $t["id"]]);
     
             if (!hasPermission($form, $t, "canRead")) continue;
             if (!hasCategory($form, $t, "_export_sct")) continue;

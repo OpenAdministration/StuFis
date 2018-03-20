@@ -1258,7 +1258,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
         if ($value === "") {
             echo '<i>Keine Angabe</i>';
         } else {
-            $otherAntrag = dbGet("antrag", ["id" => $value]);
+            $otherAntrag = DBConnector::getInstance()->dbGet("antrag", ["id" => $value]);
             if ($otherAntrag === false) {
                 echo "<i>ungültiger Wert: ".newTemplatePattern($ctrl, htmlspecialchars($value))."</i>";
             }
@@ -1266,7 +1266,7 @@ function renderFormItemOtherForm($layout,$ctrl) {
 
         $readPermitted = false;
         if ($otherAntrag !== false) {
-            $otherInhalt = dbFetchAll("inhalt", [], ["antrag_id" => $otherAntrag["id"]]);
+            $otherInhalt = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $otherAntrag["id"]]);
             $otherAntrag["_inhalt"] = $otherInhalt;
 
             $otherForm = getForm($otherAntrag["type"], $otherAntrag["revision"]);
@@ -2297,9 +2297,9 @@ function renderFormItemSelect($layout, $ctrl) {
 function renderOtherAntrag($antragId, &$ctrl, $renderOpts = "", $newState = false) {
     static $cache = false;
     static $cacheVersion = false;
-    if ($cache === false || $cacheVersion !== dbGetWriteCounter()) {
+    if ($cache === false || $cacheVersion !== DBConnector::getInstance()->dbGetWriteCounter()){
         $cache = [];
-        $cacheVersion = dbGetWriteCounter();
+        $cacheVersion = DBConnector::getInstance()->dbGetWriteCounter();
     }
 
     $renderOpts = explode(",", $renderOpts);
@@ -3281,13 +3281,13 @@ function renderFormItemInvRef($layout,$ctrl) {
                 $f = ["type" => $formFilterDef["type"]];
                 if (isset($formFilterDef["state"]))
                     $f["state"] = $formFilterDef["state"];
-                $al = dbFetchAll("antrag", [], $f);
+                $al = DBConnector::getInstance()->dbFetchAll("antrag", [], $f);
                 foreach ($al as $a) {
                     if (isset($formFilterDef["referenceFormField"])) {
-                        $r0 = dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId ]);
+                        $r0 = DBConnector::getInstance()->dbGet("inhalt", ["antrag_id" => $a["id"], "fieldname" => $formFilterDef["referenceFormField"], "contenttype" => "otherForm", "value" => $currentFormId]);
                         $r1 = false;
                         if ($refId === false) # we're not in a table so lookup otherForm in-Table references (this is unsupported if we're in table)
-                            $r1 = dbFetchAll("inhalt", [], ["antrag_id" => $a["id"], "fieldname" => ["LIKE", $formFilterDef["referenceFormField"] . "[%"], "contenttype" => "otherForm", "value" => $currentFormId]);
+                            $r1 = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $a["id"], "fieldname" => ["LIKE", $formFilterDef["referenceFormField"] . "[%"], "contenttype" => "otherForm", "value" => $currentFormId]);
                         if ($r0 === false && ($r1 === false || count($r1) == 0)) continue;
                     }
                     $forms[$a["id"]]["antrag"] = $a;
