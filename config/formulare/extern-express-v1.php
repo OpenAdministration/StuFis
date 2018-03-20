@@ -29,11 +29,6 @@ $config = [
             ],
         ],
 
-        "balancing-exists" => [
-            ["id" => "geld.abgerechnet",
-             "value" => "biggerEquals:0"
-            ],
-        ],
         "no-prepaymnt" =>[
             ["id" => "geld.vorkasse",
              "value" => "equals:0"
@@ -69,10 +64,10 @@ $config = [
 ];
 $config["printMode"]["bewilligungsbescheid"]["mapping"] = [
     "komaVar" => [
-        "vereinName" => "projekt.org",
-        "vereinPerson" => "Sektion BD Club",
-        "vereinAdresse" => "A-Keller",
-        "vereinOrt" => "98693 Ilmenau",
+        "vereinName" => "projekt.org.name",
+        "vereinPerson" => "_",
+        "vereinAdresse" => "_",
+        "vereinOrt" => "_",
         "datum" => "stura.datum",/*time() - für aktuelle Zeit; stura.datum für Beschlussdatum*/
         "projId" => "autovalue:id",
         "projName" => "projekt.name",
@@ -86,9 +81,9 @@ $config["printMode"]["bewilligungsbescheid"]["mapping"] = [
 $config["printMode"]["pruefbescheid"]["mapping"] = [
     "komaVar" => [
         "vereinName" => "projekt.org.name",
-        "vereinPerson" => "Sektion BD Club",
-        "vereinAdresse" => "A-Keller",
-        "vereinOrt" => "98693 Ilmenau",
+        "vereinPerson" => "_",
+        "vereinAdresse" => "_",
+        "vereinOrt" => "_",
         "datum" => "autovalue:today",/*time() - für aktuelle Zeit; stura.datum für Beschlussdatum*/
         "projId" => "autovalue:id",
         "projName" => "projekt.name",
