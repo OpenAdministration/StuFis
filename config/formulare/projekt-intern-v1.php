@@ -120,7 +120,7 @@ $layout[] = [
     "hideInStates" => ["createState", "draft"],
     "children" => [
         ["id" => "genehmigung.recht.grp", "title" => "Rechtsgrundlage", "type" => "group", "width" => 12, "children" => [
-        
+    
             ["id" => "genehmigung.recht.grp.0", "type" => "group", "width" => 12, "children" => [
                 ["id" => "genehmigung.recht", "text" => "Büromaterial: StuRa-Beschluss 21/20-07: bis zu 50 EUR", "type" => "radio", "value" => "buero", "width" => 12,],
             ],],
@@ -132,20 +132,20 @@ $layout[] = [
                 "children" => [
                     ["id" => "genehmigung.recht", "text" => "Verbrauchsmaterial: Finanzordnung §11: bis zu 150 EUR", "type" => "radio", "value" => "verbrauch", "width" => 12,],
                 ],],
-        
+    
             ["id" => "genehmigung.recht.grp.3", "type" => "group", "width" => 12,
                 "children" => [
                     ["id" => "genehmigung.recht", "text" => "Beschluss StuRa-Sitzung\nFür FSR-Titel ist außerdem ein FSR Beschluss notwendig.", "type" => "radio", "value" => "stura",
                         "width" => [12, 12, 6, 6],],
                     ["id" => "genehmigung.recht.stura.empty", "type" => "plaintext", "width" => 2,],
-                
+    
                     ["id" => "genehmigung.recht.stura.datum", "title" => "vom", "type" => "date",
                         "width" => [6, 6, 2, 2],],
                     ["id" => "genehmigung.recht.stura.beschluss", "title" => "StuRa-Beschluss-Nr", "type" => "text",
                         "width" => [6, 6, 2, 2],],
-            
+
                 ],],
-        
+    
             ["id" => "genehmigung.recht.grp.4", "type" => "group", "width" => 12,
                 "children" => [
                     ["id" => "genehmigung.recht", "text" => "Beschluss Fachschaftsrat/Referat\nStuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR\nMuss auf der nächsten StuRa Sitzung bekannt gemacht werden\nund erhält dann eine StuRa-Beschluss-Nr.", "type" => "radio", "value" => "fsr",
@@ -171,7 +171,7 @@ $layout[] = [
                         "onClickFillFrom" => "projekt.protokoll", "onClickFillFromPattern" => '\d\d\d\d-\d\d-\d\d'],
                     ["id" => "genehmigung.recht.kleidung.empty", "type" => "plaintext", "width" => 2,],
                 ],],
-        
+    
             ["id" => "genehmigung.recht.grp.5", "type" => "group", "width" => 12,
                 "children" => [
                     ["id" => "genehmigung.recht", "text" => "Andere Rechtsgrundlage", "type" => "radio", "value" => "other",
@@ -179,7 +179,7 @@ $layout[] = [
                     ["id" => "genehmigung.recht.other.reason", "title" => "Grund", "type" => "text",
                         "width" => [12, 12, 6, 6],],
                 ],],
-    
+
         ],],
     
     
@@ -208,28 +208,20 @@ $layout[] = [
 $layout[] = [
     "type" => "table", /* renderer */
     "id" => "finanzgruppentbl",
-    "opts" => ["with-row-number", "with-headline"],
+    "opts" => ["with-row-number", "with-headline", "sum-over-table-bottom"],
     "width" => 12,
+    "db" => "projektposten",
     "onlyEditableInStates" => ["createState", "draft"],
     "hideInStates" => ["wip", "ok-by-hv", "need-stura", "ok-by-stura", "done-hv", "done-other", "revoked", "terminated",],
     "renderOptRead" => ["no-form-compress"],
     "columns" => [
-        [
-            "type" => "group", /* renderer */
-            "width" => 12,
-            "id" => "group2",
-            "name" => true,
-            "opts" => ["title", "sum-over-table-bottom"],
-            "children" => [
-                ["id" => "geld.name", "name" => "Ein/Ausgabengruppe", "type" => "text", "width" => 3, "opts" => ["required", "title"], "onlyEditableInStates" => ["createState", "draft"],
-                    "placeholder" => "Name des Postens",
-                ],
-                ["id" => "geld.bemerkung", "width" => 5, "name" => "Bemerkung", "type" => "text", "placeholder" => "Bemerkung optional", "onlyEditableInStates" => ["createState", "draft"]],
-                ["id" => "geld.einnahmen", "name" => "Einnahmen", "type" => "money", "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["createState", "draft"], "addToSum" => ["einnahmen"]],
+        ["id" => "geld.name", "name" => "Ein/Ausgabengruppe", "type" => "text", "width" => 3, "opts" => ["required", "title"], "onlyEditableInStates" => ["createState", "draft"],
+            "placeholder" => "Name des Postens",
+        ],
+        ["id" => "geld.bemerkung", "width" => 4, "name" => "Bemerkung", "type" => "text", "placeholder" => "Bemerkung optional", "onlyEditableInStates" => ["createState", "draft"]],
+        ["id" => "geld.einnahmen", "name" => "Einnahmen", "type" => "money", "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["createState", "draft"], "addToSum" => ["einnahmen"]],
     
-                ["id" => "geld.ausgaben", "name" => "Ausgaben", "type" => "money", "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["createState", "draft"], "addToSum" => ["ausgaben"]],
-            ], // children
-        ], // column
+        ["id" => "geld.ausgaben", "name" => "Ausgaben", "type" => "money", "width" => 2, "currency" => "€", "opts" => ["sum-over-table-bottom"], "onlyEditableInStates" => ["createState", "draft"], "addToSum" => ["ausgaben"]],
     ], // columns
 ];
 //only for states after wip (incl.)

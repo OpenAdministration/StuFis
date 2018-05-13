@@ -8,7 +8,7 @@ $DB_PASSWORD = "FIXME";
 $DB_PREFIX = "finanzformular__";
 $SIMPLESAML = dirname(dirname(dirname(__FILE__)))."/simplesamlphp";
 $SIMPLESAMLAUTHSOURCE = "FIXME";
-# permissions required by index.php
+# permissions required by index_old.php
 $AUTHGROUP = "FIXME";
 # permission required for hibiscus import
 $HIBISCUSGROUP = "FIXME";
