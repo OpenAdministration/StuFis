@@ -1,15 +1,14 @@
 <?php
 
-class  AuthHandler extends Singelton{
+class  AuthHandler extends Singleton{
     private static $SIMPLESAMLDIR;
     private static $SIMPLESAMLAUTHSOURCE;
+    private static $AUTHGROUP;
+    private static $ADMINGROUP;
     private $saml;
     
-    final static protected function static__set($name, $value){
-        if (property_exists(get_class(), $name))
-            self::$$name = $value;
-        else
-            throw new Exception("$name ist keine Variable in " . get_class());
+    public static function getInstance(...$pars): AuthHandler{
+        return parent::getInstance(...$pars);
     }
     
     protected function __construct(){
@@ -17,35 +16,50 @@ class  AuthHandler extends Singelton{
         $this->saml = new SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
     }
     
+    final static protected function static__set($name, $value){
+        if (property_exists(get_class(), $name))
+            self::$$name = $value;
+        else
+            die("$name ist keine Variable in " . get_class());
+    }
+    
     function getUserFullName(){
         $this->requireAuth();
         return $this->getAttributes()["displayName"][0];
     }
     
-    function getUserMail(){
-        $this->requireAuth();
-        return $this->getAttributes()["mail"][0];
+    function requireAuth(){
+        if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$this->saml->isAuthenticated()){
+            header('HTTP/1.0 401 UNATHORISED');
+            die("Login nicht (mehr) gueltig");
+        }
+        $this->saml->requireAuth();
+        if (!$this->hasGroup(self::$AUTHGROUP)){
+            header('HTTP/1.0 403 FORBIDDEN');
+            die("Du besitzt nicht die nötigen Rechte um diese Seite zu sehen.");
+        }
     }
     
     function getAttributes(){
         global $DEV;
         $attributes = $this->saml->getAttributes();
+        //var_dump($attributes['groups']);
         if (!$DEV){
             return $attributes;
         }else{
             $removeGroups = [];
             //$removeGroups = ["ref-finanzen","ref-finanzen-hv",];
+            //$addGroups = [];
+            $addGroups = ["ref-finanzen-hv"];
             $attributes["groups"] = array_diff($attributes["groups"], $removeGroups);
+            $attributes["groups"] = array_merge($attributes["groups"], $addGroups);
             return $attributes;
         }
     }
     
-    function requireAuth(){
-        if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$this->saml->isAuthenticated()){
-            header('HTTP/1.0 401 Unauthorized');
-            die();
-        }
-        $this->saml->requireAuth();
+    function getUserMail(){
+        $this->requireAuth();
+        return $this->getAttributes()["mail"][0];
     }
     
     function requireGroup($group){
@@ -58,14 +72,28 @@ class  AuthHandler extends Singelton{
     }
     
     /**
-     * @param string $group     String of groups
+     * @param string $groups    String of groups
      * @param string $delimiter Delimiter of the groups in $group
      *
      * @return bool  true if the user has one or more groups from $group
      */
-    function hasGroup($group, $delimiter = ","){
+    function hasGroup($groups, $delimiter = ","){
         $attributes = $this->getAttributes();
-        if (count(array_intersect(explode($delimiter, strtolower($group)), array_map("strtolower", $attributes["groups"]))) == 0){
+        if (!isset($attributes["groups"])){
+            return false;
+        }
+        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
+            return false;
+        }
+        return true;
+    }
+    
+    function hasGremium($gremien, $delimiter = ","){
+        $attributes = $this->getAttributes();
+        if (!isset($attributes["gremien"])){
+            return false;
+        }
+        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) == 0){
             return false;
         }
         return true;
@@ -83,6 +111,11 @@ class  AuthHandler extends Singelton{
     function getLogoutURL(){
         return $this->saml->getLogoutURL();
     }
+    
+    function isAdmin(){
+        return $this->hasGroup(self::$ADMINGROUP);
+    }
+    
 }
 
 
