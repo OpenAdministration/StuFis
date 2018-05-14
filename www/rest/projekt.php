@@ -81,9 +81,11 @@ try{
     if ($ret === false || $dbret === false){
         DBConnector::getInstance()->dbRollBack();
         $msgs[] = "DB Rollback";
+        $target = "./";
     }else{
         $msgs[] = "Daten erfolgreich gespeichert!";
         $msgs[] = $ret;
+        $target = $GLOBALS["URIBASE"] . "projekt/" . $projektHandler->getID();
     }
     DBConnector::getInstance()->logAppend($logId, "result", $ret);
     DBConnector::getInstance()->logAppend($logId, "msgs", $msgs);
@@ -97,7 +99,7 @@ $msgs[] = print_r($_POST, true);
 $result = [];
 $result["msgs"] = $msgs;
 $result["ret"] = ($ret !== false);
-$result["target"] = $GLOBALS["URIBASE"] . "projekt/" . $projektHandler->getID();
+$result["target"] = $target;
 //if ($altTarget !== false)
 //    $result["altTarget"] = $altTarget;
 $result["forceClose"] = true;
