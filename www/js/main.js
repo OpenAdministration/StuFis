@@ -54,6 +54,15 @@ $(document).ready(function() {
     });
   });
 
+    //hide special Children in Container in projekt
+    $(".hide-wrapper").children().hide();
+    $(".hide-wrapper>#" + $("[name=recht]").val()).show();
+    $(".hide-wrapper>#" + $("div[data-name='recht']").data("value")).show();
+    $(".selectpicker[name='recht']").on('changed.bs.select', function (e) {
+        $(".hide-wrapper").children().hide();
+        $(".hide-wrapper>#" + e.target.value).show();
+    });
+
   $(".select-picker-container").on("clone-post.selectpicker cloned.selectpicker", function(evt) {
     var cfg = {
       style: 'btn-default',

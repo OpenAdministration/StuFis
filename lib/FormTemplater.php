@@ -273,7 +273,7 @@ class FormTemplater{
                 }
             }
             $values = array_merge(array_diff($values, array_keys($tmp_vals)), array_values($tmp_vals));
-            $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($values) . "</div>";
+            $out .= "<div data-name='$name' data-value='" . implode(",", array_keys($tmp_vals)) . "' id='$unique_id'>" . $this->getReadOnlyValue($values) . "</div>";
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }

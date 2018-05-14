@@ -136,41 +136,30 @@ class ProjektHandler{
                                 [
                                     "label" => "Büromaterial",
                                     "value" => "buero",
-                                    "externalText" => "StuRa-Beschluss 21/20-07: bis zu 50 EUR",
                                 ],
                                 [
                                     "label" => "Fahrtkosten",
                                     "value" => "fahrt",
-                                    "externalFields" => "StuRa-Beschluss 21/20-08: Fahrtkosten",
                                 ],
                                 [
                                     "label" => "Verbrauchsmaterial",
                                     "value" => "verbrauch",
-                                    "externalText" => "Finanzordnung §11: bis zu 150 EUR",
                                 ],
                                 [
-                                    "label" => "Beschluss StuRa-Sitzung. Für FSR-Titel ist außerdem ein FSR Beschluss notwendig.",
+                                    "label" => "Beschluss StuRa-Sitzung",
                                     "value" => "stura",
-                                    "externalText" => "",
                                 ],
                                 [
-                                    "label" => "Beschluss Fachschaftsrat/Referat
-StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu 250 EUR
-Muss auf der nächsten StuRa Sitzung bekannt gemacht werden
-und erhält dann eine StuRa-Beschluss-Nr.",
+                                    "label" => "Beschluss Fachschaftsrat/Referat/AG bis zu 250 EUR",
                                     "value" => "fsr-ref",
-                                    "externalText" => "",
                                 ],
                                 [
-                                    "label" => "Gremienkleidung:
-StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.",
+                                    "label" => "Gremienkleidung",
                                     "value" => "kleidung",
-                                    "externalText" => "",
                                 ],
                                 [
                                     "label" => "Andere Rechtsgrundlage",
                                     "value" => "andere",
-                                    "externalText" => "",
                                 ],
                             ],
                         ],
@@ -274,7 +263,7 @@ StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstü
      * @throws WrongVersionException
      * @throws InvalidDataException
      */
-    public function updateMetaData($data){
+    public function updateSavedData($data){
         $data = array_intersect_key($data, self::$emptyData);
         $version = $data["version"];
         
@@ -299,6 +288,16 @@ StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstü
         $extractFields = ["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben", "posten-titel"];
         $extractFields = array_intersect_key($data, array_flip($extractFields));
         $data = array_diff_key($data, $generatedFields, $extractFields);
+        
+        if (isset($data["recht-additional"])){
+            if (!isset($data["recht"]))
+                $data["recht-additional"] = "";
+            if (isset($data["recht-additional"][$data["recht"]])){
+                $data["recht-additional"] = $data["recht-additional"][$data["recht"]];
+            }else{
+                $data["recht-additional"] = "";
+            }
+        }
         
         $fields = $generatedFields;
         foreach ($data as $name => $content){
@@ -409,6 +408,32 @@ StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstü
                     <h2>Genehmigung</h2>
                     <div class="well">
                         <?= $this->templater->getDropdownForm("recht", $sel_recht, 12, "Wähle Rechtsgrundlage...", "Rechtsgrundlage", ["required"], false) ?>
+                        <div class="hide-wrapper">
+                            <div id="buero" style="display: none;">
+                                <span class="col-xs-12">Finanzordnung §11: bis zu 150 EUR</span>
+                            </div>
+                            <div id="fahrt" style="display: none;">
+                                <span class="col-xs-12">StuRa-Beschluss 21/20-08: Fahrtkosten</span>
+                            </div>
+                            <div id="verbrauch" style="display: none;">
+                                <span class="col-xs-12">StuRa-Beschluss 21/20-07: bis zu 50 EUR</span>
+                            </div>
+                            <div id="stura" style="display: none;">
+                                <?= $this->templater->getTextForm("recht-additional[stura]", $this->data["recht-additional"], 3, "", "StuRa Beschluss", []) ?>
+                                <span class="col-xs-12">Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.</span>
+                            </div>
+                            <div id="fsr-ref" style="display: none;">
+                                <?= $this->templater->getTextForm("recht-additional[fsr-ref]", $this->data["recht-additional"], 3, "", "StuRa Beschluss (Verkündung)", []) ?>
+                                <span class="col-xs-12">StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu (inkl.) 250 EUR
+                                    Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden</span>
+                            </div>
+                            <div id="kleidung" style="display: none;">
+                                <span class="col-xs-12">StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.</span>
+                            </div>
+                            <div id="andere" style="display: none;">
+                                <?= $this->templater->getTextForm("recht-additional[andere]", $this->data["recht-additional"], 12, "", "Andere Rechtsgrundlage angeben", []) ?>
+                            </div>
+                        </div>
                         <div class='clearfix'></div>
                     </div>
                 <?php } ?>

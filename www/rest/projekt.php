@@ -44,7 +44,7 @@ try{
                 throw new IdNotSetException("ID nicht gesetzt.");
             }
             $projektHandler = new ProjektHandler([$_POST["id"]]);
-            $ret = $projektHandler->updateMetaData($_POST);
+            $ret = $projektHandler->updateSavedData($_POST);
             break;
         default:
             throw new ActionNotSetException("Unbekannte Aktion verlangt!");
