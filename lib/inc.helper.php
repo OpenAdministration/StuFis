@@ -21,6 +21,7 @@ function getAntrag($id = null){
     }
     $inhalt = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
     $antrag["_inhalt"] = $inhalt;
+    $antrag["_projektposten"] = ["geld.einnahmen" => 10];
     
     $form = getForm($antrag["type"], $antrag["revision"]);
     $readPermitted = hasPermission($form, $antrag, "canRead");
@@ -142,7 +143,7 @@ function storeInhalt($inhalt, $isPartiell){
         foreach (get_object_vars($inhalt["value"]) as $i => $value){
             $inhalt["fieldname"] = $fieldname . "[{$i}]";
             $inhalt["value"] = $value;
-            $ret1 = storeInhalt($inhalt);
+            $ret1 = storeInhalt($inhalt, $isPartiell);
             $ret = $ret && $ret1;
         }
         return $ret;
@@ -260,7 +261,7 @@ function betterValues($inhalt, $newKey = "fieldname", $newValue = "value"){
 }
 
 /**
- * @param $str Name des Profiling Flags
+ * @param $str string Name des Profiling Flags
  */
 function prof_flag($str){
     global $prof_timing, $prof_names, $prof_sources;

@@ -455,7 +455,7 @@ ul.nav-pills.nav-stacked > li.label-info {
 }
 
 .chat-textarea {
-    margin: 10px 0;
+    margin-bottom: 10px;
     max-width: 100%;
     min-width: 100%;
     min-height: 7em;
@@ -579,5 +579,51 @@ tr.booking__canceled-row > td.text-color__primary {
 .text-color__green {
     color: green;
 }
+
+textarea {
+    min-width: 100%;
+    max-width: 100%;
+}
+
+button.btn.btn-arrow-left {
+    padding-left: 17px;
+    padding-right: 17px;
+}
+
+.btn.btn-arrow-left:before {
+    content: "";
+    position: absolute;
+    transform: translateY(-2px) translateX(-6px) translateX(-100%) rotate(45deg);
+    width: 24px;
+    height: 24px;
+    background: #f5f5f5;
+    /*border-bottom-color: inherit;
+    border-left-color: inherit;
+    border-left-color: transparent;
+    border-bottom-color: transparent;*/
+    border-radius: 0 4px 0 0;
+    -webkit-border-radius: 0 4px 0 0;
+    -moz-border-radius: 0 4px 0 0;
+
+}
+
+.btn.btn-arrow-left:after {
+    content: "";
+    position: absolute;
+    transform: translateY(-2px) translateX(+3px) rotate(45deg);
+    width: 24px;
+    height: 24px;
+    background: inherit;
+    /*border-bottom-color: inherit;
+    border-left-color: inherit;
+    border-left-color: transparent;
+    border-bottom-color: transparent;*/
+    border-radius: 0 4px 0 0;
+    -webkit-border-radius: 0 4px 0 0;
+    -moz-border-radius: 0 4px 0 0;
+
+}
+
+
 
 

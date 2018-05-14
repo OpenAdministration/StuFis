@@ -1,12 +1,48 @@
 <?php
-global $URIBASE, $nonce;
+global $URIBASE, $nonce, $HIBISCUSGROUP;
+
+AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
+if (isset($_GET["id"]))
+    $selected_id = $_GET["id"];
+
 ?>
-
-    <div class="col-md-10 container main">
-
-    <div class="alert alert-info">
-        Bitte wähle nur eine Zahlung oder nur einen Grund und dann beliebig viele zugehörige Gründe bzw. Zahlungen aus.
-    </div>
+<div class="col-md-10 col-xs-12 container main">
+    <?php
+    $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
+    if (!isset($selected_id)){
+        foreach (array_reverse($hhps, true) as $id => $hhp){
+            if ($hhp["state"] === "final"){
+                $selected_id = $id;
+            }
+        }
+    }
+    
+    $year = $hhps[$selected_id]["revision"];
+    $startDate = "$year-01-01";
+    $endDate = "$year-12-31";
+    $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["value" => true]);
+    $alGrund = [];
+    
+    ?>
+    <form>
+        <div class="input-group col-xs-2 pull-right">
+            <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
+            <input type="hidden" name="tab" value="booking">
+            <select class="selectpicker" name="id"><?php
+                foreach ($hhps as $id => $hhp){
+                    ?>
+                    <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
+                            data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
+                    </option>
+                <?php } ?>
+            </select>
+            <div class="input-group-btn">
+                <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
+                    Aktualisieren
+                </button>
+            </div>
+        </div>
+    </form>
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
         <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fa-fw fa-refresh"></i> neue
             Kontoauszüge
@@ -15,12 +51,12 @@ global $URIBASE, $nonce;
         <input type="hidden" name="action" value="hibiscus">
         <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
     </form>
-    <a href="<?php echo $URIBASE; ?>?tab=booking.history" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
+    <a href="<?php echo $URIBASE; ?>menu/booking-history" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
         Buchungsübersicht</a>
     <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax">
         <input type="hidden" name="action" value="booking">
         <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-        <?php //var_dump($alZahlung);?>
+        <?php //var_dump($alZahlung[0]);?>
         <table class="table table-striped">
             <thead>
             <tr>
@@ -36,23 +72,40 @@ global $URIBASE, $nonce;
                 echo "<tr>";
                 if (isset($alZahlung[$idxZahlung])){
                     if (isset($alGrund[$idxGrund])){
-                        $value = min([$alZahlung[$idxZahlung]["_value"], $alGrund[$idxGrund]["_value"]]);
+                        $value = min([floatval($alZahlung[$idxZahlung]["value"]), $alGrund[$idxGrund]["_value"]]);
                     }else{
-                        $value = $alZahlung[$idxZahlung]["_value"];
+                        //var_dump($alZahlung[$idxZahlung]);
+                        $value = floatval($alZahlung[$idxZahlung]["value"]);
                     }
                 }else{
                     $value = $alGrund[$idxGrund]["_value"];
                 }
-            
+    
                 echo "<td>";
-                while (isset($alZahlung[$idxZahlung]) && $alZahlung[$idxZahlung]["_value"] === $value){
+                while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
                     echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $value . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($alZahlung[$idxZahlung]["id"]) . "\">";
-                    $revConfig = $alZahlung[$idxZahlung]["_form"]["config"];
-                    $caption = getAntragDisplayTitle($alZahlung[$idxZahlung], $revConfig);
-                    $caption = trim(implode(" ", $caption));
-                    //$caption = "id";
-                    $url = str_replace("//", "/", $URIBASE . "/" . $alZahlung[$idxZahlung]["token"]);
-                    echo "<a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a>";
+                    $caption = "";
+                    $title = $alZahlung[$idxZahlung]["valuta"] . " - " . $alZahlung[$idxZahlung]["empf_iban"] .
+                        PHP_EOL . $alZahlung[$idxZahlung]["zweck"];
+                    //print_r($alZahlung[$idxZahlung]);
+                    switch ($alZahlung[$idxZahlung]["type"]){
+                        case "FOLGELASTSCHRIFT":
+                            $caption = "LASTSCHRIFT an ";
+                            break;
+                        case "ONLINE-UEBERWEISUNG":
+                            $caption .= "ÜBERWEISUNG an ";
+                            break;
+                        case "GUTSCHRIFT":
+                            $caption = "GUTSCHRIFT von ";
+                            break;
+                        default: //Buchung, Entgeldabschluss,...
+                            $caption = $alZahlung[$idxZahlung]["type"] . " an ";
+                            break;
+            
+                    }
+                    $caption .= $alZahlung[$idxZahlung]["empf_name"];
+                    $url = str_replace("//", "/", $URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
+                    echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars($title) . "'>" . htmlspecialchars($caption) . "</a>";
                     $idxZahlung++;
                     echo "<br>";
                 }
@@ -73,7 +126,7 @@ global $URIBASE, $nonce;
                 echo "</td>";
                 echo "</tr>";
             }
-        
+
             ?>
         </table>
 
@@ -90,31 +143,31 @@ global $URIBASE, $nonce;
                         <tbody>
                             <?php
 
-                            foreach ($alZahlung as $a) {
-                                $value = $a["_value"];
-                                $fvalue = convertDBValueToUserValue($value, "money");
+        foreach ($alZahlung as $a){
+            $value = $a["_value"];
+            $fvalue = convertDBValueToUserValue($value, "money");
+    
+            echo "<tr>";
+            echo "<td>";
+            echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $fvalue . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($a["id"]) . "\">";
+            echo "</td>";
+            echo "<td class=\"text-right nowrap\">";
+            echo htmlspecialchars($fvalue . " €");
+            echo "<input type=\"hidden\" name=\"zahlungValue[" . $a["id"] . "]\" value=\"$value\">";
+            echo "</td>";
+            echo "<td valign=\"top\">";
+            echo $a["id"];
+            echo "</td>";
+            $revConfig = $a["_form"]["config"];
+            $caption = getAntragDisplayTitle($a, $revConfig);
+            $caption = trim(implode(" ", $caption));
+            $url = str_replace("//", "/", $URIBASE . "/" . $a["token"]);
+            echo "<td><a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a></td>";
+            echo "</tr>";
+    
+        }
 
-                                echo "<tr>";
-                                echo "<td>";
-                                echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"".$fvalue."\" name=\"zahlungId[]\" value=\"".htmlspecialchars($a["id"])."\">";
-                                echo "</td>";
-                                echo "<td class=\"text-right nowrap\">";
-                                echo htmlspecialchars($fvalue." €");
-                                echo "<input type=\"hidden\" name=\"zahlungValue[".$a["id"]."]\" value=\"$value\">";
-                                echo "</td>";
-                                echo "<td valign=\"top\">";
-                                echo $a["id"];
-                                echo "</td>";
-                                $revConfig = $a["_form"]["config"];
-                                $caption = getAntragDisplayTitle($a, $revConfig);
-                                $caption = trim(implode(" ", $caption));
-                                $url = str_replace("//","/", $URIBASE."/".$a["token"]);
-                                echo "<td><a href=\"".htmlspecialchars($url)."\">".$caption."</a></td>";
-                                echo "</tr>";
-
-                            }
-
-                            ?>
+        ?>
 
                         </tbody>
                     </table>
@@ -129,31 +182,31 @@ global $URIBASE, $nonce;
                         <tbody>
                             <?php
 
-                            foreach ($alGrund as $a) {
-                                $value = $a["_value"];
-                                $fvalue = convertDBValueToUserValue($value, "money");
+        foreach ($alGrund as $a){
+            $value = $a["_value"];
+            $fvalue = convertDBValueToUserValue($value, "money");
+    
+            echo "<tr>";
+            echo "<td>";
+            echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $fvalue . "\" name=\"grundId[]\" value=\"" . htmlspecialchars($a["id"]) . "\">";
+            echo "</td>";
+            echo "<td class=\"text-right nowrap\">";
+            echo htmlspecialchars($fvalue . " €");
+            echo "<input type=\"hidden\" name=\"grundValue[" . $a["id"] . "]\" value=\"$value\">";
+            echo "</td>";
+            echo "<td valign=\"top\">";
+            echo $a["id"];
+            echo "</td>";
+            $revConfig = $a["_form"]["config"];
+            $caption = getAntragDisplayTitle($a, $revConfig);
+            $caption = trim(implode(" ", $caption));
+            $url = str_replace("//", "/", $URIBASE . "/" . $a["token"]);
+            echo "<td><a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a></td>";
+            echo "</tr>";
+    
+        }
 
-                                echo "<tr>";
-                                echo "<td>";
-                                echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"".$fvalue."\" name=\"grundId[]\" value=\"".htmlspecialchars($a["id"])."\">";
-                                echo "</td>";
-                                echo "<td class=\"text-right nowrap\">";
-                                echo htmlspecialchars($fvalue." €");
-                                echo "<input type=\"hidden\" name=\"grundValue[".$a["id"]."]\" value=\"$value\">";
-                                echo "</td>";
-                                echo "<td valign=\"top\">";
-                                echo $a["id"];
-                                echo "</td>";
-                                $revConfig = $a["_form"]["config"];
-                                $caption = getAntragDisplayTitle($a, $revConfig);
-                                $caption = trim(implode(" ", $caption));
-                                $url = str_replace("//","/", $URIBASE."/".$a["token"]);
-                                echo "<td><a href=\"".htmlspecialchars($url)."\">".$caption."</a></td>";
-                                echo "</tr>";
-
-                            }
-
-                            ?>
+        ?>
 
                         </tbody>
                     </table>
@@ -164,20 +217,16 @@ global $URIBASE, $nonce;
 
         <div style="height:5cm;">&nbsp;</div>
 
-        <nav class="navbar navbar-default navbar-fixed-bottom"
+        <!--<nav class="navbar navbar-default navbar-fixed-bottom"
              <?php
-             global $DEV;
-             if ($DEV)
-                 echo " style=\"background-color:darkred;\"";
-             ?>
+        global $DEV;
+        if ($DEV)
+            echo " style=\"background-color:darkred;\"";
+        ?>
              role="navigation">
             <div class="container">
                 <input type="submit" name="absenden" value="ausgewählte Buchungen zuordnen" class="btn btn-primary navbar-right navbar-btn">
-            </div><!-- /.container -->
-        </nav>
+            </div>
+        </nav>-->
 
     </form>
-
-    <?php
-    # vim: set syntax=php:
-

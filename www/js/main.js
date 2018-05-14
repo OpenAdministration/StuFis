@@ -50,7 +50,7 @@ $(document).ready(function() {
     if ($e.closest(".select-picker-container").length > 0) { return; }
     $e.selectpicker({
       style: 'btn-default',
-      size: false
+        size: 10
     });
   });
 
