@@ -72,10 +72,12 @@ class DBConnector extends Singleton{
             "comment" => "varchar(2048) NOT NULL",
             "value" => "FLOAT NOT NULL",
             "canceled" => "INT NOT NULL DEFAULT 0",];
-        
-        $scheme["user"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
+    
+        $scheme["user"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
             "fullname" => "varchar(255) NOT NULL",
             "username" => "varchar(32) NOT NULL",
+            "email" => "varchar(128) NOT NULL",
             "iban" => "varchar(32) NOT NULL",];
         
         $scheme['haushaltstitel'] = ["id" => " int NOT NULL AUTO_INCREMENT",
@@ -177,7 +179,10 @@ class DBConnector extends Singleton{
         else
             $actionName = "noGivenName";
         $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log (action, user_id) VALUES (?, ?)");
-        $query->execute([$actionName, DBConnector::getInstance()->getUser()["id"]]) or httperror(print_r($query->errorInfo(), true));
+        $res = $query->execute([$actionName, DBConnector::getInstance()->getUser()["id"]]);
+        if ($res === false){
+            throw new PDOException("Log ist nicht möglich!" . print_r($query->errorInfo()), true);
+        }
         $logId = $this->pdo->lastInsertId();
         foreach ($data as $key => $value){
             $key = "request_$key";
@@ -187,7 +192,26 @@ class DBConnector extends Singleton{
     }
     
     function getUser(){
-        return $this->dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
+        $user = $this->dbFetchAll("user", [], ["username" => AuthHandler::getInstance()->getUsername()]);
+        if (count($user) === 1){
+            $user = $user[0];
+        }else{
+            if (count($user) === 0){
+                $fields = [
+                    "fullname" => AuthHandler::getInstance()->getUserFullName(),
+                    "username" => AuthHandler::getInstance()->getUsername(),
+                    "email" => AuthHandler::getInstance()->getUserMail(),
+                ];
+                //print_r($fields);
+                $id = $this->dbInsert("user", $fields);
+                $fields["id"] = $id;
+                $user = $fields;
+            }else{
+                throw new PDOException("User ist mehr als einmal angelegt!");
+            }
+        }
+        //print_r($user);
+        return $user;
     }
     
     public function dbGet($table, $fields){

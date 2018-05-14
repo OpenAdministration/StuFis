@@ -87,9 +87,13 @@ try{
         $msgs[] = $ret;
         $target = $GLOBALS["URIBASE"] . "projekt/" . $projektHandler->getID();
     }
-    DBConnector::getInstance()->logAppend($logId, "result", $ret);
-    DBConnector::getInstance()->logAppend($logId, "msgs", $msgs);
-    
+    if (isset($logId)){
+        DBConnector::getInstance()->logAppend($logId, "result", $ret);
+        DBConnector::getInstance()->logAppend($logId, "msgs", $msgs);
+    }else{
+        $msgs[] = "Loging nicht möglich :(";
+    }
+   
     if (isset($projektHandler))
         DBConnector::getInstance()->logAppend($logId, "projekt_id", $projektHandler->getID());
 }
