@@ -249,6 +249,8 @@ class FormTemplater{
                 }
                 $out .= "<optgroup label='$group_label'>";
                 foreach ($group["options"] as $option){
+                    if ($option["label"] === null)
+                        continue;
                     if (isset($option["value"]))
                         $val = $option["value"];
                     else
