@@ -33,8 +33,8 @@
         </ul>
     </div>
 </nav>
-<div class col-md-2>
-    <?php include "antrag.createpanel.tpl"; ?>
+<div>
+    <?php //include "antrag.createpanel.tpl"; ?>
     <div class="profile-sidebar">
         <!-- SIDEBAR USER TITLE -->
         <div class="profile-usertitle">
@@ -55,23 +55,23 @@
         <!-- END SIDEBAR USER TITLE -->
         <!-- SIDEBAR BUTTONS -->
         <div class="profile-userbuttons">
-            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#newFormModal">
+            <a href="<?= $URIBASE ?>projekt/create/edit" type="button" class="btn btn-primary btn-sm">
                 <i class="fa fa-fw fa-plus"></i>
                 neues Projekt
-            </button>
+            </a>
         </div>
         <!-- END SIDEBAR BUTTONS -->
         <!-- SIDEBAR MENU -->
         <div class="profile-usermenu">
             <ul class="nav">
-                <li <?php if ($_REQUEST["tab"] == "mygremium") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "?tab=mygremium"); ?>">
+                <li <?php if ($subtype == "mygremium") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/mygremium"); ?>">
                         <i class="fa fa-fw fa-home"></i>
                         Meine Gremien
                     </a>
                 </li>
-                <li <?php if ($_REQUEST["tab"] == "mykonto") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "?tab=mykonto"); ?>">
+                <li <?php if ($subtype == "mykonto") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/mykonto"); ?>">
                         <i class="fa fa-fw fa-user-circle"></i>
                         Benutzerkonto
                     </a>
@@ -79,41 +79,47 @@
                 <?php
                 if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                     ?>
-                    <li <?php if ($_REQUEST["tab"] == "hv") echo "class='active'"; ?>>
-                        <a href="<?php echo htmlspecialchars($URIBASE . "?tab=hv"); ?>">
+                    <li <?php if ($subtype == "hv") echo "class='active'"; ?>>
+                        <a href="<?php echo htmlspecialchars($URIBASE . "menu/hv"); ?>">
                             <i class="fa fa-fw fa-legal"></i>
                             TODO HV
                         </a>
                     </li>
-                    <li <?php if ($_REQUEST["tab"] == "kv") echo "class='active'"; ?>>
-                        <a href="<?php echo htmlspecialchars($URIBASE . "?tab=kv"); ?>">
+                    <li <?php if ($subtype == "kv") echo "class='active'"; ?>>
+                        <a href="<?php echo htmlspecialchars($URIBASE . "menu/kv"); ?>">
                             <i class="fa fa-fw fa-calculator "></i>
                             TODO KV
                         </a>
                     </li>
-                    <li <?php if ($_REQUEST["tab"] == "booking") echo "class='active'"; ?>>
-                        <a href="<?php echo htmlspecialchars($URIBASE . "?tab=booking"); ?>">
+                    <li <?php if ($subtype == "booking") echo "class='active'"; ?>>
+                        <a href="<?php echo htmlspecialchars($URIBASE . "menu/booking"); ?>">
                             <i class="fa fa-fw fa-book "></i>
                             Buchungen
                         </a>
                     </li>
                 <?php } ?>
-                <li <?php if ($_REQUEST["tab"] == "stura") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "?tab=stura"); ?>">
+                <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/stura"); ?>">
                         <i class="fa fa-fw fa-users"></i>
                         StuRa-Sitzung
                     </a>
                 </li>
-                <li <?php if ($_REQUEST["tab"] == "allgremium") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "?tab=allgremium"); ?>">
+                <li <?php if ($subtype == "allgremium") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/allgremium"); ?>">
                         <i class="fa fa-fw fa-globe"></i>
                         Alle Gremien
                     </a>
                 </li>
-                <li <?php if ($_REQUEST["tab"] == "hhp") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "?tab=hhp"); ?>">
+                <li <?php if ($subtype == "hhp") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/hhp"); ?>">
                         <i class="fa fa-fw fa-bar-chart"></i>
                         Haushaltsplan
+                    </a>
+                </li>
+                <li <?php if ($subtype == "konto") echo "class='active'"; ?>>
+                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/konto"); ?>">
+                        <i class="fa fa-fw fa-bar-chart"></i>
+                        Konto
                     </a>
                 </li>
 

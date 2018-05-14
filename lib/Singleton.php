@@ -7,34 +7,33 @@
  */
 
 
-abstract class Singelton{
+abstract class Singleton{
     private static $hasCredentialsSet = [];
     private static $instances = [];
     
     /**
      * @param array ...$pars can be multiple or 0 Parameters which will be passed to child::__construct()
      *
-     * @return Singelton instance of child
-     * @throws Exception if setCredentials() was not done before or child is not correct configured
+     * @return mixed Singleton instance of child, if setCredentials() was not done before or child is not correct configured
      */
-    final public static function getInstance(...$pars){
+    public static function getInstance(...$pars){
         $c = static::class;
         if (!isset(self::$hasCredentialsSet[$c]))
-            throw new Exception("Credentials not set!");
+            die("Credentials of " . static::class . " not set!");
         if (!isset(self::$instances[static::class])){
             self::$instances[static::class] = new $c(...$pars);
             return self::$instances[static::class];
         }else{
             if (count($pars) > 0){
-                throw new Exception("Instance allready initialized, no Parameter Allowed after first init");
+                die("Instance allready initialized, no Parameter Allowed after first init");
             }
             return self::$instances[static::class];
         }
     }
     
     /**
-     * @param $confArray Array with variablename => variablevalue where variablename is a private static Variable in
-     *                   child Classes of Singelton
+     * @param $confArray array with variablename => variablevalue where variablename is a private static Variable in
+     *                   child Classes of Singleton
      *
      * @throws Exception
      */
@@ -46,27 +45,25 @@ abstract class Singelton{
                 if (!in_array($varName, array_keys($visVars)))
                     static::static__set($varName, $value);
                 else
-                    throw new Exception("static \$$varName ist nicht private in Klasse " . static::class);
+                    die("static \$$varName ist nicht private in Klasse " . static::class);
             else
-                throw new Exception("static \$$varName existiert nicht in Klasse " . static::class);
+                die("static \$$varName existiert nicht in Klasse " . static::class);
         }
     }
     
     abstract static protected function static__set($name, $value);
     
     /**
-     * @param array $conf Keys are the Names of Singelton-Childs and inside there will be a key-value pair with Name
+     * @param array $conf Keys are the Names of Singleton-Childs and inside there will be a key-value pair with Name
      *                    and Value of <u>private static</u> variable from Child.
-     *
-     * @throws Exception
      */
     public static function configureAll($conf){
         if (!is_array($conf)){
-            throw new Exception("No array passed");
+            die("No array passed in Singelton::configureAll()");
         }
         foreach ($conf as $className => $variables){
-            if (!is_subclass_of($className, "Singelton"))
-                throw new Exception("$className is not a Child of Singelton!");
+            if (!is_subclass_of($className, "Singleton"))
+                die("$className is not a Child of Singleton!");
             $className::setCredentials($variables);
             self::$hasCredentialsSet[$className] = true;
         }
@@ -94,7 +91,7 @@ abstract class Singelton{
 
 /*
  * Example for Implementation:
-class Test extends Singelton {
+class Test extends Singleton {
     private static $test;
     final static protected function  static__set($name, $value){
         if(property_exists(get_class(), $name))

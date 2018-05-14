@@ -1,17 +1,26 @@
 <?php
 
-class DBConnector extends Singelton{
+class DBConnector extends Singleton{
     
-    private static $DB_DSN, $DB_USERNAME, $DB_PASSWORD, $DB_PREFIX, $BUILD_DB;
+    private static $DB_DSN;
+    private static $DB_USERNAME;
+    private static $DB_PASSWORD;
+    private static $DB_PREFIX;
+    private static $BUILD_DB;
     private $pdo;
     private $scheme;
     private $validFields;
     private $dbWriteCounter = 0;
+    private $transactionCount = 0;
     
     public function __construct(){
         prof_flag("init-db-connection");
         $this->initScheme();
         $this->pdo = new PDO(self::$DB_DSN, self::$DB_USERNAME, self::$DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
+        if (self::$BUILD_DB){
+            include SYSBASE . "/sql/buildDB.php";
+            prof_flag("build-db-finished");
+        }
     }
     
     private function initScheme(){
@@ -74,24 +83,65 @@ class DBConnector extends Singelton{
             "titel_name" => " varchar(128) NOT NULL",
             "titel_nr" => " varchar(10) NOT NULL",
             "value" => "float NOT NULL",];
-        
-        $scheme['haushaltsgruppen'] = ["id" => "int NOT NULL AUTO_INCREMENT",
+    
+        $scheme['haushaltsgruppen'] = [
+            "id" => "int NOT NULL AUTO_INCREMENT",
             "hhp_id" => " int NOT NULL",
             "gruppen_name" => " varchar(128) NOT NULL",
             "type" => "tinyint(1) NOT NULL",];
-        $scheme["projektposten"] = ["id" => " INT NOT NULL AUTO_INCREMENT PRIMARY KEY",
+    
+        $scheme["projektposten"] = [
+            "id" => " INT NOT NULL",
             "projekt_id" => " INT NOT NULL",
-            "titel_id" => " INT NOT NULL",
-            "einnahmen" => " FLOAT NULL",
-            "ausgaben" => " FLOAT NULL",
+            "titel_id" => " INT NULL DEFAULT NULL",
+            "einnahmen" => " FLOAT NOT NULL",
+            "ausgaben" => " FLOAT NOT NULL",
             "name" => " VARCHAR(128) NOT NULL",
             "bemerkung" => " VARCHAR(256) NOT NULL",];
-        $scheme["beleg_posten"] = ["beleg_id" => "INT NOT NULL",
+    
+        $scheme["beleg_posten"] = [
+            "beleg_id" => "INT NOT NULL",
             "posten_id" => "INT NOT NULL",
             "antrag_id" => "INT NOT NULL",
             "einnahmen" => "FLOAT NULL",
             "ausgaben" => "FLOAT NULL",];
-        
+    
+        $scheme["konto"] = [
+            "id" => "INT NOT NULL",
+            "konto_id" => "INT NOT NULL",
+            "date" => "DATE NOT NULL",
+            "valuta" => "DATE NOT NULL",
+            "type" => "VARCHAR(128) NOT NULL",
+            "empf_iban" => "VARCHAR(40) NOT NULL",
+            "empf_bic" => "VARCHAR(11)",
+            "empf_name" => "VARCHAR(128) NOT NULL",
+            "primanota" => "float NOT NULL",
+            "value" => "float NOT NULL",
+            "saldo" => "float NOT NULL",
+            "zweck" => "varchar(256) NOT NULL",
+            "comment" => "varchar(128) NOT NULL",
+            "gvcode" => "int NOT NULL",
+            "customer_ref" => "varchar(128)"
+        ];
+        $scheme["projekte"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "creator_id" => "INT NOT NULL",
+            "createdat" => "DATETIME NOT NULL",
+            "lastupdated" => "DATETIME NOT NULL",
+            "version" => "INT NOT NULL DEFAULT 1",
+            "state" => "VARCHAR(32) NOT NULL",
+            "stateCreator_id" => "INT NOT NULL",
+            "name" => "VARCHAR(128) NULL",
+            "responsible" => "VARCHAR(128) NULL COMMENT 'EMAIL'",
+            "org" => "VARCHAR(64) NULL",
+            "org-mail" => "VARCHAR(128) NULL",
+            "protokoll" => "VARCHAR(256) NULL",
+            "recht" => "VARCHAR(64) NULL",
+            "recht-additional" => "VARCHAR(128) NULL",
+            "date-start" => "DATE NULL",
+            "date-end" => "DATE NULL",
+            "beschreibung" => "TEXT NULL"
+        ];
         $this->scheme = $scheme;
         
         //build valid fields out of schemes
@@ -102,55 +152,115 @@ class DBConnector extends Singelton{
             if (!is_array($content)) continue;
             if (in_array($tblname, $blacklist)) continue;
             $colnames = array_keys($content);
+            //all all colnames of this table
             $validFields = array_merge($colnames, $validFields);
             $func = function(&$val, $key) use ($tblname){
                 $val = $tblname . "." . $val;
             };
+            //add all colnames with tablename.colname
             array_walk($colnames, $func);
             $validFields = array_merge($colnames, $validFields);
         }
         $this->validFields = array_unique($validFields);
-        
-        if (self::$BUILD_DB){
-            include "../sql/buildDB.php";
-            prof_flag("build-db-finished");
-        }
     }
     
     final static protected function static__set($name, $value){
         if (property_exists(get_class(), $name))
             self::$$name = $value;
         else
-            throw new Exception("$name ist keine Variable in " . get_class());
+            die("$name ist keine Variable in " . get_class());
     }
     
-    public function logThisAction(){
-        $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log (action, responsible) VALUES (?, ?)");
-        $query->execute(Array($_REQUEST["action"], AuthHandler::getInstance()->getUsername())) or httperror(print_r($query->errorInfo(), true));
+    public function logThisAction($data, $actionName = false){
+        if ($actionName === false && isset($data["action"]))
+            $actionName = $data["action"];
+        else
+            $actionName = "noGivenName";
+        $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log (action, user_id) VALUES (?, ?)");
+        $query->execute([$actionName, DBConnector::getInstance()->getUser()["id"]]) or httperror(print_r($query->errorInfo(), true));
         $logId = $this->pdo->lastInsertId();
-        foreach ($_REQUEST as $key => $value){
+        foreach ($data as $key => $value){
             $key = "request_$key";
-            DBConnector::getInstance()->logAppend($logId, $key, $value);
+            $this->logAppend($logId, $key, $value);
         }
         return $logId;
     }
     
+    function getUser(){
+        return $this->dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
+    }
+    
+    public function dbGet($table, $fields){
+        if (!isset($this->scheme[$table])) die("Unkown table $table");
+        $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
+        $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
+        
+        if (count($fields) == 0) die("No (valid) fields given.");
+        
+        $c = [];
+        $vals = [];
+        foreach ($fields as $k => $v){
+            if (is_array($v)){
+                $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
+                $vals[] = $v[1];
+            }else{
+                $c[] = $this->quoteIdent($k) . " = ?";
+                $vals[] = $v;
+            }
+        }
+        $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
+        //var_dump($sql);
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
+        if ($ret === false)
+            return false;
+        if ($query->rowCount() != 1) return false;
+        
+        return $query->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    private function quoteIdent($field){
+        $ret = "`" . str_replace("`", "``", $field) . "`";
+        return str_replace(".", "`.`", $ret);
+    }
+    
+    /**
+     * @param array ...$pars
+     *
+     * @return DBConnector
+     */
+    public static function getInstance(...$pars){
+        return parent::getInstance(...$pars);
+    }
+    
     public function logAppend($logId, $key, $value){
         $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log_property (log_id, name, value) VALUES (?, ?, ?)");
-        if (is_array($value)) $value = print_r($value, true);
+        if (is_array($value))
+            $value = print_r($value, true);
         $query->execute(Array($logId, $key, $value)) or httperror(print_r($query->errorInfo(), true));
     }
     
     public function dbBegin(){
-        return $this->pdo->beginTransaction();
+        if (!$this->transactionCount++){
+            return $this->pdo->beginTransaction();
+        }
+        $ret = $this->pdo->query('SAVEPOINT trans' . $this->transactionCount);
+        return $ret && $this->transactionCount >= 0;
     }
     
     public function dbCommit(){
-        return $this->pdo->commit();
+        if (!--$this->transactionCount){
+            return $this->pdo->commit();
+        }
+        return $this->transactionCount >= 0;
     }
     
     public function dbRollBack(){
-        return $this->pdo->rollBack();
+        if (--$this->transactionCount){
+            $this->pdo->exec('ROLLBACK TO trans' . ($this->transactionCount + 1));
+            return true;
+        }
+        return $this->pdo->rollback();
     }
     
     public function dbGetWriteCounter(){
@@ -158,8 +268,8 @@ class DBConnector extends Singelton{
     }
     
     /**
-     * @param $table    table in db
-     * @param $fields   all fields which should be filled
+     * @param $table    string  table in db
+     * @param $fields   array   all fields which should be filled
      *
      * @return bool|string
      */
@@ -167,49 +277,53 @@ class DBConnector extends Singelton{
         $this->dbWriteCounter++;
         
         if (!isset($this->scheme[$table])) die("Unkown table $table");
-        
-        if (isset($fields["id"])) unset($fields["id"]);
+    
+        //if (isset($fields["id"])) unset($fields["id"]);
         
         $fields = array_intersect_key($fields, $this->scheme[$table]);
         $p = array_fill(0, count($fields), "?");
         $sql = "INSERT " . self::$DB_PREFIX . "{$table} (" . implode(",", array_map([$this, "quoteIdent"], array_keys($fields))) . ") VALUES (" . implode(",", $p) . ")";
         
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_values($fields)) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute(array_values($fields));
+        //print_r($sql);
+        //print_r(array_values($fields));
         if ($ret === false)
-            return $ret;
+            throw new PDOException(print_r($query->errorInfo(), true));
         return $this->pdo->lastInsertId();
     }
     
     /**
-     * @param $table    table of db without prefix
-     * @param $filter   after WHERE clause
-     * @param $fields   fields which will be new set
+     * @param $table  string tablename
+     * @param $filter array where clause
+     * @param $fields array new values
      *
      * @return bool|int
      */
     public function dbUpdate($table, $filter, $fields){
         $this->dbWriteCounter++;
-        
         if (!isset($this->scheme[$table])) die("Unkown table $table");
-        $validFilterFields = ["id", "token", "antrag_id", "fieldname", "contenttype", "username"];
-        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
-        $fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($validFilterFields)); # do not update filter fields
-        
+    
+        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
+        //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
+        $fields = array_intersect_key($fields, array_flip($this->validFields));
         if (count($filter) == 0) die("No filter fields given.");
         if (count($fields) == 0) die("No fields given.");
         
         $u = [];
         foreach ($fields as $k => $v){
-            $u[] = DBConnector::getInstance()->quoteIdent($k) . " = ?";
+            $u[] = $this->quoteIdent($k) . " = ?";
         }
         $c = [];
         foreach ($filter as $k => $v){
-            $c[] = DBConnector::getInstance()->quoteIdent($k) . " = ?";
+            $c[] = $this->quoteIdent($k) . " = ?";
         }
         $sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . " WHERE " . implode(" AND ", $c);
+        //print_r($sql);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_merge(array_values($fields), array_values($filter))) or httperror(print_r($query->errorInfo(), true));
+        $values = array_merge(array_values($fields), array_values($filter));
+    
+        $ret = $query->execute($values) or httperror(print_r($query->errorInfo(), true));
         if ($ret === false)
             return false;
         
@@ -217,11 +331,11 @@ class DBConnector extends Singelton{
     }
     
     public function dbDelete($table, $filter){
-        $this->dbWriteCounter++;
-        
-        if (!isset($this->scheme[$table])) die("Unkown table $table");
-        $validFilterFields = ["id", "token", "antrag_id", "fieldname"];
-        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($validFilterFields)); # only fetch using id and url
+        //$this->dbWriteCounter++;
+    
+        if (!isset($this->scheme[$table]))
+            throw new PDOException("Unkown table $table");
+        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
         
         if (count($filter) == 0) die("No filter fields given.");
         
@@ -231,15 +345,11 @@ class DBConnector extends Singelton{
         }
         $sql = "DELETE FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_values($filter)) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute(array_values($filter));
         if ($ret === false)
-            return false;
+            throw new PDOException(print_r($query->errorInfo(), true));;
         
         return $query->rowCount();
-    }
-    
-    private function quoteIdent($field){
-        return "`" . str_replace("`", "``", $field) . "`";
     }
     
     /**
@@ -271,8 +381,10 @@ class DBConnector extends Singelton{
      *                                  There can be multiple arrays of the above structure, there will be processed in
      *                                  original order from php
      * @param array  $sort              Order by key (field) with val===true ? asc : desc
-     * @param bool   $groupByFirstCol   First coloum will be row idx
-     * @param bool   $unique            First column is unique (better output with $groupByFirstCol=true)
+     * @param bool   $groupByFirstCol   First coloum will be row idx (if not $unique = true there will be an array as
+     *                                  value for each first coloum entry as key)
+     * @param bool   $unique            First column is unique (better output with $groupByFirstCol=true) has unexpected
+     *                                  results if first coulum isn't unique but $unique = true
      *
      * @return array|bool
      */
@@ -281,14 +393,17 @@ class DBConnector extends Singelton{
         if (!isset($tables)){
             die("table not set");
         }
+    
         if (!is_array($tables)){
             $tables = [$tables];
         }
-        foreach ($tables as &$table){
+    
+        foreach ($tables as $key => $table){
             if (!isset($this->scheme[$table])) die("Unkown table $table");
-            $table = self::$DB_PREFIX . $table;
+            $tables[$key] = self::$DB_PREFIX . $table;
         }
-        
+    
+    
         //check if content of fields and sort are valid
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         $sort = array_intersect_key($sort, array_flip($this->validFields));
@@ -356,15 +471,18 @@ class DBConnector extends Singelton{
         $c = [];
         $vals = [];
         foreach ($fields as $k => $v){
+            if (strpos($k, ".") !== false){
+                $k = self::$DB_PREFIX . $k;
+            }
             if (is_array($v)){
                 if (is_array($v[1])){
                     switch (strtolower($v[0])){
                         case "in":
                             $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                            $c[] = quoteIdent($k) . " $v[0] (" . $tmp . ")";
+                            $c[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
                             break;
                         case "between":
-                            $c[] = quoteIdent($k) . " $v[0] ? AND ?";
+                            $c[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
                             if (count($v[1]) !== 2){
                                 die("To many values for " . $v[0]);
                             }
@@ -398,7 +516,7 @@ class DBConnector extends Singelton{
                     if (strpos($join["on"][$i][1], ".") !== 0){
                         $join["on"][$i][1] = self::$DB_PREFIX . $join["on"][$i][1];
                     }
-                    $jon[] = $join["on"][$i][0] . " " . $join["operator"][$i] . " " . $join["on"][$i][1];
+                    $jon[] = $this->quoteIdent($join["on"][$i][0]) . " " . $join["operator"][$i] . " " . $this->quoteIdent($join["on"][$i][1]);
                 }
                 $j[] = PHP_EOL . $jtype . " " . self::$DB_PREFIX . $join["table"] . " ON " . implode(" AND ", $jon);
             }
@@ -406,7 +524,10 @@ class DBConnector extends Singelton{
         
         $o = [];
         foreach ($sort as $k => $v){
-            $o[] = $this->quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
+            if (strpos($k, ".") !== false)
+                $o[] = $this->quoteIdent(self::$DB_PREFIX . $k) . " " . ($v ? "ASC" : "DESC");
+            else
+                $o[] = $this->quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
         }
         
         
@@ -524,7 +645,6 @@ class DBConnector extends Singelton{
         return $this->groupArrayKeysByRegExpArray($projects, $gremiumNames);
     }
     
-    
     /**
      * @param $array
      * @param $regexpArray
@@ -549,39 +669,6 @@ class DBConnector extends Singelton{
             }
         }
         return $retArray;
-    }
-    
-    public function dbGetLastHibiscus(){
-        $sql = "SELECT MAX(CAST(i.value AS DECIMAL)) AS t_max FROM " . self::$DB_PREFIX . "antrag a INNER JOIN " . self::$DB_PREFIX . "inhalt i ON a.id = i.antrag_id AND i.fieldname = 'zahlung.hibiscus' AND a.type = 'zahlung' AND a.revision = 'v1-giro-hibiscus'";
-        
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute() or httperror(print_r($query->errorInfo(), true));
-        if ($ret === false)
-            return false;
-        if ($query->rowCount() != 1) return false;
-        
-        return $query->fetchColumn();
-    }
-    
-    /**
-     * @param $ktoId
-     * @param $kpId
-     *
-     * @return bool
-     */
-    public function dbHasAnfangsbestand($ktoId, $kpId){
-        $sql = "SELECT COUNT(*) FROM " . self::$DB_PREFIX . "antrag a
- INNER JOIN " . self::$DB_PREFIX . "inhalt i1 ON a.id = i1.antrag_id AND i1.fieldname = 'kontenplan.otherForm' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i1.value = ?
- INNER JOIN " . self::$DB_PREFIX . "inhalt i2 ON a.id = i2.antrag_id AND i2.fieldname = 'zahlung.konto' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i2.value = ?
-";
-        
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute([$kpId, $ktoId]) or httperror(print_r($query->errorInfo(), true));
-        if ($ret === false)
-            return false;
-        if ($query->rowCount() != 1) return false;
-        
-        return $query->fetchColumn() > 0;
     }
     
     /*
@@ -640,41 +727,36 @@ class DBConnector extends Singelton{
     
     }*/
     
-    function getUserIBAN(){
-        $ret = $this->dbGet("user", ["username" => AuthHandler::getInstance()->getUsername()]);
-        if ($ret === false){
-            return false;
-        }else{
-            return $ret["iban"];
-        }
-    }
-    
-    public function dbGet($table, $fields){
-        if (!isset($this->scheme[$table])) die("Unkown table $table");
-        $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
-        $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
-        
-        if (count($fields) == 0) die("No (valid) fields given.");
-        
-        $c = [];
-        $vals = [];
-        foreach ($fields as $k => $v){
-            if (is_array($v)){
-                $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                $vals[] = $v[1];
-            }else{
-                $c[] = $this->quoteIdent($k) . " = ?";
-                $vals[] = $v;
-            }
-        }
-        $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
+    public function dbGetLastHibiscus(){
+        $sql = "SELECT MAX(id) FROM " . self::$DB_PREFIX . "konto";
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute() or httperror(print_r($query->errorInfo(), true));
         if ($ret === false)
             return false;
         if ($query->rowCount() != 1) return false;
         
-        return $query->fetch(PDO::FETCH_ASSOC);
+        return $query->fetchColumn();
+    }
+    
+    /**
+     * @param $ktoId
+     * @param $kpId
+     *
+     * @return bool
+     */
+    public function dbHasAnfangsbestand($ktoId, $kpId){
+        $sql = "SELECT COUNT(*) FROM " . self::$DB_PREFIX . "antrag a
+ INNER JOIN " . self::$DB_PREFIX . "inhalt i1 ON a.id = i1.antrag_id AND i1.fieldname = 'kontenplan.otherForm' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i1.value = ?
+ INNER JOIN " . self::$DB_PREFIX . "inhalt i2 ON a.id = i2.antrag_id AND i2.fieldname = 'zahlung.konto' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i2.value = ?
+";
+        
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute([$kpId, $ktoId]) or httperror(print_r($query->errorInfo(), true));
+        if ($ret === false)
+            return false;
+        if ($query->rowCount() != 1) return false;
+        
+        return $query->fetchColumn() > 0;
     }
     
     function dbgetHHP($id){
@@ -735,5 +817,13 @@ class DBConnector extends Singelton{
             return $this->pdo->quote($string);
         else
             return $this->pdo->quote($string, $parameter_type);
+    }
+    
+    private function buildColDef($fields){
+        $r = "";
+        foreach ($fields as $key => $val){
+            $r .= $this->quoteIdent($key) . " $val,";
+        }
+        return $r;
     }
 }

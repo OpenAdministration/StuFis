@@ -1,17 +1,26 @@
 <?php
 
-class HibiscusXMLRPCConnector extends Singelton{
+class HibiscusXMLRPCConnector extends Singleton{
     private static $HIBISCUS_PASSWORD;
     private static $HIBISCUS_USERNAME;
     private static $HIBISCUS_URL;
     
-    private function __construct(){
+    /**
+     * HibiscusXMLRPCConnector constructor.
+     */
+    protected function __construct(){
         //remove trailing slashes from URL
         if (substr(self::$HIBISCUS_URL, -1, 1) === "/"){
             self::$HIBISCUS_URL = substr(self::$HIBISCUS_URL, 0, count(self::$HIBISCUS_URL) - 1);
         }
     }
     
+    /**
+     * @param $name
+     * @param $value
+     *
+     * @throws Exception
+     */
     final static protected function static__set($name, $value){
         if (property_exists(get_class(), $name))
             self::$$name = $value;
@@ -23,8 +32,8 @@ class HibiscusXMLRPCConnector extends Singelton{
         
         // parse into other structure
         $statements = Array();
-        
-        $client = XML_RPC2_Client::create("https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUSPASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "xmlrpc/hibiscus.xmlrpc.konto",
+    
+        $client = XML_RPC2_Client::create("https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "xmlrpc/hibiscus.xmlrpc.konto",
             ["sslverify" => false, "debug" => false, "prefix" => "hibiscus.xmlrpc.konto."]);
         $kto = $client->find();
         
@@ -45,8 +54,9 @@ class HibiscusXMLRPCConnector extends Singelton{
         }
         
         $umsopt = ["konto_id" => $ktoid];
-        
-        $url = "https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUSPASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/webadmin/rest/system/status";
+    
+        /*$url = "https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/webadmin/rest/system/status";
+        echo htmlspecialchars($url);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -57,6 +67,8 @@ class HibiscusXMLRPCConnector extends Singelton{
         if ($response === false){
             echo '<div class="alert alert-warning">FINTS hat keinen Status geliefert.</div>';
         }else{
+            print_r($response);
+            
             $response = json_decode($response, true);
             if ($response === null || !is_array($response) || !isset($response["type"]) || !isset($response["title"]) || !isset($response["text"])){
                 echo '<div class="alert alert-warning">FINTS hat keinen parsbaren Status geliefert.</div>';
@@ -75,24 +87,28 @@ class HibiscusXMLRPCConnector extends Singelton{
                     echo '<div class="alert alert-' . $cls . '">' . htmlspecialchars("FINTS (" . $response["title"] . "): " . $response["text"]) . '</div>';
                 }
             }
-        }
+        }*/
         
         # letzter abgerufener Umsatz
-        $lastUmsatzId = dbGetLastHibiscus();
+        $lastUmsatzId = DBConnector::getInstance()->dbGetLastHibiscus();
         if ($lastUmsatzId === null)
             $lastUmsatzId = false;
         
         $umsopt["datum:min"] = "2017-01-01";
         if ($lastUmsatzId !== false)
             $umsopt["id:min"] = 1 + $lastUmsatzId;
-        
-        $client = XML_RPC2_Client::create("https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUSPASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/xmlrpc/hibiscus.xmlrpc.umsatz", ["sslverify" => false, "debug" => false, "prefix" => "hibiscus.xmlrpc.umsatz."]);
+    
+        $client = XML_RPC2_Client::create("https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/xmlrpc/hibiscus.xmlrpc.umsatz", ["sslverify" => false, "debug" => false, "prefix" => "hibiscus.xmlrpc.umsatz."]);
         $umsatz = $client->list($umsopt);
         usort($umsatz, function($a, $b){
             if ($a["id"] < $b["id"]) return -1;
             if ($a["id"] > $b["id"]) return 1;
             return 0;
         });
+    
+        return $umsatz;
+    
+        /*
         $newForms = [];
         foreach ($umsatz as $u){
             $id = (string)$u["id"];
@@ -106,7 +122,7 @@ class HibiscusXMLRPCConnector extends Singelton{
             
             $inhalt[] = ["fieldname" => "zahlung.hibiscus", "contenttype" => "number", "value" => $id];
             
-            $saldo = tofloatHibiscus($u['saldo']);
+            $saldo = $this->tofloatHibiscus($u['saldo']);
             $inhalt[] = ["fieldname" => "zahlung.saldo", "contenttype" => "money", "value" => $saldo];
             
             foreach (Array("art", "empfaenger_name", "empfaenger_konto", "empfaenger_blz") as $attr){
@@ -114,7 +130,7 @@ class HibiscusXMLRPCConnector extends Singelton{
             }
             
             $betrag = (string)$u["betrag"];
-            $betrag = tofloatHibiscus($betrag);
+            $betrag = $this->tofloatHibiscus($betrag);
             if ($betrag >= 0){
                 $inhalt[] = ["fieldname" => "zahlung.einnahmen", "contenttype" => "money", "value" => $betrag];
             }else{
@@ -134,15 +150,15 @@ class HibiscusXMLRPCConnector extends Singelton{
             $f = ["type" => "kontenplan"];
             $f["state"] = "final";
             $f["revision"] = substr($datum, 0, 4); // year
-            $al = dbFetchAll("antrag", [], $f);
-            if (count($al) != 1) die("Kontenplan nicht gefunden: " . print_r($f, true));
+            $al = DBConnector::getInstance()->dbFetchAll("antrag", [], $f);
+            if (count($al) != 1) die("Kontenplan nicht eindeutig gefunden: " . print_r($f, true));
             $kpId = $al[0]["id"];
             $inhalt[] = ["fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId];
             
             $newForms[] = $inhalt;
         }
         
-        return $newForms;
+        return $newForms;*/
     }
     
     private function tofloatHibiscus($num){
@@ -173,23 +189,20 @@ class HibiscusXMLRPCConnector extends Singelton{
         );
     }
     
-    private function fetchFromHibiscusAnfangsbestand(){
+    public function fetchFromHibiscusAnfangsbestand(){
         $year = date("Y");
-        
+        /*
         $f = ["type" => "kontenplan"];
         $f["state"] = "final";
         $f["revision"] = $year;
-        $al = dbFetchAll("antrag", [], $f);
+        $al = DBConnector::getInstance()->dbFetchAll("antrag", [], $f);
         if (count($al) != 1) die("Kontenplan nicht gefunden: " . print_r($f, true));
         $kpId = $al[0]["id"];
         
         // check anfangsbestand already saved
-        if (dbHasAnfangsbestand("01 01", $kpId)){
+        if (DBConnector::getInstance()->dbHasAnfangsbestand("01 01", $kpId)){
             return [];
-        }
-        
-        // parse into other structure
-        $statements = Array();
+        }*/
         
         $client = XML_RPC2_Client::create("https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/xmlrpc/hibiscus.xmlrpc.konto", ["sslverify" => false, "debug" => false, "prefix" => "hibiscus.xmlrpc.konto."]);
         $kto = $client->find();
@@ -207,9 +220,10 @@ class HibiscusXMLRPCConnector extends Singelton{
         
         $umsopt = ["konto_id" => $ktoid];
         
-        $url = "https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/webadmin/rest/system/status";
+        /*$url = "https://" . rawurldecode(self::$HIBISCUS_USERNAME) . ":" . rawurlencode(self::$HIBISCUS_PASSWORD) . "@" . rawurldecode(self::$HIBISCUS_URL) . "/webadmin/rest/system/status";
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $response = curl_exec($ch);
@@ -218,6 +232,9 @@ class HibiscusXMLRPCConnector extends Singelton{
         if ($response === false){
             echo '<div class="alert alert-warning">FINTS hat keinen Status geliefert.</div>';
         }else{
+            echo "terst";
+            echo $response;
+            echo "3ews";
             $response = json_decode($response, true);
             if ($response === null || !is_array($response) || !isset($response["type"]) || !isset($response["title"]) || !isset($response["text"])){
                 echo '<div class="alert alert-warning">FINTS hat keinen parsbaren Status geliefert.</div>';
@@ -236,8 +253,8 @@ class HibiscusXMLRPCConnector extends Singelton{
                     echo '<div class="alert alert-' . $cls . '">' . htmlspecialchars("FINTS (" . $response["title"] . "): " . $response["text"]) . '</div>';
                 }
             }
-        }
-        
+        }*/
+        /*
         // brauche umsatz vor $year-01-01 und nach $(year-1)-12-31
         $umsopt["datum:min"] = "$year-01-01";
         $umsopt["datum:max"] = "$year-12-31";
@@ -262,8 +279,9 @@ class HibiscusXMLRPCConnector extends Singelton{
         });
         
         $uLastBefore = array_pop($umsatzImJahrDavor);
-        $saldo = tofloatHibiscus($uLastBefore['saldo']);
-        
+        $saldo = $this->tofloatHibiscus($uLastBefore['saldo']);
+        echo $saldo;
+        /*
         $newForms = [];
         
         $datum = "$year-01-01";
@@ -279,7 +297,8 @@ class HibiscusXMLRPCConnector extends Singelton{
         $inhalt[] = ["fieldname" => "kontenplan.otherForm", "contenttype" => "otherForm", "value" => $kpId];
         
         $newForms[] = $inhalt;
-        
+        */
+        $newForms = [];
         return $newForms;
     }
 }

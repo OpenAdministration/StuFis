@@ -44,7 +44,7 @@ foreach($data as $token => $beschluss){
         continue;
     }
     $inhalt["value"] = $beschluss;
-    $ret = storeInhalt($inhalt,true);
+    $ret = storeInhalt($inhalt, true);
     if(!$ret)
         exit;
     if($antrag['state'] == "need-stura"){
