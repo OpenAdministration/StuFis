@@ -69,6 +69,8 @@ class ProjektHandler{
     }
     
     static function initStaticVars(){
+        if (isset(self::$states))
+            return false;
         self::$states = [
             "draft" => ["Entwurf",],
             "wip" => ["Beantragt", "beantragen"],
@@ -206,6 +208,7 @@ class ProjektHandler{
             "revoked" => [],
         ];
         self::$writePermissionFields = [];
+        return true;
     }
     
     
@@ -254,6 +257,10 @@ class ProjektHandler{
         return new ProjektHandler([$projekt_id]);
     }
     
+    public static function getStateString($statename){
+        self::initStaticVars();
+        return self::$states[$statename][0];
+    }
     
     /**
      * @param $data

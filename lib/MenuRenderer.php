@@ -110,15 +110,16 @@ class MenuRenderer{
     
     public function renderProjekte($gremien){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => AuthHandler::getInstance()->getUserName()]);
-        $projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
-        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
+        //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
+        $projekte = DBConnector::getInstance()->dbFetchAll("projekte", ["org", "projekte.*"], ["org" => ["in", $gremien]], [], ["org" => true], true);
+        /*if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
             $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
             if ($ret !== false){
                 //var_dump($ret);
                 $projekte = array_merge($projekte, $ret);
             }
-        }
+        }*/
         //var_dump($projekte);
         ?>
         <div class="main container col-xs-12 col-md-10">
@@ -139,17 +140,20 @@ class MenuRenderer{
                             <div class="panel-body">
                                 <?php $j = 0; ?>
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
-                                    <?php foreach ($inhalt as $id => $projekt){ ?>
+                                    <?php foreach ($inhalt as $projekt){
+                                        $id = $projekt["id"];
+                                        $projekt["_ref"] = []; //FIXME
+                                        ?>
                                         <div class="panel panel-default">
-                                            <div class="panel-link"><?php echo generateLinkFromID($id, $projekt["token"]) ?>
+                                            <div class="panel-link"><?= generateLinkFromID($id, "projekt/" . $id) ?>
                                             </div>
                                             <div class="panel-heading collapsed <?= count($projekt["_ref"]) === 0 ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
                                                  href="#collapse<?php echo $i . "-" . $j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
-                                                            class="panel-projekt-name"><?= $projekt["_inhalt"]["projekt.name"] ?></span>
-                                                    <span class="label label-info project-state-label"><?php echo getStateString($projekt["type"], $projekt["revision"], $projekt["state"]); ?></span>
+                                                            class="panel-projekt-name"><?= $projekt["name"] ?></span>
+                                                    <span class="label label-info project-state-label"><?= ProjektHandler::getStateString($projekt["state"]) ?></span>
                                                 </h4>
                                             </div>
                                             <?php if (count($projekt["_ref"]) !== 0){ ?>

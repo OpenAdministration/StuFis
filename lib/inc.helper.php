@@ -343,10 +343,10 @@ class TextStyle extends Enum{
     
 }
 
-function generateLinkFromID($text, $token, $linkColor = TextStyle::__default){
+function generateLinkFromID($text, $dest, $linkColor = TextStyle::__default){
     global $URIBASE;
     
-    return "<a class='$linkColor' href='" . htmlspecialchars($URIBASE . $token) . "'><i class='fa fa-fw fa-link' aria-hidden='true'></i>&nbsp;$text</a>";
+    return "<a class='$linkColor' href='" . htmlspecialchars($URIBASE . $dest) . "'><i class='fa fa-fw fa-link' aria-hidden='true'></i>&nbsp;$text</a>";
 }
 
 /**
