@@ -75,7 +75,7 @@ class ProjektHandler{
             "ok-by-hv" => ["Genehmigt durch HV (nicht verkündet)",],
             "need-stura" => ["Warte auf StuRa-Beschluss",],
             "ok-by-stura" => ["Genehmigt durch StuRa-Beschluss",],
-            "done-hv" => ["Genehmigt durch HV und verkündet in StuRa Sitzung",],
+            "done-hv" => ["verkündet durch HV",],
             "done-other" => ["Genehmigt ohne Verkündung",],
             "revoked" => ["Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen",],
             "terminated" => ["Abgeschlossen (keine weiteren Ausgaben)", "beenden",],
@@ -298,15 +298,16 @@ class ProjektHandler{
                 $data["recht-additional"] = "";
             }
         }
-        
+        //check if fields editable
         $fields = $generatedFields;
         foreach ($data as $name => $content){
-            $fields[$name] = $content;
+            if ($this->permissionHandler->checkWritePermissionField($name) && $this->permissionHandler->isVisibleField($name))
+                $fields[$name] = $content;
         }
         $update_rows = DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $version], $fields);
         
         //set new posten values, delete old
-        $ret_del = DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
+        DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
         for ($i = 0; $i < $minRows - 1; $i++){
             //would throw exception if not working
             DBConnector::getInstance()->dbInsert("projektposten", [
@@ -355,7 +356,7 @@ class ProjektHandler{
         if (isset($this->id) && count($this->args) === 1){
             $this->renderInteractionPanel();
             //echo $this->templater->getStateChooser($this->stateHandler);
-            $this->renderProjekt("Internes Projekt:");
+            $this->renderProjekt("Internes Projekt");
             $this->renderCommentPanel();
             return;
         }
@@ -628,7 +629,7 @@ class ProjektHandler{
                             <div class="modal-body">
                                 <input type="hidden" name="action" value="changeState">
                                 <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce'] ?>">
-                                <input type="hidden" name="version" value="<?php $this->data["version"] ?>">
+                                <input type="hidden" name="version" value="<?= $this->data["version"] ?>">
                                 <input type="hidden" name="id" value="<?= $this->getID() ?>">
                                 <div class="form-group">
                                     <label for="newantragstate">Neuer Bearbeitungsstatus</label>
