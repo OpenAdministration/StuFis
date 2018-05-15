@@ -214,168 +214,6 @@ class DBConnector extends Singleton{
         return $user;
     }
     
-    public function dbGet($table, $fields){
-        if (!isset($this->scheme[$table])) die("Unkown table $table");
-        $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
-        $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
-        
-        if (count($fields) == 0) die("No (valid) fields given.");
-        
-        $c = [];
-        $vals = [];
-        foreach ($fields as $k => $v){
-            if (is_array($v)){
-                $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                $vals[] = $v[1];
-            }else{
-                $c[] = $this->quoteIdent($k) . " = ?";
-                $vals[] = $v;
-            }
-        }
-        $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
-        //var_dump($sql);
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
-        if ($ret === false)
-            return false;
-        if ($query->rowCount() != 1) return false;
-        
-        return $query->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    private function quoteIdent($field){
-        $ret = "`" . str_replace("`", "``", $field) . "`";
-        return str_replace(".", "`.`", $ret);
-    }
-    
-    /**
-     * @param array ...$pars
-     *
-     * @return DBConnector
-     */
-    public static function getInstance(...$pars){
-        return parent::getInstance(...$pars);
-    }
-    
-    public function logAppend($logId, $key, $value){
-        $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log_property (log_id, name, value) VALUES (?, ?, ?)");
-        if (is_array($value))
-            $value = print_r($value, true);
-        $query->execute(Array($logId, $key, $value)) or httperror(print_r($query->errorInfo(), true));
-    }
-    
-    public function dbBegin(){
-        if (!$this->transactionCount++){
-            return $this->pdo->beginTransaction();
-        }
-        $ret = $this->pdo->query('SAVEPOINT trans' . $this->transactionCount);
-        return $ret && $this->transactionCount >= 0;
-    }
-    
-    public function dbCommit(){
-        if (!--$this->transactionCount){
-            return $this->pdo->commit();
-        }
-        return $this->transactionCount >= 0;
-    }
-    
-    public function dbRollBack(){
-        if (--$this->transactionCount){
-            $this->pdo->exec('ROLLBACK TO trans' . ($this->transactionCount + 1));
-            return true;
-        }
-        return $this->pdo->rollback();
-    }
-    
-    public function dbGetWriteCounter(){
-        return $this->dbWriteCounter;
-    }
-    
-    /**
-     * @param $table    string  table in db
-     * @param $fields   array   all fields which should be filled
-     *
-     * @return bool|string
-     */
-    public function dbInsert($table, $fields){
-        $this->dbWriteCounter++;
-        
-        if (!isset($this->scheme[$table])) die("Unkown table $table");
-    
-        //if (isset($fields["id"])) unset($fields["id"]);
-        
-        $fields = array_intersect_key($fields, $this->scheme[$table]);
-        $p = array_fill(0, count($fields), "?");
-        $sql = "INSERT " . self::$DB_PREFIX . "{$table} (" . implode(",", array_map([$this, "quoteIdent"], array_keys($fields))) . ") VALUES (" . implode(",", $p) . ")";
-        
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_values($fields));
-        //print_r($sql);
-        //print_r(array_values($fields));
-        if ($ret === false)
-            throw new PDOException(print_r($query->errorInfo(), true));
-        return $this->pdo->lastInsertId();
-    }
-    
-    /**
-     * @param $table  string tablename
-     * @param $filter array where clause
-     * @param $fields array new values
-     *
-     * @return bool|int
-     */
-    public function dbUpdate($table, $filter, $fields){
-        $this->dbWriteCounter++;
-        if (!isset($this->scheme[$table])) die("Unkown table $table");
-    
-        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
-        //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
-        $fields = array_intersect_key($fields, array_flip($this->validFields));
-        if (count($filter) == 0) die("No filter fields given.");
-        if (count($fields) == 0) die("No fields given.");
-        
-        $u = [];
-        foreach ($fields as $k => $v){
-            $u[] = $this->quoteIdent($k) . " = ?";
-        }
-        $c = [];
-        foreach ($filter as $k => $v){
-            $c[] = $this->quoteIdent($k) . " = ?";
-        }
-        $sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . " WHERE " . implode(" AND ", $c);
-        //print_r($sql);
-        $query = $this->pdo->prepare($sql);
-        $values = array_merge(array_values($fields), array_values($filter));
-    
-        $ret = $query->execute($values) or httperror(print_r($query->errorInfo(), true));
-        if ($ret === false)
-            return false;
-        
-        return $query->rowCount();
-    }
-    
-    public function dbDelete($table, $filter){
-        //$this->dbWriteCounter++;
-    
-        if (!isset($this->scheme[$table]))
-            throw new PDOException("Unkown table $table");
-        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
-        
-        if (count($filter) == 0) die("No filter fields given.");
-        
-        $c = [];
-        foreach ($filter as $k => $v){
-            $c[] = $this->quoteIdent($k) . " = ?";
-        }
-        $sql = "DELETE FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_values($filter));
-        if ($ret === false)
-            throw new PDOException(print_r($query->errorInfo(), true));;
-        
-        return $query->rowCount();
-    }
-    
     /**
      * @param string $tables            table which should be used in FROM statement
      *                                  if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
@@ -584,6 +422,168 @@ class DBConnector extends Singleton{
             return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
+    private function quoteIdent($field){
+        $ret = "`" . str_replace("`", "``", $field) . "`";
+        return str_replace(".", "`.`", $ret);
+    }
+    
+    /**
+     * @param $table    string  table in db
+     * @param $fields   array   all fields which should be filled
+     *
+     * @return bool|string
+     */
+    public function dbInsert($table, $fields){
+        $this->dbWriteCounter++;
+        
+        if (!isset($this->scheme[$table])) die("Unkown table $table");
+        
+        //if (isset($fields["id"])) unset($fields["id"]);
+        
+        $fields = array_intersect_key($fields, $this->scheme[$table]);
+        $p = array_fill(0, count($fields), "?");
+        $sql = "INSERT " . self::$DB_PREFIX . "{$table} (" . implode(",", array_map([$this, "quoteIdent"], array_keys($fields))) . ") VALUES (" . implode(",", $p) . ")";
+        
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute(array_values($fields));
+        //print_r($sql);
+        //print_r(array_values($fields));
+        if ($ret === false)
+            throw new PDOException(print_r($query->errorInfo(), true));
+        return $this->pdo->lastInsertId();
+    }
+    
+    /**
+     * @param array ...$pars
+     *
+     * @return DBConnector
+     */
+    public static function getInstance(...$pars){
+        return parent::getInstance(...$pars);
+    }
+    
+    public function logAppend($logId, $key, $value){
+        $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log_property (log_id, name, value) VALUES (?, ?, ?)");
+        if (is_array($value))
+            $value = print_r($value, true);
+        $query->execute(Array($logId, $key, $value)) or httperror(print_r($query->errorInfo(), true));
+    }
+    
+    public function dbGet($table, $fields){
+        if (!isset($this->scheme[$table])) die("Unkown table $table");
+        $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
+        $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
+        
+        if (count($fields) == 0) die("No (valid) fields given.");
+        
+        $c = [];
+        $vals = [];
+        foreach ($fields as $k => $v){
+            if (is_array($v)){
+                $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
+                $vals[] = $v[1];
+            }else{
+                $c[] = $this->quoteIdent($k) . " = ?";
+                $vals[] = $v;
+            }
+        }
+        $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
+        //var_dump($sql);
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
+        if ($ret === false)
+            return false;
+        if ($query->rowCount() != 1) return false;
+        
+        return $query->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    public function dbBegin(){
+        if (!$this->transactionCount++){
+            return $this->pdo->beginTransaction();
+        }
+        $ret = $this->pdo->query('SAVEPOINT trans' . $this->transactionCount);
+        return $ret && $this->transactionCount >= 0;
+    }
+    
+    public function dbCommit(){
+        if (!--$this->transactionCount){
+            return $this->pdo->commit();
+        }
+        return $this->transactionCount >= 0;
+    }
+    
+    public function dbRollBack(){
+        if (--$this->transactionCount){
+            $this->pdo->exec('ROLLBACK TO trans' . ($this->transactionCount + 1));
+            return true;
+        }
+        return $this->pdo->rollback();
+    }
+    
+    public function dbGetWriteCounter(){
+        return $this->dbWriteCounter;
+    }
+    
+    /**
+     * @param $table  string tablename
+     * @param $filter array where clause
+     * @param $fields array new values
+     *
+     * @return bool|int
+     */
+    public function dbUpdate($table, $filter, $fields){
+        $this->dbWriteCounter++;
+        if (!isset($this->scheme[$table])) die("Unkown table $table");
+        
+        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
+        //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
+        $fields = array_intersect_key($fields, array_flip($this->validFields));
+        if (count($filter) == 0) die("No filter fields given.");
+        if (count($fields) == 0) die("No fields given.");
+        
+        $u = [];
+        foreach ($fields as $k => $v){
+            $u[] = $this->quoteIdent($k) . " = ?";
+        }
+        $c = [];
+        foreach ($filter as $k => $v){
+            $c[] = $this->quoteIdent($k) . " = ?";
+        }
+        $sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . " WHERE " . implode(" AND ", $c);
+        //print_r($sql);
+        $query = $this->pdo->prepare($sql);
+        $values = array_merge(array_values($fields), array_values($filter));
+        
+        $ret = $query->execute($values) or httperror(print_r($query->errorInfo(), true));
+        if ($ret === false)
+            return false;
+        
+        return $query->rowCount();
+    }
+    
+    public function dbDelete($table, $filter){
+        //$this->dbWriteCounter++;
+        
+        if (!isset($this->scheme[$table]))
+            throw new PDOException("Unkown table $table");
+        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
+        
+        if (count($filter) == 0) die("No filter fields given.");
+        
+        $c = [];
+        foreach ($filter as $k => $v){
+            $c[] = $this->quoteIdent($k) . " = ?";
+        }
+        $sql = "DELETE FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute(array_values($filter));
+        if ($ret === false)
+            throw new PDOException(print_r($query->errorInfo(), true));;
+        
+        return $query->rowCount();
+    }
+    
     /**
      * @param $gremiumName
      *
@@ -785,11 +785,11 @@ class DBConnector extends Singleton{
     
     function dbgetHHP($id){
         $sql = "
-    SELECT t.hhpgruppen_id,t.id,g.type,g.gruppen_name,t.titel_nr,t.titel_name,t.value
-    FROM " . self::$DB_PREFIX . "haushaltstitel AS t
-    INNER JOIN " . self::$DB_PREFIX . "haushaltsgruppen AS g ON t.hhpgruppen_id = g.id
-    WHERE `hhp_id` = ?
-    ORDER BY `titel_nr` ASC";
+            SELECT t.hhpgruppen_id,t.id,g.type,g.gruppen_name,t.titel_nr,t.titel_name,t.value,g.type
+            FROM " . self::$DB_PREFIX . "haushaltstitel AS t
+            INNER JOIN " . self::$DB_PREFIX . "haushaltsgruppen AS g ON t.hhpgruppen_id = g.id
+            WHERE `hhp_id` = ?
+            ORDER BY `type` ASC,`g`.`id` ASC,`titel_nr` ASC";
         $query = $this->pdo->prepare($sql);
         $query->execute([$id]) or httperror(print_r($query->errorInfo(), true));
         $groups = [];
@@ -804,10 +804,9 @@ class DBConnector extends Singleton{
             return $groups;
         }
         $sql = "
-    SELECT b.titel_id, b.value, b.canceled
-    FROM " . self::$DB_PREFIX . "booking AS b
-    WHERE b.titel_id IN (" . implode(",", array_fill(0, count($titelIdsToGroupId), "?")) . ")
-    ";
+            SELECT b.titel_id, b.value, b.canceled
+            FROM " . self::$DB_PREFIX . "booking AS b
+            WHERE b.titel_id IN (" . implode(",", array_fill(0, count($titelIdsToGroupId), "?")) . ")";
         $query = $this->pdo->prepare($sql);
         $query->execute(array_keys($titelIdsToGroupId)) or httperror(print_r($query->errorInfo(), true));
         while ($row = $query->fetch(PDO::FETCH_ASSOC)){
