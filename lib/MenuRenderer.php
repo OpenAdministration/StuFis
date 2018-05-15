@@ -204,13 +204,19 @@ class MenuRenderer{
 
 public function renderMyProfile(){
     
-    $iban = DBConnector::getInstance()->getUser()["iban"];
+    $user = DBConnector::getInstance()->getUser();
+    if (isset($user["iban"])){
+        $iban = $user["iban"];
+    }else{
+        $iban = "";
+    }
+    
     $form = [
         "layout" => [
             ["id" => "myiban",
                 "type" => "iban",
                 "title" => "meine IBAN",
-                "value" => $iban ? $iban : "",
+                "value" => $iban === "" ? $iban : "",
                 "placeholder" => "DE ...",
                 "width" => 12,
                 "opts" => ["required"],
@@ -296,8 +302,6 @@ public function renderMyProfile(){
      * @return bool|void false if error else void
      */
     public function renderHaushaltsplan($selected_id = null){
-        
-        
         ?>
         <div class="main container col-md-11"> <?php
             list($hhps, $selected_id) = MenuRenderer::renderHHPSelector("hhp", $selected_id);
@@ -315,13 +319,19 @@ public function renderMyProfile(){
                 Haushaltsplan <?= $hhp["revision"] . " (" . getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) . ")" ?></h1>
             <table class="table table-striped">
                 <?php
-                
+                $group_nr = 1;
+                $type = 0;
                 foreach ($groups as $group){
                     if (count($group) === 0) continue;
+                    if ($type !== array_values($group)[0]["type"])
+                        $group_nr = 1;
+    
+                    $type = array_values($group)[0]["type"];
                     ?>
                     <thead>
                     <tr>
-                        <th class="bg-info" colspan="42"><?= array_values($group)[0]["gruppen_name"] ?></th>
+                        <th class="bg-info"
+                            colspan="42"><?= ($type + 1) . "." . $group_nr++ . " " . array_values($group)[0]["gruppen_name"] ?></th>
                     </tr>
                     <tr>
                         <th></th>

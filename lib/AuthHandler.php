@@ -49,8 +49,8 @@ class  AuthHandler extends Singleton{
         }else{
             $removeGroups = [];
             //$removeGroups = ["ref-finanzen","ref-finanzen-hv",];
-            //$addGroups = [];
-            $addGroups = ["ref-finanzen-hv"];
+            $addGroups = [];
+            //$addGroups = ["ref-finanzen-hv"];
             $attributes["groups"] = array_diff($attributes["groups"], $removeGroups);
             $attributes["groups"] = array_merge($attributes["groups"], $addGroups);
             return $attributes;
