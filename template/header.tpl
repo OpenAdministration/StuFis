@@ -97,6 +97,12 @@
                             Buchungen
                         </a>
                     </li>
+                    <li <?php if ($subtype == "konto") echo "class='active'"; ?>>
+                        <a href="<?= htmlspecialchars($URIBASE . "menu/konto"); ?>">
+                            <i class="fa fa-fw fa-bar-chart"></i>
+                            Konto
+                        </a>
+                    </li>
                 <?php } ?>
                 <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
                     <a href="<?php echo htmlspecialchars($URIBASE . "menu/stura"); ?>">
@@ -116,12 +122,7 @@
                         Haushaltsplan
                     </a>
                 </li>
-                <li <?php if ($subtype == "konto") echo "class='active'"; ?>>
-                    <a href="<?php echo htmlspecialchars($URIBASE . "menu/konto"); ?>">
-                        <i class="fa fa-fw fa-bar-chart"></i>
-                        Konto
-                    </a>
-                </li>
+
 
             </ul>
         </div>
