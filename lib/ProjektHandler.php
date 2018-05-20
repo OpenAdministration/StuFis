@@ -6,7 +6,7 @@
  * Time: 01:29
  */
 
-class ProjektHandler{
+class ProjektHandler implements FormHandlerInterface{
     static private $emptyData;
     static private $selectable_recht;
     static private $states;
@@ -28,9 +28,8 @@ class ProjektHandler{
     
     function __construct($args = null){
         //print_r($args);
-        if (self::$states === null){
-            self::initStaticVars();
-        }
+        self::initStaticVars();
+        
         if (!isset($args) || empty($args)){
             $args = ["create", "edit"];
         }
@@ -199,11 +198,11 @@ class ProjektHandler{
         self::$writePermissionAll = [
             "draft" => ["groups" => ["sgis"]],
             "wip" => ["groups" => ["ref-finanzen-hv"]],
-            "ok-by-hv" => [],
+            "ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
             "need-stura" => ["groups" => ["ref-finanzen-hv"]],
-            "ok-by-stura" => [],
-            "done-hv" => [],
-            "done-other" => [],
+            "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
+            "done-hv" => ["groups" => ["ref-finanzen-hv"]],
+            "done-other" => ["groups" => ["ref-finanzen-hv"]],
             "terminated" => [],
             "revoked" => [],
         ];
@@ -339,7 +338,7 @@ class ProjektHandler{
      * @throws IllegalTransitionException
      */
     public function setState($stateName){
-        if (!in_array($stateName, $this->getPossibleStates(), true))
+        if (!in_array($stateName, $this->getNextPossibleStates(), true))
             throw new IllegalStateException("In den Status $stateName kann nicht gewechselt werden");
         
         $user_id = DBConnector::getInstance()->getUser()["id"];
@@ -349,7 +348,7 @@ class ProjektHandler{
         return true;
     }
     
-    public function getPossibleStates(){
+    public function getNextPossibleStates(){
         return $this->stateHandler->getNextStates(true);
     }
     
@@ -452,7 +451,7 @@ class ProjektHandler{
                     <?= $this->templater->getDropdownForm("org", $selectable_gremien, 6, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
                     <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 6, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
                     <?= $this->templater->getTextForm("protokoll", $this->data["protokoll"], 12, "www.wiki.stura.tu-ilmenau.de/protokolle/...", "Beschluss (Wiki-Direktlink)", ["required"]) ?>
-                    <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true) ?>
+                    <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
                     <div class='clearfix'></div>
                 </div>
                 <?php $tablePartialEditable = $this->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and"); ?>
@@ -472,8 +471,7 @@ class ProjektHandler{
                     <?php
                     for ($row_nr = 0; $row_nr <= count($this->data["posten-name"]); $row_nr++){
                         $new_row = $row_nr === count($this->data["posten-name"]);
-                        $row_editable = $this->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
-                        if ($new_row && !$row_editable)
+                        if ($new_row && !$tablePartialEditable)
                             continue;
                         $sel_titel = $selectable_titel;
                         if (isset($this->data['posten-titel'][$row_nr])){
@@ -482,7 +480,7 @@ class ProjektHandler{
                         ?>
                         <tr class="<?= $new_row ? "new-table-row" : "dynamic-table-row" ?>">
                             <td class="row-number"> <?= $row_nr + 1 ?>.</td>
-                            <?php if ($row_editable){ ?>
+                            <?php if ($tablePartialEditable){ ?>
                                 <td class='delete-row'><a href='' class='delete-row'><i
                                                 class='fa fa-fw fa-trash'></i></a></td>
                             <?php }else{
@@ -562,31 +560,6 @@ class ProjektHandler{
         <?php
     }
     
-    public function isEditable($names, $conjunctureWith = ""){
-        $ret = [];
-        if (is_array($names)){
-            $ret_or = false;
-            $ret_and = true;
-            foreach ($names as $name){
-                $tmp = $this->isEditable($name);
-                $ret[] = $tmp;
-                $ret_or |= $tmp;
-                $ret_and &= $tmp;
-            }
-            if ($conjunctureWith === "")
-                return $ret;
-            if (strtolower($conjunctureWith) === "or")
-                return $ret_or;
-            if (strtolower($conjunctureWith) === "and")
-                return $ret_and;
-            return null;
-        }else{
-            if ($this->permissionHandler->checkWritePermission() === true){
-                return true;
-            }
-            return $this->permissionHandler->checkWritePermissionField($names);
-        }
-    }
     
     private function renderInteractionPanel(){
         global $URIBASE;

@@ -107,25 +107,26 @@ class FormTemplater{
         
     }
     
-    function getTextForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
+    public function getCheckboxForms($name, $value = false, $width = 12, $label_text = "", $validator = []){
         $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
         $editable = $this->checkWritePermission($name);
         $out = "";
-        
         if ($editable){
             $additonal_array = $this->constructValidatorStrings($validator);
+            if ($value !== false)
+                $additonal_array[] = "checked";
             $additonal_str = implode(" ", $additonal_array);
-            
-            $type = "text";
-            if (isset($validator["email"]))
-                $type = "email";
-            
-            $value = htmlspecialchars($value);
-            $out .= "<input type='$type' class='form-control' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            $out .= "<div class='checkbox'>";
+            $out .= "<label><input id='$unique_id' name='$name' type='checkbox' value='" . ($value !== false) . "' $additonal_str>$label_text</label>";
+            $out .= "</div>";
         }else{
-            $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
+            if ($value !== false)
+                $iconName = "fa-check-square";
+            else
+                $iconName = "fa-square-o";
+            $out .= "<i class='fa fa-fw $iconName'></i>&nbsp;$label_text";
         }
-        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, "", $validator);
     }
     
     private function getUniqueIDfromName($name){
@@ -203,7 +204,79 @@ class FormTemplater{
         return $ret_cls;
     }
     
-    public function getMoneyForm($name, $value = "", $width = 12, $placeholder = "0.00", $label_text = "", $validator = [], $sum_id = ""){
+    function getFileForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
+        $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
+        $editable = $this->checkWritePermission($name);
+        $out = "";
+        $out .= "<div class='single-file-container'>";
+        $out .= "<input class='form-control single-file' type='file' name='$name' id='$unique_id'>";
+        $out .= "</div>";
+        /*
+        $myOut = "<div class=\"single-file-container\">";
+        $myOut .= "<input class=\"form-control single-file\" type=\"file\" name=\"" . htmlspecialchars($ctrl["name"]) . "\" orig-name=\"" . htmlspecialchars($ctrl["orig-name"]) . "\" id=\"" . htmlspecialchars($ctrl["id"]) . "\"/>";
+        $myOut .= "</div>";
+        if ($file){
+            $renameFileFieldName = "formdata[{$layout["id"]}][newFileName]";
+            $renameFileFieldNameOrig = $renameFileFieldName;
+            foreach ($ctrl["suffix"] as $suffix){
+                $renameFileFieldName .= "[{$suffix}]";
+                $renameFileFieldNameOrig .= "[]";
+            }
+        
+            echo "<div class=\"single-file-container\" data-display-text=\"" . newTemplatePattern($ctrl, $fileName) . "\" data-filename=\"" . newTemplatePattern($ctrl, $fileName) . "\" data-orig-filename=\"" . newTemplatePattern($ctrl, $fileName) . "\" data-old-html=\"" . htmlspecialchars($myOut) . "\">";
+            echo "<span>" . $tPattern . "</span>";
+            echo "<span>&nbsp;</span>";
+            echo "<small><nobr class=\"show-file-size\">" . newTemplatePattern($ctrl, $file["size"]) . "</nobr></small>";
+            if (!$ctrl["readonly"]){
+                echo "<a href=\"#\" class=\"on-click-rename-file\"><i class=\"fa fa-fw fa-pencil\"></i></a>";
+                echo "<a href=\"#\" class=\"on-click-delete-file\"><i class=\"fa fa-fw fa-trash\"></i></a>";
+            }
+            echo "<input type=\"hidden\" name=\"" . htmlspecialchars($renameFileFieldName) . "\" orig-name=\"" . htmlspecialchars($renameFileFieldNameOrig) . "\" id=\"" . htmlspecialchars($ctrl["id"]) . "-newFileName\" value=\"\" class=\"form-file-name\"/>";
+            echo $oldFieldName;
+            echo "</div>";
+        }else if ($ctrl["readonly"]){
+            echo "<div class=\"single-file-container\">";
+            echo "</div>";
+        }else{
+            echo $myOut;
+        }*/
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
+    }
+    
+    function getTextForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $textPrefix = ""){
+        $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
+        $editable = $this->checkWritePermission($name);
+        $out = "";
+        
+        if ($editable){
+            $additonal_array = $this->constructValidatorStrings($validator);
+            $type = "text";
+            if (isset($validator["email"]))
+                $type = "email";
+            $additonal_str = implode(" ", $additonal_array);
+            
+            $value = htmlspecialchars($value);
+            if (isset($textPrefix) && !empty($textPrefix)){
+                $out .= "<div class='input-group'>";
+                $out .= "<div class='input-group-addon'>" . $textPrefix . "</div>";
+            }
+            $out .= "<input type='$type' class='form-control' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            if (isset($textPrefix) && !empty($textPrefix)){
+                $out .= "</div>";
+            }
+        }else{
+            $out .= "<div id='$unique_id'>" . htmlspecialchars($textPrefix) . " - " . $this->getReadOnlyValue($value) . "</div>";
+        }
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
+    }
+    
+    public function getHyperLink($text, $type, $id){
+        
+        $out = "<a href='" . $GLOBALS["URIBASE"] . $type . "/" . $id . "'><i class='fa fa-fw fa-chain'></i>&nbsp;" . htmlspecialchars($text) . "</a>";
+        return $out;
+    }
+    
+    public function getMoneyForm($name, $value = 0, $width = 12, $placeholder = "0.00", $label_text = "", $validator = [], $sum_id = ""){
         $out = "";
         $unique_id = $this->getUniqueIDfromName($name);
         $editable = $this->checkWritePermission($name);
@@ -295,7 +368,7 @@ class FormTemplater{
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
     
-    function getDatePickerForm($names, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $daterange = false){
+    function getDatePickerForm($names, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $daterange = false, $startDate = ""){
         if (!is_array($value)){
             $value = [$value, $value];
         }
@@ -317,7 +390,7 @@ class FormTemplater{
             $additonal_array = $this->constructValidatorStrings($validator);
             
             $additonal_str = implode(" ", $additonal_array);
-            $out .= "<div id='$unique_id0' class='input-group " . ($daterange ? "input-daterange" : "date") . "' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' data-date-start-date='today'>";
+            $out .= "<div id='$unique_id0' class='input-group " . ($daterange ? "input-daterange" : "date") . "' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' data-date-start-date='$startDate'>";
             if ($daterange){
                 $out .= "<div class='input-group-addon' style='background-color: transparent; border: none;'>von</div>";
                 $out .= "<div class='input-group'>";

@@ -45,7 +45,7 @@ class StateHandler{
     public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null){
         $this->parentTableName = $parentTableName;
         if (!is_array($allStates) || !is_array($transitions)){
-            throw new InvalidArgumentException("Keine Arrays übergeben!");
+            throw new InvalidArgumentException("Keine Arrays in States / Transitions übergeben!");
         }
         
         if ($start === null || empty($start)){
@@ -154,7 +154,7 @@ class StateHandler{
     }
     
     private function checkPermissionArray($permArray){
-        //TODO: use same function as in ProjektHandler
+        //TODO: use same function as in PermissionHandler
         //var_dump($permArray);
         if ($permArray === true){
             return true;

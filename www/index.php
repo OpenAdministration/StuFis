@@ -13,7 +13,7 @@ $type = "menu";
 $subtype = "";
 $args = [];
 if (!empty($_SERVER["PATH_INFO"])){
-    $p = explode("/", trim($_SERVER["PATH_INFO"], "/"));
+    $p = explode("/", trim(strtolower($_SERVER["PATH_INFO"]), "/"));
     //var_dump($p);
     if (!empty($p[0])){
         $type = array_shift($p);
@@ -36,6 +36,13 @@ switch ($type){
     case "projekt":
         $projektRenderer = new ProjektHandler($args);
         $projektRenderer->render();
+        break;
+    case "auslagen":
+        $auslagenHandler = new AuslagenHandler($args);
+        $auslagenHandler->render();
+        break;
+    default:
+        include "../template/404.tpl";
         break;
 }
 

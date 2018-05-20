@@ -56,14 +56,16 @@ class PermissionHandler{
             if (!isset($writePermissionAll[$stateName])){
                 die("Status $stateName is not defined in \$writePermissionAll");
             }else{
-                if (!isset($writePermissionAll[$stateName]["groups"])){
-                    $writePermissionAll[$stateName]["groups"] = [];
-                }
-                if (!isset($writePermissionAll[$stateName]["persons"])){
-                    $writePermissionAll[$stateName]["persons"] = [];
-                }
-                if (!isset($writePermissionAll[$stateName]["gremien"])){
-                    $writePermissionAll[$stateName]["gremien"] = [];
+                if ($writePermissionAll[$stateName] !== true){ //could be explicit true or false
+                    if (!isset($writePermissionAll[$stateName]["groups"])){
+                        $writePermissionAll[$stateName]["groups"] = [];
+                    }
+                    if (!isset($writePermissionAll[$stateName]["persons"])){
+                        $writePermissionAll[$stateName]["persons"] = [];
+                    }
+                    if (!isset($writePermissionAll[$stateName]["gremien"])){
+                        $writePermissionAll[$stateName]["gremien"] = [];
+                    }
                 }
             }
             foreach ($dataFields as $dataFieldName => $content){
@@ -155,6 +157,32 @@ class PermissionHandler{
         $state = $this->stateHandler->getActualState();
         //var_dump([$fieldname,$this->checkPermissionArray($this->writePermissionField[$state][$fieldname])]);
         return $this->checkPermissionArray($this->writePermissionField[$state][$fieldname]);
+    }
+    
+    public function isEditable($names, $conjunctureWith = ""){
+        $ret = [];
+        if (is_array($names)){
+            $ret_or = false;
+            $ret_and = true;
+            foreach ($names as $name){
+                $tmp = $this->isEditable($name);
+                $ret[] = $tmp;
+                $ret_or |= $tmp;
+                $ret_and &= $tmp;
+            }
+            if ($conjunctureWith === "")
+                return $ret;
+            if (strtolower($conjunctureWith) === "or")
+                return $ret_or;
+            if (strtolower($conjunctureWith) === "and")
+                return $ret_and;
+            return null;
+        }else{
+            if ($this->checkWritePermission() === true){
+                return true;
+            }
+            return $this->checkWritePermissionField($names);
+        }
     }
     
 }
