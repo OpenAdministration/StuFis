@@ -31,7 +31,7 @@ class ProjektHandler implements FormHandlerInterface{
         self::initStaticVars();
         
         if (!isset($args) || empty($args)){
-            $args = ["create", "edit"];
+            $args = ["create"];
         }
         $this->args = $args;
         
@@ -41,7 +41,7 @@ class ProjektHandler implements FormHandlerInterface{
         }else{
             $this->id = $args[0];
             $res = DBConnector::getInstance()->dbFetchAll("projekte", [], ["projekte.id" => $this->id], [
-                ["type" => "inner", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
+                ["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
             ], ["version" => true]);
             if (!empty($res))
                 $this->data = $res[0];
@@ -60,7 +60,7 @@ class ProjektHandler implements FormHandlerInterface{
         }
         
         $editMode = false;
-        if (isset($args[1]) && $args[1] === "edit")
+        if ((isset($args[0]) && $args[0] === "create") || (isset($args[1]) && $args[1] === "edit"))
             $editMode = true;
         $this->stateHandler = new StateHandler("projekte", self::$states, self::$stateChanges, [], [], $stateNow);
         $this->permissionHandler = new PermissionHandler(self::$emptyData, $this->stateHandler, self::$writePermissionAll, self::$writePermissionFields, self::$visibleFields, $editMode);
@@ -454,7 +454,7 @@ class ProjektHandler implements FormHandlerInterface{
                     <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
                     <div class='clearfix'></div>
                 </div>
-                <?php $tablePartialEditable = $this->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and"); ?>
+                <?php $tablePartialEditable = $this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and"); ?>
                 <table class="table table-striped summing-table <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                     <thead>
                     <tr>
@@ -577,7 +577,10 @@ class ProjektHandler implements FormHandlerInterface{
                     <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i
                                     class="fa fa-fw fa-refresh"></i></a></li>
                 <?php } ?>
-                
+                <?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])){ ?>
+                    <li><a href="<?= $url ?>newAuslage" title="Neue Auslagenerstattung">neue Auslagenerstattung&nbsp;<i
+                                    class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
+                <?php } ?>
                 <?php if ($this->permissionHandler->isAnyDataEditable(true) != false){ ?>
                     <li><a href="<?= $url ?>edit" title="Bearbeiten">Bearbeiten&nbsp;<i
                                     class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
@@ -595,7 +598,7 @@ class ProjektHandler implements FormHandlerInterface{
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?php echo $URIBASE . "rest/projekt.php"; ?>" method="POST"
+            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "rest/projekt.php"; ?>" method="POST"
                   enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">

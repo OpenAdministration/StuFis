@@ -56,16 +56,21 @@ $(document).ready(function () {
         });
     });
 
-    //hide special Children in Container in projekt
-    $(".hide-wrapper").children().hide();
-    $(".hide-wrapper>#" + $("[name=recht]").val()).show();
+    //hide special Children in Container in projekt (editable)
+    $(".hide-wrapper>.hide-items").children().hide();
+    var picker = $(".hide-picker .selectpicker");
+    if (picker.val() !== "")
+        $(".hide-wrapper>.hide-items>#" + picker_val).show();
+    picker.on('changed.bs.select', function (e) {
+        $(".hide-wrapper>.hide-items").children().hide();
+        $(".hide-wrapper>.hide-items>#" + e.target.value).show();
+    });
+
+    //hide special children in container in projekt (no-editable)
     var recht_readonlyval = $("div[data-name='recht']").data("value");
     if (recht_readonlyval !== "")
         $(".hide-wrapper>#" + recht_readonlyval).show();
-    $(".selectpicker[name='recht']").on('changed.bs.select', function (e) {
-        $(".hide-wrapper").children().hide();
-        $(".hide-wrapper>#" + e.target.value).show();
-    });
+
 
     $(".select-picker-container").on("clone-post.selectpicker cloned.selectpicker", function (evt) {
         var cfg = {
@@ -258,7 +263,7 @@ $(document).ready(function () {
                     return;
                 }
 
-                refTables = []
+                refTables = [];
                 $ref.each(function (i, sel) {
                     var $sel = $(sel);
                     var $refTable = $sel.closest(".dynamic-table");
@@ -1140,8 +1145,8 @@ $(document).ready(function () {
                 if (!IBAN.isValid(val))
                     return "Ungültige IBAN";
                 $el.val(IBAN.printFormat(val));
-            },
-        },
+            }
+        }
     }).on("submit", function (e) {
         if (e.isDefaultPrevented()) { // validator said no
             console.log(e);

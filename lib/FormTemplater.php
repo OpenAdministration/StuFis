@@ -12,9 +12,8 @@ class FormTemplater{
     /**
      * @var $permissionHandler PermissionHandler
      */
-    
-    private $noValueStringInReadOnly;
     private $permissionHandler;
+    private $noValueStringInReadOnly;
     
     /**
      * FormTemplater constructor.
@@ -46,6 +45,78 @@ class FormTemplater{
             //set in parent
             $selectable["groups"][] = $ret_group;
         }
+        return $selectable;
+    }
+    
+    static function generateProjektpostenSelectable($projekt_id){
+        $res = DBConnector::getInstance()->dbFetchAll("projektposten", [], ["projekt_id" => $projekt_id], [], ["einnahmen" => true, "id" => true]);
+        /*
+        $idx = $row["id"];
+        $this->data["posten-name"][$idx] = $row["name"];
+        $this->data["posten-bemerkung"][$idx] = $row["bemerkung"];
+        $this->data["posten-einnahmen"][$idx] = $row["einnahmen"];
+        $this->data["posten-ausgaben"][$idx] = $row["ausgaben"];
+        $this->data["posten-titel"][$idx] = $row["titel_id"];
+        */
+        $selectable = [];
+        $options_ein = [];
+        $options_aus = [];
+        $options[] = ["label" => "keine Auswahl", "value" => ""];
+        foreach ($res as $row){
+            if ($row["einnahmen"] == 0){
+                $money = number_format($row["ausgaben"], 2, ",", " ") . " €";
+                $options_aus[] = [
+                    "label" => $row["name"],
+                    "subtext" => $money . $row["titel_id"],
+                    "value" => $row["id"],
+                ];
+            }
+            if ($row["ausgaben"] == 0){
+                $money = number_format($row["ausgaben"], 2, ".", " ") . " €";
+                $options_ein[] = [
+                    "label" => $row["name"],
+                    "subtext" => $money . " " . $row["titel_id"],
+                    "value" => $row["id"],
+                ];
+            }
+        }
+        $selectable["groups"][0]["options"] = $options_ein;
+        $selectable["groups"][0]["label"] = "Einnahmeposten";
+        $selectable["groups"][1]["options"] = $options_aus;
+        $selectable["groups"][1]["label"] = "Ausgabeposten";
+        return $selectable;
+    }
+    
+    static function generateUserSelectable($onlywithIBAN = false){
+        if ($onlywithIBAN === false){
+            $userdata = DBConnector::getInstance()->dbFetchAll("user", [], [], [], ["fullname" => true]);
+        }else{
+            $userdata = DBConnector::getInstance()->dbFetchAll("user", [], ["iban" => ["<>", "null"]], [], ["fullname" => true]);
+        }
+        $selectable = [];
+        $options = [];
+        $options[] = ["label" => "keine Auswahl", "value" => ""];
+        foreach ($userdata as $row){
+            if (empty($row["iban"]))
+                $iban = "keine IBAN angegeben";
+            else{
+                $tmp = explode(" ", $row["iban"]);
+                $start = array_shift($tmp);
+                $end = array_pop($tmp);
+                array_walk($tmp, function(&$item){
+                    $item = preg_replace('/[0-9]+/', 'XXXX', $item);
+                });
+                $iban = $start . " " . implode(" ", $tmp) . " " . $end;
+            }
+            $options[] = [
+                "label" => $row["fullname"],
+                "subtext" => $iban,
+                "value" => $row["id"],
+            ];
+        }
+        //only 1 group
+        $selectable["groups"][0]["options"] = $options;
+        
         return $selectable;
     }
     
@@ -148,19 +219,10 @@ class FormTemplater{
             $ret[] = "data-minlength=" . $validatorArray["min-length"];
         if (isset($validatorArray["email"]))
             $ret[] = "data-remote='" . $GLOBALS['URIBASE'] . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
+        if (isset($validatorArray["iban"]))
+            $ret[] = "data-validateiban='1'";
         
         return $ret;
-    }
-    
-    private function getReadOnlyValue($values){
-        if (is_array($values)){
-            return implode(",", array_map([$this, "getReadOnlyValue"], $values));
-        }
-        if (empty($values)){
-            return "<i>" . htmlspecialchars($this->noValueStringInReadOnly) . "</i>";
-        }else{
-            return htmlspecialchars($values);
-        }
     }
     
     private function getOutputWrapped($content, $width, $editable, $name, $unique_id, $label_text, $validator){
@@ -204,7 +266,7 @@ class FormTemplater{
         return $ret_cls;
     }
     
-    function getFileForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
+    public function getFileForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
         $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
         $editable = $this->checkWritePermission($name);
         $out = "";
@@ -243,7 +305,7 @@ class FormTemplater{
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
     
-    function getTextForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $textPrefix = ""){
+    public function getTextForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $textPrefix = ""){
         $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
         $editable = $this->checkWritePermission($name);
         $out = "";
@@ -265,9 +327,23 @@ class FormTemplater{
                 $out .= "</div>";
             }
         }else{
-            $out .= "<div id='$unique_id'>" . htmlspecialchars($textPrefix) . " - " . $this->getReadOnlyValue($value) . "</div>";
+            if (!empty($textPrefix))
+                $out .= "<div id='$unique_id'>" . htmlspecialchars($textPrefix) . " - " . $this->getReadOnlyValue($value) . "</div>";
+            else
+                $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
+    }
+    
+    private function getReadOnlyValue($values){
+        if (is_array($values)){
+            return implode(",", array_map([$this, "getReadOnlyValue"], $values));
+        }
+        if (empty($values)){
+            return "<i>" . htmlspecialchars($this->noValueStringInReadOnly) . "</i>";
+        }else{
+            return htmlspecialchars($values);
+        }
     }
     
     public function getHyperLink($text, $type, $id){
@@ -308,7 +384,7 @@ class FormTemplater{
                 $values = explode(",", $selectable["values"]);
             }
         }
-        //var_dump($values);
+        //var_dump($selectable);
         if ($editable){
             $additonal_array = $this->constructValidatorStrings($validator);
             $additonal_array[] = "data-live-search=" . ($searchable ? "'true'" : "'false'");
@@ -351,7 +427,7 @@ class FormTemplater{
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
     
-    function getTextareaForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $min_rows = 5){
+    public function getTextareaForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $min_rows = 5){
         $out = "";
         $editable = $this->checkWritePermission($name);
         $unique_id = $this->getUniqueIDfromName($name);
@@ -368,7 +444,7 @@ class FormTemplater{
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
     
-    function getDatePickerForm($names, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $daterange = false, $startDate = ""){
+    public function getDatePickerForm($names, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $daterange = false, $startDate = ""){
         if (!is_array($value)){
             $value = [$value, $value];
         }
