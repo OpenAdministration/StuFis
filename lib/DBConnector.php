@@ -57,17 +57,6 @@ class DBConnector extends Singleton{
             //"array_idx" => "INT NOT NULL",
             "value" => "TEXT NOT NULL",];
         	
-        	//TODO noch gebraucht?
-	        $scheme["anhang"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
-	            "antrag_id" => "INT NOT NULL",
-	            "fieldname" => "VARCHAR(128) NOT NULL",
-	            "mimetype" => "VARCHAR(128) NOT NULL",
-	            "path" => "VARCHAR(128) NOT NULL",
-	            "size" => "INT NOT NULL",
-	            "md5sum" => "VARCHAR(128) NOT NULL",
-	            "state" => "ENUM('active','revoked') DEFAULT 'active' NOT NULL",
-	            "filename" => "VARCHAR(256) NOT NULL",];
-        
         $scheme["comments"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
             "antrag_id" => "INT NOT NULL",
             "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -114,14 +103,6 @@ class DBConnector extends Singleton{
             "ausgaben" => " FLOAT NOT NULL",
             "name" => " VARCHAR(128) NOT NULL",
             "bemerkung" => " VARCHAR(256) NOT NULL",];
-    	
-	        //TODO noch gebraucht?
-	        $scheme["beleg_posten"] = [
-	            "beleg_id" => "INT NOT NULL",
-	            "posten_id" => "INT NOT NULL",
-	            "antrag_id" => "INT NOT NULL",
-	            "einnahmen" => "FLOAT NULL",
-	            "ausgaben" => "FLOAT NULL",];
     
         $scheme["konto"] = [
             "id" => "INT NOT NULL",

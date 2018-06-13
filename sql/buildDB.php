@@ -32,15 +32,6 @@ if ($r === false){
               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
 }
 
-$r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."anhang");
-if ($r === false){
-    $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."anhang (" .
-        $this->buildColDef($this->scheme["anhang"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES ".self::$DB_PREFIX."antrag(id) ON DELETE CASCADE
-               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
-}
-
 $r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."comments");
 if ($r === false){
     $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."comments (" .
@@ -150,7 +141,7 @@ $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."filedata (" .
 	$this->buildColDef($this->scheme["filedata"]) . "
     PRIMARY KEY (`id`)
-)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4;") or httperror(print_r($this->pdo->errorInfo(), true));
+)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
 
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."fileinfo (" .
@@ -162,7 +153,7 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."fileinfo (" .
 	INDEX `index5` (`hashname` ASC),
 	INDEX `index6` (`filename` ASC),
 	FOREIGN KEY (`data`) REFERENCES ".self::$DB_PREFIX."filedata(`id`)
-)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4;") or httperror(print_r($this->pdo->errorInfo(), true));
+)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
 
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."auslagen (" .
@@ -171,7 +162,7 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."auslagen (" .
 	UNIQUE INDEX `id_UNIQUE` (`id` ASC)),
 	INDEX `fk_belege_1_idx` (`projekt_id` ASC),
 	FOREIGN KEY (`projekt_id`) REFERENCES ".self::$DB_PREFIX."projekte(`id`)
-)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4;") or httperror(print_r($this->pdo->errorInfo(), true));
+)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
 
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."belege (" .
@@ -180,7 +171,7 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."belege (" .
 	UNIQUE INDEX `id_UNIQUE` (`id` ASC),
 	INDEX `fk_belege_1_idx` (`auslagen_id` ASC),
 	FOREIGN KEY (`auslagen_id`) REFERENCES ".self::$DB_PREFIX."auslagen(`id`)
-)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4;") or httperror(print_r($this->pdo->errorInfo(), true));
+)ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4_general_ci;") or httperror(print_r($this->pdo->errorInfo(), true));
 
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."beleg_posten (" .
@@ -189,5 +180,5 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."beleg_posten (" .
 	INDEX `fk_beleg_posten_2_idx` (`beleg_id` ASC),
 	UNIQUE INDEX `id_UNIQUE` (`id` ASC),
 	FOREIGN KEY (`beleg_id`) REFERENCES ".self::$DB_PREFIX."belege(`id`)
-    )ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4;
+    )ENGINE = InnoDB DEFAULT CHARSET=utf8_mb4_general_ci;
 ") or httperror(print_r($this->pdo->errorInfo(), true));
