@@ -2,10 +2,10 @@
 if ($DEV)
     prof_print(); ?>
 <!-- close container -->
-</div>
+<?php //</div> ?>
 
 
-
+<?php if (!isset($routeInfo) || $routeInfo['controller'] != 'error') { ?>
 
 <!-- Modal -->
 <div class="modal fade" id="please-wait-dlg" tabindex="-1" role="dialog" aria-labelledby="please-wait-label">
@@ -164,10 +164,10 @@ global $renderFormTrace;
 
 if (isset($renderFormTrace)) {
     print_r($renderFormTrace);
-}
-
-?>
+} ?>
 -->
+
+<?php } ?>
 
 </body>
 </html>

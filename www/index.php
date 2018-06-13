@@ -6,44 +6,116 @@
  * Time: 22:19
  */
 
+//show errors ---------------------------
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+//auth ----------------------------------
 include "../lib/inc.all.php";
 AuthHandler::getInstance()->requireAuth();
 
-$type = "menu";
-$subtype = "";
-$args = [];
-if (!empty($_SERVER["PATH_INFO"])){
-    $p = explode("/", trim(strtolower($_SERVER["PATH_INFO"]), "/"));
-    //var_dump($p);
-    if (!empty($p[0])){
-        $type = array_shift($p);
-        $args = $p;
-    }else{
-        $args = ["create"];
-    }
-}else{
-    $type = "menu";
+// routing ------------------------------
+include_once dirname(__FILE__, 2)."/lib/class.Router.php";
+include_once dirname(__FILE__, 2)."/lib/class.ErrorHandler.php";
+$router = new Router();
+$routeInfo = $router->route();
+
+//TODO ACL on route ? ----------------------------
+$idebug = false;
+
+//#######################################################
+//backport ----------------------------------------------
+if ($routeInfo['controller'] === 'menu'
+	|| $routeInfo['controller'] === 'projekt'
+	|| $routeInfo['controller'] === 'auslagen'){
+	$type = $routeInfo['controller'];
+	$subtype = "";
+	$args = [];
+	if (trim($routeInfo['path'],'/')!=''){
+		$p = explode("/", trim(strtolower($routeInfo['path']), "/"));
+		if (!empty($p[0])){
+			$type = array_shift($p);
+			$args = $p;
+		}else{
+			$args = ["create"];
+		}
+	} else {
+		$type = "menu";
+	}
+	$type = $routeInfo['controller'];
+}
+//#######################################################
+
+// handle route -------------------------
+$content = NULL;
+$error = false;
+switch($routeInfo['controller']){
+	case "menu":
+		ob_start();
+			$menuRenderer = new MenuRenderer();
+			$menuRenderer->render($args);
+		$content = ob_get_clean();
+		break;
+	case "projekt":
+		ob_start();
+			$projektRenderer = new ProjektHandler($args);
+			$projektRenderer->render();
+		$content = ob_get_clean();
+		break;
+	case "auslagen":
+		ob_start();
+			$auslagenHandler = new AuslagenHandler2($routeInfo);
+		$ret = $auslagenHandler->render();
+		$content = ob_get_clean();
+		if (is_numeric($ret) && $ret < 0) $error = true;
+		break;
+	case "rest":
+		include_once dirname(__FILE__, 2).'/lib/class.RestHandler.php';
+		$restHandler = new RestHandler();
+		$restHandler->handlePost($routeInfo);
+		break;
+	case "files":
+		include_once dirname(__FILE__, 2).'/lib/class.FileController.php';
+		$fileController = new FileController();
+		$fileController->handle($routeInfo);
+		break;
+	case 'error':
+	default:
+		$errorHdl = new ErrorHandler($routeInfo);
+		$errorHdl->render();
+		break;
 }
 
-
-include "../template/header.tpl";
-
-switch ($type){
-    case "menu":
-        $menuRenderer = new MenuRenderer();
-        $menuRenderer->render($args);
-        break;
-    case "projekt":
-        $projektRenderer = new ProjektHandler($args);
-        $projektRenderer->render();
-        break;
-    case "auslagen":
-        $auslagenHandler = new AuslagenHandler($args);
-        $auslagenHandler->render();
-        break;
-    default:
-        include "../template/404.tpl";
-        break;
+//header --------------------------------
+if (!$error && $content !== NULL
+	&& $_SERVER['REQUEST_METHOD'] != 'POST'
+	&& $routeInfo['controller']!='error'){
+	include dirname(__FILE__, 2)."/template/header.tpl";
 }
 
-include "../template/footer.tpl";
+//content -------------------------------
+if ($content !== NULL){
+	if ($idebug){
+		$i = [
+			'type' => $type,
+			'subtype' => $subtype,
+			'args' => $args,
+			'p'	=> isset($p)? $p: NULL,
+		];
+		echo '<div class="main container col-xs-12 col-md-10">';
+		echo '<div class="info">RouteInfo</div>';
+		echo '<pre>'; var_export($routeInfo); echo '</pre>';
+		echo '<div class="alert alert-danger">ii - backport</div>';
+		echo '<pre>'; var_export($i); echo '</pre>';
+		echo '</div>';
+	}
+	echo $content;
+}
+
+//footer --------------------------------
+if (!$error && $content !== NULL
+	&& $_SERVER['REQUEST_METHOD'] != 'POST'
+	&& $routeInfo['controller']!='error'){
+	include dirname(__FILE__, 2)."/template/footer.tpl";
+}
