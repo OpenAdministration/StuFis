@@ -102,15 +102,15 @@ class AuslagenHandler2 implements FormHandlerInterface{
     	//errors ----------------------------
     	if (!isset($args['pid'])){
     		$this->error = true;
-    		throw new Exception('missing parameter: pid - project id');
+            ErrorHandler::_errorExit('missing parameter: pid - project id');
     	}
     	if (!isset($args['action'])){
     		$this->error = true;
-    		throw new Exception('missing parameter: action');
+            ErrorHandler::_errorExit('missing parameter: action');
     	}
     	if ($args['action'] == 'edit' && !isset($args['aid'])){
     		$this->error = true;
-    		throw new Exception('missing parameter: aid - auslagen id');
+            ErrorHandler::_errorExit('missing parameter: aid - auslagen id');
     	}
     	// init variables ---------------------
         self::initStaticVars();
