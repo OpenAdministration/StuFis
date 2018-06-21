@@ -60,7 +60,7 @@ $(document).ready(function () {
     $(".hide-wrapper>.hide-items").children().hide();
     var picker = $(".hide-picker .selectpicker");
     if (picker.val() !== "")
-        $(".hide-wrapper>.hide-items>#" + picker_val).show();
+        $(".hide-wrapper>.hide-items>#" + picker.val()).show();
     picker.on('changed.bs.select', function (e) {
         $(".hide-wrapper>.hide-items").children().hide();
         $(".hide-wrapper>.hide-items>#" + e.target.value).show();

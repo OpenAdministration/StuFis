@@ -373,7 +373,7 @@ class ProjektHandler implements FormHandlerInterface{
                     $this->renderProjekt("Projekt bearbeiten");
                     break;
                 default:
-                    die("unknown interaction {$this->args[1]} with Projekt No {$this->id}");
+                	ErrorHandler::_errorExit("unknown interaction {$this->args[1]} with Projekt No {$this->id}");
                     break;
             }
         }
@@ -401,7 +401,7 @@ class ProjektHandler implements FormHandlerInterface{
         ?>
         <div class='container main col-xs-12 col-md-10'>
             <?php if ($editable){ ?>
-            <form role="form" action="<?= $GLOBALS["URIBASE"] . "rest/projekt.php" ?>" method="POST"
+            <form role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt" ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?= $this->templater->getHiddenActionInput(isset($this->id) ? "update" : "create") ?>
                 <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
@@ -598,7 +598,7 @@ class ProjektHandler implements FormHandlerInterface{
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "rest/projekt.php"; ?>" method="POST"
+            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt"; ?>" method="POST"
                   enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">

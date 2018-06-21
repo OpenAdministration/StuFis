@@ -212,7 +212,7 @@ class ErrorHandler
 	 */
 	public static function _renderJson($info){
 		//create return message
-		$out = ['success' => false, 'msg' => $info['info']];
+		$out = ['success' => false, 'msg' => $info['msg']];
 		//set html response code
 		self::_setErrorCode($info);
 		//echo resonse

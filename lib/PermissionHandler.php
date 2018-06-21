@@ -95,7 +95,6 @@ class PermissionHandler{
     }
     
     public function isVisibleField($fieldname){
-        
         $fieldname = $this->cleanFieldNameFromArrayTags($fieldname);
         if ($this->visibleFields[$fieldname] === true){
             return true;
@@ -156,6 +155,7 @@ class PermissionHandler{
         $fieldname = $this->cleanFieldNameFromArrayTags($fieldname);
         $state = $this->stateHandler->getActualState();
         //var_dump([$fieldname,$this->checkPermissionArray($this->writePermissionField[$state][$fieldname])]);
+        //echo '<pre>'; var_dump($this->writePermissionField); echo '</pre>';
         return $this->checkPermissionArray($this->writePermissionField[$state][$fieldname]);
     }
     

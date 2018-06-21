@@ -10,9 +10,10 @@ class FormTemplater{
     
     private static $ID_DELIMITER = "__";
     /**
-     * @var $permissionHandler PermissionHandler
+     * @var PermissionHandler
      */
     private $permissionHandler;
+    
     private $noValueStringInReadOnly;
     
     /**
@@ -156,6 +157,81 @@ class FormTemplater{
         $selectable["groups"][0]["options"] = $options;
         
         return $selectable;
+    }
+    
+    /**
+     * generate List
+     * @param array $list
+     * @param boolean $box
+     */
+    static function generateListGroup($list, $label = '', $wrapped = true, $linebreak = true, $wrapped_class="col-xs-12 form-group" ,$default_tag = 'div' ,$width_class = 'col-xs-12'){
+    	if (!is_array($list)) $list = [$list];
+    	$out = '';
+    	if($label){
+    		$out .= '<label>'.$label.'</label>';
+    	}
+    	$out .= '<div class="input-group '.$width_class.'">';
+    	foreach ($list as $entry){
+    		if (is_string($entry)){
+    			$out .= "<$default_tag class=\"list-group-item\">" . $entry . "</$default_tag>";
+    		} else {
+    			$tag = isset($entry['tag'])? $entry['tag'] : $default_tag;
+    			$text = isset($entry['text'])? htmlentities($entry['text']) : '';
+    			$html = isset($entry['html'])? $entry['html'] : '';
+    			if (!isset($entry['attr']['class'])) $entry['attr']['class'] = 'list-group-item';
+    			$attr = '';
+    			if (isset($entry['attr'])) {
+    				foreach ($entry['attr'] as $k => $v){
+    					$attr .= ' '. "{$k}=\"{$v}\"";
+    				}
+    			}
+    			$out .= "<{$tag}{$attr}>" . $text. $html . "</$tag>";
+    		}
+    	}
+    	$out .= '</div>';
+    	if ($wrapped){
+    		return '<div class="'.$wrapped_class.'">'.$out.'</div><div class="clearfix"></div>'.(($linebreak)?'<br>':'');
+    	} else {
+    		return $out.(($linebreak)?'<br>':'');
+    	}
+    }
+    
+    /**
+     * 
+     * @param string $key current 	editable key
+     * @param string $function 		editable function
+     * @param string $type 			editable type
+     * @param string $value 		current value
+     * @param array $values 		value list
+     * @param array $values_out 	value - html map 
+     * @param string $title			hover title
+     * @param array $additional_data additional data
+     * @param string $additional_class class
+     * @param string $target_prefix	target uri prefix
+     * @param string $target		target uri
+     */
+    public static function jsonEditable($key, $function='edit', $type='', $value='' , $values=['value'], $values_out = NULL, $title = 'Ändern', $additional_params = [], $additional_class='', $target_prefix = '/', $target='rest/forms/editable'){
+    	
+    	$opt = '';
+    	if (isset($additional_params)&&is_array($additional_params)) {
+    		foreach ($additional_params as $k => $v){
+    			$opt .= ' data-'. "{$k}=\"{$v}\"";
+    		}
+    	}
+    	if ($type != 'disabled'){
+	    	return '<div	class="editable '.$additional_class.
+	    				'" title="'.$title.
+	    				'" data-key="'.$key.
+	    				'" data-mfunction="'.$function.
+	    				'" data-type="'.$type.
+	    				'" data-value="'.$value.
+	    				'" data-target="'.$target_prefix.$target.'" '.
+	    				$opt.'>'.
+	    				(($values_out)?$values_out[$value]:$value).
+	    			'</div>';
+    	} else {
+    		return '<div class="editable-disabled'.$additional_class.'">'.(($values_out)?$values_out[$value]:$value).'</div>';
+    	}
     }
     
     function getStateChooser(StateHandler $stateHandler){
