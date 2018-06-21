@@ -81,7 +81,7 @@ class DBConnector extends Singleton{
             "fullname" => "varchar(255) NOT NULL",
             "username" => "varchar(32) NOT NULL",
             "email" => "varchar(128) NOT NULL",
-            "iban" => "varchar(32) NOT NULL",];
+            "iban" => "varchar(32) NOT NULL DEFAULT ''",];
         
         $scheme['haushaltstitel'] = ["id" => " int NOT NULL AUTO_INCREMENT",
             "hhpgruppen_id" => " int NOT NULL",
@@ -147,12 +147,14 @@ class DBConnector extends Singleton{
         	"projekt_id" => "INT NOT NULL",
         	"name_suffix" => "VARCHAR(255) NULL",
         	"state" => "VARCHAR(127) NOT NULL",
-        	"belege_ok" => "VARCHAR(127) NOT NULL",
-        	"hv_ok" => "VARCHAR(127) NOT NULL",
-        	"kv_ok" => "VARCHAR(127) NOT NULL",
+        	"belege_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+        	"hv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+        	"kv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
         	"zahlung_iban" => "VARCHAR(127) NOT NULL",
         	"zahlung_name" => "VARCHAR(127) NOT NULL",
         	"zahlung_vwzk" => "VARCHAR(127) NOT NULL",
+        	'last_change' => 'DATETIME NOT NULL DEFAULT ',
+        	'etag' => 'VARCHAR(255) NOT NULL',
         ];
         $scheme["belege"] = [
         	"id" => "INT NOT NULL AUTO_INCREMENT",
@@ -177,12 +179,12 @@ class DBConnector extends Singleton{
         	"id" => "INT NOT NULL AUTO_INCREMENT",
         	"link" => "VARCHAR(127) NOT NULL",
         	"added_on" => "DATETIME NOT NULL DEFAULT NOW()",
-        	"hashname" => "VARCHER(255) NOT NULL",
+        	"hashname" => "VARCHAR(255) NOT NULL",
         	"filename" => "VARCHAR(255) NOT NULL",
          	"size" => "INT NOT NULL DEFAULT 0",
          	"fileextension" => "VARCHAR(45) NOT NULL DEFAULT ''",
          	"mime" => "VARCHAR(256) NULL",
-         	"encoding" => "VARCHAR(45) NUL",
+         	"encoding" => "VARCHAR(45) NULL",
          	"data" => "INT NULL DEFAULT NULL",
         ];
          $scheme["filedata"] = [
@@ -230,7 +232,7 @@ class DBConnector extends Singleton{
         $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log (action, user_id) VALUES (?, ?)");
         $res = $query->execute([$actionName, DBConnector::getInstance()->getUser()["id"]]);
         if ($res === false){
-            throw new PDOException("Log ist nicht möglich!" . print_r($query->errorInfo()), true);
+            ErrorHandler::_errorExit("Log ist nicht möglich!" . print_r($query->errorInfo(), true));
         }
         $logId = $this->pdo->lastInsertId();
         foreach ($data as $key => $value){
@@ -500,8 +502,9 @@ class DBConnector extends Singleton{
         $ret = $query->execute(array_values($fields));
         //print_r($sql);
         //print_r(array_values($fields));
-        if ($ret === false)
-            throw new PDOException(print_r($query->errorInfo(), true));
+        if ($ret === false){
+        	ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        }
         return $this->pdo->lastInsertId();
     }
     
@@ -518,7 +521,7 @@ class DBConnector extends Singleton{
         $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log_property (log_id, name, value) VALUES (?, ?, ?)");
         if (is_array($value))
             $value = print_r($value, true);
-        $query->execute(Array($logId, $key, $value)) or httperror(print_r($query->errorInfo(), true));
+        $query->execute(Array($logId, $key, $value)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
     }
     
     public function dbGet($table, $fields){
@@ -545,7 +548,7 @@ class DBConnector extends Singleton{
         $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
         //var_dump($sql);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute($vals) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false)
             return false;
         if ($query->rowCount() != 1) return false;
@@ -615,7 +618,7 @@ class DBConnector extends Singleton{
         $query = $this->pdo->prepare($sql);
         $values = array_merge(array_values($fields), array_values($filter));
         
-        $ret = $query->execute($values) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute($values) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false){
         	return false;
         }
@@ -712,7 +715,7 @@ class DBConnector extends Singleton{
             ;";
         
         
-        $query = $this->pdo->query($sql) or httperror(print_r($this->pdo->errorInfo(), true));
+        $query = $this->pdo->query($sql) or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
         if ($query === false){
             return $this->groupArrayKeysByRegExpArray($projects, $gremiumNames);
         }
@@ -817,7 +820,7 @@ class DBConnector extends Singleton{
     public function dbGetLastHibiscus(){
         $sql = "SELECT MAX(id) FROM " . self::$DB_PREFIX . "konto";
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute() or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute() or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false)
             return false;
         if ($query->rowCount() != 1) return false;
@@ -838,7 +841,7 @@ class DBConnector extends Singleton{
 ";
         
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute([$kpId, $ktoId]) or httperror(print_r($query->errorInfo(), true));
+        $ret = $query->execute([$kpId, $ktoId]) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false)
             return false;
         if ($query->rowCount() != 1) return false;
@@ -854,7 +857,7 @@ class DBConnector extends Singleton{
             WHERE `hhp_id` = ?
             ORDER BY `type` ASC,`g`.`id` ASC,`titel_nr` ASC";
         $query = $this->pdo->prepare($sql);
-        $query->execute([$id]) or httperror(print_r($query->errorInfo(), true));
+        $query->execute([$id]) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         $groups = [];
         $titelIdsToGroupId = [];
         while ($row = $query->fetch(PDO::FETCH_ASSOC)){
@@ -871,7 +874,7 @@ class DBConnector extends Singleton{
             FROM " . self::$DB_PREFIX . "booking AS b
             WHERE b.titel_id IN (" . implode(",", array_fill(0, count($titelIdsToGroupId), "?")) . ")";
         $query = $this->pdo->prepare($sql);
-        $query->execute(array_keys($titelIdsToGroupId)) or httperror(print_r($query->errorInfo(), true));
+        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         while ($row = $query->fetch(PDO::FETCH_ASSOC)){
             $tId = array_shift($row);
             $val = $row["value"];
@@ -892,7 +895,7 @@ class DBConnector extends Singleton{
         WHERE b.titel_id IN (7)
         ";
         $query = $this->pdo->prepare($sql);
-        $query->execute(array_keys($titelIdsToGroupId)) or httperror(print_r($query->errorInfo(), true));
+        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         var_dump($query->fetchAll(PDO::FETCH_ASSOC));
         //var_dump($groups);*/
         return $groups;

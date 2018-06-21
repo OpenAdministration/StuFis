@@ -53,6 +53,12 @@ class  AuthHandler extends Singleton{
             //$addGroups = ["ref-finanzen-hv"];
             $attributes["groups"] = array_diff($attributes["groups"], $removeGroups);
             $attributes["groups"] = array_merge($attributes["groups"], $addGroups);
+            //TODO remove on live system remove admin
+            $attributes["groups"][] = 'admin';
+            $attributes["groups"][] = 'ref-finanzen-hv';
+            $attributes["groups"][] = 'ref-finanzen-kv';
+            $attributes["groups"][] = 'ref-finanzen';
+            //$attributes["groups"][] = 'ref-finanzen';
             return $attributes;
         }
     }

@@ -12,7 +12,7 @@ $routing = [
 			'type' => 'path',
 			'children' => [
 				[
-					'path' => '(mygremium|mykonto|stura|allgremium|hhp)',
+					'path' => '(mygremium|mykonto|stura|allgremium|hhp|kv|hv|booking|konto|booking-history)',
 					'type' => 'pattern',
 					'param' => 'action'
 				],
@@ -39,18 +39,38 @@ $routing = [
 								[
 									'path' => '\d+',
 									'type' => 'pattern',
-									'action' => 'edit',
-									'param' => 'aid'
+									'action' => 'view',
+									'param' => 'aid',
+									'children' => [
+										[
+											'path' => 'edit',
+											'type' => 'path',
+											'action' => 'edit'
+										],
+									],
 								],
 							],
 						],
-					//	[
-					//		'path' => 'history',
-					//		'type' => 'path',
-					//		'action' => 'history',
-					//	]
+						[
+							'path' => '(edit|history)',
+							'type' => 'pattern',
+							'action' => 'edit',
+							'param' => 'action'
+						]
 					]
 				],
+				[
+					'path' => 'create',
+					'type' => 'path',
+					'action' => 'create',
+					'children' => [
+						[
+							'path' => 'edit',
+							'type' => 'path',
+							'action' => 'edit',
+						]
+					]
+				]
 			]
 		],
 		[
@@ -70,7 +90,7 @@ $routing = [
 							'path' => '(projekt)(.*)',
 							'type' => 'pattern',
 							'param' => 'id',
-							'match' => 0,
+							'match' => 1,
 							'controller' => 'rest',
 							'action' => 'projekt',
 							'is_suffix' => true
