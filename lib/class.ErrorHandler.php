@@ -216,7 +216,7 @@ class ErrorHandler
 		//set html response code
 		self::_setErrorCode($info);
 		//echo resonse
-		require_once dirname(__FILE__).'/class._JsonController.php';
+        require_once dirname(__FILE__) . '/class.JsonController.php';
 		JsonController::print_json($out);
 	}
 	

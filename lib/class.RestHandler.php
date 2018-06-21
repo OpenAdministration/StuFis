@@ -11,7 +11,7 @@
  * @platform        PHP
  * @requirements    PHP 7.0 or higher
  */
-include_once dirname(__FILE__).'/class._JsonController.php';
+include_once dirname(__FILE__) . '/class.JsonController.php';
 class RestHandler extends JsonController {
 	
 	// ================================================================================================
