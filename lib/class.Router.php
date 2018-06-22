@@ -134,6 +134,7 @@ class Router
 				if (isset($route['controller']))$ret['controller'] 	= $route['controller'];
 				if (isset($route['action'])) 	$ret['action'] 		= $route['action'];
 				if (isset($route['method'])) 	$ret['method'] 		= $route['method'];
+                if (isset($route['load'])) $ret['load'] = $route['load'];
 				if (isset($route['not_found'])) $this->not_found_route = $route['not_found'];
 				//is pattern match
 				$matches = NULL;
@@ -149,6 +150,7 @@ class Router
 					if (isset($route['controller']))$ret['controller'] 	= $route['controller'];
 					if (isset($route['action'])) 	$ret['action'] 		= $route['action'];
 					if (isset($route['method'])) 	$ret['method'] 		= $route['method'];
+                    if (isset($route['load'])) $ret['load'] = $route['load'];
 					if (isset($route['not_found'])) $this->not_found_route = $route['not_found'];
 					$ret[$route['param']] = $matches[(isset($route['match']))? $route['match']: 0];
 				}
@@ -170,7 +172,7 @@ class Router
 						}
 					}
 				} elseif (isset($tmpRet['not_found'])) {
-					$ret['not_found'] = true;
+                    $ret['not_found'] = false;
 					$ret['controller'] = $tmpRet['controller'];
 					$ret['action'] = $tmpRet['action'];
 				} else {

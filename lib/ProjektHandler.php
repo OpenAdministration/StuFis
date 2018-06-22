@@ -23,23 +23,21 @@ class ProjektHandler implements FormHandlerInterface{
      */
     private $permissionHandler;
     private $id;
-    private $args;
+    private $action;
     private $data;
     
-    function __construct($args = null){
-        //print_r($args);
+    function __construct($pathInfo){
+        //print_r($pathInfo);
         self::initStaticVars();
+        if (!isset($pathInfo["action"]))
+            ErrorHandler::_errorExit("Aktion nicht klar");
+        $this->action = $pathInfo["action"];
         
-        if (!isset($args) || empty($args)){
-            $args = ["create"];
-        }
-        $this->args = $args;
-        
-        if (!is_numeric($args[0])){
+        if ($this->action === "create" || !isset($pathInfo["pid"])){
             $this->data = self::$emptyData;
             $stateNow = "draft";
         }else{
-            $this->id = $args[0];
+            $this->id = $pathInfo["pid"];
             $res = DBConnector::getInstance()->dbFetchAll("projekte", [], ["projekte.id" => $this->id], [
                 ["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
             ], ["version" => true]);
@@ -59,9 +57,7 @@ class ProjektHandler implements FormHandlerInterface{
             $stateNow = $this->data["state"];
         }
         
-        $editMode = false;
-        if ((isset($args[0]) && $args[0] === "create") || (isset($args[1]) && $args[1] === "edit"))
-            $editMode = true;
+        $editMode = $this->action === "create" || $this->action === "edit";
         $this->stateHandler = new StateHandler("projekte", self::$states, self::$stateChanges, [], [], $stateNow);
         $this->permissionHandler = new PermissionHandler(self::$emptyData, $this->stateHandler, self::$writePermissionAll, self::$writePermissionFields, self::$visibleFields, $editMode);
         $this->templater = new FormTemplater($this->permissionHandler);
@@ -354,28 +350,25 @@ class ProjektHandler implements FormHandlerInterface{
     
     function render(){
         //var_dump($this->args);
-        if ($this->args[0] === "create" || !isset($this->id)){
+        if ($this->action === "create" || !isset($this->id)){
             $this->renderProjekt("neues Projekt anlegen");
             return;
         }
-        
-        if (isset($this->id) && count($this->args) === 1){
-            $this->renderInteractionPanel();
-            //echo $this->templater->getStateChooser($this->stateHandler);
-            $this->renderProjekt("Internes Projekt");
-            $this->renderCommentPanel();
-            return;
-        }
-        if (count($this->args) > 1){
-            switch ($this->args[1]){
-                case "edit":
-                    $this->renderBackButton();
-                    $this->renderProjekt("Projekt bearbeiten");
-                    break;
-                default:
-                	ErrorHandler::_errorExit("unknown interaction {$this->args[1]} with Projekt No {$this->id}");
-                    break;
-            }
+    
+        switch ($this->action){
+            case "edit":
+                $this->renderBackButton();
+                $this->renderProjekt("Projekt bearbeiten");
+                break;
+            case "view":
+                $this->renderInteractionPanel();
+                //echo $this->templater->getStateChooser($this->stateHandler);
+                $this->renderProjekt("Internes Projekt");
+                $this->renderCommentPanel();
+                break;
+            default:
+                ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
+                break;
         }
     }
     
@@ -578,7 +571,7 @@ class ProjektHandler implements FormHandlerInterface{
                                     class="fa fa-fw fa-refresh"></i></a></li>
                 <?php } ?>
                 <?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])){ ?>
-                    <li><a href="<?= $url ?>newAuslage" title="Neue Auslagenerstattung">neue Auslagenerstattung&nbsp;<i
+                    <li><a href="<?= $url ?>auslagen" title="Neue Auslagenerstattung">neue Auslagenerstattung&nbsp;<i
                                     class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
                 <?php } ?>
                 <?php if ($this->permissionHandler->isAnyDataEditable(true) != false){ ?>
@@ -598,7 +591,8 @@ class ProjektHandler implements FormHandlerInterface{
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt"; ?>" method="POST"
+            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt"; ?>"
+                  method="POST"
                   enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">

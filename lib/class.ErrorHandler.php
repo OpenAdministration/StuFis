@@ -4,7 +4,7 @@
  * @author michael
  * 
  */
-class ErrorHandler
+class ErrorHandler implements Renderer
 {
 	/**
 	 * contains default error messages
@@ -230,12 +230,13 @@ class ErrorHandler
 		$routeInfo = ['controller' => 'error'];
 		// set html response code
 		self::_setErrorCode($param);
-		// include header
-		include dirname(__FILE__, 2)."/template/header.tpl";
-		//include error template
-		include dirname(__FILE__, 2)."/template/error.phtml";
-		// include footer
-		include dirname(__FILE__, 2)."/template/footer.tpl";
+        HTMLPageRenderer::setErrorPage($param);
+        /*// include header
+        include dirname(__FILE__, 2)."/template/header.tpl";
+        //include error template
+        include dirname(__FILE__, 2)."/template/error.phtml";
+        // include footer
+        include dirname(__FILE__, 2)."/template/footer.tpl";*/
 	}
 }
 

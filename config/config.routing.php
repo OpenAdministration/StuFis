@@ -23,24 +23,35 @@ $routing = [
             'type' => 'path',
             'controller' => 'projekt',
             'action' => 'create',
+            'load' => [
+                LoadGroups::DATEPICKER,
+                LoadGroups::SELECTPICKER
+            ],
             'children' => [
                 [
                     'path' => '\d+',
                     'type' => 'pattern',
-                    'action' => 'projekt',
+                    'action' => 'view',
                     'param' => 'pid',
+                    'load' => [],
                     'children' => [
                         [
                             'path' => 'auslagen',
                             'type' => 'path',
                             'controller' => 'auslagen',
                             'action' => 'create',
+                            'load' => [
+                                LoadGroups::DATEPICKER,
+                                LoadGroups::SELECTPICKER,
+                                LoadGroups::FILEINPUT,
+                            ],
                             'children' => [
                                 [
                                     'path' => '\d+',
                                     'type' => 'pattern',
                                     'action' => 'view',
                                     'param' => 'aid',
+                                    'load' => [],
                                     'children' => [
                                         [
                                             'path' => 'edit',
@@ -55,7 +66,11 @@ $routing = [
                             'path' => '(edit|history)',
                             'type' => 'pattern',
                             'action' => 'edit',
-                            'param' => 'action'
+                            'param' => 'action',
+                            'load' => [
+                                LoadGroups::DATEPICKER,
+                                LoadGroups::SELECTPICKER
+                            ],
                         ]
                     ]
                 ],
@@ -137,3 +152,4 @@ $routing = [
     
     ]
 ];
+

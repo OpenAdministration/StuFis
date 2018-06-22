@@ -8,13 +8,21 @@
 
 class HTMLPageRenderer{
     private static $profiling_timing, $profiling_names, $profiling_sources;
+    private static $errorPage;
+    private static $dev = true;
     private $uribase;
     private $bodycontent;
     private $titel;
+    private $routeInfo;
     
-    public function __construct($titel = "StuRa Finanzen", $bodycontent = ""){
+    public function __construct($routeInfo, $bodycontent = ""){
+        $this->routeInfo = $routeInfo;
+        if (isset($this->routeInfo["titel"])){
+            $this->titel = $this->routeInfo["titel"];
+        }else{
+            $this->titel = "StuRa Finanzen";
+        }
         $this->bodycontent = $bodycontent;
-        $this->titel = $titel;
         $this->uribase = $GLOBALS["URIBASE"];
     }
     
@@ -26,6 +34,12 @@ class HTMLPageRenderer{
         $bt = debug_backtrace();
         self::$profiling_sources[] = array_shift($bt);
         self::$profiling_names[] = $name;
+    }
+    
+    static public function setErrorPage($param){
+        ob_start();
+        include SYSBASE . "/template/error.phtml";
+        self::$errorPage = ob_get_clean();
     }
     
     /**
@@ -42,9 +56,9 @@ class HTMLPageRenderer{
         $this->bodycontent = $bodycontent;
     }
     
-    public function appendRendererContent(Renderer $renderObject, $args = null){
+    public function appendRendererContent(Renderer $renderObject){
         ob_start();
-        $renderObject->render($args);
+        $renderObject->render();
         $content = ob_get_clean();
         $this->appendToBody($content);
     }
@@ -54,6 +68,9 @@ class HTMLPageRenderer{
     }
     
     public function render(){
+        if (isset(self::$errorPage)){
+            $this->renderErrorPage();
+        }
         $this->renderHtmlHeader();
         $this->renderNavbar();
         $this->renderSiteNavigation();
@@ -61,8 +78,22 @@ class HTMLPageRenderer{
         echo $this->bodycontent;
         echo "</div>";
         $this->renderModals();
+        if (self::$dev){
+            $this->renderProfiling();
+        }
+        $this->renderFooter();
+    }
+    
+    private function renderErrorPage(){
+        $this->renderHtmlHeader();
+        $this->renderNavbar();
+        $this->renderSiteNavigation();
+        echo "<div class='container main col-xs-12 col-md-10'>";
+        echo self::$errorPage;
+        echo "</div>";
         $this->renderProfiling();
         $this->renderFooter();
+        exit(-1);
     }
     
     private function renderHtmlHeader(){
@@ -96,22 +127,32 @@ class HTMLPageRenderer{
         header("Pragma: no-cache");
     }
     
-    private function includeCSS($additionalCssFiles = []){
+    private function includeCSS(){
         $out = "";
         $defaultCssFiles = ["bootstrap.min", "font-awesome.min"];
-        $cssFiles = array_merge($defaultCssFiles, $additionalCssFiles);
-        
-        foreach ($cssFiles as $cssFile){
-            $out .= "<link rel='stylesheet' href='{$this->uribase}css/$cssFile.css'>";
+        $cssFiles = $defaultCssFiles;
+        if (isset($this->routeInfo["load"])){
+            foreach ($this->routeInfo["load"] as $loadgroupEnum){
+                $cssFiles = array_merge($cssFiles, $loadgroupEnum["css"]);
+            }
         }
-        $out .= "<link rel='stylesheet' href='{$this->uribase}css/main.css'>";
+        foreach ($cssFiles as $cssFile){
+            $out .= "<link rel='stylesheet' href='{$this->uribase}css/$cssFile.css'>" . PHP_EOL;
+        }
+        $out .= "<link rel='stylesheet' href='{$this->uribase}css/main.css'>" . PHP_EOL;
         return $out;
         
     }
     
-    private function includeJS($additionalJsFiles = []){
+    private function includeJS(){
         $out = "";
-        $defaultJsFiles = ["jquery-3.1.1.min", "bootstrap.min", "font-awesome.min"];
+        $defaultJsFiles = [
+            "jquery-3.1.1.min",
+            "bootstrap.min",
+            "validator",
+            "numeral.min",
+            "numeral-locales.min",
+        ];
         /*
         jquery-3.1.1.min.js
         bootstrap.min.js
@@ -128,12 +169,17 @@ class HTMLPageRenderer{
         numeral-locales.min.js
         main.js
         */
-        $jsFiles = array_merge($defaultJsFiles, $additionalJsFiles);
-        
-        foreach ($jsFiles as $jsFile){
-            $out .= "<script src='{$this->uribase}js/$jsFile.js'></script>";
+        $jsFiles = $defaultJsFiles;
+        if (isset($this->routeInfo["load"])){
+            foreach ($this->routeInfo["load"] as $loadgroupEnum){
+                $jsFiles = array_merge($jsFiles, $loadgroupEnum["js"]);
+            }
         }
-        $out .= "<script src='{$this->uribase}js/main.js'></script>";
+        //var_dump($this->routeInfo["load"]);
+        foreach ($jsFiles as $jsFile){
+            $out .= "<script src='{$this->uribase}js/$jsFile.js'></script>" . PHP_EOL;
+        }
+        $out .= "<script src='{$this->uribase}js/main.js'></script>" . PHP_EOL;
         return $out;
     }
     
@@ -268,6 +314,40 @@ class HTMLPageRenderer{
                 <!-- END MENU -->
             </div>
         </div>
+        <?php
+    }
+    
+    /**
+     * Print all Profiling Flags from HTMLPageRenderer::registerProfilingBreakpoint()
+     */
+    private function renderProfiling(){
+        $sum = 0;
+        $size = count(self::$profiling_timing);
+        $out = "";
+        for ($i = 0; $i < $size - 1; $i++){
+            $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . "</strong></span>";
+            $out .= "<i class='profiling-source'>" .
+                basename(self::$profiling_sources[$i]["file"]) . ":" .
+                self::$profiling_sources[$i]["line"] . "
+                </i>";
+            $sum += self::$profiling_timing[$i + 1] - self::$profiling_timing[$i];
+            $out .= "<div>" . sprintf("&nbsp;&nbsp;&nbsp;%f<br>", self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]) . "<div>";
+        }
+        $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$size - 1] . "</strong></span>";
+        $out .= "<i class='profiling-source'>" .
+            basename(self::$profiling_sources[$size - 1]["file"]) . ":" .
+            self::$profiling_sources[$size - 1]["line"] . "
+                </i>";
+        
+        $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
+        $out .= "</div>";
+        echo $out;
+    }
+    
+    private function renderFooter(){
+        ?>
+        </body>
+        </html>
         <?php
     }
     
@@ -507,40 +587,6 @@ class HTMLPageRenderer{
                 </div>
             </div>
         </div>
-        <?php
-    }
-    
-    /**
-     * Print all Profiling Flags from HTMLPageRenderer::registerProfilingBreakpoint()
-     */
-    private function renderProfiling(){
-        $sum = 0;
-        $size = count(self::$profiling_timing);
-        $out = "";
-        for ($i = 0; $i < $size - 1; $i++){
-            $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . "</strong></span>";
-            $out .= "<i class='profiling-source'>" .
-                basename(self::$profiling_sources[$i]["file"]) . ":" .
-                self::$profiling_sources[$i]["line"] . "
-                </i>";
-            $sum += self::$profiling_timing[$i + 1] - self::$profiling_timing[$i];
-            $out .= "<div>" . sprintf("&nbsp;&nbsp;&nbsp;%f<br>", self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]) . "<div>";
-        }
-        $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$size - 1] . "</strong></span>";
-        $out .= "<i class='profiling-source'>" .
-            basename(self::$profiling_sources[$size - 1]["file"]) . ":" .
-            self::$profiling_sources[$size - 1]["line"] . "
-                </i>";
-        
-        $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
-        $out .= "</div>";
-        echo $out;
-    }
-    
-    private function renderFooter(){
-        ?>
-        </body>
-        </html>
         <?php
     }
     
