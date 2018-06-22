@@ -4,3 +4,4 @@ PHP_errors.log
 config/config.php
 config/ca.pem
 .idea/
+logs/*

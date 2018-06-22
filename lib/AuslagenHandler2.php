@@ -333,7 +333,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
       					'zahlung-name' => ['groups' => ['sgis']],
         				'zahlung-iban' => ['groups' => ['sgis']],
         				'zahlung-user' => ['groups' => ['sgis']],
-        				'zahlung-vwzk' => ['groups' => ['sgis']]],
+        				'zahlung-vwzk' => ['groups' => ['sgis']],
+        				'beleg-datum' => ['groups' => ['sgis']],
+        				'beleg-file' => ['groups' => ['sgis']],
+        				'beleg-beschreibung' => ['groups' => ['sgis']],],
             "ok-hv" => [],
             "ok-kv" => [],
             
@@ -482,6 +485,144 @@ class AuslagenHandler2 implements FormHandlerInterface{
         return $this->renderAuslagenerstattung("Auslagenerstattung");
     }
     
+    /**
+     * 
+     * @param array $beleg
+     * 	[
+         		'id' => NULL,
+         		'short' => '',
+         		'created_on' => date_create()->format('Y-m-d H:i:s'),
+         		'datum' => '',
+         		'beschreibung' => '',
+         		'file_id' => NULL,
+         		'file' => NULL,
+         		'posten' => []
+         	]
+     * @param boolean $hidden
+     */
+    public function render_beleg_container($belege, $editable = true, $label = ''){
+		if ($label){ echo '<label>'.$label.'</label>';} ?>
+		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
+    		<div class="row row-striped">
+	    		<div class="form-group">
+	    			<div class="col-sm-1"><strong>Beleg</strong></div>
+	    			<div class="col-sm-11"></div>
+	    		</div>
+    		</div>
+    		<?php if (count($belege) == 0){ ?>
+    			<div class="row row-striped">
+	    			<div class="form-group no-belege-info">
+		    			<div class="col-sm-12"><strong style="font-size: 2em;">Keine Belege eingereicht</strong></div>
+	    			</div>
+    			</div>
+    		<?php } 
+    		
+    	foreach ($belege as $b){
+    		echo $this->render_beleg_row($b, $editable);
+    	}
+    	
+    	//render hidden beleg for js copy
+    	if ($editable){
+	    	echo $this->render_beleg_row([
+	    		'id' => '',
+	    		'short' => '',
+	    		'created_on' => '',
+	    		'datum' => '',
+	    		'beschreibung' => '',
+	    		'file_id' => NULL,
+	    		'file' => NULL,
+	    		'posten' => []
+	    	], $editable, true);
+    	} if ($editable){ ?>
+    			<div class="row row-striped" style="margin: 10px 0;">
+	    			<div class="add-belege" style="padding:5px;">
+		    			<div class="text-center"><button type="button" class="btn btn-success" style="min-width:100px; font-weight: bold;">+ Beleg ergänzen</button></div>
+	    			</div>
+    			</div>
+    	<?php } ?>
+    	</div>
+    	<?php 
+    }
+    
+    public function render_beleg_row($beleg, $editable = true,  $hidden = false){
+    	ob_start();
+    	$date = ($beleg['datum'])? date_create($beleg['datum'])->format('d.m.Y') : '';
+    	$date_value = ($beleg['datum'])? date_create($beleg['datum'])->format('Y-m-d') : '';
+    	$date_form = ($editable)? $this->templater->getDatePickerForm(($hidden)? '' : "beleg-datum[{$beleg['id']}]", $date_value, 0, "", "", []): '<strong>am </strong>'.$date; 
+		
+    	$file_form = '';
+    	if (!$hidden) {
+    		if ($beleg['file_id']) {
+    			$file_form = '<span class="beleg-file" data-id="'.$beleg['file_id'].'">'.
+    				'<a href="'.URIBASE.'files/get/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'</a>'.
+    				'<div><small><span style="min-width: 50px; font-weight: bold;">Size: </span>'.
+    							'<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.
+    					 '<small><span style="min-width: 50px; font-weight: bold;">Mime: </span>'.
+    							'<span>'.$beleg['file']['mime'].'</span></small>'.
+    				'</div><button type="button" title="Löschen" class="file-delete btn btn-danger">X</button>'.
+    			'</span>';
+    		} else {
+    			if ($editable){
+    				$file_form = $this->templater->getFileForm("beleg-file[{$beleg['id']}]", 0, 0, "Datei...", "", []);
+    			} else {
+    				$file_form = '<span>Keine Datei verknüpft.</span>';
+    			}
+    		}
+    	} else {
+    		$file_form = $this->templater->getFileForm("", 0, 7, "Datei...", "", []);
+    	}
+    		
+    	$desc_form = '';
+    	if ($editable) {
+    		$desc_form = $this->templater->getTextareaForm(($hidden)? '' : "beleg-beschreibung[{$beleg['id']}]", ($beleg['beschreibung'])?$beleg['beschreibung']:"", 0, "optional", "", [], 1);
+    	} else {
+    		$desc_form = '<span>'.($beleg['beschreibung'])?$beleg['beschreibung']:"keine".'</span>';
+    	}
+    	
+    	
+    	?>
+		<div class="row row-striped" style="padding: 5px;">
+			<div class="form-group<?= ($hidden)? ' beleg-template' : ' beleg-container' ?>" data-id="<?= $beleg['id']; ?>">
+				<div class="col-sm-1 beleg-idx-box">
+					<div class="form-group">
+						<div class="col-sm-6 beleg-idx"></div>
+						<div class="col-sm-1 beleg-nr"><?= $beleg['short']; ?><?= 
+							($editable)? '<a href="#" class="delete-row"><i class="fa fa-fw fa-trash"></i></a>' : '' ?></div>
+					</div>
+				</div>
+				<div class="col-sm-11 beleg-inner">
+					<div class="form-group">
+						<div class="col-sm-4"><strong>Datum des Belegs</strong></div>
+						<div class="col-sm-8"><strong>Scan des Belegs</strong></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-4 beleg-date"><?= $date_form ?></div>
+						<div class="col-sm-8 beleg-file"><?= $file_form ?></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12"><strong>Beschreibung</strong></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12 beleg-desc"><?= $desc_form ?></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12 beleg-data well" style="margin-top: 10px;"><?php 
+						echo $this->beleg_posten_table($beleg['posten'], $editable, $hidden);
+						?></div>
+					</div>
+				</div>
+			</div>
+		</div>
+    	<?php 
+    	return ob_get_clean();
+    }
+    
+    public function beleg_posten_table($posten, $editable, $hidden){
+    	//TODO Weiteres einfügen
+    	return 'Weiteres einfügen<br>Projektposten Einnahmen Ausgaben';
+    	
+    }
+    
     private function renderAuslagenerstattung($titel){
     	if ($this->error) return -1;
         ?>
@@ -552,21 +693,31 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
-            <?php 
+	        <?php 
+            	
+	            //$belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
+	            $belege = [[
+	         		'id' => '42',
+	         		'short' => 'B2',
+	         		'created_on' => date_create()->format('Y-m-d H:i:s'),
+	         		'datum' => '2017-12-03',
+	         		'beschreibung' => 'Einmal einkaufen für alle',
+	         		'file_id' => NULL,
+	         		'file' => NULL,
+	         		'posten' => []
+         		]];
+	            $this->render_beleg_container($belege, true,  'Belege');
+	            	
+	           
             
            		$beleg_nr = 0;
             	$tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
             
-            ?>
-            <div class="col-xs-12">Falls mehrere Posten pro Beleg vorhanden sind bitte auf dem Beleg (vor Scan!)
-                kenntlich machen welcher Teil zu welchem u.g. Posten gehört.
-            </div>
-            <?php ?>
-            <div class="beleg-table table table-striped">
-            	<div class=""></div>
+            	?>
+          
             
-            </div>
             
+
             <table id="beleg-table"
                    class="table table-striped <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                 <thead>

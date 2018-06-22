@@ -624,7 +624,23 @@ button.btn.btn-arrow-left {
     -moz-border-radius: 0 4px 0 0;
 
 }
+.row-striped:nth-of-type(odd){
+  /* background-color: #efefef; */
+}
 
-
-
-
+.row-striped:nth-of-type(even){
+  background-color: #ffffff;
+}
+/* --------- beleg container --------- */
+.beleg-table {
+	counter-reset: beleg-counter;
+}
+.beleg-table .beleg-container {
+	counter-increment: beleg-counter;
+}
+.beleg-table .beleg-container .beleg-idx::before {
+	 content: counter(beleg-counter);
+}
+.beleg-table .beleg-template {
+	display: none;
+}
