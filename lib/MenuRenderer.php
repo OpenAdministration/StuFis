@@ -6,7 +6,7 @@
  * Time: 14:43
  */
 
-class MenuRenderer{
+class MenuRenderer implements Renderer{
     const DEFAULT = "mygremium";
     
     
@@ -32,7 +32,7 @@ class MenuRenderer{
                     return false;
                 });
                 rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
-                prof_flag("start-rendering");
+                HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
                 MenuRenderer::renderProjekte($gremien);
                 break;
             
@@ -79,7 +79,7 @@ class MenuRenderer{
                 if (isset($_REQUEST["id"])){
                     $antrag_id = $_REQUEST["id"];
                 }
-                prof_flag("renderhhp-start");
+                HTMLPageRenderer::registerProfilingBreakpoint("renderhhp-start");
                 MenuRenderer::renderHaushaltsplan($antrag_id);
                 break;
             case "booking":
@@ -122,7 +122,6 @@ class MenuRenderer{
         }*/
         //var_dump($projekte);
         ?>
-        <div class="main container col-xs-12 col-md-10">
         <div class="panel-group" id="accordion">
             <?php $i = 0;
             if (isset($projekte)){
@@ -229,7 +228,6 @@ public function renderMyProfile(){
     ];
     ?>
 
-    <div class="container main col-md-6">
     <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
           enctype="multipart/form-data" class="ajax">
         <input type="hidden" name="action" value="mykonto.update"/>
@@ -265,7 +263,6 @@ public function renderMyProfile(){
         //var_dump($name2Nr);
         //var_dump($mapping);
         ?>
-        <div class="col-md-9 container main">
             <table class="table">
                 <thead>
                 <tr>
@@ -296,7 +293,6 @@ public function renderMyProfile(){
                 <?php } ?>
                 </tbody>
             </table>
-        </div>
         <?php
     }
     
@@ -306,8 +302,6 @@ public function renderMyProfile(){
      * @return bool|void false if error else void
      */
     public function renderHaushaltsplan($selected_id = null){
-        ?>
-        <div class="main container col-md-11"> <?php
             list($hhps, $selected_id) = MenuRenderer::renderHHPSelector("hhp", $selected_id);
             $editable = ($hhps[$selected_id]["state"] !== "final");
             ?>
@@ -329,7 +323,7 @@ public function renderMyProfile(){
                     if (count($group) === 0) continue;
                     if ($type !== array_values($group)[0]["type"])
                         $group_nr = 1;
-    
+                    
                     $type = array_values($group)[0]["type"];
                     ?>
                     <thead>
@@ -365,8 +359,8 @@ public function renderMyProfile(){
                                 <?= convertDBValueToUserValue($row["_booked"], "money") ?>
                             </td>
                         </tr>
-    
-    
+                        
+                        
                         <?php
                     } ?>
                     <tr class="table-sum-footer">
@@ -375,12 +369,12 @@ public function renderMyProfile(){
                         <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_ist, "money") ?></td>
                     </tr>
                     </tbody>
-    
+                    
                     <?php
                 } ?>
 
             </table>
-        </div> <?php
+        <?php
         return;
     }
     
@@ -532,9 +526,6 @@ public function renderKonto($selected_id){
             ["timestamp" => true, "id" => true]
         );
         
-        ?>
-        <div class="container main col-xs-12 col-lg-11">
-        <?php
         //var_dump(reset($ret));
         ?>
         <table class="table" align="right">

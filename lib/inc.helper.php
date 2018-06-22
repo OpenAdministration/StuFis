@@ -260,35 +260,7 @@ function betterValues($inhalt, $newKey = "fieldname", $newValue = "value"){
     return $inhalt_better;
 }
 
-/**
- * @param $str string Name des Profiling Flags
- */
-function prof_flag($str){
-    global $prof_timing, $prof_names, $prof_sources;
-    $prof_timing[] = microtime(true);
-    $bt = debug_backtrace();
-    $prof_sources[] = array_shift($bt);
-    $prof_names[] = $str;
-}
 
-/**
- * Print all Profiling Flags from prof_flag()
- */
-function prof_print(){
-    global $prof_timing, $prof_names, $prof_sources;
-    $sum = 0;
-    $size = count($prof_timing);
-    $out = "";
-    for ($i = 0; $i < $size - 1; $i++){
-        $out .= "<div class='profiling-source'>" . basename($prof_sources[$i]["file"]) . ":" . $prof_sources[$i]["line"] . "</div> <div class='profiling-names'>{$prof_names[$i]}</div><br>";
-        $sum += $prof_timing[$i + 1] - $prof_timing[$i];
-        $out .= sprintf("&nbsp;&nbsp;&nbsp;%f<br>", $prof_timing[$i + 1] - $prof_timing[$i]);
-    }
-    $out .= "<i class='profiling-source'>" . basename($prof_sources[$i]["file"]) . ":" . $prof_sources[$size - 1]["line"] . "</i> <b>{$prof_names[$size-1]}</b><br>";
-    $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
-    $out .= "</div>";
-    echo $out;
-}
 
 abstract class Enum{
     private static $constCacheArray = null;

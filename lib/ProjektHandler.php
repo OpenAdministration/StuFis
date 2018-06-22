@@ -399,7 +399,7 @@ class ProjektHandler implements FormHandlerInterface{
         $selectable_titel = FormTemplater::generateTitelSelectable(5);
         
         ?>
-        <div class='container main col-xs-12 col-md-10'>
+        <div class='col-xs-12 col-md-10'>
             <?php if ($editable){ ?>
             <form role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt" ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
@@ -659,7 +659,7 @@ class ProjektHandler implements FormHandlerInterface{
         $comments = DBConnector::getInstance()->dbFetchAll("comments", [], ["antrag_id" => $this->id], [], ["timestamp" => false]); ?>
 
         <div class='clearfix'></div>
-        <div class="container main col-xs-12 col-md-10">
+        <div class="col-xs-12 col-md-10">
             <div class='panel panel-default'>
                 <div class='panel-heading'>Kommentare</div>
                 <div class='panel-body chat'>
@@ -730,7 +730,7 @@ class ProjektHandler implements FormHandlerInterface{
     
     private function renderBackButton(){
         ?>
-        <div class="container main col-xs-12 col-md-10">
+        <div class="">
             <a href="./">
                 <button class="btn btn-primary"><i class="fa fa-fw fa-arrow-left"></i>&nbsp;Zurück</button>
             </a>

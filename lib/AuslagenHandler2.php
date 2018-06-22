@@ -485,7 +485,6 @@ class AuslagenHandler2 implements FormHandlerInterface{
     private function renderAuslagenerstattung($titel){
     	if ($this->error) return -1;
         ?>
-        <div class="main container col-xs-12 col-md-10">
             <h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
              <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Projekt Information</label>
@@ -664,8 +663,6 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 </tr>
                 </tfoot>
             </table>
-
-        </div>
         <?php
         return;
     }

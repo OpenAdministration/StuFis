@@ -6,7 +6,7 @@
  * Time: 19:45
  */
 
-interface FormHandlerInterface{
+interface FormHandlerInterface extends Renderer{
     public static function initStaticVars();
     
     public static function getStateString($statename);
@@ -16,8 +16,6 @@ interface FormHandlerInterface{
     public function setState($stateName);
     
     public function getNextPossibleStates();
-    
-    public function render();
     
     public function getID();
 }

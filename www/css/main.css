@@ -296,7 +296,8 @@ a.disabled-option span {
 }
 
 .profiling-source {
-    font-size: 75%;
+    font-size: 65%;
+    padding-left: 5px;
 }
 
 .profiling-names {

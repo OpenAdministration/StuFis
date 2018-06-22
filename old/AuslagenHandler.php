@@ -204,7 +204,6 @@ class AuslagenHandler implements FormHandlerInterface{
     private function renderAuslagenerstattung($titel){
         $tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
         ?>
-        <div class="main container col-xs-12 col-md-10">
             <h3><?= $titel ?></h3>
             <label for="genehmigung">Genehmigung</label>
             <div id='genehmigung' class="well">
@@ -349,8 +348,6 @@ class AuslagenHandler implements FormHandlerInterface{
                 </tr>
                 </tfoot>
             </table>
-
-        </div>
         <?php
     }
     

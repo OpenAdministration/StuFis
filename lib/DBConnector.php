@@ -14,23 +14,23 @@ class DBConnector extends Singleton{
     private $transactionCount = 0;
     
     public function __construct(){
-        prof_flag("init-db-connection");
+        HTMLPageRenderer::registerProfilingBreakpoint("init-db-connection");
         $this->initScheme();
         $this->pdo = new PDO(self::$DB_DSN, self::$DB_USERNAME, self::$DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
         if (self::$BUILD_DB){
             include SYSBASE . "/sql/buildDB.php";
-            prof_flag("build-db-finished");
+            HTMLPageRenderer::registerProfilingBreakpoint("build-db-finished");
         }
     }
     
     /**
-     * @return the $pdo
+     * @return PDO $pdo
      */
     public function getPdo(){
     	return $this->pdo;
     }
     /**
-     * @return the $DB_PREFIX
+     * @return string $DB_PREFIX
      */
     public function getDbPrefix(){
     	return self::$DB_PREFIX;
@@ -456,13 +456,13 @@ class DBConnector extends Singleton{
         if (count($o) > 0){
             $sql .= PHP_EOL . "ORDER BY " . implode(", ", $o);
         }
-        //prof_flag($sql);
-        prof_flag("sql-start");
+        //HTMLPageRenderer::registerProfilingBreakpoint($sql);
+        HTMLPageRenderer::registerProfilingBreakpoint("sql-start");
         //var_dump($sql);
         //var_dump($vals);
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($vals) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
-        prof_flag("sql-done");
+        HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;
         if ($groupByFirstCol && $unique)
@@ -656,7 +656,7 @@ class DBConnector extends Singleton{
      * @return array|bool
      */
     public function getProjectFromGremium($gremiumNames, $antrag_type){
-        prof_flag("gremien-start");
+        HTMLPageRenderer::registerProfilingBreakpoint("gremien-start");
         $sql =
             "SELECT a.gremium,a.type,a.revision,a.state,i2.fieldname,i2.value,i2.antrag_id, a.token
               FROM
