@@ -6,6 +6,7 @@ $routing = [
     'action' => 'index',
     'not_found' => '404',
     'method' => 'GET',
+    'load' => [],
     'children' => [
         [
             'path' => 'menu',
