@@ -553,7 +553,6 @@ class ProjektHandler implements FormHandlerInterface{
         <?php
     }
     
-    
     private function renderInteractionPanel(){
         global $URIBASE;
         $url = str_replace("//", "/", $URIBASE . "projekt/" . $this->id . "/");
