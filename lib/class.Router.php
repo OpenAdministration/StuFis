@@ -91,6 +91,13 @@ class Router{
     
     // private member functions -------------------------------
     
+    /**
+     * @param $path
+     * @param $routes
+     *
+     * @return array
+     * @throws Exception
+     */
     private function _route($path, $routes){
         $current = null;
         $next = null;
@@ -116,7 +123,6 @@ class Router{
                 var_export($route);
                 echo '</pre>';
                 throw new Exception("Router: Error on configuration. Parameter 'path' is missing.");
-                return null;
             }
             if (!isset($route['type'])){
                 echo '<div class="bg-error alert alert-error orange">Falsch konfigurierte Route. Parameter "type" fehlt:</div>';
@@ -124,7 +130,6 @@ class Router{
                 var_export($route);
                 echo '</pre>';
                 throw new Exception("Router: Error on configuration. Parameter 'type' is missing.");
-                return null;
             }
             //check if current path matches route path
             if (($route['type'] === 'path' && $route['path'] === $current
@@ -196,7 +201,6 @@ class Router{
         }
         return $ret;
     }
-    
 }
 
 ?>

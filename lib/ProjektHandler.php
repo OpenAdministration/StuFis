@@ -591,8 +591,7 @@ class ProjektHandler implements FormHandlerInterface{
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
             <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt"; ?>"
-                  method="POST"
-                  enctype="multipart/form-data" class="ajax" data-toggle="validator">
+                  method="POST" enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">
                     <div class="modal-dialog" role="document">
