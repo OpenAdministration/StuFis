@@ -313,26 +313,6 @@ class TextStyle extends Enum{
     
 }
 
-class LoadGroups extends Enum{
-    const __default = [];
-    
-    const SELECTPICKER = [
-        "js" => ["bootstrap-select.min"],
-        "css" => ["bootstrap-select.min"],
-    ];
-    const DATEPICKER = [
-        "js" => ["bootstrap-datepicker.min", "bootstrap-datepicker.de.min"],
-        "css" => ["bootstrap-datepicker.min"],
-    ];
-    const FILEINPUT = [
-        "js" => ["fileinput.min", "fileinput.de.min", "fileinput-themes/gly/theme.js"],
-        "css" => ["fileinput.min"],
-    ];
-    const IBAN = [
-        "js" => ["iban"],
-        "css" => [],
-    ];
-}
 
 function generateLinkFromID($text, $dest, $linkColor = TextStyle::__default){
     global $URIBASE;
