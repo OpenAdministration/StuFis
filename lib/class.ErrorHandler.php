@@ -73,14 +73,22 @@ class ErrorHandler implements Renderer
 		$file1 = (isset($stack[1]['file'])? preg_replace($re, '', $stack[1]['file']):' ?? ');
 		//create message
 		if ($_SERVER['REQUEST_METHOD'] == 'POST'){
-			$msg = 	"$file0 [$line0]:  $msg\n".
-			"(Called in: $file1 [$line1])";
+			$msg_log = 	"$file0 [$line0]:  $msg\n".
+				"(Called in: $file1 [$line1])";
+			if (DEBUG > 0){
+				$msg = 	"$file0 [$line0]:  $msg\n".
+					"(Called in: $file1 [$line1])";
+			}
 		} else {
-			$msg = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
+			$msg_log = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
+				"(Called in: <i>$file1 [$line1]</i>)<p></p>";
+			if (DEBUG > 0){
+				$msg = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
 					"(Called in: <i>$file1 [$line1]</i>)<p></p>";
+			}
 		}
 		// log message
-		self::_errorLog($msg);
+		self::_errorLog($msg_log);
 		// echo message
 		ErrorHandler::_renderError($msg);
 		exit(-1);
