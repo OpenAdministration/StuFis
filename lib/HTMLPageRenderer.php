@@ -218,7 +218,6 @@ class HTMLPageRenderer{
     private function renderSiteNavigation(){
         $subtype = "";
         ?>
-
         <div>
             <div class="profile-sidebar">
                 <!-- SIDEBAR USER TITLE -->
@@ -338,7 +337,7 @@ class HTMLPageRenderer{
             basename(self::$profiling_sources[$size - 1]["file"]) . ":" .
             self::$profiling_sources[$size - 1]["line"] . "
                 </i>";
-        
+        //Wrapp all output till now with div
         $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf("%f", $sum) . '</h3>' . $out;
         $out .= "</div>";
         echo $out;
@@ -574,15 +573,16 @@ class HTMLPageRenderer{
                     </div>
                     <?php if ($hasFooter){ ?>
                         <div class='modal-footer'>
-                        <?php if (isset($abortLabel)){ ?>
-                            <button type='button' class='btn btn-<?= $buttonType1 ?>'
-                                    data-dismiss='modal'><?= $abortLabel ?></button>
-                        <?php } ?>
-                        <?php if (isset($actionLabel)){ ?>
-                            <button type='button' class='btn btn-<?= $buttonType2 ?>'
-                                    id='<?= $id ?>-btn'><?= $actionLabel ?></button>
-                            </div>
-                        <?php } ?>
+                            <?php if (isset($abortLabel)){ ?>
+                                <button type='button' class='btn btn-<?= $buttonType1 ?>'
+                                        data-dismiss='modal'><?= $abortLabel ?></button>
+                            <?php } ?>
+                            <?php if (isset($actionLabel)){ ?>
+                                <button type='button' class='btn btn-<?= $buttonType2 ?>'
+                                        id='<?= $id ?>-btn'><?= $actionLabel ?></button>
+    
+                            <?php } ?>
+                        </div>
                     <?php } ?>
                 </div>
             </div>
