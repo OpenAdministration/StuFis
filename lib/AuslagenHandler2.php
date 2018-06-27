@@ -119,7 +119,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
         $this->projekt_id = $args['pid'];
         
         // check projekt exists --------------------
-        if (!$this->getProject()) return; //set error
+        if (!$this->getDbProject()) return; //set error
         
         // create, view or edit -------------------------
         $editMode = false;
@@ -134,8 +134,8 @@ class AuslagenHandler2 implements FormHandlerInterface{
            	$editMode = true;
            	$this->id = $args['aid'];
            	//check auslagen id exists --------------------
-            if (!$this->getAuslagen()) return;
-            if (!$this->getBelegePostenFiles()) return;
+            if (!$this->getDbAuslagen()) return;
+            if (!$this->getDbBelegePostenFiles()) return;
             $stateNow = $this->auslagen_data['state'];
             //page title
             $this->title = ' - Bearbeiten';
@@ -143,8 +143,8 @@ class AuslagenHandler2 implements FormHandlerInterface{
             die();
         } elseif($args['action'] == 'view') {
         	//check auslagen id exists --------------------
-        	if (!$this->getAuslagen()) return;
-        	if (!$this->getBelegePostenFiles()) return;
+        	if (!$this->getDbAuslagen()) return;
+        	if (!$this->getDbBelegePostenFiles()) return;
         	$stateNow = $this->auslagen_data['state'];
         	
         } else {
@@ -215,6 +215,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
             ],
         ];
         self::$emptyData = [
+        	"beleg" => [],
+        	
+        	
+        	
         	"auslagen-name" => '',
         	"belege-ok" => false,
         	"hv-ok" => false,
@@ -254,6 +258,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
          	'date-start' => '',
          	'date-end' => '',
          	'beschreibung' => '',
+         	'posten' => []
      		'auslagen' => [
          		'id' => ''
          		'suffix' => ''
@@ -333,7 +338,13 @@ class AuslagenHandler2 implements FormHandlerInterface{
       					'zahlung-name' => ['groups' => ['sgis']],
         				'zahlung-iban' => ['groups' => ['sgis']],
         				'zahlung-user' => ['groups' => ['sgis']],
-        				'zahlung-vwzk' => ['groups' => ['sgis']]],
+        				'zahlung-vwzk' => ['groups' => ['sgis']],
+        				'beleg-datum' => ['groups' => ['sgis']],
+        				'beleg-file' => ['groups' => ['sgis']],
+        				'beleg-beschreibung' => ['groups' => ['sgis']],
+        				'beleg' => ['groups' => ['sgis']],
+        				'auslagen' => ['groups' => ['sgis']],],
+        	
             "ok-hv" => [],
             "ok-kv" => [],
             
@@ -352,7 +363,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
      * get project information from db
      * @param boolean $renderError
      */
-    private function getProject($renderError = true){
+    private function getDbProject($renderError = true){
     	$res = $this->db->dbFetchAll("projekte", [], ["projekte.id" => $this->projekt_id], [
     		//TODO ["type" => "inner", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
     	], ["version" => true]);
@@ -376,6 +387,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     	}
     	//TODO remove
     	//$this->projekt_data['auslagen'][] = ['id' => 1, 'name_suffix' => 'mein name suffix', 'state' => 'draft'];
+    	$this->getDbProjektPosten($renderError);
     	return true;
     }
     
@@ -383,7 +395,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
      * get auslagen information from db
      * @param boolean $renderError
      */
-    private function getAuslagen($renderError = true){
+    private function getDbAuslagen($renderError = true){
     	$res = $this->db->dbFetchAll("auslagen", [], ["auslagen.id" => $this->id, "auslagen.projekt_id" => $this->projekt_id],
     	 [
     	 //TODO ACL? ["type" => "inner", "table" => "user", "on" => [["user.id", "auslagen.creator_id"]]],
@@ -400,7 +412,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     	}
     }
     
-    private function getBelegePostenFiles($renderError = true){
+    private function getDbBelegePostenFiles($renderError = true){
     	$res = $this->db->dbFetchAll("belege", [], ["belege.auslagen_id" => $this->id],
     		[
     			["type" => "left", "table" => "beleg_posten", "on" => [["belege.id", "beleg_posten.beleg_id"]]],
@@ -461,6 +473,22 @@ class AuslagenHandler2 implements FormHandlerInterface{
     	return true;
     }
     
+	/**
+     * get auslagen information from db
+     * @param boolean $renderError
+     */
+    private function getDbProjektPosten($renderError = true){
+    	$res = $this->db->dbFetchAll("projektposten", [], ["projekt_id" => $this->projekt_id]);
+    	$aus = [];
+    	if (!empty($res)){
+    		foreach ($res as $row){
+    			$aus[] = $row;
+    		}
+    	}
+    	$this->projekt_data['posten'] = $aus;
+    	return true;
+    }
+    
     public static function getStateString($statename){
         return self::$states[$statename][0];
     }
@@ -480,6 +508,259 @@ class AuslagenHandler2 implements FormHandlerInterface{
     public function render(){
         // TODO: Implement render() method.
         return $this->renderAuslagenerstattung("Auslagenerstattung");
+    }
+    
+    /**
+     *
+     * @param array $beleg
+     * 	[
+         		'id' => NULL,
+         		'short' => '',
+         		'created_on' => date_create()->format('Y-m-d H:i:s'),
+         		'datum' => '',
+         		'beschreibung' => '',
+         		'file_id' => NULL,
+         		'file' => NULL,
+         		'posten' => []
+         	]
+     * @param boolean $hidden
+     */
+    public function render_beleg_container($belege, $editable = true, $label = ''){
+		if ($label){ echo '<label>'.$label.'</label>';} ?>
+		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
+			<div class="hidden datalists">
+			<?php //TODO ?>
+				<datalist class="datalist-projekt">
+					<option value="0" data-alias="Bitte Wählen">
+				<?php foreach ($this->projekt_data['posten'] as $p){ ?>
+					<option value="<? $p['id'] ?>" data-alias="<? $p['name'] ?>">
+				<?php } ?>
+				</datalist>
+			</div>
+    		<div class="row row-striped">
+	    		<div class="form-group">
+	    			<div class="col-sm-1"><strong>Beleg</strong></div>
+	    			<div class="col-sm-11"></div>
+	    		</div>
+    		</div>
+    		<?php if (count($belege) == 0){ ?>
+    			<div class="row row-striped">
+	    			<div class="form-group no-belege-info">
+		    			<div class="col-sm-12"><strong style="font-size: 2em;">Keine Belege eingereicht</strong></div>
+	    			</div>
+    			</div>
+    		<?php }
+    		
+    	foreach ($belege as $b){
+    		echo $this->render_beleg_row($b, $editable);
+    	}
+    	
+    	//render hidden beleg for js copy
+    	if ($editable){
+	    	echo $this->render_beleg_row([
+	    		'id' => '',
+	    		'short' => '',
+	    		'created_on' => '',
+	    		'datum' => '',
+	    		'beschreibung' => '',
+	    		'file_id' => NULL,
+	    		'file' => NULL,
+	    		'posten' => []
+	    	], $editable, true);
+    	} if ($editable){ ?>
+    			<div class="row row-striped add-button-row" style="margin: 10px 0;">
+	    			<div class="add-belege" style="padding:5px;">
+		    			<div class="text-center"><button type="button" class="btn btn-success" style="min-width:100px; font-weight: bold;">+ Beleg ergänzen</button></div>
+	    			</div>
+    			</div>
+    	<?php } ?>
+    	</div>
+    	<?php
+    }
+    
+    public function render_beleg_row($beleg, $editable = true,  $hidden = false){
+    	ob_start();
+    	$date = ($beleg['datum'])? date_create($beleg['datum'])->format('d.m.Y') : '';
+    	$date_value = ($beleg['datum'])? date_create($beleg['datum'])->format('Y-m-d') : '';
+    	$date_form = ($editable)? $this->templater->getDatePickerForm(($hidden)? '' : "beleg[{$beleg['id']}][\"datum\"]", $date_value, 0, "", "", []): '<strong>am </strong>'.$date;
+		
+    	$file_form = '';
+    	if (!$hidden) {
+    		if ($beleg['file_id']) {
+    			$file_form = '<span class="beleg-file" data-id="'.$beleg['file_id'].'">'.
+    				'<a href="'.URIBASE.'files/get/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'</a>'.
+    				'<div><small><span style="min-width: 50px; font-weight: bold;">Size: </span>'.
+    							'<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.
+    					 '<small><span style="min-width: 50px; font-weight: bold;">Mime: </span>'.
+    							'<span>'.$beleg['file']['mime'].'</span></small>'.
+    				'</div><button type="button" title="Löschen" class="file-delete btn btn-danger">X</button>'.
+    			'</span>';
+    		} else {
+    			if ($editable){
+    				$file_form = $this->templater->getFileForm("beleg[{$beleg['id']}][\"file\"]", 0, 0, "Datei...", "", []);
+    			} else {
+    				$file_form = '<span>Keine Datei verknüpft.</span>';
+    			}
+    		}
+    	} else {
+    		$file_form = $this->templater->getFileForm("", 0, 0, "Datei...", "", []);
+    	}
+    	
+    	$desc_form = '';
+    	if ($editable) {
+    		$desc_form = $this->templater->getTextareaForm(($hidden)? '' : "beleg[{$beleg['id']}][\"beschreibung\"]", ($beleg['beschreibung'])?$beleg['beschreibung']:"", 0, "optional", "", [], 1);
+    	} else {
+    		$desc_form = '<span>'.($beleg['beschreibung'])?$beleg['beschreibung']:"keine".'</span>';
+    	}
+    	
+    	
+    	?>
+		<div class="row row-striped <?= ($hidden)? 'hidden' : 'bt-dark' ?>" style="padding: 5px;">
+			<div class="form-group<?= ($hidden)? ' beleg-template' : ' beleg-container' ?>" data-id="<?= $beleg['id']; ?>">
+				<div class="col-sm-1 beleg-idx-box">
+					<div class="form-group">
+						<div class="col-sm-6 beleg-idx"></div>
+						<div class="col-sm-1 beleg-nr"><?= $beleg['short']; ?><?=
+							($editable)? '<a href="#" class="delete-row"> <i class="fa fa-fw fa-trash"></i></a>' : '' ?></div>
+					</div>
+				</div>
+				<div class="col-sm-11 beleg-inner">
+					<div class="form-group">
+						<div class="col-sm-4"><strong>Datum des Belegs</strong></div>
+						<div class="col-sm-8"><strong>Scan des Belegs</strong></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-4 beleg-date"><?= $date_form ?></div>
+						<div class="col-sm-8 beleg-file"><?= $file_form ?></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12"><strong>Beschreibung</strong></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12 beleg-desc"><?= $desc_form ?></div>
+					</div>
+					<div class="form-group">
+						<div class="col-sm-12 beleg-data well" style="margin-top: 10px;"><?php
+						echo $this->beleg_posten_table($beleg['posten'], $editable, $hidden, $beleg['id']);
+						?></div>
+					</div>
+				</div>
+			</div>
+		</div>
+    	<?php
+    	return ob_get_clean();
+    }
+    
+    public function beleg_posten_table($posten, $editable, $hidden, $beleg_id){
+    	$out = '<div class="row row-striped" style="padding: 5px; border-bottom: 2px solid #ddd;">
+					<div class="form-group posten-headline">
+						<div class="col-sm-1"></div>
+						<div class="col-sm-5"><strong>Projektposten</strong></div>
+						<div class="col-sm-3"><strong>Einnahmen</strong></div>
+						<div class="col-sm-3"><strong>Ausgaben</strong></div>
+					</div>
+				</div>';
+    	
+    	$sum_in = 0;
+    	$sum_out = 0;
+    	$out .= '<div class="row row-striped posten-inner-list" style="padding: 5px; border-bottom: 2px solid #ddd;">';
+    	
+    	// if empty and !$editable add empty hint
+    	$out .= '<div class="form-group posten-empty '.((count($posten) == 0)?'':' hidden').'">Keine Angaben</div>';
+    	
+    	// if nonempty add lines
+    	foreach ($posten as $pline){
+    		$out .= '<div class="form-group posten-entry" data-id="'.$pline['id'].'" data-projekt-posten-id="'.$pline['projekt_posten_id'].'">';
+    		//position counter + trash bin
+    		$out .= '<div class="col-sm-1 posten-counter">
+						'.(($editable)?'<i class="fa fa-fw fa-trash"></i>':'').'
+					</div>';
+    		//short name / position
+    		$out .= '<div class="col-sm-1 posten-short">P'.$pline['short'].'</div>';
+    		//posten_name
+    		if ($editable){
+    			$out .= '<div class="col-sm-4 editable projekt-posten-select" data-value="'.$pline['projekt_posten_id'].'">'
+    						.'<span class="value">'.$pline['projekt.posten_name'].'</span>'
+    						.'<input type="hidden" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'projekt-posten\']" value="'.$pline['projekt_posten_id'].'">'
+    					.'</div>';
+    		} else {
+    			$out .= '<div class="col-sm-4 posten-name">'.$pline['projekt.posten_name'].'</div>';
+    		}
+    		
+    		//einnahmen
+    		if ($editable){
+    			$out .= '<div class="col-sm-3 posten-in">'
+    						.'<div class="input-group">'
+    							.'<input class="form-control" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'in\']" type="number" step="0.01" min="0" value="'.$pline['einnahmen'].'">'
+    							.'<div class="input-group-addon">€</div>'
+    						.'</div>'
+    					.'</div>';
+    		} else {
+    			$out .= '<div class="col-sm-3 posten-in">'.$pline['einnahmen'].'</div>';
+    		}
+    		$sum_in += $pline['einnahmen'];
+    		
+    		//ausgaben
+    		if ($editable){
+    			$out .= '<div class="col-sm-3 posten-out">'
+    						.'<div class="input-group">'
+    							.'<input class="form-control" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'in\']" type="number" step="0.01" min="0" value="'.$pline['ausgaben'].'">'
+    							.'<div class="input-group-addon">€</div>'
+    						.'</div>'
+    					.'</div>';
+    		} else {
+    			$out .= '<div class="col-sm-3 posten-out">'.$pline['ausgaben'].'</div>';
+    		}
+    		$sum_out += $pline['ausgaben'];
+    		
+    		$out .= '<div style="clear:both;"></div></div>';
+    	}
+    	
+    	//if $ediatable add __auto add line__
+    	if ($editable) {
+    		$out .= '<div class="form-group posten-entry-new">';
+    		//position counter + trash bin
+    		$out .= '<div class="col-sm-1 posten-counter">
+						<i class="hidden fa fa-fw fa-trash"></i>
+           				<i class="fa fa-fw fa-plus text-success"></i>
+					</div>';
+    		//short name / position
+    		$out .= '<div class="col-sm-1 posten-short"></div>';
+    		//posten_name
+    		$out .= '<div class="col-sm-4 editable projekt-posten-select" data-value="0">'
+    						.'<span class="value"></span>'
+    						.'<input type="hidden" value="0">'
+    					.'</div>';
+    		
+    		//einnahmen
+			$out .= '<div class="col-sm-3 posten-in">'
+						.'<div class="input-group">'
+							.'<input class="form-control" type="number" step="0.01" min="0" value="0">'
+							.'<div class="input-group-addon">€</div>'
+						.'</div>'
+					.'</div>';
+    		
+    		//ausgaben
+			$out .= '<div class="col-sm-3 posten-out">'
+						.'<div class="input-group">'
+							.'<input class="form-control" type="number" step="0.01" min="0" value="0">'
+							.'<div class="input-group-addon">€</div>'
+						.'</div>'
+					.'</div>';
+
+    		$out .= '<div style="clear:both;"></div></div>';
+    	}
+    	
+    	$out .= '</div>';
+    	$out .= '<div class="row row-striped" style="padding: 5px; border-top: 2px solid #ddd;">
+    				<div class="form-group posten-sum-line">
+						<div class="col-sm-1"></div>
+						<div class="col-sm-5"></div>
+						<div class="col-sm-3 posten-sum-in"><strong><span style="width: 10%;">Σ</span><span class="text-right" style="display: inline-block; padding-right: 10px; width: 80%;">'.number_format($sum_in,2).'</span><span style="width: 10%;">€</span></strong></div>
+						<div class="col-sm-3 posten-sum-out"><strong><span style="width: 10%;">Σ</span><span class="text-right" style="display: inline-block; padding-right: 10px; width: 80%;">'.number_format($sum_out,2).'</span><span style="width: 10%;">€</span></strong></div>
+					</div>
+    			</div>';
+    	return $out;
     }
     
     private function renderAuslagenerstattung($titel){
@@ -551,21 +832,42 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
-            <?php 
+	        <?php
+          
+	        	//TODO hidden data -> projekt posten name <-> projekt-posten-id
+	        
+	            //$belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
+	            $belege = [[
+	         		'id' => '42',
+	         		'short' => 'B2',
+	         		'created_on' => date_create()->format('Y-m-d H:i:s'),
+	         		'datum' => '2017-12-03',
+	         		'beschreibung' => 'Einmal einkaufen für alle',
+	         		'file_id' => NULL,
+	         		'file' => NULL,
+	         		'posten' => [
+	         			[
+	         				'id' => '13',
+	         				'short' => '3',
+	         				'projekt_posten_id' => 6,
+	         				'projekt.posten_name' => 'Getränke',
+	         				'ausgaben' => '30.77',
+	         				'einnahmen' => '12.03'
+	            		]
+	         		]
+         		]];
+	            $this->render_beleg_container($belege, true,  'Belege');
+	            
+	           
             
            		$beleg_nr = 0;
             	$tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
             
-            ?>
-            <div class="col-xs-12">Falls mehrere Posten pro Beleg vorhanden sind bitte auf dem Beleg (vor Scan!)
-                kenntlich machen welcher Teil zu welchem u.g. Posten gehört.
-            </div>
-            <?php ?>
-            <div class="beleg-table table table-striped">
-            	<div class=""></div>
+            	?>
+          
             
-            </div>
             
+			<?php /* ?>
             <table id="beleg-table"
                    class="table table-striped <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                 <thead>
@@ -663,6 +965,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 </tr>
                 </tfoot>
             </table>
+			<?php //*/ ?>
         <?php
         return;
     }

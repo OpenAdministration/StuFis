@@ -625,7 +625,43 @@ button.btn.btn-arrow-left {
     -moz-border-radius: 0 4px 0 0;
 
 }
+.row-striped:nth-of-type(odd){
+  /* background-color: #efefef; */
+}
 
-
-
-
+.row-striped:nth-of-type(even){
+  background-color: #ffffff;
+}
+/* --------- beleg container --------- */
+.beleg-table {
+	counter-reset: beleg-counter;
+}
+.beleg-table .beleg-container {
+	counter-increment: beleg-counter;
+}
+.beleg-table .beleg-container .beleg-idx::before {
+	 content: counter(beleg-counter);
+}
+.beleg-table .beleg-template {
+	display: none;
+}
+.beleg-table .posten-headline {
+	counter-reset: posten-counter;
+}
+.beleg-table .posten-entry {
+	counter-increment: posten-counter;
+}
+.beleg-table .posten-entry .posten-counter::before {
+	content: counter(posten-counter) ".";
+	display: inline-block;
+	padding: 0 5px 0 0;
+}
+.beleg-table .posten-entry-new {
+	border-top: 2px dashed #ddd;
+	padding-top: 5px;
+	margin-top: -15px;
+	margin-bottom: 0px;
+}
+.bt-dark {
+	border-top: 2px solid #777;
+}
