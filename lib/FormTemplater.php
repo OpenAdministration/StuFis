@@ -303,7 +303,8 @@ class FormTemplater{
     
     private function getOutputWrapped($content, $width, $editable, $name, $unique_id, $label_text, $validator){
         $out = "";
-        if ($this->checkVisibility($name) === false)
+
+        if ($name!='' && $this->checkVisibility($name) === false)
             return "";
         
         $classes_array = $this->constructWidthClasses($width);
@@ -344,7 +345,8 @@ class FormTemplater{
     
     public function getFileForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
         $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
-        $editable = $this->checkWritePermission($name);
+
+        $editable = (!$name)? true : $this->checkWritePermission($name);
         $out = "";
         $out .= "<div class='single-file-container'>";
         $out .= "<input class='form-control single-file' type='file' name='$name' id='$unique_id'>";
@@ -505,7 +507,8 @@ class FormTemplater{
     
     public function getTextareaForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $min_rows = 5){
         $out = "";
-        $editable = $this->checkWritePermission($name);
+        
+        $editable = (!$name)? true : $this->checkWritePermission($name);
         $unique_id = $this->getUniqueIDfromName($name);
         
         if ($editable){
@@ -535,7 +538,8 @@ class FormTemplater{
             }
         }
         $out = "";
-        $editable = $this->checkWritePermission($names);
+        
+        $editable = ((count($names)==0 || (count($names)==1 && !$names[0]))? true : $this->permissionHandler->isEditable($names, 'and'));
         $unique_id0 = $this->getUniqueIDfromName($names[0]);
         
         if ($editable){
