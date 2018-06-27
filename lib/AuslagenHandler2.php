@@ -529,11 +529,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
 		if ($label){ echo '<label>'.$label.'</label>';} ?>
 		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
 			<div class="hidden datalists">
-			<?php //TODO ?>
 				<datalist class="datalist-projekt">
 					<option value="0" data-alias="Bitte Wählen">
 				<?php foreach ($this->projekt_data['posten'] as $p){ ?>
-					<option value="<? $p['id'] ?>" data-alias="<? $p['name'] ?>">
+					<option value="<?= $p['id'] ?>" data-alias="<?= $p['name'] ?>">
 				<?php } ?>
 				</datalist>
 			</div>
@@ -765,7 +764,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     
     private function renderAuslagenerstattung($titel){
     	if ($this->error) return -1;
-        ?>
+        ?><form method="POST" action="<?= URIBASE ?>rest/forms/auslagen/updatecreate"></form>
             <h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
              <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Projekt Information</label>
@@ -837,7 +836,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
 	        	//TODO hidden data -> projekt posten name <-> projekt-posten-id
 	        
 	            //$belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
-	            $belege = [[
+	            /*TODO remove this comment
+	             
+	             $belege = [[
 	         		'id' => '42',
 	         		'short' => 'B2',
 	         		'created_on' => date_create()->format('Y-m-d H:i:s'),
@@ -855,8 +856,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
 	         				'einnahmen' => '12.03'
 	            		]
 	         		]
-         		]];
-	            $this->render_beleg_container($belege, true,  'Belege');
+         		]]; */
+	       		$editable = ($this->args['action'] == create || false);
+	            $this->render_beleg_container($belege, $editable,  'Belege');
 	            
 	           
             
@@ -868,6 +870,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
             
             
 			<?php /* ?>
+			
+			$beleg_nr = 0;
+            	$tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
+			
             <table id="beleg-table"
                    class="table table-striped <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                 <thead>
@@ -966,6 +972,12 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 </tfoot>
             </table>
 			<?php //*/ ?>
+			<div class="row row-striped add-button-row" style="margin: 10px 0;">
+	    		<div class="send" style="padding:5px;">
+		    		<div class="text-center"><button type="button" class="btn btn-success" style="min-width:100px; font-weight: bold;">Änderungen Speichern</button></div>
+	    		</div>
+    		</div>
+		</form>
         <?php
         return;
     }

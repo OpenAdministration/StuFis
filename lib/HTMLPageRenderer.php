@@ -93,7 +93,7 @@ class HTMLPageRenderer{
         echo "</div>";
         $this->renderProfiling();
         $this->renderFooter();
-        exit(-1);
+        exit();
     }
     
     private function renderHtmlHeader(){

@@ -212,12 +212,13 @@ class ErrorHandler implements Renderer
 	 */
 	public static function _renderJson($info){
 		//create return message
-		$out = ['success' => false, 'msg' => $info['msg']];
+		$out = ['success' => false, 'msg' => $info['msg'], 'status' => $info['code'] ];
 		//set html response code
 		self::_setErrorCode($info);
 		//echo resonse
         require_once dirname(__FILE__) . '/class.JsonController.php';
 		JsonController::print_json($out);
+		die();
 	}
 	
 	/**
@@ -226,7 +227,7 @@ class ErrorHandler implements Renderer
 	 */
 	public static function _renderErrorPage($param){
 		//UI globals
-		global $URIBASE, $ADMINGROUP, $subtype;
+		//global $URIBASE, $ADMINGROUP, $subtype;
 		$routeInfo = ['controller' => 'error'];
 		// set html response code
 		self::_setErrorCode($param);

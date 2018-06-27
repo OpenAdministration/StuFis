@@ -45,6 +45,7 @@ $routing = [
                                 LoadGroups::DATEPICKER,
                                 LoadGroups::SELECTPICKER,
                                 LoadGroups::FILEINPUT,
+                            	LoadGroups::AUSLAGEN,
                             ],
                             'children' => [
                                 [
@@ -111,6 +112,20 @@ $routing = [
                             'action' => 'projekt',
                             'is_suffix' => true
                         ],
+                    	[
+	                    	'path' => 'auslagen',
+	                    	'type' => 'path',
+	                    	'controller' => 'rest',
+	                    	'action' => 'auslagen',
+	                    	'children' => [
+	                    		[
+		                    		'path' => '(updatecreate)',
+		                    		'type' => 'path',
+	                    			'param' => 'mfunction',
+	                    			'match' => 0,
+	                    		],
+	                    	]
+                    	],
                     ]
                 ]
             ]

@@ -20,20 +20,23 @@ $idebug = false;
 // handle route -------------------------
 $content = null;
 $error = false;
-print_r($routeInfo);
+
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":
         $menuRenderer = new MenuRenderer();
         $htmlRenderer->appendRendererContent($menuRenderer);
+        $htmlRenderer->render();
         break;
     case "projekt":
         $projektRenderer = new ProjektHandler($routeInfo);
         $htmlRenderer->appendRendererContent($projektRenderer);
+        $htmlRenderer->render();
         break;
     case "auslagen":
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
+        $htmlRenderer->render();
         break;
     case "rest":
         $restHandler = new RestHandler();
@@ -47,7 +50,8 @@ switch ($routeInfo['controller']){
     default:
         $errorHdl = new ErrorHandler($routeInfo);
         $htmlRenderer->appendRendererContent($errorHdl);
+        $htmlRenderer->render();
         break;
 }
 
-$htmlRenderer->render();
+
