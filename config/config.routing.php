@@ -120,7 +120,7 @@ $routing = [
 	                    	'children' => [
 	                    		[
 		                    		'path' => '(updatecreate)',
-		                    		'type' => 'path',
+		                    		'type' => 'pattern',
 	                    			'param' => 'mfunction',
 	                    			'match' => 0,
 	                    		],
