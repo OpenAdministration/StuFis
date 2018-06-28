@@ -8,16 +8,19 @@
 
 class MenuRenderer implements Renderer{
     const DEFAULT = "mygremium";
+    private $pathinfo;
     
-    
-    public function render($args = []){
-        if (empty($args) || !isset($args[0]))
-            $args = [self::DEFAULT];
+    public function __construct($pathinfo = []) {
+        $this->pathinfo = $pathinfo;
+    }
+    public function render(){
+        if (empty($this->pathinfo) || !isset($this->pathinfo) || !isset($this->pathinfo["action"]))
+            $this->pathinfo = ["action" => self::DEFAULT];
         $attributes = AuthHandler::getInstance()->getAttributes();
-        switch ($args[0]){
+        switch ($this->pathinfo["action"]){
             case "mygremium":
             case "allgremium":
-                if ($args[0] === "allgremium")
+                if ($this->pathinfo["action"] === "allgremium")
                     $gremien = $attributes["alle-gremien"];
                 else
                     $gremien = $attributes["gremien"];
@@ -32,7 +35,9 @@ class MenuRenderer implements Renderer{
                     return false;
                 });
                 rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
+                $gremien[] = "";
                 HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
+                //print_r($this->pathinfo["action"]);
                 MenuRenderer::renderProjekte($gremien);
                 break;
             
@@ -104,7 +109,8 @@ class MenuRenderer implements Renderer{
                 //TODO FIXME;
                 break;
             default:
-                die("?!? could not interpret '$args[0]' as menu name :( ");
+                //FIXME
+                die("?!? could not interpret '{$this->pathinfo["action"]}' as menu name :( ");
         }
     }
     
@@ -132,7 +138,7 @@ class MenuRenderer implements Renderer{
                              href="#collapse<?php echo $i; ?>">
 
                             <h4 class="panel-title">
-                                <i class="fa fa-fw fa-togglebox"></i> <?= $gremium ?>
+                                <i class="fa fa-fw fa-togglebox"></i> <?= empty($gremium) ? "Nicht zugeordnete Projekte": $gremium ?>
                             </h4>
                         </div>
                         <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">

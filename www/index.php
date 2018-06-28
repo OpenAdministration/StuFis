@@ -24,7 +24,7 @@ $error = false;
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":
-        $menuRenderer = new MenuRenderer();
+        $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
         $htmlRenderer->render();
         break;

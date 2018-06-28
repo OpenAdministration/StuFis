@@ -78,7 +78,7 @@ class HTMLPageRenderer{
         echo $this->bodycontent;
         echo "</div>";
         $this->renderModals();
-        if (self::$dev){
+        if ($GLOBALS["DEV"]){
             $this->renderProfiling();
         }
         $this->renderFooter();
