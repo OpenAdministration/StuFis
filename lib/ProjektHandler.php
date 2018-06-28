@@ -448,12 +448,12 @@ class ProjektHandler implements FormHandlerInterface{
                 <?php } ?>
                 <h2><?= $title ?></h2>
                 <div class="well">
-                    <?= $this->templater->getTextForm("name", $this->data["name"], 12, "", "Projektname", ["required"]) ?>
-                    <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 4, "vorname.nachname@tu-ilmenau.de", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
-                    <?= $this->templater->getDropdownForm("org", $selectable_gremien, 6, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
-                    <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 6, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
-                    <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "www.wiki.stura.tu-ilmenau.de/protokoll/...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>
-                    <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
+                    <?= $this->templater->getTextForm("name", $this->data["name"], 10, "", "Projektname", ["required"]) ?>
+                    <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 5, "vorname.nachname", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
+                    <?= $this->templater->getDropdownForm("org", $selectable_gremien, 5, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
+                    <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 5, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
+                    <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>
+                    <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 10, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
                     <div class='clearfix'></div>
                 </div>
                 <?php $tablePartialEditable = $this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and"); ?>

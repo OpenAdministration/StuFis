@@ -1503,7 +1503,6 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                 $("#server-question-label").text(txtHeadline);
                 var $smc = $("#server-question-content");
                 $smc.empty();
-                $("#server-question-content").empty();
                 var $smcu = $('<ul/>').appendTo($smc);
                 for (var i = 0; i < values.msgs.length; i++) {
                     var msg = (values.msgs[i]);
@@ -1514,8 +1513,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                 } else {
                     $('#server-question-dlg').find("*[data-dismiss=\"modal\"]").show();
                 }
-                $("#server-question-close-window").off("click");
-                $("#server-question-close-window").on("click", function (evt) {
+                $("#server-question-btn-action").off("click");
+                $("#server-question-btn-action").on("click", function () {
                     if (values.altTarget) {
                         window.open(values.altTarget);
                     }
@@ -1531,7 +1530,7 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                 $("#server-question-dlg").off('hidden.bs.modal');
                 $("#server-question-dlg").on('hidden.bs.modal', function (e) {
                     if (values.forceClose) {
-                        $("#server-question-close-window").triggerHandler("click");
+                        $("#server-question-btn-action").triggerHandler("click");
                     } else {
                         if (values.altTarget) {
                             window.open(values.altTarget);

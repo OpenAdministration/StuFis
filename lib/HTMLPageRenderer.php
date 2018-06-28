@@ -572,7 +572,7 @@ class HTMLPageRenderer{
                         </button>
                         <h4 class='modal-title' id='<?= $id ?>-label'><?= $titel ?></h4>
                     </div>
-                    <div class='modal-body' id='please-reload-content'>
+                    <div class='modal-body' id='<?= $id ?>-content'>
                         <?= $bodycontent ?>
                     </div>
                     <?php if ($hasFooter){ ?>
@@ -583,7 +583,7 @@ class HTMLPageRenderer{
                             <?php } ?>
                             <?php if (isset($actionLabel)){ ?>
                                 <button type='button' class='btn btn-<?= $buttonType2 ?>'
-                                        id='<?= $id ?>-btn'><?= $actionLabel ?></button>
+                                        id='<?= $id ?>-btn-action'><?= $actionLabel ?></button>
     
                             <?php } ?>
                         </div>
