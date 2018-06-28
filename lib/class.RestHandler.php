@@ -25,13 +25,42 @@ class RestHandler extends JsonController {
 	}
 	
 	// ================================================================================================
+	
+	/**
+	 * 
+	 * @param array $routeInfo
+	 */
+	public function handlePost($routeInfo = NULL){
+		switch ($routeInfo['action']){
+			case 'projekt':
+				$this->handleProjekt($routeInfo);
+				break;
+			case 'auslagen':
+				$this->handleAuslagen($routeInfo);
+				break;
+			default:
+				ErrorHandler::_errorExit('Unknown Action: '. $routeInfo['action']);
+				break;
+		}
+	}
+	
+	/**
+	 * handle auslagen posts
+	 * @param string $routeInfo
+	 */
+	public function handleAuslagen($routeInfo = NULL){
+		echo '<pre>'; var_dump($routeInfo); echo '</pre>';
+		echo '<pre>'; var_dump($_POST); echo '</pre>';
+		echo '<pre>'; var_dump($_FILES); echo '</pre>';
+	}
+	
 	/**
 	 * Created by PhpStorm.
 	 * User: konsul
 	 * Date: 07.05.18
 	 * Time: 02:16
 	 */
-	public function handlePost($routeInfo = NULL){
+	public function handleProjekt($routeInfo = NULL){
 		global $nonce;
 		$ret = false;
 		$msgs = [];
@@ -59,14 +88,14 @@ class RestHandler extends JsonController {
 					if (!isset($_POST["id"]) || !is_numeric($_POST["id"])){
 						throw new IdNotSetException("ID nicht gesetzt.");
 					}
-					$projektHandler = new ProjektHandler([$_POST["id"]]);
+                    $projektHandler = new ProjektHandler(["pid" => $_POST["id"], "action" => "none"]);
 					$ret = $projektHandler->setState($_POST["newState"]);
 					break;
 				case "update":
 					if (!isset($_POST["id"]) || !is_numeric($_POST["id"])){
 						throw new IdNotSetException("ID nicht gesetzt.");
 					}
-					$projektHandler = new ProjektHandler([$_POST["id"]]);
+                    $projektHandler = new ProjektHandler(["pid" => $_POST["id"], "action" => "edit"]);
 					$ret = $projektHandler->updateSavedData($_POST);
 					break;
 				default:

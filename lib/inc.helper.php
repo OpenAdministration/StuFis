@@ -261,7 +261,7 @@ function betterValues($inhalt, $newKey = "fieldname", $newValue = "value"){
 }
 
 
-class TextStyle extends Enum{
+class TextStyle extends baseclass\Enum{
     const __default = self::NORMAL;
     
     const NORMAL = "";

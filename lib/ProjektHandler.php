@@ -30,7 +30,7 @@ class ProjektHandler implements FormHandlerInterface{
         //print_r($pathInfo);
         self::initStaticVars();
         if (!isset($pathInfo["action"]))
-            ErrorHandler::_errorExit("Aktion nicht klar");
+            ErrorHandler::_errorExit("Aktion nicht gesetzt");
         $this->action = $pathInfo["action"];
         
         if ($this->action === "create" || !isset($pathInfo["pid"])){
@@ -242,14 +242,14 @@ class ProjektHandler implements FormHandlerInterface{
             DBConnector::getInstance()->dbInsert("projektposten", [
                 "id" => $i,
                 "projekt_id" => $projekt_id,
-                "einnahmen" => convertUserValueToDBValue($data["posten-einnahmen"][$i], "money"),
-                "ausgaben" => convertUserValueToDBValue($data["posten-ausgaben"][$i], "money"),
+                "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($data["posten-einnahmen"][$i], "money"),
+                "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue($data["posten-ausgaben"][$i], "money"),
                 "name" => $data["posten-name"][$i],
                 "bemerkung" => $data["posten-bemerkung"][$i]
             ]);
         }
-        
-        return new ProjektHandler([$projekt_id]);
+    
+        return new ProjektHandler(["pid" => $projekt_id, "action" => "none"]);
     }
     
     public static function getStateString($statename){
@@ -303,12 +303,17 @@ class ProjektHandler implements FormHandlerInterface{
         //check if fields editable
         $fields = $generatedFields;
         foreach ($data as $name => $content){
-            if ($this->permissionHandler->checkWritePermissionField($name) && $this->permissionHandler->isVisibleField($name))
-                $fields[$name] = $content;
+            if ($this->permissionHandler->isEditable($name) && $this->permissionHandler->isVisibleField($name)){
+                if (!empty($content)){
+                    $fields[$name] = $content;
+                }else{
+                    $fields[$name] = null;
+                }
+            }
         }
         $update_rows = DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $version], $fields);
-        
-        //set new posten values, delete old
+    
+        //set new posten values, *delete* old
         DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
         for ($i = 0; $i < $minRows - 1; $i++){
             //would throw exception if not working
@@ -316,13 +321,12 @@ class ProjektHandler implements FormHandlerInterface{
                 "id" => $i,
                 "projekt_id" => $this->id,
                 "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
-                "einnahmen" => convertUserValueToDBValue($extractFields["posten-einnahmen"][$i], "money"),
-                "ausgaben" => convertUserValueToDBValue($extractFields["posten-ausgaben"][$i], "money"),
+                "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-einnahmen"][$i], "money"),
+                "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-ausgaben"][$i], "money"),
                 "name" => $extractFields["posten-name"][$i],
                 "bemerkung" => $extractFields["posten-bemerkung"][$i]
             ]);
         }
-        
         return $update_rows === 1; //true falls nur ein Eintrag geändert
     }
     
@@ -364,7 +368,8 @@ class ProjektHandler implements FormHandlerInterface{
                 $this->renderInteractionPanel();
                 //echo $this->templater->getStateChooser($this->stateHandler);
                 $this->renderProjekt("Internes Projekt");
-                $this->renderCommentPanel();
+                // FIXME: LIVE COMMENT ONLY
+                //$this->renderCommentPanel();
                 break;
             default:
                 ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
@@ -407,31 +412,35 @@ class ProjektHandler implements FormHandlerInterface{
                 <?php if ($this->permissionHandler->isVisibleField("recht")){ ?>
                     <h2>Genehmigung</h2>
                     <div class="well">
-                        <?= $this->templater->getDropdownForm("recht", $sel_recht, 12, "Wähle Rechtsgrundlage...", "Rechtsgrundlage", ["required"], false) ?>
                         <div class="hide-wrapper">
-                            <div id="buero" style="display: none;">
-                                <span class="col-xs-12">Finanzordnung §11: bis zu 150 EUR</span>
+                            <div class="hide-picker">
+                                <?= $this->templater->getDropdownForm("recht", $sel_recht, 6, "Wähle Rechtsgrundlage...", "Rechtsgrundlage", ["required"], false) ?>
                             </div>
-                            <div id="fahrt" style="display: none;">
-                                <span class="col-xs-12">StuRa-Beschluss 21/20-08: Fahrtkosten</span>
-                            </div>
-                            <div id="verbrauch" style="display: none;">
-                                <span class="col-xs-12">StuRa-Beschluss 21/20-07: bis zu 50 EUR</span>
-                            </div>
-                            <div id="stura" style="display: none;">
-                                <?= $this->templater->getTextForm("recht-additional[stura]", $this->data["recht-additional"], 3, "", "StuRa Beschluss", []) ?>
-                                <span class="col-xs-12">Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.</span>
-                            </div>
-                            <div id="fsr-ref" style="display: none;">
-                                <?= $this->templater->getTextForm("recht-additional[fsr-ref]", $this->data["recht-additional"], 3, "", "StuRa Beschluss (Verkündung)", []) ?>
-                                <span class="col-xs-12">StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu (inkl.) 250 EUR
+                            <div class="hide-items">
+                                <div id="buero" class="form-group" style="display: none;">
+                                    <div class="col-xs-12">Finanzordnung §11: bis zu 150 EUR</div>
+                                </div>
+                                <div id="fahrt" class="form-group" style="display: none;">
+                                    <span class="col-xs-12">StuRa-Beschluss 21/20-08: Fahrtkosten</span>
+                                </div>
+                                <div id="verbrauch" class="" style="display: none;">
+                                    <div class="form-group col-xs-12">StuRa-Beschluss 21/20-07: bis zu 50 EUR</div>
+                                </div>
+                                <div id="stura" style="display: none;">
+                                    <?= $this->templater->getTextForm("recht-additional[stura]", $this->data["recht-additional"], 4, "", "StuRa Beschluss", []) ?>
+                                    <span class="col-xs-12">Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.</span>
+                                </div>
+                                <div id="fsr-ref" style="display: none;">
+                                    <?= $this->templater->getTextForm("recht-additional[fsr-ref]", $this->data["recht-additional"], 4, "", "StuRa Beschluss (Verkündung)", []) ?>
+                                    <span class="col-xs-12">StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu (inkl.) 250 EUR
                                     Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden</span>
-                            </div>
-                            <div id="kleidung" style="display: none;">
-                                <span class="col-xs-12">StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.</span>
-                            </div>
-                            <div id="andere" style="display: none;">
-                                <?= $this->templater->getTextForm("recht-additional[andere]", $this->data["recht-additional"], 12, "", "Andere Rechtsgrundlage angeben", []) ?>
+                                </div>
+                                <div id="kleidung" style="display: none;">
+                                    <span class="col-xs-12">StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.</span>
+                                </div>
+                                <div id="andere" style="display: none;">
+                                    <?= $this->templater->getTextForm("recht-additional[andere]", $this->data["recht-additional"], 5, "", "Andere Rechtsgrundlage angeben", []) ?>
+                                </div>
                             </div>
                         </div>
                         <div class='clearfix'></div>
@@ -440,10 +449,10 @@ class ProjektHandler implements FormHandlerInterface{
                 <h2><?= $title ?></h2>
                 <div class="well">
                     <?= $this->templater->getTextForm("name", $this->data["name"], 12, "", "Projektname", ["required"]) ?>
-                    <?= $this->templater->getTextForm("responsible", $this->data["responsible"], 12, "vorname.nachname@tu-ilmenau.de", "Projektverantwortlich (Mail)", ["required", "email"]) ?>
+                    <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 4, "vorname.nachname@tu-ilmenau.de", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
                     <?= $this->templater->getDropdownForm("org", $selectable_gremien, 6, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
                     <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 6, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
-                    <?= $this->templater->getTextForm("protokoll", $this->data["protokoll"], 12, "www.wiki.stura.tu-ilmenau.de/protokolle/...", "Beschluss (Wiki-Direktlink)", ["required"]) ?>
+                    <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "www.wiki.stura.tu-ilmenau.de/protokoll/...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>
                     <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
                     <div class='clearfix'></div>
                 </div>
@@ -553,6 +562,16 @@ class ProjektHandler implements FormHandlerInterface{
         <?php
     }
     
+    private function renderBackButton(){
+        ?>
+        <div class="">
+            <a href="./">
+                <button class="btn btn-primary"><i class="fa fa-fw fa-arrow-left"></i>&nbsp;Zurück</button>
+            </a>
+        </div>
+        <?php
+    }
+    
     private function renderInteractionPanel(){
         global $URIBASE;
         $url = str_replace("//", "/", $URIBASE . "projekt/" . $this->id . "/");
@@ -570,8 +589,9 @@ class ProjektHandler implements FormHandlerInterface{
                                     class="fa fa-fw fa-refresh"></i></a></li>
                 <?php } ?>
                 <?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])){ ?>
+                    <!-- FIXME LIVE COMMENT ONLY
                     <li><a href="<?= $url ?>auslagen" title="Neue Auslagenerstattung">neue Auslagenerstattung&nbsp;<i
-                                    class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
+                                    class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li> -->
                 <?php } ?>
                 <?php if ($this->permissionHandler->isAnyDataEditable(true) != false){ ?>
                     <li><a href="<?= $url ?>edit" title="Bearbeiten">Bearbeiten&nbsp;<i
@@ -581,11 +601,12 @@ class ProjektHandler implements FormHandlerInterface{
                 <!--<li><a href="<?php echo ""; ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
                 <!--<li><a href="<?php echo ""; ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
 
+                <!-- FIXME LIVE COMMENT ONLY
                 <li><a href="<?= $url ?>history" title="Verlauf">Historie <i class="fa fa-fw fa-history"
                                                                              aria-hidden="true"></i></a></li>
                 <li><a href="<?= $url ?>delete">Antrag löschen <i class="fa fa-trash" aria-hidden="true"></i></a></li>
                 <li><a href="https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege">Hilfe
-                        <i class="fa fa-question" aria-hidden="true"></i></a></li>
+                        <i class="fa fa-question" aria-hidden="true"></i></a></li> -->
             </ul>
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
@@ -716,16 +737,6 @@ class ProjektHandler implements FormHandlerInterface{
 
                 </div>
             </div>
-        </div>
-        <?php
-    }
-    
-    private function renderBackButton(){
-        ?>
-        <div class="">
-            <a href="./">
-                <button class="btn btn-primary"><i class="fa fa-fw fa-arrow-left"></i>&nbsp;Zurück</button>
-            </a>
         </div>
         <?php
     }

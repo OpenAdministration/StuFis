@@ -23,6 +23,54 @@ class DBConnector extends Singleton{
         }
     }
     
+    function convertDBValueToUserValue($value, $type){
+        switch ($type){
+            case "money":
+                $value = (string)$value;
+                if ($value === false || $value == "") return $value;
+                return number_format($value, 2, ',', '&nbsp;');
+            case "date":
+            case "daterange":
+                return htmlspecialchars(date("d.m.Y", strtotime($value)));
+                break;
+            default:
+                return $value;
+        }
+    }
+    
+    function convertUserValueToDBValue($value, $type){
+        switch ($type){
+            case "titelnr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 4 == 1) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "kostennr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 3 == 2) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "kontennr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 2 == 0 && $i > 0) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "money":
+                return str_replace(" ", "", str_replace(",", ".", str_replace(".", "", $value)));
+            default:
+                return $value;
+        }
+    }
+    
     /**
      * @return PDO $pdo
      */

@@ -123,13 +123,32 @@ class AuslagenHandler2 implements FormHandlerInterface{
         
         // create, view or edit -------------------------
         $editMode = false;
+        $projekt_editable = (
+        	$this->projekt_data['state'] == 'ok-by-stura' ||
+        	$this->projekt_data['state'] == 'done-hv' || 
+        	$this->projekt_data['state'] == 'done-other');
         if ($args['action']=='create'){
+        	//check projekt editable
+        	if (!$projekt_editable){
+        		$msg = 'Eine Auslagenerstattung für dieses Projekt ist momentan nicht möglich.';
+        		ErrorHandler::_renderError($msg, 403);
+        		$this->error = true;
+        		return false;
+        	}
             $this->auslagen_data = self::$emptyData;
             $stateNow = "draft";
             $editMode = true;
             //page title
             $this->title = ' - Erstellen'; 
         } elseif($args['action'] == 'edit') {
+        	//check projekt editable
+        	if (!$projekt_editable){
+        		$msg = 'Die Auslagenerstattung kann momentan nicht geändert werden.';
+        		ErrorHandler::_renderError($msg, 403);
+        		$this->error = true;
+        		return false;
+        	}
+        	//TODO check auslage editable
             //load from db
            	$editMode = true;
            	$this->id = $args['aid'];
@@ -386,7 +405,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     		$this->projekt_data['auslagen'] = $aus;
     	}
     	//TODO remove
-    	//$this->projekt_data['auslagen'][] = ['id' => 1, 'name_suffix' => 'mein name suffix', 'state' => 'draft'];
+    	$this->projekt_data['auslagen'][] = ['id' => 1, 'name_suffix' => 'mein name suffix', 'state' => 'draft'];
     	$this->getDbProjektPosten($renderError);
     	return true;
     }
@@ -529,11 +548,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
 		if ($label){ echo '<label>'.$label.'</label>';} ?>
 		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
 			<div class="hidden datalists">
-			<?php //TODO ?>
 				<datalist class="datalist-projekt">
 					<option value="0" data-alias="Bitte Wählen">
 				<?php foreach ($this->projekt_data['posten'] as $p){ ?>
-					<option value="<? $p['id'] ?>" data-alias="<? $p['name'] ?>">
+					<option value="<?= $p['id'] ?>" data-alias="<?= $p['name'] ?>">
 				<?php } ?>
 				</datalist>
 			</div>
@@ -765,8 +783,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
     
     private function renderAuslagenerstattung($titel){
     	if ($this->error) return -1;
+    	$editable = ($this->args['action'] == 'create' || $this->args['action'] == 'edit');
         ?>
-            <h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
+        	<h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
              <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Projekt Information</label>
             <div id='projekt-well' class="well">
@@ -814,6 +833,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
 		           <div class="clearfix"></div>
 		        </div>
 	        <?php } ?>
+	        <form method="POST" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
 	        <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Allgemein</label>
             <div id='projekt-well' class="well">
@@ -824,10 +844,11 @@ class AuslagenHandler2 implements FormHandlerInterface{
             <?php //-------------------------------------------------------------------- ?>
             <label for="zahlung">Zahlungsinformationen</label>
             <div id="zahlung" class="well">
-				<?= $this->templater->getTextForm("zahlung-name", "", 6, "Name Zahlungsempfänger", "anderen Zahlungsempfänger Name (neu)", [], []) ?>
-				<?= $this->templater->getTextForm("zahlung-iban", "", 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)", ["iban" => true]) ?>
+				<?= $this->templater->getTextForm("zahlung-name", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-name']:'', 6, "Name Zahlungsempfänger", "anderen Zahlungsempfänger Name (neu)", [], []) ?>
+				<?= //TODO iban only show trimmed if not hv/kv important!
+					$this->templater->getTextForm("zahlung-iban", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-iban']:'', 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)", ["iban" => true]) ?>
                 <div class='clearfix'></div>
-                <?= $this->templater->getTextForm("zahlung-vwzk", "", 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <?= $this->templater->getTextForm("zahlung-vwzk", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-vwzk']:'', 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
                 <?= $this->templater->getHiddenActionInput('zahlung-user'); ?>
                 <div class="clearfix"></div>
             </div>
@@ -837,7 +858,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
 	        	//TODO hidden data -> projekt posten name <-> projekt-posten-id
 	        
 	            //$belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
-	            $belege = [[
+	            //TODO remove this comment
+	             
+	             $belege = [[
 	         		'id' => '42',
 	         		'short' => 'B2',
 	         		'created_on' => date_create()->format('Y-m-d H:i:s'),
@@ -855,8 +878,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
 	         				'einnahmen' => '12.03'
 	            		]
 	         		]
-         		]];
-	            $this->render_beleg_container($belege, true,  'Belege');
+         		]]; //*/
+	       		
+	            $this->render_beleg_container($belege, $editable,  'Belege');
 	            
 	           
             
@@ -868,6 +892,10 @@ class AuslagenHandler2 implements FormHandlerInterface{
             
             
 			<?php /* ?>
+			
+			$beleg_nr = 0;
+            	$tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
+			
             <table id="beleg-table"
                    class="table table-striped <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                 <thead>
@@ -966,6 +994,12 @@ class AuslagenHandler2 implements FormHandlerInterface{
                 </tfoot>
             </table>
 			<?php //*/ ?>
+			<div class="row row-striped add-button-row" style="margin: 10px 0;">
+	    		<div class="send" style="padding:5px;">
+		    		<div class="text-center"><button type="submit" class="btn btn-success" style="min-width:100px; font-weight: bold;">Änderungen Speichern</button></div>
+	    		</div>
+    		</div>
+		</form>
         <?php
         return;
     }

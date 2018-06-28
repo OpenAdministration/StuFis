@@ -73,14 +73,22 @@ class ErrorHandler implements Renderer
 		$file1 = (isset($stack[1]['file'])? preg_replace($re, '', $stack[1]['file']):' ?? ');
 		//create message
 		if ($_SERVER['REQUEST_METHOD'] == 'POST'){
-			$msg = 	"$file0 [$line0]:  $msg\n".
-			"(Called in: $file1 [$line1])";
+			$msg_log = 	"$file0 [$line0]:  $msg\n".
+				"(Called in: $file1 [$line1])";
+			if (DEBUG > 0){
+				$msg = 	"$file0 [$line0]:  $msg\n".
+					"(Called in: $file1 [$line1])";
+			}
 		} else {
-			$msg = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
+			$msg_log = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
+				"(Called in: <i>$file1 [$line1]</i>)<p></p>";
+			if (DEBUG > 0){
+				$msg = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
 					"(Called in: <i>$file1 [$line1]</i>)<p></p>";
+			}
 		}
 		// log message
-		self::_errorLog($msg);
+		self::_errorLog($msg_log);
 		// echo message
 		ErrorHandler::_renderError($msg);
 		exit(-1);
@@ -212,12 +220,13 @@ class ErrorHandler implements Renderer
 	 */
 	public static function _renderJson($info){
 		//create return message
-		$out = ['success' => false, 'msg' => $info['msg']];
+		$out = ['success' => false, 'msg' => $info['msg'], 'status' => $info['code'] ];
 		//set html response code
 		self::_setErrorCode($info);
 		//echo resonse
         require_once dirname(__FILE__) . '/class.JsonController.php';
 		JsonController::print_json($out);
+		die();
 	}
 	
 	/**
@@ -226,7 +235,7 @@ class ErrorHandler implements Renderer
 	 */
 	public static function _renderErrorPage($param){
 		//UI globals
-		global $URIBASE, $ADMINGROUP, $subtype;
+		//global $URIBASE, $ADMINGROUP, $subtype;
 		$routeInfo = ['controller' => 'error'];
 		// set html response code
 		self::_setErrorCode($param);

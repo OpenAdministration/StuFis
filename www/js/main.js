@@ -5,6 +5,13 @@ String.prototype.replaceAll = function (target, replacement) {
 numeral.locale("de");
 
 $(document).ready(function () {
+    $(".input-group>.form-field-to-replace").on('input', function () {
+        console.log($(this).siblings(".form-field-to-replace").text());
+        $(this).val($(this).val().replace($(this).siblings(".form-field-replace").text(), ""));
+    });
+});
+
+$(document).ready(function () {
     // add a hash to the URL when the user clicks on a tab
     $('a[data-toggle="tab"]').on('click.tabstate', function (e) {
         history.pushState(null, null, $(this).attr('href'));
@@ -63,7 +70,7 @@ $(document).ready(function () {
         $(".hide-wrapper>.hide-items>#" + picker.val()).show();
     picker.on('changed.bs.select', function (e) {
         $(".hide-wrapper>.hide-items").children().hide();
-        $(".hide-wrapper>.hide-items>#" + e.target.value).show();
+        $(".hide-wrapper>.hide-items>#" + e.target.value).fadeIn();
     });
 
     //hide special children in container in projekt (no-editable)
