@@ -51,6 +51,7 @@ class RestHandler extends JsonController {
 	public function handleAuslagen($routeInfo = NULL){
 		echo '<pre>'; var_dump($routeInfo); echo '</pre>';
 		echo '<pre>'; var_dump($_POST); echo '</pre>';
+		echo '<pre>'; var_dump($_FILES); echo '</pre>';
 	}
 	
 	/**

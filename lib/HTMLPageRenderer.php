@@ -330,7 +330,7 @@ class HTMLPageRenderer{
                 self::$profiling_sources[$i]["line"] . "
                 </i>";
             $sum += self::$profiling_timing[$i + 1] - self::$profiling_timing[$i];
-            $out .= "<div>" . sprintf("&nbsp;&nbsp;&nbsp;%f<br>", self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]) . "<div>";
+            $out .= "<div>" . sprintf("&nbsp;&nbsp;&nbsp;%f<br>", self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]) . "</div>";
         }
         $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$size - 1] . "</strong></span>";
         $out .= "<i class='profiling-source'>" .
