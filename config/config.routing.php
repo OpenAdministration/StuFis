@@ -34,7 +34,9 @@ $routing = [
                     'type' => 'pattern',
                     'action' => 'view',
                     'param' => 'pid',
-                    'load' => [],
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                    ],
                     'children' => [
                         [
                             'path' => 'auslagen',

@@ -154,7 +154,11 @@ class PermissionHandler{
         // https://stackoverflow.com/questions/2715026/are-php5-objects-passed-by-reference -> yes
         $fieldname = $this->cleanFieldNameFromArrayTags($fieldname);
         $state = $this->stateHandler->getActualState();
-        //var_dump([$fieldname,$this->checkPermissionArray($this->writePermissionField[$state][$fieldname])]);
+        /*var_dump([
+            "name" => $fieldname,
+            "rules" => $this->writePermissionField[$state][$fieldname],
+            "res" => $this->checkPermissionArray($this->writePermissionField[$state][$fieldname]),
+        ]);*/
         //echo '<pre>'; var_dump($this->writePermissionField); echo '</pre>';
         return $this->checkPermissionArray($this->writePermissionField[$state][$fieldname]);
     }

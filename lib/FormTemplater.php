@@ -161,77 +161,228 @@ class FormTemplater{
     
     /**
      * generate List
-     * @param array $list
+     *
+     * @param array   $list
      * @param boolean $box
      */
-    static function generateListGroup($list, $label = '', $wrapped = true, $linebreak = true, $wrapped_class="col-xs-12 form-group" ,$default_tag = 'div' ,$width_class = 'col-xs-12'){
-    	if (!is_array($list)) $list = [$list];
-    	$out = '';
-    	if($label){
-    		$out .= '<label>'.$label.'</label>';
-    	}
-    	$out .= '<div class="input-group '.$width_class.'">';
-    	foreach ($list as $entry){
-    		if (is_string($entry)){
-    			$out .= "<$default_tag class=\"list-group-item\">" . $entry . "</$default_tag>";
-    		} else {
-    			$tag = isset($entry['tag'])? $entry['tag'] : $default_tag;
-    			$text = isset($entry['text'])? htmlentities($entry['text']) : '';
-    			$html = isset($entry['html'])? $entry['html'] : '';
-    			if (!isset($entry['attr']['class'])) $entry['attr']['class'] = 'list-group-item';
-    			$attr = '';
-    			if (isset($entry['attr'])) {
-    				foreach ($entry['attr'] as $k => $v){
-    					$attr .= ' '. "{$k}=\"{$v}\"";
-    				}
-    			}
-    			$out .= "<{$tag}{$attr}>" . $text. $html . "</$tag>";
-    		}
-    	}
-    	$out .= '</div>';
-    	if ($wrapped){
-    		return '<div class="'.$wrapped_class.'">'.$out.'</div><div class="clearfix"></div>'.(($linebreak)?'<br>':'');
-    	} else {
-    		return $out.(($linebreak)?'<br>':'');
-    	}
+    static function generateListGroup($list, $label = '', $wrapped = true, $linebreak = true, $wrapped_class = "col-xs-12 form-group", $default_tag = 'div', $width_class = 'col-xs-12'){
+        if (!is_array($list)) $list = [$list];
+        $out = '';
+        if ($label){
+            $out .= '<label>' . $label . '</label>';
+        }
+        $out .= '<div class="input-group ' . $width_class . '">';
+        foreach ($list as $entry){
+            if (is_string($entry)){
+                $out .= "<$default_tag class=\"list-group-item\">" . $entry . "</$default_tag>";
+            }else{
+                $tag = isset($entry['tag']) ? $entry['tag'] : $default_tag;
+                $text = isset($entry['text']) ? htmlentities($entry['text']) : '';
+                $html = isset($entry['html']) ? $entry['html'] : '';
+                if (!isset($entry['attr']['class'])) $entry['attr']['class'] = 'list-group-item';
+                $attr = '';
+                if (isset($entry['attr'])){
+                    foreach ($entry['attr'] as $k => $v){
+                        $attr .= ' ' . "{$k}=\"{$v}\"";
+                    }
+                }
+                $out .= "<{$tag}{$attr}>" . $text . $html . "</$tag>";
+            }
+        }
+        $out .= '</div>';
+        if ($wrapped){
+            return '<div class="' . $wrapped_class . '">' . $out . '</div><div class="clearfix"></div>' . (($linebreak) ? '<br>' : '');
+        }else{
+            return $out . (($linebreak) ? '<br>' : '');
+        }
     }
     
     /**
-     * 
-     * @param string $key current 	editable key
-     * @param string $function 		editable function
-     * @param string $type 			editable type
-     * @param string $value 		current value
-     * @param array $values 		value list
-     * @param array $values_out 	value - html map 
-     * @param string $title			hover title
-     * @param array $additional_data additional data
+     *
+     * @param string $key              current    editable key
+     * @param string $function         editable function
+     * @param string $type             editable type
+     * @param string $value            current value
+     * @param array  $values           value list
+     * @param array  $values_out       value - html map
+     * @param string $title            hover title
+     * @param array  $additional_data  additional data
      * @param string $additional_class class
-     * @param string $target_prefix	target uri prefix
-     * @param string $target		target uri
+     * @param string $target_prefix    target uri prefix
+     * @param string $target           target uri
      */
-    public static function jsonEditable($key, $function='edit', $type='', $value='' , $values=['value'], $values_out = NULL, $title = 'Ändern', $additional_params = [], $additional_class='', $target_prefix = '/', $target='rest/forms/editable'){
-    	
-    	$opt = '';
-    	if (isset($additional_params)&&is_array($additional_params)) {
-    		foreach ($additional_params as $k => $v){
-    			$opt .= ' data-'. "{$k}=\"{$v}\"";
-    		}
-    	}
-    	if ($type != 'disabled'){
-	    	return '<div	class="editable '.$additional_class.
-	    				'" title="'.$title.
-	    				'" data-key="'.$key.
-	    				'" data-mfunction="'.$function.
-	    				'" data-type="'.$type.
-	    				'" data-value="'.$value.
-	    				'" data-target="'.$target_prefix.$target.'" '.
-	    				$opt.'>'.
-	    				(($values_out)?$values_out[$value]:$value).
-	    			'</div>';
-    	} else {
-    		return '<div class="editable-disabled'.$additional_class.'">'.(($values_out)?$values_out[$value]:$value).'</div>';
-    	}
+    public static function jsonEditable($key, $function = 'edit', $type = '', $value = '', $values = ['value'], $values_out = null, $title = 'Ändern', $additional_params = [], $additional_class = '', $target_prefix = '/', $target = 'rest/forms/editable'){
+        
+        $opt = '';
+        if (isset($additional_params) && is_array($additional_params)){
+            foreach ($additional_params as $k => $v){
+                $opt .= ' data-' . "{$k}=\"{$v}\"";
+            }
+        }
+        if ($type != 'disabled'){
+            return '<div	class="editable ' . $additional_class .
+                '" title="' . $title .
+                '" data-key="' . $key .
+                '" data-mfunction="' . $function .
+                '" data-type="' . $type .
+                '" data-value="' . $value .
+                '" data-target="' . $target_prefix . $target . '" ' .
+                $opt . '>' .
+                (($values_out) ? $values_out[$value] : $value) .
+                '</div>';
+        }else{
+            return '<div class="editable-disabled' . $additional_class . '">' . (($values_out) ? $values_out[$value] : $value) . '</div>';
+        }
+    }
+    
+    public function getWikiLinkForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $linkPrefix = ""){
+        $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
+        $editable = $this->checkWritePermission($name);
+        $out = "";
+        
+        if ($editable){
+            $additonal_array = $this->constructValidatorStrings($validator);
+            $type = "text";
+            if (isset($validator["email"]))
+                $type = "email";
+            $additonal_str = implode(" ", $additonal_array);
+            
+            $value = htmlspecialchars($value);
+            if (isset($linkPrefix) && !empty($linkPrefix)){
+                $out .= "<div class='input-group'>";
+                $out .= "<div class='input-group-addon form-field-to-replace'>" . $linkPrefix . "</div>";
+            }
+            $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            if (isset($linkPrefix) && !empty($linkPrefix)){
+                $out .= "</div>";
+            }
+        }else{
+            if (!empty($linkPrefix))
+                $out .= "<div id='$unique_id'>
+                            <a target='_blank' href='" . htmlspecialchars($linkPrefix) . $this->getReadOnlyValue($value) . "'>" .
+                    "<i class='fa fa-fw fa-wikipedia-w'></i> " . htmlspecialchars($linkPrefix) . $this->getReadOnlyValue($value) .
+                    "</a>
+                         </div>";
+            else
+                $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
+        }
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
+    }
+    
+    private function getUniqueIDfromName($name){
+        return htmlspecialchars(explode("[", $name)[0] . self::$ID_DELIMITER . uniqid());
+    }
+    
+    private function checkWritePermission($name){
+        if ($this->permissionHandler->checkWritePermission() === true)
+            return true;
+        return $this->permissionHandler->checkWritePermissionField($name);
+    }
+    
+    private function constructValidatorStrings($validatorArray){
+        if (!isset($validatorArray) || empty($validatorArray))
+            return [];
+        $ret = ["required"];
+        
+        if (isset($validatorArray["min-length"]))
+            $ret[] = "data-minlength=" . $validatorArray["min-length"];
+        if (isset($validatorArray["email"]))
+            $ret[] = "data-remote='" . $GLOBALS['URIBASE'] . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
+        if (isset($validatorArray["iban"]))
+            $ret[] = "data-validateiban='1'";
+        
+        return $ret;
+    }
+    
+    private function getReadOnlyValue($values){
+        if (is_array($values)){
+            if (!empty($values)){
+                return implode(",", array_map([$this, "getReadOnlyValue"], $values));
+            }else{
+                return "<i>" . htmlspecialchars($this->noValueStringInReadOnly) . "</i>";
+            }
+        }
+        if (empty($values)){
+            return "<i>" . htmlspecialchars($this->noValueStringInReadOnly) . "</i>";
+        }else{
+            return htmlspecialchars($values);
+        }
+    }
+    
+    private function getOutputWrapped($content, $width, $editable, $name, $unique_id, $label_text, $validator){
+        $out = "";
+    
+        if ($name != '' && $this->checkVisibility($name) === false)
+            return "";
+        
+        $classes_array = $this->constructWidthClasses($width);
+        $classes_array[] = "form-group";
+        if (!empty($validator) && $editable)
+            $classes_array[] = "has-feedback";
+        $classes_str = implode(" ", $classes_array);
+        $out .= "<div class='$classes_str'>";
+        if (!empty($label_text)){
+            $out .= "<label class='control-label' for='$unique_id'>$label_text</label>";
+        }
+        $out .= $content;
+        if (!empty($validator) && $editable){
+            //$out .= "<span class='glyphicon form-control-feedback' aria-hidden='true'></span>";
+            $out .= "<div class='help-block with-errors'></div>";
+        }
+        $out .= "</div>";
+        
+        return $out;
+    }
+    
+    private function checkVisibility($name){
+        return $this->permissionHandler->isVisibleField($name);
+    }
+    
+    private function constructWidthClasses($width){
+        if (!isset($width))
+            return [];
+        $base_cls = ["col-xs-", "col-xs-", "col-md-", "col-lg-"];
+        $ret_cls = [];
+        if (!is_array($width))
+            $width = [$width];
+        for ($i = 0; $i < count($width) && $i < 4; $i++){
+            $ret_cls[] = $base_cls[$i] . $width[$i];
+        }
+        return $ret_cls;
+    }
+    
+    public function getMailForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $domainSuffix = ""){
+        $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
+        $editable = $this->checkWritePermission($name);
+        $out = "";
+        
+        if ($editable){
+            $additonal_array = $this->constructValidatorStrings($validator);
+            $type = "text";
+            if (isset($validator["email"]))
+                $type = "email";
+            $additonal_str = implode(" ", $additonal_array);
+            
+            $value = htmlspecialchars($value);
+            if (isset($domainSuffix) && !empty($domainSuffix)){
+                $out .= "<div class='input-group'>";
+            }
+            $out .= "<input type='$type' class='form-control form-field-to-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            if (isset($domainSuffix) && !empty($domainSuffix)){
+                $out .= "<div class='input-group-addon form-field-replace'>" . $domainSuffix . "</div>";
+                $out .= "</div>";
+            }
+        }else{
+            if (!empty($domainSuffix))
+                $out .= "<div id='$unique_id'>
+                            <a target='_blank' href='mailto:" . $this->getReadOnlyValue($value) . htmlspecialchars($domainSuffix) . "'>" .
+                    "<i class='fa fa-fw fa-envelope-o'></i> " . $this->getReadOnlyValue($value) . htmlspecialchars($domainSuffix) .
+                    "</a>
+                         </div>";
+            else
+                $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
+        }
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
     
     function getStateChooser(StateHandler $stateHandler){
@@ -276,77 +427,10 @@ class FormTemplater{
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, "", $validator);
     }
     
-    private function getUniqueIDfromName($name){
-        return htmlspecialchars(explode("[", $name)[0] . self::$ID_DELIMITER . uniqid());
-    }
-    
-    private function checkWritePermission($name){
-        if ($this->permissionHandler->checkWritePermission() === true)
-            return true;
-        return $this->permissionHandler->checkWritePermissionField($name);
-    }
-    
-    private function constructValidatorStrings($validatorArray){
-        if (!isset($validatorArray) || empty($validatorArray))
-            return [];
-        $ret = ["required"];
-        
-        if (isset($validatorArray["min-length"]))
-            $ret[] = "data-minlength=" . $validatorArray["min-length"];
-        if (isset($validatorArray["email"]))
-            $ret[] = "data-remote='" . $GLOBALS['URIBASE'] . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
-        if (isset($validatorArray["iban"]))
-            $ret[] = "data-validateiban='1'";
-        
-        return $ret;
-    }
-    
-    private function getOutputWrapped($content, $width, $editable, $name, $unique_id, $label_text, $validator){
-        $out = "";
-
-        if ($name!='' && $this->checkVisibility($name) === false)
-            return "";
-        
-        $classes_array = $this->constructWidthClasses($width);
-        $classes_array[] = "form-group";
-        if (!empty($validator) && $editable)
-            $classes_array[] = "has-feedback";
-        $classes_str = implode(" ", $classes_array);
-        $out .= "<div class='$classes_str'>";
-        if (!empty($label_text)){
-            $out .= "<label class='control-label' for='$unique_id'>$label_text</label>";
-        }
-        $out .= $content;
-        if (!empty($validator) && $editable){
-            //$out .= "<span class='glyphicon form-control-feedback' aria-hidden='true'></span>";
-            $out .= "<div class='help-block with-errors'></div>";
-        }
-        $out .= "</div>";
-        
-        return $out;
-    }
-    
-    private function checkVisibility($name){
-        return $this->permissionHandler->isVisibleField($name);
-    }
-    
-    private function constructWidthClasses($width){
-        if (!isset($width))
-            return [];
-        $base_cls = ["col-xs-", "col-xs-", "col-md-", "col-lg-"];
-        $ret_cls = [];
-        if (!is_array($width))
-            $width = [$width];
-        for ($i = 0; $i < count($width) && $i < 4; $i++){
-            $ret_cls[] = $base_cls[$i] . $width[$i];
-        }
-        return $ret_cls;
-    }
-    
     public function getFileForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = []){
         $unique_id = htmlspecialchars($this->getUniqueIDfromName($name));
-
-        $editable = (!$name)? true : $this->checkWritePermission($name);
+    
+        $editable = (!$name) ? true : $this->checkWritePermission($name);
         $out = "";
         $out .= "<div class='single-file-container'>";
         $out .= "<input class='form-control single-file' type='file' name='$name' id='$unique_id'>";
@@ -411,17 +495,6 @@ class FormTemplater{
                 $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
-    }
-    
-    private function getReadOnlyValue($values){
-        if (is_array($values)){
-            return implode(",", array_map([$this, "getReadOnlyValue"], $values));
-        }
-        if (empty($values)){
-            return "<i>" . htmlspecialchars($this->noValueStringInReadOnly) . "</i>";
-        }else{
-            return htmlspecialchars($values);
-        }
     }
     
     public function getHyperLink($text, $type, $id){
@@ -491,6 +564,7 @@ class FormTemplater{
             }
             $out .= "</select>";
         }else{
+            //re-substitute ids => names
             $tmp_vals = [];
             foreach ($selectable["groups"] as $group){
                 foreach ($group["options"] as $option){
@@ -507,8 +581,8 @@ class FormTemplater{
     
     public function getTextareaForm($name, $value = "", $width = 12, $placeholder = "", $label_text = "", $validator = [], $min_rows = 5){
         $out = "";
-        
-        $editable = (!$name)? true : $this->checkWritePermission($name);
+    
+        $editable = (!$name) ? true : $this->checkWritePermission($name);
         $unique_id = $this->getUniqueIDfromName($name);
         
         if ($editable){
@@ -538,8 +612,8 @@ class FormTemplater{
             }
         }
         $out = "";
-        
-        $editable = ((count($names)==0 || (count($names)==1 && !$names[0]))? true : $this->permissionHandler->isEditable($names, 'and'));
+    
+        $editable = ((count($names) == 0 || (count($names) == 1 && !$names[0])) ? true : $this->permissionHandler->isEditable($names, 'and'));
         $unique_id0 = $this->getUniqueIDfromName($names[0]);
         
         if ($editable){

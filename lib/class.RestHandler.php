@@ -87,14 +87,14 @@ class RestHandler extends JsonController {
 					if (!isset($_POST["id"]) || !is_numeric($_POST["id"])){
 						throw new IdNotSetException("ID nicht gesetzt.");
 					}
-					$projektHandler = new ProjektHandler([$_POST["id"]]);
+                    $projektHandler = new ProjektHandler(["pid" => $_POST["id"], "action" => "none"]);
 					$ret = $projektHandler->setState($_POST["newState"]);
 					break;
 				case "update":
 					if (!isset($_POST["id"]) || !is_numeric($_POST["id"])){
 						throw new IdNotSetException("ID nicht gesetzt.");
 					}
-					$projektHandler = new ProjektHandler([$_POST["id"]]);
+                    $projektHandler = new ProjektHandler(["pid" => $_POST["id"], "action" => "edit"]);
 					$ret = $projektHandler->updateSavedData($_POST);
 					break;
 				default:

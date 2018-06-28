@@ -20,7 +20,7 @@ $idebug = false;
 // handle route -------------------------
 $content = null;
 $error = false;
-
+//print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":
@@ -50,7 +50,6 @@ switch ($routeInfo['controller']){
     default:
         $errorHdl = new ErrorHandler($routeInfo);
         $htmlRenderer->appendRendererContent($errorHdl);
-        $htmlRenderer->render();
         break;
 }
 
