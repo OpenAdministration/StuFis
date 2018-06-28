@@ -254,15 +254,17 @@ class HTMLPageRenderer{
                                 Meine Gremien
                             </a>
                         </li>
+                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "mykonto") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/mykonto"); ?>">
                                 <i class="fa fa-fw fa-user-circle"></i>
                                 Benutzerkonto
                             </a>
-                        </li>
+                        </li>-->
                         <?php
                         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                             ?>
+                            <!-- LIVE COMMENT ONLY
                             <li <?php if ($subtype == "hv") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/hv"); ?>">
                                     <i class="fa fa-fw fa-legal"></i>
@@ -286,26 +288,28 @@ class HTMLPageRenderer{
                                     <i class="fa fa-fw fa-bar-chart"></i>
                                     Konto
                                 </a>
-                            </li>
+                            </li> -->
                         <?php } ?>
+                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/stura"); ?>">
                                 <i class="fa fa-fw fa-users"></i>
                                 StuRa-Sitzung
                             </a>
-                        </li>
+                        </li>-->
                         <li <?php if ($subtype == "allgremium") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/allgremium"); ?>">
                                 <i class="fa fa-fw fa-globe"></i>
                                 Alle Gremien
                             </a>
                         </li>
+                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "hhp") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/hhp"); ?>">
                                 <i class="fa fa-fw fa-bar-chart"></i>
                                 Haushaltsplan
                             </a>
-                        </li>
+                        </li>-->
 
 
                     </ul>
