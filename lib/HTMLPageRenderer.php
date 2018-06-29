@@ -217,7 +217,11 @@ class HTMLPageRenderer{
     }
     
     private function renderSiteNavigation(){
-        $subtype = $this->routeInfo["navigation"];
+        if (isset($this->routeInfo["navigation"])){
+            $activeButton = $this->routeInfo["navigation"];
+        }else{
+            $activeButton = "";
+        }
         ?>
         <div>
             <div class="profile-sidebar">
@@ -249,14 +253,14 @@ class HTMLPageRenderer{
                 <!-- SIDEBAR MENU -->
                 <div class="profile-usermenu">
                     <ul class="nav">
-                        <li <?php if ($subtype == "mygremium") echo "class='active'"; ?>>
+                        <li <?php if ($activeButton == "mygremium") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/mygremium"); ?>">
                                 <i class="fa fa-fw fa-home"></i>
                                 Meine Gremien
                             </a>
                         </li>
                         <!-- LIVE COMMENT ONLY
-                        <li <?php if ($subtype == "mykonto") echo "class='active'"; ?>>
+                        <li <?php if ($activeButton == "mykonto") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/mykonto"); ?>">
                                 <i class="fa fa-fw fa-user-circle"></i>
                                 Benutzerkonto
@@ -266,45 +270,45 @@ class HTMLPageRenderer{
                         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                             ?>
 
-                            <li <?php if ($subtype == "hv") echo "class='active'"; ?>>
+                            <li <?php if ($activeButton == "hv") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/hv"); ?>">
                                     <i class="fa fa-fw fa-legal"></i>
                                     TODO HV
                                 </a>
                             </li>
-                            <li <?php if ($subtype == "kv") echo "class='active'"; ?>>
+                            <li <?php if ($activeButton == "kv") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/kv"); ?>">
                                     <i class="fa fa-fw fa-calculator "></i>
                                     TODO KV
                                 </a>
                             </li>
                             <!-- LIVE COMMENT ONLY
-                            <li <?php if ($subtype == "booking") echo "class='active'"; ?>>
+                            <li <?php if ($activeButton == "booking") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/booking"); ?>">
                                     <i class="fa fa-fw fa-book "></i>
                                     Buchungen
                                 </a>
                             </li>
-                            <li <?php if ($subtype == "konto") echo "class='active'"; ?>>
+                            <li <?php if ($activeButton == "konto") echo "class='active'"; ?>>
                                 <a href="<?= htmlspecialchars($this->uribase . "menu/konto"); ?>">
                                     <i class="fa fa-fw fa-bar-chart"></i>
                                     Konto
                                 </a>
                             </li> -->
                         <?php } ?>
-                        <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
+                        <li <?php if ($activeButton == "stura") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/stura"); ?>">
                                 <i class="fa fa-fw fa-users"></i>
                                 StuRa-Sitzung
                             </a>
                         </li>
-                        <li <?php if ($subtype == "allgremium") echo "class='active'"; ?>>
+                        <li <?php if ($activeButton == "allgremium") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/allgremium"); ?>">
                                 <i class="fa fa-fw fa-globe"></i>
                                 Alle Gremien
                             </a>
                         </li>
-                        <li <?php if ($subtype == "hhp") echo "class='active'"; ?>>
+                        <li <?php if ($activeButton == "hhp") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "hhp"); ?>">
                                 <i class="fa fa-fw fa-bar-chart"></i>
                                 Haushaltsplan
