@@ -28,6 +28,8 @@ class Router{
     
     // constructor, getter, setter ----------------------------
     
+    private static $reserved_keywords = 'controller|action|method|not_found|match|path|type|is_suffix|param|children|value';
+    
     /**
      * class constuctor
      */
@@ -139,9 +141,13 @@ class Router{
                 if (isset($route['controller'])) $ret['controller'] = $route['controller'];
                 if (isset($route['action'])) $ret['action'] = $route['action'];
                 if (isset($route['method'])) $ret['method'] = $route['method'];
-                if (isset($route['load'])) $ret['load'] = $route['load'];
-                if (isset($route['navigation'])) $ret['navigation'] = $route['navigation'];
                 if (isset($route['not_found'])) $this->not_found_route = $route['not_found'];
+                
+                foreach ($route as $k => $v){
+                	if (!preg_match('/^('.self::$reserved_keywords.')$/', $k)){
+                		$ret[$k] = $v;
+                	}
+                }
                 //is pattern match
                 $matches = null;
                 if ($route['type'] === 'pattern' && preg_match('/^' . $route['path'] . '$/', $current, $matches)){
@@ -156,8 +162,12 @@ class Router{
                     if (isset($route['controller'])) $ret['controller'] = $route['controller'];
                     if (isset($route['action'])) $ret['action'] = $route['action'];
                     if (isset($route['method'])) $ret['method'] = $route['method'];
-                    if (isset($route['load'])) $ret['load'] = $route['load'];
                     if (isset($route['not_found'])) $this->not_found_route = $route['not_found'];
+                    foreach ($route as $k => $v){
+                    	if (!preg_match('/^('.self::$reserved_keywords.')$/', $k)){
+                    		$ret[$k] = $v;
+                    	}
+                    }
                     $ret[$route['param']] = $matches[(isset($route['match'])) ? $route['match'] : 0];
                 }
             }
