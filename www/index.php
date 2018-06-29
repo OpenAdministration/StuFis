@@ -20,7 +20,7 @@ $idebug = false;
 // handle route -------------------------
 $content = null;
 $error = false;
-//print_r($_POST);
+//print_r($routeInfo);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":

@@ -140,6 +140,7 @@ class Router{
                 if (isset($route['action'])) $ret['action'] = $route['action'];
                 if (isset($route['method'])) $ret['method'] = $route['method'];
                 if (isset($route['load'])) $ret['load'] = $route['load'];
+                if (isset($route['navigation'])) $ret['navigation'] = $route['navigation'];
                 if (isset($route['not_found'])) $this->not_found_route = $route['not_found'];
                 //is pattern match
                 $matches = null;

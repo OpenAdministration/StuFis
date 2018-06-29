@@ -73,7 +73,7 @@ class ProjektHandler extends FormHandlerInterface{
             "need-stura" => ["Warte auf StuRa-Beschluss",],
             "ok-by-stura" => ["Genehmigt durch StuRa-Beschluss",],
             "done-hv" => ["verkündet durch HV",],
-            "done-other" => ["Genehmigt ohne Verkündung",],
+            "done-other" => ["Genehmigt (Verkündung nicht nötig)",],
             "revoked" => ["Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)", "zurückziehen / ablehnen",],
             "terminated" => ["Abgeschlossen (keine weiteren Ausgaben)", "beenden",],
         ];
@@ -188,13 +188,29 @@ class ProjektHandler extends FormHandlerInterface{
             'date-end' => '',
         ];
         self::$visibleFields = [
-            "recht" => ["wip"],
-            "posten-titel" => ["wip"],
+            "recht" => [
+                "wip",
+                "ok-by-hv",
+                "need-stura",
+                "ok-by-stura",
+                "done-hv",
+                "done-other",
+                "terminated",
+            ],
+            "posten-titel" => [
+                "wip",
+                "ok-by-hv",
+                "need-stura",
+                "ok-by-stura",
+                "done-hv",
+                "done-other",
+                "terminated",
+            ],
         ];
         self::$writePermissionAll = [
             "draft" => ["groups" => ["sgis"]],
             "wip" => ["groups" => ["ref-finanzen-hv"]],
-            "ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
+            "ok-by-hv" => [],
             "need-stura" => ["groups" => ["ref-finanzen-hv"]],
             "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
             "done-hv" => ["groups" => ["ref-finanzen-hv"]],
@@ -202,7 +218,11 @@ class ProjektHandler extends FormHandlerInterface{
             "terminated" => [],
             "revoked" => [],
         ];
-        self::$writePermissionFields = [];
+        self::$writePermissionFields = [
+            "ok-by-hv" => [
+                "recht-additional" => ["groups" => ["ref-finanzen-hv"]],
+            ],
+        ];
         return true;
     }
     
@@ -396,8 +416,8 @@ class ProjektHandler extends FormHandlerInterface{
         
         $sel_recht = self::$selectable_recht;
         $sel_recht["values"] = $this->data['recht'];
-        
-        $selectable_titel = FormTemplater::generateTitelSelectable(5);
+    
+        $selectable_titel = FormTemplater::generateTitelSelectable(5); //FIXME not fixed 5!
         
         ?>
         <div class='col-xs-12 col-md-10'>

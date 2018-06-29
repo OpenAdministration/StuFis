@@ -125,10 +125,11 @@ class MenuRenderer extends Renderer{
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
                                     <?php foreach ($inhalt as $projekt){
                                         $id = $projekt["id"];
+                                        $year =  date("y",strtotime($projekt["createdat"]));
                                         $projekt["_ref"] = []; //FIXME
                                         ?>
                                         <div class="panel panel-default">
-                                            <div class="panel-link"><?= generateLinkFromID("IP-".$id, "projekt/" . $id) ?>
+                                            <div class="panel-link"><?= generateLinkFromID("IP-$year-$id", "projekt/" . $id) ?>
                                             </div>
                                             <div class="panel-heading collapsed <?= count($projekt["_ref"]) === 0 ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
