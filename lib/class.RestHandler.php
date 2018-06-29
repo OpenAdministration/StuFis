@@ -32,13 +32,22 @@ class RestHandler extends JsonController{
      * @param array $routeInfo
      */
     public function handlePost($routeInfo = null){
+    	global $nonce;
         switch ($routeInfo['action']){
             case 'projekt':
+            	if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
+                	ErrorHandler::_renderError('Access Denied.', 403);
+                }
                 $this->handleProjekt($routeInfo);
                 break;
             case 'auslagen':
+            	if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
+            		ErrorHandler::_renderError('Access Denied.', 403);
+            	}
                 $this->handleAuslagen($routeInfo);
                 break;
+            case 'nononce':
+            	break;
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
                 break;
@@ -52,7 +61,7 @@ class RestHandler extends JsonController{
      * Time: 02:16
      */
     public function handleProjekt($routeInfo = null){
-        global $nonce;
+       
         $ret = false;
         $msgs = [];
         $projektHandler = null;
@@ -63,8 +72,6 @@ class RestHandler extends JsonController{
             
             if (!isset($_POST["action"]))
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");
-            if ($_POST["nonce"] !== $nonce)
-                throw new OldFormException("{$_POST["nonce"]} Veraltetes Formular: {$GLOBALS['nonce']}");
             
             if (DBConnector::getInstance()->dbBegin() === false)
                 throw new PDOException("cannot start DB transaction");
@@ -168,5 +175,7 @@ class RestHandler extends JsonController{
         echo '<pre>';
         var_dump($_FILES);
         echo '</pre>';
+        
+        //TODO validate inputs
     }
 }

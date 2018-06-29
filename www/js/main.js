@@ -1387,10 +1387,40 @@ function getTrText($tr) {
 
 }
 
+var parseData = function (data, reload) {
+	var r = {}
+	if (typeof(data.success) != 'undefined' ){
+		r = data;
+	} else {
+		try {
+			r = JSON.parse(data);
+		} catch(e) {
+			r.success=false;
+			r.eMsg = ('Unerwarteter Fehler (Code: "'+data.status+'"). Seite wird neu geladen...');
+			if (typeof (reload) == 'undefined' || reload == true){
+				auto_page_reload(5000);
+			}
+		}
+	}
+	return r;
+};
 
 //moment.locale('de');
 
 function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
+	if ((jqXHR.status == 403 || jqXHR.status == 404) && 
+			typeof(jqXHR.responseText) != 'undefined' &&
+			typeof(parseData(jqXHR.responseText).success)=='boolean'){
+		data = parseData(jqXHR.responseText);
+		//hide wait dialog modal
+		$("#please-wait-dlg").modal("hide");
+		//show
+		$("#server-error-dlg").modal("show");
+		$("#server-error-dlg .msg").text('('+data.msg+')');
+		//auto page reload
+		setTimeout(function() { window.location.replace(window.location); }, 3000);
+		return;
+	}
     $("#please-wait-dlg").modal("hide");
 
     $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
@@ -1418,6 +1448,9 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
     }
     var data = new FormData($form[0]);
     data.append("ajax", 1);
+    if ($('input[name="nonce"]').length == 1){
+    	data.append("nonce", $('input[name="nonce"]').val());
+    }
     if (fnMod)
         fnMod(data);
     $('.new-table-row *[name]').each(function (i, e) {
@@ -1477,6 +1510,7 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
         type: "POST"
     })
         .done(function (values, status, req) {
+
             $("#please-wait-dlg").modal("hide");
             if (typeof(values) == "string") {
                 $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
