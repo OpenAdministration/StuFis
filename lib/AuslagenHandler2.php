@@ -405,7 +405,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     		$this->projekt_data['auslagen'] = $aus;
     	}
     	//TODO remove
-    	$this->projekt_data['auslagen'][] = ['id' => 1, 'name_suffix' => 'mein name suffix', 'state' => 'draft'];
+    	//$this->projekt_data['auslagen'][] = ['id' => 1, 'name_suffix' => 'mein name suffix', 'state' => 'draft'];
     	$this->getDbProjektPosten($renderError);
     	return true;
     }
@@ -601,6 +601,8 @@ class AuslagenHandler2 implements FormHandlerInterface{
     	if ($in === '') return '';
     	if (mb_strlen($in)>=5) {
     		return mb_substr($in, 0, 4).' ... ... '.mb_substr($in, -4);
+    	} else {
+    		return $in;
     	}
     }
     
@@ -707,7 +709,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     		if ($editable){
     			$out .= '<div class="col-sm-4 editable projekt-posten-select" data-value="'.$pline['projekt_posten_id'].'">'
     						.'<span class="value">'.$pline['projekt.posten_name'].'</span>'
-    						.'<input type="hidden" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'projekt-posten\']" value="'.$pline['projekt_posten_id'].'">'
+    						.'<input type="hidden" name="beleg['.$beleg_id.'][posten]['.$pline['id'].'][projekt-posten]" value="'.$pline['projekt_posten_id'].'">'
     					.'</div>';
     		} else {
     			$out .= '<div class="col-sm-4 posten-name">'.$pline['projekt.posten_name'].'</div>';
@@ -717,7 +719,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     		if ($editable){
     			$out .= '<div class="col-sm-3 posten-in">'
     						.'<div class="input-group">'
-    							.'<input class="form-control" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'in\']" type="number" step="0.01" min="0" value="'.$pline['einnahmen'].'">'
+    							.'<input class="form-control" name="beleg['.$beleg_id.'][posten]['.$pline['id'].'][in]" type="number" step="0.01" min="0" value="'.$pline['einnahmen'].'">'
     							.'<div class="input-group-addon">€</div>'
     						.'</div>'
     					.'</div>';
@@ -730,7 +732,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
     		if ($editable){
     			$out .= '<div class="col-sm-3 posten-out">'
     						.'<div class="input-group">'
-    							.'<input class="form-control" name="beleg['.$beleg_id.'][\'posten\']['.$pline['id'].'][\'in\']" type="number" step="0.01" min="0" value="'.$pline['ausgaben'].'">'
+    							.'<input class="form-control" name="beleg['.$beleg_id.'][posten]['.$pline['id'].'][out]" type="number" step="0.01" min="0" value="'.$pline['ausgaben'].'">'
     							.'<div class="input-group-addon">€</div>'
     						.'</div>'
     					.'</div>';
@@ -841,7 +843,7 @@ class AuslagenHandler2 implements FormHandlerInterface{
 		           <div class="clearfix"></div>
 		        </div>
 	        <?php } ?>
-	        <form method="POST" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
+	        <form method="POST" enctype="multipart/form-data" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
 	        <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Allgemein</label>
             <div id='projekt-well' class="well">
@@ -856,9 +858,9 @@ class AuslagenHandler2 implements FormHandlerInterface{
 				<?php //TODO iban only show trimmed if not hv/kv important!
 	            	$iban_text = $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-iban']:'';
 	            	if (!AuthHandler::getInstance()->hasGroup('HV,KV')){
-	            		$iban_text = self::trimIban($iban_text);	
+	            		$iban_text = self::trimIban($iban_text);
 	            	}
-					$this->templater->getTextForm("zahlung-iban", $iban_text, 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)", ["iban" => true]) ?>
+					echo $this->templater->getTextForm("zahlung-iban", $iban_text, 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)") ?>
                 <div class='clearfix'></div>
                 <?= $this->templater->getTextForm("zahlung-vwzk", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-vwzk']:'', 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
                 <?= $this->templater->getHiddenActionInput('zahlung-user'); ?>
