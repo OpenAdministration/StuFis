@@ -533,15 +533,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
      *
      * @param array $beleg
      * 	[
-         		'id' => NULL,
-         		'short' => '',
-         		'created_on' => date_create()->format('Y-m-d H:i:s'),
-         		'datum' => '',
-         		'beschreibung' => '',
-         		'file_id' => NULL,
-         		'file' => NULL,
-         		'posten' => []
-         	]
+     *   		'id' => NULL,
+     *   		'short' => '',
+     *   		'created_on' => date_create()->format('Y-m-d H:i:s'),
+     *   		'datum' => '',
+     *   		'beschreibung' => '',
+     *   		'file_id' => NULL,
+     *   		'file' => NULL,
+     *   		'posten' => []
+     *   	]
      * @param boolean $hidden
      */
     public function render_beleg_container($belege, $editable = true, $label = ''){
@@ -862,7 +862,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            	if (!AuthHandler::getInstance()->hasGroup('HV,KV')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	}
-					echo $this->templater->getTextForm("zahlung-iban", $iban_text, 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)") ?>
+			echo $this->templater->getTextForm("zahlung-iban", $iban_text, 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)") ?>
                 <div class='clearfix'></div>
                 <?= $this->templater->getTextForm("zahlung-vwzk", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-vwzk']:'', 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
                 <?= $this->templater->getHiddenActionInput('zahlung-user'); ?>
