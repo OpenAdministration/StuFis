@@ -62,7 +62,7 @@ abstract class Renderer{
     
     protected function date2relstr($time){
         if (!ctype_digit($time))
-            $ts = strtotime($time);
+            $time = strtotime($time);
         
         $diff = strtotime(date("Y-m-d")) - $time;
         
@@ -78,7 +78,5 @@ abstract class Renderer{
                 return $past ? "gestern" : "morgen";
             }
         }
-        
-        
     }
 }
