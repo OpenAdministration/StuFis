@@ -217,7 +217,7 @@ class HTMLPageRenderer{
     }
     
     private function renderSiteNavigation(){
-        $subtype = "";
+        $subtype = $this->routeInfo["navigation"];
         ?>
         <div>
             <div class="profile-sidebar">

@@ -71,12 +71,10 @@ abstract class Renderer{
         $anzahlTage = floor($diff / (60 * 60 * 24));
         if ($anzahlTage > 1){
             return ($past ? "vor " : "in ") . $anzahlTage . " Tagen";
+        }else if ($anzahlTage === 0){
+            return "heute";
         }else{
-            if ($anzahlTage === 0){
-                return "heute";
-            }else{
-                return $past ? "gestern" : "morgen";
-            }
+            return $past ? "gestern" : "morgen";
         }
     }
 }
