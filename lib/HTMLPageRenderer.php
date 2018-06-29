@@ -40,6 +40,7 @@ class HTMLPageRenderer{
         ob_start();
         include SYSBASE . "/template/error.phtml";
         self::$errorPage = ob_get_clean();
+    
     }
     
     /**
@@ -303,15 +304,12 @@ class HTMLPageRenderer{
                                 Alle Gremien
                             </a>
                         </li>
-                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "hhp") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/hhp"); ?>">
+                            <a href="<?php echo htmlspecialchars($this->uribase . "hhp"); ?>">
                                 <i class="fa fa-fw fa-bar-chart"></i>
                                 Haushaltsplan
                             </a>
-                        </li>-->
-
-
+                        </li>
                     </ul>
                 </div>
                 <!-- END MENU -->

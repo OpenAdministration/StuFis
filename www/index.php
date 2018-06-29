@@ -38,6 +38,11 @@ switch ($routeInfo['controller']){
         $htmlRenderer->appendRendererContent($auslagenHandler);
         $htmlRenderer->render();
         break;
+    case "hhp":
+        $hhpHandler = new HHPHandler($routeInfo);
+        $htmlRenderer->appendRendererContent($hhpHandler);
+        $htmlRenderer->render();
+        break;
     case "rest":
         $restHandler = new RestHandler();
         $restHandler->handlePost($routeInfo);
@@ -50,6 +55,7 @@ switch ($routeInfo['controller']){
     default:
         $errorHdl = new ErrorHandler($routeInfo);
         $htmlRenderer->appendRendererContent($errorHdl);
+        $htmlRenderer->render();
         break;
 }
 

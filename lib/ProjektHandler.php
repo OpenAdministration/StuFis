@@ -6,7 +6,7 @@
  * Time: 01:29
  */
 
-class ProjektHandler implements FormHandlerInterface{
+class ProjektHandler extends FormHandlerInterface{
     static private $emptyData;
     static private $selectable_recht;
     static private $states;
@@ -453,6 +453,7 @@ class ProjektHandler implements FormHandlerInterface{
                 <div class="well">
                     <?= $this->templater->getTextForm("name", $this->data["name"], 6, "", "Projektname", ["required"]) ?>
                     <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 6, "vorname.nachname", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
+                    <div class="clearfix"></div>
                     <?= $this->templater->getDropdownForm("org", $selectable_gremien, 6, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
                     <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 6, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
                     <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>

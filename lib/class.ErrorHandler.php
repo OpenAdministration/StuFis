@@ -4,7 +4,7 @@
  * @author michael
  * 
  */
-class ErrorHandler implements Renderer
+class ErrorHandler extends Renderer
 {
 	/**
 	 * contains default error messages
@@ -75,14 +75,14 @@ class ErrorHandler implements Renderer
 		if ($_SERVER['REQUEST_METHOD'] == 'POST'){
 			$msg_log = 	"$file0 [$line0]:  $msg\n".
 				"(Called in: $file1 [$line1])";
-			if (DEBUG > 0){
+            if ($GLOBALS["DEV"]){
 				$msg = 	"$file0 [$line0]:  $msg\n".
 					"(Called in: $file1 [$line1])";
 			}
 		} else {
 			$msg_log = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
 				"(Called in: <i>$file1 [$line1]</i>)<p></p>";
-			if (DEBUG > 0){
+            if ($GLOBALS["DEV"]){
 				$msg = 	"<i>$file0 [$line0]:</i>&emsp;<b><pre>$msg</b></pre>\n".
 					"(Called in: <i>$file1 [$line1]</i>)<p></p>";
 			}

@@ -23,67 +23,6 @@ class DBConnector extends Singleton{
         }
     }
     
-    function convertDBValueToUserValue($value, $type){
-        switch ($type){
-            case "money":
-                $value = (string)$value;
-                if ($value === false || $value == "") return $value;
-                return number_format($value, 2, ',', '&nbsp;');
-            case "date":
-            case "daterange":
-                return htmlspecialchars(date("d.m.Y", strtotime($value)));
-                break;
-            default:
-                return $value;
-        }
-    }
-    
-    function convertUserValueToDBValue($value, $type){
-        switch ($type){
-            case "titelnr":
-                $value = trim(str_replace(" ", "", $value));
-                $nv = "";
-                for ($i = 0; $i < strlen($value); $i++){
-                    if ($i % 4 == 1) $nv .= " ";
-                    $nv .= $value[$i];
-                }
-                return $nv;
-            case "kostennr":
-                $value = trim(str_replace(" ", "", $value));
-                $nv = "";
-                for ($i = 0; $i < strlen($value); $i++){
-                    if ($i % 3 == 2) $nv .= " ";
-                    $nv .= $value[$i];
-                }
-                return $nv;
-            case "kontennr":
-                $value = trim(str_replace(" ", "", $value));
-                $nv = "";
-                for ($i = 0; $i < strlen($value); $i++){
-                    if ($i % 2 == 0 && $i > 0) $nv .= " ";
-                    $nv .= $value[$i];
-                }
-                return $nv;
-            case "money":
-                return str_replace(" ", "", str_replace(",", ".", str_replace(".", "", $value)));
-            default:
-                return $value;
-        }
-    }
-    
-    /**
-     * @return PDO $pdo
-     */
-    public function getPdo(){
-    	return $this->pdo;
-    }
-    /**
-     * @return string $DB_PREFIX
-     */
-    public function getDbPrefix(){
-    	return self::$DB_PREFIX;
-    }
-    
     private function initScheme(){
         $scheme = [];
         $scheme["antrag"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
@@ -104,7 +43,7 @@ class DBConnector extends Singleton{
             "contenttype" => "VARCHAR(128) NOT NULL", # automatisch aus Formulardefinition, zur Darstellung alter Anträge (alte Revision) ohne Metadaten
             //"array_idx" => "INT NOT NULL",
             "value" => "TEXT NOT NULL",];
-        	
+    
         $scheme["comments"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
             "antrag_id" => "INT NOT NULL",
             "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
@@ -191,54 +130,60 @@ class DBConnector extends Singleton{
         
         // auslagen ---------------------
         $scheme["auslagen"] = [
-        	"id" => "INT NOT NULL AUTO_INCREMENT",
-        	"projekt_id" => "INT NOT NULL",
-        	"name_suffix" => "VARCHAR(255) NULL",
-        	"state" => "VARCHAR(127) NOT NULL",
-        	"belege_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-        	"hv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-        	"kv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-        	"zahlung_iban" => "VARCHAR(127) NOT NULL",
-        	"zahlung_name" => "VARCHAR(127) NOT NULL",
-        	"zahlung_vwzk" => "VARCHAR(127) NOT NULL",
-        	'last_change' => 'DATETIME NOT NULL DEFAULT ',
-        	'etag' => 'VARCHAR(255) NOT NULL',
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "projekt_id" => "INT NOT NULL",
+            "name_suffix" => "VARCHAR(255) NULL",
+            "state" => "VARCHAR(127) NOT NULL",
+            "belege_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "hv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "kv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "zahlung_iban" => "VARCHAR(127) NOT NULL",
+            "zahlung_name" => "VARCHAR(127) NOT NULL",
+            "zahlung_vwzk" => "VARCHAR(127) NOT NULL",
+            'last_change' => 'DATETIME NOT NULL DEFAULT ',
+            'etag' => 'VARCHAR(255) NOT NULL',
         ];
         $scheme["belege"] = [
-        	"id" => "INT NOT NULL AUTO_INCREMENT",
-        	"auslagen_id" => "INT NOT NULL",
-        	"short" => "VARCHAR(45) NULL",
-        	"created_on" => "DATETIME NOT NULL DEFAULT NOW()",
-        	"datum" => "DATETIME NOT NULL",
-        	"beschreibung" => "TEXT NOT NULL",
-        	"file_id" => "INT NULL DEFAULT NULL",
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "auslagen_id" => "INT NOT NULL",
+            "short" => "VARCHAR(45) NULL",
+            "created_on" => "DATETIME NOT NULL DEFAULT NOW()",
+            "datum" => "DATETIME NOT NULL",
+            "beschreibung" => "TEXT NOT NULL",
+            "file_id" => "INT NULL DEFAULT NULL",
         ];
         $scheme["beleg_posten"] = [
-        	"id" => "INT NOT NULL AUTO_INCREMENT",
-        	"beleg_id" => "INT NOT NULL",
-        	"short" => "INT NOT NULL",
-        	"projekt_posten_id" => "INT NOT NULL",
-        	"ausgaben" => "DOUBLE NULL DEFAULT NULL",
-        	"einnahmen" => "DOUBLE NULL DEFAULT NULL",
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "beleg_id" => "INT NOT NULL",
+            "short" => "INT NOT NULL",
+            "projekt_posten_id" => "INT NOT NULL",
+            "ausgaben" => "DOUBLE NULL DEFAULT NULL",
+            "einnahmen" => "DOUBLE NULL DEFAULT NULL",
         ];
         
         // dateinen ---------------------
-         $scheme["fileinfo"] = [
-        	"id" => "INT NOT NULL AUTO_INCREMENT",
-        	"link" => "VARCHAR(127) NOT NULL",
-        	"added_on" => "DATETIME NOT NULL DEFAULT NOW()",
-        	"hashname" => "VARCHAR(255) NOT NULL",
-        	"filename" => "VARCHAR(255) NOT NULL",
-         	"size" => "INT NOT NULL DEFAULT 0",
-         	"fileextension" => "VARCHAR(45) NOT NULL DEFAULT ''",
-         	"mime" => "VARCHAR(256) NULL",
-         	"encoding" => "VARCHAR(45) NULL",
-         	"data" => "INT NULL DEFAULT NULL",
+        $scheme["fileinfo"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "link" => "VARCHAR(127) NOT NULL",
+            "added_on" => "DATETIME NOT NULL DEFAULT NOW()",
+            "hashname" => "VARCHAR(255) NOT NULL",
+            "filename" => "VARCHAR(255) NOT NULL",
+            "size" => "INT NOT NULL DEFAULT 0",
+            "fileextension" => "VARCHAR(45) NOT NULL DEFAULT ''",
+            "mime" => "VARCHAR(256) NULL",
+            "encoding" => "VARCHAR(45) NULL",
+            "data" => "INT NULL DEFAULT NULL",
         ];
-         $scheme["filedata"] = [
-        	"id" => "INT NOT NULL AUTO_INCREMENT",
-        	"data" => "LONGBLOB NULL DEFAULT NULL",
-        	"diskpath" => "VARCHAR(511) NULL DEFAULT NULL",
+        $scheme["filedata"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "data" => "LONGBLOB NULL DEFAULT NULL",
+            "diskpath" => "VARCHAR(511) NULL DEFAULT NULL",
+        ];
+        $scheme["haushaltsplan"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
+            "von" => "DATE NULL",
+            "bis" => "DATE NULL",
+            "state" => "VARCHAR(64) NOT NULL",
         ];
         
         
@@ -268,8 +213,70 @@ class DBConnector extends Singleton{
         if (property_exists(get_class(), $name))
             self::$$name = $value;
         else{
-        	ErrorHandler::_errorExit("$name ist keine Variable in " . get_class());
+            ErrorHandler::_errorExit("$name ist keine Variable in " . get_class());
         }
+    }
+    
+    function convertDBValueToUserValue($value, $type){
+        switch ($type){
+            case "money":
+                $value = (string)$value;
+                if ($value === false || $value == "") return $value;
+                return number_format($value, 2, ',', '&nbsp;');
+            case "date":
+            case "daterange":
+                return htmlspecialchars(date("d.m.Y", strtotime($value)));
+                break;
+            default:
+                return $value;
+        }
+    }
+    
+    function convertUserValueToDBValue($value, $type){
+        switch ($type){
+            case "titelnr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 4 == 1) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "kostennr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 3 == 2) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "kontennr":
+                $value = trim(str_replace(" ", "", $value));
+                $nv = "";
+                for ($i = 0; $i < strlen($value); $i++){
+                    if ($i % 2 == 0 && $i > 0) $nv .= " ";
+                    $nv .= $value[$i];
+                }
+                return $nv;
+            case "money":
+                return str_replace(" ", "", str_replace(",", ".", str_replace(".", "", $value)));
+            default:
+                return $value;
+        }
+    }
+    
+    /**
+     * @return PDO $pdo
+     */
+    public function getPdo(){
+        return $this->pdo;
+    }
+    
+    /**
+     * @return string $DB_PREFIX
+     */
+    public function getDbPrefix(){
+        return self::$DB_PREFIX;
     }
     
     public function logThisAction($data, $actionName = false){
@@ -350,9 +357,10 @@ class DBConnector extends Singleton{
      * @return array|bool
      */
     public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false){
-       	//check if all tables are known
+        //check if all tables are known
+        
         if (!isset($tables)){
-        	ErrorHandler::_errorExit("table not set");
+            ErrorHandler::_errorExit("table not set");
         }
     
         if (!is_array($tables)){
@@ -361,8 +369,8 @@ class DBConnector extends Singleton{
     
         foreach ($tables as $key => $table){
             if (!isset($this->scheme[$table])){
-            	ErrorHandler::_errorExit("Unkown table $table", 404);
-            }   
+                ErrorHandler::_errorExit("Unkown table $table", 404);
+            }
             $tables[$key] = self::$DB_PREFIX . $table;
         }
     
@@ -374,26 +382,26 @@ class DBConnector extends Singleton{
         $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
         foreach (array_keys($joins) as $nr){
             if (!isset($joins[$nr]["table"])){
-            	ErrorHandler::_errorExit("no Jointable set in '" . $nr . "' use !");
+                ErrorHandler::_errorExit("no Jointable set in '" . $nr . "' use !");
             }else if (!in_array($joins[$nr]["table"], array_keys($this->scheme))){
-            	ErrorHandler::_errorExit("Unknown Table " . $joins[$nr]["table"]);
+                ErrorHandler::_errorExit("Unknown Table " . $joins[$nr]["table"]);
             }else if (isset($joins[$nr]["type"]) && !in_array(strtolower($joins[$nr]["type"]), ["inner", "left", "natural", "right"])){
-            	ErrorHandler::_errorExit("Unknown Join type " . $joins[$nr]["type"]);
+                ErrorHandler::_errorExit("Unknown Join type " . $joins[$nr]["type"]);
             }
             if (!isset($joins[$nr]["on"])) $joins[$nr]["on"] = [];
             if (!is_array($joins[$nr]["on"])){
-            	ErrorHandler::_errorExit("on '{$joins[$nr]["on"]}' has to be an array!");
+                ErrorHandler::_errorExit("on '{$joins[$nr]["on"]}' has to be an array!");
             }
             if (count($joins[$nr]["on"]) === 2 && count($joins[$nr]["on"][0]) === 1){
                 $joins[$nr]["on"] = [$joins[$nr]["on"]]; //if only 1 "on" set bring it into an array-form
             }
             foreach ($joins[$nr]["on"] as $pkey => $pair){
                 if (!is_array($pair)){
-                	ErrorHandler::_errorExit("Join on '$pair' is not an array");
+                    ErrorHandler::_errorExit("Join on '$pair' is not an array");
                 }
                 $newpair = array_intersect($pair, $this->validFields);
                 if (count($newpair) !== 2){
-                	ErrorHandler::_errorExit("unvalid joinon pair:" . $pair[0] . " and " . $pair[1]);
+                    ErrorHandler::_errorExit("unvalid joinon pair:" . $pair[0] . " and " . $pair[1]);
                 }
                 $joins[$nr]["on"][$pkey] = $newpair;
             }
@@ -401,14 +409,14 @@ class DBConnector extends Singleton{
                 if (!is_array($joins[$nr]["operator"])) $joins[$nr]["operator"] = [$joins[$nr]["operator"]];
                 foreach ($joins[$nr]["operator"] as $op){
                     if (!in_array($op, $validJoinOnOperators)){
-                    	ErrorHandler::_errorExit("unallowed join operator '$op' in {$nr}th join");
+                        ErrorHandler::_errorExit("unallowed join operator '$op' in {$nr}th join");
                     }
                 }
             }else{
                 $joins[$nr]["operator"] = array_fill(0, count($joins[$nr]["on"]), "=");
             }
             if (count($joins[$nr]["on"]) !== count($joins[$nr]["operator"])){
-            	ErrorHandler::_errorExit("not same amount of on-pairs(" . count($joins[$nr]["on"]) . ") and operators (" . count($joins[$nr]["operator"]) . ")!");
+                ErrorHandler::_errorExit("not same amount of on-pairs(" . count($joins[$nr]["on"]) . ") and operators (" . count($joins[$nr]["operator"]) . ")!");
             }
         }
         
@@ -447,11 +455,11 @@ class DBConnector extends Singleton{
                         case "between":
                             $c[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
                             if (count($v[1]) !== 2){
-                            	ErrorHandler::_errorExit("To many values for " . $v[0]);
+                                ErrorHandler::_errorExit("To many values for " . $v[0]);
                             }
                             break;
                         default:
-                        	ErrorHandler::_errorExit("unknown identifier " . $v[0]);
+                            ErrorHandler::_errorExit("unknown identifier " . $v[0]);
                     }
                     $vals = array_merge($vals, $v[1]);
                     
@@ -504,6 +512,7 @@ class DBConnector extends Singleton{
         if (count($o) > 0){
             $sql .= PHP_EOL . "ORDER BY " . implode(", ", $o);
         }
+    
         //HTMLPageRenderer::registerProfilingBreakpoint($sql);
         HTMLPageRenderer::registerProfilingBreakpoint("sql-start");
         //var_dump($sql);
@@ -538,8 +547,8 @@ class DBConnector extends Singleton{
         $this->dbWriteCounter++;
         
         if (!isset($this->scheme[$table])){
-        	ErrorHandler::_errorExit("Unkown table $table");
-        }        
+            ErrorHandler::_errorExit("Unkown table $table");
+        }
         //if (isset($fields["id"])) unset($fields["id"]);
         
         $fields = array_intersect_key($fields, $this->scheme[$table]);
@@ -551,7 +560,7 @@ class DBConnector extends Singleton{
         //print_r($sql);
         //print_r(array_values($fields));
         if ($ret === false){
-        	ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+            ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         }
         return $this->pdo->lastInsertId();
     }
@@ -574,14 +583,14 @@ class DBConnector extends Singleton{
     
     public function dbGet($table, $fields){
         if (!isset($this->scheme[$table])){
-        	ErrorHandler::_errorExit("Unkown table $table");
-        }        
+            ErrorHandler::_errorExit("Unkown table $table");
+        }
         $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
         $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
         
         if (count($fields) == 0){
-        	ErrorHandler::_errorExit("No (valid) fields given.");
-        }        
+            ErrorHandler::_errorExit("No (valid) fields given.");
+        }
         $c = [];
         $vals = [];
         foreach ($fields as $k => $v){
@@ -641,18 +650,18 @@ class DBConnector extends Singleton{
     public function dbUpdate($table, $filter, $fields){
         $this->dbWriteCounter++;
         if (!isset($this->scheme[$table])){
-        	ErrorHandler::_errorExit("Unkown table $table");
-        }   
+            ErrorHandler::_errorExit("Unkown table $table");
+        }
         
         $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
         //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         if (count($filter) == 0){
-        	ErrorHandler::_errorExit("No filter fields given.");
-        }   
+            ErrorHandler::_errorExit("No filter fields given.");
+        }
         if (count($fields) == 0){
-        	ErrorHandler::_errorExit("No fields given.");
-        }        
+            ErrorHandler::_errorExit("No fields given.");
+        }
         $u = [];
         foreach ($fields as $k => $v){
             $u[] = $this->quoteIdent($k) . " = ?";
@@ -668,7 +677,7 @@ class DBConnector extends Singleton{
         
         $ret = $query->execute($values) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false){
-        	return false;
+            return false;
         }
         
         return $query->rowCount();
@@ -682,7 +691,7 @@ class DBConnector extends Singleton{
         $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
         
         if (count($filter) == 0){
-        	ErrorHandler::_errorExit("No filter fields given.");
+            ErrorHandler::_errorExit("No filter fields given.");
         }
         
         $c = [];

@@ -6,16 +6,18 @@
  * Time: 14:43
  */
 
-class MenuRenderer implements Renderer{
+class MenuRenderer extends Renderer{
     const DEFAULT = "mygremium";
+    
     private $pathinfo;
     
     public function __construct($pathinfo = []) {
+        if (!isset($pathinfo) || empty($pathinfo) || !isset($pathinfo["action"])){
+            $pathinfo["action"] = self::DEFAULT;
+        }
         $this->pathinfo = $pathinfo;
     }
     public function render(){
-        if (empty($this->pathinfo) || !isset($this->pathinfo) || !isset($this->pathinfo["action"]))
-            $this->pathinfo = ["action" => self::DEFAULT];
         $attributes = AuthHandler::getInstance()->getAttributes();
         switch ($this->pathinfo["action"]){
             case "mygremium":
@@ -40,7 +42,6 @@ class MenuRenderer implements Renderer{
                 //print_r($this->pathinfo["action"]);
                 MenuRenderer::renderProjekte($gremien);
                 break;
-            
             case "mykonto":
                 MenuRenderer::renderMyProfile();
                 break;
@@ -80,12 +81,8 @@ class MenuRenderer implements Renderer{
                 MenuRenderer::renderTable($groups, $mapping);
                 break;
             case "hhp":
-                $antrag_id = null;
-                if (isset($_REQUEST["id"])){
-                    $antrag_id = $_REQUEST["id"];
-                }
                 HTMLPageRenderer::registerProfilingBreakpoint("renderhhp-start");
-                MenuRenderer::renderHaushaltsplan($antrag_id);
+                MenuRenderer::renderHaushaltsplan();
                 break;
             case "booking":
                 require "../template/booking.tpl";
@@ -150,7 +147,7 @@ class MenuRenderer implements Renderer{
                                         $projekt["_ref"] = []; //FIXME
                                         ?>
                                         <div class="panel panel-default">
-                                            <div class="panel-link"><?= generateLinkFromID($id, "projekt/" . $id) ?>
+                                            <div class="panel-link"><?= generateLinkFromID("P-".$id, "projekt/" . $id) ?>
                                             </div>
                                             <div class="panel-heading collapsed <?= count($projekt["_ref"]) === 0 ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
@@ -247,7 +244,8 @@ public function renderMyProfile(){
     
 }
     
-    public function renderTable($groups, $mapping){
+    public function renderTable2($groups, $mapping){
+        //FIXME probably delete this function?
         $res = [];
         $header = ["ID", "Name", "Organisation", "Summe", "Status", "letzte Änderung"];
         
@@ -302,94 +300,15 @@ public function renderMyProfile(){
         <?php
     }
     
-    /**
-     * @param int $selected_id default: oldest HHP with state final
-     *
-     * @return bool|void false if error else void
-     */
-    public function renderHaushaltsplan($selected_id = null){
-            list($hhps, $selected_id) = MenuRenderer::renderHHPSelector("hhp", $selected_id);
-            $editable = ($hhps[$selected_id]["state"] !== "final");
-            ?>
-            <button class="btn btn-danger">Diesen HHP löschen</button>
-            <button class="btn btn-primary">neuen HHP anlegen</button>
-            <button class="btn btn-warning">Statuswechsel</button>
-            <?php
-            $hhp = $hhps[$selected_id];
-            $groups = DBConnector::getInstance()->dbgetHHP($selected_id);
-            //var_dump($groups);
-            ?>
-            <h1>
-                Haushaltsplan <?= $hhp["revision"] . " (" . getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) . ")" ?></h1>
-            <table class="table table-striped">
-                <?php
-                $group_nr = 1;
-                $type = 0;
-                foreach ($groups as $group){
-                    if (count($group) === 0) continue;
-                    if ($type !== array_values($group)[0]["type"])
-                        $group_nr = 1;
-                    
-                    $type = array_values($group)[0]["type"];
-                    ?>
-                    <thead>
-                    <tr>
-                        <th class="bg-info"
-                            colspan="42"><?= ($type + 1) . "." . $group_nr++ . " " . array_values($group)[0]["gruppen_name"] ?></th>
-                    </tr>
-                    <tr>
-                        <th></th>
-                        <th>Titelnr</th>
-                        <th>Titelname</th>
-                        <th class="money"><?= "soll-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") ?></th>
-                        <th class="money"><?= "ist-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") . " (gebucht)" ?></th>
-                        <th class="money"><?= "ist-" . (array_values($group)[0]["type"] == 0 ? "Einnahmen" : "Ausgaben") . " (beschlossen)" ?></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php
-                    $gsum_soll = 0;
-                    $gsum_ist = 0;
-                    foreach ($group as $row){
-                        if (!isset($row["_booked"]))
-                            $row["_booked"] = 0;
-                        $gsum_soll += $row["value"];
-                        $gsum_ist += $row["_booked"];
-                        ?>
-                        <tr>
-                            <td></td>
-                            <td><?= $row["titel_nr"] ?></td>
-                            <td><?= $row["titel_name"] ?></td>
-                            <td class="money"><?= convertDBValueToUserValue($row["value"], "money") ?></td>
-                            <td class="money <?= MenuRenderer::checkTitelBudget($row["value"], $row["_booked"]) ?>">
-                                <?= convertDBValueToUserValue($row["_booked"], "money") ?>
-                            </td>
-                        </tr>
-                        
-                        
-                        <?php
-                    } ?>
-                    <tr class="table-sum-footer">
-                        <td colspan="3"></td>
-                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_soll, "money") ?></td>
-                        <td class="money table-sum-hhpgroup"><?= convertDBValueToUserValue($gsum_ist, "money") ?></td>
-                    </tr>
-                    </tbody>
-                    
-                    <?php
-                } ?>
-
-            </table>
-        <?php
-        return;
-    }
-    
-    private function renderHHPSelector($tabname, $selected_id){
-        $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
-        if (!isset($selected_id)){
+    private function renderHHPSelector($tabname){
+        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan",[],[],[],[],true,true);
+        if(!isset($hhps) || empty($hhps)){
+            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
+        }
+        if (!isset($this->pathinfo["hhp-id"])){
             foreach (array_reverse($hhps, true) as $id => $hhp){
                 if ($hhp["state"] === "final"){
-                    $selected_id = $id;
+                    $this->pathinfo["hhp-id"] = $id;
                 }
             }
         } ?>
@@ -398,10 +317,9 @@ public function renderMyProfile(){
                 <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
                 <input type="hidden" name="tab" value="<?= $tabname ?>">
                 <select class="selectpicker" name="id"><?php
-                    foreach ($hhps as $id => $hhp){
-                        ?>
-                        <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
-                                data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
+                    foreach ($hhps as $id => $hhp){ ?>
+                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
+                                data-subtext="<?= $hhp["state"] ?>">seit <?= $hhp["von"] ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -412,33 +330,11 @@ public function renderMyProfile(){
                 </div>
             </div>
         </form>
-        
-        <?php if (array_search($selected_id, array_keys($hhps)) === false){
-            var_dump($selected_id);
-            var_dump($hhps);
-            die("Konnte zugehörigen HHP nicht finden. :(");
-            return false;
-        }
-        return [$hhps, $selected_id];
+        <?php
+        return $hhps;
     }
     
-    /**
-     * @param $should
-     * @param $is
-     *
-     * @return string
-     */
-    private function checkTitelBudget($should, $is){
-        if ($is > $should){
-            if ($is > $should * 1.5){
-                return "hhp-danger";
-            }else{
-                return "hhp-warning";
-            }
-        }else{
-            return "";
-        }
-    }
+    
 
 public function renderKonto($selected_id){
     global $nonce, $URIBASE;
