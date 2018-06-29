@@ -42,7 +42,7 @@
 			$_bt.find('.beleg-date input')[0].name = "beleg[new_"+add_beleg_counter+"][datum]";
 			// beleg-file
 			$_bt.find('.beleg-file').html('<div class="col-xs-0 form-group"><div class="single-file-container"><input class="form-control single-file" type="file" name="beleg[42][file]"></div></div>');
-			$_bt.find('.beleg-file input')[0].name = "beleg[new_"+add_beleg_counter+"][file]";
+			$_bt.find('.beleg-file input')[0].name = "files[beleg_new_"+add_beleg_counter+"]";
 			//beschreibung
 			$_bt.find('.beleg-desc textarea')[0].name = "beleg[new_"+add_beleg_counter+"][beschreibung]";
 		//add delete handler
