@@ -13,12 +13,39 @@ $routing = [
             'type' => 'path',
             'children' => [
                 [
-                    'path' => '(mygremium|mykonto|stura|allgremium|kv|hv|booking|konto|booking-history)',
+                    'path' => '(mykonto|booking|konto|booking-history)',
                     'type' => 'pattern',
-                    'load' => [
-                        LoadGroups::SELECTPICKER,
-                    ],
                     'param' => 'action'
+                ],
+                [
+                    'path' => 'mygremium',
+                    'type' => 'path',
+                    'action' => 'mygremium',
+                    'navigation' => 'mygremium',
+                ],
+                [
+                    'path' => 'hv',
+                    'type' => 'path',
+                    'action' => 'hv',
+                    'navigation' => 'hv',
+                ],
+                [
+                    'path' => 'kv',
+                    'type' => 'path',
+                    'action' => 'kv',
+                    'navigation' => 'kv',
+                ],
+                [
+                    'path' => 'stura',
+                    'type' => 'path',
+                    'action' => 'stura',
+                    'navigation' => 'stura',
+                ],
+                [
+                    'path' => 'allgremium',
+                    'type' => 'path',
+                    'action' => 'allgremium',
+                    'navigation' => 'allgremium',
                 ],
             ],
         ],
@@ -27,6 +54,7 @@ $routing = [
             'type' => 'path',
             'controller' => 'hhp',
             'action' => 'pick',
+            'navigation' => 'hhp',
             'children' => [
                 [
                     'path' => '\d+',

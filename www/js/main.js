@@ -73,11 +73,14 @@ $(document).ready(function () {
         $(".hide-wrapper>.hide-items>#" + e.target.value).fadeIn();
     });
 
-    //hide special children in container in projekt (no-editable)
-    var recht_readonlyval = $("div[data-name='recht']").data("value");
-    if (recht_readonlyval !== "")
-        $(".hide-wrapper>#" + recht_readonlyval).show();
-
+    // make all selected things visible (no-editable)
+    var recht_readonlyval_array = $("div[data-name='recht']").data("value");
+    if (typeof(recht_readonlyval_array) !== "undefined") {
+        for (var i = 0; i < recht_readonlyval_array.length; i++) {
+            if (recht_readonlyval_array[i] !== "")
+                $(".hide-wrapper>.hide-items>#" + recht_readonlyval_array[i]).show();
+        }
+    }
 
     $(".select-picker-container").on("clone-post.selectpicker cloned.selectpicker", function (evt) {
         var cfg = {

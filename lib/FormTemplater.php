@@ -31,7 +31,7 @@ class FormTemplater{
         $all_titels = DBConnector::getInstance()->dbFetchAll("haushaltsgruppen",
             ["haushaltsgruppen.id", "haushaltstitel.id", "gruppen_name", "titel_name", "titel_nr", "type"], ["haushaltsgruppen.hhp_id" => $hhp_id],
             [["type" => "left", "table" => "haushaltstitel", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]]],
-            ["type" => true, "haushaltsgruppen.id" => true, "titel_nr" => true], true);
+            ["type" => false, "haushaltsgruppen.id" => true, "titel_nr" => true], true);
         $selectable = [];
         foreach ($all_titels as $g_id => $group){
             $ret_group = ["label" => ($group[0]["type"] ? "Ausgabe" : "Einnahme") . " - " . $group[0]["gruppen_name"]];
@@ -569,12 +569,25 @@ class FormTemplater{
             foreach ($selectable["groups"] as $group){
                 foreach ($group["options"] as $option){
                     if (isset($option["value"]) && in_array($option["value"], $values)){
-                        $tmp_vals[$option["value"]] = $option["label"];
+                        $tmp_vals[$option["value"]] = ["label" => $option["label"], "subtext" => $option["subtext"]];
                     }
                 }
             }
             $values = array_merge(array_diff($values, array_keys($tmp_vals)), array_values($tmp_vals));
-            $out .= "<div data-name='$name' data-value='" . implode(",", array_keys($tmp_vals)) . "' id='$unique_id'>" . $this->getReadOnlyValue($values) . "</div>";
+    
+            //build subtext for read only
+            $res = [];
+            foreach ($values as $value){
+                if (is_array($value)){
+                    $res[] = $this->getReadOnlyValue($value["label"]) . "&nbsp;<small><span class='text-muted'>" . htmlspecialchars($value["subtext"]) . "</span></small>";
+                }else{
+                    $res[] = $this->getReadOnlyValue($value);
+                }
+            }
+            $out .= "<div data-value='" . json_encode(array_keys($tmp_vals)) . "' data-name='$name' id='$unique_id'>";
+            $out .= implode(",", $res);
+            $out .= "</div>";
+            
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
