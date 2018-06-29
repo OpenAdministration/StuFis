@@ -265,7 +265,7 @@ class HTMLPageRenderer{
                         <?php
                         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                             ?>
-                            <!-- LIVE COMMENT ONLY
+
                             <li <?php if ($subtype == "hv") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/hv"); ?>">
                                     <i class="fa fa-fw fa-legal"></i>
@@ -278,6 +278,7 @@ class HTMLPageRenderer{
                                     TODO KV
                                 </a>
                             </li>
+                            <!-- LIVE COMMENT ONLY
                             <li <?php if ($subtype == "booking") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/booking"); ?>">
                                     <i class="fa fa-fw fa-book "></i>
@@ -291,13 +292,12 @@ class HTMLPageRenderer{
                                 </a>
                             </li> -->
                         <?php } ?>
-                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/stura"); ?>">
                                 <i class="fa fa-fw fa-users"></i>
                                 StuRa-Sitzung
                             </a>
-                        </li>-->
+                        </li>
                         <li <?php if ($subtype == "allgremium") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/allgremium"); ?>">
                                 <i class="fa fa-fw fa-globe"></i>

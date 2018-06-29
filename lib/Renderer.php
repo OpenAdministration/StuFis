@@ -32,7 +32,7 @@ abstract class Renderer{
             <?php foreach ($groupedContent as $groupName => $rows){
                 if (!is_int($groupName)){ ?>
                     <tr>
-                        <th colspan="<?= count($header) ?>"><?php echo $groupName; ?></th>
+                        <th class="bg-info" colspan="<?= count($header) ?>"><?php echo $groupName; ?></th>
                     </tr>
                 <?php }
                 foreach ($rows as $row){ ?>
@@ -53,5 +53,32 @@ abstract class Renderer{
     
     protected function formatDateToMonthYear($dateString){
         return !empty($dateString) ? strftime("%b %G", strtotime($dateString)) : "";
+    }
+    
+    protected function renderInternalHyperLink($text, $dest){
+        global $URIBASE;
+        return "<a href='" . htmlspecialchars($URIBASE . $dest) . "'><i class='fa fa-fw fa-link' aria-hidden='true'></i>&nbsp;$text</a>";
+    }
+    
+    protected function date2relstr($time){
+        if (!ctype_digit($time))
+            $ts = strtotime($time);
+        
+        $diff = strtotime(date("Y-m-d")) - $time;
+        
+        $past = $diff > 0;
+        $diff = abs($diff);
+        $anzahlTage = floor($diff / (60 * 60 * 24));
+        if ($anzahlTage > 1){
+            return ($past ? "vor " : "in ") . $anzahlTage . " Tagen";
+        }else{
+            if ($anzahlTage === 0){
+                return "heute";
+            }else{
+                return $past ? "gestern" : "morgen";
+            }
+        }
+        
+        
     }
 }

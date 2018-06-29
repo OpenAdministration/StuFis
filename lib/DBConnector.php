@@ -428,9 +428,10 @@ class DBConnector extends Singleton{
             foreach ($showColumns as $col){
                 if (in_array($col, $this->validFields)){
                     if (strpos($col, ".")){
-                        $cols[] = self::$DB_PREFIX . $col;
+                        $tmp = explode(".", $col);
+                        $cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]);
                     }else{
-                        $cols[] = $col;
+                        $cols[] = $this->quoteIdent($col);
                     }
                     
                 }
@@ -518,7 +519,7 @@ class DBConnector extends Singleton{
         //var_dump($sql);
         //var_dump($vals);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(),/*"sql" => $sql*/], true));
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;

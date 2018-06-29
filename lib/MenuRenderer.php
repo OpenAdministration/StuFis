@@ -46,29 +46,10 @@ class MenuRenderer extends Renderer{
                 MenuRenderer::renderMyProfile();
                 break;
             case "stura":
-                $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
-                $groups[] = ["name" => "Interne Projekte", "fields" => ["type" => "projekt-intern", "state" => "need-stura",]];
-                $groups[] = ["name" => "Beschlossen von Haushahaltsverantwortlichen, zur Verkündung",
-                    "fields" => ["type" => "projekt-intern", "state" => "ok-by-hv",]];
-                
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                MenuRenderer::renderTable($groups, $mapping);
+                $this->renderStuRaView();
                 break;
             case "hv":
-                $groups[] = ["name" => "zu Bearbeitende Interne Projekte", "fields" => ["type" => "projekt-intern", "state" => "wip",]];
-                $groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
-                $groups[] = ["name" => "Auslagenerstattungen nur noch HV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-kv",]];
-                $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
-                
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                
-                MenuRenderer::renderTable($groups, $mapping);
-                
+                $this->renderHVView();
                 break;
             case "kv":
                 $groups[] = ["name" => "Noch zu tätigende Zahlungen", "fields" => ["type" => "zahlung-anweisung", "state" => "ok",]];
@@ -147,7 +128,7 @@ class MenuRenderer extends Renderer{
                                         $projekt["_ref"] = []; //FIXME
                                         ?>
                                         <div class="panel panel-default">
-                                            <div class="panel-link"><?= generateLinkFromID("P-".$id, "projekt/" . $id) ?>
+                                            <div class="panel-link"><?= generateLinkFromID("IP-".$id, "projekt/" . $id) ?>
                                             </div>
                                             <div class="panel-heading collapsed <?= count($projekt["_ref"]) === 0 ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
@@ -207,7 +188,7 @@ class MenuRenderer extends Renderer{
         
         <?php
     }
-
+    
 public function renderMyProfile(){
     
     $user = DBConnector::getInstance()->getUser();
@@ -244,82 +225,85 @@ public function renderMyProfile(){
     
 }
     
-    public function renderTable2($groups, $mapping){
-        //FIXME probably delete this function?
-        $res = [];
-        $header = ["ID", "Name", "Organisation", "Summe", "Status", "letzte Änderung"];
+    private function renderStuRaView(){
+        $header = ["Id", "Projektname", "Organisation", /*"Einnahmen", "Ausgaben"*/];
         
-        if (!isset($groups)) return "groups leer";
-        if (!isset($mapping)) return "Mapping leer";
-        if (count($mapping) !== count($groups)) return "Mapping stimmt nicht mit Groups überein (Anzahl)";
-        $name2Nr = [];
-        foreach ($groups as $nr => $data){
-            $name2Nr[$data["name"]] = $nr;
-            $fields = $data["fields"];
-            $res[$data["name"]] = DBConnector::getInstance()->dbFetchAll("antrag", [], $fields, [], [], true, true);
-            $ids = array_keys($res[$data["name"]]);
-            foreach ($ids as $id){
-                $res[$data["name"]][$id]["_inhalt"] = betterValues(DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $id]));
-                //var_dump($res[$data["name"]]);
+        //TODO: also externe Anträge
+        // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
+        $internContent = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org"],["state" => "need-stura"]);
+        $internContentHV = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org"],["state" => "ok-by-hv"]);
+        $groups = [
+            "Vom StuRa abzustimmen" => $internContent,
+            "zur Verkündung (genehmigt von HV)" => $internContentHV,
+        ];
+        $escapeFunctions = [
+            function($id){
+                return $this->renderInternalHyperLink("IP-".$id,"projekt/".$id);
+            },
+            "htmlspecialchars",
+            "htmlspecialchars",
+        ];
+        $this->renderHeadline("Projekte für die nächste StuRa Sitzung");
+        $this->renderTable($header, $groups, $escapeFunctions);
+    }
+
+    private function renderHVView(){
+        $header = ["Id", "Projektname", "Organisation","Projektbeginn"];
+        
+        $internWIP = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "wip"],[],["date-start" => true]);
+        $groups["zu prüfende Interne Projekte"] = $internWIP;
+        //TODO: Implementierung vom rest
+        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+        //$groups[] = ["name" => "Auslagenerstattungen nur noch HV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-kv",]];
+        //$groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
+        $escapeFunctions = [
+            function($id){
+                return $this->renderInternalHyperLink("IP-".$id,"projekt/".$id);
+            },
+            "htmlspecialchars",
+            "htmlspecialchars",
+            function($datestring){
+                if(empty($datestring)){
+                    return "";
+                }else{
+                    return $this->date2relstr(strtotime($datestring));
+                }
+                
             }
-            //var_dump($res);
-        }
-        //var_dump($name2Nr);
-        //var_dump($mapping);
-        ?>
-            <table class="table">
-                <thead>
-                <tr>
-                    <?php
-                    foreach ($header as $titel){
-                        echo "<th>$titel</th>";
-                    }
-                    ?>
-                </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($res as $name => $inhalt){ ?>
-                    <tr>
-                        <th id="par" colspan="6"><?php echo $name; ?></th>
-                    </tr>
-                    <?php foreach ($inhalt as $id => $row){ ?>
-                        <tr>
-                            <td><?php echo $id; ?></td>
-                            <td><?php echo generateLinkFromID($row["_inhalt"][$mapping[$name2Nr[$name]]["p-name"]], $row["token"]); ?></td>
-                            <td><?php echo $row["_inhalt"][$mapping[$name2Nr[$name]]["org-name"]]; ?></td>
-                            <td>Beantragte Summe</td>
-                            <td>
-                                <div class="label label-primary"><?php echo getStateString($row["type"], $row["revision"], $row["state"]); ?></div>
-                            </td>
-                            <td><?php echo $row["lastupdated"]; ?></td>
-                        </tr>
-                    <?php } ?>
-                <?php } ?>
-                </tbody>
-            </table>
-        <?php
+        ];
+        $this->renderHeadline("Von den Haushaltsverantwortlichen zu erledigen");
+        $this->renderTable($header,$groups, $escapeFunctions);
     }
     
-    private function renderHHPSelector($tabname){
-        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan",[],[],[],[],true,true);
-        if(!isset($hhps) || empty($hhps)){
-            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
-        }
-        if (!isset($this->pathinfo["hhp-id"])){
+    public function renderKonto($selected_id){
+        global $nonce, $URIBASE;
+        ?>
+        <div class="col-md-11 col-xs-12 container main">
+        <?php
+        $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
+        if (!isset($selected_id)){
             foreach (array_reverse($hhps, true) as $id => $hhp){
                 if ($hhp["state"] === "final"){
-                    $this->pathinfo["hhp-id"] = $id;
+                    $selected_id = $id;
                 }
             }
-        } ?>
+        }
+        
+        $year = $hhps[$selected_id]["revision"];
+        $startDate = "$year-01-01";
+        $endDate = "$year-12-31";
+        $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["id" => false]);
+        
+        ?>
         <form>
             <div class="input-group col-xs-2 pull-right">
                 <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
-                <input type="hidden" name="tab" value="<?= $tabname ?>">
+                <input type="hidden" name="tab" value="konto">
                 <select class="selectpicker" name="id"><?php
-                    foreach ($hhps as $id => $hhp){ ?>
-                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
-                                data-subtext="<?= $hhp["state"] ?>">seit <?= $hhp["von"] ?>
+                    foreach ($hhps as $id => $hhp){
+                        ?>
+                        <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
+                                data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -330,88 +314,43 @@ public function renderMyProfile(){
                 </div>
             </div>
         </form>
-        <?php
-        return $hhps;
-    }
-    
-    
-
-public function renderKonto($selected_id){
-    global $nonce, $URIBASE;
-    ?>
-    <div class="col-md-11 col-xs-12 container main">
-    <?php
-    $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
-    if (!isset($selected_id)){
-        foreach (array_reverse($hhps, true) as $id => $hhp){
-            if ($hhp["state"] === "final"){
-                $selected_id = $id;
-            }
-        }
-    }
-    
-    $year = $hhps[$selected_id]["revision"];
-    $startDate = "$year-01-01";
-    $endDate = "$year-12-31";
-    $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["id" => false]);
-    
-    ?>
-    <form>
-        <div class="input-group col-xs-2 pull-right">
-            <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
-            <input type="hidden" name="tab" value="konto">
-            <select class="selectpicker" name="id"><?php
-                foreach ($hhps as $id => $hhp){
-                    ?>
-                    <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
-                            data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
-                    </option>
-                <?php } ?>
-            </select>
-            <div class="input-group-btn">
-                <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
-                    Aktualisieren
-                </button>
-            </div>
-        </div>
-    </form>
-    <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
-        <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fa-fw fa-refresh"></i> neue
-            Kontoauszüge
-            abrufen
-        </button>
-        <input type="hidden" name="action" value="hibiscus">
-        <input type="hidden" name="nonce" value="<?php echo $nonce; ?>">
-    </form>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Datum</th>
-            <th>Empfänger</th>
-            <th class="visible-md visible-lg">Verwendungszweck</th>
-            <th class="visible-md visible-lg">IBAN</th>
-            <th class="money">Betrag</th>
-            <th class="money">Saldo</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($alZahlung as $zahlung){ ?>
-            <tr title="<?= htmlspecialchars($zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"]
-                . PHP_EOL . $zahlung["zweck"]) ?>">
-                <td><?= htmlspecialchars($zahlung["id"]) ?></td>
-                <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
-                <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
-                <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["zweck"]) ?></td>
-                <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
-                <td class="money"><?= convertDBValueToUserValue($zahlung["value"], "money") ?></td>
-                <td class="money"><?= convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
+        <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
+            <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fa-fw fa-refresh"></i> neue
+                Kontoauszüge
+                abrufen
+            </button>
+            <input type="hidden" name="action" value="hibiscus">
+            <input type="hidden" name="nonce" value="<?php echo $nonce; ?>">
+        </form>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Datum</th>
+                <th>Empfänger</th>
+                <th class="visible-md visible-lg">Verwendungszweck</th>
+                <th class="visible-md visible-lg">IBAN</th>
+                <th class="money">Betrag</th>
+                <th class="money">Saldo</th>
             </tr>
-        <?php } ?>
-        </tbody>
-    </table>
-    <?php
-}
+            </thead>
+            <tbody>
+            <?php foreach ($alZahlung as $zahlung){ ?>
+                <tr title="<?= htmlspecialchars($zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"]
+                    . PHP_EOL . $zahlung["zweck"]) ?>">
+                    <td><?= htmlspecialchars($zahlung["id"]) ?></td>
+                    <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
+                    <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
+                    <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["zweck"]) ?></td>
+                    <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
+                    <td class="money"><?= convertDBValueToUserValue($zahlung["value"], "money") ?></td>
+                    <td class="money"><?= convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
+                </tr>
+            <?php } ?>
+            </tbody>
+        </table>
+        <?php
+    }
     
     public function renderBookingHistory($selected_hhp_id = null){
         global $nonce;
@@ -488,6 +427,96 @@ public function renderKonto($selected_id){
             <?php } ?>
             </tbody>
         </table>
+        <?php
+    }
+    
+    private function renderHHPSelector($tabname){
+        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan",[],[],[],[],true,true);
+        if(!isset($hhps) || empty($hhps)){
+            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
+        }
+        if (!isset($this->pathinfo["hhp-id"])){
+            foreach (array_reverse($hhps, true) as $id => $hhp){
+                if ($hhp["state"] === "final"){
+                    $this->pathinfo["hhp-id"] = $id;
+                }
+            }
+        } ?>
+        <form>
+            <div class="input-group col-xs-2 pull-right">
+                <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
+                <input type="hidden" name="tab" value="<?= $tabname ?>">
+                <select class="selectpicker" name="id"><?php
+                    foreach ($hhps as $id => $hhp){ ?>
+                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
+                                data-subtext="<?= $hhp["state"] ?>">seit <?= $hhp["von"] ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <div class="input-group-btn">
+                    <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
+                        Aktualisieren
+                    </button>
+                </div>
+            </div>
+        </form>
+        <?php
+        return $hhps;
+    }
+    
+    public function renderTable2($groups, $mapping){
+        //FIXME probably delete this function?
+        $res = [];
+        $header = ["ID", "Name", "Organisation", "Summe", "Status", "letzte Änderung"];
+        
+        if (!isset($groups)) return "groups leer";
+        if (!isset($mapping)) return "Mapping leer";
+        if (count($mapping) !== count($groups)) return "Mapping stimmt nicht mit Groups überein (Anzahl)";
+        $name2Nr = [];
+        foreach ($groups as $nr => $data){
+            $name2Nr[$data["name"]] = $nr;
+            $fields = $data["fields"];
+            $res[$data["name"]] = DBConnector::getInstance()->dbFetchAll("antrag", [], $fields, [], [], true, true);
+            $ids = array_keys($res[$data["name"]]);
+            foreach ($ids as $id){
+                $res[$data["name"]][$id]["_inhalt"] = betterValues(DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $id]));
+                //var_dump($res[$data["name"]]);
+            }
+            //var_dump($res);
+        }
+        //var_dump($name2Nr);
+        //var_dump($mapping);
+        ?>
+            <table class="table">
+                <thead>
+                <tr>
+                    <?php
+                    foreach ($header as $titel){
+                        echo "<th>$titel</th>";
+                    }
+                    ?>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($res as $name => $inhalt){ ?>
+                    <tr>
+                        <th id="par" colspan="6"><?php echo $name; ?></th>
+                    </tr>
+                    <?php foreach ($inhalt as $id => $row){ ?>
+                        <tr>
+                            <td><?php echo $id; ?></td>
+                            <td><?php echo generateLinkFromID($row["_inhalt"][$mapping[$name2Nr[$name]]["p-name"]], $row["token"]); ?></td>
+                            <td><?php echo $row["_inhalt"][$mapping[$name2Nr[$name]]["org-name"]]; ?></td>
+                            <td>Beantragte Summe</td>
+                            <td>
+                                <div class="label label-primary"><?php echo getStateString($row["type"], $row["revision"], $row["state"]); ?></div>
+                            </td>
+                            <td><?php echo $row["lastupdated"]; ?></td>
+                        </tr>
+                    <?php } ?>
+                <?php } ?>
+                </tbody>
+            </table>
         <?php
     }
 }
