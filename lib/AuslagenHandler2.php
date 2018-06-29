@@ -610,7 +610,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     	ob_start();
     	$date = ($beleg['datum'])? date_create($beleg['datum'])->format('d.m.Y') : '';
     	$date_value = ($beleg['datum'])? date_create($beleg['datum'])->format('Y-m-d') : '';
-    	$date_form = ($editable)? $this->templater->getDatePickerForm(($hidden)? '' : "beleg[{$beleg['id']}][\"datum\"]", $date_value, 0, "", "", []): '<strong>am </strong>'.$date;
+    	$date_form = ($editable)? $this->templater->getDatePickerForm(($hidden)? '' : "beleg[{$beleg['id']}][datum]", $date_value, 0, "", "", []): '<strong>am </strong>'.$date;
 		
     	$file_form = '';
     	if (!$hidden) {
@@ -625,7 +625,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     			'</span>';
     		} else {
     			if ($editable){
-    				$file_form = $this->templater->getFileForm("beleg[{$beleg['id']}][\"file\"]", 0, 0, "Datei...", "", []);
+    				$file_form = $this->templater->getFileForm("files[beleg_{$beleg['id']}]", 0, 0, "Datei...", "", []);
     			} else {
     				$file_form = '<span>Keine Datei verknüpft.</span>';
     			}
@@ -636,7 +636,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     	
     	$desc_form = '';
     	if ($editable) {
-    		$desc_form = $this->templater->getTextareaForm(($hidden)? '' : "beleg[{$beleg['id']}][\"beschreibung\"]", ($beleg['beschreibung'])?$beleg['beschreibung']:"", 0, "optional", "", [], 1);
+    		$desc_form = $this->templater->getTextareaForm(($hidden)? '' : "beleg[{$beleg['id']}][beschreibung]", ($beleg['beschreibung'])?$beleg['beschreibung']:"", 0, "optional", "", [], 1);
     	} else {
     		$desc_form = '<span>'.($beleg['beschreibung'])?$beleg['beschreibung']:"keine".'</span>';
     	}
@@ -843,7 +843,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		           <div class="clearfix"></div>
 		        </div>
 	        <?php } ?>
-	        <form method="POST" enctype="multipart/form-data" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
+	        <input type="hidden" name="nononce" value="<?= $GLOBALS["nonce"] ?>">
+	        <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
+	        <form class="ajax" method="POST" enctype="multipart/form-data" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
 	        <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Allgemein</label>
             <div id='projekt-well' class="well">
