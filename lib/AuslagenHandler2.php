@@ -596,6 +596,14 @@ class AuslagenHandler2 extends FormHandlerInterface{
     	<?php
     }
     
+    public static function trimIban($in){
+    	$in = trim($in);
+    	if ($in === '') return '';
+    	if (mb_strlen($in)>=5) {
+    		return mb_substr($in, 0, 4).' ... ... '.mb_substr($in, -4);
+    	}
+    }
+    
     public function render_beleg_row($beleg, $editable = true,  $hidden = false){
     	ob_start();
     	$date = ($beleg['datum'])? date_create($beleg['datum'])->format('d.m.Y') : '';
@@ -845,8 +853,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <label for="zahlung">Zahlungsinformationen</label>
             <div id="zahlung" class="well">
 				<?= $this->templater->getTextForm("zahlung-name", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-name']:'', 6, "Name Zahlungsempfänger", "anderen Zahlungsempfänger Name (neu)", [], []) ?>
-				<?= //TODO iban only show trimmed if not hv/kv important!
-					$this->templater->getTextForm("zahlung-iban", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-iban']:'', 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)", ["iban" => true]) ?>
+				<?php //TODO iban only show trimmed if not hv/kv important!
+	            	$iban_text = $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-iban']:'';
+	            	if (!AuthHandler::getInstance()->hasGroup('HV,KV')){
+	            		$iban_text = self::trimIban($iban_text);	
+	            	}
+					$this->templater->getTextForm("zahlung-iban", $iban_text, 6, "DE ...", "anderen Zahlungsempfänger IBAN (neu)", ["iban" => true]) ?>
                 <div class='clearfix'></div>
                 <?= $this->templater->getTextForm("zahlung-vwzk", $editable&&$this->args['action']!='create'?$this->auslagen_data['zahlung-vwzk']:'', 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
                 <?= $this->templater->getHiddenActionInput('zahlung-user'); ?>
@@ -855,10 +867,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <?php //-------------------------------------------------------------------- ?>
 	        <?php
           
-	        	//TODO hidden data -> projekt posten name <-> projekt-posten-id
-	        
-	            //$belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
-	            //TODO remove this comment
+	            $belege = (isset($this->auslagen_data['belege']))? $this->auslagen_data['belege']: [];
+	            /*//TODO remove this comment
 	             
 	             $belege = [[
 	         		'id' => '42',
@@ -881,9 +891,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
          		]]; //*/
 	       		
 	            $this->render_beleg_container($belege, $editable,  'Belege');
-	            
-	           
-            
+
            		$beleg_nr = 0;
             	$tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
             
