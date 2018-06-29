@@ -20,6 +20,7 @@ require_once SYSBASE . '/lib/MenuRenderer.php';
 require_once SYSBASE . '/lib/FormTemplater.php';
 require_once SYSBASE . '/lib/ProjektHandler.php';
 require_once SYSBASE . '/lib/AuslagenHandler2.php';
+require_once SYSBASE . '/lib/HHPHandler.php';
 require_once SYSBASE . '/lib/StateHandler.php';
 require_once SYSBASE . '/lib/PermissionHandler.php';
 require_once SYSBASE . '/lib/HTMLPageRenderer.php';

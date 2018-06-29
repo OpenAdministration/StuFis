@@ -6,7 +6,7 @@
  * Time: 19:55
  */
 
-class AuslagenHandler2 implements FormHandlerInterface{
+class AuslagenHandler2 extends FormHandlerInterface{
     
 	/**
      * error flag

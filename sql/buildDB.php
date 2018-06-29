@@ -13,24 +13,12 @@ require_once dirname(__FILE__,2)."/lib/inc.all.php";
 #foreach(array_reverse(array_keys($this->scheme)) as $k)
 #  $this->pdo->query("DROP TABLE ".self::$DB_PREFIX."{$k}") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(),true));
 
-
-$r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."antrag");
-if ($r === false){
-    $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."antrag (" .
-        $this->buildColDef($this->scheme["antrag"]) . "
-                PRIMARY KEY (id,version),
-                UNIQUE (token)
-               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
-}
-
-$r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."inhalt");
-if ($r === false){
-    $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."inhalt (" .
-        $this->buildColDef($this->scheme["inhalt"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES ".self::$DB_PREFIX."antrag(id) ON DELETE CASCADE
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
-}
+$this->pdo->query("
+CREATE TABLE IF NOT EXISTS " . self::$DB_PREFIX . "haushaltsplan (" .
+    $this->buildColDef($this->scheme["haushaltsplan"]) . "
+	PRIMARY KEY (`id`)
+    )ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
+") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
 
 $r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."comments");
 if ($r === false){
@@ -77,15 +65,6 @@ if ($r === false){
               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
 }
 
-$r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."money");
-if ($r === false){
-    /*$this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."money (".
-                $this->buildColDef($this->scheme["money"])."
-                PRIMARY KEY (antrag_id,antrag_version,idx),
-                FOREIGN KEY (antrag_id,antrag_version) REFERENCES ".self::$DB_PREFIX."antrag(id,version)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(),true));*/
-}
-
 $r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."haushaltsgruppen");
 if ($r === false){
     $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."haushaltsgruppen (" .
@@ -112,7 +91,7 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."konto (" .
 
 $r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."booking");
 if ($r === false){
-	$this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."booking (" .
+    $this->pdo->query("CREATE TABLE " . self::$DB_PREFIX . "booking (" .
 		$this->buildColDef($this->scheme["booking"]) . "
                 FOREIGN KEY (beleg_id) REFERENCES ".self::$DB_PREFIX."antrag(id),
                 FOREIGN KEY (zahlung_id) REFERENCES ".self::$DB_PREFIX."konto(id),
@@ -183,3 +162,4 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."beleg_posten (" .
 	FOREIGN KEY (`beleg_id`) REFERENCES ".self::$DB_PREFIX."belege(`id`)
     )ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
 ") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+

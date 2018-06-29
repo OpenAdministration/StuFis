@@ -3,7 +3,7 @@ $routing = [
     'path' => '',
     'type' => 'path',
     'controller' => 'menu',
-    'action' => 'index',
+    'action' => 'mygremium',
     'not_found' => '404',
     'method' => 'GET',
     'load' => [],
@@ -13,11 +13,31 @@ $routing = [
             'type' => 'path',
             'children' => [
                 [
-                    'path' => '(mygremium|mykonto|stura|allgremium|hhp|kv|hv|booking|konto|booking-history)',
+                    'path' => '(mygremium|mykonto|stura|allgremium|kv|hv|booking|konto|booking-history)',
                     'type' => 'pattern',
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                    ],
                     'param' => 'action'
                 ],
-            ]
+            ],
+        ],
+        [
+            'path' => 'hhp',
+            'type' => 'path',
+            'controller' => 'hhp',
+            'action' => 'pick',
+            'children' => [
+                [
+                    'path' => '\d+',
+                    'type' => 'pattern',
+                    'action' => 'view',
+                    'param' => 'hhp-id',
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                    ],
+                ],
+            ],
         ],
         [
             'path' => 'projekt',
@@ -47,7 +67,7 @@ $routing = [
                                 LoadGroups::DATEPICKER,
                                 LoadGroups::SELECTPICKER,
                                 LoadGroups::FILEINPUT,
-                            	LoadGroups::AUSLAGEN,
+                                LoadGroups::AUSLAGEN,
                             ],
                             'children' => [
                                 [
@@ -114,20 +134,20 @@ $routing = [
                             'action' => 'projekt',
                             'is_suffix' => true
                         ],
-                    	[
-	                    	'path' => 'auslagen',
-	                    	'type' => 'path',
-	                    	'controller' => 'rest',
-	                    	'action' => 'auslagen',
-	                    	'children' => [
-	                    		[
-		                    		'path' => '(updatecreate)',
-		                    		'type' => 'pattern',
-	                    			'param' => 'mfunction',
-	                    			'match' => 0,
-	                    		],
-	                    	]
-                    	],
+                        [
+                            'path' => 'auslagen',
+                            'type' => 'path',
+                            'controller' => 'rest',
+                            'action' => 'auslagen',
+                            'children' => [
+                                [
+                                    'path' => '(updatecreate)',
+                                    'type' => 'pattern',
+                                    'param' => 'mfunction',
+                                    'match' => 0,
+                                ],
+                            ]
+                        ],
                     ]
                 ]
             ]

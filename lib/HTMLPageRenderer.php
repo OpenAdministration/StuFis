@@ -40,6 +40,7 @@ class HTMLPageRenderer{
         ob_start();
         include SYSBASE . "/template/error.phtml";
         self::$errorPage = ob_get_clean();
+    
     }
     
     /**
@@ -78,7 +79,7 @@ class HTMLPageRenderer{
         echo $this->bodycontent;
         echo "</div>";
         $this->renderModals();
-        if (self::$dev){
+        if ($GLOBALS["DEV"]){
             $this->renderProfiling();
         }
         $this->renderFooter();
@@ -254,15 +255,17 @@ class HTMLPageRenderer{
                                 Meine Gremien
                             </a>
                         </li>
+                        <!-- LIVE COMMENT ONLY
                         <li <?php if ($subtype == "mykonto") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/mykonto"); ?>">
                                 <i class="fa fa-fw fa-user-circle"></i>
                                 Benutzerkonto
                             </a>
-                        </li>
+                        </li>-->
                         <?php
                         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
                             ?>
+
                             <li <?php if ($subtype == "hv") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/hv"); ?>">
                                     <i class="fa fa-fw fa-legal"></i>
@@ -275,6 +278,7 @@ class HTMLPageRenderer{
                                     TODO KV
                                 </a>
                             </li>
+                            <!-- LIVE COMMENT ONLY
                             <li <?php if ($subtype == "booking") echo "class='active'"; ?>>
                                 <a href="<?php echo htmlspecialchars($this->uribase . "menu/booking"); ?>">
                                     <i class="fa fa-fw fa-book "></i>
@@ -286,7 +290,7 @@ class HTMLPageRenderer{
                                     <i class="fa fa-fw fa-bar-chart"></i>
                                     Konto
                                 </a>
-                            </li>
+                            </li> -->
                         <?php } ?>
                         <li <?php if ($subtype == "stura") echo "class='active'"; ?>>
                             <a href="<?php echo htmlspecialchars($this->uribase . "menu/stura"); ?>">
@@ -301,13 +305,11 @@ class HTMLPageRenderer{
                             </a>
                         </li>
                         <li <?php if ($subtype == "hhp") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/hhp"); ?>">
+                            <a href="<?php echo htmlspecialchars($this->uribase . "hhp"); ?>">
                                 <i class="fa fa-fw fa-bar-chart"></i>
                                 Haushaltsplan
                             </a>
                         </li>
-
-
                     </ul>
                 </div>
                 <!-- END MENU -->
@@ -568,7 +570,7 @@ class HTMLPageRenderer{
                         </button>
                         <h4 class='modal-title' id='<?= $id ?>-label'><?= $titel ?></h4>
                     </div>
-                    <div class='modal-body' id='please-reload-content'>
+                    <div class='modal-body' id='<?= $id ?>-content'>
                         <?= $bodycontent ?>
                     </div>
                     <?php if ($hasFooter){ ?>
@@ -579,7 +581,7 @@ class HTMLPageRenderer{
                             <?php } ?>
                             <?php if (isset($actionLabel)){ ?>
                                 <button type='button' class='btn btn-<?= $buttonType2 ?>'
-                                        id='<?= $id ?>-btn'><?= $actionLabel ?></button>
+                                        id='<?= $id ?>-btn-action'><?= $actionLabel ?></button>
     
                             <?php } ?>
                         </div>

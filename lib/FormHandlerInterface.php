@@ -6,16 +6,18 @@
  * Time: 19:45
  */
 
-interface FormHandlerInterface extends Renderer{
-    public static function initStaticVars();
+abstract class FormHandlerInterface extends Renderer{
     
-    public static function getStateString($statename);
+    abstract public static function initStaticVars();
     
-    public function updateSavedData($data);
+    abstract public static function getStateString($statename);
     
-    public function setState($stateName);
+    abstract public function updateSavedData($data);
     
-    public function getNextPossibleStates();
+    abstract public function setState($stateName);
     
-    public function getID();
+    abstract public function getNextPossibleStates();
+    
+    abstract public function getID();
+    
 }

@@ -665,3 +665,7 @@ button.btn.btn-arrow-left {
 .bt-dark {
 	border-top: 2px solid #777;
 }
+
+.has-feedback .form-control {
+    padding: 6px 12px;
+}

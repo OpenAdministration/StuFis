@@ -6,7 +6,7 @@
  * Time: 01:29
  */
 
-class ProjektHandler implements FormHandlerInterface{
+class ProjektHandler extends FormHandlerInterface{
     static private $emptyData;
     static private $selectable_recht;
     static private $states;
@@ -236,6 +236,9 @@ class ProjektHandler implements FormHandlerInterface{
             "org" => $data["org"],
             "org-mail" => $data["org-mail"],
             "protokoll" => $data["protokoll"],
+            "beschreibung" => $data["beschreibung"],
+            "date-start" => $data["date-start"],
+            "date-end" => $data["date-end"],
         ]);
         
         for ($i = 0; $i < $minRows - 1; $i++){
@@ -448,11 +451,12 @@ class ProjektHandler implements FormHandlerInterface{
                 <?php } ?>
                 <h2><?= $title ?></h2>
                 <div class="well">
-                    <?= $this->templater->getTextForm("name", $this->data["name"], 12, "", "Projektname", ["required"]) ?>
-                    <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 4, "vorname.nachname@tu-ilmenau.de", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
+                    <?= $this->templater->getTextForm("name", $this->data["name"], 6, "", "Projektname", ["required"]) ?>
+                    <?= $this->templater->getMailForm("responsible", $this->data["responsible"], 6, "vorname.nachname", "Projektverantwortlich (Mail)", ["required", "email"], "@tu-ilmenau.de") ?>
+                    <div class="clearfix"></div>
                     <?= $this->templater->getDropdownForm("org", $selectable_gremien, 6, "Wähle Gremium ...", "Organisation", ["required"], true) ?>
                     <?= $this->templater->getDropdownForm("org-mail", $selectable_mail, 6, "Wähle Mailingliste ...", "Organisations-Mail", ["required"], true) ?>
-                    <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "www.wiki.stura.tu-ilmenau.de/protokoll/...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>
+                    <?= $this->templater->getWikiLinkForm("protokoll", $this->data["protokoll"], 12, "...", "Beschluss (Wiki-Direktlink)", ["required"], "https://wiki.stura.tu-ilmenau.de/protokoll/") ?>
                     <?= $this->templater->getDatePickerForm(["date-start", "date-end"], [$this->data["date-start"], $this->data["date-end"]], 12, ["Projekt-Start", "Projekt-Ende"], "Projektzeitraum", ["required"], true, "today") ?>
                     <div class='clearfix'></div>
                 </div>

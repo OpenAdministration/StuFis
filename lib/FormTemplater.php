@@ -620,7 +620,7 @@ class FormTemplater{
             $additonal_array = $this->constructValidatorStrings($validator);
             
             $additonal_str = implode(" ", $additonal_array);
-            $out .= "<div id='$unique_id0' class='input-group " . ($daterange ? "input-daterange" : "date") . "' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' data-date-start-date='$startDate'>";
+            $out .= "<div id='$unique_id0' class='input-group " . ($daterange ? "input-daterange" : "date") . "' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' ><!--data-date-start-date='$startDate'-->";
             if ($daterange){
                 $out .= "<div class='input-group-addon' style='background-color: transparent; border: none;'>von</div>";
                 $out .= "<div class='input-group'>";

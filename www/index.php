@@ -24,7 +24,7 @@ $error = false;
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":
-        $menuRenderer = new MenuRenderer();
+        $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
         $htmlRenderer->render();
         break;
@@ -36,6 +36,11 @@ switch ($routeInfo['controller']){
     case "auslagen":
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
+        $htmlRenderer->render();
+        break;
+    case "hhp":
+        $hhpHandler = new HHPHandler($routeInfo);
+        $htmlRenderer->appendRendererContent($hhpHandler);
         $htmlRenderer->render();
         break;
     case "rest":
@@ -50,6 +55,7 @@ switch ($routeInfo['controller']){
     default:
         $errorHdl = new ErrorHandler($routeInfo);
         $htmlRenderer->appendRendererContent($errorHdl);
+        $htmlRenderer->render();
         break;
 }
 

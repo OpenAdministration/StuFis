@@ -6,7 +6,7 @@
  * Time: 19:55
  */
 
-class AuslagenHandler implements FormHandlerInterface{
+class AuslagenHandler extends FormHandlerInterface{
     
     static private $emptyData;
     static private $states;
