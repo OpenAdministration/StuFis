@@ -148,7 +148,7 @@ class HTMLPageRenderer{
     private function includeJS(){
         $out = "";
         $defaultJsFiles = [
-            "jquery-3.1.1.min",
+            "jquery.min",
             "bootstrap.min",
             "validator",
             "numeral.min",
@@ -398,8 +398,8 @@ class HTMLPageRenderer{
         );
         $this->buildModal(
         	"server-error",
-        	"Es ist ein unerwarteter Fehler aufgetreten.",
-        	"Die Seite wird gleich automatisch neu geladen.<div class='msg'></div>",
+        	"<div class='default-head'>Es ist ein unerwarteter Fehler aufgetreten.</div><div class='js-head'></div>",
+        	"<div class='default-content'>Die Seite wird gleich automatisch neu geladen.<div class='msg'></div></div><div class='js-content'></div>",
         	NULL,
         	NULL,
         	true
