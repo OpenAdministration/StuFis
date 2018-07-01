@@ -315,3 +315,22 @@ function checkIBAN($iban){
     
 }
 
+if (!function_exists('generateRandomString')){
+	/**
+	 * generates secure random hex string of length: 2*$length
+	 * @param integer $length 0.5 string length
+	 * @return NULL|string
+	 */
+	function generateRandomString($length) {
+		if (!is_int($length)){
+			throwException('Invalid argument type. Integer expected.');
+			return null;
+		}
+		if (version_compare(PHP_VERSION, '7.0.0') >= 0){
+			return bin2hex(random_bytes($length));
+		} else {
+			return bin2hex(openssl_random_pseudo_bytes($length));
+		}
+	}
+}
+
