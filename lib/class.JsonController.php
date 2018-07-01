@@ -61,9 +61,7 @@ class JsonController {
 	 * @param boolean $jsonHeader, default: false
 	 */
 	protected function print_json_result($jsonHeader = false){
-		if ($jsonHeader) header("Content-Type: application/json");
-		echo json_encode($this->json_result, JSON_HEX_QUOT | JSON_HEX_TAG);
-		die();
+		self::print_json($this->json_result, $jsonHeader);
 	}
 	
 	/**
