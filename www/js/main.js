@@ -1395,11 +1395,7 @@ var parseData = function (data, reload) {
 		try {
 			r = JSON.parse(data);
 		} catch(e) {
-			r.success=false;
-			r.eMsg = ('Unerwarteter Fehler (Code: "'+data.status+'"). Seite wird neu geladen...');
-			if (typeof (reload) == 'undefined' || reload == true){
-				auto_page_reload(5000);
-			}
+			return data;
 		}
 	}
 	return r;
@@ -1415,10 +1411,18 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
 		//hide wait dialog modal
 		$("#please-wait-dlg").modal("hide");
 		//show
+		$("#server-error-dlg .default-head").show();
+		$("#server-error-dlg .js-head").hide();
+		$("#server-error-dlg .default-content").show();
+		$("#server-error-dlg .js-content").hide();
 		$("#server-error-dlg").modal("show");
 		$("#server-error-dlg .msg").text('('+data.msg+')');
 		//auto page reload
-		setTimeout(function() { window.location.replace(window.location); }, 3000);
+		if (typeof(data.reload)=='number') {
+			setTimeout(function() { window.location.replace(window.location); }, data.reload);
+		} else if ((typeof(data.reload)=='boolean' && data.reloa ) || (typeof(data.reload)!='boolean' && typeof(data.reload)!='number')){
+			setTimeout(function() { window.location.replace(window.location); }, 3000);
+		}
 		return;
 	}
     $("#please-wait-dlg").modal("hide");
@@ -1432,6 +1436,15 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
 };
 
 function handleSubmitForm($form, evt, isConfirmed, fnMod) {
+	var animate_delete = function($elm, callback){
+		$elm.animate({ height: 0, opacity: 0 }, 500,function(){ 
+			$(this).remove();
+			if (typeof(callback) == 'function'){
+				callback();
+			}
+		});
+	};
+	
     var action = $form.attr("action");
     if ($form.find(":input[name=action]").length == 0) {
         return true;
@@ -1510,8 +1523,87 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
         type: "POST"
     })
         .done(function (values, status, req) {
-
-            $("#please-wait-dlg").modal("hide");
+        	//remove wait modal
+        	$("#please-wait-dlg").modal("hide");
+        	
+        	//remove old error hints
+    		animate_delete($('.vali-error-msg'));
+    		$('.vali-error-hint').removeClass('has-error').removeClass('vali-error-hint');
+    		
+    		//parse values / backport
+        	if (typeof(values) == 'object'){
+        		// message array
+        		if (values.hasOwnProperty('msg') && !values.hasOwnProperty('msgs')){
+        			values['msgs'] = [values.msg];
+        		}
+        	}
+        	
+        	//reload function
+        	if (values.hasOwnProperty('reload') && (typeof(values.reload)=='integer'|| typeof(values.reload)=='number')){
+        		setTimeout(function() { window.location.replace(window.location); }, values.reload);
+        	}
+        	
+        	//validatr + message boxes
+        	if (typeof(values) == 'object' && values.hasOwnProperty('success')){
+        		//form validation - error after ajax
+        		if (!values.success && values.hasOwnProperty('type') && values.type=='validator' && values.hasOwnProperty('field')){
+	        		//find form element
+	        		var $t = $('[name="'+values.field+'"]');
+	        		if ($t.length == 1){
+	        			//add has-error class
+	        			if ($t.closest('.form-group').is(':visible')){
+	        				$t.closest('.form-group').addClass('has-error').addClass('vali-error-hint');
+	        			}
+	        			//add error description
+	        			$t.closest('.form-group').append('<small class="vali-error-msg error text-danger"><strong>'+values.msg+'</strong></small>');
+	        		} else {
+	        			console.log($t);
+	        		}
+	        		return;
+	        	//message boxes
+        		} else if (!values.success && values.hasOwnProperty('type') && values.type=='modal' && values.hasOwnProperty('subtype')) {
+        			$("#"+values.subtype+"-dlg .default-head").hide();
+        			$("#"+values.subtype+"-dlg .js-head").show();
+        			$("#"+values.subtype+"-dlg .default-content").hide();
+        			$("#"+values.subtype+"-dlg .js-content").show();
+        			if (values.hasOwnProperty('headline')){
+        				$("#"+values.subtype+"-dlg .js-head").html(values.headline);
+        			} else {
+        				$("#"+values.subtype+"-dlg .js-head").html('Warnung');
+        			}
+        			$("#"+values.subtype+"-dlg .js-content").html(values.msg);
+        			$("#"+values.subtype+"-dlg").modal("show");
+        			return;
+        		} else if (!values.success && values.hasOwnProperty('type') && values.type=='modal'){
+        			if (values.hasOwnProperty('headline')){
+        				$("#server-message-label").html(values.headline);
+        			} else {
+        				$("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+        			}
+        			if (values.hasOwnProperty('msg') && !values.hasOwnProperty('dump')){
+        				$("#server-message-content").html(values.msg);
+        			} else if (values.hasOwnProperty('msgs') && !values.hasOwnProperty('dump')){
+        				var out = '';
+        				for (var i = 0; i < values.msgs.length; i++){
+        					out += '<p>'+values.msgs[i]+'</p>';
+        				}
+        				$("#server-message-content").html(out);
+        			} else {
+        				$("#server-message-content").html(
+                        	'<pre>'+
+                            	JSON.stringify(values, null, 4)+
+                        	'</pre>'
+                        );
+                        $("#server-message-dlg").modal("show");
+        			}
+        			return;
+        		}
+        	}
+        		
+        		
+        	
+        	
+        	
             if (typeof(values) == "string") {
                 $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
                 var $smc = $("#server-message-content");
