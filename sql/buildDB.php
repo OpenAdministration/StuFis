@@ -135,6 +135,21 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."fileinfo (" .
 	FOREIGN KEY (`data`) REFERENCES ".self::$DB_PREFIX."filedata(`id`)
 )ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
 
+/* 
+$this->pdo->query("
+	SET foreign_key_checks = 0;
+		DROP TABLE IF EXISTS ".self::$DB_PREFIX."auslagen ;
+	SET foreign_key_checks = 1;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+$this->pdo->query("
+	SET foreign_key_checks = 0;
+		DROP TABLE IF EXISTS ".self::$DB_PREFIX."belege ;
+	SET foreign_key_checks = 1;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+$this->pdo->query("
+	SET foreign_key_checks = 0;
+		DROP TABLE IF EXISTS ".self::$DB_PREFIX."beleg_posten ;
+	SET foreign_key_checks = 1;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+//*/
+
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."auslagen (" .
 	$this->buildColDef($this->scheme["auslagen"]) . "

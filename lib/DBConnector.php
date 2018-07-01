@@ -134,21 +134,26 @@ class DBConnector extends Singleton{
             "projekt_id" => "INT NOT NULL",
             "name_suffix" => "VARCHAR(255) NULL",
             "state" => "VARCHAR(127) NOT NULL",
-            "belege_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "hv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "kv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "ok-belege" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "ok-hv" => "VARCHAR(127) NOT NULL DEFAULT ''",
+            "ok-kv" => "VARCHAR(127) NOT NULL DEFAULT ''",
+        	"payed" => "VARCHAR(127) NOT NULL DEFAULT ''",
+        	"rejected" => "VARCHAR(127) NOT NULL DEFAULT ''",
             "zahlung_iban" => "VARCHAR(127) NOT NULL",
             "zahlung_name" => "VARCHAR(127) NOT NULL",
             "zahlung_vwzk" => "VARCHAR(127) NOT NULL",
-            'last_change' => 'DATETIME NOT NULL DEFAULT ',
+            'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
+        	'last_change_by' => "VARCHAR(127) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',
+        	"version" => "INT NOT NULL DEFAULT 1",
+        	"created" => "VARCHAR(127) NOT NULL DEFAULT ''",
         ];
         $scheme["belege"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
             "auslagen_id" => "INT NOT NULL",
             "short" => "VARCHAR(45) NULL",
             "created_on" => "DATETIME NOT NULL DEFAULT NOW()",
-            "datum" => "DATETIME NOT NULL",
+            "datum" => "DATETIME NULL DEFAULT NULL",
             "beschreibung" => "TEXT NOT NULL",
             "file_id" => "INT NULL DEFAULT NULL",
         ];
@@ -157,8 +162,8 @@ class DBConnector extends Singleton{
             "beleg_id" => "INT NOT NULL",
             "short" => "INT NOT NULL",
             "projekt_posten_id" => "INT NOT NULL",
-            "ausgaben" => "DOUBLE NULL DEFAULT NULL",
-            "einnahmen" => "DOUBLE NULL DEFAULT NULL",
+            "ausgaben" => "DECIMAL(10,2) NOT NULL DEFAULT 0",
+            "einnahmen" => "DECIMAL(10,2) NOT NULL DEFAULT 0",
         ];
         
         // dateinen ---------------------
