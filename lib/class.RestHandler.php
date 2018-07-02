@@ -211,7 +211,8 @@ class RestHandler extends JsonController{
     					'empty',
     					'error' => 'Ungültige Iban.'
     				],
-    				'zahlung-vwzk' => [ 'name',
+    				'zahlung-vwzk' => [ 'regex',
+    					'pattern' => '/^[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+[a-zA-Z0-9\-_,;\/\\()!?& .äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
     					'maxlength' => '127',
     				],
     				'belege' => ['array', 'optional',
@@ -248,13 +249,13 @@ class RestHandler extends JsonController{
 				    							'step' => '0.01',
 				    							'format' => '2',
 				    							'min' => '0',
-				    							'error' => 'Posten - Einnahmen: Ungültiger Wert'
+				    							#'error' => 'Posten - Einnahmen: Ungültiger Wert'
 				    						],
 				    						'out' => [ 'float',
 				    							'step' => '0.01',
 				    							'format' => '2',
 				    							'min' => '0',
-				    							'error' => 'Posten - Ausgaben: Ungültiger Wert'
+				    							#'error' => 'Posten - Ausgaben: Ungültiger Wert'
 				    						],
 				    					]
 			    					]
@@ -263,7 +264,7 @@ class RestHandler extends JsonController{
     					]
     				],
     			];
-    			$vali->validateMap($_POST, $validator_map, true);
+    			break;
     		case 'filedelete':
     			$validator_map = [
     				'etag' => ['regex',
@@ -321,61 +322,64 @@ class RestHandler extends JsonController{
     		]);
     	}
     	$validated = $vali->getFiltered();
-    	//may add nonexisting arrays
-    	if (!isset($validated['beleg'])){
-    		$validated['beleg'] = [];
-    	}
-    	foreach ($validated['beleg'] as $k => $v){
-    		if (!isset($v['posten'])){
-    			$validated['beleg'][$k]['posten'] = [];
-    		}
-    	}
-    	//check all values empty?
-    	$empty = ($validated['auslagen-id']=='NEW');
-    	$auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
-    	$belege_test_empty = ['datum', 'beschreibung', 'posten'];
-    	$posten_text_empty = ['out', 'in'];
-    	if ($empty) foreach ($auslagen_test_empty as $e){
-    		if (is_string($validated[$e]) && !!$validated[$e]
-    			|| is_array($validated[$e]) && count($validated[$e])){
-    			$empty = false;
-    			break;
-    		}
-    	}
-    	if ($empty) foreach ($validated['beleg'] as $kb => $belege){
-    		foreach ($belege_test_empty as $e){
-    			if (is_string($belege[$e]) && !!$belege[$e]
-    				|| is_array($belege[$e]) && count($belege[$e])){
-    				$empty = false;
-    				break 2;
-    			}
-    		}
-	    	foreach ($belege['posten'] as $posten){
-	    		foreach ($posten_text_empty as $e){
-	    			if (is_string($posten[$e]) && !!$posten[$e]
-	    				|| is_array($posten[$e]) && count($posten[$e])){
-	    				$empty = false;
-	    				break 3;
-	    			}
+    	
+    	if ($routeInfo['mfunction'] == 'updatecreate'){
+	    	//may add nonexisting arrays
+	    	if (!isset($validated['belege'])){
+	    		$validated['belege'] = [];
+	    	}
+	    	foreach ($validated['belege'] as $k => $v){
+	    		if (!isset($v['posten'])){
+	    			$validated['belege'][$k]['posten'] = [];
 	    		}
 	    	}
-	    	
-	    	//check file non empty
-	    	$fileIdx = 'beleg_'.$kb;
-	    	if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
-	    		$empty = false;
-	    		break;
+	    	//check all values empty?
+	    	$empty = ($validated['auslagen-id']=='NEW');
+	    	$auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
+	    	$belege_test_empty = ['datum', 'beschreibung', 'posten'];
+	    	$posten_text_empty = ['out', 'in'];
+	    	if ($empty) foreach ($auslagen_test_empty as $e){
+	    		if (is_string($validated[$e]) && !!$validated[$e]
+	    			|| is_array($validated[$e]) && count($validated[$e])){
+	    			$empty = false;
+	    			break;
+	    		}
 	    	}
-    	}
-    	//error reply
-    	if ($empty) {
-    		JsonController::print_json([
-    			'success' => false,
-    			'status' => '200',
-    			'msg' => 'Leere Auslagenerstattungen können nicht gespeichert werden.',
-    			'type' => 'modal',
-    			'subtype' => 'server-error',
-    		]);
+	    	if ($empty) foreach ($validated['belege'] as $kb => $belege){
+	    		foreach ($belege_test_empty as $e){
+	    			if (is_string($belege[$e]) && !!$belege[$e]
+	    				|| is_array($belege[$e]) && count($belege[$e])){
+	    				$empty = false;
+	    				break 2;
+	    			}
+	    		}
+		    	foreach ($belege['posten'] as $posten){
+		    		foreach ($posten_text_empty as $e){
+		    			if (is_string($posten[$e]) && !!$posten[$e]
+		    				|| is_array($posten[$e]) && count($posten[$e])){
+		    				$empty = false;
+		    				break 3;
+		    			}
+		    		}
+		    	}
+		    	
+		    	//check file non empty
+		    	$fileIdx = 'beleg_'.$kb;
+		    	if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
+		    		$empty = false;
+		    		break;
+		    	}
+	    	}
+	    	//error reply
+	    	if ($empty) {
+	    		JsonController::print_json([
+	    			'success' => false,
+	    			'status' => '200',
+	    			'msg' => 'Leere Auslagenerstattungen können nicht gespeichert werden.',
+	    			'type' => 'modal',
+	    			'subtype' => 'server-error',
+	    		]);
+	    	}
     	}
     	$routeInfo['pid'] = $validated['projekt-id'];
     	if ($validated['auslagen-id']!='NEW'){
@@ -387,41 +391,15 @@ class RestHandler extends JsonController{
     	$handler = new AuslagenHandler2($routeInfo);
     	$handler->handlePost();
     	
-    	/* echo "is error: \n"; var_dump($vali->getIsError()); 
-    	if ($vali->getIsError()){
-    		echo "error msg: \n"; var_dump($vali->getLastErrorMsg());
-    		echo "error key: \n"; var_dump($vali->getLastMapKey());
+    	//error reply
+    	if ($empty) {
+    		JsonController::print_json([
+    			'success' => false,
+    			'status' => '200',
+    			'msg' => 'Der Posthandler hat die Anfrage nicht beantwortet.',
+    			'type' => 'modal',
+    			'subtype' => 'server-error',
+    		]);
     	}
-    	echo "validated: \n"; var_dump($vali->getFiltered());
-    	//*/
-    	
-    	
-    	/*
-
-    	 
-    	
-    	
-    	
-    	 
-    	 'beleg' =>
-    	 array (size=1)
-    	 'new_1' =>
-    	 array (size=2)
-    	 'datum' => string '' (length=0)
-    	 'beschreibung' => string '' (length=0)
-    	 'ajax' => string '1' (length=1)//*/
-    	/*
-        echo '<pre>';
-        var_dump($routeInfo);
-        echo '</pre>';
-        echo '<pre>';
-        var_dump($_POST);
-        echo '</pre>';
-        echo '<pre>';
-        var_dump($_FILES);
-        echo '</pre>';//*/
-        
-    	echo 'Hier eigentlich schon tot, oder alles korrekt';
-        //TODO validate inputs
     }
 }
