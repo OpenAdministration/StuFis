@@ -846,12 +846,153 @@ class FileHandler {
 			"x-conference/x-cooltalk" => "ice",
 	];
 
+	/* ------ Constant substitution to configure uploader dynamically ------ */
+
+	/**
+	 * true|false store into DATABASE or FILESYSTEM
+	 * default: true - may overwritten by global constants
+	 * @var bool
+	 */
+	private $UPLOAD_TARGET_DATABASE;
+
+	/**
+	 * if DATABASE storage enabled , use filesystem as cache
+	 * default: false - may overwritten by global constants
+	 * @var bool
+	 */
+	private $UPLOAD_USE_DISK_CACHE;
+
+	/**
+	 * if there are multiple files on Upload and an error occures: FALSE -> upload files with no errors, TRUE upload no file
+	 * default: true - may overwritten by global constants
+	 * @var bool
+	 */
+	private $UPLOAD_MULTIFILE_BREAOK_ON_ERROR;
+
+	/**
+	 * how many files can be uploaded at once
+	 * default: 1 - may overwritten by global constants
+	 * @var integer
+	 */
+	private $UPLOAD_MAX_MULTIPLE_FILES;
+
+	///**
+	// * path to DATABASE filecache or FILESYSTEM storage - no '/' at the ends7
+	// * default: '' - may overwritten by global constants
+	// * @var string
+	// */
+	// static context
+	//private $UPLOAD_DISK_PATH;
+
+	/**
+	 * in bytes - also check DB BLOB max size and php upload size limit in php.ini
+	 * default: 41943215 - may overwritten by global constants
+	 * @var integer
+	 */
+	private $UPLOAD_MAX_SIZE;
+
+	/**
+	 * upload blacklist
+	 * comma (,) seperated list, 
+	 * regex possible
+	 * default: 'ph.*?,cgi,pl,pm,exe,com,bat,pif,cmd,src,asp,aspx,js,lnk,html,htm,forbidden' - may overwritten by global constants
+	 * @var string
+	 */
+	private $UPLOAD_PROHIBITED_EXTENSIONS;
+
+	/**
+	 * 0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
+	 * default : 1 - may overwritten by global constants
+	 * @var integer
+	 */
+	private $UPLOAD_MOD_XSENDFILE;
+
+	/**
+	 * upload whitelist
+	 * if defined only files with this extensions may be uploaded,
+	 * comma (,) seperated list, 
+	 * regex possible
+	 * default: .* - may overwritten by global constants
+	 * @var string
+	 */
+	private $UPLOAD_WHITELIST;
+
+	/**
+	 * overwrite global upload config
+	 * exception: upload_path has to be set global if filestorage or disk cache is enabled
+	 * 	possible keys:
+	 * 		UPLOAD_TARGET_DATABASE
+	 * 		UPLOAD_USE_DISK_CACHE
+	 * 		UPLOAD_MULTIFILE_BREAOK_ON_ERROR
+	 * 		UPLOAD_MAX_MULTIPLE_FILES
+	 * 		UPLOAD_MAX_SIZE
+	 * 		UPLOAD_PROHIBITED_EXTENSIONS
+	 * 		UPLOAD_MOD_XSENDFILE
+	 * 		UPLOAD_WHITELIST
+	 * 		
+	 * @param array $settings
+	 */
+	function initSettings($settings){
+		$this->UPLOAD_TARGET_DATABASE =
+			(isset($settings['UPLOAD_TARGET_DATABASE'])? 
+				$settings['UPLOAD_TARGET_DATABASE']
+				:(defined('UPLOAD_TARGET_DATABASE')? 
+					UPLOAD_TARGET_DATABASE
+					: true));
+		$this->UPLOAD_USE_DISK_CACHE =
+			(isset($settings['UPLOAD_USE_DISK_CACHE'])?
+				$settings['UPLOAD_USE_DISK_CACHE']
+				:(defined('UPLOAD_USE_DISK_CACHE')?
+					UPLOAD_USE_DISK_CACHE
+					: false));
+		$this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR =
+			(isset($settings['UPLOAD_MULTIFILE_BREAOK_ON_ERROR'])?
+				$settings['UPLOAD_MULTIFILE_BREAOK_ON_ERROR']
+				:(defined('UPLOAD_MULTIFILE_BREAOK_ON_ERROR')?
+					UPLOAD_MULTIFILE_BREAOK_ON_ERROR
+					: true));
+		$this->UPLOAD_MAX_MULTIPLE_FILES =
+			(isset($settings['UPLOAD_MAX_MULTIPLE_FILES'])?
+				$settings['UPLOAD_MAX_MULTIPLE_FILES']
+				:(defined('UPLOAD_MAX_MULTIPLE_FILES')?
+					UPLOAD_MAX_MULTIPLE_FILES
+					: 1));
+		$this->UPLOAD_MAX_SIZE =
+			(isset($settings['UPLOAD_MAX_SIZE'])?
+				$settings['UPLOAD_MAX_SIZE']
+				:(defined('UPLOAD_MAX_SIZE')?
+					UPLOAD_MAX_SIZE
+					: 41943215));
+		$this->UPLOAD_PROHIBITED_EXTENSIONS =
+			(isset($settings['UPLOAD_PROHIBITED_EXTENSIONS'])?
+				$settings['UPLOAD_PROHIBITED_EXTENSIONS']
+				:(defined('UPLOAD_PROHIBITED_EXTENSIONS')?
+					UPLOAD_PROHIBITED_EXTENSIONS
+					: 'ph.*?,cgi,pl,pm,exe,com,bat,pif,cmd,src,asp,aspx,js,lnk,html,htm,forbidden'));
+		$this->UPLOAD_MOD_XSENDFILE =
+			(isset($settings['UPLOAD_MOD_XSENDFILE'])?
+				$settings['UPLOAD_MOD_XSENDFILE']
+				:(defined('UPLOAD_MOD_XSENDFILE')?
+					UPLOAD_MOD_XSENDFILE
+					: 1));
+		$this->UPLOAD_WHITELIST =
+			(isset($settings['UPLOAD_WHITELIST'])?
+				$settings['UPLOAD_WHITELIST']
+				:(defined('UPLOAD_WHITELIST')?
+					UPLOAD_WHITELIST
+					: '.*'));
+	}
+
+	/* -------------------------------- */
+
 	/**
 	 * constructor
 	 * @param DBConnector $dbconnector
+	 * @param array $settings set local file handler settings
 	 */
-	function __construct($dbconnector){
+	function __construct($dbconnector, $settings = NULL){
 		$this->db = new DbFilePDO($dbconnector);
+		$this->initSettings($settings);
 	}
 
 	/**
@@ -954,7 +1095,7 @@ class FileHandler {
 	 * @param boolean $noinline disposition: false -> 'inline'|true -> 'attachment' 
 	 */
 	public function deliverFileData($file, $noinline = false){
-		if (!UPLOAD_TARGET_DATABASE){ // disk FILESYSTEM storage ------------
+		if (!$this->UPLOAD_TARGET_DATABASE){ // disk FILESYSTEM storage ------------
 			if (!file_exists(self::getDiskpathOfFile($file))){
 				error_log("FILE Error: File not found on disk. File Id: {$file->id} File Path: ". self::getDiskpathOfFile($file) );
 			} else {
@@ -976,7 +1117,7 @@ class FileHandler {
 				}
 			}
 		} else { // DATABASE storage ----------------
-			if (UPLOAD_USE_DISK_CACHE && file_exists(self::getDiskpathOfFile($file))){
+			if ($this->UPLOAD_USE_DISK_CACHE && file_exists(self::getDiskpathOfFile($file))){
 				header('Last-Modified: '.$file->getAddedOnDate()->format('D, d M Y H:i:s').' GMT', true);
 				if ($file->size) header('Content-Length: ' . $file->size );
 				if ($file->mime){
@@ -1002,7 +1143,7 @@ class FileHandler {
 				} else {
 					header("Content-Type: application/octet-stream");
 				}
-				if (UPLOAD_USE_DISK_CACHE){
+				if ($this->UPLOAD_USE_DISK_CACHE){
 					self::checkCreateDirectory(self::getDirpathOfFile($file));
 					file_put_contents(self::getDiskpathOfFile($file), $data);
 					// apache deliver
@@ -1038,14 +1179,14 @@ class FileHandler {
 	 * @return false|binary
 	 */
 	public function getFiledataBinary($file, $cache = true){
-		if (!UPLOAD_TARGET_DATABASE){ // disk FILESYSTEM storage ------------
+		if (!$this->UPLOAD_TARGET_DATABASE){ // disk FILESYSTEM storage ------------
 			if (!file_exists(self::getDiskpathOfFile($file))){
 				error_log("FILE Error: File not found on disk. File Id: {$file->id} File Path: ". self::getDiskpathOfFile($file) );
 			} else {
 				return file_get_contents(self::getDiskpathOfFile($file));
 			}
 		} else { // DATABASE storage ----------------
-			if (UPLOAD_USE_DISK_CACHE && file_exists(self::getDiskpathOfFile($file))){
+			if ($this->UPLOAD_USE_DISK_CACHE && file_exists(self::getDiskpathOfFile($file))){
 				return file_get_contents(self::getDiskpathOfFile($file));
 			} else {
 				$data = $this->db->getFiledataBinary($file->data);
@@ -1140,9 +1281,10 @@ class FileHandler {
 
 			$tmp_attach = NULL;
 			$files = array();
-			$forbidden_file_types = preg_replace( '/\s*[,;\|#]\s*/','|', UPLOAD_PROHIBITED_EXTENSIONS);
-
-			if (count($files) > UPLOAD_MAX_MULTIPLE_FILES){
+			$forbidden_file_types = preg_replace( '/\s*[,;\|#]\s*/','|', $this->UPLOAD_PROHIBITED_EXTENSIONS);
+			$file_whitelist = preg_replace( '/\s*[,;\|#]\s*/','|', isset($this->UPLOAD_WHITELIST)? $this->UPLOAD_WHITELIST : '.*');
+			
+			if (count($files) > $this->UPLOAD_MAX_MULTIPLE_FILES){
 				$result['error'][] = 'Too many simultaneous Files on Upload.';
 			} else {
 				// check files
@@ -1185,7 +1327,7 @@ class FileHandler {
 						continue;
 					}
 					// file size -------------------------------------------------
-					if ($_FILES[$base_key]['size'][$id] > UPLOAD_MAX_SIZE){
+					if ($_FILES[$base_key]['size'][$id] > $this->UPLOAD_MAX_SIZE){
 						$result['error'][] = 'Datei ist zu groß';
 						continue;
 					}
@@ -1232,6 +1374,10 @@ class FileHandler {
 						$result['error'][] = 'You are not allowed to upload files with this extension';
 						continue;
 					}
+					if (!preg_match("/" . $file_whitelist . "$/i", $ext1)){
+						$result['error'][] = 'You are not allowed to upload files with this extension';
+						continue;
+					}
 					if ($ext1 != ''){
 						$vali->V_filename($ext1);
 						$ext1 = $vali->getIsError() ? '' : $vali->getFiltered();
@@ -1251,6 +1397,11 @@ class FileHandler {
 							$continue = false;
 							foreach($ext2 as $ex){
 								if (preg_match("/" . $forbidden_file_types . "$/i", $ex)){
+									$result['error'][] = 'You are not allowed to upload files with this extension (different mime detected)';
+									$continue = true;
+									break;
+								}
+								if (!preg_match("/" . $file_whitelist . "$/i", $ex)){
 									$result['error'][] = 'You are not allowed to upload files with this extension (different mime detected)';
 									$continue = true;
 									break;
@@ -1279,7 +1430,7 @@ class FileHandler {
 					$files[$tmp_name] = $file;
 				}
 			}
-			if (UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0){
+			if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0){
 				$result['error'][] = 'Upload aborted due to an error.';
 			} else {
 				// check db for existing files
@@ -1290,7 +1441,7 @@ class FileHandler {
 						unset($files[$tmp_name]);
 					}
 				}
-				if (UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0){
+				if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0){
 					$result['error'][] = 'Upload aborted due to an error.';
 					$result['success'] = false;
 				} else {
@@ -1303,7 +1454,7 @@ class FileHandler {
 			return $result;
 		} else {
 			// FILESYSTEM storage ---------------
-			if (!UPLOAD_TARGET_DATABASE){
+			if (!$this->UPLOAD_TARGET_DATABASE){
 				foreach ( $result['fileinfo'] as $tmp_name => $file ){
 					$dir = self::getDirpathOfFile($file);
 					// create directory if not extists
@@ -1331,7 +1482,7 @@ class FileHandler {
 							unlink($uploadfile);
 							unset($result['fileinfo'][$tmp_name]);
 							$result['error'][] = "DB Error -> remove file";
-							if (UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
+							if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
 								$result['success'] = false;
 								break;
 							}
@@ -1339,7 +1490,7 @@ class FileHandler {
 					} else {
 						unset($result['fileinfo'][$tmp_name]);
 						$result['error'][] = "Couldn't move file";
-						if (UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
+						if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
 							$result['success'] = false;
 							break;
 						}
@@ -1366,7 +1517,7 @@ class FileHandler {
 					if ($dberror) {
 						unset($result['fileinfo'][$tmp_name]);
 						$result['error'][] = "DB Error";
-						if (UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
+						if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR){
 							$result['success'] = false;
 							break;
 						}
@@ -1381,9 +1532,9 @@ class FileHandler {
 	 * test if server supports xsendfile headers (mod_xsendfile)
 	 */
 	public static function hasModXSendfile() {
-		if (!UPLOAD_MOD_XSENDFILE){
+		if (!$this->UPLOAD_MOD_XSENDFILE){
 			return false;
-		} elseif (UPLOAD_MOD_XSENDFILE == 2){
+		} elseif ($this->UPLOAD_MOD_XSENDFILE == 2){
 			return true;
 		}
 		if (function_exists ( 'apache_get_modules' )){
