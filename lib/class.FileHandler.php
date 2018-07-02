@@ -1135,6 +1135,7 @@ class FileHandler {
 			isset($_FILES[$base_key]) &&
 			isset($_FILES[$base_key]['error']) &&
 			isset($_FILES[$base_key]['name']) &&
+			is_array($_FILES[$base_key]['error']) &&
 			count($_FILES[$base_key]['name']) > 0 ){
 
 			$tmp_attach = NULL;

@@ -478,7 +478,7 @@ class DbFilePDO
 			$this->_isError = false;
 			$result = $this->dbconnector->dbDelete(
 				"fileinfo",
-				["fileinfo.link" => $linkid]);
+				["link" => $linkid]);
 		} catch (Exception $e) {
 			$this->_isError = true;
 			$this->msgError = $e->getMessage();
@@ -533,11 +533,13 @@ class DbFilePDO
 			$stmt->bindParam(1, $fp, PDO::PARAM_LOB);
 		}
 		try {
+			$last_id = 0;
 			$this->db->beginTransaction();
 			$stmt->execute();
+			$last_id = $this->db->lastInsertId();
 			$this->db->commit();
 			fclose($fp);
-			return $this->lastInsertId();
+			return $last_id;
 		} catch (Exception $e){
 			$this->_isError = true;
 			$this->msgError = $e->getMessage();
