@@ -139,9 +139,9 @@ class DBConnector extends Singleton{
             "ok-kv" => "VARCHAR(127) NOT NULL DEFAULT ''",
         	"payed" => "VARCHAR(127) NOT NULL DEFAULT ''",
         	"rejected" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "zahlung_iban" => "VARCHAR(127) NOT NULL",
-            "zahlung_name" => "VARCHAR(127) NOT NULL",
-            "zahlung_vwzk" => "VARCHAR(127) NOT NULL",
+            "zahlung-iban" => "VARCHAR(127) NOT NULL",
+            "zahlung-name" => "VARCHAR(127) NOT NULL",
+            "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
             'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
         	'last_change_by' => "VARCHAR(127) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',
@@ -329,6 +329,12 @@ class DBConnector extends Singleton{
      * @param string $tables            table which should be used in FROM statement
      *                                  if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
      * @param array  $showColumns       if [] there will be all coulums (*) shown
+     * 									if keys are not numeric, key will be used as alias
+     * 									don't use same alias twice
+     * 									renaming of tables is possible
+     * 									 e.g.: newname => tablename.*, numerik keys(newname) will be ignored
+     * 									  will be: newname.col1, newname.col2 ... 
+     * 									
      * @param array  $fields            val no array [colname => val,...]: WHERE colname = val AND ...
      *
      *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value
@@ -371,14 +377,12 @@ class DBConnector extends Singleton{
         if (!is_array($tables)){
             $tables = [$tables];
         }
-    
+        
         foreach ($tables as $key => $table){
-            if (!isset($this->scheme[$table])){
-                ErrorHandler::_errorExit("Unkown table $table", 404);
-            }
-            $tables[$key] = self::$DB_PREFIX . $table;
+        	if (!isset($this->scheme[$table])){
+        		ErrorHandler::_errorExit("Unkown table $table", 404);
+        	}
         }
-    
     
         //check if content of fields and sort are valid
         $fields = array_intersect_key($fields, array_flip($this->validFields));
@@ -428,23 +432,47 @@ class DBConnector extends Singleton{
         //
         //prebuild sql
         //
-        if (!empty($showColumns)){
-            $cols = [];
-            foreach ($showColumns as $col){
-                if (in_array($col, $this->validFields)){
-                    if (strpos($col, ".")){
-                        $tmp = explode(".", $col);
-                        $cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]);
-                    }else{
-                        $cols[] = $this->quoteIdent($col);
-                    }
-                    
-                }
-                
-            }
-        }else{
-            $cols = ["*"];
+ 
+        if (empty($showColumns)){
+            $showColumns = ["*"];
         }
+        if (in_array('*', $showColumns)){
+        	unset($showColumns[array_search('*', $showColumns)]);
+        	foreach ($tables as $t){
+        		$showColumns[] = "$t.*";
+        	}
+        	foreach ($joins as $j){
+        		$showColumns[] = "{$j['table']}.*";
+        	}
+        }
+        $newShowColumns = [];
+        foreach ($showColumns as $alias => $col){
+        	if (!is_int($alias) && ($pos = strpos($col, ".*"))!==false){
+        		$tname = substr($col, 0, $pos);
+        		$rename = $alias;
+        		foreach ($this->scheme[$tname] as $colName => $dev_null){
+        			$newShowColumns[$rename.'.'.$colName] = $tname.'.'.$colName;
+        		}
+        	} else {
+        		$newShowColumns[$alias] = $col;
+        	}
+        }
+        
+        $cols = [];
+        foreach ($newShowColumns as $alias => $col){
+        	if (in_array($col, $this->validFields)){
+        		$as = (!is_int($alias))? " as `$alias`":'';
+        		if (strpos($col, ".")){
+        			$tmp = explode(".", $col);
+        			$cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]) . $as;
+        		}else{
+        			$cols[] = $this->quoteIdent($col).$as;
+        		}
+        
+        	}
+        
+        }
+
         $c = [];
         $vals = [];
         foreach ($fields as $k => $v){
@@ -507,8 +535,11 @@ class DBConnector extends Singleton{
                 $o[] = $this->quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
         }
         
+        foreach ($tables as $key => $table){
+        	$tables[$key] = self::$DB_PREFIX . $table;
+        }
         
-        $sql = PHP_EOL . "SELECT " . implode(",", $cols) . PHP_EOL . "FROM " . implode(",", $tables);
+        $sql = PHP_EOL . "SELECT " . implode(",".PHP_EOL, $cols) . PHP_EOL . "FROM " . implode(",".PHP_EOL, $tables);
         if (count($j) > 0){
             $sql .= " " . implode(" ", $j) . " ";
         }
