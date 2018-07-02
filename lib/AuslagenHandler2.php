@@ -184,6 +184,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		"zahlung-iban" => '',
 		"zahlung-name" => '',
 		"zahlung-vwzk" => '',
+		'kv-ok' => '',
+		'hv-ok' => '',
 	];
 	
 	/**
@@ -854,7 +856,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//changed ------
 		foreach ($changed_belege as $kb => $b){
 			$fileIdx = 'beleg_'.$kb;
-			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
+			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
 				$beleg_file_map[$kb] = [
 					'file' => $fileIdx,
 					'link' => $b['id'],
@@ -887,7 +889,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$db_beleg['id'] = $idd;
 			$map_new_beleg_beleg_idx[$kb] = $idd;
 			$fileIdx = 'beleg_'.$kb;
-			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
+			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
 				$beleg_file_map[$kb] = [
 					'file' => $fileIdx,
 					'link' => $idd,
@@ -1211,7 +1213,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     				'</span>';
     		} else {
     			if ($editable){
-    				$file_form = $this->templater->getFileForm("files[beleg_{$beleg['id']}]", 0, 0, "Datei...", "", []);
+    				$file_form = $this->templater->getFileForm("files[beleg_{$beleg['id']}][]", 0, 0, "Datei...", "", []);
     			} else {
     				$file_form = '<span>Keine Datei verknüpft.</span>';
     			}

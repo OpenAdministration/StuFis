@@ -39,12 +39,12 @@
 		$_bt.find('.beleg-nr').prepend('N'+add_beleg_counter);
 		//set input names
 			//beleg-date
-			$_bt.find('.beleg-date input')[0].name = "beleg[new_"+add_beleg_counter+"][datum]";
+			$_bt.find('.beleg-date input')[0].name = "belege[new_"+add_beleg_counter+"][datum]";
 			// beleg-file
-			$_bt.find('.beleg-file').html('<div class="col-xs-0 form-group"><div class="single-file-container"><input class="form-control single-file" type="file" name="beleg[42][file]"></div></div>');
-			$_bt.find('.beleg-file input')[0].name = "beleg_new_"+add_beleg_counter;
+			$_bt.find('.beleg-file').html('<div class="col-xs-0 form-group"><div class="single-file-container"><input class="form-control single-file" type="file" name="belege[42][file]"></div></div>');
+			$_bt.find('.beleg-file input')[0].name = "beleg_new_"+add_beleg_counter+'[0]';
 			//beschreibung
-			$_bt.find('.beleg-desc textarea')[0].name = "beleg[new_"+add_beleg_counter+"][beschreibung]";
+			$_bt.find('.beleg-desc textarea')[0].name = "belege[new_"+add_beleg_counter+"][beschreibung]";
 		//add delete handler
 		$_bt.find('.beleg-nr .delete-row').on('click', remove_beleg);
 		//append posten handling
@@ -135,9 +135,9 @@
 		$new.find('input').on('input', function(){ update_posten_counter($old.closest('.posten-inner-list')); });
 		//update input names
 		var beleg_id = $old.closest('.beleg-container')[0].dataset.id;
-		$new.find('.posten-in input')[0].name = "beleg["+beleg_id+"][posten][new_"+add_posten_counter+"][in]";
-		$new.find('.posten-out input')[0].name = "beleg["+beleg_id+"][posten][new_"+add_posten_counter+"][out]";
-		$new.find('.projekt-posten-select input')[0].name = "beleg["+beleg_id+"][posten][new_"+add_posten_counter+"][projekt-posten]";
+		$new.find('.posten-in input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][in]";
+		$new.find('.posten-out input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][out]";
+		$new.find('.projekt-posten-select input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][projekt-posten]";
 		//append new to inner list
 		$new.insertBefore($old);
 		// set focus to new
@@ -226,7 +226,7 @@
 	$(document).ready(function(){
 		$('.beleg-table .beleg-container .beleg-file input').each(function(i, e){
 			//update name
-			e.name = (e.name+'').replace(/^(files)(\[)(.*)(\])$/, `$3`);
+			e.name = (e.name+'').replace(/^(files)(\[)(.*)(\])(\[\])$/, `$3$5`);
 		});
 		$('.beleg-table .add-belege .btn').on( 'click', add_beleg);
 		$('.beleg-table .beleg-container .beleg-nr .delete-row').on( 'click', remove_beleg);

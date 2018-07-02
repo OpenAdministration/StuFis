@@ -662,6 +662,11 @@ button.btn.btn-arrow-left {
 	margin-top: -10px;
 	margin-bottom: 0px;
 }
+.beleg-table .posten-entry .posten-in .vali-error-msg,
+.beleg-table .posten-entry .posten-out .vali-error-msg {
+	display: table-row;
+}
+
 .bt-dark {
 	border-top: 2px solid #777;
 }
