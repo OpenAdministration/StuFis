@@ -402,12 +402,20 @@ class HTMLPageRenderer{
         	"<div class='default-content'>Die Seite wird gleich automatisch neu geladen.<div class='msg'></div></div><div class='js-content'></div>",
         	NULL,
         	NULL,
-        	true
+        	'danger'
+        );
+        $this->buildModal(
+        	"server-success",
+        	"<div class='default-head'>Request erfolgreich.</div><div class='js-head'></div>",
+        	"<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
+        	NULL,
+        	NULL,
+        	'success'
         );
     }
     
     private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){
-        if ($danger){
+        if ($danger=='danger'){
             $buttonType1 = "primary";
             $buttonType2 = "danger";
         }else{
@@ -420,7 +428,8 @@ class HTMLPageRenderer{
              aria-labelledby='<?= $id ?>-label'>
             <div class='modal-dialog' role='document'>
                 <div class='modal-content'>
-                    <div class='modal-header<?= ($danger)? " btn-danger' style='border-top-left-radius: 5px; border-top-right-radius: 5px;":'' ?>'>
+                    <div class='modal-header<?= 
+                    	(($danger)? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;":'') ?>'>
                         <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
                                     aria-hidden='true'>&times;</span>
                         </button>
