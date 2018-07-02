@@ -228,6 +228,28 @@
 			//update name
 			e.name = (e.name+'').replace(/^(files)(\[)(.*)(\])(\[\])$/, `$3$5`);
 		});
+		$('.beleg-table .beleg-container .beleg-file .file-delete').on('click', function(){
+			var $e = $(this);
+			var $f = $e.closest('form');
+			var action = $f.attr("action");
+			action = action.substring(0, action.lastIndexOf('/')) + '/filedelete'
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'fid': $e.closest('.beleg-file')[0].dataset.id,
+				'auslagen-id': $f.children('input[name="auslagen-id"]').val(),
+				'projekt-id': $f.children('input[name="projekt-id"]').val(),
+				'etag': $f.children('input[name="etag"]').val()
+			};
+			jQuery.ajax({
+		        url: action,
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
 		$('.state-links .state-changes-now').on('click', function(ev){
 			var $e = $(this);
 			var $f = $e.closest('.state-links');

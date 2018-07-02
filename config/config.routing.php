@@ -169,7 +169,7 @@ $routing = [
                             'action' => 'auslagen',
                             'children' => [
                                 [
-                                    'path' => '(updatecreate)',
+                                    'path' => '(updatecreate|filedelete|state)',
                                     'type' => 'pattern',
                                     'param' => 'mfunction',
                                     'match' => 0,

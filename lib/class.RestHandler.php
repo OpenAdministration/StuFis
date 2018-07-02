@@ -264,6 +264,26 @@ class RestHandler extends JsonController{
     				],
     			];
     			$vali->validateMap($_POST, $validator_map, true);
+    		case 'filedelete':
+    			$validator_map = [
+    				'etag' => ['regex',
+    					'pattern' => '/^(0|([a-f0-9]){32})$/',
+    					'error' => 'Ungültige Version.'
+    				],
+    				'projekt-id' => ['integer',
+    					'min' => '1',
+    					'error' => 'Ungültige Projekt ID.'
+    				],
+    				'auslagen-id' => ['integer',
+    					'min' => '1',
+    					'error' => 'Ungültige Auslagen ID.'
+    				],
+    				'fid' => ['integer',
+    					'min' => '1',
+    					'error' => 'Ungültige Datei ID.'
+    				],
+    			];
+    			break;
     		case 'state':
     			$auslagen_states = [];
     			$validator_map = [

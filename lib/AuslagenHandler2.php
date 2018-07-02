@@ -723,6 +723,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					$this->error = 'Die Auslagenerstattng kann nicht verändert werden.';
 				}
 			} break;
+			case 'filedelete': {
+				if ($this->stateInfo['editable']){
+					$this->post_filedelete();
+				} else {
+					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Datei nicht gelöcht.';
+				}
+			} break;
 			case 'state': {
 				if ($this->stateInfo['project-editable'] && $this->auslagen_id){
 					$this->post_statechange();
@@ -757,6 +764,55 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			];
 		}
 		
+	}
+	
+	//handle file delete request
+	private function post_filedelete(){
+		if ($this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']) {
+				$this->error = '<p>Die Prüfsumme der Auslagenerstattung stimmt nicht mit der gesendeten überein.</p>'.
+					'<p>Die Auslagenerstattung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>'.
+					'<p>Die übertragene Version liegt '.($this->auslagen_data['version'] - $this->routeInfo['validated']['version']).' Version(en) zurück.</p>';
+			return;
+		}
+		//fill data
+		$newInfo = $this->stateInfo;
+		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
+		$newInfo['user'] = AuthHandler::getInstance()->getUsername();
+		
+		//check fileid exists
+		$found_file_id = false;
+		foreach($this->auslagen_data['belege'] as $b){
+			if ($b['file_id'] == $this->routeInfo['validated']['fid']){
+				$found_file_id = $b;
+				break;
+			}
+		}
+		if (!$found_file_id){
+			$this->error = 'Die Angegebene Datei konnte nicht gefunden werden.';
+			return;
+		}
+		//delete file by link id
+		$fh = new FileHandler($this->db);
+		$fh->deleteFilesByLinkId($found_file_id['id']);
+		//remove id from auslagen, + update changed
+		$this->db->dbUpdate('belege', ['id' => $found_file_id['id']], ['file_id' => NULL]);
+		$this->db->dbUpdate('auslagen', ['id' => $this->auslagen_data['id']], 
+			[
+				"last_change" => "{$newInfo['date']}",
+				"last_change_by" => "{$newInfo['user']}",
+				"version" => intval($this->auslagen_data['version']) + 1,
+				"etag" => generateRandomString(16),
+			]
+		);
+		$this->json_result = [
+			'success' => true,
+			'msg' => "Die Datei '{$found_file_id['file']['filename']}.{$found_file_id['file']['fileextension']}' wurde erfolgreich entfernt.",
+			'reload' => 2000,
+			'type' => 'modal',
+			'subtype' => 'server-success',
+			'headline' => 'Eingaben gespeichert',
+			'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'].'/edit',
+		];
 	}
 	private function post_createupdate(){
 		//auslage =============================================
