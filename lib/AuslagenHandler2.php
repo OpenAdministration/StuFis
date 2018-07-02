@@ -723,6 +723,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					$this->error = 'Die Auslagenerstattng kann nicht verändert werden.';
 				}
 			} break;
+			case 'state': {
+				if ($this->stateInfo['project-editable'] && $this->auslagen_id){
+					$this->post_statechange();
+				} else {
+					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Der status wurde nicht geändert.';
+				}
+			} break;
 			default: {
 				$this->error = 'Unknown Action.';
 			} break;
@@ -733,6 +740,24 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	//---------------------------------------------------------
 	/* ---------- JSON FUNCTIONS ------------ */
 	
+	private function post_statechange() {
+		$newState = $this->routeInfo['validated']['state'];
+		if (!$this->state_change_possible($newState)||
+			!$this->state_change($newState, $this->routeInfo['validated']['etag'])){
+			$this->error = 'Diese Statusänderung ist momentan nicht möglich.';
+		} else {
+			$this->json_result = [
+				'success' => true,
+				'msg' => "Status geändert",
+				'reload' => 2000,
+				'type' => 'modal',
+				'subtype' => 'server-success',
+				'headline' => 'Erfolgreich',
+				'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+			];
+		}
+		
+	}
 	private function post_createupdate(){
 		//auslage =============================================
 		//check etag if no new auslage
@@ -1114,6 +1139,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		<?php } ?>
 		</form>
         <?php
+        if ($this->routeInfo['action'] != 'edit'){
+        	$this->render_state_links();
+        }
         return;
     }
 	
@@ -1389,6 +1417,48 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					</div>
     			</div>';
 		return $out;
+	}
+	
+	public function render_state_links(){ 
+		?> 
+		<label for="projekt-well">Links</label>
+        <div id='projekt-well' class="well state-links">
+        	<input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
+        	<input type="hidden" name="auslagen-id" value="<?= ($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id; ?>">
+        	<input type="hidden" name="etag" value="<?= ($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']; ?>">
+			<input type="hidden" name="action" value="<?= URIBASE ?>index.php/rest/forms/auslagen/state">
+		<?php if (isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']) { ?>
+			<div class="col-xs-12 form-group">
+				<a class="btn btn-success" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>">Bearbeiten</a>
+			</div>
+			<div class="clearfix"></div>
+		<?php } 
+		if ($this->auslagen_id){
+			foreach(self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
+				if ($k == 'revocation')	continue;
+				if (!$this->state_change_possible($k)) continue;
+				
+			?>
+				<div class="col-xs-12 form-group">
+					<button type="button" class="btn btn-default state-changes-now" title="<?= self::$states[$k][0] ?>" data-newstate="<?= $k ?>"><?= self::$states[$k][1] ?></button>
+				</div>
+				<div class="clearfix"></div>
+			<?php
+			}
+			foreach(self::$subStates as $k => $info){
+				if ($this->state_change_possible($k)){
+				?>
+					<div class="col-xs-12 form-group">
+						<button type="button" class="btn btn-default state-changes-now" title="<?= $info[3] ?>" data-newstate="<?= $k ?>"><?= $info[2] ?></button>
+					</div>
+					<div class="clearfix"></div>
+				<?php
+				}
+			}
+		}
+		?>
+		</div>
+	<?php 
 	}
 	
 	//---------------------------------------------------------
