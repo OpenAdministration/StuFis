@@ -1401,7 +1401,110 @@ var parseData = function (data, reload) {
 	return r;
 };
 
-//moment.locale('de');
+function defaultPostModalHandler(values){
+	var animate_delete = function($elm, callback){
+		$elm.animate({ height: 0, opacity: 0 }, 500,function(){ 
+			$(this).remove();
+			if (typeof(callback) == 'function'){
+				callback();
+			}
+		});
+	};
+	//remove wait modal
+	$("#please-wait-dlg").modal("hide");
+	
+	//remove old error hints
+	animate_delete($('.vali-error-msg'));
+	$('.vali-error-hint').removeClass('has-error').removeClass('vali-error-hint');
+	
+	//parse values / backport
+	if (typeof(values) == 'object'){
+		// message array
+		if (values.hasOwnProperty('msg') && !values.hasOwnProperty('msgs')){
+			values['msgs'] = [values.msg];
+		}
+	}
+	
+	//reload function
+	if (values.hasOwnProperty('reload') && (typeof(values.reload)=='integer'|| typeof(values.reload)=='number')){
+		if (values.hasOwnProperty('redirect')) {
+			setTimeout(function() { window.location.replace(values.redirect); }, values.reload);
+		} else if(values.hasOwnProperty('target')){
+			setTimeout(function() { window.location.replace(values.target); }, values.reload);
+		} else {
+			setTimeout(function() { window.location.replace(window.location); }, values.reload);
+		}
+	}
+	
+	//validatr + message boxes
+	if (typeof(values) == 'object' && values.hasOwnProperty('success')){
+		//form validation - error after ajax
+		if (!values.success && values.hasOwnProperty('type') && values.type=='validator' && values.hasOwnProperty('field')){
+    		//find form element
+    		var $t = $('[name="'+values.field+'"]');
+    		if ($t.length == 1){
+    			//add has-error class
+    			if ($t.closest('.form-group').is(':visible')){
+    				$t.closest('.form-group').addClass('has-error').addClass('vali-error-hint');
+    			}
+    			//add error description
+    			$t.closest('.form-group').append('<small class="vali-error-msg error text-danger"><strong>'+values.msg+'</strong></small>');
+    		} else {
+    			console.log($t);
+    		}
+    		return true;
+    	//message boxes
+		} else if (values.hasOwnProperty('type') && values.type=='modal' && values.hasOwnProperty('subtype')) {
+			$("#"+values.subtype+"-dlg .default-head").hide();
+			$("#"+values.subtype+"-dlg .js-head").show();
+			$("#"+values.subtype+"-dlg .default-content").hide();
+			$("#"+values.subtype+"-dlg .js-content").show();
+			if (values.hasOwnProperty('headline')){
+				$("#"+values.subtype+"-dlg .js-head").html(values.headline);
+			} else {
+				$("#"+values.subtype+"-dlg .js-head").html('Warnung');
+			}
+			$("#"+values.subtype+"-dlg .js-content").html(values.msg);
+			$("#"+values.subtype+"-dlg").modal("show");
+			return true;
+		} else if (values.hasOwnProperty('type') && values.type=='modal'){
+			if (values.hasOwnProperty('headline')){
+				$("#server-message-label").html(values.headline);
+			} else {
+				$("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+			}
+			if (values.hasOwnProperty('msg') && !values.hasOwnProperty('dump')){
+				$("#server-message-content").html(values.msg);
+			} else if (values.hasOwnProperty('msgs') && !values.hasOwnProperty('dump')){
+				var out = '';
+				for (var i = 0; i < values.msgs.length; i++){
+					out += '<p>'+values.msgs[i]+'</p>';
+				}
+				$("#server-message-content").html(out);
+			} else {
+				$("#server-message-content").html(
+                	'<pre>'+
+                    	JSON.stringify(values, null, 4)+
+                	'</pre>'
+                );
+                $("#server-message-dlg").modal("show");
+			}
+			return true;
+		}
+	}
+	
+	if (typeof(values) == "string") {
+        $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+        var $smc = $("#server-message-content");
+        $smc.empty();
+        $("#server-message-content").empty();
+        var $smcp = $('<pre>').appendTo($smc).html(values);
+        $("#server-message-dlg").modal("show");
+        return true;
+    }
+	
+	return false;
+}
 
 function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
 	if ((jqXHR.status == 403 || jqXHR.status == 404) && 
@@ -1431,7 +1534,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
     var $smc = $("#server-message-content");
     $smc.empty();
     $("#server-message-content").empty();
-    var $smcp = $('<pre>').appendTo($smc).text(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
+    var $smcp = $('<pre>').appendTo($smc).html(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
     $("#server-message-dlg").modal("show");
 };
 
@@ -1523,13 +1626,10 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
         type: "POST"
     })
         .done(function (values, status, req) {
-        	//remove wait modal
-        	$("#please-wait-dlg").modal("hide");
-        	
-        	//remove old error hints
-    		animate_delete($('.vali-error-msg'));
-    		$('.vali-error-hint').removeClass('has-error').removeClass('vali-error-hint');
-    		
+        	if (defaultPostModalHandler(values)){
+        		return;
+        	}
+        
     		//parse values / backport
         	if (typeof(values) == 'object'){
         		// message array
@@ -1538,81 +1638,7 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
         		}
         	}
         	
-        	//reload function
-        	if (values.hasOwnProperty('reload') && (typeof(values.reload)=='integer'|| typeof(values.reload)=='number')){
-        		setTimeout(function() { window.location.replace(window.location); }, values.reload);
-        	}
-        	
-        	//validatr + message boxes
-        	if (typeof(values) == 'object' && values.hasOwnProperty('success')){
-        		//form validation - error after ajax
-        		if (!values.success && values.hasOwnProperty('type') && values.type=='validator' && values.hasOwnProperty('field')){
-	        		//find form element
-	        		var $t = $('[name="'+values.field+'"]');
-	        		if ($t.length == 1){
-	        			//add has-error class
-	        			if ($t.closest('.form-group').is(':visible')){
-	        				$t.closest('.form-group').addClass('has-error').addClass('vali-error-hint');
-	        			}
-	        			//add error description
-	        			$t.closest('.form-group').append('<small class="vali-error-msg error text-danger"><strong>'+values.msg+'</strong></small>');
-	        		} else {
-	        			console.log($t);
-	        		}
-	        		return;
-	        	//message boxes
-        		} else if (!values.success && values.hasOwnProperty('type') && values.type=='modal' && values.hasOwnProperty('subtype')) {
-        			$("#"+values.subtype+"-dlg .default-head").hide();
-        			$("#"+values.subtype+"-dlg .js-head").show();
-        			$("#"+values.subtype+"-dlg .default-content").hide();
-        			$("#"+values.subtype+"-dlg .js-content").show();
-        			if (values.hasOwnProperty('headline')){
-        				$("#"+values.subtype+"-dlg .js-head").html(values.headline);
-        			} else {
-        				$("#"+values.subtype+"-dlg .js-head").html('Warnung');
-        			}
-        			$("#"+values.subtype+"-dlg .js-content").html(values.msg);
-        			$("#"+values.subtype+"-dlg").modal("show");
-        			return;
-        		} else if (!values.success && values.hasOwnProperty('type') && values.type=='modal'){
-        			if (values.hasOwnProperty('headline')){
-        				$("#server-message-label").html(values.headline);
-        			} else {
-        				$("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
-        			}
-        			if (values.hasOwnProperty('msg') && !values.hasOwnProperty('dump')){
-        				$("#server-message-content").html(values.msg);
-        			} else if (values.hasOwnProperty('msgs') && !values.hasOwnProperty('dump')){
-        				var out = '';
-        				for (var i = 0; i < values.msgs.length; i++){
-        					out += '<p>'+values.msgs[i]+'</p>';
-        				}
-        				$("#server-message-content").html(out);
-        			} else {
-        				$("#server-message-content").html(
-                        	'<pre>'+
-                            	JSON.stringify(values, null, 4)+
-                        	'</pre>'
-                        );
-                        $("#server-message-dlg").modal("show");
-        			}
-        			return;
-        		}
-        	}
-        		
-        		
-        	
-        	
-        	
-            if (typeof(values) == "string") {
-                $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
-                var $smc = $("#server-message-content");
-                $smc.empty();
-                $("#server-message-content").empty();
-                var $smcp = $('<pre>').appendTo($smc).text(values);
-                $("#server-message-dlg").modal("show");
-                return;
-            }
+        
             var txt;
             var txtHeadline;
             if (values.ret) {
