@@ -462,7 +462,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//state / substate
 		if (isset(self::$subStates[$s])){
 			$out['substate'] = $s;
-			$out['state'] = self::$subStates['state'][0];
+			$out['state'] = self::$subStates[$s][0];
 		} elseif (isset(self::$states[$s])) {
 			$out['state'] = $s;
 		} else {
@@ -570,6 +570,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$this->auslagen_id = $routeInfo['aid'];
 			if (!$this->getDbAuslagen()) return;
 			if (!$this->getDbBelegePostenFiles()) return;
+			
 			//current state
 			$this->stateFromAuslagenData();
 		} else {
@@ -598,7 +599,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		if (!$this->stateInfo['project-editable']){
 			if (   $routeInfo['action']	=='create'
 				|| $routeInfo['action']	=='edit'
-				|| $routeInfo['action']	=='post'){
+				|| $routeInfo['action']	=='post' ){
 				$this->error = 'Für das aktuelle Projekt sind (momentan) keine Auslagenerstattungen möglich.';
 				return;
 			}
@@ -616,6 +617,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				break;
 			};
 			case 'view': {
+				$this->stateInfo['editable_link'] = $this->stateInfo['editable'];
+				$this->stateInfo['editable'] = false;
 				break;
 			};
 			case 'post': {
@@ -656,7 +659,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			return false;
 		}
 		// get auslagen liste
-		$res = $this->db->dbFetchAll(['auslagen'], ['auslagen.id', 'auslagen.name_suffix', 'auslagen.status'], ["auslagen.projekt_id" => $this->projekt_id], [], ['auslagen.id' => true]);
+		$res = $this->db->dbFetchAll(['auslagen'], ['auslagen.id', 'auslagen.name_suffix', 'auslagen.state', 'auslagen.created'], ["auslagen.projekt_id" => $this->projekt_id], [], ['auslagen.id' => true]);
 		if (!empty($res)){
 			$aus = [];
 			foreach ($res as $row){
@@ -673,11 +676,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param boolean $renderError
 	 */
 	private function getDbAuslagen(){
-		$res = $this->db->dbFetchAll("auslagen", [], ["auslagen.id" => $this->auslagen_id, "auslagen.projekt_id" => $this->projekt_id],
+		$res = $this->db->dbFetchAll("auslagen", [ 
+ 			'auslagen.*', 
+			'projekte' => 'projekte.*',
+		], ["auslagen.id" => $this->auslagen_id, "auslagen.projekt_id" => $this->projekt_id],
 			[
 				["type" => "inner", "table" => "projekte", "on" => [["projekte.id", "auslagen.projekt_id"]]],
 			]);
 		if (!empty($res)){
+			$out = [];
 			$this->auslagen_data = $res[0];
 			return true;
 		} else {
@@ -687,20 +694,25 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	}
 	
 	private function getDbBelegePostenFiles(){
-		$res = $this->db->dbFetchAll("belege", [], ["belege.auslagen_id" => $this->auslagen_id],
+		$res = $this->db->dbFetchAll("belege", [
+			'belege' => 'belege.*',
+			'beleg_posten' => 'beleg_posten.*',
+			'fileinfo' => 'fileinfo.*',
+			'projektposten' => 'projektposten.*',
+		], ["belege.auslagen_id" => $this->auslagen_id],
 			[
 				["type" => "left", "table" => "beleg_posten", "on" => [["belege.id", "beleg_posten.beleg_id"]]],
 				["type" => "left", "table" => "fileinfo", "on" => [["fileinfo.id", "belege.file_id"]]],
 				["type" => "left", "table" => "projektposten", "on" => [["beleg_posten.projekt_posten_id", "projektposten.id"]]],
 			], ["belege.id" => true, "belege.short" => true, "beleg_posten.id" => true, "beleg_posten.short" => true, "projektposten.name" => true]);
+		$belege = [];
 		if (!empty($res)){
-			$belege = [];
 			$last_beleg = -1;
 			$last_posten = -1;
 			foreach ($res as $row){
 				//belege
 				if ($last_beleg != $row['belege.id']){
-					$last_beleg == $row['belege.id'];
+					$last_beleg = $row['belege.id'];
 					$belege[$last_beleg] = [
 						'id' => $row['belege.id'],
 						'short' => $row['belege.short'],
@@ -724,15 +736,16 @@ class AuslagenHandler2 extends FormHandlerInterface{
 							'mime' => $row['fileinfo.mime'],
 							'encoding' => $row['fileinfo.encoding'],
 							'data' => NULL,
-						];
+						];$this->stateInfo['editable'] = false;
 					}
 				}
 				//posten
 				if ($last_posten != $row['beleg_posten.id']){
-					$last_posten = $row['beleg_posten.projekt_posten_id'];
+					$last_posten = $row['beleg_posten.id'];
 					if ($last_posten){
 						$belege[$last_beleg]['posten'][$last_posten] = [
 							'id' => $row['beleg_posten.id'],
+							'beleg_id' => $row['beleg_posten.beleg_id'],
 							'short' => $row['beleg_posten.short'],
 							'projekt_posten_id' => $row['projektposten.id'],
 							'projekt.posten_name' => $row['projektposten.name'],
@@ -742,8 +755,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					}
 				}
 			}
-			$this->auslagen_data['belege'] = $belege;
 		}
+		$this->auslagen_data['belege'] = $belege;
 		return true;
 	}
 	
@@ -798,6 +811,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			} break;
 		}
 		if ($this->error) $this->_renderPostError();
+		else {
+			$this->_renderPostResult();
+		}
 	}
 	
 	//---------------------------------------------------------
@@ -870,6 +886,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'].'/edit',
 		];
 	}
+	
+	//handle create or update auslage
 	private function post_createupdate(){
 		//auslage =============================================
 		//check etag if no new auslage
@@ -912,7 +930,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						$changed_belege_flag = true;
 					}
 				}
-				foreach ($b['posten'] as $kp => $p){
+				if (isset($b['posten'])) foreach ($b['posten'] as $kp => $p){
 					if (strpos($kp, 'new_')!==false){
 						$changed_posten_flag = true;
 						$new_posten[$kp] = ['posten' => $p, 'beleg_id' => $kb];
@@ -922,7 +940,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					} else {
 						$op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
 						$changed_posten[$kb] = $op;
-						if ($op['in'] != $p['in'] || $op['out'] != $p['out'] ){
+						if ($op['einnahmen'] != $p['in'] || $op['ausgaben'] != $p['out'] ){
 							$changed_posten_flag = true;
 						}
 					}
@@ -962,7 +980,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"version" => intval($this->auslagen_data['version']) + 1,
 			"etag" => generateRandomString(16),
 		];
-		echo '<pre>'; var_dump($db_auslage); echo '</pre>';
 		//insert/update in db
 		if ($this->auslagen_data['id']){
 			$where = [
@@ -1074,8 +1091,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		foreach ($beleg_file_map as $fileInfo){
 			$file_id = 0;
 			//handle file upload
-			$res = $fh->upload($fileInfo['link'], $fileInfo['file']);
-			
+			$res = $fh->upload(intval($fileInfo['link']), $fileInfo['file']);
 			if (count($res['error']) > 0) {
 				$msg = '';
 				foreach ($res['error'] as $e){
@@ -1091,9 +1107,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			}
 			//update beleg -> set file link
 			if ($file_id){
-				$this->db->dbUpdate('belege', ['id' => $fileInfo], ['file_id' => $file_id]);
+				$this->db->dbUpdate('belege', ['id' => $fileInfo['link']], ['file_id' => $file_id]);
 			}
 		}
+		$this->json_result = [
+			'success' => true,
+			'msg' => 'Die Änderungen wurden erfolgreich übernommen.<br>Seite wird aktulisiert...',
+			'reload' => 2000,
+			'type' => 'modal',
+			'subtype' => 'server-success',
+			'headline' => 'Eingaben gespeichert',
+			'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+		];
 	}
 	
 	//---------------------------------------------------------
@@ -1144,7 +1169,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             	<?= $this->templater->generateListGroup(
 	            	[
 	            		[	'html' => '<i class="fa fa-fw fa-chain"></i>&nbsp;'.$this->projekt_data['name'], 
-	            	 	'attr' => ['href' => URIBASE.'projekt/'.$this->projekt_id ]	],
+	            	 	'attr' => ['href' => URIBASE.'projekt/'.$this->projekt_id, 'style' => 'color: #99000b;' ]	],
 	            	],
 	            	'Zugehöriges Projekt', false, $show_genemigung_state, '', 'a'); ?>
 	            <?php 
@@ -1153,10 +1178,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	    				echo '<div  class="well" style="margin-bottom: 0px; background-color: white;"><span>Keine</span></div>';
 		            } else {
 		            	$tmpList = [];
+		            	$show_creator = $this->checkPermissionByMap(self::$groups['stateless']['view_creator']);
 		            	foreach ($this->projekt_data['auslagen'] as $auslage){
+		            		$tmp_state = self::state2stateInfo($auslage['state']);
+		            		$created = self::state2stateInfo('draft;'.$auslage['created']);
+		            		$name = $auslage['id'].' - '.($auslage['name_suffix']?$auslage['name_suffix']:'(Ohne Namen)') . '<strong><small style="margin-left: 10px;">'.$created['date'].'</small>' . (($show_creator)?'<small style="margin-left: 10px;">['.$created['user'].']</small>':'').'</strong>';
+		            		
 		            		$tmpList[] = [
-		            			'html' => $auslage['name_suffix'].'<span class="label label-info pull-right"><span>Status: </span><span>'.self::$states[$auslage['state']][0].'</span></span>',
-		            			'attr' => ['href' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$auslage['id']],
+		            			'html' => $name.'<span class="label label-info pull-right"><span>Status: </span><span>'.self::$states[$tmp_state['state']][0].'</span></span>',
+		            			'attr' => ['href' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$auslage['id'],
+		            						'style' => 'color: #3099c2;' ],
+		            			
 		            		];
 		            	}
 		            	echo $this->templater->generateListGroup($tmpList,
@@ -1168,19 +1200,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	        	<label for="genehmigung">Auslage Status</label>
 	    		<div id='projekt-well' class="well">
 	            	<label for="genehmigung">Status</label>
-	            	<div style="padding-bottom: 10px;"><?= self::$states[$this->auslagen_data['state']][0];?></div>
+	            	<div class="col-xs-12 form-group">
+	            		<div style="padding-bottom: 10px;"><?= self::$states[$this->stateInfo['state']][0];?></div>
+	            	</div>
 	            	<label for="genehmigung">Original-Belege</label>
 	            	<?php 
-	            		if($this->auslagen_data['belege-ok']){
-	            			echo '<div class="" title="'.$this->auslagen_data['belege-ok'].'" style="padding-left: 10px; padding-bottom: 10px;"><i class="fa fa-fw fa-2x fa-check-square-o"></i> <strong style="line-height: 1.6em; height: 2em; vertical-align: top;"> eingereicht</strong></div>';
+	            		if($this->auslagen_data['ok-belege']){
+	            			echo '<div class="" title="'.$this->auslagen_data['ok-belege'].'" style="padding-left: 10px; padding-bottom: 10px;"><i class="fa fa-fw fa-2x fa-check-square-o"></i> <strong style="line-height: 1.6em; height: 2em; vertical-align: top;"> eingereicht</strong></div>';
 	            		} else {
 	            			echo '<div class="" style="padding-left: 10px; padding-bottom: 10px;"><i class="fa fa-fw fa-2x fa-square-o"></i> <strong style="line-height: 1.6em; height: 2em; vertical-align: top;"> nicht eingereicht</strong></div>';
 	            		}
 	            	?>
 	            	<label for="genehmigung">Genehmigung</label>
 	            	<br>
-		                <?= $this->templater->getTextForm("hv-ok", $this->auslagen_data['hv-ok']? $this->auslagen_data['hv-ok']:'ausstehend', 6, "HV", "HV", []) ?>
-		                <?= $this->templater->getTextForm("kv-ok", $this->auslagen_data['kv-ok']? $this->auslagen_data['kv-ok']:'ausstehend', 6, "KV", "KV", []) ?>
+		                <?= $this->templater->getTextForm("hv-ok", $this->auslagen_data['ok-hv']? $this->auslagen_data['ok-hv']:'ausstehend', 6, "HV", "HV", []) ?>
+		                <?= $this->templater->getTextForm("kv-ok", $this->auslagen_data['ok-kv']? $this->auslagen_data['ok-kv']:'ausstehend', 6, "KV", "KV", []) ?>
 		           <div class="clearfix"></div>
 		        </div>
 	        <?php } ?>
@@ -1197,8 +1231,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <div id='projekt-well' class="well">
             	<label>Name der Auslagenerstattung</label>
             	<?= $this->templater->getTextForm("auslagen-name", "", 12, "optional", "", [], 'Auslagenname') ?>
-	            <div class="clearfix"></div>
+	            
 	            <?php if($this->routeInfo['action'] != 'create'){ ?>
+	           		<div class="clearfix"></div>
 	            	<label>Erstellt</label>
 		            <div class="col-xs-12 form-group">
 		            	<?php
@@ -1206,30 +1241,36 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		            	$cr_split = explode(';', $cr);
 		            	echo date_create($cr_split[0])->format('d.m.Y H:i:s'); ?>
 		            </div>
-		            <?php if(self::checkPermissionByMap(self::$groups['stateless']['view_creator'])){ ?>
-		            	<label>Von</label>
-			            <div class="col-xs-12 form-group">
+		            <?php if($this->checkPermissionByMap(self::$groups['stateless']['view_creator'])){ ?>
+		            	<div class="clearfix"></div>
+		            	<div class="col-xs-12 form-group">
+		            		<label>Von</label>
 			            	<?= $cr_split[1] ?>
 			            </div>
 		        	<?php } ?>
+		        	<div class="clearfix"></div>
+	            	<label>Version</label>
+		            <div class="col-xs-12">
+		            	<?= $this->auslagen_data['version'] ?>
+		            </div>
 		        <?php } ?>
+		        
 	            <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
             <label for="zahlung">Zahlungsinformationen</label>
             <div id="zahlung" class="well">
-				<?= $this->templater->getTextForm("zahlung-name", $editable&&$this->routeInfo['action']!='create'?$this->auslagen_data['zahlung-name']:'', [12,12,6], "Name Zahlungsempfänger", "anderen Zahlungsempfänger Name (neu)", [], []) ?>
+				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "anderen Zahlungsempfänger Name (neu)", [], []) ?>
 				<?php // iban only show trimmed if not hv/kv important!
-	            	$iban_text = $editable&&$this->routeInfo['action']!='create'?$this->auslagen_data['zahlung-iban']:'';
+	            	$iban_text = $this->auslagen_data['zahlung-iban'];
 	            	if (!AuthHandler::getInstance()->hasGroup('HV,KV')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	} elseif ($iban_text != '') {
 	            		$iban_text = chunk_split($iban_text, 4, ' ');
 	            	}
-	            		
 				echo $this->templater->getTextForm("zahlung-iban", $iban_text, [12,12,6], "DE ...", "anderen Zahlungsempfänger IBAN (neu)") ?>
 				<div class='clearfix'></div>
-                <?= $this->templater->getTextForm("zahlung-vwzk", $editable&&$this->routeInfo['action']!='create'?$this->auslagen_data['zahlung-vwzk']:'', 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
                 <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
@@ -1343,14 +1384,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
     	$file_form = '';
     	if (!$hidden) {
     		if ($beleg['file_id']) {
-    			$file_form = '<span class="beleg-file" data-id="'.$beleg['file_id'].'">'.
-    				'<a href="'.URIBASE.'files/get/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'</a>'.
-    				'<div><small><span style="min-width: 50px; font-weight: bold;">Size: </span>'.
+    			$file_form = '<div class="beleg-file btn-default" style=" border: 1px solid #ddd; border-radius: 5px; padding: 5px 10px; position: relative;" data-id="'.$beleg['file_id'].'">'.
+    				'<a href="'.URIBASE.'files/get/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
+    				'<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>'.
+    				'<div><small><span style="min-width: 50px; display: inline-block; font-weight: bold;">Size: </span>'.
     				'<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.
-    				'<small><span style="min-width: 50px; font-weight: bold;">Mime: </span>'.
+    				'<small><span style="min-width: 50px; display: inline-block; margin-left: 10px; font-weight: bold;">Mime: </span>'.
     				'<span>'.$beleg['file']['mime'].'</span></small>'.
-    				'</div><button type="button" title="Löschen" class="file-delete btn btn-danger">X</button>'.
-    				'</span>';
+    				'</div>'.
+    				'</div>';
     		} else {
     			if ($editable){
     				$file_form = $this->templater->getFileForm("files[beleg_{$beleg['id']}][]", 0, 0, "Datei...", "", []);

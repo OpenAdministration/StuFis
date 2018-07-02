@@ -103,7 +103,6 @@ $routing = [
                                     'type' => 'pattern',
                                     'action' => 'view',
                                     'param' => 'aid',
-                                    'load' => [],
                                     'children' => [
                                         [
                                             'path' => 'edit',
