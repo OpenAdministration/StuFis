@@ -90,6 +90,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'wip' 	=> ["groups" => ["ref-finanzen-hv"]],
 			'ok' 	=> ["groups" => ["ref-finanzen-hv"]],
 		],
+		'strict_editable' => [
+			'groups' => ["ref-finanzen-hv"],
+			'dynamic' => [
+				'owner',
+				'plain_orga'
+			],
+		],
 		'stateless' => [
 			'view_creator' => ["groups" => ["ref-finanzen-hv"]]
 		]
@@ -169,10 +176,24 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"instructed" => ["groups" => ["ref-finanzen-kv"]],
 		],
 		'revoked'		=>	[
-			"wip" => true,
-			"ok" => true,
+			"wip" => [
+				'groups' => ["ref-finanzen"],
+				'dynamic' => [
+					'owner',
+					'plain_orga'
+				],
+			],
+			"ok" => [
+				'groups' => ["ref-finanzen-hv"],
+				'dynamic' => [
+					'owner',
+					'plain_orga'
+				],
+			],
 		],
 		'rejected'		=>	[
+			"wip" => ["groups" => ["ref-finanzen"]],
+			"ok" => ["groups" => ["ref-finanzen"]],
 			"instructed" => ["groups" => ["ref-finanzen"]],
 		],
 	];
@@ -259,7 +280,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param boolean|array $map
 	 * @return bool
 	 */
-	private static function checkPermissionByMap($map){
+	private function checkPermissionByMap($map){
 		if ($map === true){
 			return true;
 		}
@@ -267,7 +288,36 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			&&isset($map['groups'])){
 			$g = (is_string($map['groups']))? $map['groups'] : implode(",", $map["groups"]);
 			if (AuthHandler::getInstance()->hasGroup($g)){
-				return true;
+					return true;
+			}
+		}
+		if (is_array($map)
+			&&isset($map['dynamic']) && $this->auslagen_id){
+			//build dynamic data
+			$owner = explode(';', $this->auslagen_data['created']);
+			$owner = $owner[1];
+			$dynamic = [
+				'owner' => $owner,
+				'plain_orga' => $this->auslagen_data['projekte.org'],
+			];
+			//check dynamic permissions
+			$ah = AuthHandler::getInstance();
+			$a = $ah->getAttributes();
+			foreach ($map['dynamic'] as $type){
+				if (!isset($dynamic[$type])) continue;
+				switch($type){
+					case 'owner':{
+						if($ah->getUsername() == $dynamic[$type]){
+							return true;
+						}
+					} break;
+					case 'plain_orga': {
+						if (!isset($a['gremien'])) continue;
+						if (in_array($dynamic[$type], $a['gremien'])){
+							return true;
+						}
+					}break;
+				}
 			}
 		}
 		return false;
@@ -282,7 +332,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param string $newState
 	 * @return boolean
 	 */
-	private function state_change_possible($newState){
+	private function state_change_possible($newState, $is_sub = false){
 		//current state
 		$c = $this->stateInfo['state'];
 		//main stateChange -----------------------------------
@@ -298,23 +348,23 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					$required_sub[] = $sub;
 				}
 			}
-			foreach ($required_sub as $required){
+			if (!$is_sub) foreach ($required_sub as $required){
 				if (strpos($this->stateInfo['substate'], $required)===false){
 					return false;
 				}
 			}
 			//state change permission
-			if (self::checkPermissionByMap(self::$stateChanges[$c][$newState])){
+			if ($this->checkPermissionByMap(self::$stateChanges[$c][$newState])){
 				return true;
 			}
 		// sub state changes ----------------------------------
 		} else if (isset(self::$subStates[$newState])){
 			//mainstatechange possible ?
 			//same state || mainstate change possible
-			if (self::$subStates[$newState][0] == $c || $this->state_change_possible(self::$subStates[$newState][0])){
+			if (self::$subStates[$newState][0] == $c || $this->state_change_possible(self::$subStates[$newState][0], $newState)){
 				//if substatechange possible
 				if (isset(self::$stateChanges[$newState][$c])){
-					if (self::checkPermissionByMap(self::$stateChanges[$newState][$c])){
+					if ($this->checkPermissionByMap(self::$stateChanges[$newState][$c])){
 						return true;
 					}
 				}
@@ -461,7 +511,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					:'');
 		}
 		//sub state - instructed
-		if ($this->stateInfo['state']=='wip'){
+		if ($this->stateInfo['state']=='instructed'){
 			$this->stateInfo['substate'] .=
 				($this->auslagen_data['payed']?
 					(($this->stateInfo['substate'])? ',': '')
@@ -527,11 +577,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$this->stateInfo = self::state2stateInfo('draft');
 		}
 		//is editable ------------------------------
+		$this->stateInfo['editable'] = false;
 		if (isset(self::$groups['editable'][$this->stateInfo['state']])
-			&& self::checkPermissionByMap(self::$groups['editable'][$this->stateInfo['state']])){
+			&& $this->checkPermissionByMap(self::$groups['editable'][$this->stateInfo['state']])){
 			$this->stateInfo['editable'] = true;
-		} else {
-			$this->stateInfo['editable'] = false;
+		}
+		//check if editable and action != create
+		// if user is owner or in same organisation or is ref-finanzen
+		if ($this->stateInfo['editable'] && $this->routeInfo['action'] != 'create') {
+			if (!$this->checkPermissionByMap(self::$groups['strict_editable'])){
+				$this->stateInfo['editable'] = false;
+			}
 		}
 		$this->stateInfo['project-editable'] = (
 			$this->projekt_data['state'] == 'ok-by-stura' ||
