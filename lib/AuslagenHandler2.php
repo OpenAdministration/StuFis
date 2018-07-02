@@ -997,7 +997,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		//belege ==============================================
 		//removed ------
-		$fh = new FileHandler($this->db);
+		$fh = new FileHandler($this->db, ['UPLOAD_WHITELIST' => 'pdf']);
 		foreach ($removed_belege as $b){
 			//remove file
 			$fh->deleteFilesByLinkId($b['id']);
@@ -1093,11 +1093,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			//handle file upload
 			$res = $fh->upload(intval($fileInfo['link']), $fileInfo['file']);
 			if (count($res['error']) > 0) {
-				$msg = '';
+				$emsg = '';
 				foreach ($res['error'] as $e){
-					$msg ."<p>$e</p>";
+					$emsg .="<p>$e</p>";
 				}
-				$this->error = $msg;
+				$this->error = $emsg;
 			} else {
 				/** @var SILMPH\File $file */
 				foreach ($res['fileinfo'] as $file){
@@ -1131,7 +1131,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'msg' => $this->error,
 			'type' => 'modal',
 			'subtype' => 'server-error',
-			'reload' => false
+			'reload' => (strpos($this->error, 'not allowed') && strpos($this->error, 'files'))? 3000 : false
 		];
 		$this->_renderPostResult();
 	}
