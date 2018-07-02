@@ -284,7 +284,7 @@ class Validator {
 	 *  decimal_seperator	2	[. or ,] default: .
 	 * 	min 				2	min value
 	 * 	max 				2	max value
-	 *  step				2	step
+	 *  step				2	step - be carefull may produce errors (wrong deteced values)
 	 *  format				2	trim to x decimal places
 	 *  error				2	error message on error case
 	 *
@@ -307,9 +307,20 @@ class Validator {
 				$msg = (isset($params['error']))? $params['error'] : "Float out of range: larger than {$params['max']}" ;
 				return !$this->setError(true, 200, $msg, 'float to big');
 			}
-			if (isset($params['step']) && fmod($v, ''.(float)$params['step']) != '0' && ''.round(fmod($v, (float)$params['step']), ((strpos($params['step'], '.')!==false)? strlen(substr($params['step'], strpos($params['step'], '.')+1)) : 1) ) != ''.(float)$params['step']){
-				$msg = (isset($params['error']))? $params['error'] : "float invalid step" ;
-				return !$this->setError(true, 200, $msg, 'float invalid step');
+			if (isset($params['step'])){
+				$mod = $params['step'];
+				$cv = $v;
+				if (($p = strpos($mod , '.'))!== false){
+					$ex = strlen(substr($params['step'], $p + 1));
+					$ex = (pow(10, $ex));
+					$mod = $mod * $ex;
+					$cv = $cv * $ex;
+				}
+				
+				if ((is_numeric( $cv ) && floor( $cv ).'' != $cv.'') || $cv % $mod != 0){
+					$msg = (isset($params['error']))? $params['error'] : "float invalid step" ;
+					return !$this->setError(true, 200, $msg, 'float invalid step');
+				}
 			}
 			if (isset($params['format'])){
 				$this->filtered = number_format($v, $params['format'], $decimal, '');
