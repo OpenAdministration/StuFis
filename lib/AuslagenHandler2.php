@@ -98,7 +98,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			],
 		],
 		'stateless' => [
-			'view_creator' => ["groups" => ["ref-finanzen-hv"]]
+			'view_creator' => ["groups" => ["ref-finanzen-hv"]],
+			'finanzen' => ["groups" => ["ref-finanzen"]]
 		]
 	];
 	
@@ -1043,7 +1044,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$db_beleg['id'] = $idd;
 			$map_new_beleg_beleg_idx[$kb] = $idd;
 			$fileIdx = 'beleg_'.$kb;
-			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
+			if (isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
 				$beleg_file_map[$kb] = [
 					'file' => $fileIdx,
 					'link' => $idd,
@@ -1201,8 +1202,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	    		<div id='projekt-well' class="well">
 	            	<label for="genehmigung">Status</label>
 	            	<div class="col-xs-12 form-group">
-	            		<div style="padding-bottom: 10px;"><?= self::$states[$this->stateInfo['state']][0];?></div>
+	            		<div style="padding-bottom: 10px;"><?php 
+	            			if ($this->stateInfo['state'] == 'instructed' && strpos($this->stateInfo['substate'], 'payed')!==false){
+	            				echo 'Bezahlt';
+	            			} else {
+	            				echo self::$states[$this->stateInfo['state']][0];
+	            			}
+	            		?></div>
 	            	</div>
+	            	<div class="clearfix"></div>
 	            	<label for="genehmigung">Original-Belege</label>
 	            	<?php 
 	            		if($this->auslagen_data['ok-belege']){
@@ -1211,6 +1219,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            			echo '<div class="" style="padding-left: 10px; padding-bottom: 10px;"><i class="fa fa-fw fa-2x fa-square-o"></i> <strong style="line-height: 1.6em; height: 2em; vertical-align: top;"> nicht eingereicht</strong></div>';
 	            		}
 	            	?>
+	            	<div class="clearfix"></div>
 	            	<label for="genehmigung">Genehmigung</label>
 	            	<br>
 		                <?= $this->templater->getTextForm("hv-ok", $this->auslagen_data['ok-hv']? $this->auslagen_data['ok-hv']:'ausstehend', 6, "HV", "HV", []) ?>
@@ -1230,7 +1239,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <label for="projekt-well">Allgemein</label>
             <div id='projekt-well' class="well">
             	<label>Name der Auslagenerstattung</label>
-            	<?= $this->templater->getTextForm("auslagen-name", "", 12, "optional", "", [], 'Auslagenname') ?>
+            	<?= $this->templater->getTextForm("auslagen-name", (isset($this->auslagen_data['id']))?$this->auslagen_data['name_suffix']:'', 12, "optional", "", [], 'Auslagenname') ?>
 	            
 	            <?php if($this->routeInfo['action'] != 'create'){ ?>
 	           		<div class="clearfix"></div>

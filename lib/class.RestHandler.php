@@ -213,6 +213,7 @@ class RestHandler extends JsonController{
     				],
     				'zahlung-vwzk' => [ 'regex',
     					'pattern' => '/^[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+[a-zA-Z0-9\-_,;\/\\()!?& .äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+    					'empty',
     					'maxlength' => '127',
     				],
     				'belege' => ['array', 'optional',
