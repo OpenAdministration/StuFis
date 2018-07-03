@@ -1165,6 +1165,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         	<h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
              <?php //-------------------------------------------------------------------- ?>
             <label for="projekt-well">Projekt Information</label>
+            <?= ($this->routeInfo['action'] == 'view')?$this->getStateSvg().$this->getSvgHiddenFields():''; ?>
             <div id='projekt-well' class="well">
             	<?php $show_genemigung_state = ($this->routeInfo['action'] != 'create' || isset($this->auslagen_data['state']) && $this->auslagen_data['state'] != 'draft' ); ?>
             	<?= $this->templater->generateListGroup(
@@ -1622,6 +1623,190 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		?>
 		</div>
 	<?php 
+	}
+	
+	
+	
+	public function getStateSvg(){
+		$diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
+		$diagram->setData($this->getDiagramStatelistFiltered());
+		$diagram->setServerAspectRadio(false);
+		$diagram->setSetting('height', 220);
+		$diagram->setSetting('width', 780);
+		$diagram->setStateSetting('center_lines', false);
+		$diagram->generate();
+		
+		return $diagram->getChart();
+	}
+	
+	public function getSvgHiddenFields(){
+		return '<div class="svg-statechanges hidden">'.
+			'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
+			'<input type="hidden" name="auslagen-id" value="'.(($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id).'">'.
+			'<input type="hidden" name="etag" value="'.(($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']).'">'.
+			'<input type="hidden" name="action" value="'. URIBASE .'index.php/rest/forms/auslagen/state">'.
+		'</div>';
+	}
+	
+	public function getDiagramStatelistFiltered(){
+		$set = $this->getDiagramStatelist();
+		//states to id
+		$keymap = [];
+		foreach ($set as $line => $lineset){
+			foreach ($lineset as $elementkey => $state){
+				$keymap[$state['state']]=[
+					'l' => $line,
+					'k' => $elementkey,
+				];
+				if(isset($state['children'])) foreach ($state['children'] as $childkey => $c){
+					$keymap[$c['state']]=[
+						'l' => $line,
+						'k' => $elementkey,
+						'c' => $childkey
+					];
+				}
+			}
+		}
+		//color current state
+		$s = $keymap[$this->stateInfo['state']];
+		$set[$s['l']][$s['k']]['options']['fill']='#CAFF70';
+		//possible states
+		foreach(self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
+			if ($k == 'revocation')	continue;
+			if (!$this->state_change_possible($k)) continue;
+			$s = $keymap[$k];
+			//color 
+			$set[$s['l']][$s['k']]['options']['fill']='#b2f7f9';
+			//clickable
+			$set[$s['l']][$s['k']]['options']['trigger']=true;
+			
+		}
+		//may remove substate: reject
+		if (!$this->checkPermissionByMap(self::$groups['stateless']['finanzen'])){
+			$s=$keymap['rejected'];
+			echo '<pre>'; var_dump($s); echo '</pre>';
+			echo '<pre>'; var_dump($set[$s['l']]); echo '</pre>';
+			echo '<pre>'; var_dump($set[$s['l']][$s['k']]['children'][$s['c']]); echo '</pre>';
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
+		}
+		//handle childs
+		foreach(self::$subStates as $k => $info){
+			$s=$keymap[$k];
+			//if substate was unset
+			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']])) 
+				continue;
+			//if state = child.parent and substate is set -> continue
+			if (strpos($this->stateInfo['substate'], $k)!==false && $this->stateInfo['state']==$info[0])
+				continue;
+			if ($this->state_change_possible($k)){
+				//color clickable
+				$set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill']='#b2f7f9';
+				//clickable
+				$set[$s['l']][$s['k']]['children'][$s['c']]['options']['trigger']=true;
+				
+			}
+		}
+		//color subchilds if state = child.parent and substate is set
+		foreach (self::$subStates as $ss => $info){
+			$s=$keymap[$ss];
+			if ($info[0]=='revocation') 
+				continue;
+			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']]))
+				continue;
+			if (strpos($this->stateInfo['substate'], $ss)!==false && $this->stateInfo['state']==$info[0]){
+				$set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill']='#CAFF70';
+			}
+		}
+		
+		return $set;
+	}
+	
+	/**
+	 * return complete state diagram data set
+	 */
+	public function getDiagramStatelist(){
+		return [
+			'line0' => [
+				0 => [
+					'state' => 'draft', 
+					'title' => self::$states['draft'][0],
+					'hovertitle' => self::$states['draft'][1],
+					'target' => ['wip']
+				],
+				1 => [
+					'state' => 'wip', 
+					'title' => self::$states['wip'][0],
+					'hovertitle' => self::$states['draft'][1],
+					'target' => ['ok', 'revocation'],
+					'children' => [
+						[
+							'state' => 'ok-hv', 
+							'title' => self::$subStates['ok-hv'][2],
+							'hovertitle' => self::$subStates['ok-hv'][3],
+							'options' => ['fill' => '#cccccc'],
+						],
+						[
+							'state' => 'ok-kv',
+							'title' => self::$subStates['ok-kv'][2],
+							'hovertitle' => self::$subStates['ok-kv'][3],
+							'options' => ['fill' => '#cccccc'],
+						],
+						[
+							'state' => 'ok-belege',
+							'title' => self::$subStates['ok-belege'][2],
+							'hovertitle' => self::$subStates['ok-belege'][3],
+							'options' => ['fill' => '#cccccc'],
+						]
+					],
+				],
+				2 => ['state' => 'ok', 
+					'title' => self::$states['ok'][0], 
+					'hovertitle' => self::$states['draft'][1],
+					'target' => ['instructed', 'revocation']
+				],
+				3 => ['state' => 'instructed', 
+					'title' => self::$states['instructed'][0], 
+					'hovertitle' => self::$states['draft'][1],
+					'target' => ['booked'],
+					'children' => [
+						[
+							'state' => 'payed',
+							'title' => self::$subStates['payed'][2],
+							'hovertitle' => self::$subStates['payed'][3],
+							'options' => ['fill' => '#cccccc'],
+						],
+					],
+				],
+				4 => ['state' => 'booked', 
+					'title' => self::$states['booked'][0],
+					'hovertitle' => self::$states['draft'][1],
+					'target' => []
+				],
+			],
+			'line1' => [
+				0 => [
+					'state' => 'revocation', 
+					'title' => self::$states['revocation'][0], 
+					'hovertitle' => self::$states['draft'][1],
+					'offset' => ['x' => 0, 'y' => -25],
+					'target' => ['draft'],
+					'children' => [
+						[
+							'state' => 'rejected',
+							'title' => self::$subStates['rejected'][2],
+							'hovertitle' => self::$subStates['rejected'][3],
+							'options' => ['fill' => '#cccccc'],
+						],
+						[
+							'state' => 'revoked',
+							'title' => self::$subStates['revoked'][2],
+							'hovertitle' => self::$subStates['revoked'][3],
+							'options' => ['fill' => '#cccccc'],
+						],
+					],
+				]
+			]
+		];
 	}
 	
 	//---------------------------------------------------------
