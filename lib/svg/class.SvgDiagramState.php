@@ -118,6 +118,11 @@ class SvgDiagramState extends SvgDiagramCore
 				$boxes[$e['state']]['out_pos'] = 0;
 				//in counter
 				foreach ($boxes[$e['state']]['out'] as $target){
+					$outpos = NULL;
+					if (is_array($target)){
+						$outpos = $target[1];
+						$target = $target[0];
+					}
 					$boxes[$target]['in'] = ((isset($boxes[$target]['in']))? $boxes[$target]['in'] : 0) + 1;
 				}
 				 
@@ -131,9 +136,11 @@ class SvgDiagramState extends SvgDiagramCore
 		foreach ($boxes as $s => $b){
 			if (!isset($b['x'])) continue;
 			$boxelement = '';
+			$childelements = [];
 			//draw boxes
 			$text = (isset($b['options']['text']))?$b['options']['text']:[];
 			$text['text'] = $b['title'];
+			$text['attr']['class'] = 'shape-text';
 			$opt = $b['options'];
 			if (isset($opt['trigger']) && $opt['trigger']){
 				$opt['onclick'] = 'triggerEvent(\'state-change\', \''.$b['state'].'\')';
@@ -162,16 +169,27 @@ class SvgDiagramState extends SvgDiagramCore
 				}
 				$text_c = (isset($options['text']))?$options['text']:[];
 				$text_c['text'] = $child['title'];
-				$boxelement.=$this->drawShape($xx, $yy, $ww, $hh, 5, $text_c,0, $options, NULL, 
+				$text_c['attr']['class'] = 'shape-text';
+				$childelements[]=$this->drawShape($xx, $yy, $ww, $hh, 5, $text_c,0, $options, NULL, 
 					((isset($child['hovertitle'])&&$child['hovertitle'])?$child['hovertitle']:NULL));
 				$cpos++;
 			}
 		
 			//draw arrows
 			foreach ($boxes[$s]['out'] as $next){
+				$outpos = NULL;
+				$outoffset = ['x' => 0, 'y' => 0];
+				$other = NULL;
+				if (is_array($next)){
+					if (isset($next[2]['x'])) $outoffset['x'] = $next[2]['x'];
+					if (isset($next[2]['y'])) $outoffset['y'] = $next[2]['y'];
+					if (isset($next[3])) $other = $next[3];
+					$outpos = $next[1];
+					$next = $next[0];
+				}
 				//direct line
 				if (!isset($boxes[$next]['x'])) continue;
-				if ((count($b['out']) == $boxes[$next]['in'] || $force_same_level_line) && $b['level'] == $boxes[$next]['level']){
+				if ($outpos == NULL && (count($b['out']) == $boxes[$next]['in'] || $force_same_level_line) && $b['level'] == $boxes[$next]['level']){
 					// outpos
 					$outpos_y = (!$center_lines)? $b['y'] + ($boxes[$s]['out_pos']+1) * $b['h'] / (count($b['out'])+1)
 									: $b['y'] + $b['h'] / 2;
@@ -181,9 +199,8 @@ class SvgDiagramState extends SvgDiagramCore
 					if ($force_same_level_line) $inpos_y = $boxes[$next]['y'] + $boxsize['h'] / 2;
 					$outpos_x = $b['x'] + (($b['index']<$boxes[$next]['index'])?$b['w']:0);
 					$inpos_x = $boxes[$next]['x'] + (($b['index']>$boxes[$next]['index'])?$boxes[$next]['w']:0);
-					
-					
-					
+					$outpos_x+=$outoffset['x'];
+					$outpos_y+=$outoffset['y'];
 					$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black');
 					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
 					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
@@ -192,14 +209,15 @@ class SvgDiagramState extends SvgDiagramCore
 						$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, (($b['index']<$boxes[$next]['index'])?$arrowsize['h']:-$arrowsize['h']), $arrowsize['a'], 0, 'black');
 					}
 				//levelshift right side out
-				} elseif ($b['index'] < $boxes[$next]['index']) {
+				} elseif ($outpos == 1 || $outpos == NULL && $b['index'] < $boxes[$next]['index']) {
 					$outpos_y = (!$center_lines)? $b['y'] + ($boxes[$s]['out_pos']+1) * $b['h'] / (count($b['out'])+1)
 								: $b['y'] + $b['h'] / 2;
 					$outpos_x = $b['x'] + $b['w'];
 					$inpos_x = $outpos_x + $margin['x'];
 					$inpos_y = (!$center_lines)? $boxes[$next]['y'] + ($boxes[$next]['in_pos']+1) * $boxes[$next]['h'] / ($boxes[$next]['in'] + 1)
 								: $boxes[$next]['y'] + $boxes[$next]['h'] / 2;
-		
+					$outpos_x+=$outoffset['x'];
+					$outpos_y+=$outoffset['y'];
 					//tmp
 					$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black');
 					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
@@ -215,39 +233,104 @@ class SvgDiagramState extends SvgDiagramCore
 					} else {
 						//triangle
 						if ($arrows) {
-							$chartcontent .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], (($inpos_y < $outpos_y && ($outpos_y - $inpos_y) > $boxsize['h'])? -15: (($inpos_y > $outpos_y && ($inpos_y - $outpos_y) > $boxsize['h'])? +15: 0)), 'black');
+							$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], (($inpos_y < $outpos_y && ($outpos_y - $inpos_y) > $boxsize['h'])? -15: (($inpos_y > $outpos_y && ($inpos_y - $outpos_y) > $boxsize['h'])? +15: 0)), 'black');
 						}
 					}
 				//arrows up down
-				} else if ($b['index'] == $boxes[$next]['index']) {
+				} else if ($outpos == 2 || $outpos == NULL && $b['index'] == $boxes[$next]['index']) {
 					$outpos_y = $b['y'] + (($b['level'] > $boxes[$next]['level'])? 0 : $b['h']);
 					$inpos_y = $boxes[$next]['y'] + (($b['level'] > $boxes[$next]['level'])? $boxes[$next]['h'] : 0);
 					$outpos_x = $b['x'] + $b['w']/2;
 					$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w']/2;
+					$outpos_x+=$outoffset['x'];
+					$outpos_y+=$outoffset['y'];
 					//tmp
 					$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black', NULL, 1);
 					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
 					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
 					if ($arrows) {
-						$chartcontent .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], (($b['level'] > $boxes[$next]['level'])? -90 : 90), 'black');
+						$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], (($b['level'] > $boxes[$next]['level'])? -90 : 90), 'black');
 					}
 				// lines back to left -> manhatten
-				} else if ($b['index'] > $boxes[$next]['index'] && $b['level'] != $boxes[$next]['level']){
+				} else if ($outpos == 3 || $outpos == NULL && $b['index'] > $boxes[$next]['index'] && $b['level'] != $boxes[$next]['level']){
 					$outpos_y = $b['y'] + (($b['level'] > $boxes[$next]['level'])? 0 : $b['h']);
 					$outpos_x = $b['x'] + $b['w']/2;
 					$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w'];
 					$inpos_y = (!$center_lines)? $boxes[$next]['y'] + ($boxes[$next]['in_pos']+1) * $boxes[$next]['h'] / ($boxes[$next]['in'] + 1)
 					: $boxes[$next]['y'] + $boxes[$next]['h'] / 2;
+					$outpos_x+=$outoffset['x'];
+					$outpos_y+=$outoffset['y'];
 					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
-					$chartcontent .= $this->drawManhattenLine($outpos_x, $outpos_y, $inpos_x, $inpos_y, 10, 1, 1, NULL, $arrows? $arrowsize: NULL );
+					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
+					$boxelement .= $this->drawManhattenLine($outpos_x, $outpos_y, $inpos_x, $inpos_y, 10, 1, 1, NULL, $arrows? $arrowsize: NULL );
+				} else if ($outpos == 4) {
+					$outpos_y = (!$center_lines)? $b['y'] + ($boxes[$s]['out_pos']+1) * $b['h'] / (count($b['out'])+1)
+									: $b['y'] + $b['h'] / 2;
+					$outpos_x = $b['x'];
+					$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w']/2;
+					
+					if ($outpos_y < $boxes[$next]['y']) {
+						//oben
+						$inpos_y = $boxes[$next]['y'];
+						$outpos_x+=$outoffset['x'];
+						$outpos_y+=$outoffset['y'];
+						$boxelement .= $this->drawManhattenLine($outpos_x, $outpos_y, $inpos_x, $inpos_y, 10, 0, 1, NULL, $arrows? $arrowsize: NULL );
+						if ($arrows) {
+							$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], 90, 'black');
+						}
+					} elseif($outpos_y > $boxes[$next]['y'] + $boxes[$next]['h'])  {
+						//unten
+						$inpos_y = $boxes[$next]['y'] + $boxes[$next]['h'];
+						$outpos_x+=$outoffset['x'];
+						$outpos_y+=$outoffset['y'];
+						$boxelement .= $this->drawManhattenLine($outpos_x, $outpos_y, $inpos_x, $inpos_y, 10, 0, 1, NULL, $arrows? $arrowsize: NULL );
+						if ($arrows) {
+							$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], -90, 'black');
+						}
+					} else {
+						$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w'];
+						$inpos_y = $boxes[$next]['y'] + $boxes[$next]['h']/2;
+						$outpos_x+=$outoffset['x'];
+						$outpos_y+=$outoffset['y'];
+						$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black');
+						if ($arrows) {
+							$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, -$arrowsize['h'], $arrowsize['a'], 0, 'black');
+						}
+					}
+					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
+					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
+				} else if ($outpos == 5||$outpos == 6) {
+					$outpos_x = $b['x'] + $b['w']/2 + $outoffset['x'];
+					$outpos_y = $b['y'] + (($outpos == 6)? $b['h'] : 0);
+					
+					$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w']/2;
+					$rotate = 90;
+					if ($outpos_y < $boxes[$next]['y']) {
+						//oben
+						$inpos_y = $boxes[$next]['y'];
+					} else {
+						//unten
+						$rotate = -90;
+						$inpos_y = $boxes[$next]['y'] + $boxes[$next]['h'];
+					}
+					$middle_y = $outpos_y + $outoffset['y'];
+					$middle_x = ( $outpos_x + $inpos_x ) / 2;
+					
+					$boxelement .= $this->drawManhattenLine($outpos_x, $outpos_y, $middle_x, $middle_y, 10, ($outpos == 6)?1:0, 1, NULL, NULL );
+					$boxelement .= $this->drawManhattenLine($middle_x, $middle_y, $inpos_x, $inpos_y, 10, 0, 1, NULL, $arrows? $arrowsize: NULL );
+					if ($arrows) {
+						$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], $rotate, 'black');
+					}
 				}
 			}
 			$hoverOpt = [
-				'opacity' => isset($b['options']['hover']['opacity'])? $b['options']['hover']['opacity']: '0.8',
+				'opacity' => isset($b['options']['hover']['opacity'])? $b['options']['hover']['opacity']: '2.3',
 				'background-color' => isset($b['options']['hover']['background-color'])? $b['options']['hover']['background-color']: NULL,
 			];
-			$hoverOpt['background-color'] = 'red';
 			$chartcontent.=$this->suroundElementWithMouseHilight($boxelement, $hoverOpt['opacity'], $hoverOpt['background-color']);
+			foreach ($childelements as $chelm){
+				$chartcontent.=$this->suroundElementWithMouseHilight($chelm, $hoverOpt['opacity'], $hoverOpt['background-color']);
+			}
 		}
 		$this->setSvgResult($chartcontent, true);
 	}

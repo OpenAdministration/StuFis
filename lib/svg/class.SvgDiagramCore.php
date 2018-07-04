@@ -59,6 +59,12 @@ abstract class SvgDiagramCore
      */
     protected $result;
     
+    /**
+     * add extra elemnts to result on generation
+     * @var string
+     */
+    protected $resultAdditional = [];
+    
     // CLASS CONSTRUCTOR --------------------------------------
     
 	/**
@@ -180,7 +186,32 @@ abstract class SvgDiagramCore
 	 * clear data array
 	 */
 	public function clearData (){
-		$dataset= array();
+		$this->dataset = [];
+	}
+	
+	/* ------ RESULT ADDONS ------ */
+	
+	/**
+	 * clear additional result array
+	 */
+	public function clearResultAddons (){
+		$this->resultAdditional = [];
+	}
+	
+	/**
+	 * add additional result array
+	 * @param string $content
+	 */
+	public function addResultAddons ($content){
+		$this->resultAdditional[] = $content;
+	}
+	
+	/**
+	 * get additional result array
+	 * @return array the $resultAdditional
+	 */
+	public function getResultAddons (){
+		return $this->resultAdditional;
 	}
 	
 	/* ------ HELPER FUNCTIONS ------ */
@@ -255,9 +286,10 @@ abstract class SvgDiagramCore
 	 * @param string $weight NULL|bold|normal
 	 * @param number $size Fontsize
 	 * @param number $rotate rotate Text to degree of
+	 * @param array|NULL $attr additional attributes
 	 * @return string
 	 */
-	protected function drawText($str, $x=NULL, $y=NULL, $anchor=NULL, $color=NULL, $weight=NULL, $size=NULL, $rotate=NULL, $family = NULL){
+	protected function drawText($str, $x=NULL, $y=NULL, $anchor=NULL, $color=NULL, $weight=NULL, $size=NULL, $rotate=NULL, $family = NULL, $attr=NULL){
 		$anch = 'middle';
 		$xx = $this->settings['width']/2;
 		$yy = $this->settings['height']/2;
@@ -265,6 +297,7 @@ abstract class SvgDiagramCore
 		$family = 'Helvetica, Arial, sans-serif';
 		$wei = '';
 		$siz = 30;
+		$at='';
 		if ($x!==null){
 			$xx=$x;
 		}
@@ -283,9 +316,14 @@ abstract class SvgDiagramCore
 		if ($weight!==null){
 			$wei= ' font-weight="'. $weight.'"';
 		}
+		if ($attr!==null){
+			foreach ($attr as $k => $v){
+				$at .= " $k=\"$v\"";
+			}
+		}
 		return '<text'.$wei.' xml:space="preserve" text-anchor="'.$anch.'" font-family="'.$family.'" font-size="'.
 			$siz.'" y="'.$yy.'" x="'.$xx.'" stroke-width="0" stroke="'.$stroke.'" fill="'.$stroke.'"'.
-			(($rotate===NULL)?'':(' transform="rotate('.$rotate.','.$xx.','.$yy.')"')).'>'.$str.'</text>';
+			(($rotate===NULL)?'':(' transform="rotate('.$rotate.','.$xx.','.$yy.')"')).$at.'>'.$str.'</text>';
 	}
 	
 	/**
@@ -533,10 +571,10 @@ abstract class SvgDiagramCore
 			$vertLineTo  . $spc . ( - $height + abs($r[2]) + abs($r[3])) . $spc.
 			(($r[3])? 	$arcTo   	 . $spc . abs($r[3]) 			  . $spc . abs($r[3]) . $spc . 0 . $spc . 0 . $spc . (($r[3]>0)?1:0) . $spc . abs($r[3]) . $spc . -abs($r[3]) . $spc :'').
 			$closePath;
-		$class = '';
+		$class = 'shape-body';
 		$onclick = '';
 		if (isset($options['cursor-pointer'])&&$options['cursor-pointer']){
-			$class.=' cursor-pointer';
+			$class.= (($class!='')?' ':'').'cursor-pointer';
 		}
 		if (isset($options['onclick'])&&$options['onclick']){
 			$onclick = ' onclick="'.$options['onclick'].'"';
@@ -553,7 +591,9 @@ abstract class SvgDiagramCore
 				(is_string($text)||!isset($text['color']))?  'black': $text['color'],
 				(is_string($text)||!isset($text['weight']))? NULL	: $text['weight'],
 				$fsize,
-				(is_string($text)||!isset($text['rotate']))? NULL	: $text['rotate']
+				(is_string($text)||!isset($text['rotate']))? NULL	: $text['rotate'],
+				NULL,
+				(is_string($text)||!isset($text['attr']))? NULL	: $text['attr']
 			);
 		}
 		return $out; // return it from the function
@@ -663,14 +703,21 @@ abstract class SvgDiagramCore
 	/**
 	 * add svg tags with size attributes and hoverscripts (optional)
 	 * @param string $svgElements svg elements
-	 * @param string $scripts add scripts to svg
+	 * @param bool $scripts add scripts to svg
+	 * @param bool $addAddons add additional svg content
+	 * @return string
 	 */
-	protected function capsuleSvg($svgElements, $scripts = true){
+	protected function capsuleSvg($svgElements, $scripts = true, $addAddons = true){
 		$out = sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d"'.$this->serverAspectRadio.'>',
 			$this->settings['width'],
 			$this->settings['height']);
 		if ($scripts)
 			$out .= $this->createHoverScripts();
+		if ($addAddons){
+			foreach ($this->resultAdditional as $a){
+				$out .= $a;
+			}
+		}
 		return $out . $svgElements . '</svg>';
 	}
 	
@@ -701,31 +748,46 @@ abstract class SvgDiagramCore
     <script type="text/javascript">
         function setOpacityColor(ev,opa,color)
         {
-            ev.target.parentNode.setAttribute("fill-opacity",opa);
-        	//if (ev.target.className == "box"){
-//         	console.log('------------------------');
-//         	console.log('color: ', color);
-//         	console.log('target: ', ev.target);
-//         	console.log('fill: ', ev.target.getAttribute("fill"));
-//         	console.log('dataset: ', ev.target.dataset.color);
-//         	console.log('');
-	        	switch(color){
-	        		case 'null': break;
-	        		case 'reset': {
-	        			ev.target.setAttribute("fill",ev.target.dataset.color);
-	        		} break;
-	        		default: {
-        				if (typeof(ev.target.dataset.color)=='undefined'){
-	        				if (ev.target.getAttribute("fill")){
-	        					ev.target.dataset.color = ev.target.getAttribute("fill");
-	        				} else {
-	        					ev.target.dataset.color = 'none';
-	        				}
-        				}
-	        			ev.target.setAttribute("fill",color);
-	        		} break;
-	    		}
-        	//}
+			var color_target = ev.target;
+			var opactity_target = ev.target.parentNode;
+			if (color_target.className.baseVal.indexOf('shape-text')!==-1){
+				opactity_target = ev.target.previousSibling;
+				color_target = color_target.previousSibling;
+			} else if (color_target.className.baseVal.indexOf('shape-body')!==-1) {
+				opactity_target = ev.target;
+			}
+	        switch(color){
+				case 'null': break;
+				case 'reset': {
+					color_target.setAttribute("fill",color_target.dataset.color);
+				} break;
+				default: {
+					if (typeof(color_target.dataset.color)=='undefined'){
+						if (color_target.getAttribute("fill")){
+							color_target.dataset.color = color_target.getAttribute("fill");
+						} else {
+							color_target.dataset.color = 'none';
+						}
+					}
+					color_target.setAttribute("fill",color);
+				} break;
+			}
+			
+			if (parseFloat(opa) <= 1.0 || opa == '1.0') {
+				opactity_target.setAttribute("fill-opacity",opa);
+				//reset darken class
+				if (opactity_target.className.baseVal.indexOf('darken-hover')!==-1){
+					var old_class = ''+ opactity_target.className.baseVal;
+					old_class = old_class.replace('darken-hover', '');
+					opactity_target.className.baseVal = old_class;
+				}
+			} else {
+				//may add darken class
+				if (opactity_target.className.baseVal.indexOf('darken-hover')===-1){
+					var old_class = ''+opactity_target.className.baseVal;
+					opactity_target.className.baseVal = old_class + ((old_class!='')?' ':'') + 'darken-hover';
+				}
+			}
         }
        	function triggerEvent(name, detail){
         	var event = new CustomEvent('svg-trigger-'+name, { 'detail': detail });
@@ -737,8 +799,17 @@ abstract class SvgDiagramCore
     </script>
 </defs>
 <style>
-    .cursor-pointer { cursor: pointer; } /* specific elements */
- </style>
+    .cursor-pointer { cursor: pointer; }
+	.shape-text { cursor: pointer; }
+	.darken-hover {
+		-webkit-filter: brightness(70%);
+	    -webkit-transition: all .3s ease;
+	    -moz-transition: all .3s ease;
+	    -o-transition: all .3s ease;
+	    -ms-transition: all .3s ease;
+	    transition: all .3s ease;
+	}
+</style>
 HEREDOC;
 		return $ret;
 	}

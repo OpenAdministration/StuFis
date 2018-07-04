@@ -130,10 +130,11 @@ class SvgDiagramRaw extends SvgDiagramCore
 	 * @param string $weight NULL|bold|normal
 	 * @param number $size Fontsize
 	 * @param number $rotate rotate Text to degree of
+	 * @param array|NULL $attr additional attributes
 	 * @return string
 	 */
-	public function drawText($str, $x=NULL, $y=NULL, $anchor=NULL, $color=NULL, $weight=NULL, $size=NULL, $rotate=NULL, $family = NULL){
-		return parent::drawText($str, $x, $y, $anchor, $color, $weight, $size, $rotate, $family);
+	public function drawText($str, $x=NULL, $y=NULL, $anchor=NULL, $color=NULL, $weight=NULL, $size=NULL, $rotate=NULL, $family = NULL, $attr=NULL){
+		return parent::drawText($str, $x, $y, $anchor, $color, $weight, $size, $rotate, $family, $attr);
 	}
 	
 	/**
@@ -223,7 +224,7 @@ class SvgDiagramRaw extends SvgDiagramCore
 	 * @param number $y position
 	 * @param number $width
 	 * @param number $height
-	 * @param number|array $r radius ; array: first index is top right - clockwise direction
+	 * @param number|array $r border radius ; array: first index is top right - clockwise direction
 	 * @param string|array $text as string or array with drawText values
 	 * @param array $options ['stroke' => 'black', 'fill' => 'white']
 	 * @param number $id set tag id
@@ -296,10 +297,12 @@ class SvgDiagramRaw extends SvgDiagramCore
 	/**
 	 * add svg tags with size attributes and hoverscripts (optional)
 	 * @param string $svgElements svg elements
-	 * @param string $scripts add scripts to svg
+	 * @param bool $scripts add scripts to svg
+	 * @param bool $addAddons add additional svg content
+	 * @return string
 	 */
-	public function capsuleSvg($svgElements, $scripts = true){
-		return parent::capsuleSvg($svgElements, $scripts);
+	public function capsuleSvg($svgElements, $scripts = true, $addAddons = true){
+		return parent::capsuleSvg($svgElements, $scripts, $addAddons = true);
 	}
 	
 	/* ------ JS INTERACTIVE GROUPING ------ */
