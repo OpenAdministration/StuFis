@@ -7,6 +7,9 @@ class  AuthHandler extends Singleton{
     private static $ADMINGROUP;
     private $saml;
     
+    /**
+     * @return AuthHandler
+     */
     public static function getInstance(...$pars): AuthHandler{
         return parent::getInstance(...$pars);
     }

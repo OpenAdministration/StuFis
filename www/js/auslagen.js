@@ -296,6 +296,10 @@
 		$('.beleg-table .beleg-container .posten-inner-list').each(function(i, e){
 			posten_handler($(e));
 		});
-		
+		$('.auslagen-form-submit-send').on('click', function(){
+			var $e = $(this);
+			var $target = $('form#'+this.dataset.for);
+			$target.trigger('submit');
+		});
 	});
 })();
