@@ -700,6 +700,9 @@ button.btn.btn-arrow-left {
 		width: 100%;
 	}
 }
+.textarea_readonly {
+	white-space: pre;
+}
 .bt-dark {
 	border-top: 2px solid #777;
 }
