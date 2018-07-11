@@ -168,7 +168,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
         return false;
     }
     
-    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => AuthHandler::getInstance()->getUsername()]);
+    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => (AUTH_HANLER)::getInstance()->getUsername()]);
     
     if ($ret !== 1)
         return false;
@@ -197,7 +197,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
         if (isset($action["value"])){
             $newValue = $action["value"];
         }else if ($action["type"] == "signbox"){
-            $newValue = AuthHandler::getInstance()->getUserFullName() . " am " . date("Y-m-d");
+            $newValue = (AUTH_HANLER)::getInstance()->getUserFullName() . " am " . date("Y-m-d");
         }else
             die("cannot autogenerate value for preNewStateActions");
     
@@ -209,8 +209,8 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
     
     $comment = [];
     $comment["antrag_id"] = $antrag["id"];
-    $comment["creator"] = AuthHandler::getInstance()->getUsername();
-    $comment["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
+    $comment["creator"] = (AUTH_HANLER)::getInstance()->getUsername();
+    $comment["creatorFullName"] = (AUTH_HANLER)::getInstance()->getUserFullName();
     $comment["timestamp"] = date("Y-m-d H:i:s");
     $txt = $newState;
     if (isset($form["_class"]["state"][$newState]))

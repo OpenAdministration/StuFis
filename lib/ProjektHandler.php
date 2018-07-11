@@ -406,12 +406,12 @@ class ProjektHandler extends FormHandlerInterface{
         $editable = $this->permissionHandler->isAnyDataEditable();
         
         //build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable(AuthHandler::getInstance()->hasGroup("ref-finanzen"));
+        $selectable_gremien = FormTemplater::generateGremienSelectable((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen"));
         $selectable_gremien["values"] = $this->data['org'];
         
         
-        $mail_selector = AuthHandler::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-        $selectable_mail = FormTemplater::generateSelectable(AuthHandler::getInstance()->getAttributes()[$mail_selector]);
+        $mail_selector = (AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
+        $selectable_mail = FormTemplater::generateSelectable((AUTH_HANLER)::getInstance()->getAttributes()[$mail_selector]);
         $selectable_mail["values"] = $this->data['org-mail'];
         
         $sel_recht = self::$selectable_recht;
@@ -708,8 +708,8 @@ class ProjektHandler extends FormHandlerInterface{
                         <div class='chat-container chat-own'>
                             <span class='chat-time'>Jetzt gerade</span>
                             <label for='new-comment'>
-                                <?= htmlspecialchars(AuthHandler::getInstance()->getUserFullName() .
-                                    " (" . AuthHandler::getInstance()->getUsername() . ")") ?>
+                                <?= htmlspecialchars((AUTH_HANLER)::getInstance()->getUserFullName() .
+                                    " (" . (AUTH_HANLER)::getInstance()->getUsername() . ")") ?>
                             </label>
                             <textarea name='new-comment' id='new-comment' class='chat-textarea form-control col-xs-10'
                                       rows='3'
@@ -724,7 +724,7 @@ class ProjektHandler extends FormHandlerInterface{
                     
                     <?php
                     foreach ($comments as $c){
-                        $owner = ($c["creator"] === AuthHandler::getInstance()->getUsername() ? "own" : "other");
+                        $owner = ($c["creator"] === (AUTH_HANLER)::getInstance()->getUsername() ? "own" : "other");
                         $creatorStr = ((($c["creator"] == $c["creatorFullName"]) || empty($c["creatorFullName"])) ?
                             $c["creator"] :
                             ($c["creatorFullName"] . " (" . $c["creator"] . ")")
@@ -739,7 +739,7 @@ class ProjektHandler extends FormHandlerInterface{
                                 <?php
                                 break;
                             case 2: //admin only
-                                if (!AuthHandler::getInstance()->isAdmin())
+                                if (!(AUTH_HANLER)::getInstance()->isAdmin())
                                     break;
                             //fall-through
                             case 1: //comment

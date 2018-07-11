@@ -18,7 +18,7 @@ class MenuRenderer extends Renderer{
         $this->pathinfo = $pathinfo;
     }
     public function render(){
-        $attributes = AuthHandler::getInstance()->getAttributes();
+        $attributes = (AUTH_HANLER)::getInstance()->getAttributes();
         switch ($this->pathinfo["action"]){
             case "mygremium":
             case "allgremium":
@@ -71,7 +71,7 @@ class MenuRenderer extends Renderer{
                 break;
             case "konto":
                 global $HIBISCUSGROUP;
-                AuthHandler::getInstance()->requireGroup($HIBISCUSGROUP);
+                (AUTH_HANLER)::getInstance()->requireGroup($HIBISCUSGROUP);
                 $selected_hhp_id = null;
                 if (isset($_REQUEST["id"])){
                     $selected_hhp_id = $_REQUEST["id"];
@@ -93,10 +93,10 @@ class MenuRenderer extends Renderer{
     }
     
     public function renderProjekte($gremien){
-        //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => AuthHandler::getInstance()->getUserName()]);
+        //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANLER)::getInstance()->getUserName()]);
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
         $projekte = DBConnector::getInstance()->dbFetchAll("projekte", ["org", "projekte.*"], ["org" => ["in", $gremien]], [], ["org" => true], true);
-        /*if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
+        /*if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
             $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
             if ($ret !== false){

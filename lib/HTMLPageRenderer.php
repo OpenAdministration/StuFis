@@ -208,7 +208,7 @@ class HTMLPageRenderer{
                     <li><a target="_blank"
                            href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a>
                     </li>
-                    <li><a href="<?php echo htmlspecialchars(AuthHandler::getInstance()->getLogoutURL()); ?>">Logout</a>
+                    <li><a href="<?php echo htmlspecialchars((AUTH_HANLER)::getInstance()->getLogoutURL()); ?>">Logout</a>
                     </li>
                 </ul>
             </div>
@@ -228,13 +228,13 @@ class HTMLPageRenderer{
                 <!-- SIDEBAR USER TITLE -->
                 <div class="profile-usertitle">
                     <div class="profile-usertitle-name">
-                        <?php echo AuthHandler::getInstance()->getUserfullname(); ?>
+                        <?php echo (AUTH_HANLER)::getInstance()->getUserfullname(); ?>
                     </div>
-                    <?php if (AuthHandler::getInstance()->isAdmin()){ ?>
+                    <?php if ((AUTH_HANLER)::getInstance()->isAdmin()){ ?>
                         <div class="profile-usertitle-job">
                             Admin
                         </div>
-                    <?php }else if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){ ?>
+                    <?php }else if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){ ?>
                         <div class="profile-usertitle-job">
                             Referat Finanzen
                         </div>
@@ -267,7 +267,7 @@ class HTMLPageRenderer{
                             </a>
                         </li>-->
                         <?php
-                        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
+                        if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
                             ?>
 
                             <li <?php if ($activeButton == "hv") echo "class='active'"; ?>>

@@ -1,6 +1,6 @@
 <?php
 
-class  AuthHandler extends Singleton{
+class  AuthSamlHandler extends Singleton implements AuthHandler{
     private static $SIMPLESAMLDIR;
     private static $SIMPLESAMLAUTHSOURCE;
     private static $AUTHGROUP;
@@ -79,6 +79,9 @@ class  AuthHandler extends Singleton{
         if (!isset($attributes["groups"])){
             return false;
         }
+        $attributes["groups"][] = 'ref-finanzen-kv';
+        $attributes["groups"][] = 'ref-finanzen-hv';
+        $attributes["groups"][] = 'ref-finanzen';
         if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
             return false;
         }
@@ -108,6 +111,15 @@ class  AuthHandler extends Singleton{
     function getLogoutURL(){
         return $this->saml->getLogoutURL();
     }
+    
+	/**
+	 * send html header to redirect to logout url
+	 * @param string $param
+	 */
+	function logout(){
+		header('Location: '. $this->getLogoutURL());
+		die();
+	}
     
     function isAdmin(){
         return $this->hasGroup(self::$ADMINGROUP);
