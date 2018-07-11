@@ -5,9 +5,8 @@ String.prototype.replaceAll = function (target, replacement) {
 numeral.locale("de");
 
 $(document).ready(function () {
-    $(".input-group>.form-field-to-replace").on('input', function () {
-        console.log($(this).siblings(".form-field-to-replace").text());
-        $(this).val($(this).val().replace($(this).siblings(".form-field-replace").text(), ""));
+    $(".input-group>.form-field-replace").on('input', function () {
+        $(this).val($(this).val().replace($(this).siblings(".form-field-to-replace").text(), ""));
     });
 });
 

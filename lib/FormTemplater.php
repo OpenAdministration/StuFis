@@ -367,9 +367,9 @@ class FormTemplater{
             if (isset($domainSuffix) && !empty($domainSuffix)){
                 $out .= "<div class='input-group'>";
             }
-            $out .= "<input type='$type' class='form-control form-field-to-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
             if (isset($domainSuffix) && !empty($domainSuffix)){
-                $out .= "<div class='input-group-addon form-field-replace'>" . $domainSuffix . "</div>";
+                $out .= "<div class='input-group-addon form-field-to-replace'>" . $domainSuffix . "</div>";
                 $out .= "</div>";
             }
         }else{
