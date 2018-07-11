@@ -1608,14 +1608,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		<div class="auslagen-links">
 	        <?php if ($this->routeInfo['action'] != 'edit' && isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']) { ?>
 				<div class="col-xs-12 form-group">
-					<strong><a class="btn btn-success text-center" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>">Bearbeiten</a></strong>
+					<strong><a class="btn btn-success text-center" style="font-weight: bold;" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>">Bearbeiten</a></strong>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>
 			<?php if ($this->stateInfo['editable']){ 
 				foreach ($this->formSubmitButtons as $formId){ ?>
 				<div class="col-xs-12 form-group">
-			    	<strong><button data-for="<?= $formId; ?>" type="button" class="btn btn-success auslagen-form-submit-send" style="min-width:100px; font-weight: bold;">Speichern</button></strong>
+			    	<strong><button data-for="<?= $formId; ?>" type="button" class="btn btn-success auslagen-form-submit-send" style="font-weight: bold;">Speichern</button></strong>
+	    		</div>
+	    		<div class="col-xs-12 form-group">
+			    	<strong><a href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}" ?>" class="btn btn-danger" style="font-weight: bold;">Abbrechen</a></strong>
 	    		</div>
 	    		<?php } ?>
     		<?php } ?>
