@@ -1085,7 +1085,7 @@ class FileHandler {
 	 * @return string base64 encoded data
 	 */
 	public function fileToBase64($file){
-		return base64_encode($this->getFiledataBinary($file, true));
+		return base64_encode($this->getFiledataBinary($file, $this->UPLOAD_USE_DISK_CACHE));
 	}
 
 	/**
