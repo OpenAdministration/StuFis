@@ -17,6 +17,11 @@ require_once dirname(__FILE__).'/class.File.php';
 require_once dirname(__FILE__).'/class.Validator.php';
 require_once dirname(__FILE__).'/class.DbFilePDO.php';
 
+/**
+ *
+ * UPLOAD_MOD_XSENDFILE and UPLOAD_DISK_PATH has to be defined globally
+ *
+ */
 class FileHandler {
 
 	/**
@@ -876,13 +881,14 @@ class FileHandler {
 	 */
 	private $UPLOAD_MAX_MULTIPLE_FILES;
 
-	///**
-	// * path to DATABASE filecache or FILESYSTEM storage - no '/' at the ends7
-	// * default: '' - may overwritten by global constants
-	// * @var string
-	// */
-	// static context
-	//private $UPLOAD_DISK_PATH;
+	//	/**
+	//	 * need to be set globally
+	//	 * path to DATABASE filecache or FILESYSTEM storage - no '/' at the ends7
+	//	 * default: '' - may overwritten by global constants
+	//	 * @var string
+	//	 */
+	//	static context
+	//	UPLOAD_DISK_PATH;
 
 	/**
 	 * in bytes - also check DB BLOB max size and php upload size limit in php.ini
@@ -900,12 +906,13 @@ class FileHandler {
 	 */
 	private $UPLOAD_PROHIBITED_EXTENSIONS;
 
-	/**
-	 * 0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
-	 * default : 1 - may overwritten by global constants
-	 * @var integer
-	 */
-	private $UPLOAD_MOD_XSENDFILE;
+	//	/**
+	//	 * need to be set globally
+	// 	 * 0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
+	// 	 * default : 1 - may overwritten by global constants
+	// 	 * @var integer
+	// 	 */
+	//	UPLOAD_MOD_XSENDFILE;
 
 	/**
 	 * upload whitelist
@@ -927,7 +934,6 @@ class FileHandler {
 	 * 		UPLOAD_MAX_MULTIPLE_FILES
 	 * 		UPLOAD_MAX_SIZE
 	 * 		UPLOAD_PROHIBITED_EXTENSIONS
-	 * 		UPLOAD_MOD_XSENDFILE
 	 * 		UPLOAD_WHITELIST
 	 * 		
 	 * @param array $settings
@@ -969,12 +975,7 @@ class FileHandler {
 				:(defined('UPLOAD_PROHIBITED_EXTENSIONS')?
 					UPLOAD_PROHIBITED_EXTENSIONS
 					: 'ph.*?,cgi,pl,pm,exe,com,bat,pif,cmd,src,asp,aspx,js,lnk,html,htm,forbidden'));
-		$this->UPLOAD_MOD_XSENDFILE =
-			(isset($settings['UPLOAD_MOD_XSENDFILE'])?
-				$settings['UPLOAD_MOD_XSENDFILE']
-				:(defined('UPLOAD_MOD_XSENDFILE')?
-					UPLOAD_MOD_XSENDFILE
-					: 1));
+		if (!defined('UPLOAD_MOD_XSENDFILE')) define('UPLOAD_MOD_XSENDFILE', 1);
 		$this->UPLOAD_WHITELIST =
 			(isset($settings['UPLOAD_WHITELIST'])?
 				$settings['UPLOAD_WHITELIST']
@@ -1532,9 +1533,9 @@ class FileHandler {
 	 * test if server supports xsendfile headers (mod_xsendfile)
 	 */
 	public static function hasModXSendfile() {
-		if (!$this->UPLOAD_MOD_XSENDFILE){
+		if (!UPLOAD_MOD_XSENDFILE){
 			return false;
-		} elseif ($this->UPLOAD_MOD_XSENDFILE == 2){
+		} elseif (UPLOAD_MOD_XSENDFILE == 2){
 			return true;
 		}
 		if (function_exists ( 'apache_get_modules' )){
