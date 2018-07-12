@@ -17,7 +17,7 @@ if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['a
 	define('AUTH_HANLER', 'AuthBasicHandler');
 	(AUTH_HANLER)::getInstance()->requireAuth();
 	(AUTH_HANLER)::getInstance()->requireGroup('basic');
-	if (!isset($routeInfo['basic']) || !(AUTH_HANLER)::getInstance()->hasGroup($routeInfo['basic'])){
+	if (!isset($routeInfo['groups'])){
 		$routeInfo['action'] = '403';
 		$routeInfo['controller'] = 'error';
 	}
@@ -25,7 +25,10 @@ if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['a
 	define('AUTH_HANLER', 'AuthSamlHandler');
 	(AUTH_HANLER)::getInstance()->requireAuth();
 }
-
+if (isset($routeInfo['groups']) && !(AUTH_HANLER)::getInstance()->hasGroup($routeInfo['groups'])){
+	$routeInfo['action'] = '403';
+	$routeInfo['controller'] = 'error';
+}
 
 //TODO ACL on route ? ----------------------------
 $idebug = false;
