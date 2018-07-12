@@ -332,6 +332,8 @@ class ProjektHandler extends FormHandlerInterface{
                 }else{
                     $fields[$name] = null;
                 }
+            }else{
+                ErrorHandler::_renderJson(["code" => 403, "msg" => "Du hast keine Berechtigung '$name' zu schreiben."]);
             }
         }
         $update_rows = DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $version], $fields);

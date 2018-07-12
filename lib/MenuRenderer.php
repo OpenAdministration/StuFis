@@ -227,12 +227,12 @@ public function renderMyProfile(){
 }
     
     private function renderStuRaView(){
-        $header = ["Id", "Projektname", "Organisation", /*"Einnahmen", "Ausgaben"*/];
+        $header = ["Id", "Projektname", "Organisation","Projektbeginn", /*"Einnahmen", "Ausgaben"*/];
         
         //TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
-        $internContent = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org"],["state" => "need-stura"]);
-        $internContentHV = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org"],["state" => "ok-by-hv"]);
+        $internContent = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "need-stura"]);
+        $internContentHV = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "ok-by-hv"]);
         $groups = [
             "Vom StuRa abzustimmen" => $internContent,
             "zur Verkündung (genehmigt von HV)" => $internContentHV,
@@ -243,6 +243,14 @@ public function renderMyProfile(){
             },
             "htmlspecialchars",
             "htmlspecialchars",
+            function($datestring){
+                if(empty($datestring)){
+                    return "";
+                }else{
+                    return $this->date2relstr(strtotime($datestring));
+                }
+                
+            }
         ];
         $this->renderHeadline("Projekte für die nächste StuRa Sitzung");
         $this->renderTable($header, $groups, $escapeFunctions);
