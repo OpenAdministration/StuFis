@@ -654,6 +654,9 @@ button.btn.btn-arrow-left {
 .beleg-table .posten-entry {
 	counter-increment: posten-counter;
 }
+.beleg-table .posten-entry .posten-counter a {
+	cursor: pointer;
+}
 .beleg-table .posten-entry .posten-counter::before {
 	content: counter(posten-counter) ".";
 	display: inline-block;
