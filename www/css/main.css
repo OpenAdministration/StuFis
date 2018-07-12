@@ -355,7 +355,6 @@ a.disabled-option span {
 
 .container.main {
     padding-left: 20%;
-	margin-left: 20px;
 }
 
 /* Profile sidebar */
@@ -639,6 +638,10 @@ button.btn.btn-arrow-left {
 .beleg-table .beleg-container {
 	counter-increment: beleg-counter;
 }
+.beleg-table .beleg-container .beleg-nr::before {
+	content: 'B';
+	display: inline;
+}
 .beleg-table .beleg-container .beleg-idx::before {
 	 content: counter(beleg-counter);
 }
@@ -662,10 +665,186 @@ button.btn.btn-arrow-left {
 	margin-top: -10px;
 	margin-bottom: 0px;
 }
+.beleg-table .posten-entry .posten-in .vali-error-msg,
+.beleg-table .posten-entry .posten-out .vali-error-msg {
+	display: table-row;
+}
+.auslagen-links {
+	position: fixed;
+	right: 0;
+	width: 17%;
+	top: 200px;
+}
+.auslagen-links .btn{
+	width: 100%;
+	max-width: 200px;
+}
+@media (max-width: 991px) {
+	.auslagen-links {
+		right: inherit;
+		left: 0;
+		top: 500px;
+	}
+}
+@media (max-width: 700px) {
+	.auslagen-links {
+		right: inherit;
+		left: inherit;
+		top: inherit;
+		position: relative;
+		width: 100%;
+	}
+}
+@media (max-width: 700px), (max-height: 580px) {
+	.auslagen-links {
+		right: inherit;
+		left: inherit;
+		top: inherit;
+		position: relative;
+		width: 100%;
+	}
+}
+.textarea_readonly {
+	white-space: pre;
+}
 .bt-dark {
 	border-top: 2px solid #777;
 }
-
 .has-feedback .form-control {
     padding: 6px 12px;
+}
+/* --------- SPINNING FONT AWESOME----------*/
+.multifa {
+  font-size: 14px;
+  position:relative;
+  width: 56px;
+  height: 56px;
+}
+.multifa.center {
+	margin: 0 auto;
+	left: 0;
+	right:0;
+}
+.multifa > span.fa {
+  font-size: 56px;
+  display: block;
+  width: 56px;
+  height: 56px;
+  line-height: 56px;
+  text-align: center;
+}
+.multifa > span.fa:last-child {
+  position:absolute;
+  top: 25px;
+  left: 37px;
+}
+.sym-spin {
+  -webkit-animation: spin 5s infinite linear;
+  -moz-animation: spin 5s infinite linear;
+  -o-animation: spin 5s infinite linear;
+  animation: spin 5s infinite linear;
+}
+.sym-spin-reverse {
+  -webkit-animation: spin 5s infinite linear reverse;
+  -moz-animation: spin 5s infinite linear reverse;
+  -o-animation: spin 5s infinite linear reverse;
+  animation: spin 5s infinite linear reverse;
+}
+@-moz-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    -moz-transform: rotate(359deg);
+  }
+}
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+  }
+}
+@-o-keyframes spin {
+  0% {
+    -o-transform: rotate(0deg);
+  }
+  100% {
+    -o-transform: rotate(359deg);
+  }
+}
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+/* ------- SPINNER ---------------------- */
+/*-- https://github.com/tobiasahlin/SpinKit ---*/
+.planespinner {
+  width: 40px;
+  height: 40px;
+  background-color: #333;
+
+  margin: 10px auto;
+  -webkit-animation: sk-rotateplane 1.2s infinite ease-in-out;
+  animation: sk-rotateplane 1.2s infinite ease-in-out;
+}
+
+@-webkit-keyframes sk-rotateplane {
+  0% { -webkit-transform: perspective(120px) }
+  50% { -webkit-transform: perspective(120px) rotateY(180deg) }
+  100% { -webkit-transform: perspective(120px) rotateY(180deg)  rotateX(180deg) }
+}
+
+@keyframes sk-rotateplane {
+  0% { 
+    transform: perspective(120px) rotateX(0deg) rotateY(0deg);
+    -webkit-transform: perspective(120px) rotateX(0deg) rotateY(0deg) 
+  } 50% { 
+    transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg);
+    -webkit-transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg) 
+  } 100% { 
+    transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
+    -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
+  }
+}
+/* -------- fileview -------- */
+#server-file-dlg{
+	padding: 5px;
+	position: fixed;
+	height: 100%;
+	width: 100%;
+}
+#server-file-dlg .modal-dialog{
+	position: relative;
+	width: 100%;
+	height: 90%;
+	height: calc(100% - 60px);
+}
+#server-file-dlg .modal-dialog .modal-content{
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#server-file-dlg .modal-dialog .modal-content{
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#server-file-dlg .modal-dialog .modal-content .modal-body{
+	position: relative;
+	height: 100%;
+	height: calc(100% - 57px);
+	padding: 0;
+}
+#server-file-dlg .modal-dialog .modal-content .modal-body .js-content,
+#server-file-dlg .modal-dialog .modal-content .modal-body .js-content > *{
+	width: 100%;
+	height: 100%;
 }

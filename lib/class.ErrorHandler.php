@@ -1,8 +1,12 @@
 <?php
 
-/** 
- * @author michael
- * 
+/**
+ * implement error handler
+ * @category        framework
+ * @author 			michael gnehr
+ * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ * @since 			07.05.2018
+ * @copyright 		Copyright Referat IT (C) 2018 - All rights reserved
  */
 class ErrorHandler extends Renderer
 {

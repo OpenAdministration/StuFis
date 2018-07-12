@@ -133,22 +133,27 @@ class DBConnector extends Singleton{
             "id" => "INT NOT NULL AUTO_INCREMENT",
             "projekt_id" => "INT NOT NULL",
             "name_suffix" => "VARCHAR(255) NULL",
-            "state" => "VARCHAR(127) NOT NULL",
-            "belege_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "hv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "kv_ok" => "VARCHAR(127) NOT NULL DEFAULT ''",
-            "zahlung_iban" => "VARCHAR(127) NOT NULL",
-            "zahlung_name" => "VARCHAR(127) NOT NULL",
-            "zahlung_vwzk" => "VARCHAR(127) NOT NULL",
-            'last_change' => 'DATETIME NOT NULL DEFAULT ',
+            "state" => "VARCHAR(255) NOT NULL",
+            "ok-belege" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "ok-hv" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "ok-kv" => "VARCHAR(255) NOT NULL DEFAULT ''",
+        	"payed" => "VARCHAR(255) NOT NULL DEFAULT ''",
+        	"rejected" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "zahlung-iban" => "VARCHAR(127) NOT NULL",
+            "zahlung-name" => "VARCHAR(127) NOT NULL",
+            "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
+            'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
+        	'last_change_by' => "VARCHAR(255) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',
+        	"version" => "INT NOT NULL DEFAULT 1",
+        	"created" => "VARCHAR(255) NOT NULL DEFAULT ''",
         ];
         $scheme["belege"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
             "auslagen_id" => "INT NOT NULL",
             "short" => "VARCHAR(45) NULL",
             "created_on" => "DATETIME NOT NULL DEFAULT NOW()",
-            "datum" => "DATETIME NOT NULL",
+            "datum" => "DATETIME NULL DEFAULT NULL",
             "beschreibung" => "TEXT NOT NULL",
             "file_id" => "INT NULL DEFAULT NULL",
         ];
@@ -157,8 +162,8 @@ class DBConnector extends Singleton{
             "beleg_id" => "INT NOT NULL",
             "short" => "INT NOT NULL",
             "projekt_posten_id" => "INT NOT NULL",
-            "ausgaben" => "DOUBLE NULL DEFAULT NULL",
-            "einnahmen" => "DOUBLE NULL DEFAULT NULL",
+            "ausgaben" => "DECIMAL(10,2) NOT NULL DEFAULT 0",
+            "einnahmen" => "DECIMAL(10,2) NOT NULL DEFAULT 0",
         ];
         
         // dateinen ---------------------
@@ -298,15 +303,15 @@ class DBConnector extends Singleton{
     }
     
     function getUser(){
-        $user = $this->dbFetchAll("user", [], ["username" => AuthHandler::getInstance()->getUsername()]);
+        $user = $this->dbFetchAll("user", [], ["username" => (AUTH_HANLER)::getInstance()->getUsername()]);
         if (count($user) === 1){
             $user = $user[0];
         }else{
             if (count($user) === 0){
                 $fields = [
-                    "fullname" => AuthHandler::getInstance()->getUserFullName(),
-                    "username" => AuthHandler::getInstance()->getUsername(),
-                    "email" => AuthHandler::getInstance()->getUserMail(),
+                    "fullname" => (AUTH_HANLER)::getInstance()->getUserFullName(),
+                    "username" => (AUTH_HANLER)::getInstance()->getUsername(),
+                    "email" => (AUTH_HANLER)::getInstance()->getUserMail(),
                 ];
                 //print_r($fields);
                 $id = $this->dbInsert("user", $fields);
@@ -324,6 +329,12 @@ class DBConnector extends Singleton{
      * @param string $tables            table which should be used in FROM statement
      *                                  if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
      * @param array  $showColumns       if [] there will be all coulums (*) shown
+     * 									if keys are not numeric, key will be used as alias
+     * 									don't use same alias twice
+     * 									renaming of tables is possible
+     * 									 e.g.: newname => tablename.*, numerik keys(newname) will be ignored
+     * 									  will be: newname.col1, newname.col2 ... 
+     * 									
      * @param array  $fields            val no array [colname => val,...]: WHERE colname = val AND ...
      *
      *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value
@@ -366,14 +377,12 @@ class DBConnector extends Singleton{
         if (!is_array($tables)){
             $tables = [$tables];
         }
-    
+        
         foreach ($tables as $key => $table){
-            if (!isset($this->scheme[$table])){
-                ErrorHandler::_errorExit("Unkown table $table", 404);
-            }
-            $tables[$key] = self::$DB_PREFIX . $table;
+        	if (!isset($this->scheme[$table])){
+        		ErrorHandler::_errorExit("Unkown table $table", 404);
+        	}
         }
-    
     
         //check if content of fields and sort are valid
         $fields = array_intersect_key($fields, array_flip($this->validFields));
@@ -423,23 +432,47 @@ class DBConnector extends Singleton{
         //
         //prebuild sql
         //
-        if (!empty($showColumns)){
-            $cols = [];
-            foreach ($showColumns as $col){
-                if (in_array($col, $this->validFields)){
-                    if (strpos($col, ".")){
-                        $tmp = explode(".", $col);
-                        $cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]);
-                    }else{
-                        $cols[] = $this->quoteIdent($col);
-                    }
-                    
-                }
-                
-            }
-        }else{
-            $cols = ["*"];
+ 
+        if (empty($showColumns)){
+            $showColumns = ["*"];
         }
+        if (in_array('*', $showColumns)){
+        	unset($showColumns[array_search('*', $showColumns)]);
+        	foreach ($tables as $t){
+        		$showColumns[] = "$t.*";
+        	}
+        	foreach ($joins as $j){
+        		$showColumns[] = "{$j['table']}.*";
+        	}
+        }
+        $newShowColumns = [];
+        foreach ($showColumns as $alias => $col){
+        	if (!is_int($alias) && ($pos = strpos($col, ".*"))!==false){
+        		$tname = substr($col, 0, $pos);
+        		$rename = $alias;
+        		foreach ($this->scheme[$tname] as $colName => $dev_null){
+        			$newShowColumns[$rename.'.'.$colName] = $tname.'.'.$colName;
+        		}
+        	} else {
+        		$newShowColumns[$alias] = $col;
+        	}
+        }
+        
+        $cols = [];
+        foreach ($newShowColumns as $alias => $col){
+        	if (in_array($col, $this->validFields)){
+        		$as = (!is_int($alias))? " as `$alias`":'';
+        		if (strpos($col, ".")){
+        			$tmp = explode(".", $col);
+        			$cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]) . $as;
+        		}else{
+        			$cols[] = $this->quoteIdent($col).$as;
+        		}
+        
+        	}
+        
+        }
+
         $c = [];
         $vals = [];
         foreach ($fields as $k => $v){
@@ -502,8 +535,11 @@ class DBConnector extends Singleton{
                 $o[] = $this->quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
         }
         
+        foreach ($tables as $key => $table){
+        	$tables[$key] = self::$DB_PREFIX . $table;
+        }
         
-        $sql = PHP_EOL . "SELECT " . implode(",", $cols) . PHP_EOL . "FROM " . implode(",", $tables);
+        $sql = PHP_EOL . "SELECT " . implode(",".PHP_EOL, $cols) . PHP_EOL . "FROM " . implode(",".PHP_EOL, $tables);
         if (count($j) > 0){
             $sql .= " " . implode(" ", $j) . " ";
         }

@@ -39,12 +39,12 @@
 		$_bt.find('.beleg-nr').prepend('N'+add_beleg_counter);
 		//set input names
 			//beleg-date
-			$_bt.find('.beleg-date input')[0].name = "beleg['new_"+add_beleg_counter+"']['datum']";
+			$_bt.find('.beleg-date input')[0].name = "belege[new_"+add_beleg_counter+"][datum]";
 			// beleg-file
-			$_bt.find('.beleg-file').html('<div class="col-xs-0 form-group"><div class="single-file-container"><input class="form-control single-file" type="file" name="beleg[42]['+"'file'"+']"></div></div>');
-			$_bt.find('.beleg-file input')[0].name = "beleg['new_"+add_beleg_counter+"']['file']";
+			$_bt.find('.beleg-file').html('<div class="col-xs-0 form-group"><div class="single-file-container"><input class="form-control single-file" type="file" name="belege[42][file]"></div></div>');
+			$_bt.find('.beleg-file input')[0].name = "beleg_new_"+add_beleg_counter+'[0]';
 			//beschreibung
-			$_bt.find('.beleg-desc textarea')[0].name = "beleg['new_"+add_beleg_counter+"']['beschreibung']";
+			$_bt.find('.beleg-desc textarea')[0].name = "belege[new_"+add_beleg_counter+"][beschreibung]";
 		//add delete handler
 		$_bt.find('.beleg-nr .delete-row').on('click', remove_beleg);
 		//append posten handling
@@ -110,7 +110,9 @@
 	}
 	
 	var add_posten_counter = 0;
-	var add_posten = function() {
+	var add_posten = function(ev) {
+		ev.stopPropagation();
+		ev.preventDefault();
 		add_posten_counter++;
 		var $e = $(this);
 		var focus_index = $e.parent().parent().hasClass('posten-in')? 'in':'out';
@@ -133,9 +135,9 @@
 		$new.find('input').on('input', function(){ update_posten_counter($old.closest('.posten-inner-list')); });
 		//update input names
 		var beleg_id = $old.closest('.beleg-container')[0].dataset.id;
-		$new.find('.posten-in input')[0].name = "posten['"+beleg_id+"']['new_"+add_posten_counter+"']['in']";
-		$new.find('.posten-out input')[0].name = "posten['"+beleg_id+"']['new_"+add_posten_counter+"']['out']";
-		$new.find('.projekt-posten-select input')[0].name = "posten['"+beleg_id+"']['new_"+add_posten_counter+"']['projekt-posten']";
+		$new.find('.posten-in input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][in]";
+		$new.find('.posten-out input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][out]";
+		$new.find('.projekt-posten-select input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][projekt-posten]";
 		//append new to inner list
 		$new.insertBefore($old);
 		// set focus to new
@@ -144,6 +146,7 @@
 		posten_project_list($new.find('.projekt-posten-select'));
 		//update counter
 		update_posten_counter($new.closest('.posten-inner-list'));
+		return true;
 	};
 	
 	var posten_handler = function ($posten_inner_list) {
@@ -167,26 +170,45 @@
 		var $select = $('<select/>', {
 				 'class':"selectpicker"
 		});
+		//add options
 		for (var idx in data) {
 			if (!data.hasOwnProperty(idx)) continue;
 			$select.append('<option value=' + idx + '>' + data[idx] + '</option>');
 		}
-		$select.appendTo($target);
+		//set value
 		$select[0].value = ($target[0].dataset.value);
-		$select.selectpicker('refresh');
-		$target.children('span').addClass('hidden');
-		//onchange listener TODO
-		$target.find('select').on('change', function(ev){
-			var $e = $(this);
-			var $p = $e.closest('.projekt-posten-select');
-			$p[0].dataset.value=$e.val();
-			$p.children('input').val($e.val());
-			$p.children('span').text($e[0].options[$e[0].selectedIndex].text);
-		});
+		var $group;
+		if ($target.children('.form-group').length == 1) {
+			$group = $target.children('.form-group');
+			$group.children('span').addClass('hidden');
+		} else {
+			$select.appendTo($target);
+			$target.children('span').addClass('hidden');
+		}
+		setTimeout(function(){
+			if ($target.children('.form-group').length == 1){
+				$select.prependTo($group);
+			}
+			$select.selectpicker('refresh');
+			//onchange listener TODO
+			$target.find('select').on('change', function(ev){
+				var $e = $(this);
+				var $p = $e.closest('.projekt-posten-select');
+				$p[0].dataset.value=$e.val();
+				$p.find('input').val($e.val());
+				$p.find('span.value').text($e[0].options[$e[0].selectedIndex].text);
+			});
+			$target.find('.bootstrap-select').css({
+				'display': 'table-caption',
+				'width': '100%'
+			});
+		}, 100);
+		
+		
+		
 	};
 	
 	var update_fileinput = function($target){
-		console.log($target);
 		var $t = $target.find('input');
 		var cfg = {
             'showUpload': false, // magically appears in fileinput
@@ -202,11 +224,99 @@
 	};
 		
 	$(document).ready(function(){
+		$('.beleg-table .beleg-container .beleg-file input').each(function(i, e){
+			//update name
+			e.name = (e.name+'').replace(/^(files)(\[)(.*)(\])(\[\])$/, `$3$5`);
+		});
+		$('.beleg-table .beleg-container .beleg-file .file-delete').on('click', function(){
+			var $e = $(this);
+			var $f = $e.closest('form');
+			var action = $f.attr("action");
+			action = action.substring(0, action.lastIndexOf('/')) + '/filedelete'
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'fid': $e.closest('.beleg-file')[0].dataset.id,
+				'auslagen-id': $f.children('input[name="auslagen-id"]').val(),
+				'projekt-id': $f.children('input[name="projekt-id"]').val(),
+				'etag': $f.children('input[name="etag"]').val()
+			};
+			jQuery.ajax({
+		        url: action,
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
+		$('.state-links .state-changes-now').on('click', function(ev){
+			var $e = $(this);
+			var $f = $e.closest('.state-links');
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'state': this.dataset.newstate,
+				'auslagen-id': $f.find('input[name="auslagen-id"]').val(),
+				'projekt-id': $f.find('input[name="projekt-id"]').val(),
+				'etag': $f.find('input[name="etag"]').val()
+			};
+			console.log(dataset);
+			jQuery.ajax({
+		        url: $f.find('input[name="action"]').val(),
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
+		$(document).on('svg-trigger-state-change', function(ev){
+			var $f = $('.svg-statechanges');
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'state': ev.originalEvent.detail,
+				'auslagen-id': $f.find('input[name="auslagen-id"]').val(),
+				'projekt-id': $f.find('input[name="projekt-id"]').val(),
+				'etag': $f.find('input[name="etag"]').val()
+			};
+			console.log(dataset);
+			jQuery.ajax({
+		        url: $f.find('input[name="action"]').val(),
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
 		$('.beleg-table .add-belege .btn').on( 'click', add_beleg);
 		$('.beleg-table .beleg-container .beleg-nr .delete-row').on( 'click', remove_beleg);
 		$('.beleg-table .beleg-container .posten-inner-list').each(function(i, e){
 			posten_handler($(e));
 		});
-		
+		$('.auslagen-form-submit-send').on('click', function(){
+			var $e = $(this);
+			var $target = $('form#'+this.dataset.for);
+			$target.trigger('submit');
+		});
+		$('.auslagen-belege-pdf').on('click', function(ev){
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'projekt-id': this.dataset.pfor,
+				'auslagen-id': this.dataset.afor,
+			};
+			var action = this.dataset.action;
+			jQuery.ajax({
+		        url: action,
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
 	});
 })();

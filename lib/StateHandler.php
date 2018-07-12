@@ -159,14 +159,14 @@ class StateHandler{
         if ($permArray === true){
             return true;
         }
-        $ret = AuthHandler::getInstance()->isAdmin();
+        $ret = (AUTH_HANLER)::getInstance()->isAdmin();
         if (isset($permArray["groups"]))
-            $ret |= AuthHandler::getInstance()->hasGroup(implode(",", $permArray["groups"]));
+            $ret |= (AUTH_HANLER)::getInstance()->hasGroup(implode(",", $permArray["groups"]));
         if (isset($permArray["gremien"]))
-            $ret |= AuthHandler::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
+            $ret |= (AUTH_HANLER)::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
         if (isset($permArray["persons"])){
-            $ret |= in_array(AuthHandler::getInstance()->getUsername(), $permArray["persons"], true);
-            $ret |= in_array(AuthHandler::getInstance()->getUserFullName(), $permArray["persons"], true);
+            $ret |= in_array((AUTH_HANLER)::getInstance()->getUsername(), $permArray["persons"], true);
+            $ret |= in_array((AUTH_HANLER)::getInstance()->getUserFullName(), $permArray["persons"], true);
         }
         //var_dump($ret);
         return (bool)$ret;

@@ -124,9 +124,9 @@ class FormTemplater{
     static function generateGremienSelectable($all = false){
         $GremiumPrefix = $GLOBALS["GremiumPrefix"];
         if ($all)
-            $gremien = AuthHandler::getInstance()->getAttributes()["alle-gremien"];
+            $gremien = (AUTH_HANLER)::getInstance()->getAttributes()["alle-gremien"];
         else
-            $gremien = AuthHandler::getInstance()->getAttributes()["gremien"];
+            $gremien = (AUTH_HANLER)::getInstance()->getAttributes()["gremien"];
         sort($gremien);
         $selectable = [];
         
@@ -367,9 +367,9 @@ class FormTemplater{
             if (isset($domainSuffix) && !empty($domainSuffix)){
                 $out .= "<div class='input-group'>";
             }
-            $out .= "<input type='$type' class='form-control form-field-to-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
             if (isset($domainSuffix) && !empty($domainSuffix)){
-                $out .= "<div class='input-group-addon form-field-replace'>" . $domainSuffix . "</div>";
+                $out .= "<div class='input-group-addon form-field-to-replace'>" . $domainSuffix . "</div>";
                 $out .= "</div>";
             }
         }else{
@@ -604,7 +604,7 @@ class FormTemplater{
             $out .= "<textarea id='$unique_id' placeholder='$placeholder' name='$name' class='form-control' rows='$min_rows' $additonal_str>$value</textarea>";
         }else{
             
-            $out .= "<div id='$unique_id'>{$this->getReadOnlyValue($value)}</div>";
+            $out .= "<div id='$unique_id' class='textarea_readonly'>{$this->getReadOnlyValue($value)}</div>";
         }
         
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);

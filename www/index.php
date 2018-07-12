@@ -8,11 +8,27 @@
 
 //auth ----------------------------------
 include "../lib/inc.all.php";
-AuthHandler::getInstance()->requireAuth();
 
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
+
+if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
+	define('AUTH_HANLER', 'AuthBasicHandler');
+	(AUTH_HANLER)::getInstance()->requireAuth();
+	(AUTH_HANLER)::getInstance()->requireGroup('basic');
+	if (!isset($routeInfo['groups'])){
+		$routeInfo['action'] = '403';
+		$routeInfo['controller'] = 'error';
+	}
+} else {
+	define('AUTH_HANLER', 'AuthSamlHandler');
+	(AUTH_HANLER)::getInstance()->requireAuth();
+}
+if (isset($routeInfo['groups']) && !(AUTH_HANLER)::getInstance()->hasGroup($routeInfo['groups'])){
+	$routeInfo['action'] = '403';
+	$routeInfo['controller'] = 'error';
+}
 
 //TODO ACL on route ? ----------------------------
 $idebug = false;

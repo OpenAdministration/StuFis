@@ -9,10 +9,12 @@ require_once SYSBASE . '/lib/LoadGroups.php';
 require_once SYSBASE . '/lib/Singleton.php';
 require_once SYSBASE . '/lib/baseclass/Enum.php';
 require_once SYSBASE . '/lib/LoadGroups.php';
-
+require_once SYSBASE . '/lib/svg/class.SvgDiagram.php';
 require_once SYSBASE . '/lib/Renderer.php';
 require_once SYSBASE . '/lib/HibiscusXMLRPCConnector.php';
-require_once SYSBASE . '/lib/AuthHandler.php';
+require_once SYSBASE . '/lib/class.AuthHandler.php';
+require_once SYSBASE . '/lib/AuthSamlHandler.php';
+require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
 require_once SYSBASE . '/lib/DBConnector.php';
 require_once SYSBASE . '/lib/inc.helper.php';
 require_once SYSBASE . '/lib/FormHandlerInterface.php';

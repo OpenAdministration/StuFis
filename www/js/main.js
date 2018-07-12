@@ -5,9 +5,8 @@ String.prototype.replaceAll = function (target, replacement) {
 numeral.locale("de");
 
 $(document).ready(function () {
-    $(".input-group>.form-field-to-replace").on('input', function () {
-        console.log($(this).siblings(".form-field-to-replace").text());
-        $(this).val($(this).val().replace($(this).siblings(".form-field-replace").text(), ""));
+    $(".input-group>.form-field-replace").on('input', function () {
+        $(this).val($(this).val().replace($(this).siblings(".form-field-to-replace").text(), ""));
     });
 });
 
@@ -1387,21 +1386,188 @@ function getTrText($tr) {
 
 }
 
+var parseData = function (data, reload) {
+	var r = {}
+	if (typeof(data.success) != 'undefined' ){
+		r = data;
+	} else {
+		try {
+			r = JSON.parse(data);
+		} catch(e) {
+			return data;
+		}
+	}
+	return r;
+};
 
-//moment.locale('de');
+function defaultPostModalHandler(values){
+	var animate_delete = function($elm, callback){
+		$elm.animate({ height: 0, opacity: 0 }, 500,function(){ 
+			$(this).remove();
+			if (typeof(callback) == 'function'){
+				callback();
+			}
+		});
+	};
+	//remove wait modal
+	$("#please-wait-dlg").modal("hide");
+	
+	//remove old error hints
+	animate_delete($('.vali-error-msg'));
+	$('.vali-error-hint').removeClass('has-error').removeClass('vali-error-hint');
+	
+	//parse values / backport
+	if (typeof(values) == 'object'){
+		// message array
+		if (values.hasOwnProperty('msg') && !values.hasOwnProperty('msgs')){
+			values['msgs'] = [values.msg];
+		}
+	}
+	//reload function
+	if (values.hasOwnProperty('reload') && (typeof(values.reload)=='integer'|| typeof(values.reload)=='number')){
+		if (values.hasOwnProperty('redirect')) {
+			setTimeout(function() { window.location.replace(values.redirect); }, values.reload);
+		} else if(values.hasOwnProperty('target')){
+			setTimeout(function() { window.location.replace(values.target); }, values.reload);
+		} else {
+			setTimeout(function() { window.location.replace(window.location); }, values.reload);
+		}
+	}
+	//validatr + message boxes
+	if (typeof(values) == 'object' && values.hasOwnProperty('success')){
+		//form validation - error after ajax
+		if (!values.success && values.hasOwnProperty('type') && values.type=='validator' && values.hasOwnProperty('field')){
+    		//find form element
+    		var $t = $('[name="'+values.field+'"]');
+    		if ($t.length == 1){
+    			//add has-error class
+    			if ($t.closest('.form-group').is(':visible')){
+    				$t.closest('.form-group').addClass('has-error').addClass('vali-error-hint');
+    			}
+    			//add error description
+    			$t.closest('.form-group').append('<small class="vali-error-msg error text-danger"><strong>'+values.msg+'</strong></small>');
+    		} else {
+    			console.log($t);
+    		}
+    		return true;
+    	//message boxes
+		} else if (values.hasOwnProperty('type') && values.type=='modal' && values.hasOwnProperty('subtype') && values.subtype!='file' ) {
+			$("#"+values.subtype+"-dlg .default-head").hide();
+			$("#"+values.subtype+"-dlg .js-head").show();
+			$("#"+values.subtype+"-dlg .default-content").hide();
+			$("#"+values.subtype+"-dlg .js-content").show();
+			if (values.hasOwnProperty('headline')){
+				$("#"+values.subtype+"-dlg .js-head").html(values.headline);
+			} else {
+				$("#"+values.subtype+"-dlg .js-head").html('Warnung');
+			}
+			$("#"+values.subtype+"-dlg .js-content").html(values.msg);
+			$("#"+values.subtype+"-dlg").modal("show");
+			return true;
+		} else if (values.hasOwnProperty('type') && values.type=='modal' && values.hasOwnProperty('subtype') && values.subtype=='file') {
+			if (values.hasOwnProperty('headline')){
+				$("#server-"+values.subtype+"-dlg .js-head").html(values.headline);
+			} else {
+				$("#server-"+values.subtype+"-dlg .js-head").empty();
+			}
+			var obj_opt = $.extend({'data': ((values.hasOwnProperty('datapre'))?values.datapre:'')+values.data}, (values.hasOwnProperty('attr'))?values.attr:{});
+			var $c = $('<'+((values.hasOwnProperty('container') && values.container)?values.container:'object')+'/>'); 
+			for (p in obj_opt){
+				if (obj_opt.hasOwnProperty(p)){
+					$c.attr(p, obj_opt[p]);
+				}
+			}
+			if (values.hasOwnProperty('fallback') && values.fallback){
+				$c.html(values.fallback);
+				$c.find('.modal-form-fallback-submit').on('click', function(){
+					var $e = $(this);
+					$e.closest('form').append('<input type="hidden" name="nonce" value="'+$('input[name="nonce"]').val()+'" >');
+					$e.closest('form')[0].submit();
+				});
+			}
+			$("#server-"+values.subtype+"-dlg .js-content").empty();
+			$("#server-"+values.subtype+"-dlg .js-content").append($c);
+			$("#server-"+values.subtype+"-dlg").modal("show");
+			return true;
+		} else if (values.hasOwnProperty('type') && values.type=='modal'){
+			if (values.hasOwnProperty('headline')){
+				$("#server-message-label").html(values.headline);
+			} else {
+				$("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+			}
+			if (values.hasOwnProperty('msg') && !values.hasOwnProperty('dump')){
+				$("#server-message-content").html(values.msg);
+			} else if (values.hasOwnProperty('msgs') && !values.hasOwnProperty('dump')){
+				var out = '';
+				for (var i = 0; i < values.msgs.length; i++){
+					out += '<p>'+values.msgs[i]+'</p>';
+				}
+				$("#server-message-content").html(out);
+			} else {
+				$("#server-message-content").html(
+                	'<pre>'+
+                    	JSON.stringify(values, null, 4)+
+                	'</pre>'
+                );
+                $("#server-message-dlg").modal("show");
+			}
+			return true;
+		}
+	}
+	if (typeof(values) == "string") {
+        $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
+        var $smc = $("#server-message-content");
+        $smc.empty();
+        $("#server-message-content").empty();
+        var $smcp = $('<pre>').appendTo($smc).html(values);
+        $("#server-message-dlg").modal("show");
+        return true;
+    }
+	return false;
+}
 
 function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
+	if ((jqXHR.status == 403 || jqXHR.status == 404) && 
+			typeof(jqXHR.responseText) != 'undefined' &&
+			typeof(parseData(jqXHR.responseText).success)=='boolean'){
+		data = parseData(jqXHR.responseText);
+		//hide wait dialog modal
+		$("#please-wait-dlg").modal("hide");
+		//show
+		$("#server-error-dlg .default-head").show();
+		$("#server-error-dlg .js-head").hide();
+		$("#server-error-dlg .default-content").show();
+		$("#server-error-dlg .js-content").hide();
+		$("#server-error-dlg").modal("show");
+		$("#server-error-dlg .msg").text('('+data.msg+')');
+		//auto page reload
+		if (typeof(data.reload)=='number') {
+			setTimeout(function() { window.location.replace(window.location); }, data.reload);
+		} else if ((typeof(data.reload)=='boolean' && data.reloa ) || (typeof(data.reload)!='boolean' && typeof(data.reload)!='number')){
+			setTimeout(function() { window.location.replace(window.location); }, 3000);
+		}
+		return;
+	}
     $("#please-wait-dlg").modal("hide");
 
     $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
     var $smc = $("#server-message-content");
     $smc.empty();
     $("#server-message-content").empty();
-    var $smcp = $('<pre>').appendTo($smc).text(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
+    var $smcp = $('<pre>').appendTo($smc).html(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
     $("#server-message-dlg").modal("show");
 };
 
 function handleSubmitForm($form, evt, isConfirmed, fnMod) {
+	var animate_delete = function($elm, callback){
+		$elm.animate({ height: 0, opacity: 0 }, 500,function(){ 
+			$(this).remove();
+			if (typeof(callback) == 'function'){
+				callback();
+			}
+		});
+	};
+	
     var action = $form.attr("action");
     if ($form.find(":input[name=action]").length == 0) {
         return true;
@@ -1418,6 +1584,9 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
     }
     var data = new FormData($form[0]);
     data.append("ajax", 1);
+    if ($('input[name="nonce"]').length == 1){
+    	data.append("nonce", $('input[name="nonce"]').val());
+    }
     if (fnMod)
         fnMod(data);
     $('.new-table-row *[name]').each(function (i, e) {
@@ -1477,16 +1646,19 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
         type: "POST"
     })
         .done(function (values, status, req) {
-            $("#please-wait-dlg").modal("hide");
-            if (typeof(values) == "string") {
-                $("#server-message-label").text("Es ist ein Server-Fehler aufgetreten");
-                var $smc = $("#server-message-content");
-                $smc.empty();
-                $("#server-message-content").empty();
-                var $smcp = $('<pre>').appendTo($smc).text(values);
-                $("#server-message-dlg").modal("show");
-                return;
-            }
+        	if (defaultPostModalHandler(values)){
+        		return;
+        	}
+        
+    		//parse values / backport
+        	if (typeof(values) == 'object'){
+        		// message array
+        		if (values.hasOwnProperty('msg') && !values.hasOwnProperty('msgs')){
+        			values['msgs'] = [values.msg];
+        		}
+        	}
+        	
+        
             var txt;
             var txtHeadline;
             if (values.ret) {

@@ -103,7 +103,6 @@ $routing = [
                                     'type' => 'pattern',
                                     'action' => 'view',
                                     'param' => 'aid',
-                                    'load' => [],
                                     'children' => [
                                         [
                                             'path' => 'edit',
@@ -169,7 +168,7 @@ $routing = [
                             'action' => 'auslagen',
                             'children' => [
                                 [
-                                    'path' => '(updatecreate)',
+                                    'path' => '(updatecreate|filedelete|state|belegpdf)',
                                     'type' => 'pattern',
                                     'param' => 'mfunction',
                                     'match' => 0,

@@ -148,7 +148,7 @@ class HTMLPageRenderer{
     private function includeJS(){
         $out = "";
         $defaultJsFiles = [
-            "jquery-3.1.1.min",
+            "jquery.min",
             "bootstrap.min",
             "validator",
             "numeral.min",
@@ -208,7 +208,7 @@ class HTMLPageRenderer{
                     <li><a target="_blank"
                            href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a>
                     </li>
-                    <li><a href="<?php echo htmlspecialchars(AuthHandler::getInstance()->getLogoutURL()); ?>">Logout</a>
+                    <li><a href="<?php echo htmlspecialchars((AUTH_HANLER)::getInstance()->getLogoutURL()); ?>">Logout</a>
                     </li>
                 </ul>
             </div>
@@ -228,13 +228,13 @@ class HTMLPageRenderer{
                 <!-- SIDEBAR USER TITLE -->
                 <div class="profile-usertitle">
                     <div class="profile-usertitle-name">
-                        <?php echo AuthHandler::getInstance()->getUserfullname(); ?>
+                        <?php echo (AUTH_HANLER)::getInstance()->getUserfullname(); ?>
                     </div>
-                    <?php if (AuthHandler::getInstance()->isAdmin()){ ?>
+                    <?php if ((AUTH_HANLER)::getInstance()->isAdmin()){ ?>
                         <div class="profile-usertitle-job">
                             Admin
                         </div>
-                    <?php }else if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){ ?>
+                    <?php }else if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){ ?>
                         <div class="profile-usertitle-job">
                             Referat Finanzen
                         </div>
@@ -267,7 +267,7 @@ class HTMLPageRenderer{
                             </a>
                         </li>-->
                         <?php
-                        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")){
+                        if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
                             ?>
 
                             <li <?php if ($activeButton == "hv") echo "class='active'"; ?>>
@@ -358,7 +358,8 @@ class HTMLPageRenderer{
     
     private function renderModals(){
         
-        $this->buildModal("please-wait", "Bitte warten", "Bitte warten, die Anfrage wird verarbeitet.");
+        $this->buildModal("please-wait", "Bitte warten - Die Anfrage wird verarbeitet.", "".
+        	'<div class="planespinner"><div class="rotating-plane"></div></div>');
         $this->buildModal("server-message", "Antwort vom Server", "...");
         $this->buildModal("server-question", "Antwort vom Server", "...", "Ok", "Fenster schließen");
         $this->buildModal(
@@ -395,167 +396,34 @@ class HTMLPageRenderer{
             "Abbruch",
             "Formular speichern und neu zum Bearbeiten öffnen"
         );
-        ?>
-        <!--
-        <div class="modal fade" id="please-wait-dlg" tabindex="-1" role="dialog" aria-labelledby="please-wait-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="please-wait-label">Bitte warten</h4>
-                    </div>
-                    <div class="modal-body">
-                        Bitte warten, die Anfrage wird verarbeitet.
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="server-message-dlg" tabindex="-1" role="dialog"
-             aria-labelledby="server-message-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="server-message-label">Antwort vom Server</h4>
-                    </div>
-                    <div class="modal-body" id="server-message-content">
-                        Und die Lösung lautet..
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="server-question-dlg" tabindex="-1" role="dialog"
-             aria-labelledby="server-question-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="server-question-label">Antwort vom Server</h4>
-                    </div>
-                    <div class="modal-body" id="server-question-content">
-                        Und die Lösung lautet..
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Ok</button>
-                        <button type="button" class="btn btn-primary" id="server-question-close-window">Fenster
-                            schließen
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="rename-file-dlg" tabindex="-1" role="dialog" aria-labelledby="rename-file-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="rename-file-label">Datei umbenennen</h4>
-                    </div>
-                    <div class="modal-body" id="rename-file-content">
-                        <div class="form-group">
-                            <label for="rename-file-oldname">Ursprünglicher Name</label>
-                            <input type="text" class="form-control" id="rename-file-oldname" readonly="readonly">
-                        </div>
-                        <div class="form-group">
-                            <label for="rename-file-newname">Neuer Name</label>
-                            <input type="text" class="form-control" id="rename-file-newname">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Abbruch</button>
-                        <button type="button" class="btn btn-primary" id="rename-file-ok">Datei umbenennen</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="delete-file-dlg" tabindex="-1" role="dialog" aria-labelledby="delete-file-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="delete-file-label">Datei löschen</h4>
-                    </div>
-                    <div class="modal-body" id="delete-file-content">
-                        <div class="form-group">
-                            <label for="delete-file-name">Name</label>
-                            <input type="text" class="form-control" id="delete-file-name" readonly="readonly">
-                        </div>
-                        <div class="form-group">
-                            <label for="delete-file-size">Größe</label>
-                            <input type="text" class="form-control" id="delete-file-size" readonly="readonly">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Abbruch</button>
-                        <button type="button" class="btn btn-primary" id="delete-file-ok">Datei löschen</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="confirm-delete-dlg" tabindex="-1" role="dialog"
-             aria-labelledby="confirm-delete-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="confirm-delete-label">Soll dieses Formular wirklich gelöscht
-                            werden?</h4>
-                    </div>
-                    <div class="modal-body" id="confirm-delete-content">
-                        Wollen Sie dieses Formular wirklich löschen?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Abbruch</button>
-                        <button type="button" class="btn btn-danger" id="confirm-delete-btn">Formular löschen</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="please-reload-dlg" tabindex="-1" role="dialog"
-             aria-labelledby="please-reload-label">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                    aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="please-reload-label">Bitte Formular speichern und neu zum Bearbeiten
-                            öffnen</h4>
-                    </div>
-                    <div class="modal-body" id="please-reload-content">
-                        Dieses Formularelement verändert die Bearbeitbarkeit von Formularfeldern. Das Formular sollte
-                        daher
-                        nun
-                        gespeichert und neu zum Bearbeiten geöffnet werden.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Abbruch</button>
-                        <button type="button" class="btn btn-danger" id="please-reload-btn">Formular speichern und neu
-                            zum
-                            Bearbeiten öffnen
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        -->
-        <?php
+        $this->buildModal(
+        	"server-error",
+        	"<div class='default-head'>Es ist ein unerwarteter Fehler aufgetreten.</div><div class='js-head'></div>",
+        	"<div class='default-content'>Die Seite wird gleich automatisch neu geladen.<div class='msg'></div></div><div class='js-content'></div>",
+        	NULL,
+        	NULL,
+        	'danger'
+        );
+        $this->buildModal(
+        	"server-success",
+        	"<div class='default-head'>Request erfolgreich.</div><div class='js-head'></div>",
+        	"<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
+        	NULL,
+        	NULL,
+        	'success'
+        );
+        $this->buildModal(
+        	"server-file",
+        	"<div class='js-head'></div>",
+        	"<div class='js-content'></div>",
+        	NULL,
+        	NULL,
+        	'success'
+        );
     }
     
     private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){
-        if ($danger){
+        if ($danger=='danger'){
             $buttonType1 = "primary";
             $buttonType2 = "danger";
         }else{
@@ -568,7 +436,8 @@ class HTMLPageRenderer{
              aria-labelledby='<?= $id ?>-label'>
             <div class='modal-dialog' role='document'>
                 <div class='modal-content'>
-                    <div class='modal-header'>
+                    <div class='modal-header<?= 
+                    	(($danger)? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;":'') ?>'>
                         <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
                                     aria-hidden='true'>&times;</span>
                         </button>

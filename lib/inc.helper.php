@@ -168,7 +168,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
         return false;
     }
     
-    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => AuthHandler::getInstance()->getUsername()]);
+    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => (AUTH_HANLER)::getInstance()->getUsername()]);
     
     if ($ret !== 1)
         return false;
@@ -197,7 +197,7 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
         if (isset($action["value"])){
             $newValue = $action["value"];
         }else if ($action["type"] == "signbox"){
-            $newValue = AuthHandler::getInstance()->getUserFullName() . " am " . date("Y-m-d");
+            $newValue = (AUTH_HANLER)::getInstance()->getUserFullName() . " am " . date("Y-m-d");
         }else
             die("cannot autogenerate value for preNewStateActions");
     
@@ -209,8 +209,8 @@ function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRe
     
     $comment = [];
     $comment["antrag_id"] = $antrag["id"];
-    $comment["creator"] = AuthHandler::getInstance()->getUsername();
-    $comment["creatorFullName"] = AuthHandler::getInstance()->getUserFullName();
+    $comment["creator"] = (AUTH_HANLER)::getInstance()->getUsername();
+    $comment["creatorFullName"] = (AUTH_HANLER)::getInstance()->getUserFullName();
     $comment["timestamp"] = date("Y-m-d H:i:s");
     $txt = $newState;
     if (isset($form["_class"]["state"][$newState]))
@@ -313,5 +313,24 @@ function checkIBAN($iban){
         return false;
     }
     
+}
+
+if (!function_exists('generateRandomString')){
+	/**
+	 * generates secure random hex string of length: 2*$length
+	 * @param integer $length 0.5 string length
+	 * @return NULL|string
+	 */
+	function generateRandomString($length) {
+		if (!is_int($length)){
+			throwException('Invalid argument type. Integer expected.');
+			return null;
+		}
+		if (version_compare(PHP_VERSION, '7.0.0') >= 0){
+			return bin2hex(random_bytes($length));
+		} else {
+			return bin2hex(openssl_random_pseudo_bytes($length));
+		}
+	}
 }
 
