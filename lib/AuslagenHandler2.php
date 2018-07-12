@@ -1565,7 +1565,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		if ($beleg['file_id']) {
     			$file_form = '<div class="beleg-file btn-default" style=" border: 1px solid #ddd; border-radius: 5px; padding: 5px 10px; position: relative;" data-id="'.$beleg['file_id'].'">'.
     				'<a href="'.URIBASE.'files/get/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
-    				'<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>'.
+    				(($this->stateInfo['editable'])?('<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>'):'').
     				'<div><small><span style="min-width: 50px; display: inline-block; font-weight: bold;">Size: </span>'.
     				'<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.
     				'<small><span style="min-width: 50px; display: inline-block; margin-left: 10px; font-weight: bold;">Mime: </span>'.
@@ -1757,18 +1757,20 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		<div class="auslagen-links">
 	        <?php if ($this->routeInfo['action'] != 'edit' && isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']) { ?>
 				<div class="col-xs-12 form-group">
-					<strong><a class="btn btn-success text-center" style="font-weight: bold;" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>">Bearbeiten</a></strong>
+					<strong><a class="btn btn-success text-center" style="font-weight: bold;" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>"><i class="fa fa-fw fa-edit"> </i>Bearbeiten</a></strong>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>
 			<?php if ($this->stateInfo['editable']){ 
 				foreach ($this->formSubmitButtons as $formId){ ?>
 				<div class="col-xs-12 form-group">
-			    	<strong><button data-for="<?= $formId; ?>" type="button" class="btn btn-success auslagen-form-submit-send" style="font-weight: bold;">Speichern</button></strong>
+			    	<strong><button data-for="<?= $formId; ?>" type="button" class="btn btn-success auslagen-form-submit-send" style="font-weight: bold;"><i class="fa fa-fw fa-save"> </i>Speichern</button></strong>
 	    		</div>
-	    		<div class="col-xs-12 form-group">
-			    	<strong><a href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}" ?>" class="btn btn-danger" style="font-weight: bold;">Abbrechen</a></strong>
-	    		</div>
+	    		<?php } 
+	    		if (isset($this->auslagen_data['id'])) {?>
+		    		<div class="col-xs-12 form-group">
+				    	<strong><a href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_data['id']}" ?>" class="btn btn-danger" style="font-weight: bold;"><i class="fa fa-fw fa-times"> </i>Abbrechen</a></strong>
+		    		</div>
 	    		<?php } ?>
     		<?php } ?>
     		<?php if ($this->routeInfo['action'] != 'edit' 
