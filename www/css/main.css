@@ -638,6 +638,10 @@ button.btn.btn-arrow-left {
 .beleg-table .beleg-container {
 	counter-increment: beleg-counter;
 }
+.beleg-table .beleg-container .beleg-nr::before {
+	content: 'B';
+	display: inline;
+}
 .beleg-table .beleg-container .beleg-idx::before {
 	 content: counter(beleg-counter);
 }
