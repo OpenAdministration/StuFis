@@ -810,3 +810,37 @@ button.btn.btn-arrow-left {
     -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
   }
 }
+/* -------- fileview -------- */
+#server-file-dlg{
+	padding: 5px;
+	position: fixed;
+	height: 100%;
+	width: 100%;
+}
+#server-file-dlg .modal-dialog{
+	position: relative;
+	width: 100%;
+	height: 90%;
+	height: calc(100% - 60px);
+}
+#server-file-dlg .modal-dialog .modal-content{
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#server-file-dlg .modal-dialog .modal-content{
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+#server-file-dlg .modal-dialog .modal-content .modal-body{
+	position: relative;
+	height: 100%;
+	height: calc(100% - 57px);
+	padding: 0;
+}
+#server-file-dlg .modal-dialog .modal-content .modal-body .js-content,
+#server-file-dlg .modal-dialog .modal-content .modal-body .js-content > *{
+	width: 100%;
+	height: 100%;
+}

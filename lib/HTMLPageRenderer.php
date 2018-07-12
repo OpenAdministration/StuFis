@@ -412,6 +412,14 @@ class HTMLPageRenderer{
         	NULL,
         	'success'
         );
+        $this->buildModal(
+        	"server-file",
+        	"<div class='js-head'></div>",
+        	"<div class='js-content'></div>",
+        	NULL,
+        	NULL,
+        	'success'
+        );
     }
     
     private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){

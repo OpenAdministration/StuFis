@@ -301,5 +301,22 @@
 			var $target = $('form#'+this.dataset.for);
 			$target.trigger('submit');
 		});
+		$('.auslagen-belege-pdf').on('click', function(ev){
+			var dataset = {
+				'nonce': $('input[name="nonce"]').val(),
+				'projekt-id': this.dataset.pfor,
+				'auslagen-id': this.dataset.afor,
+			};
+			var action = this.dataset.action;
+			jQuery.ajax({
+		        url: action,
+		        data: dataset,
+		        type: "POST"
+		    })
+		    .done(function (values, status, req) {
+		    	defaultPostModalHandler(values);
+	        })
+	        .fail(xpAjaxErrorHandler);
+		});
 	});
 })();

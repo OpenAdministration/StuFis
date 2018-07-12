@@ -51,7 +51,6 @@ class RestHandler extends JsonController{
                 $this->handleAuslagen($routeInfo);
                 break;
             case 'nononce':
-            	break;
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
                 break;
@@ -304,6 +303,24 @@ class RestHandler extends JsonController{
     				'state' => ['regex',
     					'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok-hv|ok-kv|ok-belege|revoked|rejected)$/',
     					'error' => 'Ungültiger Status.'
+    				],
+    			];
+    			break;
+    		case 'belegpdf':
+    			$auslagen_states = [];
+    			$validator_map = [
+    				'projekt-id' => ['integer',
+    					'min' => '1',
+    					'error' => 'Ungültige Projekt ID.'
+    				],
+    				'auslagen-id' => ['integer',
+    					'min' => '1',
+    					'error' => 'Ungültige Auslagen ID.'
+    				],
+    				'd' => ['integer', 'optional',
+    					'min' => '0',
+    					'max' => '1',
+    					'error' => 'Ungültige Parameter.'
     				],
     			];
     			break;

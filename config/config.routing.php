@@ -168,7 +168,7 @@ $routing = [
                             'action' => 'auslagen',
                             'children' => [
                                 [
-                                    'path' => '(updatecreate|filedelete|state)',
+                                    'path' => '(updatecreate|filedelete|state|belegpdf)',
                                     'type' => 'pattern',
                                     'param' => 'mfunction',
                                     'match' => 0,

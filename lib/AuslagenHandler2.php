@@ -107,7 +107,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		],
 		'stateless' => [
 			'view_creator' => ["groups" => ["ref-finanzen-hv"]],
-			'finanzen' => ["groups" => ["ref-finanzen"]]
+			'finanzen' => ["groups" => ["ref-finanzen"]],
+			'belegpdf' => ["groups" => ["ref-finanzen-hv"]],
 		]
 	];
 	
@@ -819,7 +820,27 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				if ($this->stateInfo['project-editable'] && $this->auslagen_id){
 					$this->post_statechange();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Der status wurde nicht geändert.';
+					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Der Status wurde nicht geändert.';
+				}
+			} break;
+			case 'belegpdf': {
+				if (!isset($this->auslagen_data['id'])){
+					$this->error = 'Die Auslagenerstattung wurde nicht gefunden';
+				} elseif(!$this->stateInfo['editable'] && !$this->checkPermissionByMap(self::$groups['stateless']['belegpdf'])) {
+					$this->error = 'Das Drucken der Belegvorlage ist derzeit nicht möglich.';
+				} elseif(!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0) {
+					$this->error = 'Die Auslagenerstattung enthält keine Belege';
+				} else {
+					//missing file?
+					foreach ($this->auslagen_data['belege'] as $b){
+						if (!$b['file']) {
+							$this->error = 'Für den Beleg [ID: '.$b['id'].'][NR: B'.$b['short'].'] muss noch eine Datei hinterlegt werden.';
+							break;
+						}
+					}
+					if (!$this->error){
+						$this->post_belegpdf();
+					}
 				}
 			} break;
 			default: {
@@ -835,6 +856,134 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	//---------------------------------------------------------
 	/* ---------- JSON FUNCTIONS ------------ */
 	
+	private function post_belegpdf(){
+		// get auslagen info
+		$info = $this->state2stateInfo('draft;'.$this->auslagen_data['created']);
+		$out = [
+			'controller' => 'pdfbuilder',
+			'action' => 'belegpdf',
+			'projekt' => [
+				'id' => $this->projekt_data['id'],
+				'name' => $this->projekt_data['name'],
+				'created' => $this->projekt_data['createdat'],
+			],
+			'auslage' => [
+				'id' => $this->auslagen_data['id'],
+				'name' => $this->auslagen_data['name_suffix'],
+				'created' => $info['date'],
+				'created_by' => $info['realname'],
+				'zahlung' => [
+					'name' => $this->auslagen_data['zahlung-name'],
+				],
+			],
+			'belege' => [],
+		];
+		//put files to info
+		$fh = new FileHandler($this->db);
+		foreach ($this->auslagen_data['belege'] as $beleg){
+			$file = ($beleg['file'])? $fh->checkFileHash($beleg['file']['hashname']): NULL;
+			$out['belege'][] = [
+				'id' => $beleg['id'],
+				'short' => $beleg['short'],
+				'date' => $beleg['datum'],
+				'desc' => $beleg['beschreibung'],
+				'file_id' => $beleg['file_id'],
+				'file' => ($file)? $fh->fileToBase64($file) : '',
+			];
+		}
+		
+		
+		// post to pdf builder ===================================
+		// use 'http' even if request is done to https://...
+		$options = array(
+			'http' => array(
+				'ignore_errors' => true,
+				'header'  => [
+					"Content-type: application/x-www-form-urlencoded; charset=UTF-8",
+					"Authorization: Basic ".FUI2PDF_AUTH,
+				],
+				'method'  => 'POST',
+				'content' => http_build_query($out),
+			)
+		);
+		$context  = stream_context_create($options);
+		//run post
+		$postresult = file_get_contents(FUI2PDF_URL, false, $context);
+		
+		//handle result
+		$result = [
+			'success' => false,
+			'code' => '403',
+			'data' => '',
+		];
+		$http_response_header = $http_response_header; 
+		if(is_array($http_response_header))
+		{
+			$parts=explode(' ',$http_response_header[0]);
+			if(count($parts)>1) //HTTP/1.0 <code> <text>
+				$result['code'] = intval($parts[1]); //Get code
+		}
+		//error ?
+		if ($result['code'] === 200 && $postresult) {
+			$result['data'] = json_decode($postresult, true);
+			if ($result['data'] === NULL){
+				$result['data'] = $postresult;
+			}
+			$result['success'] = true;
+		} elseif ($postresult){
+			$result['data'] = strip_tags($postresult);
+		}
+		
+		// return result to
+		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0 ){
+			$this->json_result = [
+				'success' => true,
+				'type' => 'modal',
+				'subtype' => 'file',
+				'container' => 'object',
+				'headline' => 
+					"Belegvorlage_P".
+					str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
+					'-A'.
+					str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
+					'.pdf',
+				'attr' => [
+					'type' => 'application/pdf',
+					'download' => 
+						"Belegvorlage_P".
+						str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
+						'-A'.
+						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
+						'.pdf',
+				],
+				'fallback' => '<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a '.
+					'" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.'.
+					'<input type="hidden" name="auslagen-id" value="'.$this->auslagen_id.'">'.
+					'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
+					'<input type="hidden" name="d" value="1">'.
+				'</form>',
+				'datapre' => 'data:application/pdf;base64,',
+				'data' => $result['data'],
+			];
+		} elseif($result['success'] && isset($this->routeInfo['validated']['d']) && $this->routeInfo['validated']['d'] == 1 ) {
+			header("Content-Type: application/pdf");
+			header('Content-Disposition: attachment; filename="'."Belegvorlage_P".
+						str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
+						'-A'.
+						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
+						'.pdf'
+				.'"');
+			echo base64_decode($result['data']); 
+			die();
+		} else {
+			ErrorHandler::_errorLog(print_r($result, true), '['.get_class($this).'][PDF-Creation]');
+			$this->error = 'Error during PDF creation.';
+		}
+		
+		
+	}
+	
+	//handle auslagen state change
 	private function post_statechange() {
 		$newState = $this->routeInfo['validated']['state'];
 		if (!$this->state_change_possible($newState)||
@@ -1320,7 +1469,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            		];
 	            	}
 	            	echo $this->templater->generateListGroup($tmpList,
-	            		'Im Projekt vorhandene Auslagenerstattungen', false, $show_genemigung_state, '', 'a', 'col-xs-12 col-md-8');
+	            		'Im Projekt vorhandene Auslagenerstattungen', false, $show_genemigung_state, '', 'a', 'col-xs-12 col-md-10');
     			} ?>
     	</div>
         <?php
@@ -1622,6 +1771,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	    		</div>
 	    		<?php } ?>
     		<?php } ?>
+    		<?php if ($this->routeInfo['action'] != 'edit' 
+			 	&& isset($this->auslagen_data['id'])
+    			&& isset($this->auslagen_data['belege'])
+			 	&& count($this->auslagen_data['belege']) > 0 
+			 	&& ($this->stateInfo['editable'] 
+			 		|| $this->checkPermissionByMap(self::$groups['stateless']['belegpdf']))) { ?>
+				<div class="col-xs-12 form-group">
+					<strong><button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>" data-action="<?= URIBASE ?>index.php/rest/forms/auslagen/belegpdf" type="button" class="btn btn-primary auslagen-belege-pdf style="font-weight: bold;"><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
+				</div>
+				<div class="clearfix"></div>
+			<?php } ?>
 			<?php if(false && $this->routeInfo['action'] != 'edit'){ ?>
 		        	<input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
 		        	<input type="hidden" name="auslagen-id" value="<?= ($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id; ?>">
