@@ -144,6 +144,7 @@ class SvgDiagramState extends SvgDiagramCore
 			$opt = $b['options'];
 			if (isset($opt['trigger']) && $opt['trigger']){
 				$opt['onclick'] = 'triggerEvent(\'state-change\', \''.$b['state'].'\')';
+				$text['attr']['onclick'] = $opt['onclick'];
 			}
 			$boxelement.=$this->drawShape(
 				$b['x'], $b['y'], $b['w'], $b['h'], 5,
@@ -164,12 +165,13 @@ class SvgDiagramState extends SvgDiagramCore
 						$options[$kk] = $vv;
 					}
 				}
-				if (isset($options['trigger']) && $options['trigger']){
-					$options['onclick'] = 'triggerEvent(\'state-change\', \''.$child['state'].'\')';
-				}
 				$text_c = (isset($options['text']))?$options['text']:[];
 				$text_c['text'] = $child['title'];
 				$text_c['attr']['class'] = 'shape-text';
+				if (isset($options['trigger']) && $options['trigger']){
+					$options['onclick'] = 'triggerEvent(\'state-change\', \''.$child['state'].'\')';
+					$text_c['attr']['onclick'] = $options['onclick'];
+				}
 				$childelements[]=$this->drawShape($xx, $yy, $ww, $hh, 5, $text_c,0, $options, NULL, 
 					((isset($child['hovertitle'])&&$child['hovertitle'])?$child['hovertitle']:NULL));
 				$cpos++;
