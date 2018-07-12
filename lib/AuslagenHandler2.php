@@ -999,6 +999,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'headline' => 'Erfolgreich',
 				'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
 			];
+			if ($newState == 'wip' && !$this->auslagen_data['ok-belege'] ){
+				$this->json_result['reload'] = 5000;
+				$this->json_result['msg'] .= '<br><strong>Bitte beachte, dass gegebenenfalls noch Belege eingereicht werden müssen.<br><i>(Vorlage: "Belege PDF")</i></strong>';
+			}
 		}
 		
 	}
