@@ -4,6 +4,7 @@ define('SYSBASE', dirname(dirname(__FILE__)));
 include SYSBASE . "/config/config.php";
 require_once SYSBASE . '/lib/inc.nonce.php';
 
+require_once SYSBASE . '/lib/class.Helper.php';
 require_once SYSBASE . '/lib/baseclass/Enum.php';
 require_once SYSBASE . '/lib/LoadGroups.php';
 require_once SYSBASE . '/lib/Singleton.php';

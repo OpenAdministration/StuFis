@@ -893,46 +893,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		
 		
-		// post to pdf builder ===================================
-		// use 'http' even if request is done to https://...
-		$options = array(
-			'http' => array(
-				'ignore_errors' => true,
-				'header'  => [
-					"Content-type: application/x-www-form-urlencoded; charset=UTF-8",
-					"Authorization: Basic ".FUI2PDF_AUTH,
-				],
-				'method'  => 'POST',
-				'content' => http_build_query($out),
-			)
-		);
-		$context  = stream_context_create($options);
-		//run post
-		$postresult = file_get_contents(FUI2PDF_URL, false, $context);
-		
-		//handle result
-		$result = [
-			'success' => false,
-			'code' => '403',
-			'data' => '',
-		];
-		$http_response_header = $http_response_header; 
-		if(is_array($http_response_header))
-		{
-			$parts=explode(' ',$http_response_header[0]);
-			if(count($parts)>1) //HTTP/1.0 <code> <text>
-				$result['code'] = intval($parts[1]); //Get code
-		}
-		//error ?
-		if ($result['code'] === 200 && $postresult) {
-			$result['data'] = json_decode($postresult, true);
-			if ($result['data'] === NULL){
-				$result['data'] = $postresult;
-			}
-			$result['success'] = true;
-		} elseif ($postresult){
-			$result['data'] = strip_tags($postresult);
-		}
+		$result = Helper::do_post_request2(FUI2PDF_URL, $out, FUI2PDF_AUTH);
 		
 		// return result to
 		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0 ){
@@ -979,8 +940,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			ErrorHandler::_errorLog(print_r($result, true), '['.get_class($this).'][PDF-Creation]');
 			$this->error = 'Error during PDF creation.';
 		}
-		
-		
 	}
 	
 	//handle auslagen state change
