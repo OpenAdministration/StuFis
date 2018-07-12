@@ -378,7 +378,7 @@ class DbFilePDO
 			$result = $this->dbconnector->dbFetchAll(
 				"fileinfo",
 				[],
-				["fileinfo.hash" => $hash]);
+				["hashname" => $hash]);
 		} catch (Exception $e) {
 			$this->_isError = true;
 			$this->msgError = $e->getMessage();
