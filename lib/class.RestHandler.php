@@ -227,7 +227,7 @@ class RestHandler extends JsonController{
 	    							'empty',
 	    							'format' => 'Y-m-d',
 	    							'parse' => 'Y-m-d',
-	    							'error' =>	'ungültiges beleg datum'
+	    							'error' =>	'Ungültiges Beleg Datum.'
 	    						],
 	    						'beschreibung' => [ 'text',
 	    							'strip',

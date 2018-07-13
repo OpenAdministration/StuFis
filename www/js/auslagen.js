@@ -25,6 +25,8 @@
 	var add_beleg = function(){
 		add_beleg_counter++;
 		var $e = $(this);
+		var k = $e.closest('.beleg-table');
+		k.find('.no-belege-info').hide();
 		var $_template = $e.closest('.add-button-row').prev();
 		var $template = $_template.clone();
 		$template.removeClass('add-button-row');
@@ -53,6 +55,13 @@
 		$template.insertBefore($_template);
 		//update fileuplader
 		update_fileinput($template.find('.beleg-file'));
+		$template.find('.posten-entry-new').each(function(i, e){
+			var $e = $(e);
+			var $select = $e.find('.projekt-posten-select');
+			posten_project_list($select, true);
+			$select.siblings('.posten-in').hide();
+			$select.siblings('.posten-out').hide();
+		});
 	};
 		
 	var remove_beleg = function(ev){
@@ -60,7 +69,13 @@
 		ev.stopPropagation();
 		var $e = $(this);
 		//test if data_id begins with new
-		$container = $e.closest('.beleg-container');
+		var k = $e.closest('.beleg-table');
+		if (k.find('.beleg-container').length == 1){
+			setTimeout(function(){
+				k.find('.no-belege-info').show();
+			}, 700);
+		}
+		var $container = $e.closest('.beleg-container');
 		animate_delete($container.parent());
 	};
 	
@@ -110,11 +125,14 @@
 	}
 	
 	var add_posten_counter = 0;
-	var add_posten = function(ev) {
+	var add_posten = function(ev, a,b,c,eee) {
 		ev.stopPropagation();
 		ev.preventDefault();
 		add_posten_counter++;
 		var $e = $(this);
+		if (typeof(eee)!='undefined'){
+			$e = eee;
+		}
 		var focus_index = $e.parent().parent().hasClass('posten-in')? 'in':'out';
 		//clone line
 		var $old = $e.closest('.posten-entry-new');
@@ -135,6 +153,8 @@
 		$new.find('input').on('input', function(){ update_posten_counter($old.closest('.posten-inner-list')); });
 		//update input names
 		var beleg_id = $old.closest('.beleg-container')[0].dataset.id;
+		$new.find('.posten-in').show();
+		$new.find('.posten-out').show();
 		$new.find('.posten-in input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][in]";
 		$new.find('.posten-out input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][out]";
 		$new.find('.projekt-posten-select input')[0].name = "belege["+beleg_id+"][posten][new_"+add_posten_counter+"][projekt-posten]";
@@ -165,7 +185,7 @@
 	};
 	
 	// append editable select list for posten name
-	var posten_project_list = function ($target){
+	var posten_project_list = function ($target, trigger_addposten){
 		var data = get_projektdata($target);
 		var $select = $('<select/>', {
 				 'class':"selectpicker"
@@ -197,15 +217,48 @@
 				$p[0].dataset.value=$e.val();
 				$p.find('input').val($e.val());
 				$p.find('span.value').text($e[0].options[$e[0].selectedIndex].text);
+				if (typeof(trigger_addposten)!='undefined' && trigger_addposten == true && $target.closest('.posten-entry-new').length > 0){
+					add_posten(ev,false, false, false, $e);
+					var $sibling = $e.closest('.posten-entry-new').prev();
+					auslagen_einnahmen_disable($sibling);
+				} else {
+					auslagen_einnahmen_disable($e.closest('.posten-entry'));
+				}
 			});
 			$target.find('.bootstrap-select').css({
 				'display': 'table-caption',
 				'width': '100%'
 			});
 		}, 100);
-		
-		
-		
+	};
+	
+	var auslagen_einnahmen_disable = function($t){
+		var $select = $t.find('.projekt-posten-select');
+		var $inp = $t.find('.posten-in input');
+		var $outp = $t.find('.posten-out input');
+		var $ina = $t.find('.posten-in .input-group-addon');
+		var $outa = $t.find('.posten-out .input-group-addon');
+		var ttt = $select.find('.value.hidden').text();
+		if ($select.find('input').val() == 0){
+			$inp.val(0);
+			$outp.val(0);
+			$inp.hide();
+			$outp.hide();
+			$ina.hide();
+			$outa.hide();
+		} else if (ttt.substr(0, 2)=='[E') {
+			$outp.val(0);
+			$inp.show();
+			$outp.hide();
+			$ina.show();
+			$outa.hide();
+		} else if (ttt.substr(0, 2)=='[A') {
+			$inp.val(0);
+			$inp.hide();
+			$outp.show();
+			$ina.hide();
+			$outa.show();
+		}
 	};
 	
 	var update_fileinput = function($target){
@@ -317,6 +370,17 @@
 		    	defaultPostModalHandler(values);
 	        })
 	        .fail(xpAjaxErrorHandler);
+		});
+		$('.posten-entry-new:visible').each(function(i, e){
+			var $e = $(e);
+			var $select = $e.find('.projekt-posten-select');
+			posten_project_list($select, true);
+			$select.siblings('.posten-in').hide();
+			$select.siblings('.posten-out').hide();
+		});
+		$('.posten-entry:visible').each(function(i, e){
+			var $e = $(e);
+			auslagen_einnahmen_disable($e);
 		});
 	});
 })();

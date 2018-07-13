@@ -434,7 +434,7 @@ class HTMLPageRenderer{
         ?>
         <div class='modal fade' id='<?= $id ?>-dlg' tabindex='-1' role='dialog'
              aria-labelledby='<?= $id ?>-label'>
-            <div class='modal-dialog' role='document'>
+            <div class='modal-dialog' <?= ($danger=='danger')? 'style="min-width: 75%;"':'' ?> role='document'>
                 <div class='modal-content'>
                     <div class='modal-header<?= 
                     	(($danger)? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;":'') ?>'>

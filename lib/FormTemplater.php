@@ -490,7 +490,7 @@ class FormTemplater{
             }
         }else{
             if (!empty($textPrefix))
-                $out .= "<div id='$unique_id'>" . htmlspecialchars($textPrefix) . " - " . $this->getReadOnlyValue($value) . "</div>";
+                $out .= "<div id='$unique_id'>" . ($textPrefix) . " - " . $this->getReadOnlyValue($value) . "</div>";
             else
                 $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . "</div>";
         }
