@@ -1910,7 +1910,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				1 => [
 					'state' => 'wip', 
 					'title' => self::$states['wip'][0],
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['wip'][1],
 					'target' => ['ok', 'revocation'],
 					'children' => [
 						[
@@ -1935,12 +1935,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				],
 				2 => ['state' => 'ok', 
 					'title' => self::$states['ok'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['ok'][1],
 					'target' => ['instructed', 'revocation']
 				],
 				3 => ['state' => 'instructed', 
 					'title' => self::$states['instructed'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['instructed'][1],
 					'target' => ['booked'],
 					'children' => [
 						[
@@ -1953,7 +1953,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				],
 				4 => ['state' => 'booked', 
 					'title' => self::$states['booked'][0],
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['booked'][1],
 					'target' => []
 				],
 			],
@@ -1961,7 +1961,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				2 => [
 					'state' => 'revocation', 
 					'title' => self::$states['revocation'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['revocation'][1],
 					'offset' => ['x' => 0, 'y' => -85],
 					'target' => [['draft', 4, ['y' => 30]]],
 					'children' => [
