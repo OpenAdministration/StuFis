@@ -2,6 +2,9 @@
 
 class DBConnector extends Singleton{
     
+    const SUM = 1;
+    const SUM_ROUND2 = 2;
+    const COUNT = 3;
     private static $DB_DSN;
     private static $DB_USERNAME;
     private static $DB_PASSWORD;
@@ -137,16 +140,16 @@ class DBConnector extends Singleton{
             "ok-belege" => "VARCHAR(255) NOT NULL DEFAULT ''",
             "ok-hv" => "VARCHAR(255) NOT NULL DEFAULT ''",
             "ok-kv" => "VARCHAR(255) NOT NULL DEFAULT ''",
-        	"payed" => "VARCHAR(255) NOT NULL DEFAULT ''",
-        	"rejected" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "payed" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "rejected" => "VARCHAR(255) NOT NULL DEFAULT ''",
             "zahlung-iban" => "VARCHAR(127) NOT NULL",
             "zahlung-name" => "VARCHAR(127) NOT NULL",
             "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
             'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
-        	'last_change_by' => "VARCHAR(255) NOT NULL DEFAULT ''",
+            'last_change_by' => "VARCHAR(255) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',
-        	"version" => "INT NOT NULL DEFAULT 1",
-        	"created" => "VARCHAR(255) NOT NULL DEFAULT ''",
+            "version" => "INT NOT NULL DEFAULT 1",
+            "created" => "VARCHAR(255) NOT NULL DEFAULT ''",
         ];
         $scheme["belege"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
@@ -326,16 +329,19 @@ class DBConnector extends Singleton{
     }
     
     /**
-     * @param string $tables            table which should be used in FROM statement
-     *                                  if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
-     * @param array  $showColumns       if [] there will be all coulums (*) shown
-     * 									if keys are not numeric, key will be used as alias
-     * 									don't use same alias twice
-     * 									renaming of tables is possible
-     * 									 e.g.: newname => tablename.*, numerik keys(newname) will be ignored
-     * 									  will be: newname.col1, newname.col2 ... 
-     * 									
-     * @param array  $fields            val no array [colname => val,...]: WHERE colname = val AND ...
+     * @param string $tables                table which should be used in FROM statement
+     *                                      if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
+     *
+     * @param array  $showColumns           if empty array there will be all coulums (*) shown
+     *                                      if keys are not numeric, key will be used as alias
+     *                                      don't use same alias twice (ofc)
+     *                                      renaming of tables is possible
+     *                                      e.g.: newname => tablename.*, numerik keys(newname) will be ignored
+     *                                      will be: newname.col1, newname.col2 ...
+     *                                      if values of $showColumns are arrays, there can be aggregated functions as
+     *                                      second value, fist value is the columnname e.g. alias => ["colname", SUM]
+     *
+     * @param array  $fields                val no array [colname => val,...]: WHERE colname = val AND ...
      *
      *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value
      *                                  AND
@@ -344,12 +350,13 @@ class DBConnector extends Singleton{
      *                                  if value is array [colname => [operator,[v1,v2,...]],...]: WHERE colname
      *                                  operator
      *                                  (v1,v2,...) AND ...
-     * @param array  $joins             Fields which should be joined:
-     *                                  ["type"="inner",table => "tblname","on" =>
-     *                                  [["tbl1.col","tbl2.col"],...],"operator"
-     *                                  => ["=",...]] Will be: FROM $table INNER JOIN tblname ON (tbl1.col = tbl2.col
-     *                                  AND
-     *                                  ... )
+     *
+     * @param array  $joins                 Fields which should be joined:
+     *                                      ["type"="inner",table => "tblname","on" =>
+     *                                      [["tbl1.col","tbl2.col"],...],"operator"
+     *                                      => ["=",...]] Will be: FROM $table INNER JOIN tblname ON (tbl1.col =
+     *                                      tbl2.col AND
+     *                                      ... )
      *
      *                                  accepted values (<u>default</u>):
      *
@@ -359,31 +366,36 @@ class DBConnector extends Singleton{
      *
      *                                  There can be multiple arrays of the above structure, there will be processed in
      *                                  original order from php
-     * @param array  $sort              Order by key (field) with val===true ? asc : desc
-     * @param bool   $groupByFirstCol   First coloum will be row idx (if not $unique = true there will be an array as
-     *                                  value for each first coloum entry as key)
-     * @param bool   $unique            First column is unique (better output with $groupByFirstCol=true) has unexpected
-     *                                  results if first coulum isn't unique but $unique = true
+     *
+     * @param array  $sort                  Order by key (field) with val===true ? asc : desc
+     *
+     * @param bool   $groupByFirstCol       First coloum will be row idx (if not $unique = true there will be an array
+     *                                      as value for each first coloum entry as key)
+     *
+     * @param bool   $unique                First column is unique (better output with $groupByFirstCol=true) has
+     *                                      unexpected results if first coulum isn't unique but $unique = true
+     *
+     * @param array  $groupBy               Array with columns which will be grouped by
      *
      * @return array|bool
      */
-    public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false){
+    public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false, $groupBy = []){
         //check if all tables are known
         
         if (!isset($tables)){
             ErrorHandler::_errorExit("table not set");
         }
-    
+        
         if (!is_array($tables)){
             $tables = [$tables];
         }
         
         foreach ($tables as $key => $table){
-        	if (!isset($this->scheme[$table])){
-        		ErrorHandler::_errorExit("Unkown table $table", 404);
-        	}
+            if (!isset($this->scheme[$table])){
+                ErrorHandler::_errorExit("Unkown table $table", 404);
+            }
         }
-    
+        
         //check if content of fields and sort are valid
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         $sort = array_intersect_key($sort, array_flip($this->validFields));
@@ -432,47 +444,55 @@ class DBConnector extends Singleton{
         //
         //prebuild sql
         //
- 
+        
         if (empty($showColumns)){
             $showColumns = ["*"];
         }
         if (in_array('*', $showColumns)){
-        	unset($showColumns[array_search('*', $showColumns)]);
-        	foreach ($tables as $t){
-        		$showColumns[] = "$t.*";
-        	}
-        	foreach ($joins as $j){
-        		$showColumns[] = "{$j['table']}.*";
-        	}
+            unset($showColumns[array_search('*', $showColumns)]);
+            foreach ($tables as $t){
+                $showColumns[] = "$t.*";
+            }
+            foreach ($joins as $j){
+                $showColumns[] = "{$j['table']}.*";
+            }
         }
         $newShowColumns = [];
-        foreach ($showColumns as $alias => $col){
-        	if (!is_int($alias) && ($pos = strpos($col, ".*"))!==false){
-        		$tname = substr($col, 0, $pos);
-        		$rename = $alias;
-        		foreach ($this->scheme[$tname] as $colName => $dev_null){
-        			$newShowColumns[$rename.'.'.$colName] = $tname.'.'.$colName;
-        		}
-        	} else {
-        		$newShowColumns[$alias] = $col;
-        	}
+        foreach ($showColumns as $alias => $content){
+            if (is_array($content)){
+                $col = $content[0];
+                $aggregate = $content[1];
+            }else{
+                $col = $content;
+                $aggregate = 0;
+            }
+            if (!is_int($alias) && ($pos = strpos($col, ".*")) !== false){
+                $tname = substr($col, 0, $pos);
+                $rename = $alias;
+                foreach ($this->scheme[$tname] as $colName => $dev_null){
+                    $newShowColumns[$rename . '.' . $colName] = $tname . '.' . $colName;
+                }
+            }else{
+                $newShowColumns[$alias] = [$col, $aggregate];
+            }
         }
         
         $cols = [];
-        foreach ($newShowColumns as $alias => $col){
-        	if (in_array($col, $this->validFields)){
-        		$as = (!is_int($alias))? " as `$alias`":'';
-        		if (strpos($col, ".")){
-        			$tmp = explode(".", $col);
-        			$cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0]) . "." . $this->quoteIdent($tmp[1]) . $as;
-        		}else{
-        			$cols[] = $this->quoteIdent($col).$as;
-        		}
-        
-        	}
-        
+        foreach ($newShowColumns as $alias => $content){
+            $col = $content[0];
+            $aggregateConst = $content[1];
+            if (in_array($col, $this->validFields)){
+                $as = (!is_int($alias)) ? " as `$alias`" : '';
+                if (strpos($col, ".")){
+                    $tmp = explode(".", $col);
+                    $cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0] . "." . $tmp[1], $aggregateConst) . $as;
+                }else{
+                    $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
+                }
+            }
+            
         }
-
+        
         $c = [];
         $vals = [];
         foreach ($fields as $k => $v){
@@ -535,27 +555,39 @@ class DBConnector extends Singleton{
                 $o[] = $this->quoteIdent($k) . " " . ($v ? "ASC" : "DESC");
         }
         
-        foreach ($tables as $key => $table){
-        	$tables[$key] = self::$DB_PREFIX . $table;
+        $g = [];
+        foreach ($groupBy as $item){
+            if (in_array($item, $this->validFields)){
+                $g[] = $this->quoteIdent($item);
+            }else{
+                ErrorHandler::_errorExit(["$item ist für sql nicht bekannt."]);
+            }
         }
         
-        $sql = PHP_EOL . "SELECT " . implode(",".PHP_EOL, $cols) . PHP_EOL . "FROM " . implode(",".PHP_EOL, $tables);
+        foreach ($tables as $key => $table){
+            $tables[$key] = self::$DB_PREFIX . $table;
+        }
+        
+        $sql = PHP_EOL . "SELECT " . implode("," . PHP_EOL, $cols) . PHP_EOL . "FROM " . implode("," . PHP_EOL, $tables);
         if (count($j) > 0){
             $sql .= " " . implode(" ", $j) . " ";
         }
         if (count($c) > 0){
             $sql .= PHP_EOL . "WHERE " . implode(" AND ", $c);
         }
+        if (count($groupBy) > 0){
+            $sql .= PHP_EOL . "GROUP BY " . implode(",", $g);
+        }
         if (count($o) > 0){
             $sql .= PHP_EOL . "ORDER BY " . implode(", ", $o);
         }
-    
+        
         //HTMLPageRenderer::registerProfilingBreakpoint($sql);
         HTMLPageRenderer::registerProfilingBreakpoint("sql-start");
         //var_dump($sql);
         //var_dump($vals);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(),/*"sql" => $sql*/], true));
+        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(), "sql" => $sql], true));
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;
@@ -569,9 +601,27 @@ class DBConnector extends Singleton{
             return $query->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    private function quoteIdent($field){
+    private function quoteIdent($field, $aggregateConst = 0){
+        switch ($aggregateConst){
+            case $this::SUM:
+                $aggregatePre = "SUM(";
+                $aggregateSuf = ")";
+                break;
+            case $this::SUM_ROUND2:
+                $aggregatePre = "ROUND(SUM(";
+                $aggregateSuf = "),2)";
+                break;
+            case $this::COUNT:
+                $aggregatePre = "COUNT(";
+                $aggregateSuf = ")";
+                break;
+            default:
+                $aggregatePre = "";
+                $aggregateSuf = "";
+                break;
+        }
         $ret = "`" . str_replace("`", "``", $field) . "`";
-        return str_replace(".", "`.`", $ret);
+        return $aggregatePre . str_replace(".", "`.`", $ret) . $aggregateSuf;
     }
     
     /**
@@ -751,44 +801,11 @@ class DBConnector extends Singleton{
      */
     public function getProjectFromGremium($gremiumNames, $antrag_type){
         HTMLPageRenderer::registerProfilingBreakpoint("gremien-start");
-        $sql =
-            "SELECT a.gremium,a.type,a.revision,a.state,i2.fieldname,i2.value,i2.antrag_id, a.token
-              FROM
-                  (SELECT inhalt.value AS gremium, antrag.id,antrag.type, antrag.revision,antrag.token,antrag.state
-                      FROM " . self::$DB_PREFIX . "antrag AS antrag,
-                         " . self::$DB_PREFIX . "inhalt AS inhalt
-                      WHERE antrag.id = inhalt.antrag_id
-                      AND inhalt.fieldname = 'projekt.org.name'
-                      AND inhalt.value REGEXP ?
-                      AND antrag.type = ?
-                    ORDER BY createdat ASC
-                  ) a,
-              " . self::$DB_PREFIX . "inhalt AS i2
-              WHERE
-                i2.antrag_id = a.id
-              ORDER BY a.gremium DESC, a.id DESC";
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute([implode("|", $gremiumNames), $antrag_type]);
-        if ($ret === false){
-            var_dump($query->errorInfo());
-            return false;
-        }
+        $ret = $this->dbFetchAll("projekte", ["id"], [], [], ["org" => true, "id" => true], true);
+        
         
         $projects = [];
         $projekt_ids = [];
-        $tmp_id = null;
-        while ($row = $query->fetch(PDO::FETCH_ASSOC)){
-            //var_dump($row);
-            $gremium = $row["gremium"];
-            $tmp_id = $row["antrag_id"];
-            $projects[$gremium][$tmp_id]["state"] = $row["state"];
-            $projects[$gremium][$tmp_id]["revision"] = $row["revision"];
-            $projects[$gremium][$tmp_id]["type"] = $row["type"];
-            $projects[$gremium][$tmp_id]["token"] = $row["token"];
-            $projects[$gremium][$tmp_id]["_inhalt"][$row["fieldname"]] = $row["value"];
-            $projects[$gremium][$tmp_id]["_ref"] = [];
-            $projekt_ids[$tmp_id] = $gremium;
-        }
         
         if (empty($projekt_ids)){
             return [];

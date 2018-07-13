@@ -95,7 +95,25 @@ class MenuRenderer extends Renderer{
     public function renderProjekte($gremien){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANLER)::getInstance()->getUserName()]);
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
-        $projekte = DBConnector::getInstance()->dbFetchAll("projekte", ["org", "projekte.*"], ["org" => ["in", $gremien]], [], ["org" => true], true);
+        $projekte = DBConnector::getInstance()->dbFetchAll(
+            "projekte",
+            [
+                "org",
+                "projekte.*",
+                "ausgaben" => ["projektposten.ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["projektposten.einnahmen", DBConnector::SUM_ROUND2],
+                "auslagen" => "auslagen.*",
+            ],
+            ["org" => ["in", $gremien]],
+            [
+                ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
+                ["table" => "auslagen", "type" => "left", "on" => ["auslagen.projekt_id", "projekte.id"]],
+            ],
+            ["org" => true],
+            true,
+            false,
+            ["id"]
+        );
         /*if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
             $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
@@ -104,7 +122,7 @@ class MenuRenderer extends Renderer{
                 $projekte = array_merge($projekte, $ret);
             }
         }*/
-        //var_dump($projekte);
+        var_dump(end(end($projekte)));
         ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
@@ -114,9 +132,8 @@ class MenuRenderer extends Renderer{
                     <div class="panel panel-default">
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
                              href="#collapse<?php echo $i; ?>">
-
                             <h4 class="panel-title">
-                                <i class="fa fa-fw fa-togglebox"></i> <?= empty($gremium) ? "Nicht zugeordnete Projekte": $gremium ?>
+                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= empty($gremium) ? "Nicht zugeordnete Projekte": $gremium ?>
                             </h4>
                         </div>
                         <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">
@@ -137,6 +154,7 @@ class MenuRenderer extends Renderer{
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
                                                             class="panel-projekt-name"><?= $projekt["name"] ?></span>
+                                                    <span class="panel-projekt-money text-muted hidden-xs"><?= number_format($projekt["ausgaben"],2,",",".")?></span>
                                                     <span class="label label-info project-state-label"><?= ProjektHandler::getStateString($projekt["state"]) ?></span>
                                                 </h4>
                                             </div>
