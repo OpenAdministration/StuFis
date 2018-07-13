@@ -860,12 +860,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		// get auslagen info
 		$info = $this->state2stateInfo('draft;'.$this->auslagen_data['created']);
 		$out = [
-			'controller' => 'pdfbuilder',
+			'APIKEY' => FUI2PDF_APIKEY,
 			'action' => 'belegpdf',
 			'projekt' => [
 				'id' => $this->projekt_data['id'],
 				'name' => $this->projekt_data['name'],
 				'created' => $this->projekt_data['createdat'],
+				'org' => $this->projekt_data['org'],
 			],
 			'auslage' => [
 				'id' => $this->auslagen_data['id'],
@@ -897,35 +898,45 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		
 		// return result to
 		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0 ){
-			$this->json_result = [
-				'success' => true,
-				'type' => 'modal',
-				'subtype' => 'file',
-				'container' => 'object',
-				'headline' => 
-					"Belegvorlage_P".
-					str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
-					'-A'.
-					str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
-					'.pdf',
-				'attr' => [
-					'type' => 'application/pdf',
-					'download' => 
+			if ($result['data']['success']){
+				$this->json_result = [
+					'success' => true,
+					'type' => 'modal',
+					'subtype' => 'file',
+					'container' => 'object',
+					'headline' => 
 						"Belegvorlage_P".
 						str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
 						'-A'.
 						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
 						'.pdf',
-				],
-				'fallback' => '<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a '.
-					'" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.'.
-					'<input type="hidden" name="auslagen-id" value="'.$this->auslagen_id.'">'.
-					'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
-					'<input type="hidden" name="d" value="1">'.
-				'</form>',
-				'datapre' => 'data:application/pdf;base64,',
-				'data' => $result['data'],
-			];
+					'attr' => [
+						'type' => 'application/pdf',
+						'download' => 
+							"Belegvorlage_P".
+							str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
+							'-A'.
+							str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
+							'.pdf',
+					],
+					'fallback' => '<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a '.
+						'" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.'.
+						'<input type="hidden" name="auslagen-id" value="'.$this->auslagen_id.'">'.
+						'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
+						'<input type="hidden" name="d" value="1">'.
+					'</form>',
+					'datapre' => 'data:application/pdf;base64,',
+					'data' => $result['data']['data'],
+				];
+			} else {
+				$this->json_result = [
+					'success' => false,
+					'type' => 'modal',
+					'subtype' => 'server-error',
+					'status' => '200',
+					'msg' => '<div style="white-space: pre-wrap;">'.print_r($result['data']['error'], true).'</div>',
+				];
+			}
 		} elseif($result['success'] && isset($this->routeInfo['validated']['d']) && $this->routeInfo['validated']['d'] == 1 ) {
 			header("Content-Type: application/pdf");
 			header('Content-Disposition: attachment; filename="'."Belegvorlage_P".
@@ -1377,7 +1388,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <label for="projekt-well">Auslagenerstattung</label>
             <div id='projekt-well' class="well">
             	<label>Name der Auslagenerstattung</label>
-            	<?= $this->templater->getTextForm("auslagen-name", (isset($this->auslagen_data['id']))?$this->auslagen_data['name_suffix']:'', 12, "optional", "", [], '<a href="'.URIBASE.'projekt/'.$this->projekt_id.'"><i class="fa fa-fw fa-link"> </i>'.$this->projekt_data['name'].'</a>') ?>
+            	<?= $this->templater->getTextForm("auslagen-name", (isset($this->auslagen_data['id']))?$this->auslagen_data['name_suffix']:'', 12, "optional", "", [], '<a href="'.URIBASE.'projekt/'.$this->projekt_id.'"><i class="fa fa-fw fa-link"> </i>'.htmlspecialchars($this->projekt_data['name']).'</a>') ?>
 	            <div class="clearfix"></div>
              	<label for="zahlung">Zahlungsinformationen</label><br>
 				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
