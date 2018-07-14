@@ -355,6 +355,7 @@
 			$target.trigger('submit');
 		});
 		$('.auslagen-belege-pdf').on('click', function(ev){
+			$("#please-wait-dlg").modal("show");
 			var dataset = {
 				'nonce': $('input[name="nonce"]').val(),
 				'projekt-id': this.dataset.pfor,
@@ -367,6 +368,7 @@
 		        type: "POST"
 		    })
 		    .done(function (values, status, req) {
+		    	$("#please-wait-dlg").modal("hide");
 		    	defaultPostModalHandler(values);
 	        })
 	        .fail(xpAjaxErrorHandler);
