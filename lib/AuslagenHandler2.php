@@ -904,7 +904,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		
 		
-		$result = Helper::do_post_request2(FUI2PDF_URL, $out, FUI2PDF_AUTH);
+		$result = Helper::do_post_request2(FUI2PDF_URL.'/pdfbuilder', $out, FUI2PDF_AUTH);
 		
 		// return result to
 		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0 ){
