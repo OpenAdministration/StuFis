@@ -108,7 +108,19 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		'stateless' => [
 			'view_creator' => ["groups" => ["ref-finanzen-hv"]],
 			'finanzen' => ["groups" => ["ref-finanzen"]],
-			'belegpdf' => ["groups" => ["ref-finanzen-hv"]],
+			'belegpdf' => [
+				'groups' => ["ref-finanzen-hv"],
+				'dynamic' => [
+					'owner',
+					'plain_orga'
+				]
+			],
+			'owner' => [
+				'dynamic' => [
+					'owner',
+					'plain_orga'
+				],
+			],
 		]
 	];
 	
@@ -826,8 +838,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			case 'belegpdf': {
 				if (!isset($this->auslagen_data['id'])){
 					$this->error = 'Die Auslagenerstattung wurde nicht gefunden';
-				} elseif(!$this->stateInfo['editable'] && !$this->checkPermissionByMap(self::$groups['stateless']['belegpdf'])) {
-					$this->error = 'Das Drucken der Belegvorlage ist derzeit nicht möglich.';
 				} elseif(!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0) {
 					$this->error = 'Die Auslagenerstattung enthält keine Belege';
 				} else {
@@ -1751,9 +1761,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		<?php if ($this->routeInfo['action'] != 'edit' 
 			 	&& isset($this->auslagen_data['id'])
     			&& isset($this->auslagen_data['belege'])
-			 	&& count($this->auslagen_data['belege']) > 0 
-			 	&& ($this->stateInfo['editable'] 
-			 		|| $this->checkPermissionByMap(self::$groups['stateless']['belegpdf']))) { ?>
+			 	&& count($this->auslagen_data['belege']) > 0) { ?>
 				<div class="col-xs-12 form-group">
 					<strong><button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>" data-action="<?= URIBASE ?>index.php/rest/forms/auslagen/belegpdf" type="button" class="btn btn-primary auslagen-belege-pdf style="font-weight: bold;"><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
 				</div>
