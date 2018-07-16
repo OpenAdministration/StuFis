@@ -102,17 +102,33 @@ class MenuRenderer extends Renderer{
                 "projekte.*",
                 "ausgaben" => ["projektposten.ausgaben", DBConnector::SUM_ROUND2],
                 "einnahmen" => ["projektposten.einnahmen", DBConnector::SUM_ROUND2],
-                "auslagen" => "auslagen.*",
             ],
             ["org" => ["in", $gremien]],
             [
                 ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
-                ["table" => "auslagen", "type" => "left", "on" => ["auslagen.projekt_id", "projekte.id"]],
             ],
             ["org" => true],
             true,
             false,
             ["id"]
+        );
+        $pids = [];
+        array_walk($projekte,function($array,$gremien) use (&$pids) {
+            array_walk($array,function($res,$key) use (&$pids) {
+                $pids[] = $res["id"];
+            });
+        });
+        $auslagen = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            ["projekt_id","auslagen.id","name_suffix","zahlung-name","betrag" => ["projekt_id",DBConnector::SUM_ROUND2],"state"],
+            ["projekt_id" => ["IN",$pids]],
+            [
+                //["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.projekt_posten_id","beleg_posten.beleg_id"]],
+            ],
+            ["id" => true],
+            true,
+            false,
+            ["projekt_id"]
         );
         /*if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
@@ -122,7 +138,8 @@ class MenuRenderer extends Renderer{
                 $projekte = array_merge($projekte, $ret);
             }
         }*/
-        var_dump(end(end($projekte)));
+        
+        //var_dump(end(end($projekte)));
         ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
@@ -142,13 +159,11 @@ class MenuRenderer extends Renderer{
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
                                     <?php foreach ($inhalt as $projekt){
                                         $id = $projekt["id"];
-                                        $year =  date("y",strtotime($projekt["createdat"]));
-                                        $projekt["_ref"] = []; //FIXME
-                                        ?>
+                                        $year =  date("y",strtotime($projekt["createdat"])); ?>
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?= generateLinkFromID("IP-$year-$id", "projekt/" . $id) ?>
                                             </div>
-                                            <div class="panel-heading collapsed <?= count($projekt["_ref"]) === 0 ? "empty" : "" ?>"
+                                            <div class="panel-heading collapsed <?= count($auslagen[$id]) === 0 ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
                                                  href="#collapse<?php echo $i . "-" . $j; ?>">
                                                 <h4 class="panel-title">
@@ -158,35 +173,29 @@ class MenuRenderer extends Renderer{
                                                     <span class="label label-info project-state-label"><?= ProjektHandler::getStateString($projekt["state"]) ?></span>
                                                 </h4>
                                             </div>
-                                            <?php if (count($projekt["_ref"]) !== 0){ ?>
+                                            <?php if (count($auslagen[$id]) > 0){ ?>
                                                 <div id="collapse<?php echo $i . "-" . $j; ?>"
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
-
-
-                                                        <table class="table">
-                                                            <thead>
-                                                            <th>ID</th>
-                                                            <th>Type</th>
-                                                            <th>Zahlungsempfänger</th>
-                                                            <th>Betrag</th>
-                                                            <th>Status</th>
-                                                            </thead>
-                                                            <tbody>
-                                                            <?php foreach ($projekt["_ref"] as $a_id => $a_inhalt){ ?>
-                                                                <tr>
-                                                                    <td><?= generateLinkFromID($a_id, $a_inhalt["token"]) ?></td>
-                                                                    <td><?= $a_inhalt["type"] ?></td>
-                                                                    <td><?= isset($a_inhalt["_inhalt"]["antragsteller.name"]) ? $a_inhalt["_inhalt"]["antragsteller.name"] : "" ?></td>
-                                                                    <td>FIXME</td>
-                                                                    <td>
-                                                                        <span class="label label-info"><?php echo getStateString($a_inhalt["type"], $a_inhalt["revision"], $a_inhalt["state"]); ?></span>
-                                                                    </td>
-                                                                </tr>
-                                                            <?php } ?>
-                                                            </tbody>
-                                                        </table>
-
+                                                        <?php
+                                                        $this->renderTable(
+                                                            ["ID","Zusatzname","Zahlungsempfänger","Betrag","Status"],
+                                                            [$auslagen[$id]],
+                                                            [
+                                                                function($aid) use ($id){
+                                                                     return $this->renderInternalHyperLink("A".$aid,"projekt/$id/auslagen/$aid");
+                                                                },
+                                                                null,
+                                                                null,
+                                                                function($money){
+                                                                    return number_format($money,2,","," ")."&nbsp€";
+                                                                },
+                                                                function($stateString){
+                                                                    $text = AuslagenHandler2::getStateString(reset(explode(";",$stateString)));
+                                                                    return "<div class='label label-info'>$text</div>";
+                                                                }
+                                                            ]
+                                                        ); ?>
                                                     </div>
                                                 </div>
                                             <?php } ?>

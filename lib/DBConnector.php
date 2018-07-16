@@ -448,8 +448,8 @@ class DBConnector extends Singleton{
         if (empty($showColumns)){
             $showColumns = ["*"];
         }
-        if (in_array('*', $showColumns)){
-            unset($showColumns[array_search('*', $showColumns)]);
+        if (in_array("*", $showColumns)){
+            unset($showColumns[array_search("*", $showColumns)]);
             foreach ($tables as $t){
                 $showColumns[] = "$t.*";
             }
@@ -470,7 +470,7 @@ class DBConnector extends Singleton{
                 $tname = substr($col, 0, $pos);
                 $rename = $alias;
                 foreach ($this->scheme[$tname] as $colName => $dev_null){
-                    $newShowColumns[$rename . '.' . $colName] = $tname . '.' . $colName;
+                    $newShowColumns[$rename . '.' . $colName] = [$tname . '.' . $colName, $aggregate];
                 }
             }else{
                 $newShowColumns[$alias] = [$col, $aggregate];
@@ -484,8 +484,7 @@ class DBConnector extends Singleton{
             if (in_array($col, $this->validFields)){
                 $as = (!is_int($alias)) ? " as `$alias`" : '';
                 if (strpos($col, ".")){
-                    $tmp = explode(".", $col);
-                    $cols[] = $this->quoteIdent(self::$DB_PREFIX . $tmp[0] . "." . $tmp[1], $aggregateConst) . $as;
+                    $cols[] = $this->quoteIdent(self::$DB_PREFIX . $col, $aggregateConst) . $as;
                 }else{
                     $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
                 }

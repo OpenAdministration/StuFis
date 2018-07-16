@@ -36,7 +36,7 @@ $conf = [
 	],
 ];
 
-$HIBISCUSGROUP = "ref-finanzen"
+$HIBISCUSGROUP = "ref-finanzen";
 
 $URIBASE = "/FIXME/";
 define('URIBASE', $URIBASE);

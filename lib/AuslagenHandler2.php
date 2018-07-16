@@ -2021,7 +2021,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
     ];
     static private $visibleFields = [];
     
-    static private $printModes;
     private $templater;
     private $permissionHandler;
     private $stateHandler;

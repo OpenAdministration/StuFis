@@ -31,13 +31,6 @@ require_once (dirname(__FILE__).'/class.AuthHandler.php');
 class AuthBasicHandler extends Singleton implements AuthHandler{
 	
 	/**
-	 * reference to own instance
-	 * singelton instance of this class
-	 * @var BasicAuthHandler
-	 */
-	private static $instance; 
-	
-	/**
 	 * user map
 	 * @var array
 	 */

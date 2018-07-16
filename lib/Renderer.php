@@ -10,13 +10,31 @@ abstract class Renderer{
     abstract public function render();
     
     protected function renderTable(array $header, array $groupedContent, array $escapeFunctions = []){
-        
+    
+        //default escape-funktion to use if nothing is
+        $defaultFunction = function($val){
+            if (empty($val)){
+                return "<i>keine Angabe</i>";
+            }else{
+                return htmlspecialchars($val);
+            }
+        };
+    
+        //if there are to less functions - add some default functions.
         if (count($header) > count($escapeFunctions)){
             $escapeFunctions = array_merge(
                 $escapeFunctions,
-                array_fill(0, count($header) - count($escapeFunctions), "htmlspecialchars")
+                array_fill(0, count($header) - count($escapeFunctions), $defaultFunction)
             );
         }
+    
+        //set every function which is null or empty to default function
+        array_walk($escapeFunctions, function(&$val) use ($defaultFunction){
+            if (!isset($val) || empty($val)){
+                $val = $defaultFunction;
+            }
+        });
+        
         ?>
         <table class="table">
             <thead>

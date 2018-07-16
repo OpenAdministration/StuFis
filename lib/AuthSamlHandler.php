@@ -79,9 +79,6 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
         if (!isset($attributes["groups"])){
             return false;
         }
-        $attributes["groups"][] = 'ref-finanzen-kv';
-        $attributes["groups"][] = 'ref-finanzen-hv';
-        $attributes["groups"][] = 'ref-finanzen';
         if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
             return false;
         }

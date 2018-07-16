@@ -18,8 +18,10 @@ interface AuthHandler
 	 * return instance of this class
 	 * singleton class
 	 * return same instance on every call
+	 *
 	 * @param bool $noPermCheck
-	 * @return BasicAuthHandler
+     *
+     * @return AuthHandler
 	 */
 	public static function getInstance();
 	

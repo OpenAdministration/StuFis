@@ -18,7 +18,7 @@ class LoadGroups extends baseclass\Enum{
         "css" => ["bootstrap-datepicker.min"],
     ];
     const FILEINPUT = [
-        "js" => ["fileinput.min", "fileinput.de.min", "fileinput-themes/gly/theme.js"],
+        "js" => ["fileinput.min", "fileinput.de", "fileinput-themes/gly/theme"],
         "css" => ["fileinput.min"],
     ];
     const IBAN = [
