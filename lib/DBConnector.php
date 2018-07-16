@@ -452,7 +452,7 @@ class DBConnector extends Singleton{
         }
         if (in_array("*", $showColumns)){
             unset($showColumns[array_search("*", $showColumns)]);
-            foreach ($tables as $t){
+            foreach ($tables as $k => $t){
                 $showColumns[] = "$t.*";
             }
             foreach ($joins as $j){
