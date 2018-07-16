@@ -14,18 +14,18 @@ $router = new Router();
 $routeInfo = $router->route();
 
 if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
-	define('AUTH_HANLER', 'AuthBasicHandler');
-	(AUTH_HANLER)::getInstance()->requireAuth();
-	(AUTH_HANLER)::getInstance()->requireGroup('basic');
+    define('AUTH_HANDLER', 'AuthBasicHandler');
+    (AUTH_HANDLER)::getInstance()->requireAuth();
+    (AUTH_HANDLER)::getInstance()->requireGroup('basic');
 	if (!isset($routeInfo['groups'])){
 		$routeInfo['action'] = '403';
 		$routeInfo['controller'] = 'error';
 	}
 } else {
-	define('AUTH_HANLER', 'AuthSamlHandler');
-	(AUTH_HANLER)::getInstance()->requireAuth();
+    define('AUTH_HANDLER', 'AuthSamlHandler');
+    (AUTH_HANDLER)::getInstance()->requireAuth();
 }
-if (isset($routeInfo['groups']) && !(AUTH_HANLER)::getInstance()->hasGroup($routeInfo['groups'])){
+if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
 	$routeInfo['action'] = '403';
 	$routeInfo['controller'] = 'error';
 }

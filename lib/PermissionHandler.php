@@ -135,14 +135,14 @@ class PermissionHandler{
         if (is_bool($permArray)){
             return $permArray;
         }
-        $ret = (AUTH_HANLER)::getInstance()->isAdmin();
+        $ret = (AUTH_HANDLER)::getInstance()->isAdmin();
         if (isset($permArray["groups"]))
-            $ret |= (AUTH_HANLER)::getInstance()->hasGroup(implode(",", $permArray["groups"]));
+            $ret |= (AUTH_HANDLER)::getInstance()->hasGroup(implode(",", $permArray["groups"]));
         if (isset($permArray["gremien"]))
-            $ret |= (AUTH_HANLER)::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
+            $ret |= (AUTH_HANDLER)::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
         if (isset($permArray["persons"])){
-            $ret |= in_array((AUTH_HANLER)::getInstance()->getUsername(), $permArray["persons"], true);
-            $ret |= in_array((AUTH_HANLER)::getInstance()->getUserFullName(), $permArray["persons"], true);
+            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUsername(), $permArray["persons"], true);
+            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUserFullName(), $permArray["persons"], true);
         }
         //var_dump($ret);
         return (bool)$ret;

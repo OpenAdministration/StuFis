@@ -124,9 +124,9 @@ class FormTemplater{
     static function generateGremienSelectable($all = false){
         $GremiumPrefix = $GLOBALS["GremiumPrefix"];
         if ($all)
-            $gremien = (AUTH_HANLER)::getInstance()->getAttributes()["alle-gremien"];
+            $gremien = (AUTH_HANDLER)::getInstance()->getAttributes()["alle-gremien"];
         else
-            $gremien = (AUTH_HANLER)::getInstance()->getAttributes()["gremien"];
+            $gremien = (AUTH_HANDLER)::getInstance()->getAttributes()["gremien"];
         sort($gremien);
         $selectable = [];
         

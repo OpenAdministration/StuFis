@@ -239,8 +239,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	private function get_empty_auslage(){
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-		$newInfo['user'] = (AUTH_HANLER)::getInstance()->getUsername();
-		$newInfo['realname'] = (AUTH_HANLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
+        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
 		return [
 			"id" => NULL,
 			"projekt_id" => $this->projekt_id,
@@ -311,7 +311,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		if (is_array($map)
 			&&isset($map['groups'])){
 			$g = (is_string($map['groups']))? $map['groups'] : implode(",", $map["groups"]);
-			if ((AUTH_HANLER)::getInstance()->hasGroup($g)){
+            if ((AUTH_HANDLER)::getInstance()->hasGroup($g)){
 					return true;
 			}
 		}
@@ -325,7 +325,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'plain_orga' => $this->auslagen_data['projekte.org'],
 			];
 			//check dynamic permissions
-			$ah = (AUTH_HANLER)::getInstance();
+            $ah = (AUTH_HANDLER)::getInstance();
 			$a = $ah->getAttributes();
 			foreach ($map['dynamic'] as $type){
 				if (!isset($dynamic[$type])) continue;
@@ -412,8 +412,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		if ($this->state_change_possible($newState)) {
 			$newInfo = self::state2stateInfo($newState);
 			$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-			$newInfo['user'] = (AUTH_HANLER)::getInstance()->getUsername();
-			$newInfo['realname'] = (AUTH_HANLER)::getInstance()->getUserFullName();
+            $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
+            $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
 			//
 			$set = [
 				'version' => $this->auslagen_data['version'] + 1,
@@ -998,8 +998,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-		$newInfo['user'] = (AUTH_HANLER)::getInstance()->getUsername();
-		$newInfo['realname'] = (AUTH_HANLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
+        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
 		
 		//check fileid exists
 		$found_file_id = false;
@@ -1053,8 +1053,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-		$newInfo['user'] = (AUTH_HANLER)::getInstance()->getUsername();
-		$newInfo['realname'] = (AUTH_HANLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
+        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
 		
 		// filter for changes ---------------------------------
 		$changed_belege_flag = false;
@@ -1404,7 +1404,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
 				<?php // iban only show trimmed if not hv/kv important!
 	            	$iban_text = $this->auslagen_data['zahlung-iban'];
-	            	if (!(AUTH_HANLER)::getInstance()->hasGroup('HV,KV')){
+                if (!(AUTH_HANDLER)::getInstance()->hasGroup('HV,KV')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	} elseif ($iban_text != '') {
 	            		$iban_text = chunk_split($iban_text, 4, ' ');

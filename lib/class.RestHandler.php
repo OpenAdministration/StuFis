@@ -70,7 +70,7 @@ class RestHandler extends JsonController{
         $dbret = false;
         try{
             $logId = DBConnector::getInstance()->logThisAction($_POST);
-            DBConnector::getInstance()->logAppend($logId, "username", (AUTH_HANLER)::getInstance()->getUsername());
+            DBConnector::getInstance()->logAppend($logId, "username", (AUTH_HANDLER)::getInstance()->getUsername());
             
             if (!isset($_POST["action"]))
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");

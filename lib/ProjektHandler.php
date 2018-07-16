@@ -394,7 +394,7 @@ class ProjektHandler extends FormHandlerInterface{
                 //echo $this->templater->getStateChooser($this->stateHandler);
                 $this->renderProjekt("Internes Projekt");
                 // FIXME: LIVE COMMENT ONLY
-                //$this->renderCommentPanel();
+                $this->renderCommentPanel();
                 break;
             default:
                 ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
@@ -408,12 +408,12 @@ class ProjektHandler extends FormHandlerInterface{
         $editable = $this->permissionHandler->isAnyDataEditable();
         
         //build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen"));
+        $selectable_gremien = FormTemplater::generateGremienSelectable((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"));
         $selectable_gremien["values"] = $this->data['org'];
-        
-        
-        $mail_selector = (AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-        $selectable_mail = FormTemplater::generateSelectable((AUTH_HANLER)::getInstance()->getAttributes()[$mail_selector]);
+    
+    
+        $mail_selector = (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
+        $selectable_mail = FormTemplater::generateSelectable((AUTH_HANDLER)::getInstance()->getAttributes()[$mail_selector]);
         $selectable_mail["values"] = $this->data['org-mail'];
         
         $sel_recht = self::$selectable_recht;
@@ -710,8 +710,8 @@ class ProjektHandler extends FormHandlerInterface{
                         <div class='chat-container chat-own'>
                             <span class='chat-time'>Jetzt gerade</span>
                             <label for='new-comment'>
-                                <?= htmlspecialchars((AUTH_HANLER)::getInstance()->getUserFullName() .
-                                    " (" . (AUTH_HANLER)::getInstance()->getUsername() . ")") ?>
+                                <?= htmlspecialchars((AUTH_HANDLER)::getInstance()->getUserFullName() .
+                                    " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")") ?>
                             </label>
                             <textarea name='new-comment' id='new-comment' class='chat-textarea form-control col-xs-10'
                                       rows='3'
@@ -726,7 +726,7 @@ class ProjektHandler extends FormHandlerInterface{
                     
                     <?php
                     foreach ($comments as $c){
-                        $owner = ($c["creator"] === (AUTH_HANLER)::getInstance()->getUsername() ? "own" : "other");
+                        $owner = ($c["creator"] === (AUTH_HANDLER)::getInstance()->getUsername() ? "own" : "other");
                         $creatorStr = ((($c["creator"] == $c["creatorFullName"]) || empty($c["creatorFullName"])) ?
                             $c["creator"] :
                             ($c["creatorFullName"] . " (" . $c["creator"] . ")")
@@ -741,7 +741,7 @@ class ProjektHandler extends FormHandlerInterface{
                                 <?php
                                 break;
                             case 2: //admin only
-                                if (!(AUTH_HANLER)::getInstance()->isAdmin())
+                                if (!(AUTH_HANDLER)::getInstance()->isAdmin())
                                     break;
                             //fall-through
                             case 1: //comment

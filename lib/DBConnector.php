@@ -306,15 +306,15 @@ class DBConnector extends Singleton{
     }
     
     function getUser(){
-        $user = $this->dbFetchAll("user", [], ["username" => (AUTH_HANLER)::getInstance()->getUsername()]);
+        $user = $this->dbFetchAll("user", [], ["username" => (AUTH_HANDLER)::getInstance()->getUsername()]);
         if (count($user) === 1){
             $user = $user[0];
         }else{
             if (count($user) === 0){
                 $fields = [
-                    "fullname" => (AUTH_HANLER)::getInstance()->getUserFullName(),
-                    "username" => (AUTH_HANLER)::getInstance()->getUsername(),
-                    "email" => (AUTH_HANLER)::getInstance()->getUserMail(),
+                    "fullname" => (AUTH_HANDLER)::getInstance()->getUserFullName(),
+                    "username" => (AUTH_HANDLER)::getInstance()->getUsername(),
+                    "email" => (AUTH_HANDLER)::getInstance()->getUserMail(),
                 ];
                 //print_r($fields);
                 $id = $this->dbInsert("user", $fields);

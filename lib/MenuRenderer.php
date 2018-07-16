@@ -18,7 +18,7 @@ class MenuRenderer extends Renderer{
         $this->pathinfo = $pathinfo;
     }
     public function render(){
-        $attributes = (AUTH_HANLER)::getInstance()->getAttributes();
+        $attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
         switch ($this->pathinfo["action"]){
             case "mygremium":
             case "allgremium":
@@ -71,7 +71,7 @@ class MenuRenderer extends Renderer{
                 break;
             case "konto":
                 global $HIBISCUSGROUP;
-                (AUTH_HANLER)::getInstance()->requireGroup($HIBISCUSGROUP);
+                (AUTH_HANDLER)::getInstance()->requireGroup($HIBISCUSGROUP);
                 $selected_hhp_id = null;
                 if (isset($_REQUEST["id"])){
                     $selected_hhp_id = $_REQUEST["id"];
@@ -93,7 +93,7 @@ class MenuRenderer extends Renderer{
     }
     
     public function renderProjekte($gremien){
-        //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANLER)::getInstance()->getUserName()]);
+        //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
         $projekte = DBConnector::getInstance()->dbFetchAll(
             "projekte",
@@ -130,7 +130,7 @@ class MenuRenderer extends Renderer{
             false,
             ["projekt_id"]
         );
-        /*if ((AUTH_HANLER)::getInstance()->hasGroup("ref-finanzen")){
+        /*if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
             $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
             if ($ret !== false){
@@ -225,26 +225,14 @@ public function renderMyProfile(){
     }else{
         $iban = "";
     }
-    
-    $form = [
-        "layout" => [
-            ["id" => "myiban",
-                "type" => "iban",
-                "title" => "meine IBAN",
-                "value" => $iban === "" ? $iban : "",
-                "placeholder" => "DE ...",
-                "width" => 12,
-                "opts" => ["required"],
-            ],
-        ],
-    ];
+    $templater = new FormTemplater()
     ?>
 
     <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
           enctype="multipart/form-data" class="ajax">
         <input type="hidden" name="action" value="mykonto.update"/>
         <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>"/>
-        <?php renderForm($form); ?>
+        <?php //renderForm($form); ?>
         <a href="javascript:void(false);" class='btn btn-success submit-form validate pull-right' data-name="iban"
            data-value="">Speichern</a>
     </form>
