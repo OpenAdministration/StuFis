@@ -71,6 +71,7 @@ class HTMLPageRenderer{
     public function render(){
         if (isset(self::$errorPage)){
             $this->renderErrorPage();
+            return;
         }
         $this->renderHtmlHeader();
         $this->renderNavbar();
@@ -82,6 +83,7 @@ class HTMLPageRenderer{
         if ($GLOBALS["DEV"]){
             $this->renderProfiling();
         }
+    
         $this->renderFooter();
     }
     

@@ -47,8 +47,10 @@ class DBConnector extends Singleton{
             //"array_idx" => "INT NOT NULL",
             "value" => "TEXT NOT NULL",];
     
-        $scheme["comments"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
+        $scheme["comments"] = [
+            "id" => "INT NOT NULL AUTO_INCREMENT",
             "antrag_id" => "INT NOT NULL",
+            "controller" => "VARCHAR(64)",
             "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "creator" => "VARCHAR(128) NOT NULL",
             "creatorFullName" => "VARCHAR(256) NOT NULL",

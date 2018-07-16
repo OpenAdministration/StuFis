@@ -38,6 +38,7 @@ $content = null;
 $error = false;
 //print_r($routeInfo);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
+$chatHandler = new ChatHandler($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":
         $menuRenderer = new MenuRenderer($routeInfo);
@@ -47,11 +48,13 @@ switch ($routeInfo['controller']){
     case "projekt":
         $projektRenderer = new ProjektHandler($routeInfo);
         $htmlRenderer->appendRendererContent($projektRenderer);
+        $htmlRenderer->appendRendererContent($chatHandler);
         $htmlRenderer->render();
         break;
     case "auslagen":
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
+        $htmlRenderer->appendRendererContent($chatHandler);
         $htmlRenderer->render();
         break;
     case "hhp":
