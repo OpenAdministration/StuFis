@@ -898,7 +898,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		
 		// return result to
 		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0 ){
-			if ($result['data']['success']){
+			if (isset($result['data']['success'])&&$result['data']['success']){
 				$this->json_result = [
 					'success' => true,
 					'type' => 'modal',
@@ -934,7 +934,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'type' => 'modal',
 					'subtype' => 'server-error',
 					'status' => '200',
-					'msg' => '<div style="white-space: pre-wrap;">'.print_r($result['data']['error'], true).'</div>',
+					'msg' => '<div style="white-space: pre-wrap;">'.print_r((isset($result['data']['error']))?$result['data']['error']:$result['data'], true).'</div>',
 				];
 			}
 		} elseif($result['success'] && isset($this->routeInfo['validated']['d']) && $this->routeInfo['validated']['d'] == 1 ) {
@@ -1794,8 +1794,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	<?php 
 	}
 	
-	
-	
 	public function getStateSvg(){
 		$diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
 		$diagram->setData($this->getDiagramStatelistFiltered());
@@ -1910,7 +1908,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				1 => [
 					'state' => 'wip', 
 					'title' => self::$states['wip'][0],
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['wip'][1],
 					'target' => ['ok', 'revocation'],
 					'children' => [
 						[
@@ -1935,12 +1933,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				],
 				2 => ['state' => 'ok', 
 					'title' => self::$states['ok'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['ok'][1],
 					'target' => ['instructed', 'revocation']
 				],
 				3 => ['state' => 'instructed', 
 					'title' => self::$states['instructed'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['instructed'][1],
 					'target' => ['booked'],
 					'children' => [
 						[
@@ -1953,7 +1951,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				],
 				4 => ['state' => 'booked', 
 					'title' => self::$states['booked'][0],
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['booked'][1],
 					'target' => []
 				],
 			],
@@ -1961,7 +1959,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				2 => [
 					'state' => 'revocation', 
 					'title' => self::$states['revocation'][0], 
-					'hovertitle' => self::$states['draft'][1],
+					'hovertitle' => self::$states['revocation'][1],
 					'offset' => ['x' => 0, 'y' => -85],
 					'target' => [['draft', 4, ['y' => 30]]],
 					'children' => [
