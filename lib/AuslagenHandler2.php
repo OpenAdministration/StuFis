@@ -723,7 +723,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	}
 	
 	private function getDbBelegePostenFiles(){
-		$res = $this->db->dbFetchAll("belege", [
+		$res = $this->db->dbFetchAll('belege', [
 			'belege' => 'belege.*',
 			'beleg_posten' => 'beleg_posten.*',
 			'fileinfo' => 'fileinfo.*',
@@ -732,7 +732,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			[
 				["type" => "left", "table" => "beleg_posten", "on" => [["belege.id", "beleg_posten.beleg_id"]]],
 				["type" => "left", "table" => "fileinfo", "on" => [["fileinfo.id", "belege.file_id"]]],
-				["type" => "left", "table" => "projektposten", "on" => [["beleg_posten.projekt_posten_id", "projektposten.id"]]],
+				["type" => "left", "table" => "auslagen", "on" => [["belege.auslagen_id", "auslagen.id"]]],
+				["type" => "left", "table" => "projektposten", "on" => [["beleg_posten.projekt_posten_id", "projektposten.id"],["projektposten.projekt_id", "auslagen.projekt_id"]]],
 			], ["belege.id" => true, "belege.short" => true, "beleg_posten.id" => true, "beleg_posten.short" => true, "projektposten.name" => true]);
 		$belege = [];
 		if (!empty($res)){
@@ -1487,7 +1488,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					<option value="0" data-alias="Bitte Wählen">
 				<?php foreach ($this->projekt_data['posten'] as $p){ 
 					?>
-					<option value="<?= $p['id']+1 //TODO remove +1 wenn db ok und projekthandler gefixed ?>" data-alias="<?= (($p['einnahmen'])?'[Einnahme] ':'').(($p['ausgaben'])?'[Ausgabe] ':'').$p['name'] ?>">
+					<option value="<?= $p['id'] ?>" data-alias="<?= (($p['einnahmen'])?'[Einnahme] ':'').(($p['ausgaben'])?'[Ausgabe] ':'').$p['name'] ?>">
 				<?php } ?>
 				</datalist>
 			</div>
