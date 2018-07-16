@@ -263,7 +263,7 @@ class ProjektHandler extends FormHandlerInterface{
         
         for ($i = 0; $i < $minRows - 1; $i++){
             DBConnector::getInstance()->dbInsert("projektposten", [
-                "id" => $i,
+                "id" => $i+1 ,
                 "projekt_id" => $projekt_id,
                 "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($data["posten-einnahmen"][$i], "money"),
                 "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue($data["posten-ausgaben"][$i], "money"),
@@ -343,7 +343,7 @@ class ProjektHandler extends FormHandlerInterface{
         for ($i = 0; $i < $minRows - 1; $i++){
             //would throw exception if not working
             DBConnector::getInstance()->dbInsert("projektposten", [
-                "id" => $i,
+                "id" => $i+1 ,
                 "projekt_id" => $this->id,
                 "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
                 "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-einnahmen"][$i], "money"),
@@ -514,18 +514,18 @@ class ProjektHandler extends FormHandlerInterface{
                                 echo "<td></td>";
                             } ?>
                             <td><?= $this->templater->getTextForm("posten-name[]",
-                                    !$new_row ? $this->data["posten-name"][$row_nr] : "", null,
+                                    !$new_row ? $this->data["posten-name"][$row_nr+1]: "", null,
                                     "Name des Postens", "", ["required"]) ?></td>
                             <td><?= $this->templater->getTextForm("posten-bemerkung[]",
-                                    !$new_row ? $this->data["posten-bemerkung"][$row_nr] : "", null,
+                                    !$new_row ? $this->data["posten-bemerkung"][$row_nr+1]: "", null,
                                     "optional", "", []) ?></td>
                             <td><?= $this->templater->getDropdownForm("posten-titel[]", $sel_titel, null,
                                     "HH-Titel", "", [], true) ?></td>
                             <td><?= $this->templater->getMoneyForm("posten-einnahmen[]",
-                                    !$new_row ? $this->data["posten-einnahmen"][$row_nr] : 0, null,
+                                    !$new_row ? $this->data["posten-einnahmen"][$row_nr+1]: 0, null,
                                     "", "", ["required"], "einnahmen") ?></td>
                             <td><?= $this->templater->getMoneyForm("posten-ausgaben[]",
-                                    !$new_row ? $this->data["posten-ausgaben"][$row_nr] : 0, null,
+                                    !$new_row ? $this->data["posten-ausgaben"][$row_nr+1]: 0, null,
                                     "", "", ["required"], "ausgaben") ?></td>
                         </tr>
                     <?php } ?>

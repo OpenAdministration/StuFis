@@ -387,7 +387,7 @@ class DBConnector extends Singleton{
         if (!isset($tables)){
             ErrorHandler::_errorExit("table not set");
         }
-        
+    
         if (!is_array($tables)){
             $tables = [$tables];
         }
@@ -397,7 +397,7 @@ class DBConnector extends Singleton{
                 ErrorHandler::_errorExit("Unkown table $table", 404);
             }
         }
-        
+    
         //check if content of fields and sort are valid
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         $sort = array_intersect_key($sort, array_flip($this->validFields));
@@ -446,7 +446,7 @@ class DBConnector extends Singleton{
         //
         //prebuild sql
         //
-        
+ 
         if (empty($showColumns)){
             $showColumns = ["*"];
         }
@@ -588,7 +588,7 @@ class DBConnector extends Singleton{
         //var_dump($sql);
         //var_dump($vals);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(), "sql" => $sql], true));
+        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(),/*"sql" => $sql*/], true));
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;

@@ -203,7 +203,7 @@ class DbFilePDO
 				'mime' => $f->mime,
 				'encoding' => $f->encoding,
 				'data' => $f->data,
-				'added_on' => ($f->added_on)? $f->added_on : date_create()->format('Y--m-d H:i:s')
+				'added_on' => ($f->added_on)? $f->added_on : date_create()->format('Y-m-d H:i:s') 
 			]);
 			$this->_isError = false;
 			return $this->lastInsertId();
