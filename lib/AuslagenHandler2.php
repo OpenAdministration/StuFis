@@ -1387,7 +1387,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		           <div class="clearfix"></div>
 		        </div>
 	        <?php } ?>
-	        	<input type="hidden" name="nononce" value="<?= $GLOBALS["nonce"] ?>">
+	        	<input type="hidden" name="nononce" value="<?= strrev($GLOBALS["nonce"]) ?>">
 	        	<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
 	        <form id="<?php $current_form_id = 'auslagen-form-'.count($this->formSubmitButtons); $this->formSubmitButtons[] = $current_form_id; echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
 	        	<input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
@@ -1488,7 +1488,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					<option value="0" data-alias="Bitte Wählen">
 				<?php foreach ($this->projekt_data['posten'] as $p){ 
 					?>
-					<option value="<?= $p['id'] ?>" data-alias="<?= (($p['einnahmen'])?'[Einnahme] ':'').(($p['ausgaben'])?'[Ausgabe] ':'').$p['name'] ?>">
+					<option value="<?= $p['id']; ?>" data-alias="<?= (($p['einnahmen'])?'[Einnahme] ':'').(($p['ausgaben'])?'[Ausgabe] ':'').$p['name'] ?>">
 				<?php } ?>
 				</datalist>
 			</div>
