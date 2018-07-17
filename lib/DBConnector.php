@@ -49,13 +49,13 @@ class DBConnector extends Singleton{
     
         $scheme["comments"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
-            "antrag_id" => "INT NOT NULL",
-            "controller" => "VARCHAR(64)",
+            "target_id" => "INT NOT NULL",
+            "target" => "VARCHAR(64)",
             "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "creator" => "VARCHAR(128) NOT NULL",
-            "creatorFullName" => "VARCHAR(256) NOT NULL",
-            "text" => "varchar(2048) NOT NULL",
-            "type" => "tinyint(2) NOT NULL DEFAULT '0' COMMENT '0 = state change, 1 = comment, 2 = admin only'",];
+            "creator_alias" => "VARCHAR(256) NOT NULL",
+            "text" => "TEXT NOT NULL",
+            "type" => "tinyint(2) NOT NULL DEFAULT '0' COMMENT '0 = comment, 1 = state_change, 2 = admin only'",];
         
         $scheme["booking"] = ["id" => "INT NOT NULL PRIMARY KEY AUTO_INCREMENT",
             "titel_id" => "int NOT NULL",

@@ -74,7 +74,8 @@ $routing = [
             'action' => 'create',
             'load' => [
                 LoadGroups::DATEPICKER,
-                LoadGroups::SELECTPICKER
+                LoadGroups::SELECTPICKER,
+                LoadGroups::CHAT,
             ],
             'children' => [
                 [
@@ -84,6 +85,7 @@ $routing = [
                     'param' => 'pid',
                     'load' => [
                         LoadGroups::SELECTPICKER,
+                        LoadGroups::CHAT,
                     ],
                     'children' => [
                         [
@@ -176,7 +178,13 @@ $routing = [
                             ]
                         ],
                     ]
-                ]
+                ],
+            	[
+            		'path' => 'chat',
+            		'type' => 'path',
+            		'controller' => 'rest',
+            		'action' => 'chat',
+            	]
             ]
         ],
         [

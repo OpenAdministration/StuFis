@@ -463,56 +463,6 @@ ul.nav-pills.nav-stacked > li.label-info {
     padding: 10px 15px;
     border-radius: 4px;
 }
-
-.chat {
-    text-align: center;
-}
-
-.chat-textarea {
-    margin-bottom: 10px;
-    max-width: 100%;
-    min-width: 100%;
-    min-height: 7em;
-}
-
-.chat-container {
-    border-radius: 5px;
-    padding: 10px;
-    margin: 10px 0;
-    text-align: left;
-    width: 80%;
-}
-
-.chat-own {
-    float: left;
-    border: 1px solid #DDDDDD;
-    background-color: #F5F5F5;
-}
-
-.chat-other {
-    float: right;
-    border: 1px solid #DDDDDD;
-    background-color: #E0E0E0;
-}
-
-/* Style time text */
-.chat-time {
-    float: right;
-    color: #aaa;
-}
-
-.chat-info {
-    display: inline-block;
-    padding: 3px 10px;
-    margin: 0 auto 5px;
-    background-color: #5BC0DE;
-    font-size: 90%;
-    color: white;
-    text-align: center;
-    border-radius: 5px;
-    vertical-align: middle;
-}
-
 /* hhp code */
 .money {
     text-align: right;

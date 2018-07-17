@@ -50,6 +50,14 @@ class RestHandler extends JsonController{
                 }
                 $this->handleAuslagen($routeInfo);
                 break;
+			case 'chat':
+				if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
+					ErrorHandler::_renderError('Access Denied.', 403);
+				} else {
+					unset($_POST["nonce"]);
+				}
+				$this->handleChat($routeInfo);
+				break;
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
@@ -419,5 +427,69 @@ class RestHandler extends JsonController{
     			'subtype' => 'server-error',
     		]);
     	}
+    }
+    
+    private function handleChat($routeInfo){
+    	$db = DBConnector::getInstance();
+    	$chat = new ChatHandler(NULL, NULL);
+   		$valid = $chat->validatePost($_POST);
+   		$auth = (AUTH_HANDLER);
+   		/* @var $auth AuthHandler */
+   		$auth = $auth::getInstance();
+    	if ($valid){
+    		//access permission control
+    		switch ($valid['target']){
+    			case 'projekt': {
+    				$r = [];
+    				try{
+    					$r = $db->dbFetchAll('projekte', [], ['id' => $valid['target_id']]);
+    				} catch (Exception $e){
+    					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+    					break;
+    				}
+    				if (!$r || count($r) == 0){
+    					break;
+    				}
+    				// ACL --------------------------------
+    				// action 
+    				switch ($valid['action']){
+    					case 'gethistory':
+    						if ($auth->hasGroup('admin')) {
+    							$chat->setKeep(['0','1','2']);
+    						}
+    						break;
+    					case 'newcomment':
+    						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
+    							break 2;
+    						}
+    						//switch type
+    						switch ($valid['type']){
+    							case '0':
+    								break;
+    							case '1':
+    								break 3;
+    							case '2':
+    								if (!$auth->hasGroup('admin')) {
+    									break 3;
+    								}
+    								break;
+    							default: 
+    								break 3;
+    						}
+    						break;
+    					default: 
+    						break 2;
+    				}
+    				// all ok -> handle all
+    				$chat->answerAll($_POST);
+    				die();
+    			} break;
+    			default:
+	    			break;
+    		}
+    	}
+    	$chat->setErrorMessage('Access Denied.');
+    	$chat->answerError();
+    	die();	
     }
 }
