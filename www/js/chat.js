@@ -69,11 +69,11 @@
 	/**
 	 * append message to container
 	 */
-	var appendChatMessage = function ($t, data){
+	var appendChatMessage = function ($t, data, message_counter){
 		// may add comments
 		var add = [];
 		var $to = $t.find('.chat-section');
-		var counter = 0;
+		var counter = message_counter;
 		for(dd in data){
 			if (data.hasOwnProperty(dd)){
 				var d = data[dd];
@@ -113,12 +113,14 @@
  			}
 		}
 		chainPrepend();
+		return counter;
 	}
 	
 	var $chats = null;
 	var initChat = function($e){
 		var timeout = null;
 		var lastKnown = 0;
+		var message_counter = 0;
 		var updateChat = function($e){
 			var t = $e.find('.new-chat-comment');
 			var dataset = {};
@@ -139,7 +141,8 @@
 		    	data = parseData(values);
 		    	lastKnown = data.last;
 		    	//add comments
-		    	appendChatMessage($e, data.data);
+		    	message_counter = appendChatMessage($e, data.data, message_counter);
+		    	$e.find('.chat-loading').fadeOut(1000);
 	        }).fail(function (values) {
 	        	data = parseData(values.responseText);
 	        	console.log('error', data);
@@ -157,7 +160,7 @@
 		
 		// ---------------------------
 		//button click listener
-		$e.find('.new-chat-comment .chat-submit, .new-chat-comment .chat-admin-submit').on('click', function(){
+		$e.find('.new-chat-comment .chat-submit').on('click', function(){
 			var t = $e.find('.new-chat-comment');
 			var dataset = {};
 			for(prop in t[0].dataset){
@@ -167,7 +170,7 @@
 			}
 			dataset['nonce'] = $e.find('input[name="nonce"]').val();
 			dataset['action'] = 'newcomment';
-			dataset['type'] = ($(this).hasClass('chat-admin-submit'))? 2 : 0;
+			dataset['type'] = ($(this).data('type'));
 			dataset['text'] = t.find('textarea').val().trim();
 			
 			if (dataset['text'] != ''){

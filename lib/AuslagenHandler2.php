@@ -614,7 +614,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		//check if editable and action != create
 		// if user is owner or in same organisation or is ref-finanzen
-		if ($this->stateInfo['editable'] && $this->routeInfo['action'] != 'create') {
+		if ($this->stateInfo['editable'] && $this->routeInfo['action'] != 'create' && !(isset($this->routeInfo['mfunction']) && $this->routeInfo['mfunction'] == 'updatecreate' && !isset($this->routeInfo['aid']) )) {
 			if (!$this->checkPermissionByMap(self::$groups['strict_editable'])){
 				$this->stateInfo['editable'] = false;
 			}
@@ -819,21 +819,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				if ($this->stateInfo['editable']){
 					$this->post_createupdate();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden.';
 				}
 			} break;
 			case 'filedelete': {
 				if ($this->stateInfo['editable']){
 					$this->post_filedelete();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Datei nicht gelöcht.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Datei nicht gelöcht.';
 				}
 			} break;
 			case 'state': {
 				if ($this->stateInfo['project-editable'] && $this->auslagen_id){
 					$this->post_statechange();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Der Status wurde nicht geändert.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Der Status wurde nicht geändert.';
 				}
 			} break;
 			case 'belegpdf': {
