@@ -699,8 +699,17 @@ class ProjektHandler extends FormHandlerInterface{
 			<?php 
 				/* @var $auth AuthHandler */
 				$auth = AUTH_HANDLER;
+				$btns = [];
+				$btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+				if ($auth::getInstance()->hasGroup('ref-finanzen')) {
+					$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+				}
+				if ($auth::getInstance()->hasGroup('admin')) {
+					$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
+				}
+				
 				ChatHandler::renderChatPanel('projekt', $this->id, (AUTH_HANDLER)::getInstance()->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
-					($auth::getInstance()->hasGroup('admin'))); ?>
+					$btns); ?>
 		</div>
     <?php
     
