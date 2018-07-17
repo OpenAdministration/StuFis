@@ -380,10 +380,6 @@ class Validator {
 			if (in_array('trim', $params, true)){
 				$s = trim($s);
 			}
-			
-			if (!isset($params['maxlength'])){
-				$params['maxlength'] = 127;
-			}
 			if (isset($params['minlength']) && strlen($s) < $params['minlength']){
 				$msg = "The text is too short (Minimum length: {$params['minlength']})";
 				if (isset($params['error'])) $msg = $params['error'];
