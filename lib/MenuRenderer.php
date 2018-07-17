@@ -118,32 +118,25 @@ class MenuRenderer extends Renderer{
                 $pids[] = $res["id"];
             });
         });
-        $auslagen = DBConnector::getInstance()->dbFetchAll(
-            "auslagen",
-            ["projekt_id","auslagen.id","name_suffix","zahlung-name","betrag" => ["projekt_id",DBConnector::SUM_ROUND2],"state"],
-            ["projekt_id" => ["IN",$pids]],
-            [
-                //["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.projekt_posten_id","beleg_posten.beleg_id"]],
-            ],
-            ["id" => true],
-            true,
-            false,
-            ["projekt_id"]
-        );
-        /*if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
-            $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
-            $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
-            if ($ret !== false){
-                //var_dump($ret);
-                $projekte = array_merge($projekte, $ret);
-            }
-        }*/
-        
+        if(!empty($pids)){
+            $auslagen = DBConnector::getInstance()->dbFetchAll(
+                "auslagen",
+                ["projekt_id","auslagen.id","name_suffix","zahlung-name","betrag" => ["projekt_id",DBConnector::SUM_ROUND2],"state"],
+                ["projekt_id" => ["IN",$pids]],
+                [
+                    //["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.projekt_posten_id","beleg_posten.beleg_id"]],
+                ],
+                ["id" => true],
+                true,
+                false,
+                ["projekt_id"]
+            );
+        }
         //var_dump(end(end($projekte)));
         ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-            if (isset($projekte)){
+            if (!empty($projekte)){
                 foreach ($projekte as $gremium => $inhalt){
                     if (count($inhalt) == 0) continue; ?>
                     <div class="panel panel-default">
@@ -210,8 +203,9 @@ class MenuRenderer extends Renderer{
                     <?php
                     $i++;
                 }
-            }
-            ?>
+            }else{ ?>
+                <h2>Bisher wurden leider noch keine Projekte angelegt. :(</h2>
+            <?php } ?>
         </div>
         
         <?php
@@ -225,7 +219,6 @@ public function renderMyProfile(){
     }else{
         $iban = "";
     }
-    $templater = new FormTemplater()
     ?>
 
     <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
@@ -238,7 +231,6 @@ public function renderMyProfile(){
     </form>
     
     <?php
-    
 }
     
     private function renderStuRaView(){
@@ -486,61 +478,5 @@ public function renderMyProfile(){
         </form>
         <?php
         return $hhps;
-    }
-    
-    public function renderTable2($groups, $mapping){
-        //FIXME probably delete this function?
-        $res = [];
-        $header = ["ID", "Name", "Organisation", "Summe", "Status", "letzte Änderung"];
-        
-        if (!isset($groups)) return "groups leer";
-        if (!isset($mapping)) return "Mapping leer";
-        if (count($mapping) !== count($groups)) return "Mapping stimmt nicht mit Groups überein (Anzahl)";
-        $name2Nr = [];
-        foreach ($groups as $nr => $data){
-            $name2Nr[$data["name"]] = $nr;
-            $fields = $data["fields"];
-            $res[$data["name"]] = DBConnector::getInstance()->dbFetchAll("antrag", [], $fields, [], [], true, true);
-            $ids = array_keys($res[$data["name"]]);
-            foreach ($ids as $id){
-                $res[$data["name"]][$id]["_inhalt"] = betterValues(DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $id]));
-                //var_dump($res[$data["name"]]);
-            }
-            //var_dump($res);
-        }
-        //var_dump($name2Nr);
-        //var_dump($mapping);
-        ?>
-            <table class="table">
-                <thead>
-                <tr>
-                    <?php
-                    foreach ($header as $titel){
-                        echo "<th>$titel</th>";
-                    }
-                    ?>
-                </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($res as $name => $inhalt){ ?>
-                    <tr>
-                        <th id="par" colspan="6"><?php echo $name; ?></th>
-                    </tr>
-                    <?php foreach ($inhalt as $id => $row){ ?>
-                        <tr>
-                            <td><?php echo $id; ?></td>
-                            <td><?php echo generateLinkFromID($row["_inhalt"][$mapping[$name2Nr[$name]]["p-name"]], $row["token"]); ?></td>
-                            <td><?php echo $row["_inhalt"][$mapping[$name2Nr[$name]]["org-name"]]; ?></td>
-                            <td>Beantragte Summe</td>
-                            <td>
-                                <div class="label label-primary"><?php echo getStateString($row["type"], $row["revision"], $row["state"]); ?></div>
-                            </td>
-                            <td><?php echo $row["lastupdated"]; ?></td>
-                        </tr>
-                    <?php } ?>
-                <?php } ?>
-                </tbody>
-            </table>
-        <?php
     }
 }

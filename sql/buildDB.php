@@ -24,8 +24,7 @@ $r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."comments");
 if ($r === false){
     $this->pdo->query("CREATE TABLE ".self::$DB_PREFIX."comments (" .
         $this->buildColDef($this->scheme["comments"]) . "
-                PRIMARY KEY (id),
-                FOREIGN KEY (antrag_id) REFERENCES ".self::$DB_PREFIX."antrag(id) ON DELETE CASCADE
+                PRIMARY KEY (id)
               ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
     
 }
@@ -89,17 +88,6 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."konto (" .
       )ENGINE = InnoDB DEFAULT CHARSET=utf8;
 ") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
 
-$r = $this->pdo->query("SELECT COUNT(*) FROM ".self::$DB_PREFIX."booking");
-if ($r === false){
-    $this->pdo->query("CREATE TABLE " . self::$DB_PREFIX . "booking (" .
-		$this->buildColDef($this->scheme["booking"]) . "
-                FOREIGN KEY (beleg_id) REFERENCES ".self::$DB_PREFIX."antrag(id),
-                FOREIGN KEY (zahlung_id) REFERENCES ".self::$DB_PREFIX."konto(id),
-                FOREIGN KEY (titel_id) REFERENCES ".self::$DB_PREFIX."haushaltstitel(id),
-                FOREIGN KEY (user_id) REFERENCES ".self::$DB_PREFIX."user(id)
-              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
-}
-
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."projekte (" .
     $this->buildColDef($this->scheme["projekte"]) .
@@ -108,6 +96,19 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."projekte (" .
     FOREIGN KEY (stateCreator_id) REFERENCES ".self::$DB_PREFIX."user(id)
       )ENGINE = InnoDB DEFAULT CHARSET=utf8;
 ") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+
+
+$r = $this->pdo->query("SELECT COUNT(*) FROM " . self::$DB_PREFIX . "booking");
+if ($r === false){
+    $this->pdo->query("CREATE TABLE " . self::$DB_PREFIX . "booking (" .
+        $this->buildColDef($this->scheme["booking"]) . "
+                FOREIGN KEY (beleg_id) REFERENCES " . self::$DB_PREFIX . "projekte(id),
+                FOREIGN KEY (zahlung_id) REFERENCES " . self::$DB_PREFIX . "konto(id),
+                FOREIGN KEY (titel_id) REFERENCES " . self::$DB_PREFIX . "haushaltstitel(id),
+                FOREIGN KEY (user_id) REFERENCES " . self::$DB_PREFIX . "user(id)
+              ) ENGINE=INNODB CHARACTER SET utf8 COLLATE utf8_general_ci;") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+}
+
 
 $this->pdo->query("
 CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."projektposten (" .

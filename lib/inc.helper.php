@@ -1,93 +1,5 @@
 <?php
 
-/**
- * @param int $id - Returns Antrag via _REQUEST["token"] if null
- *
- * @return bool|mixed
- */
-function getAntrag($id = null){
-    if ($id === null){
-        if (isset($_REQUEST["token"]))
-            $antrag = DBConnector::getInstance()->dbGet("antrag", ["token" => $_REQUEST["token"]]);
-        else{
-            return false;
-        }
-    }else{
-        $antrag = DBConnector::getInstance()->dbGet("antrag", ["id" => $id]);
-    }
-    if ($antrag === false){
-        if ($id === null) die("Unknown antrag.");
-        return false;
-    }
-    $inhalt = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
-    $antrag["_inhalt"] = $inhalt;
-    $antrag["_projektposten"] = ["geld.einnahmen" => 10];
-    
-    $form = getForm($antrag["type"], $antrag["revision"]);
-    $readPermitted = hasPermission($form, $antrag, "canRead");
-    if (!$readPermitted){
-        if ($id === null) die("Permission denied");
-        return false;
-    }
-    
-    $anhang = DBConnector::getInstance()->dbFetchAll("anhang", [], ["antrag_id" => $antrag["id"]]);
-    $antrag["_anhang"] = $anhang;
-    $comments = DBConnector::getInstance()->dbFetchAll("comments", [], ["antrag_id" => $antrag["id"]], [], ["id" => false]);
-    $antrag["_comments"] = $comments;
-    
-    return $antrag;
-}
-
-function getAntragDisplayTitle(&$antrag, &$revConfig, $captionField = false){
-    global $antraege;
-    static $cache = false;
-    if ($cache === false) $cache = [];
-    $cacheMe = ($captionField === false);
-    if (isset($antrag["id"]) && isset($cache[$antrag["id"]]) && $cacheMe)
-        return $cache[$antrag["id"]];
-    $renderOk = true;
-    
-    $caption = [];
-    if ($captionField === false && isset($revConfig["captionField"]) && count($revConfig["captionField"]) > 0){
-        $captionField = $revConfig["captionField"];
-    }
-    if ($captionField !== false){
-        if (!isset($antrag["_inhalt"])){
-            $antrag["_inhalt"] = DBConnector::getInstance()->dbFetchAll("inhalt", [], ["antrag_id" => $antrag["id"]]);
-            $antraege[$antrag['type']][$antrag['revision']][$antrag['id']] = $antrag;
-        }
-        foreach ($captionField as $j => $fdesc){
-            $fdesc = explode("|", $fdesc);
-            $fname = $fdesc[0];
-            $rows = getFormEntries($fname, null, $antrag["_inhalt"]);
-            $row = count($rows) > 0 ? $rows[0] : false;
-            if ($row !== false){
-                ob_start();
-                $formlayout = [["type" => $row["contenttype"], "id" => $fname]];
-                for ($k = 1; $k < count($fdesc); $k++){
-                    list($fdk, $fdv) = explode("=", $fdesc[$k], 2);
-                    $formlayout[0][$fdk] = $fdv;
-                }
-                $form = ["layout" => $formlayout, "config" => []];
-                $ret = renderForm($form, ["_values" => $antrag, "render" => ["no-form", "no-form-markup"]]);
-                if ($ret === false) $renderOk = false;
-                $val = ob_get_contents();
-                ob_end_clean();
-                $caption[] = strip_tags($val);
-            }
-        }
-    }
-    if (isset($revConfig["caption"]) > 0 && $cacheMe){
-        $caption[] = $revConfig["caption"];
-    }
-    if (trim(strip_tags(implode(" ", $caption))) == "")
-        array_unshift($caption, htmlspecialchars($antrag["token"]));
-    
-    if (isset($antrag["id"]) && $renderOk && $cacheMe)
-        $cache[$antrag["id"]] = $caption;
-    return $caption;
-}
-
 function human_filesize($bytes, $decimals = 2){
     $size = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
     $factor = floor((strlen($bytes) - 1) / 3);
@@ -106,11 +18,6 @@ function trimMe($d){
     }
 }
 
-function add_message($msg){
-    global $msgs;
-    $msgs[] = $msg;
-}
-
 function hexEscape($string){
     $return = '';
     for ($x = 0; $x < strlen($string); $x++){
@@ -121,143 +28,6 @@ function hexEscape($string){
 
 function sanitizeName($name){
     return preg_replace(Array("#ä#", "#ö#", "#ü#", "#Ä#", "#Ö#", "#Ü#", "#ß#", "#[^A-Za-z0-9\+\?/\-:\(\)\.,' ]#"), Array("ae", "oe", "ue", "Ae", "Oe", "Ue", "sz", "."), $name);
-}
-
-function storeInhalt($inhalt, $isPartiell){
-    
-    if (is_array($inhalt["value"])){
-        $fieldname = $inhalt["fieldname"];
-        $ret = true;
-        foreach ($inhalt["value"] as $i => $value){
-            $inhalt["fieldname"] = $fieldname . "[{$i}]";
-            $inhalt["value"] = $value;
-            $ret1 = storeInhalt($inhalt, $isPartiell);
-            $ret = $ret && $ret1;
-        }
-        return $ret;
-    }
-    
-    if (is_object($inhalt["value"])){
-        $fieldname = $inhalt["fieldname"];
-        $ret = true;
-        foreach (get_object_vars($inhalt["value"]) as $i => $value){
-            $inhalt["fieldname"] = $fieldname . "[{$i}]";
-            $inhalt["value"] = $value;
-            $ret1 = storeInhalt($inhalt, $isPartiell);
-            $ret = $ret && $ret1;
-        }
-        return $ret;
-    }
-    if ($isPartiell)
-        DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $inhalt["antrag_id"], "fieldname" => $inhalt["fieldname"]]);
-    $inhalt["value"] = convertUserValueToDBValue($inhalt["value"], $inhalt["contenttype"]);
-    $ret = DBConnector::getInstance()->dbInsert("inhalt", $inhalt);
-    if (!$ret){
-        $msgs[] = "Eintrag im Formular konnte nicht gespeichert werden: " . print_r($inhalt, true);
-    }
-    return $ret;
-}
-
-function writeState($newState, $antrag, $form, &$msgs, &$filesCreated, &$filesRemoved, &$target, $checkPermissions = true){
-    if ($antrag["state"] == $newState) return true;
-    
-    $transition = "from.{$antrag["state"]}.to.{$newState}";
-    $perm = "canStateChange.{$transition}";
-    if ($checkPermissions && !hasPermission($form, $antrag, $perm)){
-        $msgs[] = "Der gewünschte Zustandsübergang kann nicht eingetragen werden (keine Berechtigung): {$antrag["state"]} -> {$newState}";
-        return false;
-    }
-    
-    $ret = DBConnector::getInstance()->dbUpdate("antrag", ["id" => $antrag["id"]], ["lastupdated" => date("Y-m-d H:i:s"), "version" => $antrag["version"] + 1, "state" => $newState, "stateCreator" => (AUTH_HANDLER)::getInstance()->getUsername()]);
-    
-    if ($ret !== 1)
-        return false;
-    
-    $preNewStateActions = [];
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["from.{$antrag["state"]}.to.{$newState}"]);
-    if (isset($form["config"]["preNewStateActions"]) && isset($form["config"]["preNewStateActions"]["to.{$newState}"]))
-        $preNewStateActions = array_merge($preNewStateActions, $form["config"]["preNewStateActions"]["to.{$newState}"]);
-    foreach ($preNewStateActions as $action){
-        if (!isset($action["writeField"])) continue;
-        
-        $antrag = getAntrag($antrag["id"]);
-        $value = getFormValueInt($action["name"], $action["type"], $antrag["_inhalt"], "");
-        
-        switch ($action["writeField"]){
-            case "always":
-                break;
-            case "ifEmpty":
-                if ($value != "") continue 2;
-                break;
-            default:
-                die("preNewStateActions writeField={$action["writeField"]} invalid value");
-        }
-        
-        if (isset($action["value"])){
-            $newValue = $action["value"];
-        }else if ($action["type"] == "signbox"){
-            $newValue = (AUTH_HANDLER)::getInstance()->getUserFullName() . " am " . date("Y-m-d");
-        }else
-            die("cannot autogenerate value for preNewStateActions");
-    
-        DBConnector::getInstance()->dbDelete("inhalt", ["antrag_id" => $antrag["id"], "fieldname" => $action["name"]]);
-        $ret = DBConnector::getInstance()->dbInsert("inhalt", ["fieldname" => $action["name"], "contenttype" => $action["type"], "antrag_id" => $antrag["id"], "value" => $newValue]);
-        if ($ret === false)
-            return false;
-    }
-    
-    $comment = [];
-    $comment["antrag_id"] = $antrag["id"];
-    $comment["creator"] = (AUTH_HANDLER)::getInstance()->getUsername();
-    $comment["creatorFullName"] = (AUTH_HANDLER)::getInstance()->getUserFullName();
-    $comment["timestamp"] = date("Y-m-d H:i:s");
-    $txt = $newState;
-    if (isset($form["_class"]["state"][$newState]))
-        $txt = $form["_class"]["state"][$newState][0];
-    $comment["text"] = "Status nach [$newState] " . $txt . " geändert";
-    $ret = DBConnector::getInstance()->dbInsert("comments", $comment);
-    if ($ret === false)
-        return false;
-    
-    if (!isValid($antrag["id"], "postEdit", $msgs))
-        return false;
-    
-    $antrag = getAntrag($antrag["id"]);
-    $ret = doNewStateActions($form, $transition, $antrag, $newState, $msgs, $filesCreated, $filesRemoved, $target);
-    if ($ret === false)
-        return false;
-    
-    return true;
-}
-
-
-/**
- * @param array  $inhalt   Array welches vereinfacht werden soll
- * @param string $newKey   Value dieses Keys wird als neuer Key verwendet; falls String leer ist wird 0 ... n als key
- *                         verwendet
- * @param string $newValue Value wird als zugehöriges Value gesetzt
- *
- * @return array Vereinfachtes Array
- */
-function betterValues($inhalt, $newKey = "fieldname", $newValue = "value"){
-    global $inhalt_better;
-    $inhalt_better = [];
-    $params = array($newKey, $newValue);
-    if (!is_array(end($inhalt))){
-        return betterValues(array($inhalt), $newKey, $newValue);
-    }
-    array_walk($inhalt, function(& $item, $k, $params){
-        global $inhalt_better;
-        $newKey = $params[0];
-        $newValue = $params[1];
-        $val = $item[$newValue];
-        if ($newKey !== "")
-            $inhalt_better[$item[$newKey]] = $val;
-        else
-            $inhalt_better[] = $val;
-    }, $params);
-    return $inhalt_better;
 }
 
 
@@ -323,7 +93,7 @@ if (!function_exists('generateRandomString')){
 	 */
 	function generateRandomString($length) {
 		if (!is_int($length)){
-			throwException('Invalid argument type. Integer expected.');
+            throw Exception('Invalid argument type. Integer expected.');
 			return null;
 		}
 		if (version_compare(PHP_VERSION, '7.0.0') >= 0){

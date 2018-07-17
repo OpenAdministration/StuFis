@@ -12,9 +12,13 @@ include "../lib/inc.all.php";
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
-
-if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
+if (!SAML){
+    require_once(SYSBASE . "/lib/AuthDummyHandler.php");
+    define('AUTH_HANDLER', 'AuthDummyHandler');
+    (AUTH_HANDLER)::getInstance()->requireAuth();
+}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
     define('AUTH_HANDLER', 'AuthBasicHandler');
+    require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
     (AUTH_HANDLER)::getInstance()->requireAuth();
     (AUTH_HANDLER)::getInstance()->requireGroup('basic');
 	if (!isset($routeInfo['groups'])){
@@ -23,6 +27,7 @@ if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['a
 	}
 } else {
     define('AUTH_HANDLER', 'AuthSamlHandler');
+    require_once SYSBASE . '/lib/AuthSamlHandler.php';
     (AUTH_HANDLER)::getInstance()->requireAuth();
 }
 if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
@@ -52,7 +57,6 @@ switch ($routeInfo['controller']){
     case "auslagen":
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
-        $htmlRenderer->appendRendererContent($chatHandler);
         $htmlRenderer->render();
         break;
     case "hhp":

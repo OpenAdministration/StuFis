@@ -36,7 +36,7 @@ interface AuthHandler
 	 * @param string $groups    String of groups
 	 * @return bool  true if the user has one or more groups from $group
 	 */
-	function requireGroup($group);
+    function requireGroup($groups);
 	
 	/**
 	 * check group permission - return result of check as boolean
@@ -44,7 +44,7 @@ interface AuthHandler
 	 * @param string $delimiter Delimiter of the groups in $group
 	 * @return bool  true if the user has one or more groups from $group
 	 */
-	function hasGroup($group, $delimiter = ",");
+    function hasGroup($groups, $delimiter = ",");
 	
 	/**
 	 * return log out url
@@ -54,7 +54,6 @@ interface AuthHandler
 	
 	/**
 	 * send html header to redirect to logout url
-	 * @param string $param
 	 */
 	function logout();
 	
@@ -82,6 +81,11 @@ interface AuthHandler
 	 * @return string
 	 */
 	function getUserMail();
+    
+    /**
+     * @return bool if user has Admin Privileges
+     */
+    function isAdmin();
 }
 
 ?>

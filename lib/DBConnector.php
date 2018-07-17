@@ -19,7 +19,17 @@ class DBConnector extends Singleton{
     public function __construct(){
         HTMLPageRenderer::registerProfilingBreakpoint("init-db-connection");
         $this->initScheme();
-        $this->pdo = new PDO(self::$DB_DSN, self::$DB_USERNAME, self::$DB_PASSWORD, [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]);
+        try{
+            $this->pdo = new PDO(
+                self::$DB_DSN,
+                self::$DB_USERNAME,
+                self::$DB_PASSWORD,
+                [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8, lc_time_names = 'de_DE', sql_mode = 'STRICT_ALL_TABLES';", PDO::MYSQL_ATTR_FOUND_ROWS => true]
+            );
+        }catch (PDOException $e){
+            ErrorHandler::_errorExit("konnte nicht mit der Datenbank vebinden");
+        }
+        
         if (self::$BUILD_DB){
             include SYSBASE . "/sql/buildDB.php";
             HTMLPageRenderer::registerProfilingBreakpoint("build-db-finished");
@@ -28,24 +38,6 @@ class DBConnector extends Singleton{
     
     private function initScheme(){
         $scheme = [];
-        $scheme["antrag"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
-            "version" => "BIGINT NOT NULL DEFAULT 0",
-            "type" => "VARCHAR(256) NOT NULL",  # Projektantrag, Fahrtkostenantrag, etc.
-            "revision" => "VARCHAR(256) NOT NULL", # Version des Formulars (welche Felder erwartet)
-            "creator" => "VARCHAR(256) NOT NULL",
-            "creatorFullName" => "VARCHAR(256) NOT NULL",
-            "createdat" => "DATETIME NOT NULL",
-            "lastupdated" => "DATETIME NOT NULL",
-            "token" => "VARCHAR(32) NOT NULL",
-            "state" => "VARCHAR(32) NOT NULL",
-            "stateCreator" => "VARCHAR(32) NOT NULL",];
-        
-        $scheme["inhalt"] = ["id" => "INT NOT NULL AUTO_INCREMENT",
-            "antrag_id" => "INT NOT NULL",
-            "fieldname" => "VARCHAR(128) NOT NULL",
-            "contenttype" => "VARCHAR(128) NOT NULL", # automatisch aus Formulardefinition, zur Darstellung alter Anträge (alte Revision) ohne Metadaten
-            //"array_idx" => "INT NOT NULL",
-            "value" => "TEXT NOT NULL",];
     
         $scheme["comments"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
@@ -195,7 +187,6 @@ class DBConnector extends Singleton{
             "bis" => "DATE NULL",
             "state" => "VARCHAR(64) NOT NULL",
         ];
-        
         
         $this->scheme = $scheme;
         
@@ -588,7 +579,11 @@ class DBConnector extends Singleton{
         //var_dump($sql);
         //var_dump($vals);
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or ErrorHandler::_renderError(print_r(["error" => $query->errorInfo(),/*"sql" => $sql*/], true));
+        $ret = $query->execute($vals);
+        if (!$ret){
+            $errormsg = ["error" => $query->errorInfo(), "sql" => $sql];
+            ErrorHandler::_renderError(print_r($errormsg, true), 500);
+        }
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;
@@ -667,38 +662,6 @@ class DBConnector extends Singleton{
         if (is_array($value))
             $value = print_r($value, true);
         $query->execute(Array($logId, $key, $value)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
-    }
-    
-    public function dbGet($table, $fields){
-        if (!isset($this->scheme[$table])){
-            ErrorHandler::_errorExit("Unkown table $table");
-        }
-        $validFields = ["id", "token", "antrag_id", "fieldname", "value", "contenttype", "username"];
-        $fields = array_intersect_key($fields, $this->scheme[$table], array_flip($validFields)); # only fetch using id and url
-        
-        if (count($fields) == 0){
-            ErrorHandler::_errorExit("No (valid) fields given.");
-        }
-        $c = [];
-        $vals = [];
-        foreach ($fields as $k => $v){
-            if (is_array($v)){
-                $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                $vals[] = $v[1];
-            }else{
-                $c[] = $this->quoteIdent($k) . " = ?";
-                $vals[] = $v;
-            }
-        }
-        $sql = "SELECT * FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
-        //var_dump($sql);
-        $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
-        if ($ret === false)
-            return false;
-        if ($query->rowCount() != 1) return false;
-        
-        return $query->fetch(PDO::FETCH_ASSOC);
     }
     
     public function dbBegin(){

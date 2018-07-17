@@ -9,7 +9,6 @@
 class HTMLPageRenderer{
     private static $profiling_timing, $profiling_names, $profiling_sources;
     private static $errorPage;
-    private static $dev = true;
     private $uribase;
     private $bodycontent;
     private $titel;
@@ -37,10 +36,18 @@ class HTMLPageRenderer{
     }
     
     static public function setErrorPage($param){
+        //$param is used in errot.phtml
         ob_start();
         include SYSBASE . "/template/error.phtml";
         self::$errorPage = ob_get_clean();
     
+    }
+    
+    static public function dieWithErrorPage($param){
+        self::setErrorPage($param);
+        $htmlRenderer = new HTMLPageRenderer([]);
+        $htmlRenderer->render();
+        exit(-1);
     }
     
     /**
@@ -80,7 +87,7 @@ class HTMLPageRenderer{
         echo $this->bodycontent;
         echo "</div>";
         $this->renderModals();
-        if ($GLOBALS["DEV"]){
+        if (DEV){
             $this->renderProfiling();
         }
     
@@ -191,8 +198,7 @@ class HTMLPageRenderer{
 
         <nav class="navbar navbar-inverse navbar-fixed-top"
             <?php
-            global $DEV;
-            if ($DEV)
+            if (DEV)
                 echo " style='background-color:darkred;'";
             ?>
         >
@@ -201,7 +207,7 @@ class HTMLPageRenderer{
                     <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
                     <a class="navbar-brand" href="<?php echo htmlspecialchars($this->uribase); ?>">StuRa-Finanzformulare
                         <?php
-                        if ($DEV)
+                        if (DEV)
                             echo " TESTSYSTEM";
                         ?>
                     </a>

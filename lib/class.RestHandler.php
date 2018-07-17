@@ -156,7 +156,7 @@ class RestHandler extends JsonController{
             if (isset($projektHandler))
                 DBConnector::getInstance()->logAppend($logId, "projekt_id", $projektHandler->getID());
         }
-        if ($GLOBALS["DEV"])
+        if (DEV)
             $msgs[] = print_r($_POST, true);
         
         $this->json_result["msgs"] = $msgs;
