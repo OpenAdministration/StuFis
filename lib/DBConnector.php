@@ -55,7 +55,7 @@ class DBConnector extends Singleton{
             "creator" => "VARCHAR(128) NOT NULL",
             "creator_alias" => "VARCHAR(256) NOT NULL",
             "text" => "TEXT NOT NULL",
-            "type" => "tinyint(2) NOT NULL DEFAULT '0' COMMENT '0 = state change, 1 = comment, 2 = admin only'",];
+            "type" => "tinyint(2) NOT NULL DEFAULT '0' COMMENT '0 = comment, 1 = state_change, 2 = admin only'",];
         
         $scheme["booking"] = ["id" => "INT NOT NULL PRIMARY KEY AUTO_INCREMENT",
             "titel_id" => "int NOT NULL",
