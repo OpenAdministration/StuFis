@@ -52,7 +52,6 @@ switch ($routeInfo['controller']){
     case "auslagen":
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
-        $htmlRenderer->appendRendererContent($chatHandler);
         $htmlRenderer->render();
         break;
     case "hhp":
