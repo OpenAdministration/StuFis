@@ -1235,7 +1235,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
          		'projekt_posten_id' => $map['posten']['projekt-posten'],
          		'ausgaben' => $map['posten']['out'],
          		'einnahmen' => $map['posten']['in'],
-         		'beleg_id' => strpos($map['beleg_id'], 'new_'!==false)? $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
+         		'beleg_id' => (strpos($map['beleg_id'], 'new_')!==false)? $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
          	];
 			$idd = $this->db->dbInsert('beleg_posten', $db_posten);
 		}
