@@ -393,6 +393,7 @@ class ProjektHandler extends FormHandlerInterface{
                 $this->renderInteractionPanel();
                 //echo $this->templater->getStateChooser($this->stateHandler);
                 $this->renderProjekt("Internes Projekt");
+                $this->renderChatBox();
                 $this->renderAuslagenList();
                 break;
             default:
@@ -690,6 +691,21 @@ class ProjektHandler extends FormHandlerInterface{
     
     public function getID(){
         return $this->id;
+    }
+    
+    private function renderChatBox(){ ?>
+		<div class='clearfix'></div>
+        <div class="col-xs-12 col-md-10">
+			<?php 
+				/* @var $auth AuthHandler */
+				$auth = AUTH_HANDLER;
+				ChatHandler::renderChatPanel('projekt', $this->id, (AUTH_HANDLER)::getInstance()->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
+					($auth::getInstance()->hasGroup('admin'))); ?>
+		</div>
+    <?php
+    
+    	$chatHandler = new ChatHandler('projekt', $this->id, 'mign3745');
+    
     }
     
     private function renderAuslagenList(){ ?>
