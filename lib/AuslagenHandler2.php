@@ -1590,7 +1590,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     				<div class="col-sm-11 beleg-inner">
     					<div class="form-group">
     						<div class="col-sm-4"><strong>Datum des Belegs</strong></div>
-    						<div class="col-sm-8"><strong>Scan des Belegs</strong></div>
+    						<div class="col-sm-8"><strong>Scan des Belegs (nur PDF erlaubt)</strong></div>
     					</div>
     					<div class="form-group">
     						<div class="col-sm-4 beleg-date"><?= $date_form ?></div>

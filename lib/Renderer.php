@@ -9,7 +9,7 @@
 abstract class Renderer{
     abstract public function render();
     
-    protected function renderTable(array $header, array $groupedContent, array $escapeFunctions = []){
+    protected function renderTable(array $header, array $groupedContent, array $escapeFunctions = [], array $footer = NULL){
     
         //default escape-funktion to use if nothing is
         $defaultFunction = function($val){
@@ -62,6 +62,21 @@ abstract class Renderer{
                 <?php } ?>
             <?php } ?>
             </tbody>
+            <?php if ($footer && is_array($footer) && count($footer > 0)){ ?>
+            <tfoot> <?php 
+            	if (!is_array(array_values($footer)[0])){
+            		$footer = [$footer];
+            	}
+		        foreach ($footer as $foot_line){
+		        	echo '<tr>';
+		        	foreach ($foot_line as $foot){
+		        		echo "<th>$foot</th>";
+		        	}
+		        	echo '</tr>';
+		        }
+	            ?>
+            </tfoot>
+            <?php } ?>
         </table>
     <?php }
     
