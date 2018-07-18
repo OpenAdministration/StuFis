@@ -225,7 +225,7 @@ class MenuRenderer extends Renderer{
                                                             	[
 	                                                            	'',
 	                                                            	'',
-	                                                            	'Angenommen:',
+	                                                            	'Ausgezahlt:',
 	                                                            	'&Sigma;: '.number_format($sum_a_in, 2).'&nbsp€',
 	                                                            	'&Sigma;: '.number_format($sum_a_out, 2).'&nbsp€',
 	                                                            	'&Delta;: '.number_format($sum_a_out - $sum_a_in, 2).'&nbsp€',
