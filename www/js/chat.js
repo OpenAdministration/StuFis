@@ -121,6 +121,7 @@
 		var timeout = null;
 		var lastKnown = 0;
 		var message_counter = 0;
+		var ajax_blocked = false;
 		var updateChat = function($e){
 			var t = $e.find('.new-chat-comment');
 			var dataset = {};
@@ -133,25 +134,30 @@
 			dataset['last'] = lastKnown;
 			dataset['action'] = 'gethistory';
 			// do ajax
-			jQuery.ajax({
-		        url: dataset['url'],
-		        data: dataset,
-		        type: "POST",
-		    }).done(function (values, status, req) {
-		    	data = parseData(values);
-		    	lastKnown = data.last;
-		    	//add comments
-		    	message_counter = appendChatMessage($e, data.data, message_counter);
-		    	$e.find('.chat-loading').fadeOut(1000);
-	        }).fail(function (values) {
-	        	data = parseData(values.responseText);
-	        	console.log('error', data);
-	        	// unset Interval on error
-		    	if (timeout != null){
-		    		(window).clearInterval(timeout);
-					timeout = null;
-				}
-	        });
+			if (!ajax_blocked){
+				ajax_blocked = true;
+				jQuery.ajax({
+			        url: dataset['url'],
+			        data: dataset,
+			        type: "POST",
+			    }).done(function (values, status, req) {
+			    	data = parseData(values);
+			    	lastKnown = data.last;
+			    	//add comments
+			    	message_counter = appendChatMessage($e, data.data, message_counter);
+			    	$e.find('.chat-loading').fadeOut(1000);
+			    	ajax_blocked = false;
+		        }).fail(function (values) {
+		        	data = parseData(values.responseText);
+		        	console.log('error', data);
+		        	// unset Interval on error
+			    	if (timeout != null){
+			    		(window).clearInterval(timeout);
+						timeout = null;
+					}
+			    	ajax_blocked = false;
+		        });
+			}
 		};
 		timeout = (window).setInterval(function(){ updateChat($e); }, 20000);
 		updateChat($e);
