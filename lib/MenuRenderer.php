@@ -120,15 +120,16 @@ class MenuRenderer extends Renderer{
         });
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
-            ["projekt_id","auslagen.id","name_suffix","zahlung-name","betrag" => ["projekt_id",DBConnector::SUM_ROUND2],"state"],
+            ["projekt_id","auslagen.id","name_suffix","zahlung-name","einnahmen" => ["einnahmen",DBConnector::SUM_ROUND2],"ausgaben" => ["ausgaben",DBConnector::SUM_ROUND2],"state"],
             ["projekt_id" => ["IN",$pids]],
             [
-                //["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.projekt_posten_id","beleg_posten.beleg_id"]],
+            	["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id","auslagen.id"]],
+            	["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id","belege.id"]],
             ],
             ["id" => true],
             true,
             false,
-            ["projekt_id"]
+            ["auslagen_id"]
         );
         /*if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
@@ -145,6 +146,7 @@ class MenuRenderer extends Renderer{
             <?php $i = 0;
             if (isset($projekte)){
                 foreach ($projekte as $gremium => $inhalt){
+                	
                     if (count($inhalt) == 0) continue; ?>
                     <div class="panel panel-default">
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
@@ -163,7 +165,7 @@ class MenuRenderer extends Renderer{
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?= generateLinkFromID("IP-$year-$id", "projekt/" . $id) ?>
                                             </div>
-                                            <div class="panel-heading collapsed <?= count($auslagen[$id]) === 0 ? "empty" : "" ?>"
+                                            <div class="panel-heading collapsed <?= (!isset($auslagen[$id]) || count($auslagen[$id]) === 0) ? "empty" : "" ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
                                                  href="#collapse<?php echo $i . "-" . $j; ?>">
                                                 <h4 class="panel-title">
@@ -173,13 +175,26 @@ class MenuRenderer extends Renderer{
                                                     <span class="label label-info project-state-label"><?= ProjektHandler::getStateString($projekt["state"]) ?></span>
                                                 </h4>
                                             </div>
-                                            <?php if (count($auslagen[$id]) > 0){ ?>
+                                            <?php if (isset($auslagen[$id]) && count($auslagen[$id]) > 0){ ?>
                                                 <div id="collapse<?php echo $i . "-" . $j; ?>"
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <?php
+                                                        $sum_a_in = 0; $sum_a_out = 0;
+                                                        $sum_e_in = 0; $sum_e_out = 0;
+                                                        foreach ($auslagen[$id] as $a){
+                                                       		if (substr($a['state'],0,6) == 'booked' || substr($a['state'],0,10) == 'instructed'){
+                                                       			$sum_a_in += $a['einnahmen'];
+                                                       			$sum_a_out += $a['ausgaben'];
+                                                       		}
+                                                       		if (substr($a['state'],0,10) != 'revocation' && substr($a['state'],0,5) != 'draft' ){
+                                                       			$sum_e_in += $a['einnahmen'];
+                                                       			$sum_e_out += $a['ausgaben'];
+                                                       		}
+                                                        }
+                                                        
                                                         $this->renderTable(
-                                                            ["ID","Zusatzname","Zahlungsempfänger","Betrag","Status"],
+                                                            ["ID","Zusatzname","Zahlungsempfänger","Einnahmen","Ausgaben","Status"],
                                                             [$auslagen[$id]],
                                                             [
                                                                 function($aid) use ($id){
@@ -190,10 +205,31 @@ class MenuRenderer extends Renderer{
                                                                 function($money){
                                                                     return number_format($money,2,","," ")."&nbsp€";
                                                                 },
+                                                                function($money){
+                                                                	return number_format($money,2,","," ")."&nbsp€";
+                                                                },
                                                                 function($stateString){
-                                                                    $text = AuslagenHandler2::getStateString(reset(explode(";",$stateString)));
+                                                                    $text = AuslagenHandler2::getStateString(AuslagenHandler2::state2stateInfo($stateString)['state']);
                                                                     return "<div class='label label-info'>$text</div>";
                                                                 }
+                                                            ],
+                                                            [
+                                                            	[
+	                                                            	'',
+	                                                            	'',
+	                                                            	'Eingereicht:',
+	                                                            	'&Sigma;: '.number_format($sum_e_in, 2).'&nbsp€',
+	                                                            	'&Sigma;: '.number_format($sum_e_out, 2).'&nbsp€',
+	                                                            	'&Delta;: '.number_format($sum_e_out - $sum_e_in, 2).'&nbsp€',
+	                                                            ],
+                                                            	[
+	                                                            	'',
+	                                                            	'',
+	                                                            	'Angenommen:',
+	                                                            	'&Sigma;: '.number_format($sum_a_in, 2).'&nbsp€',
+	                                                            	'&Sigma;: '.number_format($sum_a_out, 2).'&nbsp€',
+	                                                            	'&Delta;: '.number_format($sum_a_out - $sum_a_in, 2).'&nbsp€',
+                                                            	]
                                                             ]
                                                         ); ?>
                                                     </div>
