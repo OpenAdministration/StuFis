@@ -144,7 +144,7 @@ class MenuRenderer extends Renderer{
         ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-            if (isset($projekte) && !empty($projekt) && $projekte){
+            if (isset($projekte) && !empty($projekte) && $projekte){
                 foreach ($projekte as $gremium => $inhalt){
                 	
                     if (count($inhalt) == 0) continue; ?>
