@@ -179,11 +179,11 @@ class ProjektHandler extends FormHandlerInterface{
             'beschreibung' => '',
             'recht' => '',
             'recht-additional' => '',
-            'posten-name' => [""],
-            'posten-bemerkung' => [""],
+            'posten-name' => [1 => ""],
+            'posten-bemerkung' => [1 => ""],
             'posten-titel' => [""],
-            'posten-einnahmen' => [0],
-            'posten-ausgaben' => [0],
+            'posten-einnahmen' => [1=>0],
+            'posten-ausgaben' => [1=>0],
             'date-start' => '',
             'date-end' => '',
         ];
@@ -497,8 +497,11 @@ class ProjektHandler extends FormHandlerInterface{
                     </thead>
                     <tbody>
                     <?php
-                    for ($row_nr = 0; $row_nr <= count($this->data["posten-name"]); $row_nr++){
-                        $new_row = $row_nr === count($this->data["posten-name"]);
+                    
+                    $this->data["posten-name"][] = '';
+                    
+                    foreach ( $this->data["posten-name"] as $row_nr => $null){
+                   		$new_row = ($row_nr) === count($this->data["posten-name"]);
                         if ($new_row && !$tablePartialEditable)
                             continue;
                         $sel_titel = $selectable_titel;
@@ -507,7 +510,7 @@ class ProjektHandler extends FormHandlerInterface{
                         }
                         ?>
                         <tr class="<?= $new_row ? "new-table-row" : "dynamic-table-row" ?>">
-                            <td class="row-number"> <?= $row_nr + 1 ?>.</td>
+                            <td class="row-number"> <?= $row_nr ?>.</td>
                             <?php if ($tablePartialEditable){ ?>
                                 <td class='delete-row'><a href='' class='delete-row'><i
                                                 class='fa fa-fw fa-trash'></i></a></td>
@@ -515,18 +518,18 @@ class ProjektHandler extends FormHandlerInterface{
                                 echo "<td></td>";
                             } ?>
                             <td><?= $this->templater->getTextForm("posten-name[]",
-                                    !$new_row ? $this->data["posten-name"][$row_nr+1]: "", null,
+                                    !$new_row ? $this->data["posten-name"][$row_nr]: "", null,
                                     "Name des Postens", "", ["required"]) ?></td>
                             <td><?= $this->templater->getTextForm("posten-bemerkung[]",
-                                    !$new_row ? $this->data["posten-bemerkung"][$row_nr+1]: "", null,
+                                    !$new_row ? $this->data["posten-bemerkung"][$row_nr]: "", null,
                                     "optional", "", []) ?></td>
                             <td><?= $this->templater->getDropdownForm("posten-titel[]", $sel_titel, null,
                                     "HH-Titel", "", [], true) ?></td>
                             <td><?= $this->templater->getMoneyForm("posten-einnahmen[]",
-                                    !$new_row ? $this->data["posten-einnahmen"][$row_nr+1]: 0, null,
+                                    !$new_row ? $this->data["posten-einnahmen"][$row_nr]: 0, null,
                                     "", "", ["required"], "einnahmen") ?></td>
                             <td><?= $this->templater->getMoneyForm("posten-ausgaben[]",
-                                    !$new_row ? $this->data["posten-ausgaben"][$row_nr+1]: 0, null,
+                                    !$new_row ? $this->data["posten-ausgaben"][$row_nr]: 0, null,
                                     "", "", ["required"], "ausgaben") ?></td>
                         </tr>
                     <?php } ?>
