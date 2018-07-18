@@ -614,7 +614,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		//check if editable and action != create
 		// if user is owner or in same organisation or is ref-finanzen
-		if ($this->stateInfo['editable'] && $this->routeInfo['action'] != 'create') {
+		if ($this->stateInfo['editable'] && $this->routeInfo['action'] != 'create' && !(isset($this->routeInfo['mfunction']) && $this->routeInfo['mfunction'] == 'updatecreate' && !isset($this->routeInfo['aid']) )) {
 			if (!$this->checkPermissionByMap(self::$groups['strict_editable'])){
 				$this->stateInfo['editable'] = false;
 			}
@@ -819,21 +819,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				if ($this->stateInfo['editable']){
 					$this->post_createupdate();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden.';
 				}
 			} break;
 			case 'filedelete': {
 				if ($this->stateInfo['editable']){
 					$this->post_filedelete();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Datei nicht gelöcht.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Datei nicht gelöcht.';
 				}
 			} break;
 			case 'state': {
 				if ($this->stateInfo['project-editable'] && $this->auslagen_id){
 					$this->post_statechange();
 				} else {
-					$this->error = 'Die Auslagenerstattng kann nicht verändert werden. Der Status wurde nicht geändert.';
+					$this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Der Status wurde nicht geändert.';
 				}
 			} break;
 			case 'belegpdf': {
@@ -1235,7 +1235,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
          		'projekt_posten_id' => $map['posten']['projekt-posten'],
          		'ausgaben' => $map['posten']['out'],
          		'einnahmen' => $map['posten']['in'],
-         		'beleg_id' => strpos($map['beleg_id'], 'new_'!==false)? $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
+         		'beleg_id' => (strpos($map['beleg_id'], 'new_')!==false)? $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
          	];
 			$idd = $this->db->dbInsert('beleg_posten', $db_posten);
 		}
@@ -1590,7 +1590,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     				<div class="col-sm-11 beleg-inner">
     					<div class="form-group">
     						<div class="col-sm-4"><strong>Datum des Belegs</strong></div>
-    						<div class="col-sm-8"><strong>Scan des Belegs</strong></div>
+    						<div class="col-sm-8"><strong>Scan des Belegs (nur PDF erlaubt)</strong></div>
     					</div>
     					<div class="form-group">
     						<div class="col-sm-4 beleg-date"><?= $date_form ?></div>

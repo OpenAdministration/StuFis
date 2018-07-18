@@ -219,7 +219,7 @@ class RestHandler extends JsonController{
     					'error' => 'Ungültige Iban.'
     				],
     				'zahlung-vwzk' => [ 'regex',
-    					'pattern' => '/^[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+[a-zA-Z0-9\-_,;\/\\()!?& .äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+    					'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& .\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
     					'empty',
     					'maxlength' => '127',
     				],
@@ -454,9 +454,14 @@ class RestHandler extends JsonController{
     				// action 
     				switch ($valid['action']){
     					case 'gethistory':
+    						$map = ['0', '1'];
     						if ($auth->hasGroup('admin')) {
-    							$chat->setKeep(['0','1','2']);
+    							$map[] = '2';
     						}
+    						if ($auth->hasGroup('ref-finanzen')) {
+    							$map[] = '3';
+    						}
+    						$chat->setKeep($map);
     						break;
     					case 'newcomment':
     						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
@@ -470,6 +475,11 @@ class RestHandler extends JsonController{
     								break 3;
     							case '2':
     								if (!$auth->hasGroup('admin')) {
+    									break 3;
+    								}
+    								break;
+    							case '3':
+    								if (!$auth->hasGroup('ref-finanzen')) {
     									break 3;
     								}
     								break;

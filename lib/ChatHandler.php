@@ -82,6 +82,8 @@ class ChatHandler{
     	'1' => [['5BC0DE', '000']],
     	//admin message
     	'2' => [['AA3939', '000'], ['801515', 'fff'], ['D46A6A', 'fff'], ['550000', 'fff'], ['FFAAAA', '000']],
+    	//finanzen message
+    	'3' => [['0D58A6', 'fff'], ['094480', 'fff'], ['306DAB', 'fff'], ['063465', 'fff'], ['5286BC', 'fff']],
     ];
     
     // STATIC MEMBER ==================================================
@@ -114,7 +116,7 @@ class ChatHandler{
     			'error' => 'Access Denied.',
     		],
     		'type' => ['regex',
-    			'pattern' => '/^(0|2)$/',
+    			'pattern' => '/^(0|2|3)$/',
     			'maxlength' => 63,
     			'error' => 'Access Denied.',
     		],
@@ -167,9 +169,9 @@ class ChatHandler{
      * @param integer $group_id		group identifier
      * @param string  $group		group
      * @param string  $user			user name + identifier
-     * @param bool $admin_button	create admin messages
+     * @param array $button		button definitions
      */
-    public static function renderChatPanel($group, $group_id, $user, $admin_button = false){
+    public static function renderChatPanel($group, $group_id, $user, $buttons = [['label' => 'Senden', 'color' => 'success', 'type' => '0']]){
 		if (!$group_id) return; ?>
 			<div class="panel panel-default chat-panel">
 				<input type="hidden" name="nononce" value="<?= strrev($GLOBALS["nonce"]); ?>">
@@ -186,15 +188,16 @@ class ChatHandler{
 								<?= htmlspecialchars($user); ?>
 							</label>
 							<textarea id="new-comment_<?= $tid; ?>" class="chat-textarea form-control col-xs-10" rows="3"></textarea>
-							<button type="button" style="margin: 0 0 5px 8px;"
-									class="btn btn-success pull-right chat-submit">
-								Senden
-							</button><?php 
-							if ($admin_button) { ?>
-								<button type="button" style="margin: 0 0 5px 8px;" class="btn btn-danger pull-right chat-admin-submit">
-									Admin Nachricht
-								</button>
-							<?php } ?>
+							<?php 
+								foreach($buttons as $btn){ 
+									?>
+									<button type="button" style="margin: 0 0 5px 8px;"
+											data-type="<?= $btn['type'] ?>"
+											class="btn btn-<?= $btn['color']; ?> pull-right chat-submit"><?=
+												$btn['label'];
+											?></button>
+								<?php }
+							?>
 							<div class="clearfix"></div>
 						</div>
 					</div>
@@ -250,6 +253,7 @@ class ChatHandler{
     	$n = [];	$np = 0;	$nc = count($this->colors['0']);
     	$s = [];	$sp = 0;	$sc = count($this->colors['1']);
     	$a = [];	$ap = 0;	$ac = count($this->colors['2']);
+    	$f = [];	$fp = 0;	$fc = count($this->colors['3']);
     	
     	foreach ($this->comments as $k => $c){
     		if ($user == $c['creator']){
@@ -259,6 +263,11 @@ class ChatHandler{
     					$a[$c['creator']] = $this->colors['2'][($ap++%$ac)];
     				}
     				$this->comments[$k]['color'] = $a[$c['creator']];
+    			} elseif ($c['type']=='3'){
+    				if (!isset($f[$c['creator']])) {
+    					$f[$c['creator']] = $this->colors['3'][($fp++%$fc)];
+    				}
+    				$this->comments[$k]['color'] = $f[$c['creator']];
     			} else {
     				if (!isset($o[$c['creator']])) {
     					$o[$c['creator']] = $this->colors['owner'][($op++%$oc)];
@@ -283,6 +292,12 @@ class ChatHandler{
     				$a[$c['creator']] = $this->colors['2'][($ap++%$ac)];
     			}
     			$this->comments[$k]['color'] = $a[$c['creator']];
+    		} elseif($c['type']=='3') {
+    			$this->comments[$k]['pos'] = 'finanz';
+    			if (!isset($f[$c['creator']])) {
+    				$f[$c['creator']] = $this->colors['3'][($fp++%$fc)];
+    			}
+    			$this->comments[$k]['color'] = $f[$c['creator']];
     		} else {
     			$this->comments[$k]['pos'] = 'left';
     			if (!isset($d[$c['creator']])) {
