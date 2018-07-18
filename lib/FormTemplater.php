@@ -569,7 +569,8 @@ class FormTemplater{
             foreach ($selectable["groups"] as $group){
                 foreach ($group["options"] as $option){
                     if (isset($option["value"]) && in_array($option["value"], $values)){
-                        $tmp_vals[$option["value"]] = ["label" => $option["label"], "subtext" => $option["subtext"]];
+                        $subtext = isset($option["subtext"]) ? $option["subtext"] : "";
+                        $tmp_vals[$option["value"]] = ["label" => $option["label"], "subtext" => $subtext];
                     }
                 }
             }
