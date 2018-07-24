@@ -181,7 +181,7 @@ class ProjektHandler extends FormHandlerInterface{
             'recht-additional' => '',
             'posten-name' => [1 => ""],
             'posten-bemerkung' => [1 => ""],
-            'posten-titel' => [""],
+            'posten-titel' => [1=>""],
             'posten-einnahmen' => [1=>0],
             'posten-ausgaben' => [1=>0],
             'date-start' => '',
