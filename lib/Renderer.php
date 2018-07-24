@@ -52,9 +52,11 @@ abstract class Renderer{
                 );
             }
             foreach ($groupedContent as $groupName => $content){
-                if (count(reset($content)) != $paramSum){
+		if(empty($content)) 
+			continue;
+		if (count(reset($content)) != $paramSum){
                     ErrorHandler::_errorExit(
-                        "In Gruppe '$groupName' passt Spaltenzahl (" . count($content[0]) .
+                        "In Gruppe '$groupName' passt Spaltenzahl (" . count(reset($content)) .
                         ") nicht zur benötigten Parameterzahl $paramSum - es wurden " . count($escapeFunctions) .
                         " Funktionen übergeben " . $diff . " wurde(n) hinzugefügt."
                     );
