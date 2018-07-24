@@ -271,7 +271,7 @@ class MenuRenderer extends Renderer{
         //TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
         list($header, $internContent, $escapeFunctions) = $this->fetchProjectsWithState("need-stura");
-	list(, $internContentHV,) = $this->fetchProjectsWithState("ok-by-hv");
+        list(, $internContentHV,) = $this->fetchProjectsWithState("ok-by-hv");
         $groups = [
             "Vom StuRa abzustimmen" => $internContent,
             "zur Verkündung (genehmigt von HV)" => $internContentHV,
