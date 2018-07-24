@@ -86,6 +86,12 @@ interface AuthHandler
      * @return bool if user has Admin Privileges
      */
     function isAdmin();
+    
+    /**
+     * @param $gremien   string with $delimiter concat sting
+     * @param $delimiter string delimiter between gremien
+     */
+    function hasGremium($gremien, $delimiter);
 }
 
 ?>

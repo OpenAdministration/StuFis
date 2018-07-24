@@ -41,10 +41,7 @@ class ErrorHandler extends Renderer{
             'headline' => 'Interner Server Fehler',
             'json' => 'internal server error',
             'msg' => "Ein Server Fehler ist aufgetreten. Bitte kontaktiere den Administrator",
-            'additional' => [
-                'headline' => 'Kontakt',
-                'msg' => '<a href="mailto:ref-it@tu-ilmenau.de"></a>"',
-            ]
+            'additional' => "<a href='mailto:ref-it@tu-ilmenau.de'>ref-it@tu-ilmenau.de</a>",
         ],
     ];
     

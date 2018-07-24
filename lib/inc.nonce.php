@@ -6,7 +6,7 @@ if (isset($_COOKIE["Nonce"]) && !empty($_COOKIE["Nonce"])) {
   $nonce = $_COOKIE["Nonce"];
 } else {
   $nonce = randomstring();
-    setcookie("Nonce", $nonce, 0, $GLOBALS["URIBASE"]);
+    setcookie("Nonce", $nonce, 0, URIBASE);
 }
 /* return a random ascii string */
 function randomstring($length = 32) {

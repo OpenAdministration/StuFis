@@ -604,8 +604,9 @@ class FormTemplater{
             $additonal_str = implode(" ", $additonal_array);
             $out .= "<textarea id='$unique_id' placeholder='$placeholder' name='$name' class='form-control' rows='$min_rows' $additonal_str>$value</textarea>";
         }else{
-            
-            $out .= "<div id='$unique_id' class='textarea_readonly'>{$this->getReadOnlyValue($value)}</div>";
+            $out .= "<div id='$unique_id' class='textarea_readonly'>" .
+                Helper::make_links_clickable($this->getReadOnlyValue($value)) .
+                "</div>";
         }
         
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);

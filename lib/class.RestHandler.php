@@ -32,32 +32,27 @@ class RestHandler extends JsonController{
      * @param array $routeInfo
      */
     public function handlePost($routeInfo = null){
-    	global $nonce;
+        global $nonce;
+    
+        if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
+            ErrorHandler::_renderError('Access Denied.', 403);
+        }else{
+            unset($_POST["nonce"]);
+        }
+    
         switch ($routeInfo['action']){
             case 'projekt':
-            	if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
-                	ErrorHandler::_renderError('Access Denied.', 403);
-                } else {
-                	unset($_POST["nonce"]);
-                }
                 $this->handleProjekt($routeInfo);
                 break;
             case 'auslagen':
-            	if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
-            		ErrorHandler::_renderError('Access Denied.', 403);
-            	} else {
-                	unset($_POST["nonce"]);
-                }
                 $this->handleAuslagen($routeInfo);
                 break;
-			case 'chat':
-				if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
-					ErrorHandler::_renderError('Access Denied.', 403);
-				} else {
-					unset($_POST["nonce"]);
-				}
-				$this->handleChat($routeInfo);
-				break;
+            case 'chat':
+                $this->handleChat($routeInfo);
+                break;
+            case 'update-konto':
+                $this->updateKonto($routeInfo);
+                break;
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
@@ -65,12 +60,6 @@ class RestHandler extends JsonController{
         }
     }
     
-    /**
-     * Created by PhpStorm.
-     * User: konsul
-     * Date: 07.05.18
-     * Time: 02:16
-     */
     public function handleProjekt($routeInfo = null){
         $ret = false;
         $msgs = [];
@@ -144,7 +133,7 @@ class RestHandler extends JsonController{
                 $target = "./";
             }else{
                 $msgs[] = "Daten erfolgreich gespeichert!";
-                $target = $GLOBALS["URIBASE"] . "projekt/" . $projektHandler->getID();
+                $target = URIBASE . "projekt/" . $projektHandler->getID();
             }
             if (isset($logId)){
                 DBConnector::getInstance()->logAppend($logId, "result", $ret);
@@ -176,257 +165,257 @@ class RestHandler extends JsonController{
      * @param string $routeInfo
      */
     public function handleAuslagen($routeInfo = null){
-    	$func = '';
-    	if (isset($routeInfo['mfunction'])){
-    	} elseif(isset($_POST['action'])) {
-    		$routeInfo['mfunction'] = $_POST['action'];
-    	} else {
-    		ErrorHandler::_renderError('Unknown Action.', 404);
-    	}
-    	
-    	//validate
-    	$vali = new Validator();
-    	$validator_map = [];
-    	switch ($routeInfo['mfunction']){
-    		case 'updatecreate':
-    			$validator_map = [
-	    			'version' => ['integer',
-	    				'min' => '1',
-	    				'error' => 'Ungültige Versionsnummer.'
-	    			],
-	    			'etag' => ['regex',
-	    				'pattern' => '/^(0|([a-f0-9]){32})$/',
-	    				'error' => 'Ungültige Version.'
-	    			],
-	    			'projekt-id' => ['integer',
-	    				'min' => '1',
-	    				'error' => 'Ungültige Projekt ID.'
-	    			],
-    				'auslagen-id' => ['regex',
-    					'pattern' => '/^(NEW|[1-9]\d*)$/',
-    					'error' => 'Ungültige Auslagen ID.'
-    				],
-    				'auslagen-name' => [ 'name',
-    					'maxlength' => '255',
-    				],
-    				'zahlung-name' => [ 'name',
-    					'maxlength' => '127',
-    				],
-    				'zahlung-iban' => [ 'regex',
-    					'pattern'	=> '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{4}( ... ... )[a-zA-Z0-9]{2}))$/',
-    					'maxlength' => '127',
-    					'empty',
-    					'error' => 'Ungültige Iban.'
-    				],
-    				'zahlung-vwzk' => [ 'regex',
-    					'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& .\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
-    					'empty',
-    					'maxlength' => '127',
-    				],
-    				'belege' => ['array', 'optional',
-    					'minlength' => 1,
-    					'key' => [ 'regex',
-    						'pattern' => '/^(new_)?(\d+)$/'
-    					],
-    					'validator' => ['arraymap',
-	    					'required' => true,
-	    					'map' => [
-	    						'datum' => [ 'date',
-	    							'empty',
-	    							'format' => 'Y-m-d',
-	    							'parse' => 'Y-m-d',
-	    							'error' =>	'Ungültiges Beleg Datum.'
-	    						],
-	    						'beschreibung' => [ 'text',
-	    							'strip',
-	    							'trim',
-	    						],
-	    						'posten' => ['array', 'optional',
-			    					'minlength' => 1,
-			    					'key' => [ 'regex',
-			    						'pattern' => '/^(new_)?(\d+)$/'
-			    					],
-			    					'validator' => ['arraymap',
-				    					'required' => true,
-				    					'map' => [
-				    						'projekt-posten' => [ 'integer',
-				    							'min' => '1',
-				    							'error' => 'Invalid Projektposten ID.'
-				    						],
-				    						'in' => [ 'float',
-				    							'step' => '0.01',
-				    							'format' => '2',
-				    							'min' => '0',
-				    							#'error' => 'Posten - Einnahmen: Ungültiger Wert'
-				    						],
-				    						'out' => [ 'float',
-				    							'step' => '0.01',
-				    							'format' => '2',
-				    							'min' => '0',
-				    							#'error' => 'Posten - Ausgaben: Ungültiger Wert'
-				    						],
-				    					]
-			    					]
-			    				]
-	    					]
-    					]
-    				],
-    			];
-    			break;
-    		case 'filedelete':
-    			$validator_map = [
-    				'etag' => ['regex',
-    					'pattern' => '/^(0|([a-f0-9]){32})$/',
-    					'error' => 'Ungültige Version.'
-    				],
-    				'projekt-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Projekt ID.'
-    				],
-    				'auslagen-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Auslagen ID.'
-    				],
-    				'fid' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Datei ID.'
-    				],
-    			];
-    			break;
-    		case 'state':
-    			$auslagen_states = [];
-    			$validator_map = [
-    				'etag' => ['regex',
-	    				'pattern' => '/^(0|([a-f0-9]){32})$/',
-	    				'error' => 'Ungültige Version.'
-    				],
-    				'projekt-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Projekt ID.'
-    				],
-    				'auslagen-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Auslagen ID.'
-    				],
-    				'state' => ['regex',
-    					'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok-hv|ok-kv|ok-belege|revoked|rejected)$/',
-    					'error' => 'Ungültiger Status.'
-    				],
-    			];
-    			break;
-    		case 'belegpdf':
-    			$auslagen_states = [];
-    			$validator_map = [
-    				'projekt-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Projekt ID.'
-    				],
-    				'auslagen-id' => ['integer',
-    					'min' => '1',
-    					'error' => 'Ungültige Auslagen ID.'
-    				],
-    				'd' => ['integer', 'optional',
-    					'min' => '0',
-    					'max' => '1',
-    					'error' => 'Ungültige Parameter.'
-    				],
-    			];
-    			break;
-    		default:
-    			ErrorHandler::_renderError('Unknown Action.', 404);
-    			break;
-    	}
-    	$vali->validateMap($_POST, $validator_map, true);
-    	//return error if validation failed
-    	if ($vali->getIsError()){
-    		JsonController::print_json([
-    			'success' => false,
-    			'status' => '200',
-    			'msg' => $vali->getLastErrorMsg(),
-    			'type' => 'validator',
-    			'field' => $vali->getLastMapKey(),
-    		]);
-    	}
-    	$validated = $vali->getFiltered();
-    	
-    	if ($routeInfo['mfunction'] == 'updatecreate'){
-	    	//may add nonexisting arrays
-	    	if (!isset($validated['belege'])){
-	    		$validated['belege'] = [];
-	    	}
-	    	foreach ($validated['belege'] as $k => $v){
-	    		if (!isset($v['posten'])){
-	    			$validated['belege'][$k]['posten'] = [];
-	    		}
-	    	}
-	    	//check all values empty?
-	    	$empty = ($validated['auslagen-id']=='NEW');
-	    	$auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
-	    	$belege_test_empty = ['datum', 'beschreibung', 'posten'];
-	    	$posten_text_empty = ['out', 'in'];
-	    	if ($empty) foreach ($auslagen_test_empty as $e){
-	    		if (is_string($validated[$e]) && !!$validated[$e]
-	    			|| is_array($validated[$e]) && count($validated[$e])){
-	    			$empty = false;
-	    			break;
-	    		}
-	    	}
-	    	if ($empty) foreach ($validated['belege'] as $kb => $belege){
-	    		foreach ($belege_test_empty as $e){
-	    			if (is_string($belege[$e]) && !!$belege[$e]
-	    				|| is_array($belege[$e]) && count($belege[$e])){
-	    				$empty = false;
-	    				break 2;
-	    			}
-	    		}
-		    	foreach ($belege['posten'] as $posten){
-		    		foreach ($posten_text_empty as $e){
-		    			if (is_string($posten[$e]) && !!$posten[$e]
-		    				|| is_array($posten[$e]) && count($posten[$e])){
-		    				$empty = false;
-		    				break 3;
-		    			}
-		    		}
-		    	}
-		    	
-		    	//check file non empty
-		    	$fileIdx = 'beleg_'.$kb;
-		    	if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
-		    		$empty = false;
-		    		break;
-		    	}
-	    	}
-	    	//error reply
-	    	if ($empty) {
-	    		JsonController::print_json([
-	    			'success' => false,
-	    			'status' => '200',
-	    			'msg' => 'Leere Auslagenerstattungen können nicht gespeichert werden.',
-	    			'type' => 'modal',
-	    			'subtype' => 'server-error',
-	    		]);
-	    	}
-    	}
-    	$routeInfo['pid'] = $validated['projekt-id'];
-    	if ($validated['auslagen-id']!='NEW'){
-    		$routeInfo['aid'] = $validated['auslagen-id'];
-    	}
-    	$routeInfo['validated'] = $validated;
-    	$routeInfo['action'] = 'post';
-    	//call auslagen handler
-    	$handler = new AuslagenHandler2($routeInfo);
-    	$handler->handlePost();
-    	
-    	//error reply
-    	if ($empty) {
-    		JsonController::print_json([
-    			'success' => false,
-    			'status' => '200',
-    			'msg' => 'Der Posthandler hat die Anfrage nicht beantwortet.',
-    			'type' => 'modal',
-    			'subtype' => 'server-error',
-    		]);
-    	}
+        $func = '';
+        if (isset($routeInfo['mfunction'])){
+        }else if (isset($_POST['action'])){
+            $routeInfo['mfunction'] = $_POST['action'];
+        }else{
+            ErrorHandler::_renderError('Unknown Action.', 404);
+        }
+    
+        //validate
+        $vali = new Validator();
+        $validator_map = [];
+        switch ($routeInfo['mfunction']){
+            case 'updatecreate':
+                $validator_map = [
+                    'version' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Versionsnummer.'
+                    ],
+                    'etag' => ['regex',
+                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'error' => 'Ungültige Version.'
+                    ],
+                    'projekt-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Projekt ID.'
+                    ],
+                    'auslagen-id' => ['regex',
+                        'pattern' => '/^(NEW|[1-9]\d*)$/',
+                        'error' => 'Ungültige Auslagen ID.'
+                    ],
+                    'auslagen-name' => ['name',
+                        'maxlength' => '255',
+                    ],
+                    'zahlung-name' => ['name',
+                        'maxlength' => '127',
+                    ],
+                    'zahlung-iban' => ['regex',
+                        'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{4}( ... ... )[a-zA-Z0-9]{2}))$/',
+                        'maxlength' => '127',
+                        'empty',
+                        'error' => 'Ungültige Iban.'
+                    ],
+                    'zahlung-vwzk' => ['regex',
+                        'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& .\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'empty',
+                        'maxlength' => '127',
+                    ],
+                    'belege' => ['array', 'optional',
+                        'minlength' => 1,
+                        'key' => ['regex',
+                            'pattern' => '/^(new_)?(\d+)$/'
+                        ],
+                        'validator' => ['arraymap',
+                            'required' => true,
+                            'map' => [
+                                'datum' => ['date',
+                                    'empty',
+                                    'format' => 'Y-m-d',
+                                    'parse' => 'Y-m-d',
+                                    'error' => 'Ungültiges Beleg Datum.'
+                                ],
+                                'beschreibung' => ['text',
+                                    'strip',
+                                    'trim',
+                                ],
+                                'posten' => ['array', 'optional',
+                                    'minlength' => 1,
+                                    'key' => ['regex',
+                                        'pattern' => '/^(new_)?(\d+)$/'
+                                    ],
+                                    'validator' => ['arraymap',
+                                        'required' => true,
+                                        'map' => [
+                                            'projekt-posten' => ['integer',
+                                                'min' => '1',
+                                                'error' => 'Invalid Projektposten ID.'
+                                            ],
+                                            'in' => ['float',
+                                                'step' => '0.01',
+                                                'format' => '2',
+                                                'min' => '0',
+                                                #'error' => 'Posten - Einnahmen: Ungültiger Wert'
+                                            ],
+                                            'out' => ['float',
+                                                'step' => '0.01',
+                                                'format' => '2',
+                                                'min' => '0',
+                                                #'error' => 'Posten - Ausgaben: Ungültiger Wert'
+                                            ],
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                ];
+                break;
+            case 'filedelete':
+                $validator_map = [
+                    'etag' => ['regex',
+                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'error' => 'Ungültige Version.'
+                    ],
+                    'projekt-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Projekt ID.'
+                    ],
+                    'auslagen-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Auslagen ID.'
+                    ],
+                    'fid' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Datei ID.'
+                    ],
+                ];
+                break;
+            case 'state':
+                $auslagen_states = [];
+                $validator_map = [
+                    'etag' => ['regex',
+                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'error' => 'Ungültige Version.'
+                    ],
+                    'projekt-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Projekt ID.'
+                    ],
+                    'auslagen-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Auslagen ID.'
+                    ],
+                    'state' => ['regex',
+                        'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok-hv|ok-kv|ok-belege|revoked|rejected)$/',
+                        'error' => 'Ungültiger Status.'
+                    ],
+                ];
+                break;
+            case 'belegpdf':
+                $auslagen_states = [];
+                $validator_map = [
+                    'projekt-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Projekt ID.'
+                    ],
+                    'auslagen-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Auslagen ID.'
+                    ],
+                    'd' => ['integer', 'optional',
+                        'min' => '0',
+                        'max' => '1',
+                        'error' => 'Ungültige Parameter.'
+                    ],
+                ];
+                break;
+            default:
+                ErrorHandler::_renderError('Unknown Action.', 404);
+                break;
+        }
+        $vali->validateMap($_POST, $validator_map, true);
+        //return error if validation failed
+        if ($vali->getIsError()){
+            JsonController::print_json([
+                'success' => false,
+                'status' => '200',
+                'msg' => $vali->getLastErrorMsg(),
+                'type' => 'validator',
+                'field' => $vali->getLastMapKey(),
+            ]);
+        }
+        $validated = $vali->getFiltered();
+    
+        if ($routeInfo['mfunction'] == 'updatecreate'){
+            //may add nonexisting arrays
+            if (!isset($validated['belege'])){
+                $validated['belege'] = [];
+            }
+            foreach ($validated['belege'] as $k => $v){
+                if (!isset($v['posten'])){
+                    $validated['belege'][$k]['posten'] = [];
+                }
+            }
+            //check all values empty?
+            $empty = ($validated['auslagen-id'] == 'NEW');
+            $auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
+            $belege_test_empty = ['datum', 'beschreibung', 'posten'];
+            $posten_text_empty = ['out', 'in'];
+            if ($empty) foreach ($auslagen_test_empty as $e){
+                if (is_string($validated[$e]) && !!$validated[$e]
+                    || is_array($validated[$e]) && count($validated[$e])){
+                    $empty = false;
+                    break;
+                }
+            }
+            if ($empty) foreach ($validated['belege'] as $kb => $belege){
+                foreach ($belege_test_empty as $e){
+                    if (is_string($belege[$e]) && !!$belege[$e]
+                        || is_array($belege[$e]) && count($belege[$e])){
+                        $empty = false;
+                        break 2;
+                    }
+                }
+                foreach ($belege['posten'] as $posten){
+                    foreach ($posten_text_empty as $e){
+                        if (is_string($posten[$e]) && !!$posten[$e]
+                            || is_array($posten[$e]) && count($posten[$e])){
+                            $empty = false;
+                            break 3;
+                        }
+                    }
+                }
+            
+                //check file non empty
+                $fileIdx = 'beleg_' . $kb;
+                if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
+                    $empty = false;
+                    break;
+                }
+            }
+            //error reply
+            if ($empty){
+                JsonController::print_json([
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => 'Leere Auslagenerstattungen können nicht gespeichert werden.',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                ]);
+            }
+        }
+        $routeInfo['pid'] = $validated['projekt-id'];
+        if ($validated['auslagen-id'] != 'NEW'){
+            $routeInfo['aid'] = $validated['auslagen-id'];
+        }
+        $routeInfo['validated'] = $validated;
+        $routeInfo['action'] = 'post';
+        //call auslagen handler
+        $handler = new AuslagenHandler2($routeInfo);
+        $handler->handlePost();
+    
+        //error reply
+        if ($empty){
+            JsonController::print_json([
+                'success' => false,
+                'status' => '200',
+                'msg' => 'Der Posthandler hat die Anfrage nicht beantwortet.',
+                'type' => 'modal',
+                'subtype' => 'server-error',
+            ]);
+        }
     }
     
     private function handleChat($routeInfo){
@@ -501,5 +490,81 @@ class RestHandler extends JsonController{
     	$chat->setErrorMessage('Access Denied.');
     	$chat->answerError();
     	die();	
+    }
+    
+    private function updateKonto($routeInfo){
+        (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+        
+        $ret = true;
+        if (!DBConnector::getInstance()->dbBegin()){
+            ErrorHandler::_errorExit("Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!");
+        }
+        
+        //$newFormAnfangsbestand = HibiscusXMLRPCConnector::getInstance()->fetchFromHibiscusAnfangsbestand();
+        
+        $allZahlungen = HibiscusXMLRPCConnector::getInstance()->fetchFromHibiscus();
+        if ($allZahlungen === false){
+            JsonController::print_json([
+                'success' => false,
+                'status' => '500',
+                'msg' => 'Konnte keine Verbindung mit Onlinebanking Service aufbauen',
+                'type' => 'modal',
+                'subtype' => 'server-error',
+            ]);
+        }
+        $lastId = DBConnector::getInstance()->dbFetchAll("konto", ["id" => ["id", DBConnector::MAX]]);
+        if (is_array($lastId)){
+            $lastId = $lastId[0]["id"];
+        }
+        
+        $inserted = 0;
+        foreach ($allZahlungen as $zahlung){
+            if ($lastId && $zahlung["id"] < $lastId)
+                continue;
+            $fields = [];
+            $fields['id'] = $zahlung["id"];
+            $fields['konto_id'] = $zahlung["konto_id"];
+            $fields['date'] = $zahlung["datum"];
+            $lastDate = $zahlung["datum"];
+            $fields['type'] = $zahlung["art"];
+            $fields['valuta'] = $zahlung["valuta"];
+            $fields['primanota'] = $zahlung["primanota"];
+            $fields['value'] = DBConnector::getInstance()->convertUserValueToDBValue($zahlung["betrag"], "money");
+            $fields['empf_name'] = $zahlung["empfaenger_name"];
+            $fields['empf_iban'] = $zahlung["empfaenger_konto"];
+            $fields['empf_bic'] = $zahlung["empfaenger_blz"];
+            $fields['saldo'] = $zahlung["saldo"];
+            $fields['gvcode'] = $zahlung["gvcode"];
+            $fields['zweck'] = $zahlung["zweck"];
+            $fields['comment'] = $zahlung["kommentar"];
+            $fields['customer_ref'] = $zahlung["customer_ref"];
+            //$msgs[]= print_r($zahlung,true);
+            DBConnector::getInstance()->dbInsert("konto", $fields);
+            $inserted++;
+        }
+        
+        $ret = DBConnector::getInstance()->dbCommit();
+        
+        if (!$ret){
+            DBConnector::getInstance()->dbRollBack();
+        }else{
+            if ($inserted > 0){
+                JsonController::print_json([
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => "$inserted neue Umsätze gefunden.",
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                ]);
+            }else{
+                JsonController::print_json([
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => 'Keine neuen Umsätze gefunden.',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                ]);
+            }
+        }
     }
 }

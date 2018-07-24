@@ -58,13 +58,7 @@ class AuthDummyHandler implements AuthHandler{
      */
     protected function __construct(){
         //create session
-        $this->attributes = [
-            'displayName' => 'Test Nutzer',
-            'mail' => 'Test@Test.de',
-            'groups' => DEVGROUPS,
-            'gremien' => DEVGREMIEN,
-            'eduPersonPrincipalName' => ['usernameFromRZ'],
-        ];
+        $this->attributes = DEV_ATTRIBUTES;
     }
     
     /**
@@ -170,7 +164,7 @@ class AuthDummyHandler implements AuthHandler{
      */
     function getUserFullName(){
         $this->requireAuth();
-        return $this->getAttributes()["displayName"];
+        return $this->getAttributes()["displayName"][0];
     }
     
     /**
@@ -184,6 +178,18 @@ class AuthDummyHandler implements AuthHandler{
     }
     
     function isAdmin(){
-        return DEVADMIN;
+        return in_array("admin", $this->attributes["groups"]);
     }
+    
+    function hasGremium($gremien, $delimiter = ","){
+        $attributes = $this->getAttributes();
+        if (!isset($attributes["gremien"])){
+            return false;
+        }
+        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) == 0){
+            return false;
+        }
+        return true;
+    }
+    
 }

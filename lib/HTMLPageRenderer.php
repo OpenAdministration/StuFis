@@ -9,7 +9,6 @@
 class HTMLPageRenderer{
     private static $profiling_timing, $profiling_names, $profiling_sources;
     private static $errorPage;
-    private $uribase;
     private $bodycontent;
     private $titel;
     private $routeInfo;
@@ -22,7 +21,6 @@ class HTMLPageRenderer{
             $this->titel = "StuRa Finanzen";
         }
         $this->bodycontent = $bodycontent;
-        $this->uribase = $GLOBALS["URIBASE"];
     }
     
     /**
@@ -35,14 +33,6 @@ class HTMLPageRenderer{
         self::$profiling_names[] = $name;
     }
     
-    static public function setErrorPage($param){
-        //$param is used in errot.phtml
-        ob_start();
-        include SYSBASE . "/template/error.phtml";
-        self::$errorPage = ob_get_clean();
-    
-    }
-    
     static public function dieWithErrorPage($param){
         self::setErrorPage($param);
         $htmlRenderer = new HTMLPageRenderer([]);
@@ -50,60 +40,30 @@ class HTMLPageRenderer{
         exit(-1);
     }
     
-    /**
-     * @return string
-     */
-    public function getBodycontent(): string{
-        return $this->bodycontent;
-    }
-    
-    /**
-     * @param string $bodycontent
-     */
-    public function setBodycontent(string $bodycontent){
-        $this->bodycontent = $bodycontent;
-    }
-    
-    public function appendRendererContent(Renderer $renderObject){
+    static private function setErrorPage($param){
+        //$param is used in errot.phtml
         ob_start();
-        $renderObject->render();
-        $content = ob_get_clean();
-        $this->appendToBody($content);
-    }
-    
-    public function appendToBody($htmlcontent){
-        $this->bodycontent .= $htmlcontent;
+        include SYSBASE . "/template/error.phtml";
+        self::$errorPage = ob_get_clean();
+        
     }
     
     public function render(){
-        if (isset(self::$errorPage)){
-            $this->renderErrorPage();
-            return;
-        }
         $this->renderHtmlHeader();
         $this->renderNavbar();
         $this->renderSiteNavigation();
         echo "<div class='container main col-xs-12 col-md-10'>";
-        echo $this->bodycontent;
+        if (isset(self::$errorPage)){
+            echo self::$errorPage;
+        }else{
+            echo $this->bodycontent;
+        }
         echo "</div>";
         $this->renderModals();
         if (DEV){
             $this->renderProfiling();
         }
-    
         $this->renderFooter();
-    }
-    
-    private function renderErrorPage(){
-        $this->renderHtmlHeader();
-        $this->renderNavbar();
-        $this->renderSiteNavigation();
-        echo "<div class='container main col-xs-12 col-md-10'>";
-        echo self::$errorPage;
-        echo "</div>";
-        $this->renderProfiling();
-        $this->renderFooter();
-        exit();
     }
     
     private function renderHtmlHeader(){
@@ -147,9 +107,9 @@ class HTMLPageRenderer{
             }
         }
         foreach ($cssFiles as $cssFile){
-            $out .= "<link rel='stylesheet' href='{$this->uribase}css/$cssFile.css'>" . PHP_EOL;
+            $out .= "<link rel='stylesheet' href='" . URIBASE . "css/$cssFile.css'>" . PHP_EOL;
         }
-        $out .= "<link rel='stylesheet' href='{$this->uribase}css/main.css'>" . PHP_EOL;
+        $out .= "<link rel='stylesheet' href='" . URIBASE . "css/main.css'>" . PHP_EOL;
         return $out;
         
     }
@@ -187,9 +147,9 @@ class HTMLPageRenderer{
         }
         //var_dump($this->routeInfo["load"]);
         foreach ($jsFiles as $jsFile){
-            $out .= "<script src='{$this->uribase}js/$jsFile.js'></script>" . PHP_EOL;
+            $out .= "<script src='" . URIBASE . "js/$jsFile.js'></script>" . PHP_EOL;
         }
-        $out .= "<script src='{$this->uribase}js/main.js'></script>" . PHP_EOL;
+        $out .= "<script src='" . URIBASE . "js/main.js'></script>" . PHP_EOL;
         return $out;
     }
     
@@ -205,7 +165,7 @@ class HTMLPageRenderer{
             <div class="container">
                 <div class="navbar-header">
                     <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
-                    <a class="navbar-brand" href="<?php echo htmlspecialchars($this->uribase); ?>">StuRa-Finanzformulare
+                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>">StuRa-Finanzformulare
                         <?php
                         if (DEV)
                             echo " TESTSYSTEM";
@@ -231,13 +191,79 @@ class HTMLPageRenderer{
         }else{
             $activeButton = "";
         }
+        $navButtons = [
+            [
+                "title" => "Meine Gremien",
+                "show" => true,
+                "fa-icon" => "fa-home",
+                "target" => URIBASE . "menu/mygremium",
+                "tabname" => "mygremium",
+            ],
+            [
+                "title" => "Benutzerkonto",
+                "show" => true,
+                "fa-icon" => "fa-user-circle",
+                "target" => URIBASE . "menu/mykonto",
+                "tabname" => "mykonto",
+            ],
+            [
+                "title" => "TODO HV",
+                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "fa-icon" => "fa-legal",
+                "target" => URIBASE . "menu/hv",
+                "tabname" => "hv",
+            ],
+            [
+                "title" => "TODO KV",
+                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "fa-icon" => "fa-calculator",
+                "target" => URIBASE . "menu/kv",
+                "tabname" => "kv",
+            ],
+            [
+                "title" => "Buchungen",
+                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "fa-icon" => "fa-book",
+                "target" => URIBASE . "menu/booking",
+                "tabname" => "booking",
+            ],
+            [
+                "title" => "Konto",
+                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "fa-icon" => "fa-bar-chart",
+                "target" => URIBASE . "menu/konto",
+                "tabname" => "konto",
+            ],
+            [
+                "title" => "StuRa Sitzung",
+                "show" => true,
+                "fa-icon" => "fa-users",
+                "target" => URIBASE . "menu/stura",
+                "tabname" => "stura",
+            ],
+            [
+                "title" => "Alle Gremien",
+                "show" => true,
+                "fa-icon" => "fa-globe",
+                "target" => URIBASE . "menu/allgremium",
+                "tabname" => "allgremium",
+            ],
+            [
+                "title" => "Haushaltspläne",
+                "show" => true,
+                "fa-icon" => "fa-bar-chart",
+                "target" => URIBASE . "hhp",
+                "tabname" => "hhp",
+            ],
+        ];
+        
         ?>
         <div>
             <div class="profile-sidebar">
                 <!-- SIDEBAR USER TITLE -->
                 <div class="profile-usertitle">
                     <div class="profile-usertitle-name">
-                        <?php echo (AUTH_HANDLER)::getInstance()->getUserfullname(); ?>
+                        <?= (AUTH_HANDLER)::getInstance()->getUserfullname(); ?>
                     </div>
                     <?php if ((AUTH_HANDLER)::getInstance()->isAdmin()){ ?>
                         <div class="profile-usertitle-job">
@@ -253,7 +279,7 @@ class HTMLPageRenderer{
                 <!-- END SIDEBAR USER TITLE -->
                 <!-- SIDEBAR BUTTONS -->
                 <div class="profile-userbuttons">
-                    <a href="<?= $this->uribase ?>projekt/create/edit" type="button" class="btn btn-primary btn-sm">
+                    <a href="<?= URIBASE ?>projekt/create/edit" type="button" class="btn btn-primary btn-sm">
                         <i class="fa fa-fw fa-plus"></i>
                         neues Projekt
                     </a>
@@ -262,70 +288,128 @@ class HTMLPageRenderer{
                 <!-- SIDEBAR MENU -->
                 <div class="profile-usermenu">
                     <ul class="nav">
-                        <li <?php if ($activeButton == "mygremium") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/mygremium"); ?>">
-                                <i class="fa fa-fw fa-home"></i>
-                                Meine Gremien
-                            </a>
-                        </li>
-                        <!-- LIVE COMMENT ONLY
-                        <li <?php if ($activeButton == "mykonto") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/mykonto"); ?>">
-                                <i class="fa fa-fw fa-user-circle"></i>
-                                Benutzerkonto
-                            </a>
-                        </li>-->
-                        <?php
-                        if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
+                        <?php foreach ($navButtons as $navButton){
+                            if (!$navButton["show"]) continue;
                             ?>
-
-                            <li <?php if ($activeButton == "hv") echo "class='active'"; ?>>
-                                <a href="<?php echo htmlspecialchars($this->uribase . "menu/hv"); ?>">
-                                    <i class="fa fa-fw fa-legal"></i>
-                                    TODO HV
+                            <li <?php if ($activeButton == $navButton["tabname"]) echo "class='active'"; ?>>
+                                <a href="<?php echo htmlspecialchars($navButton["target"]); ?>">
+                                    <i class="fa fa-fw <?= $navButton["fa-icon"] ?>"></i>
+                                    <?= $navButton["title"] ?>
                                 </a>
                             </li>
-                            <li <?php if ($activeButton == "kv") echo "class='active'"; ?>>
-                                <a href="<?php echo htmlspecialchars($this->uribase . "menu/kv"); ?>">
-                                    <i class="fa fa-fw fa-calculator "></i>
-                                    TODO KV
-                                </a>
-                            </li>
-                            <!-- LIVE COMMENT ONLY
-                            <li <?php if ($activeButton == "booking") echo "class='active'"; ?>>
-                                <a href="<?php echo htmlspecialchars($this->uribase . "menu/booking"); ?>">
-                                    <i class="fa fa-fw fa-book "></i>
-                                    Buchungen
-                                </a>
-                            </li>
-                            <li <?php if ($activeButton == "konto") echo "class='active'"; ?>>
-                                <a href="<?= htmlspecialchars($this->uribase . "menu/konto"); ?>">
-                                    <i class="fa fa-fw fa-bar-chart"></i>
-                                    Konto
-                                </a>
-                            </li> -->
                         <?php } ?>
-                        <li <?php if ($activeButton == "stura") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/stura"); ?>">
-                                <i class="fa fa-fw fa-users"></i>
-                                StuRa-Sitzung
-                            </a>
-                        </li>
-                        <li <?php if ($activeButton == "allgremium") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "menu/allgremium"); ?>">
-                                <i class="fa fa-fw fa-globe"></i>
-                                Alle Gremien
-                            </a>
-                        </li>
-                        <li <?php if ($activeButton == "hhp") echo "class='active'"; ?>>
-                            <a href="<?php echo htmlspecialchars($this->uribase . "hhp"); ?>">
-                                <i class="fa fa-fw fa-bar-chart"></i>
-                                Haushaltsplan
-                            </a>
-                        </li>
                     </ul>
                 </div>
                 <!-- END MENU -->
+            </div>
+        </div>
+        <?php
+    }
+    
+    private function renderModals(){
+    
+        $this->buildModal("please-wait", "Bitte warten - Die Anfrage wird verarbeitet.", "" .
+            '<div class="planespinner"><div class="rotating-plane"></div></div>');
+        $this->buildModal("server-message", "Antwort vom Server", "...");
+        $this->buildModal("server-question", "Antwort vom Server", "...", "Ok", "Fenster schließen");
+        $this->buildModal(
+            "rename-file",
+            "Datei umbenennen",
+            "<div class='form-group'>
+                            <label for='rename-file-oldname'>Ursprünglicher Name</label>
+                            <input type='text' class='form-control' id='rename-file-oldname' readonly='readonly'>
+                        </div>
+                        <div class='form-group'>
+                            <label for='rename-file-newname'>Neuer Name</label>
+                            <input type='text' class='form-control' id='rename-file-newname'>
+                        </div>"
+        );
+        $this->buildModal(
+            "delete-file",
+            "Datei löschen",
+            "<div class='form-group'>
+                            <label for='delete-file-name'>Name</label>
+                            <input type='text' class='form-control' id='delete-file-name' readonly='readonly'>
+                        </div>
+                        <div class='form-group'>
+                            <label for='delete-file-size'>Größe</label>
+                            <input type='text' class='form-control' id='delete-file-size' readonly='readonly'>
+                        </div>",
+            "Abbruch",
+            "Datei löschen",
+            true
+        );
+        $this->buildModal(
+            "please-reload",
+            "Bitte Formular speichern und neu zum Bearbeiten öffnen",
+            "Dieses Formularelement verändert die Bearbeitbarkeit von Formularfeldern. Das Formular sollte daher nun gespeichert und neu zum Bearbeiten geöffnet werden.",
+            "Abbruch",
+            "Formular speichern und neu zum Bearbeiten öffnen"
+        );
+        $this->buildModal(
+            "server-error",
+            "<div class='default-head'>Es ist ein unerwarteter Fehler aufgetreten.</div><div class='js-head'></div>",
+            "<div class='default-content'>Die Seite wird gleich automatisch neu geladen.<div class='msg'></div></div><div class='js-content'></div>",
+            null,
+            null,
+            'danger'
+        );
+        $this->buildModal(
+            "server-success",
+            "<div class='default-head'>Request erfolgreich.</div><div class='js-head'></div>",
+            "<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
+            null,
+            null,
+            'success'
+        );
+        $this->buildModal(
+            "server-file",
+            "<div class='js-head'></div>",
+            "<div class='js-content'></div>",
+            null,
+            null,
+            'success'
+        );
+    }
+    
+    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){
+        if ($danger == 'danger'){
+            $buttonType1 = "primary";
+            $buttonType2 = "danger";
+        }else{
+            $buttonType1 = "default";
+            $buttonType2 = "primary";
+        }
+        $hasFooter = isset($abortLabel) || isset($actionLabel);
+        ?>
+        <div class='modal fade' id='<?= $id ?>-dlg' tabindex='-1' role='dialog'
+             aria-labelledby='<?= $id ?>-label'>
+            <div class='modal-dialog' <?= ($danger == 'danger') ? 'style="min-width: 75%;"' : '' ?> role='document'>
+                <div class='modal-content'>
+                    <div class='modal-header<?=
+                    (($danger) ? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : '') ?>'>
+                        <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
+                                    aria-hidden='true'>&times;</span>
+                        </button>
+                        <h4 class='modal-title' id='<?= $id ?>-label'><?= $titel ?></h4>
+                    </div>
+                    <div class='modal-body' id='<?= $id ?>-content'>
+                        <?= $bodycontent ?>
+                    </div>
+                    <?php if ($hasFooter){ ?>
+                        <div class='modal-footer'>
+                            <?php if (isset($abortLabel)){ ?>
+                                <button type='button' class='btn btn-<?= $buttonType1 ?>'
+                                        data-dismiss='modal'><?= $abortLabel ?></button>
+                            <?php } ?>
+                            <?php if (isset($actionLabel)){ ?>
+                                <button type='button' class='btn btn-<?= $buttonType2 ?>'
+                                        id='<?= $id ?>-btn-action'><?= $actionLabel ?></button>
+
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                </div>
             </div>
         </div>
         <?php
@@ -365,113 +449,29 @@ class HTMLPageRenderer{
         <?php
     }
     
-    private function renderModals(){
-        
-        $this->buildModal("please-wait", "Bitte warten - Die Anfrage wird verarbeitet.", "".
-        	'<div class="planespinner"><div class="rotating-plane"></div></div>');
-        $this->buildModal("server-message", "Antwort vom Server", "...");
-        $this->buildModal("server-question", "Antwort vom Server", "...", "Ok", "Fenster schließen");
-        $this->buildModal(
-            "rename-file",
-            "Datei umbenennen",
-            "<div class='form-group'>
-                            <label for='rename-file-oldname'>Ursprünglicher Name</label>
-                            <input type='text' class='form-control' id='rename-file-oldname' readonly='readonly'>
-                        </div>
-                        <div class='form-group'>
-                            <label for='rename-file-newname'>Neuer Name</label>
-                            <input type='text' class='form-control' id='rename-file-newname'>
-                        </div>"
-        );
-        $this->buildModal(
-            "delete-file",
-            "Datei löschen",
-            "<div class='form-group'>
-                            <label for='delete-file-name'>Name</label>
-                            <input type='text' class='form-control' id='delete-file-name' readonly='readonly'>
-                        </div>
-                        <div class='form-group'>
-                            <label for='delete-file-size'>Größe</label>
-                            <input type='text' class='form-control' id='delete-file-size' readonly='readonly'>
-                        </div>",
-            "Abbruch",
-            "Datei löschen",
-            true
-        );
-        $this->buildModal(
-            "please-reload",
-            "Bitte Formular speichern und neu zum Bearbeiten öffnen",
-            "Dieses Formularelement verändert die Bearbeitbarkeit von Formularfeldern. Das Formular sollte daher nun gespeichert und neu zum Bearbeiten geöffnet werden.",
-            "Abbruch",
-            "Formular speichern und neu zum Bearbeiten öffnen"
-        );
-        $this->buildModal(
-        	"server-error",
-        	"<div class='default-head'>Es ist ein unerwarteter Fehler aufgetreten.</div><div class='js-head'></div>",
-        	"<div class='default-content'>Die Seite wird gleich automatisch neu geladen.<div class='msg'></div></div><div class='js-content'></div>",
-        	NULL,
-        	NULL,
-        	'danger'
-        );
-        $this->buildModal(
-        	"server-success",
-        	"<div class='default-head'>Request erfolgreich.</div><div class='js-head'></div>",
-        	"<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
-        	NULL,
-        	NULL,
-        	'success'
-        );
-        $this->buildModal(
-        	"server-file",
-        	"<div class='js-head'></div>",
-        	"<div class='js-content'></div>",
-        	NULL,
-        	NULL,
-        	'success'
-        );
+    /**
+     * @return string
+     */
+    public function getBodycontent(): string{
+        return $this->bodycontent;
     }
     
-    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){
-        if ($danger=='danger'){
-            $buttonType1 = "primary";
-            $buttonType2 = "danger";
-        }else{
-            $buttonType1 = "default";
-            $buttonType2 = "primary";
-        }
-        $hasFooter = isset($abortLabel) || isset($actionLabel);
-        ?>
-        <div class='modal fade' id='<?= $id ?>-dlg' tabindex='-1' role='dialog'
-             aria-labelledby='<?= $id ?>-label'>
-            <div class='modal-dialog' <?= ($danger=='danger')? 'style="min-width: 75%;"':'' ?> role='document'>
-                <div class='modal-content'>
-                    <div class='modal-header<?= 
-                    	(($danger)? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;":'') ?>'>
-                        <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
-                                    aria-hidden='true'>&times;</span>
-                        </button>
-                        <h4 class='modal-title' id='<?= $id ?>-label'><?= $titel ?></h4>
-                    </div>
-                    <div class='modal-body' id='<?= $id ?>-content'>
-                        <?= $bodycontent ?>
-                    </div>
-                    <?php if ($hasFooter){ ?>
-                        <div class='modal-footer'>
-                            <?php if (isset($abortLabel)){ ?>
-                                <button type='button' class='btn btn-<?= $buttonType1 ?>'
-                                        data-dismiss='modal'><?= $abortLabel ?></button>
-                            <?php } ?>
-                            <?php if (isset($actionLabel)){ ?>
-                                <button type='button' class='btn btn-<?= $buttonType2 ?>'
-                                        id='<?= $id ?>-btn-action'><?= $actionLabel ?></button>
+    /**
+     * @param string $bodycontent
+     */
+    public function setBodycontent(string $bodycontent){
+        $this->bodycontent = $bodycontent;
+    }
     
-                            <?php } ?>
-                        </div>
-                    <?php } ?>
-                </div>
-            </div>
-        </div>
-        <?php
+    public function appendRendererContent(Renderer $renderObject){
+        ob_start();
+        $renderObject->render();
+        $content = ob_get_clean();
+        $this->appendToBody($content);
+    }
+    
+    public function appendToBody($htmlcontent){
+        $this->bodycontent .= $htmlcontent;
     }
     
 }

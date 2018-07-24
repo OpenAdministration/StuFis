@@ -250,4 +250,15 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 		$this->requireAuth();
 		return $this->getAttributes()["mail"];
 	}
+    
+    function hasGremium($gremien, $delimiter = ","){
+        $attributes = $this->getAttributes();
+        if (!isset($attributes["gremien"])){
+            return false;
+        }
+        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) == 0){
+            return false;
+        }
+        return true;
+    }
 }

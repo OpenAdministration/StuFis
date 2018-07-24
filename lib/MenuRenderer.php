@@ -11,14 +11,16 @@ class MenuRenderer extends Renderer{
     
     private $pathinfo;
     
-    public function __construct($pathinfo = []) {
+    public function __construct($pathinfo = []){
         if (!isset($pathinfo) || empty($pathinfo) || !isset($pathinfo["action"])){
             $pathinfo["action"] = self::DEFAULT;
         }
         $this->pathinfo = $pathinfo;
     }
+    
     public function render(){
         $attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
+        
         switch ($this->pathinfo["action"]){
             case "mygremium":
             case "allgremium":
@@ -40,10 +42,10 @@ class MenuRenderer extends Renderer{
                 $gremien[] = "";
                 HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
                 //print_r($this->pathinfo["action"]);
-                MenuRenderer::renderProjekte($gremien);
+                $this->renderProjekte($gremien);
                 break;
             case "mykonto":
-                MenuRenderer::renderMyProfile();
+                $this->renderMyProfile();
                 break;
             case "stura":
                 $this->renderStuRaView();
@@ -52,45 +54,29 @@ class MenuRenderer extends Renderer{
                 $this->renderHVView();
                 break;
             case "kv":
-                $groups[] = ["name" => "Noch zu tätigende Zahlungen", "fields" => ["type" => "zahlung-anweisung", "state" => "ok",]];
-                $groups[] = ["name" => "Auslagenerstattungen nur noch KV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-hv",]];
-                $groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
-                
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                $mapping[] = ["p-name" => "projekt.name", "org-name" => "projekt.org.name"];
-                MenuRenderer::renderTable($groups, $mapping);
+                $this->renderKVView();
                 break;
-            case "hhp":
-                HTMLPageRenderer::registerProfilingBreakpoint("renderhhp-start");
-                MenuRenderer::renderHaushaltsplan();
+            case "exportBank":
+                $this->renderExportBank();
                 break;
             case "booking":
-                require "../template/booking.tpl";
+                (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+                $this->renderBooking();
                 //TODO: FIXME!;
                 break;
             case "konto":
-                global $HIBISCUSGROUP;
-                (AUTH_HANDLER)::getInstance()->requireGroup($HIBISCUSGROUP);
-                $selected_hhp_id = null;
-                if (isset($_REQUEST["id"])){
-                    $selected_hhp_id = $_REQUEST["id"];
-                }
-                MenuRenderer::renderKonto($selected_hhp_id);
+                (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+                $this->renderKonto();
                 break;
             case "booking-history":
-                $selected_hhp_id = null;
-                if (isset($_REQUEST["id"])){
-                    $selected_hhp_id = $_REQUEST["id"];
-                }
-                MenuRenderer::renderBookingHistory($selected_hhp_id);
-                //TODO FIXME;
+                $this->renderBookingHistory();
                 break;
             default:
-                //FIXME
-                die("?!? could not interpret '{$this->pathinfo["action"]}' as menu name :( ");
+                ErrorHandler::_errorExit("{$this->pathinfo['action']} kann nicht interpretiert werden");
+                break;
         }
     }
+    
     
     public function renderProjekte($gremien){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
@@ -113,24 +99,33 @@ class MenuRenderer extends Renderer{
             ["id"]
         );
         $pids = [];
-        array_walk($projekte,function($array,$gremien) use (&$pids) {
-            array_walk($array,function($res,$key) use (&$pids) {
+        array_walk($projekte, function($array, $gremien) use (&$pids){
+            array_walk($array, function($res, $key) use (&$pids){
                 $pids[] = $res["id"];
             });
         });
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
-            ["projekt_id","auslagen.id","name_suffix","zahlung-name","einnahmen" => ["einnahmen",DBConnector::SUM_ROUND2],"ausgaben" => ["ausgaben",DBConnector::SUM_ROUND2],"state"],
-            ["projekt_id" => ["IN",$pids]],
             [
-            	["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id","auslagen.id"]],
-            	["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id","belege.id"]],
+                "projekt_id",  // group idx
+                "projekt_id", "auslagen.id", "name_suffix", //auslagen Link
+                "zahlung-name", // Empf. Name
+                "einnahmen" => ["einnahmen", DBConnector::SUM_ROUND2],
+                "ausgaben" => ["ausgaben", DBConnector::SUM_ROUND2],
+                "state"
+            ],
+            ["projekt_id" => ["IN", $pids]],
+            [
+                ["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
             ["id" => true],
             true,
             false,
             ["auslagen_id"]
         );
+        
+        //FIXME: do later :)
         /*if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
             $extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
             $ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
@@ -144,15 +139,14 @@ class MenuRenderer extends Renderer{
         ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-            if (isset($projekte) && !empty($projekt) && $projekte){
+            if (isset($projekte) && !empty($projekte) && $projekte){
                 foreach ($projekte as $gremium => $inhalt){
-                	
                     if (count($inhalt) == 0) continue; ?>
                     <div class="panel panel-default">
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
-                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= empty($gremium) ? "Nicht zugeordnete Projekte": $gremium ?>
+                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= empty($gremium) ? "Nicht zugeordnete Projekte" : $gremium ?>
                             </h4>
                         </div>
                         <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">
@@ -161,7 +155,7 @@ class MenuRenderer extends Renderer{
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
                                     <?php foreach ($inhalt as $projekt){
                                         $id = $projekt["id"];
-                                        $year =  date("y",strtotime($projekt["createdat"])); ?>
+                                        $year = date("y", strtotime($projekt["createdat"])); ?>
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?= generateLinkFromID("IP-$year-$id", "projekt/" . $id) ?>
                                             </div>
@@ -171,7 +165,7 @@ class MenuRenderer extends Renderer{
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
                                                             class="panel-projekt-name"><?= $projekt["name"] ?></span>
-                                                    <span class="panel-projekt-money text-muted hidden-xs"><?= number_format($projekt["ausgaben"],2,",",".")?></span>
+                                                    <span class="panel-projekt-money text-muted hidden-xs"><?= number_format($projekt["ausgaben"], 2, ",", ".") ?></span>
                                                     <span class="label label-info project-state-label"><?= ProjektHandler::getStateString($projekt["state"]) ?></span>
                                                 </h4>
                                             </div>
@@ -180,56 +174,50 @@ class MenuRenderer extends Renderer{
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <?php
-                                                        $sum_a_in = 0; $sum_a_out = 0;
-                                                        $sum_e_in = 0; $sum_e_out = 0;
+                                                        $sum_a_in = 0;
+                                                        $sum_a_out = 0;
+                                                        $sum_e_in = 0;
+                                                        $sum_e_out = 0;
                                                         foreach ($auslagen[$id] as $a){
-                                                       		if (substr($a['state'],0,6) == 'booked' || substr($a['state'],0,10) == 'instructed'){
-                                                       			$sum_a_in += $a['einnahmen'];
-                                                       			$sum_a_out += $a['ausgaben'];
-                                                       		}
-                                                       		if (substr($a['state'],0,10) != 'revocation' && substr($a['state'],0,5) != 'draft' ){
-                                                       			$sum_e_in += $a['einnahmen'];
-                                                       			$sum_e_out += $a['ausgaben'];
-                                                       		}
+                                                            if (substr($a['state'], 0, 6) == 'booked' || substr($a['state'], 0, 10) == 'instructed'){
+                                                                $sum_a_in += $a['einnahmen'];
+                                                                $sum_a_out += $a['ausgaben'];
+                                                            }
+                                                            if (substr($a['state'], 0, 10) != 'revocation' && substr($a['state'], 0, 5) != 'draft'){
+                                                                $sum_e_in += $a['einnahmen'];
+                                                                $sum_e_out += $a['ausgaben'];
+                                                            }
                                                         }
                                                         
                                                         $this->renderTable(
-                                                            ["ID","Zusatzname","Zahlungsempfänger","Einnahmen","Ausgaben","Status"],
+                                                            ["Name", "Zahlungsempfänger", "Einnahmen", "Ausgaben", "Status"],
                                                             [$auslagen[$id]],
                                                             [
-                                                                function($aid) use ($id){
-                                                                     return $this->renderInternalHyperLink("A".$aid,"projekt/$id/auslagen/$aid");
-                                                                },
-                                                                null,
-                                                                null,
-                                                                function($money){
-                                                                    return number_format($money,2,","," ")."&nbsp€";
-                                                                },
-                                                                function($money){
-                                                                	return number_format($money,2,","," ")."&nbsp€";
-                                                                },
+                                                                [$this, "auslagenLinkEscapeFunction"], // 3 Parameter
+                                                                null,  // 1 parameter
+                                                                [$this, "moneyEscapeFunction"],
+                                                                [$this, "moneyEscapeFunction"],
                                                                 function($stateString){
                                                                     $text = AuslagenHandler2::getStateString(AuslagenHandler2::state2stateInfo($stateString)['state']);
                                                                     return "<div class='label label-info'>$text</div>";
                                                                 }
+
                                                             ],
                                                             [
-                                                            	[
-	                                                            	'',
-	                                                            	'',
-	                                                            	'Eingereicht:',
-	                                                            	'&Sigma;: '.number_format($sum_e_in, 2).'&nbsp€',
-	                                                            	'&Sigma;: '.number_format($sum_e_out, 2).'&nbsp€',
-	                                                            	'&Delta;: '.number_format($sum_e_out - $sum_e_in, 2).'&nbsp€',
-	                                                            ],
-                                                            	[
-	                                                            	'',
-	                                                            	'',
-	                                                            	'Angenommen:',
-	                                                            	'&Sigma;: '.number_format($sum_a_in, 2).'&nbsp€',
-	                                                            	'&Sigma;: '.number_format($sum_a_out, 2).'&nbsp€',
-	                                                            	'&Delta;: '.number_format($sum_a_out - $sum_a_in, 2).'&nbsp€',
-                                                            	]
+                                                                [
+                                                                    '',
+                                                                    'Eingereicht:',
+                                                                    '&Sigma;: ' . number_format($sum_e_in, 2) . '&nbsp€',
+                                                                    '&Sigma;: ' . number_format($sum_e_out, 2) . '&nbsp€',
+                                                                    '&Delta;: ' . number_format($sum_e_out - $sum_e_in, 2) . '&nbsp€',
+                                                                ],
+                                                                [
+                                                                    '',
+                                                                    'Angenommen:',
+                                                                    '&Sigma;: ' . number_format($sum_a_in, 2) . '&nbsp€',
+                                                                    '&Sigma;: ' . number_format($sum_a_out, 2) . '&nbsp€',
+                                                                    '&Delta;: ' . number_format($sum_a_out - $sum_a_in, 2) . '&nbsp€',
+                                                                ]
                                                             ]
                                                         ); ?>
                                                     </div>
@@ -254,115 +242,384 @@ class MenuRenderer extends Renderer{
         <?php
     }
     
-public function renderMyProfile(){
-    
-    $user = DBConnector::getInstance()->getUser();
-    if (isset($user["iban"])){
-        $iban = $user["iban"];
-    }else{
-        $iban = "";
-    }
-    ?>
+    public function renderMyProfile(){
+        
+        $user = DBConnector::getInstance()->getUser();
+        if (isset($user["iban"])){
+            $iban = $user["iban"];
+        }else{
+            $iban = "";
+        }
+        ?>
 
-    <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
-          enctype="multipart/form-data" class="ajax">
-        <input type="hidden" name="action" value="mykonto.update"/>
-        <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>"/>
-        <?php //renderForm($form); ?>
-        <a href="javascript:void(false);" class='btn btn-success submit-form validate pull-right' data-name="iban"
-           data-value="">Speichern</a>
-    </form>
-    
-    <?php
-}
+        <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
+              enctype="multipart/form-data" class="ajax">
+            <input type="hidden" name="action" value="mykonto.update"/>
+            <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>"/>
+            <?php //renderForm($form);
+            ?>
+            <a href="javascript:void(false);" class='btn btn-success submit-form validate pull-right' data-name="iban"
+               data-value="">Speichern</a>
+        </form>
+        
+        <?php
+    }
     
     private function renderStuRaView(){
-        $header = ["Id", "Projektname", "Organisation","Projektbeginn", /*"Einnahmen", "Ausgaben"*/];
+        $header = ["Projekte", "Organisation", "Projektbeginn", /*"Einnahmen", "Ausgaben"*/];
         
         //TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
-        $internContent = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "need-stura"]);
-        $internContentHV = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "ok-by-hv"]);
+        list($header, $internContent, $escapeFunctions) = $this->fetchProjectsWithState("need-stura");
+        list(, $internContentHV,) = $this->fetchProjectsWithState("ok-by-hv");
         $groups = [
             "Vom StuRa abzustimmen" => $internContent,
             "zur Verkündung (genehmigt von HV)" => $internContentHV,
         ];
-        $escapeFunctions = [
-            function($id){
-                return $this->renderInternalHyperLink("IP-".$id,"projekt/".$id);
-            },
-            "htmlspecialchars",
-            "htmlspecialchars",
-            function($datestring){
-                if(empty($datestring)){
-                    return "";
-                }else{
-                    return $this->date2relstr(strtotime($datestring));
-                }
-                
-            }
-        ];
         $this->renderHeadline("Projekte für die nächste StuRa Sitzung");
         $this->renderTable($header, $groups, $escapeFunctions);
     }
-
-    private function renderHVView(){
-        $header = ["Id", "Projektname", "Organisation","Projektbeginn"];
-        
-        $internWIP = DBConnector::getInstance()->dbFetchAll("projekte",["id","name","org","date-start"],["state" => "wip"],[],["date-start" => true]);
-        $groups["zu prüfende Interne Projekte"] = $internWIP;
-        //TODO: Implementierung vom rest
-        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
-        //$groups[] = ["name" => "Auslagenerstattungen nur noch HV", "fields" => ["type" => "auslagenerstattung", "state" => "ok-by-kv",]];
-        //$groups[] = ["name" => "Auslagenerstattungen", "fields" => ["type" => "auslagenerstattung", "state" => "wip",]];
-        $escapeFunctions = [
-            function($id){
-                return $this->renderInternalHyperLink("IP-".$id,"projekt/".$id);
-            },
-            "htmlspecialchars",
-            "htmlspecialchars",
-            function($datestring){
-                if(empty($datestring)){
-                    return "";
-                }else{
-                    return $this->date2relstr(strtotime($datestring));
-                }
-                
-            }
+    
+    /**
+     * @param $statestring
+     *
+     * @return array [$header, $dbres, $escapeFunctions]
+     */
+    private function fetchProjectsWithState($statestring){
+        $header = ["Projekt", "Organisation", "Einnahmen", "Ausgaben", "Projektbeginn"];
+        $dbres = DBConnector::getInstance()->dbFetchAll(
+            "projekte",
+            [
+                "projekte.id", "createdat", "projekte.name",
+                "org",
+                "einnahmen" => ["projektposten.einnahmen", DBConnector::SUM_ROUND2],
+                "ausgaben" => ["projektposten.ausgaben", DBConnector::SUM_ROUND2],
+                "createdat",
+            ],
+            ["state" => "$statestring"],
+            [["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "projekte.id"]]],
+            ["date-start" => true],
+            false,
+            false,
+            ["projekte.id"],
+            true
+        );
+        $escapeFunctionsIntern = [
+            [$this, "projektLinkEscapeFunction"],
+            null,
+            [$this, "moneyEscapeFunction"],
+            [$this, "moneyEscapeFunction"],
+            [$this, "date2relstrEscapeFunction"],
         ];
-        $this->renderHeadline("Von den Haushaltsverantwortlichen zu erledigen");
-        $this->renderTable($header,$groups, $escapeFunctions);
+        return [$header, $dbres, $escapeFunctionsIntern];
     }
     
-    public function renderKonto($selected_id){
-        global $nonce, $URIBASE;
+    private function renderHVView(){
+    
+        //Projekte -------------------------------------------------------------------------------------------------
+        list($headerIntern, $internWIP, $escapeFunctionsIntern) = $this->fetchProjectsWithState("wip");
+        $groupsIntern["zu prüfende Interne Projekte"] = $internWIP;
+    
+        //Auslagenerstattungen -------------------------------------------------------------------------------------
+        list($headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen) = $this->fetchAuslagenWithState("wip", "hv");
+        $groupsAuslagen["Auslagenerstattungen HV fehlt"] = $auslagenWIP;
+        list(, $auslagenWIP,) = $this->fetchAuslagenWithState("wip", "belege");
+        $groupsAuslagen["Auslagenerstattungen Belege fehlen"] = $auslagenWIP;
+    
+        //TODO: Implementierung vom rest
+        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+    
+        $this->renderHeadline("Von den Haushaltsverantwortlichen zu erledigen");
+        $this->renderTable($headerIntern, $groupsIntern, $escapeFunctionsIntern);
+        $this->renderTable($headerAuslagen, $groupsAuslagen, $escapeFunctionsAuslagen);
+    }
+    
+    /**
+     * @param $stateString
+     * @param $missingColumn string  can be: hv, kv, belege
+     *
+     * @return array [$header, $auslagen, $escapeFunctionAuslagen]
+     */
+    private function fetchAuslagenWithState($stateString, $missingColumn){
+        $headerAuslagen = ["Projekt", "Auslage", "Organisation", "Einnahmen", "Ausgaben", "zuletzt geändert"];
+        $auslagen = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            [
+                "projekte.id", "createdat", "name", //Projekte Link
+                "projekte.id", "auslagen.id", "auslagen.name_suffix", // Auslagen Link
+                "projekte.org", // Org
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2],
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
+                "last_change"  // letzte änderung
+            ],
+            [
+                "auslagen.state" => ["LIKE", "$stateString%"],
+                "auslagen.ok-$missingColumn" => "",
+            ],
+            [
+                ["table" => "projekte", "type" => "inner", "on" => ["projekte.id", "auslagen.projekt_id"]],
+                ["table" => "belege", "type" => "inner", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["table" => "beleg_posten", "type" => "inner", "on" => ["belege.id", "beleg_posten.beleg_id"]],
+            ],
+            ["last_change" => true],
+            false,
+            false,
+            ["auslagen.id"],
+            true
+        );
+        $escapeFunctionsAuslagen = [
+            [$this, "projektLinkEscapeFunction"],
+            [$this, "auslagenLinkEscapeFunction"],
+            null,
+            [$this, "moneyEscapeFunction"],
+            [$this, "moneyEscapeFunction"],
+            [$this, "date2relstrEscapeFunction"],
+        ];
+        return [$headerAuslagen, $auslagen, $escapeFunctionsAuslagen];
+    }
+    
+    public function renderKVView(){
+        //Auslagenerstattungen
+        $headerAuslagen = ["Projekt", "Auslage", "Organisation", "zuletzt geändert"];
+        
+        list($headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen) = $this->fetchAuslagenWithState("wip", "kv");
+        $groupsAuslagen["Auslagenerstattungen KV fehlt"] = $auslagenWIP;
+        list(/**/, $auslagenWIP,/**/) = $this->fetchAuslagenWithState("wip", "belege");
+        $groupsAuslagen["Auslagenerstattungen Belege fehlen"] = $auslagenWIP;
+        
+        //TODO: Implementierung vom rest
+        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+        
+        $this->renderHeadline("Von den Kassenverantwortlichen zu erledigen");
+        $this->renderTable($headerAuslagen, $groupsAuslagen, $escapeFunctionsAuslagen);
+        
+        $this->renderExportBankButton();
+    }
+    
+    private function renderExportBankButton(){
+        $auslagen = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            ["count" => ["id", DBConnector::COUNT]],
+            ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
+            [],
+            [],
+            false,
+            false,
+            ["auslagen.id"]
+        );
+        
         ?>
-        <div class="col-md-11 col-xs-12 container main">
+        <form action="<?= URIBASE ?>menu/kv/exportBank">
+            <button class="btn btn-primary" <?= end($auslagen)["count"] === 0 ? "disabled" : "" ?>>
+                <i class="fa fa-fw fa-money"></i>&nbsp;Exportiere Überweisungen
+            </button>
+        </form>
+        
         <?php
-        $hhps = DBConnector::getInstance()->dbFetchAll("antrag", [], ["type" => "haushaltsplan"], [], ["lastupdated" => 0], true, true);
-        if (!isset($selected_id)){
+    }
+    
+    private function renderExportBank(){
+        $header = ["Auslage", "Empfänger", "IBAN", "Verwendungszweck", "Auszuzahlen"];
+        $auslagen = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            [
+                "projekte.id", "auslagen.id", "auslagen.name_suffix", // Auslagenlink
+                "auslagen.zahlung-name",
+                "auslagen.zahlung-iban",
+                "projekte.id", "projekte.createdat", "auslagen.id", "auslagen.zahlung-vwzk", "auslagen.name_suffix", "projekte.name", //verwendungszweck
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]
+            ],
+            ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
+            [
+                ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
+                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+            ],
+            [],
+            false,
+            false,
+            ["auslagen.id"],
+            true
+        );
+        $obj = $this;
+        $escapeFunctions = [
+            [$this, "auslagenLinkEscapeFunction"],                      // 3 Parameter
+            null,                                                       // 1 Parameter
+            null,                                                       // 1 Parameter
+            function($pId, $pCreate, $aId, $vwdzweck, $aName, $pName){  // 6 Parameter - Verwendungszweck
+                $year = date("Y", strtotime($pCreate));
+                $ret = "IP-$year-$pId-A$aId - $vwdzweck - $aName - $pName";
+                if (strlen($ret) > 140){
+                    $ret = substr($ret, 0, 140);
+                }
+                return $ret;
+            },
+            function($ausgaben, $einnahmen) use ($obj){                 // 2 Parameter
+                return $obj->moneyEscapeFunction(floatval($ausgaben) - floatval($einnahmen));
+            }
+        ];
+        if (count($auslagen) > 0){
+            $this->renderTable($header, [$auslagen], $escapeFunctions);
+        }else{
+            $this->renderHeadline("Aktuell liegen keine Überweisungen vor.", 2);
+        }
+    }
+    
+    private function renderBooking(){
+        global $nonce;
+        
+        list($hhps, $hhp_id) = $this->renderHHPSelector();
+        
+        $startDate = $hhps[$hhp_id]["von"];
+        $endDate = $hhps[$hhp_id]["bis"];
+        if (!isset($endDate) || empty($endDate)){
+            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => [">=", $startDate]], [], ["value" => true]);
+        }else{
+            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["value" => true]);
+        }
+        $this->renderKontoRefresh();
+        
+        $alGrund = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            ["auslagen.*", "projekte.name", "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2], "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]],
+            ["auslagen.state" => ["LIKE", "instructed%"]],
+            [
+                ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
+                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+            ],
+            [],
+            false,
+            false,
+            ["auslagen.id"]
+        );
+        array_walk($alGrund, function(&$grund){
+            $grund["value"] = $grund["einnahmen"] - $grund["ausgaben"];
+        });
+        
+        ?>
+
+
+        <a href="<?= URIBASE ?>menu/booking-history" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
+            Buchungsübersicht</a>
+        <form action="<?= URIBASE ?>" method="POST" role="form" class="form-inline ajax">
+            <input type="hidden" name="action" value="booking">
+            <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
+            <?php //var_dump($alZahlung[0]);
+            ?>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Zahlungen</th>
+                    <th class="col-md-1">Beträge</th>
+                    <th>Belege</th>
+                </tr>
+                </thead>
+                <?php
+                $idxZahlung = 0;
+                $idxGrund = 0;
+                while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)){
+                    
+                    echo "<tr>";
+                    if (isset($alZahlung[$idxZahlung])){
+                        if (isset($alGrund[$idxGrund])){
+                            $value = min([floatval($alZahlung[$idxZahlung]["value"]), $alGrund[$idxGrund]["value"]]);
+                        }else{
+                            //var_dump($alZahlung[$idxZahlung]);
+                            $value = floatval($alZahlung[$idxZahlung]["value"]);
+                        }
+                    }else{
+                        $value = $alGrund[$idxGrund]["value"];
+                    }
+                    
+                    echo "<td>";
+                    while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
+                        echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $value . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($alZahlung[$idxZahlung]["id"]) . "\">";
+                        $caption = "";
+                        $title = $alZahlung[$idxZahlung]["valuta"] . " - " . $alZahlung[$idxZahlung]["empf_iban"] .
+                            PHP_EOL . $alZahlung[$idxZahlung]["zweck"];
+                        //print_r($alZahlung[$idxZahlung]);
+                        switch ($alZahlung[$idxZahlung]["type"]){
+                            case "FOLGELASTSCHRIFT":
+                                $caption = "LASTSCHRIFT an ";
+                                break;
+                            case "ONLINE-UEBERWEISUNG":
+                                $caption .= "ÜBERWEISUNG an ";
+                                break;
+                            case "GUTSCHRIFT":
+                                $caption = "GUTSCHRIFT von ";
+                                break;
+                            default: //Buchung, Entgeldabschluss,...
+                                $caption = $alZahlung[$idxZahlung]["type"] . " an ";
+                                break;
+                            
+                        }
+                        $caption .= $alZahlung[$idxZahlung]["empf_name"];
+                        $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
+                        echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars($title) . "'>" . htmlspecialchars($caption) . "</a>";
+                        $idxZahlung++;
+                        echo "<br>";
+                    }
+                    echo "</td><td class='money'>";
+                    echo DBConnector::getInstance()->convertDBValueToUserValue($value, "money");
+                    echo "</td><td>";
+                    while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]["value"] === $value){
+                        echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $value . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($alGrund[$idxGrund]["id"]) . "\">";
+                        $caption = $alGrund[$idxGrund]["name"] . " - " . $alGrund[$idxGrund]["name_suffix"];
+                        $url = str_replace("//", "/", URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]["id"]);
+                        echo "<a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a>";
+                        $idxGrund++;
+                        echo "<br>";
+                    }
+                    echo "</td>";
+                    echo "</tr>";
+                }
+                
+                ?>
+            </table>
+
+
+            <div style="height:5cm;">&nbsp;</div>
+
+            <nav class="navbar navbar-default navbar-fixed-bottom"
+                <?php
+                if (DEV)
+                    echo " style=\"background-color:darkred;\"";
+                ?>
+                 role="navigation">
+                <div class="container">
+                    <input type="submit" name="absenden" value="ausgewählte Buchungen zuordnen"
+                           class="btn btn-primary navbar-right navbar-btn">
+                </div>
+            </nav>
+
+        </form> <?php
+    }
+    
+    private function renderHHPSelector(){
+        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan", [], [], [], ["von" => false], true, true);
+        if (!isset($hhps) || empty($hhps)){
+            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
+        }
+        if (!isset($this->pathinfo["hhp-id"])){
             foreach (array_reverse($hhps, true) as $id => $hhp){
                 if ($hhp["state"] === "final"){
-                    $selected_id = $id;
+                    $this->pathinfo["hhp-id"] = $id;
                 }
             }
         }
-        
-        $year = $hhps[$selected_id]["revision"];
-        $startDate = "$year-01-01";
-        $endDate = "$year-12-31";
-        $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["id" => false]);
-        
+        $startDate = $hhps[$this->pathinfo["hhp-id"]]["von"];
+        $endDate = $hhps[$this->pathinfo["hhp-id"]]["bis"];
         ?>
         <form>
             <div class="input-group col-xs-2 pull-right">
-                <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
-                <input type="hidden" name="tab" value="konto">
-                <select class="selectpicker" name="id"><?php
+                <select class="selectpicker" name="hhp-id"><?php
                     foreach ($hhps as $id => $hhp){
+                        $name = !empty($endDate) ? $startDate . " bis " . $endDate : "ab " . $startDate;
                         ?>
-                        <option value="<?= $id ?>" <?= $id == $selected_id ? "selected" : "" ?>
-                                data-subtext="<?= getStateString($hhp["type"], $hhp["revision"], $hhp["state"]) ?>"><?= $hhp["revision"] ?>
+                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
+                                data-subtext="<?= $hhp["state"] ?>"><?= $name ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -373,14 +630,48 @@ public function renderMyProfile(){
                 </div>
             </div>
         </form>
-        <form action="<?php echo $URIBASE; ?>" method="POST" role="form" class="form-inline ajax d-inline-block">
-            <button type="submit" name="absenden" class="btn btn-primary"><i class="fa fa-fw fa-refresh"></i> neue
-                Kontoauszüge
-                abrufen
+        <?php
+        return [$hhps, $this->pathinfo["hhp-id"]];
+    }
+    
+    private function renderKontoRefresh(){ ?>
+        <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form" class="form-inline ajax d-inline-block">
+            <button type="submit" name="absenden" class="btn btn-primary">
+                <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen
             </button>
             <input type="hidden" name="action" value="hibiscus">
-            <input type="hidden" name="nonce" value="<?php echo $nonce; ?>">
+            <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
         </form>
+        <?php
+    }
+    
+    public function renderKonto(){
+        
+        list($hhps, $selected_id) = $this->renderHHPSelector();
+        $startDate = $hhps[$selected_id]["von"];
+        $endDate = $hhps[$selected_id]["bis"];
+        if (is_null($endDate) || empty($endDate)){
+            $alZahlung = DBConnector::getInstance()->dbFetchAll(
+                "konto",
+                [],
+                ["date" => [">", $startDate]],
+                [],
+                ["id" => false]
+            );
+        }else{
+            $alZahlung = DBConnector::getInstance()->dbFetchAll(
+                "konto",
+                [],
+                ["date" => ["BETWEEN", [$startDate, $endDate]]],
+                [],
+                ["id" => false]
+            );
+        }
+        $this->renderKontoRefresh();
+        
+        ?>
+
+
         <table class="table">
             <thead>
             <tr>
@@ -400,10 +691,10 @@ public function renderMyProfile(){
                     <td><?= htmlspecialchars($zahlung["id"]) ?></td>
                     <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
                     <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
-                    <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["zweck"]) ?></td>
+                    <td class="visible-md visible-lg"><?= htmlspecialchars(explode("DATUM", $zahlung["zweck"])[0]) ?></td>
                     <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
-                    <td class="money"><?= convertDBValueToUserValue($zahlung["value"], "money") ?></td>
-                    <td class="money"><?= convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
+                    <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?></td>
+                    <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
                 </tr>
             <?php } ?>
             </tbody>
@@ -411,13 +702,12 @@ public function renderMyProfile(){
         <?php
     }
     
-    public function renderBookingHistory($selected_hhp_id = null){
-        global $nonce;
-        MenuRenderer::renderHHPSelector("booking.history", $selected_hhp_id);
+    public function renderBookingHistory(){
+        list($hhps, $hhp_id) = $this->renderHHPSelector();
         
         $ret = DBConnector::getInstance()->dbFetchAll("booking",
             ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
-            ["hhp_id" => $selected_hhp_id],
+            ["hhp_id" => $hhp_id],
             [
                 ["type" => "left", "table" => "user", "on" => ["booking.user_id", "user.id"]],
                 ["type" => "left", "table" => "haushaltstitel", "on" => ["booking.titel_id", "haushaltstitel.id"]],
@@ -468,17 +758,16 @@ public function renderMyProfile(){
                             <form id="cancel" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
                                   enctype="multipart/form-data" class="ajax">
                                 <input type="hidden" name="action" value="booking.history.cancel"/>
-                                <input type="hidden" name="nonce" value="<?= $nonce; ?>"/>
+                                <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce']; ?>"/>
                                 <input type="hidden" name="booking.id" value="<?= $row["id"]; ?>"/>
-                                <input type="hidden" name="hhp.id" value="<?= $selected_hhp_id; ?>"/>
+                                <input type="hidden" name="hhp.id" value="<?= $hhp_id; ?>"/>
 
                                 <a href="javascript:void(false);" class='submit-form <?= TextStyle::DANGER ?>'>
                                     <i class='fa fa-fw fa-ban'></i>&nbsp;Stornieren
                                 </a>
                             </form>
                         </td>
-                    <?php }else{
-                        ?>
+                    <?php }else{ ?>
                         <td>Durch <a href='#<?= $row['canceled'] ?>'>B-Nr: <?= $row['canceled'] ?></a></td>
                     <?php } ?>
                     <td class="col-xs-4 <?= TextStyle::SECONDARY ?>"><?= htmlspecialchars($row['comment']) ?></td>
@@ -487,39 +776,5 @@ public function renderMyProfile(){
             </tbody>
         </table>
         <?php
-    }
-    
-    private function renderHHPSelector($tabname){
-        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan",[],[],[],[],true,true);
-        if(!isset($hhps) || empty($hhps)){
-            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
-        }
-        if (!isset($this->pathinfo["hhp-id"])){
-            foreach (array_reverse($hhps, true) as $id => $hhp){
-                if ($hhp["state"] === "final"){
-                    $this->pathinfo["hhp-id"] = $id;
-                }
-            }
-        } ?>
-        <form>
-            <div class="input-group col-xs-2 pull-right">
-                <!--<input type="number" class="form-control" name="year" value=<?= date("Y") ?>>-->
-                <input type="hidden" name="tab" value="<?= $tabname ?>">
-                <select class="selectpicker" name="id"><?php
-                    foreach ($hhps as $id => $hhp){ ?>
-                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
-                                data-subtext="<?= $hhp["state"] ?>">seit <?= $hhp["von"] ?>
-                        </option>
-                    <?php } ?>
-                </select>
-                <div class="input-group-btn">
-                    <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
-                        Aktualisieren
-                    </button>
-                </div>
-            </div>
-        </form>
-        <?php
-        return $hhps;
     }
 }

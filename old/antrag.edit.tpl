@@ -64,7 +64,7 @@ renderForm($form, ["_values" => $antrag] );
 
   <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->
   <div class="pull-right">
-  <a class="btn btn-default" href="<?php echo htmlspecialchars($URIBASE."/".$antrag["token"]); ?>">Abbruch</a>
+      <a class="btn btn-default" href="<?php echo htmlspecialchars(URIBASE."/".$antrag["token"]); ?>">Abbruch</a>
 <?php
 
   foreach($proposeNewState as $state) {

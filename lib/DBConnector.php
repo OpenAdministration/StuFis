@@ -5,6 +5,8 @@ class DBConnector extends Singleton{
     const SUM = 1;
     const SUM_ROUND2 = 2;
     const COUNT = 3;
+    const MAX = 4;
+    const MIN = 5;
     private static $DB_DSN;
     private static $DB_USERNAME;
     private static $DB_PASSWORD;
@@ -372,26 +374,62 @@ class DBConnector extends Singleton{
      *
      * @return array|bool
      */
-    public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false, $groupBy = []){
+    public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false, $groupBy = [], $numericIdx = false){
         //check if all tables are known
         
-        if (!isset($tables)){
-            ErrorHandler::_errorExit("table not set");
-        }
-    
         if (!is_array($tables)){
             $tables = [$tables];
         }
         
-        foreach ($tables as $key => $table){
+        foreach ($tables as $table){
             if (!isset($this->scheme[$table])){
-                ErrorHandler::_errorExit("Unkown table $table", 404);
+                ErrorHandler::_errorExit("Unkown table $table");
             }
         }
-    
-        //check if content of fields and sort are valid
-        $fields = array_intersect_key($fields, array_flip($this->validFields));
-        $sort = array_intersect_key($sort, array_flip($this->validFields));
+        
+        //fill with everything if empty
+        if (empty($showColumns)){
+            $showColumns = ["*"];
+        }
+        
+        //substitute * with tablename.*
+        if (in_array("*", $showColumns)){
+            unset($showColumns[array_search("*", $showColumns)]);
+            foreach ($tables as $k => $t){
+                $showColumns[] = "$t.*";
+            }
+            foreach ($joins as $j){
+                $showColumns[] = "{$j['table']}.*";
+            }
+        }
+        
+        //apply alias for table.* and set everywhere an aggregate function (default: none)
+        $newShowColumns = [];
+        foreach ($showColumns as $alias => $content){
+            if (is_array($content)){
+                $col = $content[0];
+                $aggregate = $content[1];
+            }else{
+                $col = $content;
+                $aggregate = 0;
+            }
+            if (!is_int($alias) && ($pos = strpos($col, ".*")) !== false){
+                $tname = substr($col, 0, $pos);
+                $rename = $alias;
+                foreach ($this->scheme[$tname] as $colName => $dev_null){
+                    $newShowColumns[$rename . '.' . $colName] = [$tname . '.' . $colName, $aggregate];
+                }
+            }else{
+                $newShowColumns[$alias] = [$col, $aggregate];
+            }
+        }
+        
+        foreach ($fields as $field => $value){
+            if (!in_array($field, $this->validFields)){
+                ErrorHandler::_errorExit("Unkown column $field in WHERE");
+            }
+        }
+        
         //check join
         $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
         foreach (array_keys($joins) as $nr){
@@ -434,42 +472,21 @@ class DBConnector extends Singleton{
             }
         }
         
-        //
-        //prebuild sql
-        //
- 
-        if (empty($showColumns)){
-            $showColumns = ["*"];
-        }
-        if (in_array("*", $showColumns)){
-            unset($showColumns[array_search("*", $showColumns)]);
-            foreach ($tables as $k => $t){
-                $showColumns[] = "$t.*";
-            }
-            foreach ($joins as $j){
-                $showColumns[] = "{$j['table']}.*";
-            }
-        }
-        $newShowColumns = [];
-        foreach ($showColumns as $alias => $content){
-            if (is_array($content)){
-                $col = $content[0];
-                $aggregate = $content[1];
-            }else{
-                $col = $content;
-                $aggregate = 0;
-            }
-            if (!is_int($alias) && ($pos = strpos($col, ".*")) !== false){
-                $tname = substr($col, 0, $pos);
-                $rename = $alias;
-                foreach ($this->scheme[$tname] as $colName => $dev_null){
-                    $newShowColumns[$rename . '.' . $colName] = [$tname . '.' . $colName, $aggregate];
-                }
-            }else{
-                $newShowColumns[$alias] = [$col, $aggregate];
+        foreach ($sort as $field => $value){
+            if (!in_array($field, $this->validFields)){
+                ErrorHandler::_errorExit("Unkown column $field in ORDER");
             }
         }
         
+        foreach ($groupBy as $field){
+            if (!in_array($field, $this->validFields)){
+                ErrorHandler::_errorExit("Unkown column $field in GROUP");
+            }
+        }
+        
+        //
+        //prebuild sql
+        //
         $cols = [];
         foreach ($newShowColumns as $alias => $content){
             $col = $content[0];
@@ -481,8 +498,9 @@ class DBConnector extends Singleton{
                 }else{
                     $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
                 }
+            }else{
+                ErrorHandler::_errorExit("Unkown column $col in SELECT", 500);
             }
-            
         }
         
         $c = [];
@@ -550,7 +568,11 @@ class DBConnector extends Singleton{
         $g = [];
         foreach ($groupBy as $item){
             if (in_array($item, $this->validFields)){
-                $g[] = $this->quoteIdent($item);
+                if (strpos($item, ".") !== false){
+                    $g[] = $this->quoteIdent(self::$DB_PREFIX . $item);
+                }else{
+                    $g[] = $this->quoteIdent($item);
+                }
             }else{
                 ErrorHandler::_errorExit(["$item ist für sql nicht bekannt."]);
             }
@@ -587,14 +609,19 @@ class DBConnector extends Singleton{
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;
+        if ($numericIdx){
+            $type = PDO::FETCH_NUM;
+        }else{
+            $type = PDO::FETCH_ASSOC;
+        }
         if ($groupByFirstCol && $unique)
-            return $query->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+            return $query->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | $type);
         else if ($groupByFirstCol){
-            return $query->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
+            return $query->fetchAll(PDO::FETCH_GROUP | $type);
         }else if ($unique){
-            return $query->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+            return $query->fetchAll(PDO::FETCH_UNIQUE | $type);
         }else
-            return $query->fetchAll(PDO::FETCH_ASSOC);
+            return $query->fetchAll($type);
     }
     
     private function quoteIdent($field, $aggregateConst = 0){
@@ -609,6 +636,14 @@ class DBConnector extends Singleton{
                 break;
             case $this::COUNT:
                 $aggregatePre = "COUNT(";
+                $aggregateSuf = ")";
+                break;
+            case $this::MAX:
+                $aggregatePre = "MAX(";
+                $aggregateSuf = ")";
+                break;
+            case $this::MIN:
+                $aggregatePre = "MIN(";
                 $aggregateSuf = ")";
                 break;
             default:

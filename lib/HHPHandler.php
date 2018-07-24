@@ -22,8 +22,15 @@ class HHPHandler extends Renderer{
     }
     
     function render(){
-        $this->hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan", ["id", "id", "haushaltsplan.*"],
-            [], [], ["von" => true], true, true);
+        $this->hhps = DBConnector::getInstance()->dbFetchAll(
+            "haushaltsplan",
+            ["id", "id", "haushaltsplan.*"],
+            [],
+            [],
+            ["von" => true],
+            true,
+            true
+        );
         switch ($this->routeInfo["action"]){
             case "pick":
                 $this->renderHHPPicker();
@@ -39,6 +46,7 @@ class HHPHandler extends Renderer{
     
     private function renderHHPPicker(){
         $this->renderHeadline("Haushalspläne");
+        $obj = $this;
         $this->renderTable(
             ["Id", "von", "bis", "Status"],
             [$this->hhps],
@@ -48,8 +56,8 @@ class HHPHandler extends Renderer{
                 },
                 [$this, "formatDateToMonthYear"],
                 [$this, "formatDateToMonthYear"],
-                function($stateString){
-                    return "<div class='label label-info'>" . htmlspecialchars($this->stateStrings[$stateString]) . "</div>";
+                function($stateString) use ($obj){
+                    return "<div class='label label-info'>" . htmlspecialchars($obj->stateStrings[$stateString]) . "</div>";
                 }
             ]
         );
