@@ -33,4 +33,8 @@ class LoadGroups extends baseclass\Enum{
     	"js" => ["chat"],
     	"css" => ["chat"],
     ];
+    const BOOKING = [
+        "js" => ["booking"],
+        "css" => [],
+    ];
 }

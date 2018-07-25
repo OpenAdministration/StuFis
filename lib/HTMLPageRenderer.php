@@ -224,14 +224,14 @@ class HTMLPageRenderer{
                 "title" => "Buchungen",
                 "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-book",
-                "target" => URIBASE . "menu/booking",
+                "target" => URIBASE . "menu/booking/",
                 "tabname" => "booking",
             ],
             [
                 "title" => "Konto",
                 "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-bar-chart",
-                "target" => URIBASE . "menu/konto",
+                "target" => URIBASE . "menu/konto/",
                 "tabname" => "konto",
             ],
             [

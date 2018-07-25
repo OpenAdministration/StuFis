@@ -12,6 +12,7 @@ include "../lib/inc.all.php";
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
+
 if (!SAML){
     require_once(SYSBASE . "/lib/AuthDummyHandler.php");
     define('AUTH_HANDLER', 'AuthDummyHandler');
@@ -39,9 +40,8 @@ if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($rou
 $idebug = false;
 
 // handle route -------------------------
-$content = null;
-$error = false;
 //print_r($routeInfo);
+//print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 switch ($routeInfo['controller']){
     case "menu":

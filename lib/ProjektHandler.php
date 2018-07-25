@@ -424,7 +424,7 @@ class ProjektHandler extends FormHandlerInterface{
         ?>
         <div class='col-xs-12 col-md-10'>
             <?php if ($editable){ ?>
-            <form role="form" action="<?= URIBASE . "index.php/rest/forms/projekt" ?>" method="POST"
+            <form role="form" action="<?= URIBASE . "rest/forms/projekt" ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?= $this->templater->getHiddenActionInput(isset($this->id) ? "update" : "create") ?>
                 <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
@@ -639,7 +639,7 @@ class ProjektHandler extends FormHandlerInterface{
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?= URIBASE . "index.php/rest/forms/projekt"; ?>"
+            <form id="stateantrag" role="form" action="<?= URIBASE . "rest/forms/projekt"; ?>"
                   method="POST" enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">

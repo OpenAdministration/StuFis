@@ -25,6 +25,13 @@ $routing = [
                     'load' => [
                         LoadGroups::SELECTPICKER,
                     ],
+                    'children' => [
+                        [
+                            'path' => '\d+',
+                            'type' => 'pattern',
+                            'param' => 'hhp-id',
+                        ],
+                    ],
                 ],
                 [
                     'path' => '(booking|booking-history)',
@@ -33,6 +40,7 @@ $routing = [
                     'navigation' => 'booking',
                     'load' => [
                         LoadGroups::SELECTPICKER,
+                        LoadGroups::BOOKING,
                     ],
                     'children' => [
                         [
@@ -41,6 +49,12 @@ $routing = [
                             'param' => 'hhp-id',
                         ],
                     ],
+                ],
+                [
+                    'path' => 'check-booking',
+                    'type' => 'path',
+                    'action' => 'check-booking',
+                    'navigation' => 'booking',
                 ],
                 [
                     'path' => 'mygremium',
@@ -215,6 +229,13 @@ $routing = [
                     'type' => 'path',
                     'controller' => 'rest',
                     'action' => 'update-konto',
+                ],
+                [
+                    'path' => 'booking',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'new-booking',
+                    'groups' => 'ref-finanzen',
                 ]
             ]
         ],

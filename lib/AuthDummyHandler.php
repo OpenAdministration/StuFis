@@ -97,6 +97,7 @@ class AuthDummyHandler implements AuthHandler{
      * handle session and user login
      */
     function requireAuth(){
+        return true;
     }
     
     /**

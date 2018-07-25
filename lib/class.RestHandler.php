@@ -53,11 +53,61 @@ class RestHandler extends JsonController{
             case 'update-konto':
                 $this->updateKonto($routeInfo);
                 break;
+            case "new-booking":
+                $this->newBooking($routeInfo);
+                break;
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
                 break;
         }
+    }
+    
+    private function newBooking($routeInfo){
+        
+        if (!isset($_POST["zahlung"])
+            || !is_array($_POST["zahlung"])
+            || !isset($_POST["beleg"])
+            || !is_array($_POST["beleg"])
+            || !isset($_POST["booking-text"])
+            || empty($_POST["booking-text"])
+        ){
+            $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
+        }
+        
+        $zahlung = $_POST["zahlung"];
+        $beleg = $_POST["beleg"];
+        
+        if ((count($zahlung) === 1 && count($beleg) >= 1)
+            || (count($beleg) === 1 && count($zahlung) >= 1)
+        ){
+            $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
+        }
+        
+        if (isset($errorMsg)){
+            JsonController::print_json([
+                'success' => false,
+                'status' => '500',
+                'msg' => $errorMsg,
+                'type' => 'modal',
+                'subtype' => 'server-error',
+                'reload' => 2000,
+                'headline' => 'Unfolständige Datenübertragung',
+                //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+            ]);
+        }
+        
+        
+        JsonController::print_json([
+            'success' => true,
+            'status' => '200',
+            'msg' => "Buchung wurde gespeichert",
+            'type' => 'modal',
+            'subtype' => 'server-success',
+            //'reload' => 2000,
+            'headline' => 'Erfolgreich gespeichert',
+            //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+        ]);
     }
     
     public function handleProjekt($routeInfo = null){

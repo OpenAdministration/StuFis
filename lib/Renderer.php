@@ -34,9 +34,7 @@ abstract class Renderer{
                     $rf = new ReflectionFunction($escapeFunction);
                     $isReflectionMethods[] = false;
                 }
-                if ($rf->getNumberOfParameters() === 0){
-                    ErrorHandler::_errorExit("Eine Funktion mit 0 benötigten Parametern wurde übergeben.");
-                }
+    
                 //let some space in the idx
                 $reflectionsOfFunctions[$idx] = $rf;
                 $paramSum += $rf->getNumberOfParameters();
@@ -45,11 +43,13 @@ abstract class Renderer{
             //if there are to less parameters - add some default functions.
             $diff = count($header) - count($escapeFunctions);
             if ($diff > 0){
-                $paramSum += count($header) - count($escapeFunctions);
+                $paramSum += $diff;
                 $escapeFunctions = array_merge(
                     $escapeFunctions,
-                    array_fill(0, count($header) - count($escapeFunctions), $defaultFunction)
+                    array_fill(0, $diff, $defaultFunction)
                 );
+                $isReflectionMethods = array_merge($isReflectionMethods, array_fill(0, $diff, true));
+                $reflectionsOfFunctions = array_merge($reflectionsOfFunctions, array_fill(0, $diff, new ReflectionMethod($defaultFunction[0], $defaultFunction[1])));
             }
             foreach ($groupedContent as $groupName => $content){
                 if (empty($content))

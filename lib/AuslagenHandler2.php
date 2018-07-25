@@ -978,7 +978,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'type' => 'modal',
 				'subtype' => 'server-success',
 				'headline' => 'Erfolgreich',
-				'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+                'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'],
 			];
 			if ($newState == 'wip' && !$this->auslagen_data['ok-belege'] ){
 				$this->json_result['reload'] = 5000;
@@ -1034,7 +1034,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'type' => 'modal',
 			'subtype' => 'server-success',
 			'headline' => 'Eingaben gespeichert',
-			'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'].'/edit',
+            'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'] . '/edit',
 		];
 	}
 	
@@ -1269,7 +1269,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'type' => 'modal',
 			'subtype' => 'server-success',
 			'headline' => 'Eingaben gespeichert',
-			'redirect' => URIBASE.'index.php/projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+            'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'],
 		];
 	}
 	
@@ -1389,7 +1389,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	        <?php } ?>
 	        	<input type="hidden" name="nononce" value="<?= strrev($GLOBALS["nonce"]) ?>">
 	        	<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
-	        <form id="<?php $current_form_id = 'auslagen-form-'.count($this->formSubmitButtons); $this->formSubmitButtons[] = $current_form_id; echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data" action="<?= URIBASE ?>index.php/rest/forms/auslagen/updatecreate">
+        <form id="<?php $current_form_id = 'auslagen-form-' . count($this->formSubmitButtons);
+        $this->formSubmitButtons[] = $current_form_id;
+        echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data"
+              action="<?= URIBASE ?>rest/forms/auslagen/updatecreate">
 	        	<input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
 	        	<input type="hidden" name="auslagen-id" value="<?= ($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id; ?>">
 	        	<input type="hidden" name="version" value="<?= ($this->routeInfo['action'] == 'create')? '1':$this->auslagen_data['version']; ?>">
@@ -1743,7 +1746,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		<div class="auslagen-links">
 	        <?php if ($this->routeInfo['action'] != 'edit' && isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']) { ?>
 				<div class="col-xs-12 form-group">
-					<strong><a class="btn btn-success text-center" style="font-weight: bold;" href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>"><i class="fa fa-fw fa-edit"> </i>Bearbeiten</a></strong>
+                    <strong><a class="btn btn-success text-center" style="font-weight: bold;"
+                               href="<?= URIBASE . "projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>"><i
+                                    class="fa fa-fw fa-edit"> </i>Bearbeiten</a></strong>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>
@@ -1755,7 +1760,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	    		<?php } 
 	    		if (isset($this->auslagen_data['id'])) {?>
 		    		<div class="col-xs-12 form-group">
-				    	<strong><a href="<?= URIBASE."index.php/projekt/{$this->projekt_id}/auslagen/{$this->auslagen_data['id']}" ?>" class="btn btn-danger" style="font-weight: bold;"><i class="fa fa-fw fa-times"> </i>Abbrechen</a></strong>
+                        <strong><a href="<?= URIBASE . "projekt/{$this->projekt_id}/auslagen/{$this->auslagen_data['id']}" ?>"
+                                   class="btn btn-danger" style="font-weight: bold;"><i class="fa fa-fw fa-times"> </i>Abbrechen</a></strong>
 		    		</div>
 	    		<?php } ?>
     		<?php } ?>
@@ -1764,7 +1770,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
     			&& isset($this->auslagen_data['belege'])
 			 	&& count($this->auslagen_data['belege']) > 0) { ?>
 				<div class="col-xs-12 form-group">
-					<strong><button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>" data-action="<?= URIBASE ?>index.php/rest/forms/auslagen/belegpdf" type="button" class="btn btn-primary auslagen-belege-pdf style="font-weight: bold;"><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
+                    <strong>
+                        <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
+                                data-action="<?= URIBASE ?>rest/forms/auslagen/belegpdf" type="button"
+                                class="btn btn-primary auslagen-belege-pdf style=" font-weight: bold;
+                        "><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>
@@ -1772,7 +1782,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		        	<input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
 		        	<input type="hidden" name="auslagen-id" value="<?= ($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id; ?>">
 		        	<input type="hidden" name="etag" value="<?= ($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']; ?>">
-					<input type="hidden" name="action" value="<?= URIBASE ?>index.php/rest/forms/auslagen/state">
+                <input type="hidden" name="action" value="<?= URIBASE ?>rest/forms/auslagen/state">
 				<?php if ($this->auslagen_id){
 					foreach(self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
 						if ($k == 'revocation')	continue;
@@ -1826,7 +1836,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
 			'<input type="hidden" name="auslagen-id" value="'.(($this->routeInfo['action'] == 'create')? 'NEW':$this->auslagen_id).'">'.
 			'<input type="hidden" name="etag" value="'.(($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']).'">'.
-			'<input type="hidden" name="action" value="'. URIBASE .'index.php/rest/forms/auslagen/state">'.
+            '<input type="hidden" name="action" value="' . URIBASE . 'rest/forms/auslagen/state">' .
 		'</div>';
 	}
 	

@@ -64,6 +64,10 @@ class MenuRenderer extends Renderer{
                 $this->renderBooking();
                 //TODO: FIXME!;
                 break;
+            case "check-booking":
+                (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+                $this->renderBookingCheck();
+                break;
             case "konto":
                 (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
                 $this->renderKonto();
@@ -482,7 +486,12 @@ class MenuRenderer extends Renderer{
         
         $alGrund = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
-            ["auslagen.*", "projekte.name", "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2], "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]],
+            [
+                "auslagen.*",
+                "projekte.name",
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]
+            ],
             ["auslagen.state" => ["LIKE", "instructed%"]],
             [
                 ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
@@ -501,100 +510,110 @@ class MenuRenderer extends Renderer{
         ?>
 
 
-        <a href="<?= URIBASE ?>menu/booking-history" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
+        <a href="<?= URIBASE ?>menu/booking-history/" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
             Buchungsübersicht</a>
-        <form action="<?= URIBASE ?>" method="POST" role="form" class="form-inline ajax">
-            <input type="hidden" name="action" value="booking">
-            <input type="hidden" name="nonce" value="<?php echo $nonce; ?>"/>
-            <?php //var_dump($alZahlung[0]);
-            ?>
-            <table class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Zahlungen</th>
-                    <th class="col-md-1">Beträge</th>
-                    <th>Belege</th>
-                </tr>
-                </thead>
-                <?php
-                $idxZahlung = 0;
-                $idxGrund = 0;
-                while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)){
-                    
-                    echo "<tr>";
-                    if (isset($alZahlung[$idxZahlung])){
-                        if (isset($alGrund[$idxGrund])){
-                            $value = min([floatval($alZahlung[$idxZahlung]["value"]), $alGrund[$idxGrund]["value"]]);
-                        }else{
-                            //var_dump($alZahlung[$idxZahlung]);
-                            $value = floatval($alZahlung[$idxZahlung]["value"]);
-                        }
+    
+        <?php //var_dump($alZahlung[0]);
+        ?>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Zahlungen</th>
+                <th class="col-md-1">Beträge</th>
+                <th>Belege</th>
+            </tr>
+            </thead>
+            <?php
+            $idxZahlung = 0;
+            $idxGrund = 0;
+            while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)){
+            
+                echo "<tr>";
+                if (isset($alZahlung[$idxZahlung])){
+                    if (isset($alGrund[$idxGrund])){
+                        $value = min([floatval($alZahlung[$idxZahlung]["value"]), $alGrund[$idxGrund]["value"]]);
                     }else{
-                        $value = $alGrund[$idxGrund]["value"];
+                        //var_dump($alZahlung[$idxZahlung]);
+                        $value = floatval($alZahlung[$idxZahlung]["value"]);
                     }
-                    
-                    echo "<td>";
-                    while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
-                        echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $value . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($alZahlung[$idxZahlung]["id"]) . "\">";
-                        $caption = "";
-                        $title = $alZahlung[$idxZahlung]["valuta"] . " - " . $alZahlung[$idxZahlung]["empf_iban"] .
-                            PHP_EOL . $alZahlung[$idxZahlung]["zweck"];
-                        //print_r($alZahlung[$idxZahlung]);
-                        switch ($alZahlung[$idxZahlung]["type"]){
-                            case "FOLGELASTSCHRIFT":
-                                $caption = "LASTSCHRIFT an ";
-                                break;
-                            case "ONLINE-UEBERWEISUNG":
-                                $caption .= "ÜBERWEISUNG an ";
-                                break;
-                            case "GUTSCHRIFT":
-                                $caption = "GUTSCHRIFT von ";
-                                break;
-                            default: //Buchung, Entgeldabschluss,...
-                                $caption = $alZahlung[$idxZahlung]["type"] . " an ";
-                                break;
-                            
-                        }
-                        $caption .= $alZahlung[$idxZahlung]["empf_name"];
-                        $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
-                        echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars($title) . "'>" . htmlspecialchars($caption) . "</a>";
-                        $idxZahlung++;
-                        echo "<br>";
-                    }
-                    echo "</td><td class='money'>";
-                    echo DBConnector::getInstance()->convertDBValueToUserValue($value, "money");
-                    echo "</td><td>";
-                    while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]["value"] === $value){
-                        echo "<input type=\"checkbox\" class=\"checkbox-summing\" data-summing-value=\"" . $value . "\" name=\"zahlungId[]\" value=\"" . htmlspecialchars($alGrund[$idxGrund]["id"]) . "\">";
-                        $caption = $alGrund[$idxGrund]["name"] . " - " . $alGrund[$idxGrund]["name_suffix"];
-                        $url = str_replace("//", "/", URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]["id"]);
-                        echo "<a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a>";
-                        $idxGrund++;
-                        echo "<br>";
-                    }
-                    echo "</td>";
-                    echo "</tr>";
+                }else{
+                    $value = $alGrund[$idxGrund]["value"];
                 }
+            
+                echo "<td>";
+            
+                while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
+                    echo "<input type='checkbox' class='booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]["id"]}'>";
+                    $caption = "Z{$alZahlung[$idxZahlung]['id']} - ";
+                    $title = "VALUTA: " . $alZahlung[$idxZahlung]["valuta"] . PHP_EOL .
+                        "IBAN: " . $alZahlung[$idxZahlung]["empf_iban"] . PHP_EOL .
+                        "BIC: " . $alZahlung[$idxZahlung]["empf_bic"];
+                    //print_r($alZahlung[$idxZahlung]);
+                    switch ($alZahlung[$idxZahlung]["type"]){
+                        case "FOLGELASTSCHRIFT":
+                            $caption .= "LASTSCHRIFT an ";
+                            break;
+                        case "ONLINE-UEBERWEISUNG":
+                            $caption .= "ÜBERWEISUNG an ";
+                            break;
+                        case "GUTSCHRIFT":
+                            $caption .= "GUTSCHRIFT von ";
+                            break;
+                        default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
+                            $caption .= $alZahlung[$idxZahlung]["type"] . " an ";
+                            break;
+                    
+                    }
+                    $caption .= $alZahlung[$idxZahlung]["empf_name"] . " - " . explode("DATUM", $alZahlung[$idxZahlung]["zweck"])[0];
+                    $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
+                    echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars($title) . "'>" . htmlspecialchars($caption) . "</a>";
+                    $idxZahlung++;
+                    echo "<br>";
+                }
+                echo "</td><td class='money'>";
+                echo DBConnector::getInstance()->convertDBValueToUserValue($value, "money");
+                echo "</td><td>";
+                while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]["value"] === $value){
+                    echo "<input type='checkbox' class='booking__form-beleg' data-value='{$value}' data-id='{$alGrund[$idxGrund]['id']}' >";
                 
-                ?>
-            </table>
-
-
-            <div style="height:5cm;">&nbsp;</div>
-
-            <nav class="navbar navbar-default navbar-fixed-bottom"
-                <?php
-                if (DEV)
-                    echo " style=\"background-color:darkred;\"";
-                ?>
-                 role="navigation">
-                <div class="container">
-                    <input type="submit" name="absenden" value="ausgewählte Buchungen zuordnen"
-                           class="btn btn-primary navbar-right navbar-btn">
+                    $caption = "A" . $alGrund[$idxGrund]["id"] . " - " . $alGrund[$idxGrund]["name"] . " - " . $alGrund[$idxGrund]["name_suffix"];
+                    $url = str_replace("//", "/", URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]["id"]);
+                    echo "<a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a>";
+                    $idxGrund++;
+                    echo "<br>";
+                }
+                echo "</td>";
+                echo "</tr>";
+            }
+        
+            ?>
+        </table>
+        <form action="<?= URIBASE ?>menu/check-booking" method="GET" role="form" class="form-inline ajax">
+            <div class="booking__panel-form col-xs-2">
+                <h4>Zahlungen</h4>
+                <div class="booking__zahlung">
+                    <div data-id="">
+                        <span><i>keine ID</i></span>
+                        <span class="money">0,00</span>
+                    </div>
                 </div>
-            </nav>
+                <h4>Belege</h4>
+                <div class="booking__belege">
+                    <div data-id="">
+                        <span><i>keine ID</i></span>
+                        <span class="money">0,00</span>
+                    </div>
+                </div>
+                <!--<div>
+                    <label>Buchungstext</label>
+                    <textarea name="booking-text" rows="3" class="form-control"></textarea>
+                </div>-->
+                <button class="btn btn-primary">Buchung durchführen</button>
+            </div>
 
-        </form> <?php
+        </form>
+    
+        <?php
     }
     
     private function renderHHPSelector(){
@@ -609,14 +628,12 @@ class MenuRenderer extends Renderer{
                 }
             }
         }
-        $startDate = $hhps[$this->pathinfo["hhp-id"]]["von"];
-        $endDate = $hhps[$this->pathinfo["hhp-id"]]["bis"];
         ?>
-        <form>
+        <form action="<?= $this->pathinfo["hhp-id"] ?>">
             <div class="input-group col-xs-2 pull-right">
-                <select class="selectpicker" name="hhp-id"><?php
+                <select class="selectpicker" id="hhp-id"><?php
                     foreach ($hhps as $id => $hhp){
-                        $name = !empty($endDate) ? $startDate . " bis " . $endDate : "ab " . $startDate;
+                        $name = !empty($hhp["bis"]) ? $hhp["von"] . " bis " . $hhp["bis"] : "ab " . $hhp["von"];
                         ?>
                         <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
                                 data-subtext="<?= $hhp["state"] ?>"><?= $name ?>
@@ -645,6 +662,99 @@ class MenuRenderer extends Renderer{
         <?php
     }
     
+    private function renderBookingCheck(){
+        if (!isset($_REQUEST["zahlung"])
+            || !is_array($_REQUEST["zahlung"])
+            || !isset($_REQUEST["beleg"])
+            || !is_array($_REQUEST["beleg"])
+        ){
+            $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
+        }
+        
+        $zahlungen = $_REQUEST["zahlung"];
+        $belege = $_REQUEST["beleg"];
+        if ((count($zahlungen) > 1 && count($belege) > 1)
+            || count($belege) < 1
+            || count($zahlungen) < 1
+            || count($zahlungen) > 1 // FIXME: should be allowed later
+        ){
+            $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
+        }
+        
+        if (isset($errorMsg)){
+            ErrorHandler::_errorExit($errorMsg);
+        }else{
+            //titel_id, kostenstelle, zahlung_id, beleg_id, user_id, comment, value
+            $zahlungenDB = DBConnector::getInstance()->dbFetchAll("konto", [], ["id" => ["IN", $zahlungen]]);
+            $belegeDB = DBConnector::getInstance()->dbFetchAll(
+                "auslagen",
+                [
+                    "auslagen.projekt_id",
+                    "auslagen_id" => "auslagen.id",
+                    "titel_name",
+                    "titel_nr",
+                    "posten_id" => "projektposten.id",
+                    "beleg_posten.einnahmen",
+                    "beleg_posten.ausgaben",
+                ],
+                ["auslagen.id" => ["IN", $belege]],
+                [
+                    ["table" => "belege", "type" => "inner", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                    ["table" => "beleg_posten", "type" => "inner", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                    ["table" => "projektposten", "type" => "inner", "on" =>
+                        [
+                            ["projektposten.id", "beleg_posten.projekt_posten_id"],
+                            ["auslagen.projekt_id", "projektposten.projekt_id"]
+                        ]
+                    ],
+                    ["table" => "haushaltstitel", "type" => "inner", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
+                ]
+            );
+            $sum_zahlung = 0;
+            $sum_beleg = 0;
+            $res = [];
+            foreach ($zahlungenDB as $zahlung){
+                $sum_zahlung += $zahlung["value"];
+                $rowZahlung = [
+                    "Zahlung" => $zahlung["id"],
+                    "Zahlung-Summe" => $zahlung["value"],
+                ];
+                foreach ($belegeDB as $beleg){
+                    $sum_beleg += floatval($beleg["einnahmen"]);
+                    $sum_beleg -= floatval($beleg["ausgaben"]);
+                    
+                    $rowBeleg = [
+                        "Projekt" => $beleg["projekt_id"],
+                        "Auslage" => $beleg["auslagen_id"],
+                        "Titel" => $beleg["titel_nr"],
+                        "Titel Name" => $beleg["titel_name"],
+                    ];
+                    if (floatval($beleg["einnahmen"]) != 0){
+                        $rowBeleg["Beleg-Summe"] = $beleg["einnahmen"];
+                    }
+                    if (floatval($beleg["ausgaben"]) != 0){
+                        $rowBeleg["Beleg-Summe"] = -$beleg["ausgaben"];
+                    }
+                    $res[] = $rowZahlung + $rowBeleg;
+                }
+            }
+            //var_dump($res);
+            $this->renderTable(array_merge(array_keys(end($res)), ["Buchungstext"]), [$res], [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                function(){
+                    return "<textarea class='form-control'></textarea>";
+                }
+            ]);
+        }
+        
+    }
+    
     public function renderKonto(){
         
         list($hhps, $selected_id) = $this->renderHHPSelector();
@@ -654,7 +764,7 @@ class MenuRenderer extends Renderer{
             $alZahlung = DBConnector::getInstance()->dbFetchAll(
                 "konto",
                 [],
-                ["date" => [">", $startDate]],
+                ["valuta" => [">", $startDate]],
                 [],
                 ["id" => false]
             );
@@ -662,7 +772,7 @@ class MenuRenderer extends Renderer{
             $alZahlung = DBConnector::getInstance()->dbFetchAll(
                 "konto",
                 [],
-                ["date" => ["BETWEEN", [$startDate, $endDate]]],
+                ["valuta" => ["BETWEEN", [$startDate, $endDate]]],
                 [],
                 ["id" => false]
             );
@@ -715,66 +825,71 @@ class MenuRenderer extends Renderer{
             ],
             ["timestamp" => true, "id" => true]
         );
+        if (!empty($ret)){
         
-        //var_dump(reset($ret));
-        ?>
-        <table class="table" align="right">
-            <thead>
-            <tr>
-                <th>B-Nr</th>
-                <th class="col-xs-1">Betrag (EUR)</th>
-                <th class="col-xs-1">Titel</th>
-                <th>Beleg</th>
-                <th>Datum</th>
-                <th>Zahlung</th>
-                <th>Stornieren</th>
-                <th>Kommentar</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            foreach ($ret as $lfdNr => $row){
-                $userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
-                ?>
-                <tr class="<?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
+        
+            //var_dump(reset($ret));
+            ?>
+            <table class="table" align="right">
+                <thead>
+                <tr>
+                    <th>B-Nr</th>
+                    <th class="col-xs-1">Betrag (EUR)</th>
+                    <th class="col-xs-1">Titel</th>
+                    <th>Beleg</th>
+                    <th>Datum</th>
+                    <th>Zahlung</th>
+                    <th>Stornieren</th>
+                    <th>Kommentar</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                foreach ($ret as $lfdNr => $row){
+                    $userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
+                    ?>
+                    <tr class="<?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
 
-                    <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
+                        <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
 
-                    <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::GREEN ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
+                        <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::GREEN ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
 
-                    <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
+                        <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
 
-                    <td><?= generateLinkFromID($row['beleg_id'], "", TextStyle::BLACK) ?></td>
+                        <td><?= generateLinkFromID($row['beleg_id'], "", TextStyle::BLACK) ?></td>
 
-                    <td value="<?= $row['timestamp'] ?>">
-                        <?= date("d.m.Y", strtotime($row['timestamp'])) ?>&nbsp;<!--
+                        <td value="<?= $row['timestamp'] ?>">
+                            <?= date("d.m.Y", strtotime($row['timestamp'])) ?>&nbsp;<!--
                         --><i title="<?= $row['timestamp'] . " von " . $userStr ?>"
                               class="fa fa-fw fa-question-circle" aria-hidden="true"></i>
-                    </td>
-
-                    <td><?= generateLinkFromID($row['zahlung_id'], "", TextStyle::BLACK) ?></td>
-                    <?php if ($row["canceled"] == 0){ ?>
-                        <td>
-                            <form id="cancel" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
-                                  enctype="multipart/form-data" class="ajax">
-                                <input type="hidden" name="action" value="booking.history.cancel"/>
-                                <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce']; ?>"/>
-                                <input type="hidden" name="booking.id" value="<?= $row["id"]; ?>"/>
-                                <input type="hidden" name="hhp.id" value="<?= $hhp_id; ?>"/>
-
-                                <a href="javascript:void(false);" class='submit-form <?= TextStyle::DANGER ?>'>
-                                    <i class='fa fa-fw fa-ban'></i>&nbsp;Stornieren
-                                </a>
-                            </form>
                         </td>
-                    <?php }else{ ?>
-                        <td>Durch <a href='#<?= $row['canceled'] ?>'>B-Nr: <?= $row['canceled'] ?></a></td>
-                    <?php } ?>
-                    <td class="col-xs-4 <?= TextStyle::SECONDARY ?>"><?= htmlspecialchars($row['comment']) ?></td>
-                </tr>
-            <?php } ?>
-            </tbody>
-        </table>
-        <?php
+
+                        <td><?= generateLinkFromID($row['zahlung_id'], "", TextStyle::BLACK) ?></td>
+                        <?php if ($row["canceled"] == 0){ ?>
+                            <td>
+                                <form id="cancel" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
+                                      enctype="multipart/form-data" class="ajax">
+                                    <input type="hidden" name="action" value="booking.history.cancel"/>
+                                    <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce']; ?>"/>
+                                    <input type="hidden" name="booking.id" value="<?= $row["id"]; ?>"/>
+                                    <input type="hidden" name="hhp.id" value="<?= $hhp_id; ?>"/>
+
+                                    <a href="javascript:void(false);" class='submit-form <?= TextStyle::DANGER ?>'>
+                                        <i class='fa fa-fw fa-ban'></i>&nbsp;Stornieren
+                                    </a>
+                                </form>
+                            </td>
+                        <?php }else{ ?>
+                            <td>Durch <a href='#<?= $row['canceled'] ?>'>B-Nr: <?= $row['canceled'] ?></a></td>
+                        <?php } ?>
+                        <td class="col-xs-4 <?= TextStyle::SECONDARY ?>"><?= htmlspecialchars($row['comment']) ?></td>
+                    </tr>
+                <?php } ?>
+                </tbody>
+            </table>
+            <?php
+        }else{
+            $this->renderHeadline("bisher keine Buchungen in diesem HH-Jahr vorhanden.", 2);
+        }
     }
 }
