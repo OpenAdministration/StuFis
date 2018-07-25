@@ -1329,6 +1329,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            			<div><?php 
 		            			if ($this->stateInfo['state'] == 'instructed' && strpos($this->stateInfo['substate'], 'payed')!==false){
 		            				echo 'Bezahlt';
+		            			} elseif($this->stateInfo['state'] == 'revocation' ) {
+		            				echo ($this->auslagen_data['rejected'])? 'Abgelehnt' : 'Zurückgezogen';
 		            			} else {
 		            				echo self::$states[$this->stateInfo['state']][0];
 		            			}
