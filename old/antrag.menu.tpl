@@ -1,5 +1,5 @@
 <?php
-if ($DEV){
+if (DEV){
     echo "<!-- antrag.menu.tpl -->";
 }
 

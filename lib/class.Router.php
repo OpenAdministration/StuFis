@@ -48,14 +48,14 @@ class Router{
     }
     
     /**
-     * @return the $requested_path
+     * @return string $requested_path
      */
     public function getRequested_path(){
         return $this->requested_path;
     }
     
     /**
-     * @return the $not_found_route
+     * @return string $not_found_route
      */
     public function getNot_found_route(){
         return $this->not_found_route;

@@ -569,7 +569,8 @@ class FormTemplater{
             foreach ($selectable["groups"] as $group){
                 foreach ($group["options"] as $option){
                     if (isset($option["value"]) && in_array($option["value"], $values)){
-                        $tmp_vals[$option["value"]] = ["label" => $option["label"], "subtext" => $option["subtext"]];
+                        $subtext = isset($option["subtext"]) ? $option["subtext"] : "";
+                        $tmp_vals[$option["value"]] = ["label" => $option["label"], "subtext" => $subtext];
                     }
                 }
             }
@@ -603,8 +604,9 @@ class FormTemplater{
             $additonal_str = implode(" ", $additonal_array);
             $out .= "<textarea id='$unique_id' placeholder='$placeholder' name='$name' class='form-control' rows='$min_rows' $additonal_str>$value</textarea>";
         }else{
-            
-            $out .= "<div id='$unique_id' class='textarea_readonly'>{$this->getReadOnlyValue($value)}</div>";
+            $out .= "<div id='$unique_id' class='textarea_readonly'>" .
+                Helper::make_links_clickable($this->getReadOnlyValue($value)) .
+                "</div>";
         }
         
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);

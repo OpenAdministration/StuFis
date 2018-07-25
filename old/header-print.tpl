@@ -11,8 +11,7 @@
         <nav class="navbar navbar-inverse navbar-fixed-top no-print"
 
 <?php
-global $DEV;
- if ($DEV)
+ if (DEV)
    echo " style=\"background-color:darkred;\"";
 
 ?>
@@ -22,7 +21,7 @@ global $DEV;
 <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
                     <a class="navbar-brand" href="#">StuRa-Finanzformulare
 <?php 
-if ($DEV)
+if (DEV)
    echo " TESTSYSTEM";
 ?>
                     </a>

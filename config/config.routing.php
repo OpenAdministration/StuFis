@@ -13,9 +13,48 @@ $routing = [
             'type' => 'path',
             'children' => [
                 [
-                    'path' => '(mykonto|booking|konto|booking-history)',
+                    'path' => 'mykonto',
                     'type' => 'pattern',
                     'param' => 'action'
+                ],
+                [
+                    'path' => 'konto',
+                    'type' => 'path',
+                    'action' => 'konto',
+                    'navigation' => 'konto',
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                    ],
+                    'children' => [
+                        [
+                            'path' => '\d+',
+                            'type' => 'pattern',
+                            'param' => 'hhp-id',
+                        ],
+                    ],
+                ],
+                [
+                    'path' => '(booking|booking-history)',
+                    'type' => 'pattern',
+                    'param' => 'action',
+                    'navigation' => 'booking',
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                        LoadGroups::BOOKING,
+                    ],
+                    'children' => [
+                        [
+                            'path' => '\d+',
+                            'type' => 'pattern',
+                            'param' => 'hhp-id',
+                        ],
+                    ],
+                ],
+                [
+                    'path' => 'check-booking',
+                    'type' => 'path',
+                    'action' => 'check-booking',
+                    'navigation' => 'booking',
                 ],
                 [
                     'path' => 'mygremium',
@@ -34,6 +73,13 @@ $routing = [
                     'type' => 'path',
                     'action' => 'kv',
                     'navigation' => 'kv',
+                    'children' => [
+                        [
+                            'path' => 'exportBank',
+                            'type' => 'path',
+                            'action' => 'exportBank',
+                        ]
+                    ]
                 ],
                 [
                     'path' => 'stura',
@@ -131,13 +177,6 @@ $routing = [
                     'path' => 'create',
                     'type' => 'path',
                     'action' => 'create',
-                    'children' => [
-                        [
-                            'path' => 'edit',
-                            'type' => 'path',
-                            'action' => 'edit',
-                        ]
-                    ]
                 ]
             ]
         ],
@@ -179,12 +218,25 @@ $routing = [
                         ],
                     ]
                 ],
-            	[
-            		'path' => 'chat',
-            		'type' => 'path',
-            		'controller' => 'rest',
-            		'action' => 'chat',
-            	]
+                [
+                    'path' => 'chat',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'chat',
+                ],
+                [
+                    'path' => 'hibiscus',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'update-konto',
+                ],
+                [
+                    'path' => 'booking',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'new-booking',
+                    'groups' => 'ref-finanzen',
+                ]
             ]
         ],
         [
@@ -224,4 +276,6 @@ $routing = [
         ]
     ]
 ];
+
+
 

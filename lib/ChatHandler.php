@@ -178,10 +178,10 @@ class ChatHandler{
 	        	<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>">
 				<div class="panel-heading">Kommentare</div>
 				<div class="panel-body chat">
-					<div class="new-chat-comment" 
-						data-url="<?= URIBASE.'index.php/rest/chat'; ?>" 
-						data-target_id="<?= $group_id; ?>"
-						data-target="<?= $group; ?>">
+					<div class="new-chat-comment"
+                         data-url="<?= URIBASE . 'rest/chat'; ?>"
+                         data-target_id="<?= $group_id; ?>"
+                         data-target="<?= $group; ?>">
 						<div class="chat-container chat-right">
 							<span class="chat-time">Jetzt gerade</span>
 							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())),0,16); echo $tid;?>">

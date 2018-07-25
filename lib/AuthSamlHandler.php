@@ -44,10 +44,9 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
     }
     
     function getAttributes(){
-        global $DEV;
         $attributes = $this->saml->getAttributes();
         //var_dump($attributes['groups']);
-        if (!$DEV){
+        if (!DEV){
             return $attributes;
         }else{
             return $attributes;

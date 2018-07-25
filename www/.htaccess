@@ -5,11 +5,6 @@ RewriteCond %{HTTPS} !=on
 RewriteRule ^(.*)$ https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
 Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 
-#Do not redirect here:
-RewriteRule ^telegrambot$           - [L,NC]
-RewriteRule ^external.php$          - [L,NC]
-RewriteRule ^SQLBackuper.php$       - [L,NC]
-RewriteRule ^rest$                  - [L,NC]
 
 #Redirect everything else to index.php
 RewriteCond   %{REQUEST_FILENAME}   !-f

@@ -15,10 +15,13 @@ class Helper
 	 * do post request
 	 * uses file_get_cntents
 	 *  - don't work if  'php_value allow_url_fopen' or 'php_value allow_url_include' is disabled
+	 *
 	 * @param string $url
 	 * @param array $data
 	 * @param string $auth
 	 * @param boolean $auth_encode
+     *
+     * @return array
 	 */
 	public static function do_post_request($url, $data, $auth = NULL, $auth_encode = false){
 		$result = [
@@ -69,10 +72,13 @@ class Helper
 	/**
 	 * do post request
 	 * uses curl
-	 * @param string $url
-	 * @param array $data
-	 * @param string $auth
+	 *
+	 * @param string  $url
+	 * @param array   $data
+	 * @param string  $auth
 	 * @param boolean $auth_encode
+     *
+     * @return array
 	 */
 	public static function do_post_request2($url, $data = NULL, $auth = NULL, $auth_encode = false){
 		$result = [
@@ -120,9 +126,13 @@ class Helper
 		} elseif ($postresult){
 			$result['data'] = strip_tags($postresult);
 		}
-	
-		return $result;
-	}
+        
+        return $result;
+    }
+    
+    public static function make_links_clickable($text){
+        return preg_replace('!((http(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!i', '<a target="_blank" href="$1"><i class="fa fa-fw fa-chain"></i>&nbsp;$1</a>', $text);
+    }
 	
 }
 

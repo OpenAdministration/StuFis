@@ -181,7 +181,7 @@ class ProjektHandler extends FormHandlerInterface{
             'recht-additional' => '',
             'posten-name' => [1 => ""],
             'posten-bemerkung' => [1 => ""],
-            'posten-titel' => [""],
+            'posten-titel' => [1=>""],
             'posten-einnahmen' => [1=>0],
             'posten-ausgaben' => [1=>0],
             'date-start' => '',
@@ -424,7 +424,7 @@ class ProjektHandler extends FormHandlerInterface{
         ?>
         <div class='col-xs-12 col-md-10'>
             <?php if ($editable){ ?>
-            <form role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt" ?>" method="POST"
+            <form role="form" action="<?= URIBASE . "rest/forms/projekt" ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?= $this->templater->getHiddenActionInput(isset($this->id) ? "update" : "create") ?>
                 <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
@@ -602,8 +602,7 @@ class ProjektHandler extends FormHandlerInterface{
     }
     
     private function renderInteractionPanel(){
-        global $URIBASE;
-        $url = str_replace("//", "/", $URIBASE . "projekt/" . $this->id . "/");
+        $url = str_replace("//", "/", URIBASE . "projekt/" . $this->id . "/");
         $nextValidStates = $this->stateHandler->getNextStates(true);
         $disabledStates = array_diff($this->stateHandler->getAllAllowedTransitionableStates(), $nextValidStates);
         ?>
@@ -640,7 +639,7 @@ class ProjektHandler extends FormHandlerInterface{
         </div>
         <?php if (count($nextValidStates) > 0){ ?>
             <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?= $GLOBALS["URIBASE"] . "index.php/rest/forms/projekt"; ?>"
+            <form id="stateantrag" role="form" action="<?= URIBASE . "rest/forms/projekt"; ?>"
                   method="POST" enctype="multipart/form-data" class="ajax" data-toggle="validator">
                 <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
                      aria-labelledby="editStateModalLabel">
