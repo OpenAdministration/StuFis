@@ -460,6 +460,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				}
 			}
 			$this->db->dbUpdate('auslagen', $where, $set);
+			//automagic -> all ok -> set state ok -> auto genehmigt
+			if ($newState == 'ok-belege' || $newState == 'ok-hv' || $newState == 'ok-kv'){
+				$tmp_auslage = $this->db->dbFetchAll('auslagen', [], ['id' => $this->auslagen_data['id']]);
+				if ($tmp_auslage 
+					&& isset($tmp_auslage[0]['ok-belege'])
+					&& $tmp_auslage[0]['ok-belege']
+					&& isset($tmp_auslage[0]['ok-hv'])
+					&& $tmp_auslage[0]['ok-hv']
+					&& isset($tmp_auslage[0]['ok-kv'])
+					&& $tmp_auslage[0]['ok-kv']
+					&& substr($tmp_auslage[0]['state'], 0, 3) == 'wip'){
+					$this->db->dbUpdate('auslagen', ['id' => $this->auslagen_data['id']], ['state' => "ok;{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}"]);
+					$tmp_auslage2 = $this->db->dbFetchAll('auslagen', [], ['id' => $this->auslagen_data['id']]);
+				}
+			}
 			return true;
 		}
 		return false;
