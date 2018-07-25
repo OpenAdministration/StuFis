@@ -4,7 +4,7 @@ $(document).ready(function () {
         var zid = $(this).data("id");
         var sum = parseFloat($(this).data("value"));
 
-        if ($(".booking__zahlung>div#" + zid).length === 0) {
+        if ($(".booking__zahlung>div#Z" + zid).length === 0) {
             $("<div/>").attr("id", "Z" + zid).append(
                 $("<span/>").text("Z" + zid),
                 $("<span/>").text(sum.toFixed(2)).addClass("money"),
