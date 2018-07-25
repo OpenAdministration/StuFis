@@ -1162,7 +1162,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//changed ------
 		foreach ($changed_belege as $kb => $b){
 			$fileIdx = 'beleg_'.$kb;
-			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
+			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0])){
 				$beleg_file_map[$kb] = [
 					'file' => $fileIdx,
 					'link' => $b['id'],
