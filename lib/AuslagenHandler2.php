@@ -1091,7 +1091,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						//ignore invalid elements
 					} else {
 						$op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
-						$changed_posten[$kb] = $op;
+						$changed_posten[$kp] = $op;
 						if ($op['einnahmen'] != $p['in'] || $op['ausgaben'] != $p['out'] ){
 							$changed_posten_flag = true;
 						}
