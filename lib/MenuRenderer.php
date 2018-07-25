@@ -527,7 +527,7 @@ class MenuRenderer extends Renderer{
             $idxZahlung = 0;
             $idxGrund = 0;
             while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)){
-            
+    
                 echo "<tr>";
                 if (isset($alZahlung[$idxZahlung])){
                     if (isset($alGrund[$idxGrund])){
@@ -539,9 +539,9 @@ class MenuRenderer extends Renderer{
                 }else{
                     $value = $alGrund[$idxGrund]["value"];
                 }
-            
+    
                 echo "<td>";
-            
+    
                 while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
                     echo "<input type='checkbox' class='booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]["id"]}'>";
                     $caption = "Z{$alZahlung[$idxZahlung]['id']} - ";
@@ -562,7 +562,7 @@ class MenuRenderer extends Renderer{
                         default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
                             $caption .= $alZahlung[$idxZahlung]["type"] . " an ";
                             break;
-                    
+    
                     }
                     $caption .= $alZahlung[$idxZahlung]["empf_name"] . " - " . explode("DATUM", $alZahlung[$idxZahlung]["zweck"])[0];
                     $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
@@ -575,7 +575,7 @@ class MenuRenderer extends Renderer{
                 echo "</td><td>";
                 while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]["value"] === $value){
                     echo "<input type='checkbox' class='booking__form-beleg' data-value='{$value}' data-id='{$alGrund[$idxGrund]['id']}' >";
-                
+    
                     $caption = "A" . $alGrund[$idxGrund]["id"] . " - " . $alGrund[$idxGrund]["name"] . " - " . $alGrund[$idxGrund]["name_suffix"];
                     $url = str_replace("//", "/", URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]["id"]);
                     echo "<a href=\"" . htmlspecialchars($url) . "\">" . $caption . "</a>";
@@ -585,30 +585,38 @@ class MenuRenderer extends Renderer{
                 echo "</td>";
                 echo "</tr>";
             }
-        
+
             ?>
         </table>
         <form action="<?= URIBASE ?>menu/check-booking" method="GET" role="form" class="form-inline ajax">
             <div class="booking__panel-form col-xs-2">
-                <h4>Zahlungen</h4>
+                <h4>ausgewählte Zahlungen</h4>
                 <div class="booking__zahlung">
-                    <div data-id="">
+                    <div id="booking__zahlung-not-selected">
                         <span><i>keine ID</i></span>
-                        <span class="money">0,00</span>
+                        <span class="money">0.00</span>
+                    </div>
+                    <div class="booking__zahlung-sum text-bold">
+                        <span>&Sigma;</span>
+                        <span class="money">0.00</span>
                     </div>
                 </div>
-                <h4>Belege</h4>
+                <h4>ausgewählte Belege</h4>
                 <div class="booking__belege">
-                    <div data-id="">
+                    <div id="booking__belege-not-selected">
                         <span><i>keine ID</i></span>
-                        <span class="money">0,00</span>
+                        <span class="money">0.00</span>
+                    </div>
+                    <div class="booking__belege-sum text-bold">
+                        <span>&Sigma;</span>
+                        <span class="money">0.00</span>
                     </div>
                 </div>
                 <!--<div>
                     <label>Buchungstext</label>
                     <textarea name="booking-text" rows="3" class="form-control"></textarea>
                 </div>-->
-                <button class="btn btn-primary">Buchung durchführen</button>
+                <button id="booking__check-button" class="btn btn-primary">Buchung durchführen</button>
             </div>
 
         </form>
@@ -826,8 +834,8 @@ class MenuRenderer extends Renderer{
             ["timestamp" => true, "id" => true]
         );
         if (!empty($ret)){
-        
-        
+    
+    
             //var_dump(reset($ret));
             ?>
             <table class="table" align="right">

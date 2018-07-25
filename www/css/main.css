@@ -824,17 +824,20 @@ button.btn.btn-arrow-left {
 }
 
 .booking__panel-form > div {
-    min-height: 60px;
+    min-height: 90px;
     margin-bottom: 5px;
-}
-
-.booking__panel-form > div > textarea {
-    min-height: 5em;
 }
 
 .booking__panel-form > div > div {
     width: 100%;
-    padding: 0px 7px;
+    padding: 0 7px;
+}
+
+.booking__panel-form > div > div.booking__zahlung-sum,
+.booking__panel-form > div > div.booking__belege-sum {
+    margin-top: 5px;
+    padding-top: 2px;
+    border-top: solid 1px black;
 }
 
 .booking__panel-form > div > div > span.money {
