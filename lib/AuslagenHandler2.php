@@ -1170,7 +1170,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			}
 			//update values
 			$db_beleg = [
-         		'datum' => $this->routeInfo['validated']['belege'][$kb]['datum'],
+         		'datum' => ($this->routeInfo['validated']['belege'][$kb]['datum'])? $this->routeInfo['validated']['belege'][$kb]['datum'] : NULL,
          		'beschreibung' => $this->routeInfo['validated']['belege'][$kb]['beschreibung'],
          	];
 			$where = [
@@ -1187,7 +1187,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$db_beleg = [
          		'short' => $this->auslagen_data['version'].''.$beleg_shortcounter,
          		'created_on' => date_create()->format('Y-m-d H:i:s'),
-         		'datum' => $b['datum'],
+         		'datum' => ($b['datum'])?$b['datum'] : NULL ,
          		'beschreibung' => $b['beschreibung'],
 				'auslagen_id' => $this->auslagen_data['id'],
          	];
