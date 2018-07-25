@@ -1291,12 +1291,6 @@ class FileHandler {
 				// check files
 				foreach ( $_FILES[$base_key]['name'] as $id => $filename ){
 					// ERROR HANDLING ===========================================================
-					// is no uploaded file ---------------------------------------
-					if(!is_uploaded_file($_FILES[$base_key]['tmp_name'][$id])){
-						error_log('SECURITY ALERT: Try to save nonuploaded file.');
-						$result['error'][] = 'Es wird versucht eine nicht hochgeladene Datei zu speichern.';
-						continue;
-					}
 					// file error ------------------------------------------------
 					if ($_FILES[$base_key]['error'][$id] != UPLOAD_ERR_OK){
 						switch ($_FILES[$base_key]['error'][$id]){
@@ -1325,6 +1319,12 @@ class FileHandler {
 								$result['error'][] = "Undefinierter upload Fehler. ID: ". $_FILES[$base_key]['error'][$id];
 								break;
 						}
+						continue;
+					}
+					// is no uploaded file ---------------------------------------
+					if(!is_uploaded_file($_FILES[$base_key]['tmp_name'][$id])){
+						error_log('SECURITY ALERT: Try to save nonuploaded file.');
+						$result['error'][] = 'Es wird versucht eine nicht hochgeladene Datei zu speichern.';
 						continue;
 					}
 					// file size -------------------------------------------------
