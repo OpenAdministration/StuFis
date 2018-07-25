@@ -132,7 +132,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		'draft' 		=>	['Entwurf', 		'Als Entwurf speichern'],
 		'wip' 			=>	['Eingereicht',	'Beantragen'], 
 		'ok' 			=>	['Genehmigt',	'Genehmigen'], 
-		'instructed'	=>	['Angewiesen',	'Anweisen'], 
+		'instructed'	=>	['Zahlung beauftragt',	'Anweisen'], 
 		'booked'		=>	['Gebucht',		'Gezahlt und Gebucht'], 
 		'revocation'	=>	['Nichtig',		''] 
 	];
@@ -1878,7 +1878,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$s=$keymap['rejected'];
 			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
 			$set[$s['l']][$s['k']]['target'] = [['draft', 6, ['y' => 20]]];
-			$set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -75];
+			$set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -20];
+			$s=$keymap['ok-hv'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
+			$s=$keymap['ok-kv'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
+			$s=$keymap['ok-belege'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
 		}
 		//handle childs
 		foreach(self::$subStates as $k => $info){
