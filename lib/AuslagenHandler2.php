@@ -132,7 +132,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		'draft' 		=>	['Entwurf', 		'Als Entwurf speichern'],
 		'wip' 			=>	['Eingereicht',	'Beantragen'], 
 		'ok' 			=>	['Genehmigt',	'Genehmigen'], 
-		'instructed'	=>	['Angewiesen',	'Anweisen'], 
+		'instructed'	=>	['Zahlung beauftragt',	'Anweisen'], 
 		'booked'		=>	['Gebucht',		'Gezahlt und Gebucht'], 
 		'revocation'	=>	['Nichtig',		''] 
 	];
@@ -460,6 +460,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				}
 			}
 			$this->db->dbUpdate('auslagen', $where, $set);
+			//automagic -> all ok -> set state ok -> auto genehmigt
+			if ($newState == 'ok-belege' || $newState == 'ok-hv' || $newState == 'ok-kv'){
+				$tmp_auslage = $this->db->dbFetchAll('auslagen', [], ['id' => $this->auslagen_data['id']]);
+				if ($tmp_auslage 
+					&& isset($tmp_auslage[0]['ok-belege'])
+					&& $tmp_auslage[0]['ok-belege']
+					&& isset($tmp_auslage[0]['ok-hv'])
+					&& $tmp_auslage[0]['ok-hv']
+					&& isset($tmp_auslage[0]['ok-kv'])
+					&& $tmp_auslage[0]['ok-kv']
+					&& substr($tmp_auslage[0]['state'], 0, 3) == 'wip'){
+					$this->db->dbUpdate('auslagen', ['id' => $this->auslagen_data['id']], ['state' => "ok;{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}"]);
+					$tmp_auslage2 = $this->db->dbFetchAll('auslagen', [], ['id' => $this->auslagen_data['id']]);
+				}
+			}
 			return true;
 		}
 		return false;
@@ -1091,7 +1106,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						//ignore invalid elements
 					} else {
 						$op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
-						$changed_posten[$kb] = $op;
+						$changed_posten[$kp] = $op;
 						if ($op['einnahmen'] != $p['in'] || $op['ausgaben'] != $p['out'] ){
 							$changed_posten_flag = true;
 						}
@@ -1162,7 +1177,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//changed ------
 		foreach ($changed_belege as $kb => $b){
 			$fileIdx = 'beleg_'.$kb;
-			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0]) && $_FILES[$fileIdx]['error'][0] === 0){
+			if (!$b['file_id'] && isset($_FILES[$fileIdx]['error'][0])){
 				$beleg_file_map[$kb] = [
 					'file' => $fileIdx,
 					'link' => $b['id'],
@@ -1170,7 +1185,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			}
 			//update values
 			$db_beleg = [
-         		'datum' => $this->routeInfo['validated']['belege'][$kb]['datum'],
+         		'datum' => ($this->routeInfo['validated']['belege'][$kb]['datum'])? $this->routeInfo['validated']['belege'][$kb]['datum'] : NULL,
          		'beschreibung' => $this->routeInfo['validated']['belege'][$kb]['beschreibung'],
          	];
 			$where = [
@@ -1187,7 +1202,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$db_beleg = [
          		'short' => $this->auslagen_data['version'].''.$beleg_shortcounter,
          		'created_on' => date_create()->format('Y-m-d H:i:s'),
-         		'datum' => $b['datum'],
+         		'datum' => ($b['datum'])?$b['datum'] : NULL ,
          		'beschreibung' => $b['beschreibung'],
 				'auslagen_id' => $this->auslagen_data['id'],
          	];
@@ -1329,6 +1344,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            			<div><?php 
 		            			if ($this->stateInfo['state'] == 'instructed' && strpos($this->stateInfo['substate'], 'payed')!==false){
 		            				echo 'Bezahlt';
+		            			} elseif($this->stateInfo['state'] == 'revocation' ) {
+		            				echo ($this->auslagen_data['rejected'])? 'Abgelehnt' : 'Zurückgezogen';
 		            			} else {
 		            				echo self::$states[$this->stateInfo['state']][0];
 		            			}
@@ -1878,7 +1895,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$s=$keymap['rejected'];
 			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
 			$set[$s['l']][$s['k']]['target'] = [['draft', 6, ['y' => 20]]];
-			$set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -75];
+			$set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -20];
+			$s=$keymap['ok-hv'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
+			$s=$keymap['ok-kv'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
+			$s=$keymap['ok-belege'];
+			unset($set[$s['l']][$s['k']]['children'][$s['c']]);
 		}
 		//handle childs
 		foreach(self::$subStates as $k => $info){
