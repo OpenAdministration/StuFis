@@ -264,9 +264,15 @@ class RestHandler extends JsonController{
                         'error' => 'Ungültige Iban.'
                     ],
                     'zahlung-vwzk' => ['regex',
-                        'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& .\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& \.\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'empty',
                         'maxlength' => '127',
+                    ],
+                    'address' => ['regex',
+                    	'pattern' => '/^[a-zA-Z0-9\-_,:;\/\\\\()& \n\r\.\[\]%\'"#\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                    	'empty',
+                    	'maxlength' => '1023',
+                    	'error' => 'Adressangabe fehlerhaft.',
                     ],
                     'belege' => ['array', 'optional',
                         'minlength' => 1,
@@ -406,7 +412,7 @@ class RestHandler extends JsonController{
             }
             //check all values empty?
             $empty = ($validated['auslagen-id'] == 'NEW');
-            $auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
+            $auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege', 'address'];
             $belege_test_empty = ['datum', 'beschreibung', 'posten'];
             $posten_text_empty = ['out', 'in'];
             if ($empty) foreach ($auslagen_test_empty as $e){

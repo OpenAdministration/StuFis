@@ -231,6 +231,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		"zahlung-iban" => '',
 		"zahlung-name" => '',
 		"zahlung-vwzk" => '',
+		'address' => '',
 		'kv-ok' => '',
 		'hv-ok' => '',
 		'belege-ok' => '',
@@ -262,6 +263,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"zahlung-iban" => '',
 			"zahlung-name" => '',
 			"zahlung-vwzk" => '',
+			'address' => '',
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => '',
 			"version" => 0,
@@ -911,6 +913,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'name' => $this->auslagen_data['name_suffix'],
 				'created' => $info['date'],
 				'created_by' => $info['realname'],
+				'address' => $this->auslagen_data['address'],
 				'zahlung' => [
 					'name' => $this->auslagen_data['zahlung-name'],
 				],
@@ -1160,6 +1163,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"zahlung-iban" => strpos($this->routeInfo['validated']['zahlung-iban'], '... ...')? $this->auslagen_data['zahlung-iban'] : $this->routeInfo['validated']['zahlung-iban'],
 			"zahlung-name" => $this->routeInfo['validated']['zahlung-name'],
 			"zahlung-vwzk" => $this->routeInfo['validated']['zahlung-vwzk'],
+			"address" => $this->routeInfo['validated']['address'],
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 			"version" => intval($this->auslagen_data['version']) + 1,
@@ -1453,6 +1457,19 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				echo $this->templater->getTextForm("zahlung-iban", $iban_text, [12,12,6], "DE ...", "Zahlungsempfänger IBAN") ?>
 				<div class='clearfix'></div>
                 <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <div class="clearfix"></div>
+                <?php 
+                	$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')?
+                	 'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
+                	 'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
+                	$tmpvalue = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create' 
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['finanzen']) 
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['owner'])
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['orga']) )?
+                				$this->auslagen_data['address']:
+                				'Versteckt';
+                ?>
+                <?= $this->templater->getTextareaForm('address', $tmpvalue, 12, "Addresszusatz\nStraße 1\n98693 Ilmenau", $tmplabel) ?>
                 <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
@@ -2071,6 +2088,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		'zahlung-name' 	=> ['groups' => ['sgis']],
     		'zahlung-iban' 	=> ['groups' => ['sgis']],
     		'zahlung-vwzk' 	=> ['groups' => ['sgis']],
+    		'address'	 	=> ['groups' => ['sgis']],
     		'belege' 		=> ['groups' => ['sgis']],
     		'files'			=> ['groups' => ['sgis']],],
     	'wip' => [
@@ -2078,6 +2096,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		'zahlung-name' 	=> ['groups' => ['ref-finanzen']],
     		'zahlung-iban' 	=> ['groups' => ['ref-finanzen']],
     		'zahlung-vwzk' 	=> ['groups' => ['ref-finanzen']],
+    		'address' 	=> ['groups' => ['ref-finanzen']],
     		'belege' 		=> ['groups' => ['ref-finanzen']],
     		'files'			=> ['groups' => ['ref-finanzen']],],
     	"ok" => [],
