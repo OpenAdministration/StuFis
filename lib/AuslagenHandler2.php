@@ -95,8 +95,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	private static $groups = [
 		'editable' => [
 			'draft' => ["groups" => ["sgis"]],
-			'wip' 	=> ["groups" => ["ref-finanzen-hv"]],
-			'ok' 	=> ["groups" => ["ref-finanzen-hv"]],
+			'wip' 	=> ["groups" => ["ref-finanzen"]],
+			'ok' 	=> ["groups" => ["ref-finanzen"]],
 		],
 		'strict_editable' => [
 			'groups' => ["ref-finanzen-hv"],
@@ -118,7 +118,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'owner' => [
 				'dynamic' => [
 					'owner',
-					'plain_orga'
+				],
+			],
+			'orga' => [
+				'dynamic' => [
+					'plain_orga',
 				],
 			],
 		]
@@ -227,6 +231,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		"zahlung-iban" => '',
 		"zahlung-name" => '',
 		"zahlung-vwzk" => '',
+		'address' => '',
 		'kv-ok' => '',
 		'hv-ok' => '',
 		'belege-ok' => '',
@@ -237,10 +242,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @return multitype:NULL string number multitype:
 	 */
 	private function get_empty_auslage(){
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		return [
 			"id" => NULL,
 			"projekt_id" => $this->projekt_id,
@@ -255,6 +263,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"zahlung-iban" => '',
 			"zahlung-name" => '',
 			"zahlung-vwzk" => '',
+			'address' => '',
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => '',
 			"version" => 0,
@@ -305,13 +314,16 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @return bool
 	 */
 	private function checkPermissionByMap($map){
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		if ($map === true){
 			return true;
 		}
 		if (is_array($map)
 			&&isset($map['groups'])){
 			$g = (is_string($map['groups']))? $map['groups'] : implode(",", $map["groups"]);
-            if ((AUTH_HANDLER)::getInstance()->hasGroup($g)){
+            if ($auth->hasGroup($g)){
 					return true;
 			}
 		}
@@ -325,13 +337,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'plain_orga' => $this->auslagen_data['projekte.org'],
 			];
 			//check dynamic permissions
-            $ah = (AUTH_HANDLER)::getInstance();
-			$a = $ah->getAttributes();
+			$a = $auth->getAttributes();
 			foreach ($map['dynamic'] as $type){
 				if (!isset($dynamic[$type])) continue;
 				switch($type){
 					case 'owner':{
-						if($ah->getUsername() == $dynamic[$type]){
+						if($auth->getUsername() == $dynamic[$type]){
 							return true;
 						}
 					} break;
@@ -410,10 +421,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 */
 	private function state_change($newState, $etag){
 		if ($this->state_change_possible($newState)) {
+			$auth = (AUTH_HANDLER);
+			/* @var $auth AuthHandler */
+			$auth = $auth::getInstance();
 			$newInfo = self::state2stateInfo($newState);
 			$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-            $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-            $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+            $newInfo['user'] = $auth->getUsername();
+            $newInfo['realname'] = $auth->getUserFullName();
 			//
 			$set = [
 				'version' => $this->auslagen_data['version'] + 1,
@@ -574,7 +588,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		$in = trim($in);
 		if ($in === '') return '';
 		if (mb_strlen($in)>=5) {
-			return mb_substr($in, 0, 4).' ... ... '.mb_substr($in, -2);
+			return mb_substr($in, 0, 5).' ... ... '.mb_substr($in, -2);
 		} else {
 			return $in;
 		}
@@ -899,6 +913,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'name' => $this->auslagen_data['name_suffix'],
 				'created' => $info['date'],
 				'created_by' => $info['realname'],
+				'address' => $this->auslagen_data['address'],
 				'zahlung' => [
 					'name' => $this->auslagen_data['zahlung-name'],
 				],
@@ -1011,11 +1026,14 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'<p>Die übertragene Version liegt '.($this->auslagen_data['version'] - $this->routeInfo['validated']['version']).' Version(en) zurück.</p>';
 			return;
 		}
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		
 		//check fileid exists
 		$found_file_id = false;
@@ -1066,11 +1084,14 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		} elseif ($this->routeInfo['validated']['auslagen-id'] == 'NEW'){
 			$this->auslagen_data = $this->get_empty_auslage();
 		}
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		
 		// filter for changes ---------------------------------
 		$changed_belege_flag = false;
@@ -1142,6 +1163,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"zahlung-iban" => strpos($this->routeInfo['validated']['zahlung-iban'], '... ...')? $this->auslagen_data['zahlung-iban'] : $this->routeInfo['validated']['zahlung-iban'],
 			"zahlung-name" => $this->routeInfo['validated']['zahlung-name'],
 			"zahlung-vwzk" => $this->routeInfo['validated']['zahlung-vwzk'],
+			"address" => $this->routeInfo['validated']['address'],
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 			"version" => intval($this->auslagen_data['version']) + 1,
@@ -1325,7 +1347,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param string $titel
 	 */
 	private function renderAuslagenerstattung($titel){
-		 
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		$editable = $this->stateInfo['editable'];
 		?>
         	<h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
@@ -1416,16 +1440,16 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	        	<input type="hidden" name="etag" value="<?= ($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']; ?>">
 	        	<?= $this->templater->getHiddenActionInput(''); ?>
 	        <?php //-------------------------------------------------------------------- ?>
-            <label for="projekt-well">Auslagenerstattung</label>
+            <label for="projekt-well">Abrechnung</label>
             <div id='projekt-well' class="well">
-            	<label>Name der Auslagenerstattung</label>
+            	<label>Name der Abrechnung</label>
             	<?= $this->templater->getTextForm("auslagen-name", (isset($this->auslagen_data['id']))?$this->auslagen_data['name_suffix']:'', 12, "optional", "", [], '<a href="'.URIBASE.'projekt/'.$this->projekt_id.'"><i class="fa fa-fw fa-link"> </i>'.htmlspecialchars($this->projekt_data['name']).'</a>') ?>
 	            <div class="clearfix"></div>
              	<label for="zahlung">Zahlungsinformationen</label><br>
 				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
 				<?php // iban only show trimmed if not hv/kv important!
 	            	$iban_text = $this->auslagen_data['zahlung-iban'];
-                if (!(AUTH_HANDLER)::getInstance()->hasGroup('HV,KV')){
+                if (!$auth->hasGroup('HV,KV')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	} elseif ($iban_text != '') {
 	            		$iban_text = chunk_split($iban_text, 4, ' ');
@@ -1433,6 +1457,19 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				echo $this->templater->getTextForm("zahlung-iban", $iban_text, [12,12,6], "DE ...", "Zahlungsempfänger IBAN") ?>
 				<div class='clearfix'></div>
                 <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <div class="clearfix"></div>
+                <?php 
+                	$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')?
+                	 'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
+                	 'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
+                	$tmpvalue = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create' 
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['finanzen']) 
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['owner'])
+                				|| $this->checkPermissionByMap(self::$groups['stateless']['orga']) )?
+                				$this->auslagen_data['address']:
+                				'Versteckt';
+                ?>
+                <?= $this->templater->getTextareaForm('address', $tmpvalue, 12, "Addresszusatz\nStraße 1\n98693 Ilmenau", $tmplabel) ?>
                 <div class="clearfix"></div>
             </div>
             <?php //-------------------------------------------------------------------- ?>
@@ -1450,6 +1487,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		<div id='projekt-well' class="well">
             <?php $this->render_project_auslagen(true); ?>
     	</div>
+    	<?php 
+    		if ($this->routeInfo['action'] != 'create' && $this->routeInfo['action'] != 'edit'){
+    			if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->state2stateInfo('wip;'.$this->auslagen_data['created'])['user']) {
+    				$this->render_chat_box();
+    			}
+    		}
+    	?>
         <?php
         	$this->render_auslagen_links();
         return;
@@ -1502,6 +1546,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 */
 	public function render_beleg_container($belege, $editable = true, $label = ''){
 		if ($label){ echo '<label>'.$label.'</label>';} ?>
+		
 		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
 			<div class="hidden datalists">
 				<datalist class="datalist-projekt">
@@ -1658,7 +1703,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		 
 		// if empty and !$editable add empty hint
 		$out .= '<div class="form-group posten-empty '.((count($posten) == 0)?'':' hidden').'">Keine Angaben</div>';
-		 
+		
+		$inOutPrefix = ['0' => ''];
+		foreach ($this->projekt_data['posten'] as $pp){
+			$inOutPrefix[$pp['id']] = (($pp['einnahmen'])?'[Einnahme] ':'').(($pp['ausgaben'])?'[Ausgabe] ':'');
+		}
+		
 		// if nonempty add lines
 		foreach ($posten as $pline){
 			$out .= '<div class="form-group posten-entry" data-id="'.$pline['id'].'" data-projekt-posten-id="'.$pline['projekt_posten_id'].'">';
@@ -1672,7 +1722,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			if ($editable){
 				$out .= '<div class="col-sm-4 editable projekt-posten-select" data-value="'.$pline['projekt_posten_id'].'">'
 							.'<div class="input-group form-group">'
-								.'<span class="value">'.(($pline['ausgaben'])?'[Ausgabe] ':'').(($pline['einnahmen'])?'[Einnahme] ':'').$pline['projekt.posten_name'].'</span>'
+								.'<span class="value">'.$inOutPrefix[$pline['projekt_posten_id']].$pline['projekt.posten_name'].'</span>'
 								.'<input type="hidden" name="belege['.$beleg_id.'][posten]['.$pline['id'].'][projekt-posten]" value="'.$pline['projekt_posten_id'].'">'
 							.'</div>'
 						.'</div>';
@@ -1829,6 +1879,32 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		</div>
 	<?php 
 	}
+	
+	private function render_chat_box(){ ?>
+			<div class='clearfix'></div>
+	        <div id="auslagenchat">
+				<?php 
+					$auth = (AUTH_HANDLER);
+					/* @var $auth AuthHandler */
+					$auth = $auth::getInstance();
+					$btns = [];
+					$pdate = date_create(substr($this->auslagen_data['created'], 0, 4).'-01-01 00:00:00');
+					$pdate->modify('+1 year');
+					$now = date_create();
+					//allow chat only 90 days into next year
+					if ($now->getTimestamp()-$pdate->getTimestamp() <= 86400 * 90){
+						if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == self::state2stateInfo('wip;'.$this->auslagen_data['created'])['user']) {
+							$btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title'=> 'Private Nachricht zwischen Ref-Finanzen und dem Auslagen-Ersteller'];
+						}
+						if ($auth->hasGroup('ref-finanzen')) {
+							$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+						}
+					}
+					ChatHandler::renderChatPanel('auslagen', $this->auslagen_id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")", 
+						$btns); ?>
+			</div>
+	    <?php
+	 }
 	
 	public function getStateSvg(){
 		$diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
@@ -2045,6 +2121,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		'zahlung-name' 	=> ['groups' => ['sgis']],
     		'zahlung-iban' 	=> ['groups' => ['sgis']],
     		'zahlung-vwzk' 	=> ['groups' => ['sgis']],
+    		'address'	 	=> ['groups' => ['sgis']],
     		'belege' 		=> ['groups' => ['sgis']],
     		'files'			=> ['groups' => ['sgis']],],
     	'wip' => [
@@ -2052,6 +2129,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     		'zahlung-name' 	=> ['groups' => ['ref-finanzen']],
     		'zahlung-iban' 	=> ['groups' => ['ref-finanzen']],
     		'zahlung-vwzk' 	=> ['groups' => ['ref-finanzen']],
+    		'address' 	=> ['groups' => ['ref-finanzen']],
     		'belege' 		=> ['groups' => ['ref-finanzen']],
     		'files'			=> ['groups' => ['ref-finanzen']],],
     	"ok" => [],

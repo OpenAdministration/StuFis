@@ -116,8 +116,11 @@ class RestHandler extends JsonController{
         $projektHandler = null;
         $dbret = false;
         try{
+        	$auth = (AUTH_HANDLER);
+        	/* @var $auth AuthHandler */
+        	$auth = $auth::getInstance();
             $logId = DBConnector::getInstance()->logThisAction($_POST);
-            DBConnector::getInstance()->logAppend($logId, "username", (AUTH_HANDLER)::getInstance()->getUsername());
+            DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
             
             if (!isset($_POST["action"]))
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");
@@ -258,15 +261,21 @@ class RestHandler extends JsonController{
                         'error' =>	'Ungültiger Zahlungsempfänger.'
                     ],
                     'zahlung-iban' => ['regex',
-                        'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{4}( ... ... )[a-zA-Z0-9]{2}))$/',
+                        'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{2} [a-zA-Z0-9]{2}( ... ... )[a-zA-Z0-9]{2}))$/',
                         'maxlength' => '127',
                         'empty',
                         'error' => 'Ungültige Iban.'
                     ],
                     'zahlung-vwzk' => ['regex',
-                        'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& .\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& \.\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'empty',
                         'maxlength' => '127',
+                    ],
+                    'address' => ['regex',
+                    	'pattern' => '/^[a-zA-Z0-9\-_,:;\/\\\\()& \n\r\.\[\]%\'"#\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                    	'empty',
+                    	'maxlength' => '1023',
+                    	'error' => 'Adressangabe fehlerhaft.',
                     ],
                     'belege' => ['array', 'optional',
                         'minlength' => 1,
@@ -406,7 +415,7 @@ class RestHandler extends JsonController{
             }
             //check all values empty?
             $empty = ($validated['auslagen-id'] == 'NEW');
-            $auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege'];
+            $auslagen_test_empty = ['auslagen-name', 'zahlung-name', 'zahlung-iban', 'zahlung-vwzk', 'belege', 'address'];
             $belege_test_empty = ['datum', 'beschreibung', 'posten'];
             $posten_text_empty = ['out', 'in'];
             if ($empty) foreach ($auslagen_test_empty as $e){
@@ -487,7 +496,9 @@ class RestHandler extends JsonController{
     			case 'projekt': {
     				$r = [];
     				try{
-    					$r = $db->dbFetchAll('projekte', [], ['id' => $valid['target_id']]);
+    					$r = $db->dbFetchAll('projekte', ['projekte.*', 'user.username', 'user.email'], ['projekte.id' => $valid['target_id']], [
+							["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
+						]);
     				} catch (Exception $e){
     					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
     					break;
@@ -495,6 +506,11 @@ class RestHandler extends JsonController{
     				if (!$r || count($r) == 0){
     					break;
     				}
+    				$pdate = date_create(substr($r[0]['createdat'], 0, 4).'-01-01 00:00:00');
+    				$pdate->modify('+1 year');
+    				$now = date_create();
+    				//info mail
+    				$mail = [];
     				// ACL --------------------------------
     				// action 
     				switch ($valid['action']){
@@ -506,18 +522,40 @@ class RestHandler extends JsonController{
     						if ($auth->hasGroup('ref-finanzen')) {
     							$map[] = '3';
     						}
+    						if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()) {
+    							$map[] = '-1';
+    						}
     						$chat->setKeep($map);
     						break;
     					case 'newcomment':
+    						//allow chat only 90 days into next year
+    						if ($now->getTimestamp()-$pdate->getTimestamp() > 86400 * 90){
+    							break 2;
+    						}
+    						//new message - info mail
+							$tMail = [];
     						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
     							break 2;
     						}
     						//switch type
     						switch ($valid['type']){
-    							case '0':
+    							case '-1':
+    								if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername())) {
+    									break 3;
+    								}
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								} else {
+    									$tMail['to'][] = $r[0]['email'];
+    								}
     								break;
-    							case '1':
-    								break 3;
+    							case '0':
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								} else {
+    									$tMail['to'][] = $r[0]['responsible'];
+    								}
+    								break;
     							case '2':
     								if (!$auth->hasGroup('admin')) {
     									break 3;
@@ -527,9 +565,17 @@ class RestHandler extends JsonController{
     								if (!$auth->hasGroup('ref-finanzen')) {
     									break 3;
     								}
+    								$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
     								break;
     							default: 
     								break 3;
+    						}
+    						if (count($tMail) > 0){
+    							$tMail['param']['msg'][] = 'Im unten verlinkten %Projekt% gibt es eine neue Nachricht.';
+    							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
+    							$tMail['subjekt'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
+    							$tMail['template'] = 'projekt_default';
+    							$mail[] = $tMail;
     						}
     						break;
     					default: 
@@ -537,6 +583,96 @@ class RestHandler extends JsonController{
     				}
     				// all ok -> handle all
     				$chat->answerAll($_POST);
+    				if (count($mail) > 0){
+    					foreach ($mail as $m){
+    						//TODO create and send email
+    						//echo '<pre>'; var_export($m); echo '</pre>';
+    					}
+    				}
+    				die();
+    			} break;
+    			case 'auslagen': {
+    				$r = [];
+    				try{
+    					$r = $db->dbFetchAll('auslagen', ['auslagen.*'], ['auslagen.id' => $valid['target_id']], [
+    						
+    					]);
+    				} catch (Exception $e){
+    					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+    					break;
+    				}
+    				if (!$r || count($r) == 0){
+    					break;
+    				}
+    				$pdate = date_create(substr($r[0]['created'], 0, 4).'-01-01 00:00:00');
+    				$pdate->modify('+1 year');
+    				$now = date_create();
+    				//info mail
+    				$mail = [];
+    				// ACL --------------------------------
+    				// action 
+    				switch ($valid['action']){
+    					case 'gethistory':
+    						$map = ['1'];
+    						if ($auth->hasGroup('ref-finanzen')) {
+    							$map[] = '3';
+    						}
+    						$tmpsplit = explode(';', $r[0]['created']);
+    						if ($auth->hasGroup('ref-finanzen') || $tmpsplit[1] == $auth->getUsername()) {
+    							$map[] = '-1';
+    						}
+    						$chat->setKeep($map);
+    						break;
+    					case 'newcomment':
+    						//allow chat only 90 days into next year
+    						if ($now->getTimestamp()-$pdate->getTimestamp() > 86400 * 90){
+    							break 2;
+    						}
+    						//new message - info mail
+							$tMail = [];
+    						//switch type
+    						switch ($valid['type']){
+    							case '-1':
+    								if (!$auth->hasGroup('ref-finanzen') && $auth->getUsername() != AuslagenHandler2::state2stateInfo('wip;'.$r[0]['created'])['user']) {
+    									break 3;
+    								}
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								} else {
+    									$u = $db->dbFetchAll('user', ['email', 'id'], ['username' => AuslagenHandler2::state2stateInfo('wip;'.$r[0]['created'])['user']]);
+    									if ($u && count($u) > 0){
+    										$tMail['to'][] = $u[0]['email'];
+    									}
+    								}
+    								break;
+    							case '3':
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									break 3;
+    								}
+    								$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								break;
+    							default: 
+    								break 3;
+    						}
+    						if (count($tMail) > 0){
+    							$tMail['param']['msg'][] = 'In unten verlinkter %Abrechnung% gibt es eine neue Nachricht.';
+    							$tMail['param']['link']['Abrechnung'] = BASE_URL.URIBASE.'projekt/'.$r[0]['projekt_id'].'/auslagen/'.$r[0]['id'].'#auslagenchat';
+    							$tMail['subjekt'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
+    							$tMail['template'] = 'projekt_default';
+    							$mail[] = $tMail;
+    						}
+    						break;
+    					default: 
+    						break 2;
+    				}
+    				// all ok -> handle all
+    				$chat->answerAll($_POST);
+    				if (count($mail) > 0){
+    					foreach ($mail as $m){
+    						//TODO create and send email
+    						//echo '<pre>'; var_export($m); echo '</pre>';
+    					}
+    				}
     				die();
     			} break;
     			default:
@@ -549,7 +685,10 @@ class RestHandler extends JsonController{
     }
     
     private function updateKonto($routeInfo){
-        (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+    	$auth = (AUTH_HANDLER);
+    	/* @var $auth AuthHandler */
+    	$auth = $auth::getInstance();
+        $auth->requireGroup(HIBISCUSGROUP);
         
         $ret = true;
         if (!DBConnector::getInstance()->dbBegin()){

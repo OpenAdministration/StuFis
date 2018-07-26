@@ -5,3 +5,7 @@ config/config.php
 config/ca.pem
 .idea/
 logs/*
+.buildpath
+.project
+.settings
+.settings/*

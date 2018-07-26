@@ -133,7 +133,6 @@ class Helper
     public static function make_links_clickable($text){
         return preg_replace('!((http(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;//=]+)!i', '<a target="_blank" href="$1"><i class="fa fa-fw fa-chain"></i>&nbsp;$1</a>', $text);
     }
-	
 }
 
 ?>

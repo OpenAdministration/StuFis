@@ -141,6 +141,7 @@ class DBConnector extends Singleton{
             "zahlung-iban" => "VARCHAR(127) NOT NULL",
             "zahlung-name" => "VARCHAR(127) NOT NULL",
             "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
+        	"address" => "VARCHAR(1023) NOT NULL DEFAULT ''",
             'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
             'last_change_by' => "VARCHAR(255) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',

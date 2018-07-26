@@ -151,11 +151,24 @@ $routing = [
                                     'type' => 'pattern',
                                     'action' => 'view',
                                     'param' => 'aid',
+                                	'load' => [
+                                		LoadGroups::DATEPICKER,
+                                		LoadGroups::SELECTPICKER,
+                                		LoadGroups::FILEINPUT,
+                                		LoadGroups::AUSLAGEN,
+                                		LoadGroups::CHAT,
+                                	],
                                     'children' => [
                                         [
                                             'path' => 'edit',
                                             'type' => 'path',
-                                            'action' => 'edit'
+                                            'action' => 'edit',
+                                        	'load' => [
+                                        		LoadGroups::DATEPICKER,
+                                        		LoadGroups::SELECTPICKER,
+                                        		LoadGroups::FILEINPUT,
+                                        		LoadGroups::AUSLAGEN,
+                                        	],
                                         ],
                                     ],
                                 ],

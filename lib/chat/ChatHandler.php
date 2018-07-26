@@ -76,14 +76,20 @@ class ChatHandler{
     	//own comment color
     	'owner' => [['DCDCDC', '000']],
     	'default' => [['CCCCCC', '000']],
+    	//private message
+    	'-1' => [['DDDDDD', '000']],
     	//normal comments color, map
     	'0' => [['C7CAC3', '000'], ['AEB2A8', '000'], ['989C90', '000'], ['84887C', '000'], ['BAC4A5', '000']],
     	//system message
-    	'1' => [['5BC0DE', '000']],
+    	'1' => [['5BC0DE', 'fff']],
     	//admin message
     	'2' => [['AA3939', '000'], ['801515', 'fff'], ['D46A6A', 'fff'], ['550000', 'fff'], ['FFAAAA', '000']],
     	//finanzen message
     	'3' => [['0D58A6', 'fff'], ['094480', 'fff'], ['306DAB', 'fff'], ['063465', 'fff'], ['5286BC', 'fff']],
+    ];
+    
+    private $classMap = [
+    	'-1' => 'chat-private',
     ];
     
     // STATIC MEMBER ==================================================
@@ -116,7 +122,7 @@ class ChatHandler{
     			'error' => 'Access Denied.',
     		],
     		'type' => ['regex',
-    			'pattern' => '/^(0|2|3)$/',
+    			'pattern' => '/^(-1|0|2|3)$/',
     			'maxlength' => 63,
     			'error' => 'Access Denied.',
     		],
@@ -182,6 +188,7 @@ class ChatHandler{
                          data-url="<?= URIBASE . 'rest/chat'; ?>"
                          data-target_id="<?= $group_id; ?>"
                          data-target="<?= $group; ?>">
+                        <?php if (count($buttons)>0){ ?>
 						<div class="chat-container chat-right">
 							<span class="chat-time">Jetzt gerade</span>
 							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())),0,16); echo $tid;?>">
@@ -193,6 +200,7 @@ class ChatHandler{
 									?>
 									<button type="button" style="margin: 0 0 5px 8px;"
 											data-type="<?= $btn['type'] ?>"
+											<?= (isset($btn['hover-title']))? 'title="'.$btn['hover-title'].'"': ''; ?>
 											class="btn btn-<?= $btn['color']; ?> pull-right chat-submit"><?=
 												$btn['label'];
 											?></button>
@@ -200,6 +208,7 @@ class ChatHandler{
 							?>
 							<div class="clearfix"></div>
 						</div>
+						<?php } ?>
 					</div>
 					<div class="clearfix"></div>
 					<div class="chat-section">
@@ -248,63 +257,43 @@ class ChatHandler{
      * @param array $colors
      */
     public function _commentStyle($user, $colors){
-    	$o = [];	$op = 0;	$oc = count($this->colors['owner']);
-    	$d = [];	$dp = 0;	$dc = count($this->colors['default']);
-    	$n = [];	$np = 0;	$nc = count($this->colors['0']);
-    	$s = [];	$sp = 0;	$sc = count($this->colors['1']);
-    	$a = [];	$ap = 0;	$ac = count($this->colors['2']);
-    	$f = [];	$fp = 0;	$fc = count($this->colors['3']);
-    	
+    	$map = [];
+    	foreach($this->colors as $k => $styleInfo){
+    		$map[$k.''] = [
+    			'user' => [],
+    			'color-position' => 0,
+    			'color-count' => count($this->colors[$k]),
+    		];
+    	}
     	foreach ($this->comments as $k => $c){
+    		//position
     		if ($user == $c['creator']){
     			$this->comments[$k]['pos'] = 'right';
-    			if ($c['type']=='2'){
-    				if (!isset($a[$c['creator']])) {
-    					$a[$c['creator']] = $this->colors['2'][($ap++%$ac)];
-    				}
-    				$this->comments[$k]['color'] = $a[$c['creator']];
-    			} elseif ($c['type']=='3'){
-    				if (!isset($f[$c['creator']])) {
-    					$f[$c['creator']] = $this->colors['3'][($fp++%$fc)];
-    				}
-    				$this->comments[$k]['color'] = $f[$c['creator']];
-    			} else {
-    				if (!isset($o[$c['creator']])) {
-    					$o[$c['creator']] = $this->colors['owner'][($op++%$oc)];
-    				}
-    				$this->comments[$k]['color'] = $o[$c['creator']];
-    			}
-    		} elseif($c['type']=='0') {
-    			$this->comments[$k]['pos'] = 'left';
-    			if (!isset($n[$c['creator']])) {
-    				$n[$c['creator']] = $this->colors['0'][($np++%$nc)];
-    			}
-    			$this->comments[$k]['color'] = $n[$c['creator']];
     		} elseif($c['type']=='1') {
-    			$this->comments[$k]['pos'] = 'info';
-    			if (!isset($s[$c['creator']])) {
-    				$s[$c['creator']] = $this->colors['1'][($sp++%$sc)];
-    			}
-    			$this->comments[$k]['color'] = $s[$c['creator']];
-    		} elseif($c['type']=='2') {
-    			$this->comments[$k]['pos'] = 'admin';
-    			if (!isset($a[$c['creator']])) {
-    				$a[$c['creator']] = $this->colors['2'][($ap++%$ac)];
-    			}
-    			$this->comments[$k]['color'] = $a[$c['creator']];
-    		} elseif($c['type']=='3') {
-    			$this->comments[$k]['pos'] = 'finanz';
-    			if (!isset($f[$c['creator']])) {
-    				$f[$c['creator']] = $this->colors['3'][($fp++%$fc)];
-    			}
-    			$this->comments[$k]['color'] = $f[$c['creator']];
+    			$this->comments[$k]['pos'] = 'middle';
     		} else {
     			$this->comments[$k]['pos'] = 'left';
-    			if (!isset($d[$c['creator']])) {
-    				$d[$c['creator']] = $this->colors['default'][($dp++%$dc)];
-    			}
-    			$this->comments[$k]['color'] = $d[$c['creator']];
     		}
+    		//color + border color
+    		$colorKey = 'default';
+    		if(array_key_exists($c['type'], $map)){
+    			$colorKey = $c['type'];
+    		}
+			if ($c['type'] != 2 && $c['type'] != 3 && $c['creator'] == $user){
+				$colorKey = 'owner';
+			}
+			//------------
+			$cc = $c['creator'];
+			if (!isset($map[$colorKey]['user'][$cc])) {
+				$map[$colorKey]['user'][$cc] = $this->colors[$colorKey][($map[$colorKey]['color-position']%$map[$colorKey]['color-count'])];
+				$map[$colorKey]['color-position'] = $map[$colorKey]['color-position'] + 1;
+			}
+			$this->comments[$k]['color'] = $map[$colorKey]['user'][$cc];
+    		//extra class
+    		if (isset($this->classMap[$c['type']])){
+    			$this->comments[$k]['class'] = $this->classMap[$c['type']];
+    		}
+    		// ==========================
     		$this->max_comment_id = max($this->max_comment_id, $c['id'], $this->post_last_id);
     	}
     	$this->max_comment_id = max($this->max_comment_id, $this->post_last_id);
@@ -332,6 +321,9 @@ class ChatHandler{
     			$count++;
     			unset($this->comments[$k]);
     		} else {
+    			if ($this->comments[$k]['type']==-1){
+    				$this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
+    			}
     			$count++;
     			$this->max_comment_id = max($this->max_comment_id, $c['id'], $this->post_last_id);
     			unset($this->comments[$k]['id']); 
@@ -392,7 +384,7 @@ class ChatHandler{
     			'timestamp' => mb_substr($timestamp, 0, 20),
     			'creator' 	=> mb_substr($creator, 0, 127),
     			'creator_alias' => mb_substr($creator_alias, 0, 255),
-    			'text' 		=> mb_substr($text, 0, 60000),
+    			'text' 		=> ($type=='-1')? ($this->encryptMessage(mb_substr($text, 0, 45000))) : (mb_substr($text, 0, 60000)),
     			'type' 		=> $type,
     		]);
     	} catch (Exception $e){
@@ -537,5 +529,126 @@ class ChatHandler{
     			ErrorHandler::_errorLog('Chat: Error: Unhandles Action passed Validation: '.$post['action']);
     		} break;
     	}
+    }
+    
+    // crypto =======================================
+    
+    /**
+     * create crypto keys
+     * RSA @ 4096
+     */
+    private function createKeys(){
+    	//check files exists
+    	if (!file_exists(__DIR__.'/secret_private.php')||filesize(__DIR__.'/secret_private.php') == 0){
+	    	$config = array(
+	    		"digest_alg" => "sha512",
+	    		"private_key_bits" => 4096,
+	    		"private_key_type" => OPENSSL_KEYTYPE_RSA,
+	    	);
+	    	$res = openssl_pkey_new($config);
+	    	openssl_pkey_export($res, $privKey);
+	    	$this->textToFile(__DIR__.'/secret_private.php', $privKey);
+	    	$pubKey = openssl_pkey_get_details($res);
+	    	$pubKey = $pubKey["key"];
+	    	$this->textToFile(__DIR__.'/secret_public.php', $pubKey);
+    	}
+    }
+    
+    /**
+     * create file with text
+     * mace shure you can write on given location
+     * @param string $file
+     * @param text $text
+     * @param string $permission
+     */
+    private function textToFile($file, $text, $permission = '0400'){
+    	$text = base64_encode($text);
+    	
+    	//create file content
+    	$key_file_content = "<?php //* -------------------------------------------------------- *\n";
+    	$key_file_content .= "// Must include code to stop this file being accessed directly\n";
+    	$key_file_content .= "if(!defined('FINANRANTRAGUI_FW_SI')) die(); \n";
+    	$key_file_content .= "//* -------------------------------------------------------- *\n";
+    	$key_file_content .= '$key = \''.$text."';\n ?>";
+    	
+    	//create file
+    	$handle = fopen ($file, 'w');
+    	fwrite ($handle, $key_file_content);
+    	fclose ($handle);
+    	chmod($file, 0400);
+    }
+    
+    /**
+     * get text/key by key
+     * @param string $type
+     * @return string
+     */
+    private function getKey($type = 'public'){
+    	switch ($type){
+    		case 'public': {
+    			return $this->_getKey(__DIR__.'/secret_public.php');
+    		} break;
+    		case 'private': {
+    			return $this->_getKey(__DIR__.'/secret_private.php');
+    		} break;
+    		default: {
+    			return '';
+    		}
+    	}
+    }
+    
+    /**
+     * encrypt chat message
+     * @param string $text
+     * @return string
+     */
+    private function encryptMessage($text){
+    	if ($text == '') return '';
+    	$this->createKeys();
+    	return $this->_encryptMessage($text, $this->getKey('public'));
+    }
+    
+    /**
+     * decrypt chat message
+     * @param string $text
+     * @return string
+     */
+    private function decryptMessage($text){
+    	if ($text == '') return '';
+    	$this->createKeys();
+    	return $this->_decryptMessage($text, $this->getKey('private'));
+    }
+    
+    /**
+     * get text/key from file
+     * @param string $filename
+     * @return string
+     */
+    private function _getKey($filename){
+    	require $filename;
+    	return base64_decode($key);
+    }
+    
+    /**
+     * encrypt chat message by key
+     * @param string $text
+     * @param string $key
+     * @return string
+     */
+    private function _encryptMessage($text, $key){
+    	openssl_public_encrypt($text, $encrypted, $key);
+    	return base64_encode($encrypted);
+    }
+    
+    /**
+     * decrypt chat message by key
+     * @param string $encrypted
+     * @param string $key
+     * @return string
+     */
+    private function _decryptMessage($encrypted, $key){
+    	openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
+    	if ($decrypted === NULL) return '<strong><i>! Corrupted message. !</i></strong>';
+    	return $decrypted;
     }
 }

@@ -3,7 +3,17 @@
         padding-top: 80px;
     }
 }
-
+.logo-bg {
+	background-image: url(../img/stura.svg);
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
+	display: inline-block;
+	min-width: 60px;
+	height: 150%;
+	vertical-align: top;
+	margin-top: -3px;
+}
 td .content {
     border: none;
 }
@@ -753,32 +763,35 @@ button.btn.btn-arrow-left {
 /* ------- SPINNER ---------------------- */
 /*-- https://github.com/tobiasahlin/SpinKit ---*/
 .planespinner {
-  width: 40px;
-  height: 40px;
-  background-color: #333;
-
-  margin: 10px auto;
-  -webkit-animation: sk-rotateplane 1.2s infinite ease-in-out;
-  animation: sk-rotateplane 1.2s infinite ease-in-out;
+	width: 40px;
+	height: 40px;
+	background-color: #333;
+	margin: 10px auto;
+	-webkit-animation: sk-rotateplane 2.4s infinite ease-in-out;
+	animation: sk-rotateplane 2.4s infinite linear;
+	background-image: url(../img/stura.svg);
+	background-repeat: no-repeat;
+	background-position: center center;
+	background-size: contain;
 }
 
 @-webkit-keyframes sk-rotateplane {
-  0% { -webkit-transform: perspective(120px) }
-  50% { -webkit-transform: perspective(120px) rotateY(180deg) }
-  100% { -webkit-transform: perspective(120px) rotateY(180deg)  rotateX(180deg) }
+	0% { -webkit-transform: perspective(120px) }
+	50% { -webkit-transform: perspective(120px) rotateY(179.9deg) }
+	100% { -webkit-transform: perspective(120px) rotateY(359.9deg) }
 }
 
 @keyframes sk-rotateplane {
-  0% { 
-    transform: perspective(120px) rotateX(0deg) rotateY(0deg);
-    -webkit-transform: perspective(120px) rotateX(0deg) rotateY(0deg) 
-  } 50% { 
-    transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg);
-    -webkit-transform: perspective(120px) rotateX(-180.1deg) rotateY(0deg) 
-  } 100% { 
-    transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
-    -webkit-transform: perspective(120px) rotateX(-180deg) rotateY(-179.9deg);
-  }
+	0% { 
+		transform: perspective(120px) rotateX(0deg) rotateY(0deg);
+		-webkit-transform: perspective(120px) rotateX(0deg) rotateY(0deg) 
+	} 50% { 
+		transform: perspective(120px) rotateX(0) rotateY(179.9deg);
+		-webkit-transform: perspective(120px) rotateX(0) rotateY(179.9deg) 
+	} 100% { 
+		transform: perspective(120px) rotateX(0) rotateY(359.9deg);
+		-webkit-transform: perspective(120px) rotateX(0) rotateY(359.9deg);
+	} 
 }
 /* -------- fileview -------- */
 #server-file-dlg{

@@ -960,7 +960,7 @@ class Validator {
 	public function V_iban($value, $params){
 		$iban = trim(strip_tags(''.$value));
 		$iban = strtoupper($iban); // to upper
-		$iban = str_replace(' ', '', $iban); //remove spaces
+		$iban = preg_replace('/(\s|\n|\r)/', '', $iban); //remove white spaces
 		//empty
 		if (in_array('empty', $params, true) && $iban === ''){
 			$this->filtered = $iban;
