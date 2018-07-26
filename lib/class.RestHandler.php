@@ -487,7 +487,7 @@ class RestHandler extends JsonController{
     			case 'projekt': {
     				$r = [];
     				try{
-    					$r = $db->dbFetchAll('projekte', [], ['projekte.id' => $valid['target_id']], [
+    					$r = $db->dbFetchAll('projekte', ['projekte.*', 'user.username', 'user.email'], ['projekte.id' => $valid['target_id']], [
 							["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
 						]);
     				} catch (Exception $e){
@@ -497,6 +497,8 @@ class RestHandler extends JsonController{
     				if (!$r || count($r) == 0){
     					break;
     				}
+    				//info mail
+    				$mail = [];
     				// ACL --------------------------------
     				// action 
     				switch ($valid['action']){
@@ -508,23 +510,35 @@ class RestHandler extends JsonController{
     						if ($auth->hasGroup('ref-finanzen')) {
     							$map[] = '3';
     						}
-    						if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == (AUTH_HANDLER)::getInstance()->getUsername()) {
+    						if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()) {
     							$map[] = '-1';
     						}
     						$chat->setKeep($map);
     						break;
     					case 'newcomment':
+    						//new message - info mail
+							$tMail = [];
     						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
     							break 2;
     						}
     						//switch type
     						switch ($valid['type']){
     							case '-1':
-    								if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != (AUTH_HANDLER)::getInstance()->getUsername())) {
+    								if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername())) {
     									break 3;
+    								}
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								} else {
+    									$tMail['to'][] = $r[0]['email'];
     								}
     								break;
     							case '0':
+    								if (!$auth->hasGroup('ref-finanzen')) {
+    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+    								} else {
+    									$tMail['to'][] = $r[0]['responsible'];
+    								}
     								break;
     							case '1':
     								break 3;
@@ -537,9 +551,17 @@ class RestHandler extends JsonController{
     								if (!$auth->hasGroup('ref-finanzen')) {
     									break 3;
     								}
+    								$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
     								break;
     							default: 
     								break 3;
+    						}
+    						if (count($tMail) > 0){
+    							$tMail['param']['msg'][] = 'Im unten verlinkten %Projekt% gibt es eine neue Nachricht.';
+    							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
+    							$tMail['subjekt'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
+    							$tMail['template'] = 'projekt_default';
+    							$mail[] = $tMail;
     						}
     						break;
     					default: 
@@ -547,6 +569,12 @@ class RestHandler extends JsonController{
     				}
     				// all ok -> handle all
     				$chat->answerAll($_POST);
+    				if (count($mail) > 0){
+    					foreach ($mail as $m){
+    						//TODO create and send email
+    						//echo '<pre>'; var_export($m); echo '</pre>';
+    					}
+    				}
     				die();
     			} break;
     			default:

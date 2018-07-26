@@ -697,7 +697,7 @@ class ProjektHandler extends FormHandlerInterface{
     
     private function renderChatBox(){ ?>
 		<div class='clearfix'></div>
-        <div class="col-xs-12 col-md-10">
+        <div class="col-xs-12 col-md-10" id="projektchat">
 			<?php 
 				/* @var $auth AuthHandler */
 				$auth = AUTH_HANDLER;
