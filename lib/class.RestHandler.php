@@ -487,7 +487,9 @@ class RestHandler extends JsonController{
     			case 'projekt': {
     				$r = [];
     				try{
-    					$r = $db->dbFetchAll('projekte', [], ['id' => $valid['target_id']]);
+    					$r = $db->dbFetchAll('projekte', [], ['projekte.id' => $valid['target_id']], [
+							["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
+						]);
     				} catch (Exception $e){
     					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
     					break;
@@ -506,6 +508,9 @@ class RestHandler extends JsonController{
     						if ($auth->hasGroup('ref-finanzen')) {
     							$map[] = '3';
     						}
+    						if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == (AUTH_HANDLER)::getInstance()->getUsername()) {
+    							$map[] = '-1';
+    						}
     						$chat->setKeep($map);
     						break;
     					case 'newcomment':
@@ -514,6 +519,11 @@ class RestHandler extends JsonController{
     						}
     						//switch type
     						switch ($valid['type']){
+    							case '-1':
+    								if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != (AUTH_HANDLER)::getInstance()->getUsername())) {
+    									break 3;
+    								}
+    								break;
     							case '0':
     								break;
     							case '1':

@@ -703,6 +703,9 @@ class ProjektHandler extends FormHandlerInterface{
 				$auth = AUTH_HANDLER;
 				$btns = [];
 				$btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+				if ($auth::getInstance()->hasGroup('ref-finanzen') || $auth::getInstance()->getUsername() == $this->data['username']) {
+					$btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title'=> 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'];
+				}
 				if ($auth::getInstance()->hasGroup('ref-finanzen')) {
 					$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
 				}
@@ -710,8 +713,10 @@ class ProjektHandler extends FormHandlerInterface{
 					$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
 				}
 				
+				
 				ChatHandler::renderChatPanel('projekt', $this->id, (AUTH_HANDLER)::getInstance()->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
 					$btns); ?>
+				
 		</div>
     <?php
     

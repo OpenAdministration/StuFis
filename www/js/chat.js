@@ -69,10 +69,11 @@
 	/**
 	 * append message to container
 	 */
-	var appendChatMessage = function ($t, data, message_counter){
+	var appendChatMessage = function ($t, data, message_counter, append_method){
 		// may add comments
 		var add = [];
 		var $to = $t.find('.chat-section');
+		var $before = $to.find('.chat-loading');
 		var counter = message_counter;
 		for(dd in data){
 			if (data.hasOwnProperty(dd)){
@@ -81,10 +82,13 @@
 				counter+=d.count;
 				$c.addClass("chat-"+d.pos);
 				$c.addClass("chat-container");
+				if (d.hasOwnProperty('class')){
+					$c.addClass(d['class']);
+				}
 				$c.css({'background-color' : '#'+d.color[0]});
 				$c.css({'color' : '#'+d.color[1]});
 				switch (d.pos){
-					case 'info':{
+					case 'middle':{
 						$c.attr('title', d.creator_alias + ' am ' + stringToDate(d.timestamp).toLocaleString());
 						$c.html(d.text);
 					} break;
@@ -94,7 +98,7 @@
 						$c.html('<span class="chat-time">'+stringToDate(d.timestamp).toLocaleString()+'</span><span class="chat-count" style="border-color: '+d.color[1]+'">'+counter+'</span><label>'+d.creator_alias+'</label>'+'<p>'+d.text+'</p>');
 					} break;
 				}
-				add.push('<div class="clearfix"></div>');
+				add.push($('<div/>', {'class': 'clearfix'}));
 				add.push($c);
 			}
 		}
@@ -112,7 +116,25 @@
 				});
  			}
 		}
-		chainPrepend();
+		var chainAppend = function (){
+			if (add.length > 0){
+				var $o = add.pop();
+				$before.before($o);
+				$o.hide().slideToggle(120, function(){
+					if (add.length > 0){
+						chainAppend();
+					}
+				});
+			}
+			if (add.length > 0){
+				$before.before(add.pop());
+ 			}
+		}
+		if (append_method){
+			chainPrepend();
+		} else {
+			chainAppend();
+		}
 		return counter;
 	}
 	
@@ -122,6 +144,7 @@
 		var lastKnown = 0;
 		var message_counter = 0;
 		var ajax_blocked = false;
+		var append_method = 0;
 		var updateChat = function($e){
 			var t = $e.find('.new-chat-comment');
 			var dataset = {};
@@ -144,7 +167,8 @@
 			    	data = parseData(values);
 			    	lastKnown = data.last;
 			    	//add comments
-			    	message_counter = appendChatMessage($e, data.data, message_counter);
+			    	message_counter = appendChatMessage($e, data.data, message_counter, append_method);
+			    	append_method = 1;
 			    	$e.find('.chat-loading').fadeOut(1000);
 			    	ajax_blocked = false;
 		        }).fail(function (values) {
