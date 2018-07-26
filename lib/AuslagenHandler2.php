@@ -582,7 +582,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		$in = trim($in);
 		if ($in === '') return '';
 		if (mb_strlen($in)>=5) {
-			return mb_substr($in, 0, 4).' ... ... '.mb_substr($in, -2);
+			return mb_substr($in, 0, 5).' ... ... '.mb_substr($in, -2);
 		} else {
 			return $in;
 		}
