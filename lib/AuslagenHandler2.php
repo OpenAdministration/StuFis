@@ -1487,6 +1487,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		<div id='projekt-well' class="well">
             <?php $this->render_project_auslagen(true); ?>
     	</div>
+    	<?php 
+    		if ($this->routeInfo['action'] != 'create' && $this->routeInfo['action'] != 'edit'){
+    			if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->state2stateInfo('wip;'.$this->auslagen_data['created'])['user']) {
+    				$this->render_chat_box();
+    			}
+    		}
+    	?>
         <?php
         	$this->render_auslagen_links();
         return;
@@ -1872,6 +1879,32 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		</div>
 	<?php 
 	}
+	
+	private function render_chat_box(){ ?>
+			<div class='clearfix'></div>
+	        <div id="auslagenchat">
+				<?php 
+					$auth = (AUTH_HANDLER);
+					/* @var $auth AuthHandler */
+					$auth = $auth::getInstance();
+					$btns = [];
+					$pdate = date_create(substr($this->auslagen_data['created'], 0, 4).'-01-01 00:00:00');
+					$pdate->modify('+1 year');
+					$now = date_create();
+					//allow chat only 90 days into next year
+					if ($now->getTimestamp()-$pdate->getTimestamp() <= 86400 * 90){
+						if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == self::state2stateInfo('wip;'.$this->auslagen_data['created'])['user']) {
+							$btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title'=> 'Private Nachricht zwischen Ref-Finanzen und dem Auslagen-Ersteller'];
+						}
+						if ($auth->hasGroup('ref-finanzen')) {
+							$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+						}
+					}
+					ChatHandler::renderChatPanel('auslagen', $this->auslagen_id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")", 
+						$btns); ?>
+			</div>
+	    <?php
+	 }
 	
 	public function getStateSvg(){
 		$diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
