@@ -236,6 +236,7 @@
 	        }
 	        debounced = screenChecker.debounce(3);
 	        $(window).on('scroll',debounced);
+	        screenChecker();
 		});
 	});
 })();
