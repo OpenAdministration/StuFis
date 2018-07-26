@@ -188,6 +188,7 @@ class ChatHandler{
                          data-url="<?= URIBASE . 'rest/chat'; ?>"
                          data-target_id="<?= $group_id; ?>"
                          data-target="<?= $group; ?>">
+                        <?php if (count($buttons)>0){ ?>
 						<div class="chat-container chat-right">
 							<span class="chat-time">Jetzt gerade</span>
 							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())),0,16); echo $tid;?>">
@@ -207,6 +208,7 @@ class ChatHandler{
 							?>
 							<div class="clearfix"></div>
 						</div>
+						<?php } ?>
 					</div>
 					<div class="clearfix"></div>
 					<div class="chat-section">
