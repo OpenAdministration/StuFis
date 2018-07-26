@@ -393,7 +393,7 @@ class ProjektHandler extends FormHandlerInterface{
                 $this->renderInteractionPanel();
                 //echo $this->templater->getStateChooser($this->stateHandler);
                 $this->renderProjekt("Internes Projekt");
-                $this->renderChatBox();
+                $this->render_chat_box();
                 $this->renderAuslagenList();
                 break;
             default:
@@ -694,31 +694,34 @@ class ProjektHandler extends FormHandlerInterface{
         return $this->id;
     }
     
-    private function renderChatBox(){ ?>
+    private function render_chat_box(){ ?>
 		<div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
 			<?php 
+				$auth = (AUTH_HANDLER);
 				/* @var $auth AuthHandler */
-				$auth = AUTH_HANDLER;
+				$auth = $auth::getInstance();
 				$btns = [];
-				$btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
-				if ($auth::getInstance()->hasGroup('ref-finanzen') || $auth::getInstance()->getUsername() == $this->data['username']) {
-					$btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title'=> 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'];
+				$pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
+				$pdate->modify('+1 year');
+				$now = date_create();
+				//allow chat only 90 days into next year
+				if ($now->getTimestamp()-$pdate->getTimestamp() <= 86400 * 90){
+					$btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+					if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->data['username']) {
+						$btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title'=> 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'];
+					}
+					if ($auth->hasGroup('ref-finanzen')) {
+						$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+					}
+					if ($auth->hasGroup('admin')) {
+						$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
+					}
 				}
-				if ($auth::getInstance()->hasGroup('ref-finanzen')) {
-					$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
-				}
-				if ($auth::getInstance()->hasGroup('admin')) {
-					$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
-				}
-				
-				ChatHandler::renderChatPanel('projekt', $this->id, (AUTH_HANDLER)::getInstance()->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
+				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
 					$btns); ?>
 		</div>
     <?php
-    
-    	$chatHandler = new ChatHandler('projekt', $this->id, 'mign3745');
-    
     }
     
     private function renderAuslagenList(){ ?>

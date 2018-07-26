@@ -116,8 +116,11 @@ class RestHandler extends JsonController{
         $projektHandler = null;
         $dbret = false;
         try{
+        	$auth = (AUTH_HANDLER);
+        	/* @var $auth AuthHandler */
+        	$auth = $auth::getInstance();
             $logId = DBConnector::getInstance()->logThisAction($_POST);
-            DBConnector::getInstance()->logAppend($logId, "username", (AUTH_HANDLER)::getInstance()->getUsername());
+            DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
             
             if (!isset($_POST["action"]))
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");
@@ -503,6 +506,9 @@ class RestHandler extends JsonController{
     				if (!$r || count($r) == 0){
     					break;
     				}
+    				$pdate = date_create(substr($r[0]['createdat'], 0, 4).'-01-01 00:00:00');
+    				$pdate->modify('+1 year');
+    				$now = date_create();
     				//info mail
     				$mail = [];
     				// ACL --------------------------------
@@ -522,6 +528,10 @@ class RestHandler extends JsonController{
     						$chat->setKeep($map);
     						break;
     					case 'newcomment':
+    						//allow chat only 90 days into next year
+    						if ($now->getTimestamp()-$pdate->getTimestamp() > 86400 * 90){
+    							break 2;
+    						}
     						//new message - info mail
 							$tMail = [];
     						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
@@ -546,8 +556,6 @@ class RestHandler extends JsonController{
     									$tMail['to'][] = $r[0]['responsible'];
     								}
     								break;
-    							case '1':
-    								break 3;
     							case '2':
     								if (!$auth->hasGroup('admin')) {
     									break 3;
@@ -593,7 +601,10 @@ class RestHandler extends JsonController{
     }
     
     private function updateKonto($routeInfo){
-        (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+    	$auth = (AUTH_HANDLER);
+    	/* @var $auth AuthHandler */
+    	$auth = $auth::getInstance();
+        $auth->requireGroup(HIBISCUSGROUP);
         
         $ret = true;
         if (!DBConnector::getInstance()->dbBegin()){
