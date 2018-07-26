@@ -1518,6 +1518,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 */
 	public function render_beleg_container($belege, $editable = true, $label = ''){
 		if ($label){ echo '<label>'.$label.'</label>';} ?>
+		
 		<div class="beleg-table well<?= ($editable)? ' editable':'' ?>">
 			<div class="hidden datalists">
 				<datalist class="datalist-projekt">
@@ -1674,7 +1675,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		 
 		// if empty and !$editable add empty hint
 		$out .= '<div class="form-group posten-empty '.((count($posten) == 0)?'':' hidden').'">Keine Angaben</div>';
-		 
+		
+		$inOutPrefix = ['0' => ''];
+		foreach ($this->projekt_data['posten'] as $pp){
+			$inOutPrefix[$pp['id']] = (($pp['einnahmen'])?'[Einnahme] ':'').(($pp['ausgaben'])?'[Ausgabe] ':'');
+		}
+		
 		// if nonempty add lines
 		foreach ($posten as $pline){
 			$out .= '<div class="form-group posten-entry" data-id="'.$pline['id'].'" data-projekt-posten-id="'.$pline['projekt_posten_id'].'">';
@@ -1688,7 +1694,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			if ($editable){
 				$out .= '<div class="col-sm-4 editable projekt-posten-select" data-value="'.$pline['projekt_posten_id'].'">'
 							.'<div class="input-group form-group">'
-								.'<span class="value">'.(($pline['ausgaben'])?'[Ausgabe] ':'').(($pline['einnahmen'])?'[Einnahme] ':'').$pline['projekt.posten_name'].'</span>'
+								.'<span class="value">'.$inOutPrefix[$pline['projekt_posten_id']].$pline['projekt.posten_name'].'</span>'
 								.'<input type="hidden" name="belege['.$beleg_id.'][posten]['.$pline['id'].'][projekt-posten]" value="'.$pline['projekt_posten_id'].'">'
 							.'</div>'
 						.'</div>';
