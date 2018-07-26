@@ -617,9 +617,8 @@ class ProjektHandler extends FormHandlerInterface{
                                     class="fa fa-fw fa-refresh"></i></a></li>
                 <?php } ?>
                 <?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])){ ?>
-                    <!-- FIXME LIVE COMMENT ONLY
-                    <li><a href="<?= $url ?>auslagen" title="Neue Auslagenerstattung">neue Auslagenerstattung&nbsp;<i
-                                    class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li> -->
+                    <li><a href="<?= $url ?>auslagen" title="Neue Abrechnung/Rechnung">neue Abrechnung/Rechnung&nbsp;<i
+                                    class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
                 <?php } ?>
                 <?php if ($this->permissionHandler->isAnyDataEditable(true) != false){ ?>
                     <li><a href="<?= $url ?>edit" title="Bearbeiten">Bearbeiten&nbsp;<i
