@@ -1432,9 +1432,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	        	<input type="hidden" name="etag" value="<?= ($this->routeInfo['action'] == 'create')? '0':$this->auslagen_data['etag']; ?>">
 	        	<?= $this->templater->getHiddenActionInput(''); ?>
 	        <?php //-------------------------------------------------------------------- ?>
-            <label for="projekt-well">Auslagenerstattung</label>
+            <label for="projekt-well">Abrechnung</label>
             <div id='projekt-well' class="well">
-            	<label>Name der Auslagenerstattung</label>
+            	<label>Name der Abrechnung</label>
             	<?= $this->templater->getTextForm("auslagen-name", (isset($this->auslagen_data['id']))?$this->auslagen_data['name_suffix']:'', 12, "optional", "", [], '<a href="'.URIBASE.'projekt/'.$this->projekt_id.'"><i class="fa fa-fw fa-link"> </i>'.htmlspecialchars($this->projekt_data['name']).'</a>') ?>
 	            <div class="clearfix"></div>
              	<label for="zahlung">Zahlungsinformationen</label><br>
