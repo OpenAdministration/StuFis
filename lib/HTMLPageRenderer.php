@@ -165,7 +165,7 @@ class HTMLPageRenderer{
             <div class="container">
                 <div class="navbar-header">
                     <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
-                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>">StuRa-Finanzformulare
+                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>"><span class="logo-bg"></span> Finanzformulare
                         <?php
                         if (DEV)
                             echo " TESTSYSTEM";
