@@ -118,7 +118,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			'owner' => [
 				'dynamic' => [
 					'owner',
-					'plain_orga'
+				],
+			],
+			'orga' => [
+				'dynamic' => [
+					'plain_orga',
 				],
 			],
 		]
