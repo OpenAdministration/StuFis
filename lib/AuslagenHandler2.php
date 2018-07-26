@@ -95,8 +95,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	private static $groups = [
 		'editable' => [
 			'draft' => ["groups" => ["sgis"]],
-			'wip' 	=> ["groups" => ["ref-finanzen-hv"]],
-			'ok' 	=> ["groups" => ["ref-finanzen-hv"]],
+			'wip' 	=> ["groups" => ["ref-finanzen"]],
+			'ok' 	=> ["groups" => ["ref-finanzen"]],
 		],
 		'strict_editable' => [
 			'groups' => ["ref-finanzen-hv"],
