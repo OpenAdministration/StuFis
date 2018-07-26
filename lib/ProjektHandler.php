@@ -713,10 +713,8 @@ class ProjektHandler extends FormHandlerInterface{
 					$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
 				}
 				
-				
 				ChatHandler::renderChatPanel('projekt', $this->id, (AUTH_HANDLER)::getInstance()->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
 					$btns); ?>
-				
 		</div>
     <?php
     
