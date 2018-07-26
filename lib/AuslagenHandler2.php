@@ -237,10 +237,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @return multitype:NULL string number multitype:
 	 */
 	private function get_empty_auslage(){
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		return [
 			"id" => NULL,
 			"projekt_id" => $this->projekt_id,
@@ -305,13 +308,16 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @return bool
 	 */
 	private function checkPermissionByMap($map){
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		if ($map === true){
 			return true;
 		}
 		if (is_array($map)
 			&&isset($map['groups'])){
 			$g = (is_string($map['groups']))? $map['groups'] : implode(",", $map["groups"]);
-            if ((AUTH_HANDLER)::getInstance()->hasGroup($g)){
+            if ($auth->hasGroup($g)){
 					return true;
 			}
 		}
@@ -325,13 +331,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				'plain_orga' => $this->auslagen_data['projekte.org'],
 			];
 			//check dynamic permissions
-            $ah = (AUTH_HANDLER)::getInstance();
-			$a = $ah->getAttributes();
+			$a = $auth->getAttributes();
 			foreach ($map['dynamic'] as $type){
 				if (!isset($dynamic[$type])) continue;
 				switch($type){
 					case 'owner':{
-						if($ah->getUsername() == $dynamic[$type]){
+						if($auth->getUsername() == $dynamic[$type]){
 							return true;
 						}
 					} break;
@@ -410,10 +415,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 */
 	private function state_change($newState, $etag){
 		if ($this->state_change_possible($newState)) {
+			$auth = (AUTH_HANDLER);
+			/* @var $auth AuthHandler */
+			$auth = $auth::getInstance();
 			$newInfo = self::state2stateInfo($newState);
 			$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-            $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-            $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+            $newInfo['user'] = $auth->getUsername();
+            $newInfo['realname'] = $auth->getUserFullName();
 			//
 			$set = [
 				'version' => $this->auslagen_data['version'] + 1,
@@ -1011,11 +1019,14 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'<p>Die übertragene Version liegt '.($this->auslagen_data['version'] - $this->routeInfo['validated']['version']).' Version(en) zurück.</p>';
 			return;
 		}
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		
 		//check fileid exists
 		$found_file_id = false;
@@ -1066,11 +1077,14 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		} elseif ($this->routeInfo['validated']['auslagen-id'] == 'NEW'){
 			$this->auslagen_data = $this->get_empty_auslage();
 		}
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		//fill data
 		$newInfo = $this->stateInfo;
 		$newInfo['date'] = date_create()->format('Y-m-d H:i:s');
-        $newInfo['user'] = (AUTH_HANDLER)::getInstance()->getUsername();
-        $newInfo['realname'] = (AUTH_HANDLER)::getInstance()->getUserFullName();
+        $newInfo['user'] = $auth->getUsername();
+        $newInfo['realname'] = $auth->getUserFullName();
 		
 		// filter for changes ---------------------------------
 		$changed_belege_flag = false;
@@ -1325,7 +1339,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param string $titel
 	 */
 	private function renderAuslagenerstattung($titel){
-		 
+		$auth = (AUTH_HANDLER);
+		/* @var $auth AuthHandler */
+		$auth = $auth::getInstance();
 		$editable = $this->stateInfo['editable'];
 		?>
         	<h3><?= $titel . (($this->title)? $this->title: '') ?></h3>
@@ -1425,7 +1441,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
 				<?php // iban only show trimmed if not hv/kv important!
 	            	$iban_text = $this->auslagen_data['zahlung-iban'];
-                if (!(AUTH_HANDLER)::getInstance()->hasGroup('HV,KV')){
+                if (!$auth->hasGroup('HV,KV')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	} elseif ($iban_text != '') {
 	            		$iban_text = chunk_split($iban_text, 4, ' ');
