@@ -646,6 +646,7 @@ class ChatHandler{
      */
     private function _decryptMessage($encrypted, $key){
     	openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
+    	if ($decrypted === NULL) return '<strong><i>! Corrupted message. !</i></strong>';
     	return $decrypted;
     }
 }
