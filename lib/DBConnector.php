@@ -138,7 +138,7 @@ class DBConnector extends Singleton{
             "ok-kv" => "VARCHAR(255) NOT NULL DEFAULT ''",
             "payed" => "VARCHAR(255) NOT NULL DEFAULT ''",
             "rejected" => "VARCHAR(255) NOT NULL DEFAULT ''",
-            "zahlung-iban" => "VARCHAR(127) NOT NULL",
+            "zahlung-iban" => "VARCHAR(1023) NOT NULL",
             "zahlung-name" => "VARCHAR(127) NOT NULL",
             "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
         	"address" => "VARCHAR(1023) NOT NULL DEFAULT ''",

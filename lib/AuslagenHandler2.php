@@ -1160,7 +1160,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"ok-kv" => ($changed_belege_flag || $changed_posten_flag)? '' : $this->auslagen_data['ok-kv'],
 			"payed" => $this->auslagen_data['payed'],
 			"rejected" => $this->auslagen_data['rejected'],
-			"zahlung-iban" => strpos($this->routeInfo['validated']['zahlung-iban'], '... ...')? $this->auslagen_data['zahlung-iban'] : $this->routeInfo['validated']['zahlung-iban'],
+			"zahlung-iban" => strpos($this->routeInfo['validated']['zahlung-iban'], '... ...')? $this->auslagen_data['zahlung-iban'] : $this->encryptedStr($this->routeInfo['validated']['zahlung-iban']),
 			"zahlung-name" => $this->routeInfo['validated']['zahlung-name'],
 			"zahlung-vwzk" => $this->routeInfo['validated']['zahlung-vwzk'],
 			"address" => $this->routeInfo['validated']['address'],
@@ -1343,6 +1343,31 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	}
 	
 	/**
+	 * encrypt string
+	 * @param string $str
+	 * @return string
+	 */
+	protected static function encryptedStr($str){
+		$p = $str;
+		if (!$p) return '';
+		$p = Crypto::pad_string($p);
+		return Crypto::encrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+	}
+	
+	/**
+	 * decrypt string
+	 * @param string $str
+	 * @return string
+	 */
+	protected static function decryptedStr($str){
+		$p = $str;
+		if (!$p) return '';
+		$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		$p = Crypto::unpad_string($p);
+		return $p;
+	}
+	
+	/**
 	 * render auslagenerstattung html page
 	 * @param string $titel
 	 */
@@ -1449,7 +1474,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				<?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12,12,6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
 				<?php // iban only show trimmed if not hv/kv important!
 	            	$iban_text = $this->auslagen_data['zahlung-iban'];
-                if (!$auth->hasGroup('HV,KV')){
+	            	if ($iban_text) {
+	            		$iban_text = $this->decryptedStr($iban_text);
+	            	}
+                if (!$auth->hasGroup('ref-finanzen-hv,ref-finanzen-kv')){
 	            		$iban_text = self::trimIban($iban_text);
 	            	} elseif ($iban_text != '') {
 	            		$iban_text = chunk_split($iban_text, 4, ' ');
