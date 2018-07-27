@@ -573,7 +573,8 @@ class RestHandler extends JsonController{
     						if (count($tMail) > 0){
     							$tMail['param']['msg'][] = 'Im unten verlinkten %Projekt% gibt es eine neue Nachricht.';
     							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
-    							$tMail['subjekt'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
+    							$tMail['param']['headline'] = 'Projektinformationen - Neue Nachricht';
+    							$tMail['subjet'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
     							$tMail['template'] = 'projekt_default';
     							$mail[] = $tMail;
     						}
@@ -584,9 +585,10 @@ class RestHandler extends JsonController{
     				// all ok -> handle all
     				$chat->answerAll($_POST);
     				if (count($mail) > 0){
+    					$mh = MailHandler::getInstance();
     					foreach ($mail as $m){
-    						//TODO create and send email
-    						//echo '<pre>'; var_export($m); echo '</pre>';
+    						//create and send email
+    						$mail_result = $mh->easyMail($m);
     					}
     				}
     				die();
@@ -657,7 +659,8 @@ class RestHandler extends JsonController{
     						if (count($tMail) > 0){
     							$tMail['param']['msg'][] = 'In unten verlinkter %Abrechnung% gibt es eine neue Nachricht.';
     							$tMail['param']['link']['Abrechnung'] = BASE_URL.URIBASE.'projekt/'.$r[0]['projekt_id'].'/auslagen/'.$r[0]['id'].'#auslagenchat';
-    							$tMail['subjekt'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
+    							$tMail['param']['headline'] = 'Auslageninformationen - Neue Nachricht';
+    							$tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
     							$tMail['template'] = 'projekt_default';
     							$mail[] = $tMail;
     						}
@@ -668,9 +671,10 @@ class RestHandler extends JsonController{
     				// all ok -> handle all
     				$chat->answerAll($_POST);
     				if (count($mail) > 0){
+    					$mh = MailHandler::getInstance();
     					foreach ($mail as $m){
-    						//TODO create and send email
-    						//echo '<pre>'; var_export($m); echo '</pre>';
+    						//create and send email
+    						$mail_result = $mh->easyMail($m);
     					}
     				}
     				die();
