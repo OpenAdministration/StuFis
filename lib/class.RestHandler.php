@@ -249,19 +249,19 @@ class RestHandler extends JsonController{
                         'error' => 'Ungültige Auslagen ID.'
                     ],
                     'auslagen-name' => ['regex',
-	                    'pattern' => '/^[a-zA-Z0-9\-_ :%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+	                    'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
 	                    'maxlength' => '255',
                         'empty',
                         'error' =>	'Ungültiger Auslagen name.'
                     ],
                     'zahlung-name' => ['regex',
-	                    'pattern' => '/^[a-zA-Z0-9\-_ :%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+	                    'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
 	                    'maxlength' => '127',
                         'empty',
                         'error' =>	'Ungültiger Zahlungsempfänger.'
                     ],
                     'zahlung-iban' => ['regex',
-                        'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{2} [a-zA-Z0-9]{2}( ... ... )[a-zA-Z0-9]{2}))$/',
+                        'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{4}( ... ... )[a-zA-Z0-9]{2}))$/',
                         'maxlength' => '127',
                         'empty',
                         'error' => 'Ungültige Iban.'
