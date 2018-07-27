@@ -37,8 +37,7 @@
 	<meta property="og:title" content="<?= $headline ?>" />
 </head>
 <body class="half-padding" style="margin: 0;padding: 10px;-webkit-text-size-adjust: 100%;, height: 90%; width: 90%;">
-	<img style="display: block;height: auto;width: 100%;border: 0;max-width: 242px;" src="cid:logoattach" alt="Logo" width="242" />
-	<h2><?= $headline ?></h2>
+	<h2><img style="display: inline-block;height: auto;width: 50px;border: 0;max-width: 242px; vertical-align: top; margin-right: 20px;" src="cid:logoattach" alt="Logo" width="242" /><?= $headline ?></h2>
 	<hr>
 	<?php 
 		foreach ($param['msg'] as $msg){
@@ -46,7 +45,7 @@
 			foreach ($param['link'] as $k => $l){
 				$c = count($links);
 				$links[] = $l;
-				$ltext = '<a href=".$l.">'.$k.'['.$c.']<a>';
+				$ltext = '<a href=".$l.">'.$k.'['.$c.']</a>';
 				$msg = str_replace('%'.$k.'%', $ltext, $msg);
 			}
 			echo $msg;
