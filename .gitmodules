@@ -4,3 +4,6 @@
 [submodule "sql/SQLBackup"]
 	path = sql/SQLBackup
 	url = https://github.com/lu-kors/SQLBackup.git
+[submodule "lib/external_libraries/phpmailer"]
+	path = lib/external_libraries/phpmailer
+	url = https://github.com/PHPMailer/PHPMailer.git
