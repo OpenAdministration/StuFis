@@ -19,7 +19,7 @@ class ProjektHandler extends FormHandlerInterface{
     private $templater;
     private $stateHandler;
     /**
-     * @var $permissionHandler PermissionHandler
+     * @var PermissionHandler
      */
     private $permissionHandler;
     private $id;
@@ -296,8 +296,11 @@ class ProjektHandler extends FormHandlerInterface{
         if ($version !== $this->data["version"])
             throw new WrongVersionException("Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!");
         //check if row count is everywhere the same
-        $maxRows = max(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
-        $minRows = min(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
+        $maxRows = $minRows = 0;
+        if (isset($data["posten-name"]) && isset($data["posten-bemerkung"]) && isset($data["posten-einnahmen"]) && isset($data["posten-ausgaben"])){
+	        $maxRows = max(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
+	        $minRows = min(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
+        }
         //wenn posten-titel nicht mit übertragen setze dummy an seine stelle
         if (!isset($data["posten-titel"])){
             $data["posten-titel"] = array_fill(0, $maxRows, null);
@@ -314,15 +317,25 @@ class ProjektHandler extends FormHandlerInterface{
         $extractFields = array_intersect_key($data, array_flip($extractFields));
         $data = array_diff_key($data, $generatedFields, $extractFields);
         
+        $recht_unset = false;
         if (isset($data["recht-additional"])){
-            if (!isset($data["recht"]))
+        	if (!isset($data["recht"]) && isset($this->data['recht'])){
+	        	$data["recht"] = $this->data['recht'];
+	        	$recht_unset = true;
+	        }
+            if (!isset($data["recht"])){
                 $data["recht-additional"] = "";
-            if (isset($data["recht-additional"][$data["recht"]])){
+            } elseif (isset($data["recht-additional"][$data["recht"]])){
                 $data["recht-additional"] = $data["recht-additional"][$data["recht"]];
             }else{
                 $data["recht-additional"] = "";
             }
         }
+        
+        if ($recht_unset){
+        	unset($data["recht"]);
+        }
+        
         //check if fields editable
         $fields = $generatedFields;
         foreach ($data as $name => $content){
@@ -338,19 +351,21 @@ class ProjektHandler extends FormHandlerInterface{
         }
         $update_rows = DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $version], $fields);
     
-        //set new posten values, *delete* old
-        DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
-        for ($i = 0; $i < $minRows - 1; $i++){
-            //would throw exception if not working
-            DBConnector::getInstance()->dbInsert("projektposten", [
-                "id" => $i+1 ,
-                "projekt_id" => $this->id,
-                "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
-                "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-einnahmen"][$i], "money"),
-                "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-ausgaben"][$i], "money"),
-                "name" => $extractFields["posten-name"][$i],
-                "bemerkung" => $extractFields["posten-bemerkung"][$i]
-            ]);
+        if ($this->permissionHandler->isEditable(['posten-name','posten-bemerkung','posten-einnahmen','posten-ausgaben'], 'and')){
+	        //set new posten values, *delete* old
+	        DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
+	        for ($i = 0; $i < $minRows - 1; $i++){
+	            //would throw exception if not working
+	            DBConnector::getInstance()->dbInsert("projektposten", [
+	                "id" => $i+1 ,
+	                "projekt_id" => $this->id,
+	                "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
+	                "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-einnahmen"][$i], "money"),
+	                "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue($extractFields["posten-ausgaben"][$i], "money"),
+	                "name" => $extractFields["posten-name"][$i],
+	                "bemerkung" => $extractFields["posten-bemerkung"][$i]
+	            ]);
+	        }
         }
         return $update_rows === 1; //true falls nur ein Eintrag geändert
     }
@@ -369,6 +384,8 @@ class ProjektHandler extends FormHandlerInterface{
         $user_id = DBConnector::getInstance()->getUser()["id"];
         $logID = DBConnector::getInstance()->logThisAction(["user_id" => $user_id, "newState" => $stateName, "id" => $this->id, "version_before" => $this->data["version"]], "changeState");
         DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $this->data["version"]], ["state" => $stateName, "stateCreator_id" => $user_id, "lastupdated" => date("Y-m-d H:i:s"), "version" => ($this->data["version"] + 1)]);
+        $chat = new ChatHandler('projekt', $this->id);
+        $chat->_createComment('projekt', $this->id, date_create()->format('Y-m-d H:i:s'), 'system', '', self::$states[$this->data['state']][0].' -> '.self::$states[$stateName][0], 1);
         $this->stateHandler->transitionTo($stateName);
         return true;
     }
@@ -378,7 +395,6 @@ class ProjektHandler extends FormHandlerInterface{
     }
     
     function render(){
-        //var_dump($this->args);
         if ($this->action === "create" || !isset($this->id)){
             $this->renderProjekt("neues Projekt anlegen");
             return;
@@ -403,17 +419,18 @@ class ProjektHandler extends FormHandlerInterface{
     }
     
     private function renderProjekt($title){
-        
+    	$auth = (AUTH_HANDLER);
+    	/* @var $auth AuthHandler */
+    	$auth = $auth::getInstance();
         $validateMe = false;
         $editable = $this->permissionHandler->isAnyDataEditable();
         
         //build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"));
+        $selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
         $selectable_gremien["values"] = $this->data['org'];
     
-    
-        $mail_selector = (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-        $selectable_mail = FormTemplater::generateSelectable((AUTH_HANDLER)::getInstance()->getAttributes()[$mail_selector]);
+        $mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
+        $selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
         $selectable_mail["values"] = $this->data['org-mail'];
         
         $sel_recht = self::$selectable_recht;
@@ -718,7 +735,7 @@ class ProjektHandler extends FormHandlerInterface{
 						$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
 					}
 				}
-				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
+				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")", 
 					$btns); ?>
 		</div>
     <?php
