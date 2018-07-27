@@ -182,7 +182,7 @@ class ChatHandler{
 			<div class="panel panel-default chat-panel">
 				<input type="hidden" name="nononce" value="<?= strrev($GLOBALS["nonce"]); ?>">
 	        	<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>">
-				<div class="panel-heading">Kommentare</div>
+				<div class="panel-heading">Kommentare/Nachrichten</div>
 				<div class="panel-body chat">
 					<div class="new-chat-comment"
                          data-url="<?= URIBASE . 'rest/chat'; ?>"
