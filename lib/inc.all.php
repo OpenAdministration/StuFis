@@ -10,6 +10,8 @@ require_once SYSBASE . '/lib/LoadGroups.php';
 require_once SYSBASE . '/lib/Singleton.php';
 require_once SYSBASE . '/lib/baseclass/Enum.php';
 require_once SYSBASE . '/lib/LoadGroups.php';
+require_once SYSBASE . '/lib/class.Crypto.php';
+require_once SYSBASE . '/lib/class.MailHandler.php';
 require_once SYSBASE . '/lib/svg/class.SvgDiagram.php';
 require_once SYSBASE . '/lib/Renderer.php';
 require_once SYSBASE . '/lib/HibiscusXMLRPCConnector.php';

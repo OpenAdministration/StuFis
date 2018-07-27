@@ -1,0 +1,37 @@
+.crawllinklist p{
+	border-left: 4px solid white;
+	margin: 5px;
+	padding: 5px;
+}
+.crawllinklist p:hover,
+.crawllinklist p:focus,
+.crawllinklist p:active {
+	border-left: 4px solid gray;
+	background-color: #f2f2f2;
+}
+/* --------------------- */
+.logging {
+	display: block;
+	counter-reset: protoline;
+}
+.logging > .logline {
+	counter-increment: section;
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 2px;
+}
+.logging > .logline:hover{
+	background-color: #ddd;
+}
+.logging > .logline::before {
+	content: "" counter(section);
+	display: inline-block;
+	text-align: left;
+	margin-right: 15px;
+	padding: 2px;
+	background-color: #ccc;
+	min-width: 42px;
+}
+.logging .tab {
+	display: inline-block;
+	width: 30px;
+}
