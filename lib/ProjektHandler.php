@@ -369,6 +369,8 @@ class ProjektHandler extends FormHandlerInterface{
         $user_id = DBConnector::getInstance()->getUser()["id"];
         $logID = DBConnector::getInstance()->logThisAction(["user_id" => $user_id, "newState" => $stateName, "id" => $this->id, "version_before" => $this->data["version"]], "changeState");
         DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $this->data["version"]], ["state" => $stateName, "stateCreator_id" => $user_id, "lastupdated" => date("Y-m-d H:i:s"), "version" => ($this->data["version"] + 1)]);
+        $chat = new ChatHandler('projekt', $this->id);
+        $chat->_createComment('projekt', $this->id, date_create()->format('Y-m-d H:i:s'), 'system', '', self::$states[$this->data['state']][0].' -> '.self::$states[$stateName][0], 1);
         $this->stateHandler->transitionTo($stateName);
         return true;
     }
@@ -378,7 +380,6 @@ class ProjektHandler extends FormHandlerInterface{
     }
     
     function render(){
-        //var_dump($this->args);
         if ($this->action === "create" || !isset($this->id)){
             $this->renderProjekt("neues Projekt anlegen");
             return;
@@ -403,17 +404,18 @@ class ProjektHandler extends FormHandlerInterface{
     }
     
     private function renderProjekt($title){
-        
+    	$auth = (AUTH_HANDLER);
+    	/* @var $auth AuthHandler */
+    	$auth = $auth::getInstance();
         $validateMe = false;
         $editable = $this->permissionHandler->isAnyDataEditable();
         
         //build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"));
+        $selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
         $selectable_gremien["values"] = $this->data['org'];
     
-    
-        $mail_selector = (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-        $selectable_mail = FormTemplater::generateSelectable((AUTH_HANDLER)::getInstance()->getAttributes()[$mail_selector]);
+        $mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
+        $selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
         $selectable_mail["values"] = $this->data['org-mail'];
         
         $sel_recht = self::$selectable_recht;
@@ -718,7 +720,7 @@ class ProjektHandler extends FormHandlerInterface{
 						$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
 					}
 				}
-				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . (AUTH_HANDLER)::getInstance()->getUsername() . ")", 
+				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")", 
 					$btns); ?>
 		</div>
     <?php
