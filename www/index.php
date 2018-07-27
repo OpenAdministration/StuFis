@@ -36,6 +36,10 @@ if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($rou
 	$routeInfo['controller'] = 'error';
 }
 
+if (MAIL_INSTALL) {
+	require_once SYSBASE . '/lib/mail_init.php';
+}
+
 //TODO ACL on route ? ----------------------------
 $idebug = false;
 
