@@ -571,9 +571,9 @@ class RestHandler extends JsonController{
     								break 3;
     						}
     						if (count($tMail) > 0){
-    							$tMail['param']['msg'][] = 'Im unten verlinkten %Projekt% gibt es eine neue Nachricht.';
+    							$tMail['param']['msg'][] = 'Im %Projekt% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
     							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
-    							$tMail['param']['headline'] = 'Projektinformationen - Neue Nachricht';
+    							$tMail['param']['headline'] = 'Projekt - Neue Nachricht';
     							$tMail['subjet'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
     							$tMail['template'] = 'projekt_default';
     							$mail[] = $tMail;
@@ -657,9 +657,9 @@ class RestHandler extends JsonController{
     								break 3;
     						}
     						if (count($tMail) > 0){
-    							$tMail['param']['msg'][] = 'In unten verlinkter %Abrechnung% gibt es eine neue Nachricht.';
+    							$tMail['param']['msg'][] = 'In der %Abrechnung% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
     							$tMail['param']['link']['Abrechnung'] = BASE_URL.URIBASE.'projekt/'.$r[0]['projekt_id'].'/auslagen/'.$r[0]['id'].'#auslagenchat';
-    							$tMail['param']['headline'] = 'Auslageninformationen - Neue Nachricht';
+    							$tMail['param']['headline'] = 'Auslagen - Neue Nachricht';
     							$tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
     							$tMail['template'] = 'projekt_default';
     							$mail[] = $tMail;
