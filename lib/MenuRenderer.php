@@ -450,7 +450,13 @@ class MenuRenderer extends Renderer{
         $escapeFunctions = [
             [$this, "auslagenLinkEscapeFunction"],                      // 3 Parameter
             null,                                                       // 1 Parameter
-            null,                                                       // 1 Parameter
+            function($str){
+	        	$p = $str;
+				if (!$p) return '';
+				$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+				$p = Crypto::unpad_string($p);
+				return $p;
+        	},                                                       // 1 Parameter
             function($pId, $pCreate, $aId, $vwdzweck, $aName, $pName){  // 6 Parameter - Verwendungszweck
                 $year = date("Y", strtotime($pCreate));
                 $ret = "IP-$year-$pId-A$aId - $vwdzweck - $aName - $pName";
