@@ -173,11 +173,17 @@ class HTMLPageRenderer{
                     </a>
                 </div>
                 <ul class="nav navbar-nav navbar-right">
+                	<li><a target="_blank"
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>"><i class="fa fa-fw fa-database"></i> Datenschutz</a>
+                    </li>
                     <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">Hilfe</a>
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>"><i class="fa fa-fw fa-info"></i> Impressum</a>
+                    </li>
+                    <li><a target="_blank"
+                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>"><i class="fa fa-fw fa-question"></i> Hilfe</a>
                     </li>
                     <li>
-                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>">Logout</a>
+                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>"><i class="fa fa-fw fa-power-off"></i> Logout</a>
                     </li>
                 </ul>
             </div>

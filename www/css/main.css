@@ -553,10 +553,6 @@ tr.booking__canceled-row > td.text-color__primary {
     color: grey !important;
 }
 
-.fa.fa-fw {
-    display: inline;
-}
-
 .text-color__green {
     color: green;
 }
