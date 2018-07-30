@@ -431,7 +431,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			//
 			$set = [
 				'version' => $this->auslagen_data['version'] + 1,
-				'etag'	  => generateRandomString(16),
+				'etag'	  => Crypto::generateRandomString(16),
 			];
 			$where = [
 				'id' => $this->auslagen_data['id'],
@@ -1057,7 +1057,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				"last_change" => "{$newInfo['date']}",
 				"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 				"version" => intval($this->auslagen_data['version']) + 1,
-				"etag" => generateRandomString(16),
+				"etag" => Crypto::generateRandomString(16),
 			]
 		);
 		$this->json_result = [
@@ -1167,7 +1167,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 			"version" => intval($this->auslagen_data['version']) + 1,
-			"etag" => generateRandomString(16),
+			"etag" => Crypto::generateRandomString(16),
 		];
 		//insert/update in db
 		if ($this->auslagen_data['id']){
@@ -1351,7 +1351,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		$p = $str;
 		if (!$p) return '';
 		$p = Crypto::pad_string($p);
-		return Crypto::encrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		return Crypto::encrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
 	}
 	
 	/**
@@ -1362,7 +1362,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	protected static function decryptedStr($str){
 		$p = $str;
 		if (!$p) return '';
-		$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		$p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
 		$p = Crypto::unpad_string($p);
 		return $p;
 	}
