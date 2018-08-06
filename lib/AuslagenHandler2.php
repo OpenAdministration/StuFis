@@ -946,11 +946,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'subtype' => 'file',
 					'container' => 'object',
 					'headline' => 
+						//direct link
+						'<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'"><a '.
+						'" href="#" class="modal-form-fallback-submit text-white">'.
 						"Belegvorlage_P".
 						str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
 						'-A'.
 						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
-						'.pdf',
+						'.pdf'.
+						'</a>'.
+						'<input type="hidden" name="auslagen-id" value="'.$this->auslagen_id.'">'.
+						'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
+						'<input type="hidden" name="d" value="1">'.'</form>',
 					'attr' => [
 						'type' => 'application/pdf',
 						'download' => 
@@ -1865,11 +1872,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
     			&& isset($this->auslagen_data['belege'])
 			 	&& count($this->auslagen_data['belege']) > 0) { ?>
 				<div class="col-xs-12 form-group">
-                    <strong>
+                    
                         <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
                                 data-action="<?= URIBASE ?>rest/forms/auslagen/belegpdf" type="button"
                                 class="btn btn-primary auslagen-belege-pdf style=" font-weight: bold;
-                        "><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
+                        "><i class="fa fa-fw fa-print"> </i><strong>Belege PDF</strong></button>
+				</div>
+				<div class="clearfix"></div>
+				<div class="col-xs-12 form-group">
+					<form method="POST" action="<?= URIBASE ?>rest/forms/auslagen/belegpdf">
+						<button type="submit" class="btn btn-primary" ><i class="fa fa-fw fa-download"> </i>Belege PDF</button>
+						<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
+						<input type="hidden" name="auslagen-id" value="<?= $this->auslagen_id ?>">
+						<input type="hidden" name="projekt-id" value="<?= $this->projekt_id ?>">
+						<input type="hidden" name="d" value="1">
+					</form>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>
