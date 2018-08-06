@@ -1491,7 +1491,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            	}
 				echo $this->templater->getTextForm("zahlung-iban", $iban_text, [12,12,6], "DE ...", "Zahlungsempfänger IBAN") ?>
 				<div class='clearfix'></div>
-                <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtend bei Firmen)", [], []) ?>
                 <div class="clearfix"></div>
                 <?php 
                 	$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')?
