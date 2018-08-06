@@ -657,7 +657,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		if (!$this->stateInfo['project-editable']){
 			if (   $routeInfo['action']	=='create'
 				|| $routeInfo['action']	=='edit'
-				|| $routeInfo['action']	=='post' ){
+				|| ($routeInfo['action']	=='post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf') ){
 				$this->error = 'Für das aktuelle Projekt sind (momentan) keine Auslagenerstattungen möglich.';
 				return;
 			}

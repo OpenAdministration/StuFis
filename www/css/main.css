@@ -765,6 +765,8 @@ button.btn.btn-arrow-left {
 }
 /* ------- SPINNER ---------------------- */
 /*-- https://github.com/tobiasahlin/SpinKit ---*/
+/*-- Spinner: MIT LICENSE https://github.com/tobiasahlin/SpinKit/blob/master/LICENSE ---*/
+/*-- Modified --*/
 .planespinner {
 	width: 40px;
 	height: 40px;
