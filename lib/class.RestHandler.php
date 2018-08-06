@@ -574,7 +574,7 @@ class RestHandler extends JsonController{
     							$tMail['param']['msg'][] = 'Im %Projekt% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
     							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
     							$tMail['param']['headline'] = 'Projekt - Neue Nachricht';
-    							$tMail['subjet'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
+    							$tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
     							$tMail['template'] = 'projekt_default';
     							$mail[] = $tMail;
     						}

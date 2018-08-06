@@ -47,7 +47,7 @@ if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') == 0)
 // show encrypted password =============================================
 echo '<div class="box monospace wrap">'."\n";
 echo '<strong>Mail Passwort encrypted:</strong><br>';
-echo '<span><i class="red">'.((MailHandler::encryptedPassword())?MailHandler::encryptedPassword():'Empty').'</i></span>';
+echo '<span><i class="red">'.((MailHandler::encryptPassword())?MailHandler::encryptPassword():'Empty').'</i></span>';
 echo "\n</div>\n";
 
 // test connection  ===============================================
