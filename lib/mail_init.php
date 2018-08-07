@@ -41,7 +41,7 @@
 <?php
 // install - secret key
 if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') == 0){
-	Crypto::new_random_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
+	Crypto::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
 }
 
 // show encrypted password =============================================
