@@ -19,7 +19,7 @@ class Validator {
 	 * boolean
 	 */
 	protected $isError;
-	
+
 	/**
 	 * last error message
 	 *  -> short error message
@@ -27,39 +27,39 @@ class Validator {
 	 * string
 	 */
 	protected $lastErrorMsg;
-	
+
 	/**
 	 * last stores last map key if map validation is used
 	 */
 	protected $lastMapKey = '';
-	
+
 	/**
 	 * last error description
 	 *  -> error description
 	 * string
 	 */
 	protected $lastErrorDescription;
-	
+
 	/**
 	 * last error message
 	 * string
 	 */
 	protected $lastErrorCode;
-	
+
 	/**
 	 * filter may sanitize inputs
 	 * mixed
 	 */
 	protected $filtered;
-	
+
 	/**
 	 * class constructor
 	 */
 	function __contstruct(){
 	}
-	
+
 	// ==========================================
-	
+
 	/**
 	 * set validation status
 	 *
@@ -75,7 +75,7 @@ class Validator {
 		$this->lastErrorDescription = ($desc == '')? $msg : $desc;
 		return $isError;
 	}
-	
+
 	/**
 	 * @return the $isError
 	 */
@@ -83,7 +83,7 @@ class Validator {
 	{
 		return $this->isError;
 	}
-	
+
 	/**
 	 * @return the $lastErrorMsg
 	 */
@@ -91,7 +91,7 @@ class Validator {
 	{
 		return $this->lastErrorMsg;
 	}
-	
+
 	/**
 	 * @return the $lastErrorDescription
 	 */
@@ -99,7 +99,7 @@ class Validator {
 	{
 		return $this->lastErrorDescription;
 	}
-	
+
 	/**
 	 * @return the $lastErrorCode
 	 */
@@ -107,7 +107,7 @@ class Validator {
 	{
 		return $this->lastErrorCode;
 	}
-	
+
 	/**
 	 * @return the $lastMapKey
 	 */
@@ -115,7 +115,7 @@ class Validator {
 	{
 		return $this->lastMapKey;
 	}
-	
+
 	/**
 	 * filter may sanitize input values are stored here
 	 * Post validators will create sanitized array
@@ -128,9 +128,9 @@ class Validator {
 		else
 			return $this->filtered[$key];
 	}
-	
+
 	// ==========================================
-	
+
 	/**
 	 * call selected validator function
 	 * @param mixed $value
@@ -145,12 +145,12 @@ class Validator {
 			&& is_callable([$this, 'V_'.$validatorName]) ){
 			return $this->{'V_'.$validatorName}($value, $validatorParams);
 		} else {
-			$this->setError(true, 403, 'Access Denied', "POST unknown validator");
-			error_log("Validator: Unknown Validator: $validatorName");
+			$this->setError(true, 403, 'Access Denied', "POST unknown validator: $validatorName");
+			ErrorHandler::_errorLog("Validator: Unknown Validator: $validatorName", 'Validator: validate');
 			return !$this->isError;
 		}
 	}
-	
+
 	/**
 	 * validate POST data with a validation list
 	 *
@@ -170,8 +170,8 @@ class Validator {
 		foreach($map as $key => $validator){
 			$this->lastMapKey = $key;
 			if (!isset($source_unsafe[$key])){
-				if ($required && !in_array('optional', $validator)){
-					$this->setError(true, 403, 'Access Denied', "POST missing parameter: '$key'");
+				if ($required && !in_array('optional', $validator, true)){
+					$this->setError(true, 403, 'Access Denied', "missing parameter: '$key'");
 					return !$this->isError;
 				} else {
 					$this->setError(false);
@@ -185,7 +185,7 @@ class Validator {
 		$this->filtered = $out;
 		return !$this->isError;
 	}
-	
+
 	/**
 	 * validate POST data with a validation list
 	 * add additional mfunction layer, so this will be required
@@ -213,7 +213,7 @@ class Validator {
 			return $ret;
 		}
 	}
-	
+
 	// ====== VALIDATORS ========================
 	// functions must start with 'V_validatorname'
 	
@@ -228,7 +228,7 @@ class Validator {
 		$this->filtered = $value;
 		return true;
 	}
-	
+
 	/**
 	 * integer validator
 	 *
@@ -275,7 +275,7 @@ class Validator {
 			return !$this->setError(false);
 		}
 	}
-	
+
 	/**
 	 * float validator
 	 *
@@ -308,7 +308,7 @@ class Validator {
 				return !$this->setError(true, 200, $msg, 'float to big');
 			}
 			if (isset($params['step'])){
-				$mod = $params['step'];
+			$mod = $params['step'];
 				$cv = $v;
 				$ex = '';
 				if (($p = strpos($mod , '.'))!== false){
@@ -331,7 +331,7 @@ class Validator {
 			return !$this->setError(false);
 		}
 	}
-	
+
 	/**
 	 * check if integer and larger than 0
 	 * @param integer $value
@@ -339,7 +339,7 @@ class Validator {
 	public function V_id ($value, $params = NULL){
 		return $this->V_integer($value, ['min' => 1]);
 	}
-	
+
 	/**
 	 * text validator
 	 *
@@ -395,12 +395,13 @@ class Validator {
 			return !$this->setError(false);
 		}
 	}
-	
+
 	/**
 	 * email validator
 	 *
 	 * $param
-	 *  empty	1	allow empty value
+	 *  empty		1	allow empty value
+	 *  maxlength	2	maximum string length
 	 *
 	 * @param $value
 	 * @param $params
@@ -412,6 +413,10 @@ class Validator {
 			$this->filtered = $email;
 			return !$this->setError(false);
 		}
+		if (isset($params['maxlength']) && strlen($email) >= $params['maxlength']){
+			$msg = "E-Mail is too long (Maximum length: {$params['maxlength']})";
+			return !$this->setError(true, 200, $msg);
+		}
 		$re = '/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})$/';
 		if ($email !== '' && (filter_var($email, FILTER_VALIDATE_EMAIL) === false || !preg_match($re, $email) )){
 			return !$this->setError(true, 200, "mail validation failed", 'mail validation failed');
@@ -420,7 +425,7 @@ class Validator {
 			return !$this->setError(false);
 		}
 	}
-	
+
 	/**
 	 * phone validator
 	 *
@@ -440,7 +445,7 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * name validator
 	 *
@@ -503,25 +508,35 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * url validator
 	 *
 	 * @param $value
 	 * @param $params
+	 * 	empty	  		1 	allow empty value
+	 * 	error	 		2 	replace whole error message on error case
+	 *  forceprotocol	1	force http://|https:// in url
+	 *  forceslash		1	force trailingslash
 	 * @return boolean
 	 */
 	public function V_url($value, $params = NULL)  {
 		$url = trim(strip_tags(''.$value));
-		$re = '/^((http[s]?)((:|%3A)\/\/))(((\w)+((-|\.)(\w+))*)+(\w){0,6}?(:([0-5]?[0-9]{1,4}|6([0-4][0-9]{3}|5([0-4][0-9]{2}|5([0-2][0-9]|3[0-5])))))?\/)((\w)+((\.|-)(\w)+)*\/)*$/';
+		if (in_array('empty', $params, true) && $url === ''){
+			$this->filtered = '';
+			return !$this->setError(false);
+		}
+		$re = '/^((http[s]?)((:|%3A)\/\/))'.((in_array('forceprotocol', $params, true))?'':'?').'(((\w)+((-|\.)(\w+))*)+(\w){0,6}?(:([0-5]?[0-9]{1,4}|6([0-4][0-9]{3}|5([0-4][0-9]{2}|5([0-2][0-9]|3[0-5])))))?\/'.((in_array('forceslash', $params, true))?'':'?').')((\w)+((\.|-)(\w)+)*\/'.((in_array('forceslash', $params, true))?'':'?').')*$/';
 		if (!preg_match($re, $url) || strlen($url) >= 128){
-			return !$this->setError(true, 200, "url validation failed", 'url validation failed');
+			$msg = "url validation failed";
+			if (isset($params['error'])) $msg = $params['error'];
+			return !$this->setError(true, 200, $msg, 'url validation failed');
 		} else {
 			$this->filtered=$url;
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * ip validator
 	 * check if string is a valid ip address (supports ipv4 and ipv6)
@@ -537,7 +552,7 @@ class Validator {
 			return !$this->setError(true, 200, 'No ip address', 'No ip address');
 		}
 	}
-	
+
 	/**
 	 * check if string is a valid ip address (supports ipv4 and ipv6)
 	 * helper function
@@ -557,7 +572,7 @@ class Validator {
 			}
 		}
 	}
-	
+
 	/**
 	 * check if string is ends with other string
 	 * @param string $haystack
@@ -581,7 +596,7 @@ class Validator {
 			return substr($haystack, -strlen($needle))===$needle;
 		}
 	}
-	
+
 	/**
 	 * domain validator
 	 *
@@ -601,24 +616,24 @@ class Validator {
 		if ($this->V_ip($host)){
 			$this->filtered = $host;
 			return !$this->setError(false);
-		} else if ( preg_match("/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/", $host) &&
+		} else if ( preg_match('/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/', $host) &&
 			( (version_compare(PHP_VERSION, '7.0.0') >= 0) && filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)!==false  ||
 				(version_compare(PHP_VERSION, '7.0.0') < 0) ) ) {
-					$this->filtered = $host;
-					return !$this->setError(false);
-				} else {
-					$value_idn = idn_to_ascii($host);
-					if ( preg_match("/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/", $value_idn) &&
-						( (version_compare(PHP_VERSION, '7.0.0') >= 0) && filter_var($value_idn, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)!==false  ||
-							(version_compare(PHP_VERSION, '7.0.0') < 0) ) ) {
-								$this->filtered = $value_idn;
-								return !$this->setError(false);
-							} else {
-								return !$this->setError(true, 200, 'Kein gültiger Hostname angegeben' );
-							}
-				}
+			$this->filtered = $host;
+			return !$this->setError(false);
+		} else {
+			$value_idn = idn_to_ascii($host);
+			if ( preg_match('/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/', $value_idn) &&
+				( (version_compare(PHP_VERSION, '7.0.0') >= 0) && filter_var($value_idn, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)!==false  ||
+					(version_compare(PHP_VERSION, '7.0.0') < 0) ) ) {
+				$this->filtered = $value_idn;
+				return !$this->setError(false);
+			} else {
+				return !$this->setError(true, 200, 'Kein gültiger Hostname angegeben' );
+			}
+		}
 	}
-	
+
 	/**
 	 * regex validator
 	 *
@@ -670,10 +685,12 @@ class Validator {
 		}
 		if (isset($params['maxlength']) && strlen($v) >= $params['maxlength']){
 			$msg = "String is too long (Maximum length: {$params['maxlength']})";
+			if (isset($params['error'])) $msg = $params['error'];
 			return !$this->setError(true, 200, $msg);
 		}
 		if (isset($params['minlength']) && strlen($v) < $params['minlength']){
 			$msg = "String is too short (Minimum length: {$params['minlength']})";
+			if (isset($params['error'])) $msg = $params['error'];
 			return !$this->setError(true, 200, $msg);
 		}
 		$re = $params['pattern'];
@@ -686,15 +703,17 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * password validator
 	 *
 	 * $param
 	 *  minlength 2		minimum string length
 	 *  maxlength 2		maximum string length
-	 *  encrypt   1  	encrypt password
 	 *  empty	  1 	allow empty value
+	 *  encrypt	  1 	encrypt password - only available if Crypto class is defined
+	 *  hash	  1 	hash password	 - only available if Crypto class is defined
+	 *	error	   2	replace whole error message on error case
 	 *
 	 * @param $value
 	 * @param $params
@@ -702,62 +721,108 @@ class Validator {
 	 */
 	public function V_password($value, $params = []) {
 		$p = trim(strip_tags(''.$value));
-	
 		if (in_array('empty', $params, true) && $p === ''){
 			$this->filtered = $p;
 			return !$this->setError(false);
 		}
 		if (isset($params['maxlength']) && strlen($p) >= $params['maxlength']){
 			$msg = "The password is too long (Maximum length: {$params['maxlength']})";
+			if (isset($params['error'])) $msg = $params['error'];
 			return !$this->setError(true, 200, $msg);
 		}
 		if (isset($params['minlength']) && strlen($p) < $params['minlength']){
 			$msg = "The password is too short (Minimum length: {$params['minlength']})";
+			if (isset($params['error'])) $msg = $params['error'];
 			return !$this->setError(true, 200, $msg);
 		}
-		if (in_array('encrypt', $params, true)){
-			$p = silmph_encrypt_key ($p, SILMPH_KEY_SECRET);
+		$emsg = NULL;
+		if (in_array('hash', $params, true)){
+			if (!class_exists('\Crypto')){
+				$emsg = 'Validator: Password: "hash" requires Crypto class to be loaded.';
+			} elseif(!defined('AUTH_PW_PEPPER')){
+				$emsg = 'Validator: Password: "hash": global constant AUTH_PW_PEPPER required.';
+			} else {
+				$p = Crypto::hashPassword($p.AUTH_PW_PEPPER);
+			}
+		} elseif (in_array('encrypt', $params, true)){
+			if (!class_exists('\Crypto')){
+				$emsg = 'Validator: Password: "encrypt" requires Crypto class to be loaded.';
+			} else {
+				$p = Crypto::pad_string($p);
+				$p = Crypto::encrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), CRYPTO_SECRET_KEY);
+			}
+		}
+		if (isset($emsg) && $msg){
+			if (class_exists()){
+				ErrorHandler::_errorTraceLog($emsg);
+			} else {
+				error_log($emsg);
+			}
+			if (isset($params['error'])) $emsg = $params['error'];
+			return !$this->setError(true, 200, $emsg);
 		}
 		$this->filtered=$p;
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * name validator
 	 *
 	 * @param $value
 	 * @param $params
+	 * 	empty		1 	allow empty value
+	 * 	maxlength	2	maximum string length
+	 *  error		2	replace whole error message on error case
 	 * @return boolean
 	 */
 	public function V_path($value, $params = NULL) {
 		$path = trim(strip_tags(''.$value));
+		if (in_array('empty', $params, true) && $path === ''){
+			$this->filtered = '';
+			return !$this->setError(false);
+		}
+		if (isset($params['maxlength']) && strlen($path) >= $params['maxlength']){
+			$msg = "The path is too long (Maximum length: {$params['maxlength']})";
+			if (isset($params['error'])) $msg = $params['error'];
+			return !$this->setError(true, 200, $msg);
+		}
 		$re = '/^((\w)+((\.|-)(\w)+)*)(\/(\w)+((\.|-)(\w)+)*)*$/';
-		if (!preg_match($re, $path) || strlen($path) >= 128){
-			return !$this->setError(true, 200, "path validation failed", 'path validation failed');
+		if (!preg_match($re, $path)){
+			$msg = "path validation failed";
+			if (isset($params['error'])) $msg = $params['error'];
+			return !$this->setError(true, 200, $msg, 'path validation failed');
 		} else {
 			$this->filtered=$path;
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * color validator
 	 *
 	 * @param $value
 	 * @param $params
+	 * 	empty	  1 	allow empty value
+	 *  error	   2	replace whole error message on error case
 	 * @return boolean
 	 */
 	public function V_color($value, $params = NULL) {
 		$color = trim(strip_tags(''.$value));
+		if (in_array('empty', $params, true) && $color === ''){
+			$this->filtered = '';
+			return !$this->setError(false);
+		}
 		$re = '/^([a-fA-F0-9]){6}$/';
 		if (!preg_match($re, $color) || strlen($color) != 6){
-			return !$this->setError(true, 200, "color validation failed", 'color validation failed');
+			$msg = "color validation failed";
+			if (isset($params['error'])) $msg = $params['error'];
+			return !$this->setError(true, 200, $msg, 'color validation failed');
 		} else {
 			$this->filtered=$color;
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * filename validator
 	 *
@@ -781,7 +846,7 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * time validator
 	 *
@@ -805,7 +870,7 @@ class Validator {
 			$msg = (isset($params['error']))? $params['error'] : 'time validation failed, format: "'.$fmt.'"';
 			return !$this->setError(true, 200, $msg, 'time validation failed, format: "'.$fmt.'"');
 		} else {
-			$d = DateTime::createFromFormat($fmt, $time);
+			$d = \DateTime::createFromFormat($fmt, $time);
 			if($d && $d->format($fmt) == $time){
 				$this->filtered = $d->format((isset($params['parse']))?$params['parse']:$fmt);
 				return !$this->setError(false);
@@ -815,7 +880,7 @@ class Validator {
 			}
 		}
 	}
-	
+
 	/**
 	 * array validator
 	 * test if element is array
@@ -888,7 +953,7 @@ class Validator {
 		$this->filtered = $out;
 		return !$this->isError;
 	}
-	
+
 	/**
 	 * arraymap validator
 	 * run validator on array and given map
@@ -913,7 +978,7 @@ class Validator {
 		}
 		return !$this->isError;
 	}
-	
+
 	/**
 	 * date validator
 	 *
@@ -934,7 +999,7 @@ class Validator {
 			return !$this->setError(false);
 		}
 		$fmt = (isset($params['format']))? $params['format'] : 'Y-m-d';
-		$d = DateTime::createFromFormat($fmt, $date);
+		$d = \DateTime::createFromFormat($fmt, $date);
 		if($d && $d->format($fmt) == $date){
 			$this->filtered = $d->format((isset($params['parse']))?$params['parse']:$fmt);
 		} else {
@@ -943,7 +1008,7 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
 	 * array validator
 	 * test if string is valid iban
@@ -975,10 +1040,10 @@ class Validator {
 		}
 		return !$this->setError(false);
 	}
-	
+
 	/**
-	 * check if string is valid iban, 
-	 * 
+	 * check if string is valid iban,
+	 *
 	 * @param $iban iban srstring to check
 	 *
 	 * @return bool
@@ -987,16 +1052,16 @@ class Validator {
 	public static function _checkIBAN($iban){
 		$iban = strtoupper(str_replace(' ', '', $iban));
 		$Countries = ARRAY('AL' => 28, 'AD' => 24, 'AT' => 20, 'AZ' => 28, 'BH' => 22, 'BE' => 16, 'BA' => 20, 'BR' => 29, 'BG' => 22, 'CR' => 21, 'HR' => 21, 'CY' => 28, 'CZ' => 24, 'DK' => 18, 'DO' => 28, 'EE' => 20, 'FO' => 18, 'FI' => 18, 'FR' => 27, 'GE' => 22, 'DE' => 22, 'GI' => 23, 'GR' => 27, 'GL' => 18, 'GT' => 28, 'HU' => 28, 'IS' => 26, 'IE' => 22, 'IL' => 23, 'IT' => 27, 'JO' => 30, 'KZ' => 20, 'KW' => 30, 'LV' => 21, 'LB' => 28, 'LI' => 21, 'LT' => 20, 'LU' => 20, 'MK' => 19, 'MT' => 31, 'MR' => 27, 'MU' => 30, 'MC' => 27, 'MD' => 24, 'ME' => 22, 'NL' => 18, 'NO' => 15, 'PK' => 24, 'PS' => 29, 'PL' => 28, 'PT' => 25, 'QA' => 29, 'RO' => 24, 'SM' => 27, 'SA' => 24, 'RS' => 22, 'SK' => 24, 'SI' => 19, 'ES' => 24, 'SE' => 24, 'CH' => 21, 'TN' => 24, 'TR' => 26, 'AE' => 23, 'GB' => 22, 'VG' => 24);
-		
+	
 		//1. check country code exists + iban has valid length
 		if( !array_key_exists(substr($iban,0,2), $Countries)
 			|| strlen($iban) != $Countries[substr($iban,0,2)]){
 			return false;
 		}
-		
+	
 		//2. Rearrange countrycode and checksum
 		$rearranged = substr($iban, 4) . substr($iban, 0, 4);
-		
+	
 		//3. convert to integer
 		$iban_letters = str_split($rearranged);
 		$iban_int_only = '';
@@ -1011,7 +1076,7 @@ class Validator {
 				}
 			}
 		}
-		
+	
 		//4. calculate mod 97 -> have to be 1
 		if (self::_bcmod($iban_int_only, '97') == 1){
 			return true;
@@ -1019,7 +1084,7 @@ class Validator {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * _bcmod - get modulus (substitute for bcmod)
 	 * be careful with big $modulus values
@@ -1048,7 +1113,7 @@ class Validator {
 			return (int)$mod;
 		}
 	}
-	
+
 	private function _capsule_lastMapKey(){
 		$capsuled = $this->lastMapKey;
 		if ($capsuled != ''){
