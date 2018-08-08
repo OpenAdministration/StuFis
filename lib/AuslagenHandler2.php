@@ -993,7 +993,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
 						'.pdf'
 				.'"');
-			echo base64_decode($result['data']); 
+			echo base64_decode($result['data']['data']); 
 			die();
 		} else {
 			ErrorHandler::_errorLog(print_r($result, true), '['.get_class($this).'][PDF-Creation]');
