@@ -45,7 +45,7 @@
 			foreach ($param['link'] as $k => $l){
 				$c = count($links);
 				$links[] = $l;
-				$ltext = '<a href=".$l.">'.$k.'['.$c.']</a>';
+				$ltext = '<a href="'.$l.'">'.$k.'['.$c.']</a>';
 				$msg = str_replace('%'.$k.'%', $ltext, $msg);
 			}
 			echo $msg;
