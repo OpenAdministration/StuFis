@@ -279,6 +279,10 @@ class HTMLPageRenderer{
                         <div class="profile-usertitle-job">
                             Referat Finanzen
                         </div>
+                    <?php }else{ ?>
+                        <div class="profile-usertitle-job">
+                            Support Level 1
+                        </div>
                     <?php } ?>
 
                 </div>
