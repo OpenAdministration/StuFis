@@ -18,7 +18,7 @@
  * class Crypto
  * framework class
  *
- * INTERTOPIA BASE FRAMEWORK
+ * BASE FRAMEWORK
  * @package         intbf
  * @category        framework
  * @author 			Michael Gnehr
@@ -55,6 +55,34 @@ class Crypto
 			return bin2hex(openssl_random_pseudo_bytes($length));
 		}
 	}
+	
+	/**
+	 * write key asci save string to file
+	 * @param string $filename
+	 * @param string $text
+	 * @param boolean $overwrite
+	 */
+	private static function key_to_file($filename, $text, $overwrite = false){
+		if (overwrite && file_exists($filename) && is_file($filename) && fileperms($filename) != '0777' ){
+			chmod($filename, 0777);
+		}
+		
+		//create file content
+		$key_file_content = "<?php //* -------------------------------------------------------- *\n";
+		$key_file_content .= "// Must include code to stop this file being accessed directly\n";
+		$key_file_content .= "if(!defined('INTBF')) die(); \n";
+		$key_file_content .= "//* -------------------------------------------------------- *\n";
+		$key_file_content .= '$KEY_SECRET = \''.$text."';\n ?>";
+		
+		//create file
+		$handle = fopen ($filename, 'w');
+		fwrite ($handle, $key_file_content);
+		fclose ($handle);
+		chmod($filename, 0400);
+		unset($text);
+	}
+	
+	// string padding =========================================================
 	
 	/**
 	 * pad string to minimum length of
@@ -98,38 +126,38 @@ class Crypto
 		return $string;
 	}
 	
-	// crypto =========================================================
+	// defuse crypto =========================================================
 	
 	// without password -----------------------------------------------
 	
 	/**
-	 * encrypt string with key
+	 * encrypt string with key - defuse
 	 * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
 	 * @param string $data
 	 * @param string $keyAscii
 	 * @return string encrypted string
 	 */
-	public static function encrypt_key ($data, $keyAscii){
+	public static function encrypt_by_key ($data, $keyAscii){
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
-		$ciphertext = \Defuse\Crypto\Crypto::encrypt($data, $key);
+		$key = Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
+		$ciphertext = Defuse\Crypto\Crypto::encrypt($data, $key);
 		return $ciphertext;
 	}
 	
 	/**
-	 * decrypt string with secret key
+	 * decrypt string with secret key - defuse
 	 * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
 	 * @param string $ciphertext
 	 * @param string $keyAscii
 	 * @return string|false decrypted string | false if cipher was manipulated
 	 */
-	public static function decrypt_key ($ciphertext, $keyAscii){
+	public static function decrypt_by_key ($ciphertext, $keyAscii){
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
+		$key = Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
 		try {
-			$data = \Defuse\Crypto\Crypto::decrypt($ciphertext, $key);
+			$data = Defuse\Crypto\Crypto::decrypt($ciphertext, $key);
 			return $data;
-		} catch (\Defuse\Crypto\WrongKeyOrModifiedCiphertextException $ex) {
+		} catch (Defuse\Crypto\WrongKeyOrModifiedCiphertextException $ex) {
 			// An attack! Either the wrong key was loaded, or the ciphertext has
 			// changed since it was created -- either corrupted in the database or
 			// intentionally modified by Eve trying to carry out an attack.
@@ -140,37 +168,37 @@ class Crypto
 	// with password --------------------------------------------------
 	
 	/**
-	 * encrypt string with key (key locked with password)
+	 * encrypt string with key (key locked with password) - defuse
 	 * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
 	 * @param string $data
 	 * @param string $keyAscii
 	 * @param string $password
 	 * @return string encrypted string
 	 */
-	public static function encrypt_key_by_pw ($data, $keyAscii, $password){
+	public static function encrypt_by_key_pw ($data, $keyAscii, $password){
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\KeyProtectedByPassword::loadFromAsciiSafeString($keyAscii);
+		$key = Defuse\Crypto\KeyProtectedByPassword::loadFromAsciiSafeString($keyAscii);
 		$key = $key->unlockKey($password);
-		$ciphertext = \Defuse\Crypto\Crypto::encrypt($data, $key);
+		$ciphertext = Defuse\Crypto\Crypto::encrypt($data, $key);
 		return $ciphertext;
 	}
 	
 	/**
-	 * decrypt string with key (key locked with password)
+	 * decrypt string with key (key locked with password) - defuse
 	 * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
 	 * @param string $ciphertext
 	 * @param string $keyAscii
 	 * @param string $password
 	 * @return string|false decrypted string | false if cipher was manipulated
 	 */
-	public static function decrypt_key_by_pw ($ciphertext, $keyAscii, $password){
+	public static function decrypt_by_key_pw ($ciphertext, $keyAscii, $password){
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\KeyProtectedByPassword::loadFromAsciiSafeString($keyAscii);
+		$key = Defuse\Crypto\KeyProtectedByPassword::loadFromAsciiSafeString($keyAscii);
 		$key = $key->unlockKey($password);
 		try {
-			$data = \Defuse\Crypto\Crypto::decrypt($ciphertext, $key);
+			$data = Defuse\Crypto\Crypto::decrypt($ciphertext, $key);
 			return $data;
-		} catch (\Defuse\Crypto\WrongKeyOrModifiedCiphertextException $ex) {
+		} catch (Defuse\Crypto\WrongKeyOrModifiedCiphertextException $ex) {
 			// An attack! Either the wrong key was loaded, or the ciphertext has
 			// changed since it was created -- either corrupted in the database or
 			// intentionally modified by Eve trying to carry out an attack.
@@ -178,29 +206,19 @@ class Crypto
 		}
 	}
 	
-	// key file helper =====================================================
+	// key file helper ==================================================
 	
 	/**
-	 * generate secret key and store it to file
+	 * generate secret key and store it to file - defuse
 	 * @param string $filename path to file
 	 */
-	public static function new_random_key_to_file($filename) {
+	public static function new_key_to_file($filename) {
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\Key::createNewRandomKey();
+		$key = Defuse\Crypto\Key::createNewRandomKey();
 		$pass_key = $key->saveToAsciiSafeString();
 		
-		//create file content
-		$key_file_content = "<?php //* -------------------------------------------------------- *\n";
-		$key_file_content .= "// Must include code to stop this file being accessed directly\n";
-		$key_file_content .= "if(!defined('FINANRANTRAGUI_FW_SI')) die(); \n";
-		$key_file_content .= "//* -------------------------------------------------------- *\n";
-		$key_file_content .= '$KEY_SECRET = \''.$pass_key."';\n ?>";
-		
 		//create file
-		$handle = fopen ($filename, 'w');
-		fwrite ($handle, $key_file_content);
-		fclose ($handle);
-		chmod($filename, 0400);
+		self::key_to_file($filename, $key->saveToAsciiSafeString(), false);
 	}
 	
 	/**
@@ -208,23 +226,12 @@ class Crypto
 	 * @param string $filename path to file
 	 * @param string $password
 	 */
-	public static function new_random_protected_key_to_file($filename, $password) {
+	public static function new_protected_key_to_file($filename, $password) {
 		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-		$key = \Defuse\Crypto\KeyProtectedByPassword::createRandomPasswordProtectedKey($password);
-		$pass_key = $key->saveToAsciiSafeString();
-		
-		//create file content
-		$key_file_content = "<?php //* -------------------------------------------------------- *\n";
-		$key_file_content .= "// Must include code to stop this file being accessed directly\n";
-		$key_file_content .= "if(!defined('FINANRANTRAGUI_FW_SI')) die(); \n";
-		$key_file_content .= "//* -------------------------------------------------------- *\n";
-		$key_file_content .= '$KEY_SECRET = \''.$pass_key."';\n ?>";
+		$key = Defuse\Crypto\KeyProtectedByPassword::createRandomPasswordProtectedKey($password);
 		
 		//create file
-		$handle = fopen ($filename, 'w');
-		fwrite ($handle, $key_file_content);
-		fclose ($handle);
-		chmod($filename, 0400);
+		self::key_to_file($filename, $key->saveToAsciiSafeString(), false);
 	}
 	
 	/**
@@ -232,18 +239,95 @@ class Crypto
 	 * @param string $filename
 	 * @return string key
 	 */
-	public static function get_random_key_from_file($filename){
+	public static function get_key_from_file($filename){
+		$out = $KEY_SECRET = NULL;
 		if (file_exists($filename)){
 			require($filename);
 			$out = $KEY_SECRET;
 			unset($KEY_SECRET);
-			return $out;
-		} else {
-			return NULL;
+		}
+		return $out;
+	}
+	
+	// SSL ENCRYPTION ===================================================
+	
+	/**
+	 * create openssl key pair - openssl
+	 * RSA @ 4096
+	 */
+	public static function new_openssl_pair($private_filename, $public_filename, $force = false){
+		//check files exists
+		if (!file_exists($private_filename) || filesize($private_filename) == 0 || $force){
+			$config = array(
+				"digest_alg" => "sha512",
+				"private_key_bits" => 4096,
+				"private_key_type" => OPENSSL_KEYTYPE_RSA,
+			);
+			$res = openssl_pkey_new($config);
+			openssl_pkey_export($res, $privKey);
+			//create file
+			self::key_to_file($private_filename, base64_encode($privKey), $force);
+			$pubKey = openssl_pkey_get_details($res);
+			$pubKey = $pubKey["key"];
+			//create file
+			self::key_to_file($public_filename, base64_encode($pubKey), $force);
 		}
 	}
 	
-	// HASHING ========================================================
+	/**
+	 * encrypt data by public openssl key - openssl
+	 * could be decrypted with private key
+	 * @param string $data
+	 * @param string $keyAscii
+	 * @return string
+	 */
+	public static function encrypt_public_openssl($data, $keyAscii){
+		$keyAscii = base64_decode($keyAscii);
+		openssl_public_encrypt($data, $encrypted, $keyAscii);
+		return base64_encode($encrypted);
+	}
+	
+	/**
+	 * decrypt data by private openssl key - openssl
+	 * @param string $ciphertext
+	 * @param string $keyAscii
+	 * @return string
+	 */
+	public static function decrypt_private_openssl($ciphertext, $keyAscii){
+		$keyAscii = base64_decode($keyAscii);
+		openssl_private_decrypt(base64_decode($ciphertext), $decrypted, $keyAscii);
+		if ($decrypted === NULL) return NULL;
+		return $decrypted;
+	}
+	
+	/**
+	 * encrypt data by private openssl key - openssl
+	 * could be decrypted with public key
+	 * may used for signing
+	 * @param string $data
+	 * @param string $keyAscii
+	 * @return string
+	 */
+	public static function encrypt_private_openssl($data, $keyAscii){
+		$keyAscii = base64_decode($keyAscii);
+		openssl_private_encrypt($data, $encrypted, $keyAscii);
+		return base64_encode($encrypted);
+	}
+	
+	/**
+	 * decrypt data by public openssl key - openssl
+	 * @param string $ciphertext
+	 * @param string $keyAscii
+	 * @return string
+	 */
+	public static function decrypt_public_openssl($ciphertext, $keyAscii){
+		$keyAscii = base64_decode($keyAscii);
+		openssl_public_decrypt(base64_decode($ciphertext), $decrypted, $keyAscii);
+		if ($decrypted === NULL) return NULL;
+		return $decrypted;
+	}
+	
+	// HASHING (passwords, etc) =========================================
 	
 	/**
 	 * hashes password with best password algorithem and return data

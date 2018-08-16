@@ -431,7 +431,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			//
 			$set = [
 				'version' => $this->auslagen_data['version'] + 1,
-				'etag'	  => generateRandomString(16),
+				'etag'	  => Crypto::generateRandomString(16),
 			];
 			$where = [
 				'id' => $this->auslagen_data['id'],
@@ -657,7 +657,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		if (!$this->stateInfo['project-editable']){
 			if (   $routeInfo['action']	=='create'
 				|| $routeInfo['action']	=='edit'
-				|| $routeInfo['action']	=='post' ){
+				|| ($routeInfo['action']	=='post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf') ){
 				$this->error = 'Für das aktuelle Projekt sind (momentan) keine Auslagenerstattungen möglich.';
 				return;
 			}
@@ -946,11 +946,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'subtype' => 'file',
 					'container' => 'object',
 					'headline' => 
+						//direct link
+						'<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'"><a '.
+						'" href="#" class="modal-form-fallback-submit text-white">'.
 						"Belegvorlage_P".
 						str_pad ( $this->projekt_id, 3, "0", STR_PAD_LEFT).
 						'-A'.
 						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
-						'.pdf',
+						'.pdf'.
+						'</a>'.
+						'<input type="hidden" name="auslagen-id" value="'.$this->auslagen_id.'">'.
+						'<input type="hidden" name="projekt-id" value="'.$this->projekt_id.'">'.
+						'<input type="hidden" name="d" value="1">'.'</form>',
 					'attr' => [
 						'type' => 'application/pdf',
 						'download' => 
@@ -986,7 +993,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						str_pad ( $this->auslagen_id, 3, "0", STR_PAD_LEFT).
 						'.pdf'
 				.'"');
-			echo base64_decode($result['data']); 
+			echo base64_decode($result['data']['data']); 
 			die();
 		} else {
 			ErrorHandler::_errorLog(print_r($result, true), '['.get_class($this).'][PDF-Creation]');
@@ -1057,7 +1064,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				"last_change" => "{$newInfo['date']}",
 				"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 				"version" => intval($this->auslagen_data['version']) + 1,
-				"etag" => generateRandomString(16),
+				"etag" => Crypto::generateRandomString(16),
 			]
 		);
 		$this->json_result = [
@@ -1167,7 +1174,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 			"version" => intval($this->auslagen_data['version']) + 1,
-			"etag" => generateRandomString(16),
+			"etag" => Crypto::generateRandomString(16),
 		];
 		//insert/update in db
 		if ($this->auslagen_data['id']){
@@ -1351,7 +1358,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		$p = $str;
 		if (!$p) return '';
 		$p = Crypto::pad_string($p);
-		return Crypto::encrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		return Crypto::encrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
 	}
 	
 	/**
@@ -1362,7 +1369,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	protected static function decryptedStr($str){
 		$p = $str;
 		if (!$p) return '';
-		$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		$p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
 		$p = Crypto::unpad_string($p);
 		return $p;
 	}
@@ -1484,7 +1491,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	            	}
 				echo $this->templater->getTextForm("zahlung-iban", $iban_text, [12,12,6], "DE ...", "Zahlungsempfänger IBAN") ?>
 				<div class='clearfix'></div>
-                <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtent bei Firmen)", [], []) ?>
+                <?= $this->templater->getTextForm("zahlung-vwzk", $this->auslagen_data['zahlung-vwzk'], 12, "z.B. Rechnungsnr. o.Ä.", "Verwendungszweck (verpflichtend bei Firmen)", [], []) ?>
                 <div class="clearfix"></div>
                 <?php 
                 	$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')?
@@ -1865,11 +1872,21 @@ class AuslagenHandler2 extends FormHandlerInterface{
     			&& isset($this->auslagen_data['belege'])
 			 	&& count($this->auslagen_data['belege']) > 0) { ?>
 				<div class="col-xs-12 form-group">
-                    <strong>
+                    
                         <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
                                 data-action="<?= URIBASE ?>rest/forms/auslagen/belegpdf" type="button"
                                 class="btn btn-primary auslagen-belege-pdf style=" font-weight: bold;
-                        "><i class="fa fa-fw fa-print"> </i>Belege PDF</button></strong>
+                        "><i class="fa fa-fw fa-print"> </i><strong>Belege PDF</strong></button>
+				</div>
+				<div class="clearfix"></div>
+				<div class="col-xs-12 form-group">
+					<form method="POST" action="<?= URIBASE ?>rest/forms/auslagen/belegpdf">
+						<button type="submit" class="btn btn-primary" ><i class="fa fa-fw fa-download"> </i>Belege PDF</button>
+						<input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
+						<input type="hidden" name="auslagen-id" value="<?= $this->auslagen_id ?>">
+						<input type="hidden" name="projekt-id" value="<?= $this->projekt_id ?>">
+						<input type="hidden" name="d" value="1">
+					</form>
 				</div>
 				<div class="clearfix"></div>
 			<?php } ?>

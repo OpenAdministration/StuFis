@@ -8,74 +8,76 @@
  * @category        html clients
  * @author 			Michael Gnehr
  * @since 			17.02.2018
- * @copyright 		Copyright (C) 2018 - All rights reserved - don not copy without permission
+ * @copyright 		Copyright (C) 2018 - All rights reserved - do not copy without permission
  * @platform        PHP
  * @requirements    PHP 7.0 or higher
- *
  */
 
 /**
- * include external library: phpmailer
- */
-require_once (dirname(__FILE__).'/external_libraries/phpmailer/src/PHPMailer.php');
-require_once (dirname(__FILE__).'/external_libraries/phpmailer/src/SMTP.php');
-require_once (dirname(__FILE__).'/external_libraries/phpmailer/src/Exception.php');
-define('MAIL_LANGUAGE_PATH', dirname(__FILE__).'/external_libraries/phpmailer/language');
-
-/**
- * 
+ * class MailHandler
  * @author Michael Gnehr <michael@gnehr.de>
  * @since 20.03.2017
  * @package _framework
  */
 class MailHandler extends Singleton
 {
+	// member variables ==============================================
+
 	/**
-	 * 
+	 *
 	 * @var PHPMailer
 	 */
 	public $mail;
-	
+
 	/**
-	 * 
+	 *
 	 * @var boolean
 	 */
 	protected $initOk;
-	
+
 	/**
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $templateVars;
-	
+
 	/**
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $templateName;
-	
+
 	/**
-	 * 
+	 *
 	 * @var string
 	 */
 	protected $logoImagePath;
-	
+
 	/**
-	 * 
+	 * global mail settings
 	 * @var array
 	 */
-	private static $settings;
-	
+	private static $_settings;
+
+	/**
+	 * instance mail settings
+	 * @var array
+	 */
+	protected $settings;
+
+	// constructor ==============================================
+
 	/**
 	 * class constructor
 	 */
-	protected function __construct() {
+	protected function __construct($settings = null) {
 		$this->initOk = false;
 		$this->templateVars = array();
 		$this->templateName = '';
-		$this->logoImagePath = '/../www/img/stura_black.svg';
+		$this->logoImagePath = '/www/img/stura_black.svg';
+		$this->settings = ($settings) ? $settings : self::$_settings;
 	}
-	
+
 	/**
 	 * return instance of this class
 	 * singleton class
@@ -93,74 +95,108 @@ class MailHandler extends Singleton
 		else
 			die("$name ist keine Variable in " . get_class());
 	}
-	
-	public static function encryptedPassword(){
-		$p = self::$settings['MAIL_PASSWORD'];
-		if (!self::$settings['MAIL_PASSWORD']) return '';
-		$p = Crypto::pad_string($p);
-		return Crypto::encrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+
+	// modify settings =========================================
+
+	/**
+	 * set global mail config
+	 * @param array $settings
+	 */
+	public static function _setSettings($settings){
+		if (self::$_settings == NULL && self::checkMailsettings($settings)){
+			self::$_settings = $settings;
+		}
 	}
-	
-	public static function decryptedPassword(){
-		if (!self::$settings['MAIL_PASSWORD']) return '';
-		$p = self::$settings['MAIL_PASSWORD'];
-		$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
-		$p = Crypto::unpad_string($p);
-		return $p;
+
+	/**
+	 * set instance mail config
+	 * @param array $settings
+	 */
+	public function setSettings($settings){
+		if (self::checkMailsettings($settings)){
+			$this->settings = $settings;
+		}
 	}
-	
+
+	/**
+	 * update instance mail config - key value
+	 * @param string $key
+	 * @param string $value
+	 */
+	public function setConfigOption($key, $value){
+		if (isset($this->settings[$key])){
+			$this->settings[$key] = $value;
+		}
+	}
+
 	/**
 	 * set logo image path
 	 * set empty string to disable
 	 * default: '/../public/images/logo_wt.png'
-	 * 
+	 *
 	 * @param string $logoImagePath
 	 */
-	public function setLogoImagePath($logoImagePath = '/../www/img/stura_black.svg')
+	public function setLogoImagePath($logoImagePath = '/www/img/stura_black.svg')
 	{
 		$this->logoImagePath = $logoImagePath;
 	}
 
+	// crypto functions ======================================
+
+	public static function encryptPassword($p = NULL){
+		if ($p === NULL) $p = self::$_settings['MAIL_PASSWORD'];
+		if (!$p) return '';
+		$p = Crypto::pad_string($p);
+		return Crypto::encrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+	}
+
+	private static function decryptPassword($p){
+		if (!$p) return '';
+		$p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+		$p = Crypto::unpad_string($p);
+		return $p;
+	}
+
+	// init ==================================================
+
 	/**
-	 * test if settingsarray has all needed parameter
+	 * test if settings array has all required parameters
 	 * @param array $settings
 	 */
-	protected function checkMailsettings(){
-		$settings = self::$settings;
+	public static function checkMailsettings($settings){
 		if (!is_array($settings)) return false;
 		if (!isset($settings['MAIL_PASSWORD']) 	|| $settings['MAIL_PASSWORD'] == '') return false;
 		if (!isset($settings['SMTP_HOST']) 		|| $settings['SMTP_HOST'] == '') return false;
 		if (!isset($settings['SMTP_USER']) 		|| $settings['SMTP_USER'] == '') return false;
 		if (!isset($settings['SMTP_SECURE']) 	|| $settings['SMTP_SECURE'] == '') return false;
-		if (!isset($settings['SMTP_PORT']) 		|| $settings['SMTP_PORT'] == '' || 
-				(!strtolower($settings['SMTP_PORT']) == 'tls' && 
+		if (!isset($settings['SMTP_PORT']) 		|| $settings['SMTP_PORT'] == '' ||
+				(!strtolower($settings['SMTP_PORT']) == 'tls' &&
 				 !strtolower($settings['SMTP_PORT']) == 'ssl')) return false;
 		if (!isset($settings['MAIL_FROM']) 		|| $settings['MAIL_FROM'] == '') return false;
 		if (!isset($settings['MAIL_FROM_ALIAS'])|| $settings['MAIL_FROM_ALIAS'] == '') return false;
-		
 		return true;
 	}
-	
+
 	/**
 	 * initialize phpmailer object
 	 * @param $settings mail settings
 	 * @param array $settings
 	 */
 	public function init() {
-		$settings = self::$settings;
-		if (!$this->checkMailsettings($settings)){
+		$settings = $this->settings;
+		if (!self::checkMailsettings($settings)){
 			error_log("Mailsettings unvollständig");
 			return false;
-		}		
+		}
 		$this->mail = new PHPMailer\PHPMailer\PHPMailer;
 		$this->mail->setLanguage('de', MAIL_LANGUAGE_PATH); //TODO set Language //from Session
 		$this->mail->CharSet = 'UTF-8';
-		
+
 		$settings['SMTP_SECURE'] = ($settings['SMTP_SECURE'] == 'STARTTLS')? 'TLS' : $settings['SMTP_SECURE'];
 		$settings['SMTP_SECURE'] = strtolower($settings['SMTP_SECURE']);
-		
-		$mail_pw = self::decryptedPassword();
-		
+
+		$mail_pw = self::decryptPassword($settings['MAIL_PASSWORD']);
+
 		$this->mail->isSMTP();								// Set mailer to use SMTP
 		$this->mail->Host = $settings['SMTP_HOST'];			// Specify main and backup SMTP servers
 		$this->mail->SMTPAuth = true;						// Enable SMTP authentication
@@ -168,22 +204,22 @@ class MailHandler extends Singleton
 		$this->mail->Password = $mail_pw;					// SMTP password
 		$this->mail->SMTPSecure = $settings['SMTP_SECURE'];	// Enable TLS encryption, 'tls' or `ssl` also accepted
 		$this->mail->Port = $settings['SMTP_PORT'];			// TCP port to connect to
-		
+
 		$this->mail->setFrom($settings['MAIL_FROM'], $settings['MAIL_FROM_ALIAS']);
-		
+
 		if ($this->logoImagePath){
 			$ext = '.png';
 			if (pathinfo($this->logoImagePath, PATHINFO_EXTENSION)){
 				$ext = '.'.pathinfo($this->logoImagePath, PATHINFO_EXTENSION);
 			}
-			$this->mail->AddEmbeddedImage(FRAMEWORK_PATH.$this->logoImagePath, "logoattach", "mailLogo".$ext);
+			$this->mail->AddEmbeddedImage(SYSBASE.$this->logoImagePath, "logoattach", "mailLogo".$ext);
 		}
-		
-		$this->mail->isHTML(true);							// Set email format to HTML	
+
+		$this->mail->isHTML(true);							// Set email format to HTML
 		$this->initOk = true;
 		return true;
 	}
-	
+
 	/**
 	 * set mail template by filename (without extension)
 	 * mailtemplate have to exist in choosen template folder in mail directory
@@ -197,7 +233,7 @@ class MailHandler extends Singleton
 			$this->templateName = $template_name;
 		}
 	}
-	
+
 	/**
 	 * bind variables to mail template
 	 * format array with keys. Template variables will be named like keys
@@ -212,7 +248,7 @@ class MailHandler extends Singleton
 		$this->templateVars = $set;
 		return true;
 	}
-	
+
 	/**
 	 * set single variables for mail template
 	 * @param string|number $key
@@ -228,7 +264,7 @@ class MailHandler extends Singleton
 		}
 		$this->templateVars[$key] = $value;
 	}
-	
+
 	/**
 	 * renders template phtml file and return string
 	 * @param string $file
@@ -240,7 +276,7 @@ class MailHandler extends Singleton
 		$mail_content_html = ob_get_clean();
 		return $mail_content_html;
 	}
-	
+
 	/**
 	 * renders template txt file and return string
 	 * @param string $file
@@ -260,7 +296,7 @@ class MailHandler extends Singleton
 		);
 		return $mail_content_text;
 	}
-	
+
 	/**
 	 * send mail with phpmailer
 	 * load mailtemplate, bind variables, and send mail with them
@@ -291,7 +327,7 @@ class MailHandler extends Singleton
 			$error_trace = ob_get_clean();
 			error_log("Kein Mail-Template gewählt. Stacktrace:\n" . print_r($error_trace, true));
 			return false;
-		} else if (!file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt") && 
+		} else if (!file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt") &&
 				   !file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".phtml") &&
 				   !file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt.phtml")){
 			if ($echo) {
@@ -309,13 +345,13 @@ class MailHandler extends Singleton
 			return false;
 		} else {
 			//bind template
-			if (file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt")){
-				$this->mail->AltBody = self::renderTXT(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt", $this->templateVars);
-			} elseif (file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt.phtml")){
-				$this->mail->AltBody = self::renderPHTML(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".txt.phtml", $this->templateVars);
+			if (file_exists(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".txt")){
+				$this->mail->AltBody = self::renderTXT(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".txt", $this->templateVars);
+			} elseif (file_exists(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".txt.phtml")){
+				$this->mail->AltBody = self::renderPHTML(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".txt.phtml", $this->templateVars);
 			}
-			if (file_exists(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".phtml")){
-				$this->mail->Body = self::renderPHTML(dirname(__FILE__)."/../template/".TEMPLATE."/mail/".$this->templateName.".phtml", $this->templateVars);
+			if (file_exists(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".phtml")){
+				$this->mail->Body = self::renderPHTML(SYSBASE."/template/".TEMPLATE."/mail/".$this->templateName.".phtml", $this->templateVars);
 			}
 			try {
 				if(!$this->mail->send()) {
@@ -342,23 +378,23 @@ class MailHandler extends Singleton
 			} catch (Exception $e) {
 				error_log("Mail konnte nicht gesendet werden werden. ERROR: ".$e->getMessage()." \nStacktrace:\n" . print_r($error_trace, true));
 				return false;
-			} 
+			}
 		}
 	}
-	
+
 	/**
 	 * debug SMTP settings
 	 * @param array $settings
 	 * @param function $out function($message, $add_emptyline_suffix = false, $bold = false, $add_extra_tab_space = 0)
 	 * @throws Exception
 	 */
-	public static function smtpdebug($out){
-		$settings = self::$settings;
+	public static function smtpdebug($out, $settings = NULL){
+		$settings = ($settings)? $settings : self::$_settings;
 		//get settings ----------------------------------
-		$mail_pw = self::decryptedPassword();
+		$mail_pw = self::decryptPassword($settings['MAIL_PASSWORD']);
 		$settings['SMTP_SECURE'] = ($settings['SMTP_SECURE'] == 'STARTTLS')? 'TLS' : $settings['SMTP_SECURE'];
 		$settings['SMTP_SECURE'] = strtolower($settings['SMTP_SECURE']);
-		
+
 		$out('Current Settings:', 0, 1);
 		foreach ($settings as $k => $v){
 			$out($k.' -> '.$v, 0, 0, 1);
@@ -368,22 +404,22 @@ class MailHandler extends Singleton
 		} else {
 			$out('PW[Decrypted] -> ****** NO DEBUG MODE ******', 1, 0, 1);
 		}
-	
+
 		// ----------------------------------------------
 		$out('Create SMTP Connection', 0, 1, 0);
 		date_default_timezone_set('Etc/UTC');
-	
+
 		try {
 			$smtp = new PHPMailer\PHPMailer\SMTP;
 			$smtp->do_debug = PHPMailer\PHPMailer\SMTP::DEBUG_CONNECTION;
-				
+
 			//settimeout
 			$out('Set Timeout', 0, 0, 0);
 			set_time_limit(40); // set the time limit to 120 seconds
 			$smtp->Timeout       =   30; // set the timeout (seconds)
 			$smtp->Timelimit       =   10; // set the timelimit (seconds)
 			$out('-> done', 1, 0, 1);
-				
+
 			//Connect to an SMTP server
 			$out('Connect to '.(($settings['SMTP_SECURE'] == 'ssl')?'ssl://':'').$settings['SMTP_HOST'].':'.$settings['SMTP_PORT'].' ...', 0, 1, 0);
 			ob_start();
@@ -395,7 +431,7 @@ class MailHandler extends Singleton
 			} else {
 				$out('-> connected', 1, 0, 1);
 			}
-				
+
 			//Say hello
 			$out('say hello (own host: '.gethostname().')', 0, 1, 0);
 			ob_start();
@@ -407,7 +443,7 @@ class MailHandler extends Singleton
 			} else {
 				$out('-> ok', 1, 0, 1);
 			}
-				
+
 			//Get the list of ESMTP services the server offers
 			$out('Get the list of ESMTP services the server offers...', 0, 1, 0);
 			$e = $smtp->getServerExtList();
@@ -423,7 +459,7 @@ class MailHandler extends Singleton
 				}
 			}
 			$out('');
-				
+
 			//If server can do TLS encryption, use it
 			if ($settings['SMTP_SECURE'] == 'tls'){
 				$out('USE TLS ---------', 0, 1 , 0);
@@ -433,7 +469,7 @@ class MailHandler extends Singleton
 			} else {
 				$out('USE SSL ----------', 1, 1 , 0);
 			}
-				
+
 			if ($settings['SMTP_SECURE'] == 'tls') {
 				$out('STARTTLS...', 0, 0, 0);
 				ob_start();
@@ -447,7 +483,7 @@ class MailHandler extends Singleton
 				} else {
 					$out('-> ok', 1, 0, 1);
 				}
-	
+
 				//Repeat EHLO after STARTTLS
 				$out('Repeat EHLO after STARTTLS', 0, 0, 0);
 				ob_start();
@@ -459,7 +495,7 @@ class MailHandler extends Singleton
 				} else {
 					$out('-> ok', 1, 0, 1);
 				}
-	
+
 				//Get new capabilities list, which will usually now include AUTH if it didn't before
 				$out('get capabilities again', 0, 0, 0);
 				$e = $smtp->getServerExtList();
@@ -476,14 +512,14 @@ class MailHandler extends Singleton
 				}
 				$out('');
 			}
-				
+
 			//If server supports authentication, do it (even if no encryption)
 			$out('Login Posible?', 0, 1, 0);
 			if (is_array($e) && isset($e['AUTH'])) {
 				$out('-> yes, includes AUTH', 0, 1, 1);
 				$out('Login ...', 0, 1, 0);
 				error_log('SMTPdebug Login: '.$settings['SMTP_USER'].' ...' );
-	
+
 				ob_start();
 				$ok = $smtp->authenticate($settings['SMTP_USER'], $mail_pw);
 				$message = ob_get_clean();
@@ -503,7 +539,22 @@ class MailHandler extends Singleton
 		}
 		return true;
 	}
-	
+
+	/**
+	 * send mail
+	 * @param array $mailOptions mail content
+	 *  supported values
+	 * 	[
+	 * 		'to' => [],			(required)
+	 * 		'cc' => [], 		(optional)
+	 * 		'bcc' => [], 		(optional)
+	 * 		'subject' => '',	(optional)
+	 * 		'template' => '',	(required)
+	 * 		'param' => [],		(optional)
+	 *  ]
+	 * @param boolean $echoError
+	 * @return boolean
+	 */
 	public function easyMail($mailOptions, $echoError = true){
 		$initOk = $this->init();
 		if (!$initOk){
@@ -518,7 +569,7 @@ class MailHandler extends Singleton
 			if ($echoError) echo '$mailOptions[\'template\'] has to be set, non empty and have to be a string';
 			return false;
 		}
-		
+
 		//mail to ------------
 		foreach ($mailOptions['to'] as $to){
 			$this->mail->addAddress($to);
@@ -529,12 +580,12 @@ class MailHandler extends Singleton
 		if (isset($mailOptions['bcc']))foreach ($mailOptions['bcc'] as $to){
 			$this->mail->addBCC($to);
 		}
-		
+
 		//mail subject ----------
 		if (isset($mailOptions['subject'])){
 			$this->mail->Subject = $mailOptions['subject'];
 		}
-		
+
 		//$mailOptions params ----------
 		$mailParam = [
 			'time' 			=> date_create()->format('H:i d.m.Y'),
@@ -545,10 +596,10 @@ class MailHandler extends Singleton
 			$mailParam = $mailParam + $mailOptions['param'];
 		}
 		$this->bindVariables($mailParam);
-		
+
 		//mail template ----------
 		$this->setTemplate($mailOptions['template']);
-		
+
 		// send mail
 		if($this->send($echoError, false, true, $echoError)){
 			return true;

@@ -453,7 +453,7 @@ class MenuRenderer extends Renderer{
             function($str){
 	        	$p = $str;
 				if (!$p) return '';
-				$p = Crypto::decrypt_key_by_pw($p, Crypto::get_random_key_from_file(SYSBASE.'/secret.php'), URIBASE);
+				$p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
 				$p = Crypto::unpad_string($p);
 				return $p;
         	},                                                       // 1 Parameter

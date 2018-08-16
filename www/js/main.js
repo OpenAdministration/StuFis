@@ -1495,6 +1495,11 @@ function defaultPostModalHandler(values) {
                     $e.closest('form').append('<input type="hidden" name="nonce" value="' + $('input[name="nonce"]').val() + '" >');
                     $e.closest('form')[0].submit();
                 });
+                $("#server-" + values.subtype + "-dlg .modal-form-fallback-submit").on('click', function () {
+                    var $e = $(this);
+                    $e.closest('form').append('<input type="hidden" name="nonce" value="' + $('input[name="nonce"]').val() + '" >');
+                    $e.closest('form')[0].submit();
+                });
             }
             $("#server-" + values.subtype + "-dlg .js-content").empty();
             $("#server-" + values.subtype + "-dlg .js-content").append($c);

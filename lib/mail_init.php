@@ -41,13 +41,13 @@
 <?php
 // install - secret key
 if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') == 0){
-	Crypto::new_random_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
+	Crypto::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
 }
 
 // show encrypted password =============================================
 echo '<div class="box monospace wrap">'."\n";
 echo '<strong>Mail Passwort encrypted:</strong><br>';
-echo '<span><i class="red">'.((MailHandler::encryptedPassword())?MailHandler::encryptedPassword():'Empty').'</i></span>';
+echo '<span><i class="red">'.((MailHandler::encryptPassword())?MailHandler::encryptPassword():'Empty').'</i></span>';
 echo "\n</div>\n";
 
 // test connection  ===============================================
