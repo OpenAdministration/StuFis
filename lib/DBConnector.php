@@ -55,7 +55,7 @@ class DBConnector extends Singleton{
             "titel_id" => "int NOT NULL",
             "kostenstelle" => "int NOT NULL",
             "zahlung_id" => "INT NOT NULL",
-            "beleg_id" => "INT NOT NULL",
+            "belegposten_id" => "INT NOT NULL",
             "user_id" => "int NOT NULL",
             "timestamp" => "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "comment" => "varchar(2048) NOT NULL",

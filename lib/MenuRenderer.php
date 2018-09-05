@@ -72,6 +72,10 @@ class MenuRenderer extends Renderer{
                 (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
                 $this->renderKonto();
                 break;
+            case "save-booking":
+                $this->saveBooking();
+                break;
+            //fall through
             case "booking-history":
                 $this->renderBookingHistory();
                 break;
@@ -80,7 +84,6 @@ class MenuRenderer extends Renderer{
                 break;
         }
     }
-    
     
     public function renderProjekte($gremien){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
@@ -451,12 +454,12 @@ class MenuRenderer extends Renderer{
             [$this, "auslagenLinkEscapeFunction"],                      // 3 Parameter
             null,                                                       // 1 Parameter
             function($str){
-	        	$p = $str;
-				if (!$p) return '';
-				$p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
-				$p = Crypto::unpad_string($p);
-				return $p;
-        	},                                                       // 1 Parameter
+                $p = $str;
+                if (!$p) return '';
+                $p = Crypto::decrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
+                $p = Crypto::unpad_string($p);
+                return $p;
+            },                                                       // 1 Parameter
             function($pId, $pCreate, $aId, $vwdzweck, $aName, $pName){  // 6 Parameter - Verwendungszweck
                 $year = date("Y", strtotime($pCreate));
                 $ret = "IP-$year-$pId-A$aId - $vwdzweck - $aName - $pName";
@@ -504,15 +507,25 @@ class MenuRenderer extends Renderer{
                 ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
                 ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
-            [],
+            ["einnahmen" => true],
             false,
             false,
             ["auslagen.id"]
         );
         array_walk($alGrund, function(&$grund){
-            $grund["value"] = $grund["einnahmen"] - $grund["ausgaben"];
+            $grund["value"] = floatval($grund["einnahmen"]) - floatval($grund["ausgaben"]);
         });
-        
+    
+        //sort with reverse order
+        usort($alGrund, function($e1, $e2){
+            if ($e1["value"] === $e2["value"]){
+                return 0;
+            }else if ($e1["value"] > $e2["value"]){
+                return 1;
+            }else{
+                return -1;
+            }
+        });
         ?>
 
 
@@ -545,7 +558,6 @@ class MenuRenderer extends Renderer{
                 }else{
                     $value = $alGrund[$idxGrund]["value"];
                 }
-    
                 echo "<td>";
     
                 while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
@@ -568,7 +580,6 @@ class MenuRenderer extends Renderer{
                         default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
                             $caption .= $alZahlung[$idxZahlung]["type"] . " an ";
                             break;
-    
                     }
                     $caption .= $alZahlung[$idxZahlung]["empf_name"] . " - " . explode("DATUM", $alZahlung[$idxZahlung]["zweck"])[0];
                     $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
@@ -624,7 +635,6 @@ class MenuRenderer extends Renderer{
                 </div>-->
                 <button id="booking__check-button" class="btn btn-primary">Buchung durchführen</button>
             </div>
-
         </form>
     
         <?php
@@ -705,9 +715,11 @@ class MenuRenderer extends Renderer{
                 [
                     "auslagen.projekt_id",
                     "auslagen_id" => "auslagen.id",
+                    "belege_id" => "belege.id",
                     "titel_name",
                     "titel_nr",
-                    "posten_id" => "projektposten.id",
+                    "posten_id" => "beleg_posten.id",
+                    "posten_short" => "beleg_posten.short",
                     "beleg_posten.einnahmen",
                     "beleg_posten.ausgaben",
                 ],
@@ -730,41 +742,70 @@ class MenuRenderer extends Renderer{
             foreach ($zahlungenDB as $zahlung){
                 $sum_zahlung += $zahlung["value"];
                 $rowZahlung = [
-                    "Zahlung" => $zahlung["id"],
-                    "Zahlung-Summe" => $zahlung["value"],
+                    $zahlung["id"],
+                    $zahlung["value"],
                 ];
                 foreach ($belegeDB as $beleg){
                     $sum_beleg += floatval($beleg["einnahmen"]);
                     $sum_beleg -= floatval($beleg["ausgaben"]);
                     
                     $rowBeleg = [
-                        "Projekt" => $beleg["projekt_id"],
-                        "Auslage" => $beleg["auslagen_id"],
-                        "Titel" => $beleg["titel_nr"],
-                        "Titel Name" => $beleg["titel_name"],
+                        $beleg["projekt_id"],
+                        $beleg["auslagen_id"],
+                        " ", // show no name in auslagenLinkEscapeFunction
+                        $beleg["posten_short"],
+                        $beleg["titel_nr"],
+                        $beleg["titel_name"],
                     ];
                     if (floatval($beleg["einnahmen"]) != 0){
-                        $rowBeleg["Beleg-Summe"] = $beleg["einnahmen"];
+                        $rowBeleg[] = $beleg["einnahmen"];
                     }
                     if (floatval($beleg["ausgaben"]) != 0){
-                        $rowBeleg["Beleg-Summe"] = -$beleg["ausgaben"];
+                        $rowBeleg[] = -$beleg["ausgaben"];
                     }
-                    $res[] = $rowZahlung + $rowBeleg;
+                    $rowBeleg[] = $beleg["posten_id"];
+    
+                    $res[] = array_merge($rowZahlung, $rowBeleg);
                 }
             }
-            //var_dump($res);
-            $this->renderTable(array_merge(array_keys(end($res)), ["Buchungstext"]), [$res], [
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                function(){
-                    return "<textarea class='form-control'></textarea>";
+            if (abs($sum_zahlung - $sum_beleg) >= 0.01){
+                ErrorHandler::_errorExit("Summe Zahlung ($sum_zahlung) und Summe Beleg ($sum_beleg) passen nicht zusammen!");
+            }
+            $header = [
+                "Zahlung", "Zahlung-Betrag", "Auslage", "Beleg-Posten", "Titel Nr", "Titel", "Posten-Betrag", "Buchungstext",
+            ];
+            $this->renderHeadline("Buchung bestätigen");
+            ?>
+            <form method="POST" action="./save-booking">
+                <?php
+                //var_dump($res);
+                $obj = $this;
+                $this->renderTable($header, [$res], [
+                    function($zahlung_id) use ($obj){
+                        return $obj->defaultEscapeFunction($zahlung_id);
+                    },
+                    [$this, "moneyEscapeFunction"],
+                    [$this, "auslagenLinkEscapeFunction"],
+                    null,
+                    function($titelnr){
+                        return str_replace(" ", "&nbsp;", trim($titelnr));
+                    },
+                    null,
+                    [$this, "moneyEscapeFunction"],
+                    function($posten_id){
+                        return "<textarea name='text[$posten_id]' class='form-control'></textarea>";
+                    }
+                ]);
+                foreach ($zahlungen as $zahlung){
+                    $this->renderHiddenInput("zahlung[]", $zahlung);
                 }
-            ]);
+                foreach ($belege as $beleg){
+                    $this->renderHiddenInput("beleg[]", $beleg);
+                }
+                ?>
+                <button class="btn btn-primary pull-right">Buchung durchführen</button>
+            </form>
+            <?php
         }
         
     }
@@ -826,16 +867,107 @@ class MenuRenderer extends Renderer{
         <?php
     }
     
+    private function saveBooking(){
+        $zahlungen = $_REQUEST["zahlung"];
+        $belege = $_REQUEST["beleg"];
+        $text = $_REQUEST["text"];
+        
+        $maxBookingId = DBConnector::getInstance()->dbFetchAll("booking", ["id" => ["id", DBConnector::MAX]]);
+        
+        if (is_array($maxBookingId) && !empty($maxBookingId)){
+            $maxBookingId = intval($maxBookingId[0]["id"]);
+        }else{
+            $maxBookingId = 1;
+        }
+        //check if allready booked
+        $bookingDBbelege = DBConnector::getInstance()->dbFetchAll(
+            "booking",
+            ["zahlung_id", "belegposten_id"],
+            ["canceled" => 0, "belegposten_id" => ["IN", $belege],]
+        );
+        $bookingDBzahlung = DBConnector::getInstance()->dbFetchAll(
+            "booking",
+            ["zahlung_id", "belegposten_id"],
+            ["canceled" => 0, "zahlung_id" => ["IN", $zahlungen],]
+        );
+        if (count($bookingDBbelege) + count($bookingDBzahlung) > 0){
+            ErrorHandler::_renderErrorPage(["msg" => "Beleg oder Zahlung bereits verknüpft - " . print_r(array_merge($bookingDBzahlung, $bookingDBbelege), true), "code" => "500 Interner Fehler"]);
+        }
+        
+        $zahlungenDB = DBConnector::getInstance()->dbFetchAll("konto", ["id", "value"], ["id" => ["IN", $zahlungen]]);
+        $belegeDB = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            [
+                "titel_id",
+                "posten_id" => "beleg_posten.id",
+                "beleg_posten.einnahmen",
+                "beleg_posten.ausgaben",
+            ],
+            ["auslagen.id" => ["IN", $belege]],
+            [
+                ["table" => "belege", "type" => "inner", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["table" => "beleg_posten", "type" => "inner", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                ["table" => "projektposten", "type" => "inner", "on" =>
+                    [
+                        ["projektposten.id", "beleg_posten.projekt_posten_id"],
+                        ["auslagen.projekt_id", "projektposten.projekt_id"]
+                    ]
+                ],
+                ["table" => "haushaltstitel", "type" => "inner", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
+            ]
+        );
+        
+        $zahlung_sum = 0;
+        foreach ($zahlungenDB as $zahlung){
+            DBConnector::getInstance()->dbBegin();
+            $zahlung_sum += $zahlung["value"];
+            $belege_sum = 0;
+            foreach ($belegeDB as $beleg){
+                $value = 0;
+                if (floatval($beleg["einnahmen"]) != 0){
+                    $value = $beleg["einnahmen"];
+                }
+                if (floatval($beleg["ausgaben"]) != 0){
+                    $value = -$beleg["ausgaben"];
+                }
+                $belege_sum += $value;
+                DBConnector::getInstance()->dbInsert("booking", [
+                    "id" => ++$maxBookingId,
+                    "titel_id" => $beleg["titel_id"],
+                    "zahlung_id" => $zahlung["id"],
+                    "belegposten_id" => $beleg["posten_id"],
+                    "user_id" => DBConnector::getInstance()->getUser()["id"],
+                    "comment" => $text[$beleg["posten_id"]],
+                    "value" => $value,
+                    "kostenstelle" => 0,
+                ]);
+            }
+        }
+        
+        //check if user input was correct
+        if (abs($zahlung_sum - $belege_sum) >= 0.01){
+            DBConnector::getInstance()->dbRollBack();
+            ErrorHandler::_errorExit("Falsche Daten wurden übvertragen: $zahlung_sum != $belege_sum");
+        }else{
+            DBConnector::getInstance()->dbCommit();
+            $this->renderBookingHistory();
+        }
+        
+    }
+    
     public function renderBookingHistory(){
         list($hhps, $hhp_id) = $this->renderHHPSelector();
         
         $ret = DBConnector::getInstance()->dbFetchAll("booking",
-            ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
+            ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_posten.short", "auslagen_id", "projekt_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
             ["hhp_id" => $hhp_id],
             [
                 ["type" => "left", "table" => "user", "on" => ["booking.user_id", "user.id"]],
                 ["type" => "left", "table" => "haushaltstitel", "on" => ["booking.titel_id", "haushaltstitel.id"]],
-                ["type" => "left", "table" => "haushaltsgruppen", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]]
+                ["type" => "left", "table" => "haushaltsgruppen", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]],
+                ["type" => "left", "table" => "beleg_posten", "on" => ["booking.belegposten_id", "beleg_posten.id"]],
+                ["type" => "inner", "table" => "belege", "on" => ["belege.id", "beleg_posten.beleg_id"]],
+                ["type" => "inner", "table" => "auslagen", "on" => ["belege.auslagen_id", "auslagen.id"]],
             ],
             ["timestamp" => true, "id" => true]
         );
@@ -843,6 +975,7 @@ class MenuRenderer extends Renderer{
     
     
             //var_dump(reset($ret));
+            $this->renderHeadline("Buchungshistorie");
             ?>
             <table class="table" align="right">
                 <thead>
@@ -851,7 +984,7 @@ class MenuRenderer extends Renderer{
                     <th class="col-xs-1">Betrag (EUR)</th>
                     <th class="col-xs-1">Titel</th>
                     <th>Beleg</th>
-                    <th>Datum</th>
+                    <th>Buchungs-Datum</th>
                     <th>Zahlung</th>
                     <th>Stornieren</th>
                     <th>Kommentar</th>
@@ -861,16 +994,18 @@ class MenuRenderer extends Renderer{
                 <?php
                 foreach ($ret as $lfdNr => $row){
                     $userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
+                    $projektId = $row["projekt_id"];
+                    $auslagenId = $row["auslagen_id"]
                     ?>
                     <tr class="<?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
 
                         <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
 
-                        <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::GREEN ?> <?= TextStyle::BOLD ?>"><?= convertDBValueToUserValue($row['value'], "money") ?></td>
+                        <td class="money <?= $row['value'] < 0 ? TextStyle::DANGER_DARK : TextStyle::GREEN ?> <?= TextStyle::BOLD ?>"><?= DBConnector::getInstance()->convertDBValueToUserValue($row['value'], "money") ?></td>
 
-                        <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?>"><?= htmlspecialchars($row['titel_nr']) ?></td>
+                        <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?>"><?= str_replace(" ", "&nbsp;", trim(htmlspecialchars($row['titel_nr']))) ?></td>
 
-                        <td><?= generateLinkFromID($row['beleg_id'], "", TextStyle::BLACK) ?></td>
+                        <td><?= generateLinkFromID("A$auslagenId&nbsp;-&nbsp;" . $row['short'], "projekt/$projektId/auslagen/$auslagenId", TextStyle::BLACK) ?></td>
 
                         <td value="<?= $row['timestamp'] ?>">
                             <?= date("d.m.Y", strtotime($row['timestamp'])) ?>&nbsp;<!--

@@ -51,6 +51,13 @@ $routing = [
                     ],
                 ],
                 [
+                    'path' => 'save-booking',
+                    'type' => 'path',
+                    'action' => 'save-booking',
+                    'navigation' => 'booking',
+                    'method' => 'POST',
+                ],
+                [
                     'path' => 'check-booking',
                     'type' => 'path',
                     'action' => 'check-booking',
@@ -151,24 +158,24 @@ $routing = [
                                     'type' => 'pattern',
                                     'action' => 'view',
                                     'param' => 'aid',
-                                	'load' => [
-                                		LoadGroups::DATEPICKER,
-                                		LoadGroups::SELECTPICKER,
-                                		LoadGroups::FILEINPUT,
-                                		LoadGroups::AUSLAGEN,
-                                		LoadGroups::CHAT,
-                                	],
+                                    'load' => [
+                                        LoadGroups::DATEPICKER,
+                                        LoadGroups::SELECTPICKER,
+                                        LoadGroups::FILEINPUT,
+                                        LoadGroups::AUSLAGEN,
+                                        LoadGroups::CHAT,
+                                    ],
                                     'children' => [
                                         [
                                             'path' => 'edit',
                                             'type' => 'path',
                                             'action' => 'edit',
-                                        	'load' => [
-                                        		LoadGroups::DATEPICKER,
-                                        		LoadGroups::SELECTPICKER,
-                                        		LoadGroups::FILEINPUT,
-                                        		LoadGroups::AUSLAGEN,
-                                        	],
+                                            'load' => [
+                                                LoadGroups::DATEPICKER,
+                                                LoadGroups::SELECTPICKER,
+                                                LoadGroups::FILEINPUT,
+                                                LoadGroups::AUSLAGEN,
+                                            ],
                                         ],
                                     ],
                                 ],

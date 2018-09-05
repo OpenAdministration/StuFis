@@ -160,6 +160,11 @@ abstract class Renderer{
         }
     }
     
+    protected function renderHiddenInput($name, $value){ ?>
+        <input type="hidden" name="<?= $name ?>" value="<?= $value ?>">
+        <?php
+    }
+    
     protected function moneyEscapeFunction($money){
         return number_format($money, 2, ",", " ") . "&nbsp€";
     }
