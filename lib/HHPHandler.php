@@ -117,7 +117,6 @@ class HHPHandler extends Renderer{
                     ?>
                     <tr>
                         <td></td>
-                        <?= var_export([$titel_id => $row]) ?>
                         <td><?= $row["titel_nr"] ?></td>
                         <td><?= $row["titel_name"] ?></td>
                         <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") ?></td>
