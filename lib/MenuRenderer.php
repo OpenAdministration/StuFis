@@ -429,8 +429,8 @@ class MenuRenderer extends Renderer{
                 "auslagen.zahlung-name",
                 "auslagen.zahlung-iban",
                 "projekte.id", "projekte.createdat", "auslagen.id", "auslagen.zahlung-vwzk", "auslagen.name_suffix", "projekte.name", //verwendungszweck
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2]
             ],
             ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
             [

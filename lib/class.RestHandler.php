@@ -58,7 +58,7 @@ class RestHandler extends JsonController{
             case "cancel-booking":
                 $this->cancelBooking($routeInfo);
                 break;
-    
+        
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
@@ -556,7 +556,7 @@ class RestHandler extends JsonController{
                         $r = [];
                         try{
                             $r = $db->dbFetchAll('auslagen', [DBConnector::FETCH_ASSOC], ['auslagen.*'], ['auslagen.id' => $valid['target_id']], [
-                        
+
                             ]);
                         }catch (Exception $e){
                             ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
@@ -722,7 +722,7 @@ class RestHandler extends JsonController{
                     'status' => '200',
                     'msg' => 'Keine neuen Umsätze gefunden.',
                     'type' => 'modal',
-                    'subtype' => 'server-warning',
+                    'subtype' => 'server-error',
                 ]);
             }
         }
@@ -784,14 +784,16 @@ class RestHandler extends JsonController{
         }
         $booking_id = $_REQUEST["booking_id"];
         $ret = DBConnector::getInstance()->dbFetchAll("booking", [DBConnector::FETCH_ASSOC], [], ["id" => $booking_id]);
+        $maxBookingId = DBConnector::getInstance()->dbFetchAll("booking", [DBConnector::FETCH_ONLY_FIRST_COLUMN], [["id", DBConnector::GROUP_MAX]], ["id" => $booking_id])[0];
         if ($ret !== false && !empty($ret)){
             $ret = $ret[0];
             if ($ret["canceled"] !== 0){
                 
                 DBConnector::getInstance()->dbBegin();
                 $user_id = DBConnector::getInstance()->getUser()["id"];
-                $newId = DBConnector::getInstance()->dbInsert("booking",
+                DBConnector::getInstance()->dbInsert("booking",
                     [
+                        "id" => $maxBookingId + 1,
                         "comment" => "Rotbuchung zu B-Nr: " . $booking_id,
                         "titel_id" => $ret["titel_id"],
                         "belegposten_id" => $ret["belegposten_id"],
@@ -802,7 +804,7 @@ class RestHandler extends JsonController{
                         "canceled" => $booking_id,
                     ]
                 );
-                DBConnector::getInstance()->dbUpdate("booking", ["id" => $booking_id], ["canceled" => $newId]);
+                DBConnector::getInstance()->dbUpdate("booking", ["id" => $booking_id], ["canceled" => $maxBookingId + 1]);
                 if (!DBConnector::getInstance()->dbCommit()){
                     DBConnector::getInstance()->dbRollBack();
                     JsonController::print_json([
