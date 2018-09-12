@@ -105,19 +105,27 @@ class HHPHandler extends Renderer{
                 <?php
                 $gsum_soll = 0;
                 $gsum_ist = 0;
-                foreach ($group as $row){
+                $gsum_saved = 0;
+                foreach ($group as $titel_id => $row){
                     if (!isset($row["_booked"]))
                         $row["_booked"] = 0;
+                    if (!isset($row["_saved"]))
+                        $row["_saved"] = 0;
                     $gsum_soll += $row["value"];
                     $gsum_ist += $row["_booked"];
+                    $gsum_saved += $row["_saved"];
                     ?>
                     <tr>
                         <td></td>
+                        <?= var_export([$titel_id => $row]) ?>
                         <td><?= $row["titel_nr"] ?></td>
                         <td><?= $row["titel_name"] ?></td>
                         <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") ?></td>
                         <td class="money <?= $this->checkTitelBudget($row["value"], $row["_booked"]) ?>">
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_booked"], "money") ?>
+                        </td>
+                        <td class="money <?= $this->checkTitelBudget($row["value"], $row["_saved"]) ?>">
+                            <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_saved"], "money") ?>
                         </td>
                     </tr>
                     
@@ -128,6 +136,7 @@ class HHPHandler extends Renderer{
                     <td colspan="3"></td>
                     <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_soll, "money") ?></td>
                     <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_ist, "money") ?></td>
+                    <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_saved, "money") ?></td>
                 </tr>
                 </tbody>
                 

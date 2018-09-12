@@ -1009,18 +1009,74 @@ class DBConnector extends Singleton{
                 $groups[$titelIdsToGroupId[$tId]][$tId]["_booked"] = $val;
             }
         }
-        /* ermittle alle buchungen von projekten die beendet sind + alle offenen Projekte
-        $sql = "SELECT a.state, b.titel_id, b.value, p.titel_id,p.ausgaben
-        FROM finanzformular__booking as b
-          RIGHT JOIN finanzformular__beleg_posten as bp ON bp.beleg_id = b.beleg_id
-          RIGHT JOIN finanzformular__projektposten as p ON bp.posten_id = p.id
-          INNER JOIN finanzformular__antrag as a ON p.projekt_id = a.id
-        WHERE b.titel_id IN (7)
-        ";
-        $query = $this->pdo->prepare($sql);
-        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
-        var_dump($query->fetchAll(PDO::FETCH_ASSOC));
-        //var_dump($groups);*/
+    
+    
+        //ermittle alle buchungen von projekten die beendet sind
+        $closedMoneyByTitel = DBConnector::getInstance()->dbFetchAll(
+            "auslagen",
+            [DBConnector::FETCH_ASSOC],
+            [
+                "titel_id",
+                "titel_type" => "haushaltsgruppen.type",
+                "group_id" => "haushaltsgruppen.id",
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+            ],
+            ["hhp_id" => $id, "projekte.state" => ["LIKE", "terminated%"]],
+            [
+                ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
+                ["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "auslagen.projekt_id"]],
+                ["type" => "inner", "table" => "haushaltstitel", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
+                ["type" => "inner", "table" => "haushaltsgruppen", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"]],
+                ["type" => "inner", "table" => "haushaltsplan", "on" => ["haushaltsplan.id", "haushaltsgruppen.hhp_id"]],
+                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+            ],
+            [],
+            ["titel_id"]
+        );
+    
+        $openMoneyByTitel = DBConnector::getInstance()->dbFetchAll(
+            "projekte",
+            [DBConnector::FETCH_ASSOC],
+            [
+                "titel_id",
+                "titel_type" => "haushaltsgruppen.type",
+                "group_id" => "haushaltsgruppen.id",
+                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+            ],
+            ["hhp_id" => $id, "projekte.state" => ["REGEXP", "ok-by-hv|ok-by-stura|done-hv|done-other"]],
+            [
+                ["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "projekte.id"]],
+                ["type" => "inner", "table" => "haushaltstitel", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
+                ["type" => "inner", "table" => "haushaltsgruppen", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"]],
+                ["type" => "inner", "table" => "haushaltsplan", "on" => ["haushaltsplan.id", "haushaltsgruppen.hhp_id"]],
+            ],
+            [],
+            ["titel_id"]
+        );
+    
+        $moneyByTitel = array_merge($closedMoneyByTitel, $openMoneyByTitel);
+    
+    
+        foreach ($moneyByTitel as $row){
+            $value = 0;
+            if ($row["einnahmen"] != 0){
+                $value = floatval($row["einnahmen"]);
+            }
+            if ($row["ausgaben"] != 0){
+                $value = -floatval($row["ausgaben"]);
+            }
+            if (intval($row["titel_type"]) !== 0){
+                $value = -$value;
+            }
+            if (isset($groups[$row["group_id"]][$row["titel_id"]]["_saved"])){
+                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] += $value;
+            }else{
+                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] = $value;
+            }
+        }
         return $groups;
     }
     
