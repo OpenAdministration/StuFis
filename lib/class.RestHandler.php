@@ -55,6 +55,8 @@ class RestHandler extends JsonController{
                 break;
             case "new-booking":
                 $this->newBooking($routeInfo);
+            case "cancel-booking":
+                $this->cancelBooking($routeInfo);
                 break;
     
             case 'nononce':
@@ -62,53 +64,6 @@ class RestHandler extends JsonController{
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
                 break;
         }
-    }
-    
-    private function newBooking($routeInfo){
-        
-        if (!isset($_POST["zahlung"])
-            || !is_array($_POST["zahlung"])
-            || !isset($_POST["beleg"])
-            || !is_array($_POST["beleg"])
-            || !isset($_POST["booking-text"])
-            || empty($_POST["booking-text"])
-        ){
-            $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
-        }
-        
-        $zahlung = $_POST["zahlung"];
-        $beleg = $_POST["beleg"];
-        
-        if ((count($zahlung) === 1 && count($beleg) >= 1)
-            || (count($beleg) === 1 && count($zahlung) >= 1)
-        ){
-            $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
-        }
-        
-        if (isset($errorMsg)){
-            JsonController::print_json([
-                'success' => false,
-                'status' => '500',
-                'msg' => $errorMsg,
-                'type' => 'modal',
-                'subtype' => 'server-error',
-                'reload' => 2000,
-                'headline' => 'Unfolständige Datenübertragung',
-                //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
-            ]);
-        }
-        
-        
-        JsonController::print_json([
-            'success' => true,
-            'status' => '200',
-            'msg' => "Buchung wurde gespeichert",
-            'type' => 'modal',
-            'subtype' => 'server-success',
-            //'reload' => 2000,
-            'headline' => 'Erfolgreich gespeichert',
-            //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
-        ]);
     }
     
     public function handleProjekt($routeInfo = null){
@@ -769,6 +724,107 @@ class RestHandler extends JsonController{
                     'type' => 'modal',
                     'subtype' => 'server-warning',
                 ]);
+            }
+        }
+    }
+    
+    private function newBooking($routeInfo){
+        
+        if (!isset($_POST["zahlung"])
+            || !is_array($_POST["zahlung"])
+            || !isset($_POST["beleg"])
+            || !is_array($_POST["beleg"])
+            || !isset($_POST["booking-text"])
+            || empty($_POST["booking-text"])
+        ){
+            $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
+        }
+        
+        $zahlung = $_POST["zahlung"];
+        $beleg = $_POST["beleg"];
+        
+        if ((count($zahlung) === 1 && count($beleg) >= 1)
+            || (count($beleg) === 1 && count($zahlung) >= 1)
+        ){
+            $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
+        }
+        
+        if (isset($errorMsg)){
+            JsonController::print_json([
+                'success' => false,
+                'status' => '500',
+                'msg' => $errorMsg,
+                'type' => 'modal',
+                'subtype' => 'server-error',
+                'reload' => 2000,
+                'headline' => 'Unfolständige Datenübertragung',
+                //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+            ]);
+        }
+        
+        
+        JsonController::print_json([
+            'success' => true,
+            'status' => '200',
+            'msg' => "Buchung wurde gespeichert",
+            'type' => 'modal',
+            'subtype' => 'server-success',
+            //'reload' => 2000,
+            'headline' => 'Erfolgreich gespeichert',
+            //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+        ]);
+    }
+    
+    private function cancelBooking($routeInfo){
+        
+        (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+        if (!isset($_REQUEST["booking_id"])){
+            $msgs[] = "Daten wurden nicht korrekt übermittelt";
+            die();
+        }
+        $booking_id = $_REQUEST["booking_id"];
+        $ret = DBConnector::getInstance()->dbFetchAll("booking", [DBConnector::FETCH_ASSOC], [], ["id" => $booking_id]);
+        if ($ret !== false && !empty($ret)){
+            $ret = $ret[0];
+            if ($ret["canceled"] !== 0){
+                
+                DBConnector::getInstance()->dbBegin();
+                $user_id = DBConnector::getInstance()->getUser()["id"];
+                $newId = DBConnector::getInstance()->dbInsert("booking",
+                    [
+                        "comment" => "Rotbuchung zu B-Nr: " . $booking_id,
+                        "titel_id" => $ret["titel_id"],
+                        "belegposten_id" => $ret["belegposten_id"],
+                        "zahlung_id" => $ret["zahlung_id"],
+                        "kostenstelle" => $ret["kostenstelle"],
+                        "user_id" => $user_id,
+                        "value" => -$ret["value"], //negative old Value
+                        "canceled" => $booking_id,
+                    ]
+                );
+                DBConnector::getInstance()->dbUpdate("booking", ["id" => $booking_id], ["canceled" => $newId]);
+                if (!DBConnector::getInstance()->dbCommit()){
+                    DBConnector::getInstance()->dbRollBack();
+                    JsonController::print_json([
+                        'success' => false,
+                        'status' => '500',
+                        'msg' => "Ein Server fehler ist aufgetreten",
+                        'type' => 'modal',
+                        'subtype' => 'server-error',
+                        //'reload' => 2000,
+                        'headline' => 'Konnte nicht gespeichert werden',
+                    ]);
+                }else{
+                    JsonController::print_json([
+                        'success' => true,
+                        'status' => '200',
+                        'msg' => "Wurde erfolgreich gegengebucht; die Seite wird gleich neu geladen.",
+                        'type' => 'modal',
+                        'subtype' => 'server-success',
+                        'reload' => 1000,
+                        'headline' => 'Daten gespeichert',
+                    ]);
+                }
             }
         }
     }

@@ -248,6 +248,7 @@ $routing = [
                     'path' => 'hibiscus',
                     'type' => 'path',
                     'controller' => 'rest',
+                    'groups' => 'ref-finanzen',
                     'action' => 'update-konto',
                 ],
                 [
@@ -256,6 +257,14 @@ $routing = [
                     'controller' => 'rest',
                     'action' => 'new-booking',
                     'groups' => 'ref-finanzen',
+                    'children' => [
+                        [
+                            'path' => 'cancel',
+                            'type' => 'path',
+                            'controller' => 'rest',
+                            'action' => 'cancel-booking',
+                        ],
+                    ],
                 ]
             ]
         ],
