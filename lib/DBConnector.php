@@ -2,11 +2,17 @@
 
 class DBConnector extends Singleton{
     
-    const SUM = 1;
-    const SUM_ROUND2 = 2;
-    const COUNT = 3;
-    const MAX = 4;
-    const MIN = 5;
+    const GROUP_SUM = 1;
+    const GROUP_SUM_ROUND2 = 2;
+    const GROUP_COUNT = 3;
+    const GROUP_MAX = 4;
+    const GROUP_MIN = 5;
+    const FETCH_NUMERIC = 1;
+    const FETCH_ASSOC = 2;
+    const FETCH_UNIQUE_FIRST_COL_AS_KEY = 3;
+    const FETCH_ONLY_FIRST_COLUMN = 4;
+    const FETCH_UNIQUE = 5;
+    const FETCH_GROUPED = 6;
     private static $DB_DSN;
     private static $DB_USERNAME;
     private static $DB_PASSWORD;
@@ -141,7 +147,7 @@ class DBConnector extends Singleton{
             "zahlung-iban" => "VARCHAR(1023) NOT NULL",
             "zahlung-name" => "VARCHAR(127) NOT NULL",
             "zahlung-vwzk" => "VARCHAR(127) NOT NULL",
-        	"address" => "VARCHAR(1023) NOT NULL DEFAULT ''",
+            "address" => "VARCHAR(1023) NOT NULL DEFAULT ''",
             'last_change' => 'DATETIME NOT NULL DEFAULT NOW()',
             'last_change_by' => "VARCHAR(255) NOT NULL DEFAULT ''",
             'etag' => 'VARCHAR(255) NOT NULL',
@@ -302,7 +308,7 @@ class DBConnector extends Singleton{
     }
     
     function getUser(){
-        $user = $this->dbFetchAll("user", [], ["username" => (AUTH_HANDLER)::getInstance()->getUsername()]);
+        $user = $this->dbFetchAll("user", [DBConnector::FETCH_ASSOC], [], ["username" => (AUTH_HANDLER)::getInstance()->getUsername()]);
         if (count($user) === 1){
             $user = $user[0];
         }else{
@@ -328,6 +334,8 @@ class DBConnector extends Singleton{
      * @param string $tables                table which should be used in FROM statement
      *                                      if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
      *
+     * @param array  $fetchStyles
+     *
      * @param array  $showColumns           if empty array there will be all coulums (*) shown
      *                                      if keys are not numeric, key will be used as alias
      *                                      don't use same alias twice (ofc)
@@ -337,7 +345,7 @@ class DBConnector extends Singleton{
      *                                      if values of $showColumns are arrays, there can be aggregated functions as
      *                                      second value, fist value is the columnname e.g. alias => ["colname", SUM]
      *
-     * @param array  $fields                val no array [colname => val,...]: WHERE colname = val AND ...
+     * @param array  $where                 val no array [colname => val,...]: WHERE colname = val AND ...
      *
      *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value
      *                                  AND
@@ -365,19 +373,14 @@ class DBConnector extends Singleton{
      *
      * @param array  $sort                  Order by key (field) with val===true ? asc : desc
      *
-     * @param bool   $groupByFirstCol       First coloum will be row idx (if not $unique = true there will be an array
-     *                                      as value for each first coloum entry as key)
-     *
-     * @param bool   $unique                First column is unique (better output with $groupByFirstCol=true) has
-     *                                      unexpected results if first coulum isn't unique but $unique = true
      *
      * @param array  $groupBy               Array with columns which will be grouped by
      *
      * @return array|bool
      */
-    public function dbFetchAll($tables, $showColumns = [], $fields = [], $joins = [], $sort = [], $groupByFirstCol = false, $unique = false, $groupBy = [], $numericIdx = false){
-        //check if all tables are known
+    public function dbFetchAll($tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [], $groupBy = []){
         
+        //check if all tables are known
         if (!is_array($tables)){
             $tables = [$tables];
         }
@@ -425,7 +428,7 @@ class DBConnector extends Singleton{
             }
         }
         
-        foreach ($fields as $field => $value){
+        foreach ($where as $field => $value){
             if (!in_array($field, $this->validFields)){
                 ErrorHandler::_errorExit("Unkown column $field in WHERE");
             }
@@ -500,19 +503,20 @@ class DBConnector extends Singleton{
                     $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
                 }
             }else{
-                ErrorHandler::_errorExit("Unkown column $col in SELECT", 500);
+                ErrorHandler::_errorExit("Unkown column $col in fetchAll", 500);
             }
         }
         
         $c = [];
         $vals = [];
-        foreach ($fields as $k => $v){
+        foreach ($where as $k => $v){
             if (strpos($k, ".") !== false){
                 $k = self::$DB_PREFIX . $k;
             }
             if (is_array($v)){
                 if (is_array($v[1])){
                     switch (strtolower($v[0])){
+                        case "not in":
                         case "in":
                             $tmp = implode(',', array_fill(0, count($v[1]), '?'));
                             $c[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
@@ -610,40 +614,47 @@ class DBConnector extends Singleton{
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
             return false;
-        if ($numericIdx){
-            $type = PDO::FETCH_NUM;
-        }else{
-            $type = PDO::FETCH_ASSOC;
+        
+        $PDOfetchType = 0;
+        if (in_array(self::FETCH_NUMERIC, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_NUM;
+        }//noelseif
+        if (in_array(self::FETCH_ASSOC, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_ASSOC;
         }
-        if ($groupByFirstCol && $unique)
-            return $query->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | $type);
-        else if ($groupByFirstCol){
-            return $query->fetchAll(PDO::FETCH_GROUP | $type);
-        }else if ($unique){
-            return $query->fetchAll(PDO::FETCH_UNIQUE | $type);
-        }else
-            return $query->fetchAll($type);
+        if (in_array(self::FETCH_ONLY_FIRST_COLUMN, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_COLUMN;
+        }//noelsif
+        if (in_array(self::FETCH_UNIQUE_FIRST_COL_AS_KEY, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_GROUP | PDO::FETCH_UNIQUE;
+        }else if (in_array(self::FETCH_UNIQUE, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_UNIQUE;
+        }else if (in_array(self::FETCH_GROUPED, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_GROUP;
+        }
+        
+        return $query->fetchAll($PDOfetchType);
     }
     
     private function quoteIdent($field, $aggregateConst = 0){
         switch ($aggregateConst){
-            case $this::SUM:
+            case $this::GROUP_SUM:
                 $aggregatePre = "SUM(";
                 $aggregateSuf = ")";
                 break;
-            case $this::SUM_ROUND2:
+            case $this::GROUP_SUM_ROUND2:
                 $aggregatePre = "ROUND(SUM(";
                 $aggregateSuf = "),2)";
                 break;
-            case $this::COUNT:
+            case $this::GROUP_COUNT:
                 $aggregatePre = "COUNT(";
                 $aggregateSuf = ")";
                 break;
-            case $this::MAX:
+            case $this::GROUP_MAX:
                 $aggregatePre = "MAX(";
                 $aggregateSuf = ")";
                 break;
-            case $this::MIN:
+            case $this::GROUP_MIN:
                 $aggregatePre = "MIN(";
                 $aggregateSuf = ")";
                 break;
@@ -800,8 +811,9 @@ class DBConnector extends Singleton{
      * @return array|bool
      */
     public function getProjectFromGremium($gremiumNames, $antrag_type){
+        //TODO: DELETE CANDIDATE
         HTMLPageRenderer::registerProfilingBreakpoint("gremien-start");
-        $ret = $this->dbFetchAll("projekte", ["id"], [], [], ["org" => true, "id" => true], true);
+        $ret = $this->dbFetchAll("projekte", [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED], ["id"], [], [], ["org" => true, "id" => true]);
         
         
         $projects = [];

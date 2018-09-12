@@ -38,14 +38,14 @@ class ProjektHandler extends FormHandlerInterface{
             $stateNow = "draft";
         }else{
             $this->id = $pathInfo["pid"];
-            $res = DBConnector::getInstance()->dbFetchAll("projekte", [], ["projekte.id" => $this->id], [
+            $res = DBConnector::getInstance()->dbFetchAll("projekte", [DBConnector::FETCH_ASSOC], [], ["projekte.id" => $this->id], [
                 ["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
             ], ["version" => true]);
             if (!empty($res))
                 $this->data = $res[0];
             else
                 die("konnte Projekt nicht finden :(");
-            $tmp = DBConnector::getInstance()->dbFetchAll("projektposten", [], ["projekt_id" => $this->id]);
+            $tmp = DBConnector::getInstance()->dbFetchAll("projektposten", [DBConnector::FETCH_ASSOC], [], ["projekt_id" => $this->id]);
             foreach ($tmp as $row){
                 $idx = $row["id"];
                 $this->data["posten-name"][$idx] = $row["name"];

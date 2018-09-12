@@ -56,6 +56,7 @@ class RestHandler extends JsonController{
             case "new-booking":
                 $this->newBooking($routeInfo);
                 break;
+    
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
@@ -116,9 +117,9 @@ class RestHandler extends JsonController{
         $projektHandler = null;
         $dbret = false;
         try{
-        	$auth = (AUTH_HANDLER);
-        	/* @var $auth AuthHandler */
-        	$auth = $auth::getInstance();
+            $auth = (AUTH_HANDLER);
+            /* @var $auth AuthHandler */
+            $auth = $auth::getInstance();
             $logId = DBConnector::getInstance()->logThisAction($_POST);
             DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
             
@@ -249,16 +250,16 @@ class RestHandler extends JsonController{
                         'error' => 'Ungültige Auslagen ID.'
                     ],
                     'auslagen-name' => ['regex',
-	                    'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
-	                    'maxlength' => '255',
+                        'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'maxlength' => '255',
                         'empty',
-                        'error' =>	'Ungültiger Auslagen name.'
+                        'error' => 'Ungültiger Auslagen name.'
                     ],
                     'zahlung-name' => ['regex',
-	                    'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
-	                    'maxlength' => '127',
+                        'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'maxlength' => '127',
                         'empty',
-                        'error' =>	'Ungültiger Zahlungsempfänger.'
+                        'error' => 'Ungültiger Zahlungsempfänger.'
                     ],
                     'zahlung-iban' => ['regex',
                         'pattern' => '/^(([a-zA-Z]{2}\s?\d{2}\s?([0-9a-zA-Z]{4}\s?){4}[0-9a-zA-Z]{2})|([a-zA-Z0-9]{4}( ... ... )[a-zA-Z0-9]{2}))$/',
@@ -272,10 +273,10 @@ class RestHandler extends JsonController{
                         'maxlength' => '127',
                     ],
                     'address' => ['regex',
-                    	'pattern' => '/^[a-zA-Z0-9\-_,:;\/\\\\()& \n\r\.\[\]%\'"#\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
-                    	'empty',
-                    	'maxlength' => '1023',
-                    	'error' => 'Adressangabe fehlerhaft.',
+                        'pattern' => '/^[a-zA-Z0-9\-_,:;\/\\\\()& \n\r\.\[\]%\'"#\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
+                        'empty',
+                        'maxlength' => '1023',
+                        'error' => 'Adressangabe fehlerhaft.',
                     ],
                     'belege' => ['array', 'optional',
                         'minlength' => 1,
@@ -442,7 +443,7 @@ class RestHandler extends JsonController{
                         }
                     }
                 }
-            
+    
                 //check file non empty
                 $fileIdx = 'beleg_' . $kb;
                 if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
@@ -484,214 +485,218 @@ class RestHandler extends JsonController{
     }
     
     private function handleChat($routeInfo){
-    	$db = DBConnector::getInstance();
-    	$chat = new ChatHandler(NULL, NULL);
-   		$valid = $chat->validatePost($_POST);
-   		$auth = (AUTH_HANDLER);
-   		/* @var $auth AuthHandler */
-   		$auth = $auth::getInstance();
-    	if ($valid){
-    		//access permission control
-    		switch ($valid['target']){
-    			case 'projekt': {
-    				$r = [];
-    				try{
-    					$r = $db->dbFetchAll('projekte', ['projekte.*', 'user.username', 'user.email'], ['projekte.id' => $valid['target_id']], [
-							["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
-						]);
-    				} catch (Exception $e){
-    					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
-    					break;
-    				}
-    				if (!$r || count($r) == 0){
-    					break;
-    				}
-    				$pdate = date_create(substr($r[0]['createdat'], 0, 4).'-01-01 00:00:00');
-    				$pdate->modify('+1 year');
-    				$now = date_create();
-    				//info mail
-    				$mail = [];
-    				// ACL --------------------------------
-    				// action 
-    				switch ($valid['action']){
-    					case 'gethistory':
-    						$map = ['0', '1'];
-    						if ($auth->hasGroup('admin')) {
-    							$map[] = '2';
-    						}
-    						if ($auth->hasGroup('ref-finanzen')) {
-    							$map[] = '3';
-    						}
-    						if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()) {
-    							$map[] = '-1';
-    						}
-    						$chat->setKeep($map);
-    						break;
-    					case 'newcomment':
-    						//allow chat only 90 days into next year
-    						if ($now->getTimestamp()-$pdate->getTimestamp() > 86400 * 90){
-    							break 2;
-    						}
-    						//new message - info mail
-							$tMail = [];
-    						if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
-    							break 2;
-    						}
-    						//switch type
-    						switch ($valid['type']){
-    							case '-1':
-    								if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername())) {
-    									break 3;
-    								}
-    								if (!$auth->hasGroup('ref-finanzen')) {
-    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
-    								} else {
-    									$tMail['to'][] = $r[0]['email'];
-    								}
-    								break;
-    							case '0':
-    								if (!$auth->hasGroup('ref-finanzen')) {
-    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
-    								} else {
-    									$tMail['to'][] = $r[0]['responsible'];
-    								}
-    								break;
-    							case '2':
-    								if (!$auth->hasGroup('admin')) {
-    									break 3;
-    								}
-    								break;
-    							case '3':
-    								if (!$auth->hasGroup('ref-finanzen')) {
-    									break 3;
-    								}
-    								$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
-    								break;
-    							default: 
-    								break 3;
-    						}
-    						if (count($tMail) > 0){
-    							$tMail['param']['msg'][] = 'Im %Projekt% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
-    							$tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
-    							$tMail['param']['headline'] = 'Projekt - Neue Nachricht';
-    							$tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
-    							$tMail['template'] = 'projekt_default';
-    							$mail[] = $tMail;
-    						}
-    						break;
-    					default: 
-    						break 2;
-    				}
-    				// all ok -> handle all
-    				$chat->answerAll($_POST);
-    				if (count($mail) > 0){
-    					$mh = MailHandler::getInstance();
-    					foreach ($mail as $m){
-    						//create and send email
-    						$mail_result = $mh->easyMail($m);
-    					}
-    				}
-    				die();
-    			} break;
-    			case 'auslagen': {
-    				$r = [];
-    				try{
-    					$r = $db->dbFetchAll('auslagen', ['auslagen.*'], ['auslagen.id' => $valid['target_id']], [
-    						
-    					]);
-    				} catch (Exception $e){
-    					ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
-    					break;
-    				}
-    				if (!$r || count($r) == 0){
-    					break;
-    				}
-    				$pdate = date_create(substr($r[0]['created'], 0, 4).'-01-01 00:00:00');
-    				$pdate->modify('+1 year');
-    				$now = date_create();
-    				//info mail
-    				$mail = [];
-    				// ACL --------------------------------
-    				// action 
-    				switch ($valid['action']){
-    					case 'gethistory':
-    						$map = ['1'];
-    						if ($auth->hasGroup('ref-finanzen')) {
-    							$map[] = '3';
-    						}
-    						$tmpsplit = explode(';', $r[0]['created']);
-    						if ($auth->hasGroup('ref-finanzen') || $tmpsplit[1] == $auth->getUsername()) {
-    							$map[] = '-1';
-    						}
-    						$chat->setKeep($map);
-    						break;
-    					case 'newcomment':
-    						//allow chat only 90 days into next year
-    						if ($now->getTimestamp()-$pdate->getTimestamp() > 86400 * 90){
-    							break 2;
-    						}
-    						//new message - info mail
-							$tMail = [];
-    						//switch type
-    						switch ($valid['type']){
-    							case '-1':
-    								if (!$auth->hasGroup('ref-finanzen') && $auth->getUsername() != AuslagenHandler2::state2stateInfo('wip;'.$r[0]['created'])['user']) {
-    									break 3;
-    								}
-    								if (!$auth->hasGroup('ref-finanzen')) {
-    									$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
-    								} else {
-    									$u = $db->dbFetchAll('user', ['email', 'id'], ['username' => AuslagenHandler2::state2stateInfo('wip;'.$r[0]['created'])['user']]);
-    									if ($u && count($u) > 0){
-    										$tMail['to'][] = $u[0]['email'];
-    									}
-    								}
-    								break;
-    							case '3':
-    								if (!$auth->hasGroup('ref-finanzen')) {
-    									break 3;
-    								}
-    								$tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
-    								break;
-    							default: 
-    								break 3;
-    						}
-    						if (count($tMail) > 0){
-    							$tMail['param']['msg'][] = 'In der %Abrechnung% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
-    							$tMail['param']['link']['Abrechnung'] = BASE_URL.URIBASE.'projekt/'.$r[0]['projekt_id'].'/auslagen/'.$r[0]['id'].'#auslagenchat';
-    							$tMail['param']['headline'] = 'Auslagen - Neue Nachricht';
-    							$tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
-    							$tMail['template'] = 'projekt_default';
-    							$mail[] = $tMail;
-    						}
-    						break;
-    					default: 
-    						break 2;
-    				}
-    				// all ok -> handle all
-    				$chat->answerAll($_POST);
-    				if (count($mail) > 0){
-    					$mh = MailHandler::getInstance();
-    					foreach ($mail as $m){
-    						//create and send email
-    						$mail_result = $mh->easyMail($m);
-    					}
-    				}
-    				die();
-    			} break;
-    			default:
-	    			break;
-    		}
-    	}
-    	$chat->setErrorMessage('Access Denied.');
-    	$chat->answerError();
-    	die();	
+        $db = DBConnector::getInstance();
+        $chat = new ChatHandler(null, null);
+        $valid = $chat->validatePost($_POST);
+        $auth = (AUTH_HANDLER);
+        /* @var $auth AuthHandler */
+        $auth = $auth::getInstance();
+        if ($valid){
+            //access permission control
+            switch ($valid['target']){
+                case 'projekt':
+                    {
+                        $r = [];
+                        try{
+                            $r = $db->dbFetchAll('projekte', [DBConnector::FETCH_ASSOC], ['projekte.*', 'user.username', 'user.email'], ['projekte.id' => $valid['target_id']], [
+                                ["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
+                            ]);
+                        }catch (Exception $e){
+                            ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+                            break;
+                        }
+                        if (!$r || count($r) == 0){
+                            break;
+                        }
+                        $pdate = date_create(substr($r[0]['createdat'], 0, 4) . '-01-01 00:00:00');
+                        $pdate->modify('+1 year');
+                        $now = date_create();
+                        //info mail
+                        $mail = [];
+                        // ACL --------------------------------
+                        // action
+                        switch ($valid['action']){
+                            case 'gethistory':
+                                $map = ['0', '1'];
+                                if ($auth->hasGroup('admin')){
+                                    $map[] = '2';
+                                }
+                                if ($auth->hasGroup('ref-finanzen')){
+                                    $map[] = '3';
+                                }
+                                if ($auth->hasGroup('ref-finanzen') || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()){
+                                    $map[] = '-1';
+                                }
+                                $chat->setKeep($map);
+                                break;
+                            case 'newcomment':
+                                //allow chat only 90 days into next year
+                                if ($now->getTimestamp() - $pdate->getTimestamp() > 86400 * 90){
+                                    break 2;
+                                }
+                                //new message - info mail
+                                $tMail = [];
+                                if (!preg_match('/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/', $r[0]['state'])){
+                                    break 2;
+                                }
+                                //switch type
+                                switch ($valid['type']){
+                                    case '-1':
+                                        if (!$auth->hasGroup('ref-finanzen') && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername())){
+                                            break 3;
+                                        }
+                                        if (!$auth->hasGroup('ref-finanzen')){
+                                            $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+                                        }else{
+                                            $tMail['to'][] = $r[0]['email'];
+                                        }
+                                        break;
+                                    case '0':
+                                        if (!$auth->hasGroup('ref-finanzen')){
+                                            $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+                                        }else{
+                                            $tMail['to'][] = $r[0]['responsible'];
+                                        }
+                                        break;
+                                    case '2':
+                                        if (!$auth->hasGroup('admin')){
+                                            break 3;
+                                        }
+                                        break;
+                                    case '3':
+                                        if (!$auth->hasGroup('ref-finanzen')){
+                                            break 3;
+                                        }
+                                        $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+                                        break;
+                                    default:
+                                        break 3;
+                                }
+                                if (count($tMail) > 0){
+                                    $tMail['param']['msg'][] = 'Im %Projekt% #' . $r[0]['id'] . ' gibt es eine neue Nachricht.';
+                                    $tMail['param']['link']['Projekt'] = BASE_URL . URIBASE . 'projekt/' . $r[0]['id'] . '#projektchat';
+                                    $tMail['param']['headline'] = 'Projekt - Neue Nachricht';
+                                    $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Projekt #' . $r[0]['id'];
+                                    $tMail['template'] = 'projekt_default';
+                                    $mail[] = $tMail;
+                                }
+                                break;
+                            default:
+                                break 2;
+                        }
+                        // all ok -> handle all
+                        $chat->answerAll($_POST);
+                        if (count($mail) > 0){
+                            $mh = MailHandler::getInstance();
+                            foreach ($mail as $m){
+                                //create and send email
+                                $mail_result = $mh->easyMail($m);
+                            }
+                        }
+                        die();
+                    }
+                    break;
+                case 'auslagen':
+                    {
+                        $r = [];
+                        try{
+                            $r = $db->dbFetchAll('auslagen', [DBConnector::FETCH_ASSOC], ['auslagen.*'], ['auslagen.id' => $valid['target_id']], [
+                        
+                            ]);
+                        }catch (Exception $e){
+                            ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+                            break;
+                        }
+                        if (!$r || count($r) == 0){
+                            break;
+                        }
+                        $pdate = date_create(substr($r[0]['created'], 0, 4) . '-01-01 00:00:00');
+                        $pdate->modify('+1 year');
+                        $now = date_create();
+                        //info mail
+                        $mail = [];
+                        // ACL --------------------------------
+                        // action
+                        switch ($valid['action']){
+                            case 'gethistory':
+                                $map = ['1'];
+                                if ($auth->hasGroup('ref-finanzen')){
+                                    $map[] = '3';
+                                }
+                                $tmpsplit = explode(';', $r[0]['created']);
+                                if ($auth->hasGroup('ref-finanzen') || $tmpsplit[1] == $auth->getUsername()){
+                                    $map[] = '-1';
+                                }
+                                $chat->setKeep($map);
+                                break;
+                            case 'newcomment':
+                                //allow chat only 90 days into next year
+                                if ($now->getTimestamp() - $pdate->getTimestamp() > 86400 * 90){
+                                    break 2;
+                                }
+                                //new message - info mail
+                                $tMail = [];
+                                //switch type
+                                switch ($valid['type']){
+                                    case '-1':
+                                        if (!$auth->hasGroup('ref-finanzen') && $auth->getUsername() != AuslagenHandler2::state2stateInfo('wip;' . $r[0]['created'])['user']){
+                                            break 3;
+                                        }
+                                        if (!$auth->hasGroup('ref-finanzen')){
+                                            $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+                                        }else{
+                                            $u = $db->dbFetchAll('user', [DBConnector::FETCH_ASSOC], ['email', 'id'], ['username' => AuslagenHandler2::state2stateInfo('wip;' . $r[0]['created'])['user']]);
+                                            if ($u && count($u) > 0){
+                                                $tMail['to'][] = $u[0]['email'];
+                                            }
+                                        }
+                                        break;
+                                    case '3':
+                                        if (!$auth->hasGroup('ref-finanzen')){
+                                            break 3;
+                                        }
+                                        $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
+                                        break;
+                                    default:
+                                        break 3;
+                                }
+                                if (count($tMail) > 0){
+                                    $tMail['param']['msg'][] = 'In der %Abrechnung% #' . $r[0]['id'] . ' gibt es eine neue Nachricht.';
+                                    $tMail['param']['link']['Abrechnung'] = BASE_URL . URIBASE . 'projekt/' . $r[0]['projekt_id'] . '/auslagen/' . $r[0]['id'] . '#auslagenchat';
+                                    $tMail['param']['headline'] = 'Auslagen - Neue Nachricht';
+                                    $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #' . $r[0]['id'];
+                                    $tMail['template'] = 'projekt_default';
+                                    $mail[] = $tMail;
+                                }
+                                break;
+                            default:
+                                break 2;
+                        }
+                        // all ok -> handle all
+                        $chat->answerAll($_POST);
+                        if (count($mail) > 0){
+                            $mh = MailHandler::getInstance();
+                            foreach ($mail as $m){
+                                //create and send email
+                                $mail_result = $mh->easyMail($m);
+                            }
+                        }
+                        die();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        $chat->setErrorMessage('Access Denied.');
+        $chat->answerError();
+        die();
     }
     
     private function updateKonto($routeInfo){
-    	$auth = (AUTH_HANDLER);
-    	/* @var $auth AuthHandler */
-    	$auth = $auth::getInstance();
+        $auth = (AUTH_HANDLER);
+        /* @var $auth AuthHandler */
+        $auth = $auth::getInstance();
         $auth->requireGroup(HIBISCUSGROUP);
         
         $ret = true;
@@ -711,7 +716,7 @@ class RestHandler extends JsonController{
                 'subtype' => 'server-error',
             ]);
         }
-        $lastId = DBConnector::getInstance()->dbFetchAll("konto", ["id" => ["id", DBConnector::MAX]]);
+        $lastId = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], ["id" => ["id", DBConnector::GROUP_MAX]]);
         if (is_array($lastId)){
             $lastId = $lastId[0]["id"];
         }
@@ -754,6 +759,7 @@ class RestHandler extends JsonController{
                     'msg' => "$inserted neue Umsätze gefunden.",
                     'type' => 'modal',
                     'subtype' => 'server-success',
+                    'reload' => 2000,
                 ]);
             }else{
                 JsonController::print_json([
@@ -761,7 +767,7 @@ class RestHandler extends JsonController{
                     'status' => '200',
                     'msg' => 'Keine neuen Umsätze gefunden.',
                     'type' => 'modal',
-                    'subtype' => 'server-error',
+                    'subtype' => 'server-warning',
                 ]);
             }
         }

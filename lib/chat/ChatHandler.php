@@ -233,6 +233,7 @@ class ChatHandler{
     public function _loadComments($group, $group_id, $sort = true, $incremental = 0){
     	$this->comments = $this->db->dbFetchAll(
     		"comments",
+            [DBConnector::FETCH_ASSOC],
     		[],
     		["target" => $group, "target_id" => $group_id, 'id' => ['>', $incremental]],
     		[],

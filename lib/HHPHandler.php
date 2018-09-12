@@ -24,12 +24,11 @@ class HHPHandler extends Renderer{
     function render(){
         $this->hhps = DBConnector::getInstance()->dbFetchAll(
             "haushaltsplan",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
             ["id", "id", "haushaltsplan.*"],
             [],
             [],
-            ["von" => true],
-            true,
-            true
+            ["von" => true]
         );
         switch ($this->routeInfo["action"]){
             case "pick":

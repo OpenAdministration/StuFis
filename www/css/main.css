@@ -295,14 +295,14 @@ a.disabled-option span {
 .panel.panel-default i.fa-togglebox::before {
     /* minus */
     content: "\f147";
-    margin-right: 85px;
+    margin-right: 100px;
     color: black;
 }
 
 .panel.panel-default > .collapsed i.fa-togglebox::before {
     /* plus */
     content: "\f196";
-    margin-right: 85px;
+    margin-right: 100px;
     color: black;
 }
 
@@ -325,7 +325,7 @@ a.disabled-option span {
     text-overflow: ellipsis;
     white-space: nowrap;
     line-height: 1.11111;
-    max-width: 25%;
+    max-width: 20%;
     text-align: left;
     margin-left: 10px;
 }
@@ -336,7 +336,7 @@ a.disabled-option span {
     white-space: nowrap;
     text-overflow: ellipsis;
     line-height: 1.3;
-    width: 55%;
+    width: 50%;
     vertical-align: top;
 }
 

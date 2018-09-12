@@ -90,19 +90,18 @@ class MenuRenderer extends Renderer{
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
         $projekte = DBConnector::getInstance()->dbFetchAll(
             "projekte",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
             [
                 "org",
                 "projekte.*",
-                "ausgaben" => ["projektposten.ausgaben", DBConnector::SUM_ROUND2],
-                "einnahmen" => ["projektposten.einnahmen", DBConnector::SUM_ROUND2],
+                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
             ],
             ["org" => ["in", $gremien]],
             [
                 ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
             ],
             ["org" => true],
-            true,
-            false,
             ["id"]
         );
         $pids = [];
@@ -113,12 +112,13 @@ class MenuRenderer extends Renderer{
         });
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
             [
                 "projekt_id",  // group idx
                 "projekt_id", "auslagen.id", "name_suffix", //auslagen Link
                 "zahlung-name", // Empf. Name
-                "einnahmen" => ["einnahmen", DBConnector::SUM_ROUND2],
-                "ausgaben" => ["ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                "ausgaben" => ["ausgaben", DBConnector::GROUP_SUM_ROUND2],
                 "state"
             ],
             ["projekt_id" => ["IN", $pids]],
@@ -127,8 +127,6 @@ class MenuRenderer extends Renderer{
                 ["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
             ["id" => true],
-            true,
-            false,
             ["auslagen_id"]
         );
         
@@ -296,20 +294,18 @@ class MenuRenderer extends Renderer{
         $header = ["Projekt", "Organisation", "Einnahmen", "Ausgaben", "Projektbeginn"];
         $dbres = DBConnector::getInstance()->dbFetchAll(
             "projekte",
+            [DBConnector::FETCH_NUMERIC],
             [
                 "projekte.id", "createdat", "projekte.name",
                 "org",
-                "einnahmen" => ["projektposten.einnahmen", DBConnector::SUM_ROUND2],
-                "ausgaben" => ["projektposten.ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
                 "createdat",
             ],
             ["state" => "$statestring"],
             [["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "projekte.id"]]],
             ["date-start" => true],
-            false,
-            false,
-            ["projekte.id"],
-            true
+            ["projekte.id"]
         );
         $escapeFunctionsIntern = [
             [$this, "projektLinkEscapeFunction"],
@@ -351,12 +347,13 @@ class MenuRenderer extends Renderer{
         $headerAuslagen = ["Projekt", "Auslage", "Organisation", "Einnahmen", "Ausgaben", "zuletzt geändert"];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
+            [DBConnector::FETCH_NUMERIC],
             [
                 "projekte.id", "createdat", "name", //Projekte Link
                 "projekte.id", "auslagen.id", "auslagen.name_suffix", // Auslagen Link
                 "projekte.org", // Org
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2],
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
                 "last_change"  // letzte änderung
             ],
             [
@@ -369,10 +366,7 @@ class MenuRenderer extends Renderer{
                 ["table" => "beleg_posten", "type" => "inner", "on" => ["belege.id", "beleg_posten.beleg_id"]],
             ],
             ["last_change" => true],
-            false,
-            false,
-            ["auslagen.id"],
-            true
+            ["auslagen.id"]
         );
         $escapeFunctionsAuslagen = [
             [$this, "projektLinkEscapeFunction"],
@@ -406,12 +400,11 @@ class MenuRenderer extends Renderer{
     private function renderExportBankButton(){
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
-            ["count" => ["id", DBConnector::COUNT]],
+            [DBConnector::FETCH_ASSOC],
+            ["count" => ["id", DBConnector::GROUP_COUNT]],
             ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
             [],
             [],
-            false,
-            false,
             ["auslagen.id"]
         );
         
@@ -429,6 +422,7 @@ class MenuRenderer extends Renderer{
         $header = ["Auslage", "Empfänger", "IBAN", "Verwendungszweck", "Auszuzahlen"];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
+            [DBConnector::FETCH_NUMERIC],
             [
                 "projekte.id", "auslagen.id", "auslagen.name_suffix", // Auslagenlink
                 "auslagen.zahlung-name",
@@ -444,10 +438,7 @@ class MenuRenderer extends Renderer{
                 ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
             [],
-            false,
-            false,
-            ["auslagen.id"],
-            true
+            ["auslagen.id"]
         );
         $obj = $this;
         $escapeFunctions = [
@@ -480,26 +471,33 @@ class MenuRenderer extends Renderer{
     }
     
     private function renderBooking(){
-        global $nonce;
         
         list($hhps, $hhp_id) = $this->renderHHPSelector();
         
         $startDate = $hhps[$hhp_id]["von"];
         $endDate = $hhps[$hhp_id]["bis"];
-        if (!isset($endDate) || empty($endDate)){
-            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => [">=", $startDate]], [], ["value" => true]);
-        }else{
-            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [], ["date" => ["BETWEEN", [$startDate, $endDate]]], [], ["value" => true]);
+    
+        $bookedZahlungen = DBConnector::getInstance()->dbFetchAll("booking", [DBConnector::FETCH_ONLY_FIRST_COLUMN], ["zahlung_id"], ["canceled" => 0]);
+        if (empty($bookedZahlungen)){
+            //only remove nothing - if not set there would be an sql error
+            $bookedZahlungen = [0];
         }
-        $this->renderKontoRefresh();
+        if (!isset($endDate) || empty($endDate)){
+            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], [], ["date" => [">=", $startDate], "id" => ["NOT IN", $bookedZahlungen]], [], ["value" => true]);
+        }else{
+            $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], [], ["date" => ["BETWEEN", [$startDate, $endDate]], "id" => ["NOT IN", $bookedZahlungen]], [], ["value" => true]);
+        }
+    
+        $this->renderKontoRefreshButton();
         
         $alGrund = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
+            [DBConnector::FETCH_ASSOC],
             [
                 "auslagen.*",
                 "projekte.name",
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::SUM_ROUND2],
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::SUM_ROUND2]
+                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2]
             ],
             ["auslagen.state" => ["LIKE", "instructed%"]],
             [
@@ -508,8 +506,6 @@ class MenuRenderer extends Renderer{
                 ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
             ["einnahmen" => true],
-            false,
-            false,
             ["auslagen.id"]
         );
         array_walk($alGrund, function(&$grund){
@@ -641,7 +637,7 @@ class MenuRenderer extends Renderer{
     }
     
     private function renderHHPSelector(){
-        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan", [], [], [], ["von" => false], true, true);
+        $hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan", [DBConnector::FETCH_ASSOC, DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY], [], [], [], ["von" => false]);
         if (!isset($hhps) || empty($hhps)){
             ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
         }
@@ -675,7 +671,7 @@ class MenuRenderer extends Renderer{
         return [$hhps, $this->pathinfo["hhp-id"]];
     }
     
-    private function renderKontoRefresh(){ ?>
+    private function renderKontoRefreshButton(){ ?>
         <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form" class="form-inline ajax d-inline-block">
             <button type="submit" name="absenden" class="btn btn-primary">
                 <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen
@@ -748,7 +744,6 @@ class MenuRenderer extends Renderer{
                 foreach ($belegeDB as $beleg){
                     $sum_beleg += floatval($beleg["einnahmen"]);
                     $sum_beleg -= floatval($beleg["ausgaben"]);
-                    
                     $rowBeleg = [
                         $beleg["projekt_id"],
                         $beleg["auslagen_id"],
@@ -818,6 +813,7 @@ class MenuRenderer extends Renderer{
         if (is_null($endDate) || empty($endDate)){
             $alZahlung = DBConnector::getInstance()->dbFetchAll(
                 "konto",
+                [DBConnector::FETCH_ASSOC],
                 [],
                 ["valuta" => [">", $startDate]],
                 [],
@@ -826,13 +822,14 @@ class MenuRenderer extends Renderer{
         }else{
             $alZahlung = DBConnector::getInstance()->dbFetchAll(
                 "konto",
+                [DBConnector::FETCH_ASSOC],
                 [],
                 ["valuta" => ["BETWEEN", [$startDate, $endDate]]],
                 [],
                 ["id" => false]
             );
         }
-        $this->renderKontoRefresh();
+        $this->renderKontoRefreshButton();
         
         ?>
 
@@ -868,6 +865,7 @@ class MenuRenderer extends Renderer{
     }
     
     private function saveBooking(){
+    
         $zahlungen = $_REQUEST["zahlung"];
         $belege = $_REQUEST["beleg"];
         $text = $_REQUEST["text"];
@@ -890,6 +888,7 @@ class MenuRenderer extends Renderer{
             ["zahlung_id", "belegposten_id"],
             ["canceled" => 0, "zahlung_id" => ["IN", $zahlungen],]
         );
+    
         if (count($bookingDBbelege) + count($bookingDBzahlung) > 0){
             ErrorHandler::_renderErrorPage(["msg" => "Beleg oder Zahlung bereits verknüpft - " . print_r(array_merge($bookingDBzahlung, $bookingDBbelege), true), "code" => "500 Interner Fehler"]);
         }
@@ -959,6 +958,7 @@ class MenuRenderer extends Renderer{
         list($hhps, $hhp_id) = $this->renderHHPSelector();
         
         $ret = DBConnector::getInstance()->dbFetchAll("booking",
+            [DBConnector::FETCH_ASSOC],
             ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_posten.short", "auslagen_id", "projekt_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
             ["hhp_id" => $hhp_id],
             [
@@ -973,7 +973,6 @@ class MenuRenderer extends Renderer{
         );
         if (!empty($ret)){
     
-    
             //var_dump(reset($ret));
             $this->renderHeadline("Buchungshistorie");
             ?>
@@ -981,8 +980,8 @@ class MenuRenderer extends Renderer{
                 <thead>
                 <tr>
                     <th>B-Nr</th>
-                    <th class="col-xs-1">Betrag (EUR)</th>
-                    <th class="col-xs-1">Titel</th>
+                    <th class="col - xs - 1">Betrag (EUR)</th>
+                    <th class="col - xs - 1">Titel</th>
                     <th>Beleg</th>
                     <th>Buchungs-Datum</th>
                     <th>Zahlung</th>
@@ -997,7 +996,7 @@ class MenuRenderer extends Renderer{
                     $projektId = $row["projekt_id"];
                     $auslagenId = $row["auslagen_id"]
                     ?>
-                    <tr class="<?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
+                    <tr class=" <?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
 
                         <td><a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?></td>
 

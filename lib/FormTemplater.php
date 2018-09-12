@@ -28,10 +28,15 @@ class FormTemplater{
     }
     
     static function generateTitelSelectable($hhp_id){
-        $all_titels = DBConnector::getInstance()->dbFetchAll("haushaltsgruppen",
-            ["haushaltsgruppen.id", "haushaltstitel.id", "gruppen_name", "titel_name", "titel_nr", "type"], ["haushaltsgruppen.hhp_id" => $hhp_id],
-            [["type" => "left", "table" => "haushaltstitel", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]]],
-            ["type" => false, "haushaltsgruppen.id" => true, "titel_nr" => true], true);
+        $all_titels = DBConnector::getInstance()->dbFetchAll(
+            "haushaltsgruppen",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
+            ["haushaltsgruppen.id", "haushaltstitel.id", "gruppen_name", "titel_name", "titel_nr", "type"],
+            ["haushaltsgruppen.hhp_id" => $hhp_id],
+            [
+                ["type" => "left", "table" => "haushaltstitel", "on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]]
+            ],
+            ["type" => false, "haushaltsgruppen.id" => true, "titel_nr" => true]);
         $selectable = [];
         foreach ($all_titels as $g_id => $group){
             $ret_group = ["label" => ($group[0]["type"] ? "Ausgabe" : "Einnahme") . " - " . $group[0]["gruppen_name"]];
@@ -50,7 +55,7 @@ class FormTemplater{
     }
     
     static function generateProjektpostenSelectable($projekt_id){
-        $res = DBConnector::getInstance()->dbFetchAll("projektposten", [], ["projekt_id" => $projekt_id], [], ["einnahmen" => true, "id" => true]);
+        $res = DBConnector::getInstance()->dbFetchAll("projektposten", [DBConnector::FETCH_ASSOC], [], ["projekt_id" => $projekt_id], [], ["einnahmen" => true, "id" => true]);
         /*
         $idx = $row["id"];
         $this->data["posten-name"][$idx] = $row["name"];
@@ -90,9 +95,9 @@ class FormTemplater{
     
     static function generateUserSelectable($onlywithIBAN = false){
         if ($onlywithIBAN === false){
-            $userdata = DBConnector::getInstance()->dbFetchAll("user", [], [], [], ["fullname" => true]);
+            $userdata = DBConnector::getInstance()->dbFetchAll("user", [DBConnector::FETCH_ASSOC], [], [], [], ["fullname" => true]);
         }else{
-            $userdata = DBConnector::getInstance()->dbFetchAll("user", [], ["iban" => ["<>", "null"]], [], ["fullname" => true]);
+            $userdata = DBConnector::getInstance()->dbFetchAll("user", [DBConnector::FETCH_ASSOC], [], ["iban" => ["<>", "null"]], [], ["fullname" => true]);
         }
         $selectable = [];
         $options = [];

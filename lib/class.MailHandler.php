@@ -63,7 +63,7 @@ class MailHandler extends Singleton
 	 * instance mail settings
 	 * @var array
 	 */
-	protected $settings;
+    private static $settings;
 
 	// constructor ==============================================
 
@@ -105,7 +105,7 @@ class MailHandler extends Singleton
 	public static function _setSettings($settings){
 		if (self::$_settings == NULL && self::checkMailsettings($settings)){
 			self::$_settings = $settings;
-		}
+        }
 	}
 
 	/**
