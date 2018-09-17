@@ -335,7 +335,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->projekt_data['state'] == 'done-other');
         
         //check if there auslage should be edited
-        if (!$this->stateInfo['project-editable'] && !(AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
+	$auth = (AUTH_HANDLER);
+        /* @var $auth AuthHandler */
+        $auth = $auth::getInstance();
+        if (!$this->stateInfo['project-editable'] && !$auth->hasGroup("ref-finanzen")){
             if ($routeInfo['action'] == 'create'
                 || $routeInfo['action'] == 'edit'
                 || ($routeInfo['action'] == 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf')){
@@ -745,6 +748,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
     //handle create or update auslage
     
     public function handlePost(){
+	$auth = (AUTH_HANDLER);
+        /* @var $auth AuthHandler */
+        $auth = $auth::getInstance();
         if ($this->error) $this->_renderPostError();
         if (!isset($this->routeInfo['mfunction'])){
             $this->error = 'mfunction not set.';
@@ -770,7 +776,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 break;
             case 'state':
                 {
-                    if ($this->stateInfo['project-editable'] && $this->auslagen_id){
+                    if (($this->stateInfo['project-editable'] || $auth->hasGroup("ref-finanzen")) && $this->auslagen_id){
                         $this->post_statechange();
                     }else{
                         $this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Der Status wurde nicht geändert.';
