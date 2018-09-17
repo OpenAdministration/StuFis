@@ -335,7 +335,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->projekt_data['state'] == 'done-other');
         
         //check if there auslage should be edited
-        if (!$this->stateInfo['project-editable']){
+        if (!$this->stateInfo['project-editable'] && !(AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
             if ($routeInfo['action'] == 'create'
                 || $routeInfo['action'] == 'edit'
                 || ($routeInfo['action'] == 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf')){
@@ -1589,11 +1589,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
             <?php //--------------------------------------------------------------------
             ?>
             <?php
-    
+
             $belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
-    
+
             $this->render_beleg_container($belege, $editable, 'Belege');
-    
+
             $beleg_nr = 0;
             $tablePartialEditable = true;//$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");
             ?>
