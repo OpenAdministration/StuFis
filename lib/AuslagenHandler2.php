@@ -427,6 +427,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
             foreach ($res as $row){
                 $aus[] = $row;
             }
+        }else{
+            return false;
         }
         $this->projekt_data['posten'] = $aus;
         return true;
@@ -444,10 +446,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
             [
                 'auslagen.*',
                 'projekte' => 'projekte.*',
-            ], ["auslagen.id" => $this->auslagen_id, "auslagen.projekt_id" => $this->projekt_id],
+            ],
+            ["auslagen.id" => $this->auslagen_id, "auslagen.projekt_id" => $this->projekt_id],
             [
                 ["type" => "inner", "table" => "projekte", "on" => [["projekte.id", "auslagen.projekt_id"]]],
-            ]);
+            ]
+        );
         if (!empty($res)){
             $out = [];
             $this->auslagen_data = $res[0];
@@ -457,9 +461,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
             return false;
         }
     }
-    
-    //---------------------------------------------------------
-    /* ------------- CONSTRUCTOR ------------- */
     
     private function getDbBelegePostenFiles(){
         $res = $this->db->dbFetchAll(
@@ -536,9 +537,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
         return true;
     }
     
-    //---------------------------------------------------------
-    /* ---------- DB FUNCTIONS ---------- */
-    
     /**
      * calculate stateInfo von aktueller auslage
      */
@@ -580,6 +578,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
     }
     
+    //---------------------------------------------------------
+    /* ------------- CONSTRUCTOR ------------- */
+    
     /**
      * create stateInfo from state
      * state may be substate, state or db_state info
@@ -620,6 +621,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return $out;
     }
+    
+    //---------------------------------------------------------
+    /* ---------- DB FUNCTIONS ---------- */
     
     /**
      * check permission of permission entry
@@ -682,11 +686,26 @@ class AuslagenHandler2 extends FormHandlerInterface{
     
     }
     
+    public static function getStateString($statename){
+        return self::$states[$statename][0];
+    }
+    
+    public function getBelegPostenFiles(){
+        if (!$this->getDbBelegePostenFiles()){
+            return false;
+        }
+        return $this->auslagen_data['belege'];
+    }
+    
     //---------------------------------------------------------
     /* ---------- HANDLER FUNCTIONS ------------ */
     
-    public static function getStateString($statename){
-        return self::$states[$statename][0];
+    public function getProjektPosten(){
+        if ($this->getDbProjektPosten()){
+            return $this->projekt_data['posten'];
+        }else{
+            return false;
+        }
     }
     
     //---------------------------------------------------------
