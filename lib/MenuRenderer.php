@@ -948,11 +948,13 @@ class MenuRenderer extends Renderer{
         $stateChangeOk = true;
         foreach ($belegeDB as $beleg){
             $ah = new AuslagenHandler2(["aid" => $beleg["id"], "pid" => $beleg["projekt_id"], "action" => "none"]);
-            $stateChangeOk &= $ah->state_change("booked", $beleg["etag"]);
+            var_export($stateChangeOk);
+            $stateChangeOk = $stateChangeOk && ($ah->state_change("booked", $beleg["etag"]) === true);
+            var_export($stateChangeOk);
         }
-        if ($stateChangeOk === false){
+        if ($stateChangeOk !== true){
             DBConnector::getInstance()->dbRollBack();
-            ErrorHandler::_renderErrorPage(["msg" => "Beleg kann nicht in Status 'gebucht' überführt werden - ", "code" => "500 Interner Fehler"]);
+            ErrorHandler::_renderErrorPage(["msg" => "Beleg kann nicht in Status 'gebucht' überführt werden - evtl. wurde noch nicht auf gezahlt gesetzt? ", "code" => "500 Interner Fehler"]);
         }
         
         $zahlung_sum = 0;
@@ -990,7 +992,7 @@ class MenuRenderer extends Renderer{
         
         //check if user input was correct
         $diff = abs($zahlung_sum - $belege_sum);
-        if ($diff >= 0.01 || !$stateChangeOk){
+        if ($diff >= 0.01){
             DBConnector::getInstance()->dbRollBack();
         
             ErrorHandler::_errorExit("Falsche Daten wurden übvertragen: Differenz der Posten = $diff (" . var_export($diff >= 0.01, true) . ")");

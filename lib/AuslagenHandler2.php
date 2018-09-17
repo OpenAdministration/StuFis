@@ -1202,7 +1202,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
             }
             if (!$is_sub) foreach ($required_sub as $required){
                 if (strpos($this->stateInfo['substate'], $required) === false){
-                    echo $newState;
                     return false;
                 }
             }
@@ -1237,9 +1236,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
      * @param string $newState
      * @param string $etag
      *
-     * @return bool | string
+     * @return bool
      */
-    public function state_change($newState, $etag){
+    public function state_change($newState, $etag): bool{
         
         if ($this->state_change_possible($newState)){
             $auth = (AUTH_HANDLER);
