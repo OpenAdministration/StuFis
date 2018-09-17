@@ -372,6 +372,14 @@ class HTMLPageRenderer{
             null,
             'success'
         );
+         $this->buildModal(
+            "server-warning",
+            "<div class='default-head'>Warnung</div><div class='js-head'></div>",
+            "<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
+            null,
+            null,
+            'warning'
+        );
         $this->buildModal(
             "server-file",
             "<div class='js-head'></div>",
