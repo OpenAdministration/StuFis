@@ -120,10 +120,10 @@ class HHPHandler extends Renderer{
                         <td><?= $row["titel_nr"] ?></td>
                         <td><?= $row["titel_name"] ?></td>
                         <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") ?></td>
-                        <td class="money <?= $this->checkTitelBudget($row["value"], $row["_booked"]) ?>">
+                        <td <?= $this->checkTitelBudget($row["value"], $row["_booked"]) ?>>
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_booked"], "money") ?>
                         </td>
-                        <td class="money <?= $this->checkTitelBudget($row["value"], $row["_saved"]) ?>">
+                        <td <?= $this->checkTitelBudget($row["value"], $row["_saved"]) ?>>
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_saved"], "money") ?>
                         </td>
                     </tr>
@@ -154,14 +154,17 @@ class HHPHandler extends Renderer{
      * @return string
      */
     private function checkTitelBudget($should, $is){
+        $str = "";
+        if ($should != 0)
+            $str = "title='Titel ist zu " . number_format(floatval($is / $should) * 100, 0) . "% ausgelastet'";
         if ($is > $should){
             if ($is > $should * 1.5){
-                return "hhp-danger";
+                return $str . " class='money hhp-danger'";
             }else{
-                return "hhp-warning";
+                return $str . " class='money hhp-warning'";
             }
         }else{
-            return "";
+            return $str . " class='money'";
         }
     }
     

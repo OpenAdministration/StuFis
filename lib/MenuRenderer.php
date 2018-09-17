@@ -898,13 +898,17 @@ class MenuRenderer extends Renderer{
         $bookingDBbelege = DBConnector::getInstance()->dbFetchAll(
             "booking",
             [DBConnector::FETCH_ASSOC],
-            ["zahlung_id", "belegposten_id"],
-            ["canceled" => 0, "belegposten_id" => ["IN", $belege],]
+            ["belegposten_id"],
+            ["canceled" => 0, "belege.auslagen_id" => ["IN", $belege],],
+            [
+                ["table" => "beleg_posten", "type" => "inner", "on" => ["beleg_posten.id", "booking.belegposten_id"]],
+                ["table" => "belege", "type" => "inner", "on" => ["belege.id", "beleg_posten.beleg_id"]],
+            ]
         );
         $bookingDBzahlung = DBConnector::getInstance()->dbFetchAll(
             "booking",
             [DBConnector::FETCH_ASSOC],
-            ["zahlung_id", "belegposten_id"],
+            ["zahlung_id"],
             ["canceled" => 0, "zahlung_id" => ["IN", $zahlungen],]
         );
     
@@ -994,7 +998,7 @@ class MenuRenderer extends Renderer{
         $diff = abs($zahlung_sum - $belege_sum);
         if ($diff >= 0.01){
             DBConnector::getInstance()->dbRollBack();
-        
+    
             ErrorHandler::_errorExit("Falsche Daten wurden übvertragen: Differenz der Posten = $diff (" . var_export($diff >= 0.01, true) . ")");
             
         }else{
