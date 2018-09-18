@@ -2,6 +2,16 @@ String.prototype.replaceAll = function (target, replacement) {
     return this.split(target).join(replacement);
 };
 
+(function($) {
+    $.each(['show','hide'], function(i, val) {
+        var _org = $.fn[val];
+        $.fn[val] = function() {
+            this.trigger('main_'+val);
+            _org.apply(this, arguments);
+        };
+    });
+})(jQuery);
+
 numeral.locale("de");
 
 $(document).ready(function () {
@@ -1429,7 +1439,9 @@ function defaultPostModalHandler(values) {
         }
     }
     //reload function
-    if (values.hasOwnProperty('reload') && (typeof(values.reload) == 'integer' || typeof(values.reload) == 'number')) {
+    var closereload = false;
+    var closefunc = null;
+    if (values.hasOwnProperty('reload') && (typeof(values.reload) == 'integer' || typeof(values.reload) == 'number') && values.reload >= 0) {
         if (values.hasOwnProperty('redirect')) {
             setTimeout(function () {
                 window.location.replace(values.redirect);
@@ -1443,7 +1455,16 @@ function defaultPostModalHandler(values) {
                 window.location.replace(window.location);
             }, values.reload);
         }
+    } else if (values.hasOwnProperty('reload') || values.hasOwnProperty('redirect')) {
+        var closetarget = (values.hasOwnProperty('redirect'))? values.redirect : window.location;
+        closereload = true;
+        closefunc = function ($target) {
+            $target.on('main_hide', function() {
+                window.location.replace(closetarget);
+            });
+        }
     }
+    
     //validatr + message boxes
     if (typeof(values) == 'object' && values.hasOwnProperty('success')) {
         //form validation - error after ajax
@@ -1482,7 +1503,9 @@ function defaultPostModalHandler(values) {
                 tmsg += '</ul>';
                 $("#" + values.subtype + "-dlg .js-content").html(tmsg);
             }
+            if (closereload) closefunc($("#" + values.subtype + "-dlg"));
             $("#" + values.subtype + "-dlg").modal("show");
+            
             return true;
         } else if (values.hasOwnProperty('type') && values.type == 'modal' && values.hasOwnProperty('subtype') && values.subtype == 'file') {
             if (values.hasOwnProperty('headline')) {
