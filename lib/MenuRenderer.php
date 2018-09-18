@@ -870,7 +870,7 @@ class MenuRenderer extends Renderer{
                     <td><?= htmlspecialchars($zahlung["id"]) ?></td>
                     <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
                     <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
-                    <td class="visible-md visible-lg"><?= htmlspecialchars(explode("DATUM", $zahlung["zweck"])[0]) ?></td>
+                    <td class="visible-md visible-lg"><?= $this->makeProjektsClickable(explode("DATUM", $zahlung["zweck"])[0]) ?></td>
                     <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
                     <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?></td>
                     <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
@@ -879,6 +879,19 @@ class MenuRenderer extends Renderer{
             </tbody>
         </table>
         <?php
+    }
+    
+    private function makeProjektsClickable($text){
+        $matches = [];
+        $text = htmlspecialchars($text);
+        preg_match("/IP-[0-9]{2,4}-[0-9]+-A[0-9]+/", $text, $matches);
+        foreach ($matches as $match){
+            $array = explode("-", $match);
+            $auslagen_id = substr(array_pop($array), 1);
+            $projekt_id = array_pop($array);
+            $text = str_replace($match, "<a target='_blank' href='" . URIBASE . "projekt/$projekt_id/auslagen/$auslagen_id'><i class='fa fa-fw fa-chain'></i>$match</a>", $text);
+        }
+        return $text;
     }
     
     private function saveBooking(){

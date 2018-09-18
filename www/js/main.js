@@ -1472,7 +1472,16 @@ function defaultPostModalHandler(values) {
             } else {
                 $("#" + values.subtype + "-dlg .js-head").html('Warnung');
             }
-            $("#" + values.subtype + "-dlg .js-content").html(values.msg);
+            if (!Array.isArray(values.msg)) {
+                $("#" + values.subtype + "-dlg .js-content").html(values.msg);
+            } else {
+                var tmsg = '<ul>';
+                for (var i = 0; i < values.msg.length; i++) {
+                    tmsg += '<li>' + values.msg[i] + '</li>';
+                }
+                tmsg += '</ul>';
+                $("#" + values.subtype + "-dlg .js-content").html(tmsg);
+            }
             $("#" + values.subtype + "-dlg").modal("show");
             return true;
         } else if (values.hasOwnProperty('type') && values.type == 'modal' && values.hasOwnProperty('subtype') && values.subtype == 'file') {

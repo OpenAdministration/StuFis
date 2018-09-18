@@ -581,9 +581,6 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
     }
     
-    //---------------------------------------------------------
-    /* ------------- CONSTRUCTOR ------------- */
-    
     /**
      * create stateInfo from state
      * state may be substate, state or db_state info
@@ -626,7 +623,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     }
     
     //---------------------------------------------------------
-    /* ---------- DB FUNCTIONS ---------- */
+    /* ------------- CONSTRUCTOR ------------- */
     
     /**
      * check permission of permission entry
@@ -685,12 +682,24 @@ class AuslagenHandler2 extends FormHandlerInterface{
         return false;
     }
     
+    //---------------------------------------------------------
+    /* ---------- DB FUNCTIONS ---------- */
+    
     public static function initStaticVars(){
     
     }
     
     public static function getStateString($statename){
         return self::$states[$statename][0];
+    }
+    
+    public function getAuslagenEtag(){
+        if (!isset($this->auslagen_data['etag'])){
+            if (!$this->getDbAuslagen()){
+                return false;
+            }
+        }
+        return $this->auslagen_data['etag'];
     }
     
     public function getBelegPostenFiles(){

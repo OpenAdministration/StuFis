@@ -677,6 +677,7 @@ class RestHandler extends JsonController{
         }
         
         $inserted = 0;
+        $msg = [];
         foreach ($allZahlungen as $zahlung){
             if ($lastId && $zahlung["id"] < $lastId)
                 continue;
@@ -700,6 +701,40 @@ class RestHandler extends JsonController{
             //$msgs[]= print_r($zahlung,true);
             DBConnector::getInstance()->dbInsert("konto", $fields);
             $inserted++;
+    
+            $matches = [];
+            if (preg_match("/IP-[0-9]{2,4}-[0-9]+-A[0-9]+/", $zahlung["zweck"], $matches)){
+                $beleg_sum = 0;
+                $ahs = [];
+                foreach ($matches as $match){
+                    $arr = explode("-", $match);
+                    $auslagen_id = substr(array_pop($arr), 1);
+                    $projekt_id = array_pop($arr);
+                    $ah = new AuslagenHandler2(["pid" => $projekt_id, "aid" => $auslagen_id, "action" => "none"]);
+                    $pps = $ah->getBelegPostenFiles();
+                    foreach ($pps as $pp){
+                        foreach ($pp["posten"] as $posten){
+                            if ($posten["einnahmen"]){
+                                $beleg_sum += $posten["einnahmen"];
+                            }
+                            if ($posten["ausgaben"]){
+                                $beleg_sum -= $posten["ausgaben"];
+                            }
+                        }
+                    }
+                    $ahs[] = $ah;
+                }
+                if (abs($beleg_sum - $fields['value']) < 0.01){
+                    foreach ($ahs as $ah){
+                        $ret = $ah->state_change("payed", $ah->getAuslagenEtag());
+                        if ($ret !== true){
+                            $msg[] = "Konnte P" . $ah->getProjektID() . "-A" . $ah->getID() . " nicht in den Status 'gezahlt' überführen. Bitte ändere das noch (per Hand) nachträglich!";
+                        }
+                    }
+                }else{
+                    $msg[] = "In Zahlung " . $zahlung["id"] . " wurden folgende Projekte/Auslagen im Verwendungszweck gefunden: " . implode(" & ", $matches) . ". Dort stimmt die Summe der Belegposten (" . $beleg_sum . ") nicht mit der Summe der Zahlung (" . $fields['value'] . ") überein. Bitte prüfe das noch per Hand, und setze ggf. die passenden Projekte auf bezahlt, so das es später keine Probleme beim Buchen gibt (nur gezahlte Auslagen können gebucht werden)";
+                }
+            }
         }
         
         $ret = DBConnector::getInstance()->dbCommit();
@@ -708,14 +743,26 @@ class RestHandler extends JsonController{
             DBConnector::getInstance()->dbRollBack();
         }else{
             if ($inserted > 0){
-                JsonController::print_json([
-                    'success' => true,
-                    'status' => '200',
-                    'msg' => "$inserted neue Umsätze gefunden.",
-                    'type' => 'modal',
-                    'subtype' => 'server-success',
-                    'reload' => 2000,
-                ]);
+                if (empty($msg)){
+                    JsonController::print_json([
+                        'success' => true,
+                        'status' => '200',
+                        'msg' => "$inserted neue Umsätze gefunden und hinzugefügt!",
+                        'type' => 'modal',
+                        'subtype' => 'server-success',
+                        'reload' => 2000,
+                    ]);
+                }else{
+                    $msg = array_merge(["$inserted neue Umsätze gefunden und hinzugefügt!"], $msg);
+                    JsonController::print_json([
+                        'success' => true,
+                        'status' => '200',
+                        'msg' => $msg,
+                        'type' => 'modal',
+                        'subtype' => 'server-warning',
+                    ]);
+                }
+                
             }else{
                 JsonController::print_json([
                     'success' => false,
