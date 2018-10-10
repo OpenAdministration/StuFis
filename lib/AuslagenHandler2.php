@@ -1626,6 +1626,26 @@ class AuslagenHandler2 extends FormHandlerInterface{
 
             $belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
 
+            $head_sum_in = 0;
+            $head_sum_out = 0;
+            if (!($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')){
+                if (count ($belege) > 0){
+                    $head_sum = 0;
+                    foreach ($belege as $bel){
+                        if (isset($bel['posten']) && count($bel['posten']) > 0){
+                            foreach ($bel['posten'] as $ppp) {
+                                $head_sum_in += $ppp['einnahmen'];
+                                $head_sum_out += $ppp['ausgaben'];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($head_sum_in > 0 || $head_sum_out > 0){
+                $this->render_beleg_sums($head_sum_in, $head_sum_out, 'Gesamt');
+            }
+
             $this->render_beleg_container($belege, $editable, 'Belege');
 
             $beleg_nr = 0;
@@ -1876,7 +1896,33 @@ class AuslagenHandler2 extends FormHandlerInterface{
             return $in;
         }
     }
-    
+
+    /**
+     * Show Beleg Summen in Auslagenerstattungen
+     *
+     * @param float $in
+     * @param float $out
+     * @param string $float
+     */
+    public function render_beleg_sums($in, $out, $label='') {
+        if ($label){
+            echo '<label>' . $label . '</label>';
+        }
+        ?>
+        <div class="beleg-sum-table well">
+            <div class="row">
+                <div class="form-group">
+                    <div class="col-sm-2"></div>
+                    <div class="col-sm-3"><strong>Einnahmen:</strong></div>
+                    <div class="col-sm-2"><?= number_format( $in, 2); ?></div>
+                    <div class="col-sm-3"><strong>Ausgaben:</strong></div>
+                    <div class="col-sm-2"><?= number_format( $out, 2); ?></div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
     /**
      *
      * @param array   $beleg
