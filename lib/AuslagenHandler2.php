@@ -10,7 +10,7 @@
  * @copyright         Copyright Referat IT (C) 2018 - All rights reserved
  */
 class AuslagenHandler2 extends FormHandlerInterface{
-    
+
     //---------------------------------------------------------
     /* ------- MEMBER VARIABLES -------- */
     /**
@@ -211,7 +211,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
      * @var DBConnector
      */
     private $db;
-    
+
     //---------------------------------------------------------
     /* ------- CLASS STATIC VARIABLES -------- */
     /**
@@ -249,7 +249,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
      * @var array
      */
     private $routeInfo;
-    
+
     //---------------------------------------------------------
     /* ---------- MEMBER GETTER ----------- */
     /**
@@ -271,12 +271,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
      */
     private $formSubmitButtons = [];
     private $templater;
-    
+
     //---------------------------------------------------------
     /* ---------- PERMISSION ----------- */
     private $permissionHandler;
     private $stateHandler;
-    
+
     /**
      * class constructor
      * check projekt id and auslagen id
@@ -300,7 +300,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $this->routeInfo = $routeInfo;
         $this->db = DBConnector::getInstance();
         $this->projekt_id = $routeInfo['pid'];
-        
+
         // check projekt exists --------------------
         if (!$this->getDbProject()) return; //set error
         // check auslage exists --------------------
@@ -309,7 +309,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->auslagen_id = $routeInfo['aid'];
             if (!$this->getDbAuslagen()) return;
             if (!$this->getDbBelegePostenFiles()) return;
-            
+
             //current state
             $this->stateFromAuslagenData();
         }else{
@@ -333,7 +333,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->projekt_data['state'] == 'ok-by-stura' ||
             $this->projekt_data['state'] == 'done-hv' ||
             $this->projekt_data['state'] == 'done-other');
-        
+
         //check if there auslage should be edited
 	$auth = (AUTH_HANDLER);
         /* @var $auth AuthHandler */
@@ -346,7 +346,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 return;
             }
         }
-        
+
         switch ($routeInfo['action']){
             case 'create':
                 {
@@ -387,10 +387,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
         //TODO$this->selectable_users = FormTemplater::generateUserSelectable(false);
         //TODO$this->selectable_posten = FormTemplater::generateProjektpostenSelectable(8);
     }
-    
+
     //---------------------------------------------------------
     /* ------- HELPER FUNCTIONS -------- */
-    
+
     /**
      * get project information from db
      *
@@ -417,7 +417,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $this->getDbProjektPosten();
         return true;
     }
-    
+
     /**
      * get auslagen information from db
      *
@@ -436,7 +436,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $this->projekt_data['posten'] = $aus;
         return true;
     }
-    
+
     /**
      * get auslagen information from db
      *
@@ -464,7 +464,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             return false;
         }
     }
-    
+
     private function getDbBelegePostenFiles(){
         $res = $this->db->dbFetchAll(
             'belege',
@@ -539,7 +539,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $this->auslagen_data['belege'] = $belege;
         return true;
     }
-    
+
     /**
      * calculate stateInfo von aktueller auslage
      */
@@ -580,7 +580,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     : '');
         }
     }
-    
+
     /**
      * create stateInfo from state
      * state may be substate, state or db_state info
@@ -621,10 +621,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return $out;
     }
-    
+
     //---------------------------------------------------------
     /* ------------- CONSTRUCTOR ------------- */
-    
+
     /**
      * check permission of permission entry
      * e.g entries from stateChanges, $group, ...
@@ -681,18 +681,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return false;
     }
-    
+
     //---------------------------------------------------------
     /* ---------- DB FUNCTIONS ---------- */
-    
+
     public static function initStaticVars(){
-    
+
     }
-    
+
     public static function getStateString($statename){
         return self::$states[$statename][0];
     }
-    
+
     public function getAuslagenEtag(){
         if (!isset($this->auslagen_data['etag'])){
             if (!$this->getDbAuslagen()){
@@ -701,17 +701,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return $this->auslagen_data['etag'];
     }
-    
+
     public function getBelegPostenFiles(){
         if (!$this->getDbBelegePostenFiles()){
             return false;
         }
         return $this->auslagen_data['belege'];
     }
-    
+
     //---------------------------------------------------------
     /* ---------- HANDLER FUNCTIONS ------------ */
-    
+
     public function getProjektPosten(){
         if ($this->getDbProjektPosten()){
             return $this->projekt_data['posten'];
@@ -719,10 +719,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
             return false;
         }
     }
-    
+
     //---------------------------------------------------------
     /* ---------- JSON FUNCTIONS ------------ */
-    
+
     /**
      * @return the $auslagen_id
      */
@@ -732,9 +732,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
         else
             return null;
     }
-    
+
     //handle auslagen state change
-    
+
     /**
      * @return the $projekt_id
      */
@@ -744,18 +744,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
         else
             return null;
     }
-    
+
     //handle file delete request
-    
+
     /**
      * @return the $error
      */
     public function getError(){
         return $this->error;
     }
-    
+
     //handle create or update auslage
-    
+
     public function handlePost(){
 	$auth = (AUTH_HANDLER);
         /* @var $auth AuthHandler */
@@ -823,10 +823,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->_renderPostResult();
         }
     }
-    
+
     //---------------------------------------------------------
     /* ---------- RENDER FUNCTIONS ------------ */
-    
+
     private function _renderPostError(){
         $this->json_result = [
             'success' => false,
@@ -838,11 +838,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
         ];
         $this->_renderPostResult();
     }
-    
+
     private function _renderPostResult(){
         JsonController::print_json($this->json_result);
     }
-    
+
     private function post_createupdate(){
         //auslage =============================================
         //check etag if no new auslage
@@ -863,7 +863,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
         $newInfo['user'] = $auth->getUsername();
         $newInfo['realname'] = $auth->getUserFullName();
-        
+
         // filter for changes ---------------------------------
         $changed_belege_flag = false;
         $changed_posten_flag = false;
@@ -1080,7 +1080,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'],
         ];
     }
-    
+
     /**
      *
      * @return multitype:NULL string number multitype:
@@ -1115,7 +1115,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             'belege' => [],
         ];
     }
-    
+
     /**
      * encrypt string
      *
@@ -1129,7 +1129,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $p = Crypto::pad_string($p);
         return Crypto::encrypt_by_key_pw($p, Crypto::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
     }
-    
+
     private function post_filedelete(){
         if ($this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']){
             $this->error = '<p>Die Prüfsumme der Auslagenerstattung stimmt nicht mit der gesendeten überein.</p>' .
@@ -1145,7 +1145,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
         $newInfo['user'] = $auth->getUsername();
         $newInfo['realname'] = $auth->getUserFullName();
-        
+
         //check fileid exists
         $found_file_id = false;
         foreach ($this->auslagen_data['belege'] as $b){
@@ -1181,10 +1181,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
             'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'] . '/edit',
         ];
     }
-    
+
     //---------------------------------------------------------
     /* ---------- RENDER HELPER ------------ */
-    
+
     private function post_statechange(){
         $newState = $this->routeInfo['validated']['state'];
         if (!$this->state_change_possible($newState) ||
@@ -1205,9 +1205,9 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $this->json_result['msg'] .= '<br><strong>Bitte beachte, dass gegebenenfalls noch Belege eingereicht werden müssen.<br><i>(Vorlage: "Belege PDF")</i></strong>';
             }
         }
-        
+
     }
-    
+
     /**
      * check if state change into new state is possible
      * check state
@@ -1239,7 +1239,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     return false;
                 }
             }
-            
+
             //state change permission
             if ($this->checkPermissionByMap(self::$stateChanges[$c][$newState])){
                 return true;
@@ -1259,7 +1259,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return false;
     }
-    
+
     /**
      * performes statechange
      * checks state
@@ -1273,7 +1273,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
      * @return bool
      */
     public function state_change($newState, $etag): bool{
-        
+
         if ($this->state_change_possible($newState)){
             $auth = (AUTH_HANDLER);
             /* @var $auth AuthHandler */
@@ -1291,7 +1291,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             }catch (Exception $e){
                 return false;
             }
-            
+
             $where = [
                 'id' => $this->auslagen_data['id'],
                 'etag' => $etag
@@ -1359,7 +1359,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }
         return false;
     }
-    
+
     private function post_belegpdf(){
         // get auslagen info
         $info = $this->state2stateInfo('draft;' . $this->auslagen_data['created']);
@@ -1397,10 +1397,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 'file' => ($file) ? $fh->fileToBase64($file) : '',
             ];
         }
-        
-        
+
+
         $result = Helper::do_post_request2(FUI2PDF_URL . '/pdfbuilder', $out, FUI2PDF_AUTH);
-        
+
         // return result to
         if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0){
             if (isset($result['data']['success']) && $result['data']['success']){
@@ -1464,7 +1464,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->error = 'Error during PDF creation.';
         }
     }
-    
+
     /**
      * render page
      *
@@ -1478,7 +1478,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             return $this->renderAuslagenerstattung("Auslagenerstattung");
         }
     }
-    
+
     /**
      * render auslagenerstattung html page
      *
@@ -1493,10 +1493,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
         <h3><?= $titel . (($this->title) ? $this->title : '') ?></h3>
         <?php //--------------------------------------------------------------------
         ?>
-        
+
         <?= ($this->routeInfo['action'] == 'view') ? $this->getStateSvg() . $this->getSvgHiddenFields() : ''; ?>
         <?php $show_genemigung_state = ($this->routeInfo['action'] != 'create' || isset($this->auslagen_data['state']) && $this->auslagen_data['state'] != 'draft'); ?>
-        
+
         <?php //--------------------------------------------------------------------
         ?>
         <?php if ($show_genemigung_state){ ?>
@@ -1591,7 +1591,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 <div class="clearfix"></div>
                 <label for="zahlung">Zahlungsinformationen</label><br>
                 <?= $this->templater->getTextForm("zahlung-name", $this->auslagen_data['zahlung-name'], [12, 12, 6], "Name Zahlungsempfänger", "Zahlungsempfänger Name", [], []) ?>
-    
+
                 <?php // iban only show trimmed if not hv/kv important!
                 $iban_text = $this->auslagen_data['zahlung-iban'];
                 if ($iban_text){
@@ -1667,7 +1667,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $this->render_auslagen_links();
         return;
     }
-    
+
     public function getStateSvg(){
         $diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
         $diagram->setData($this->getDiagramStatelistFiltered());
@@ -1675,17 +1675,17 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $diagram->setSetting('height', 160);
         $diagram->setSetting('width', 780);
         $diagram->setStateSetting('center_lines', false);
-        
+
         //add state Beschreibung/Legende
         /* @var $r intertopia\Classes\svg\SvgDiagramRaw */
         $r = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_RAW);
         $diagram->addResultAddons($r->drawShape(650, 100, 120, 25, 0, 'Aktueller Status', 0, ['stroke' => 'none', 'fill' => '#CAFF70']));
         $diagram->addResultAddons($r->drawShape(650, 130, 120, 25, 0, 'Wechsel möglich', 0, ['stroke' => 'none', 'fill' => '#b2f7f9']));
-        
+
         $diagram->generate();
         return $diagram->getChart();
     }
-    
+
     public function getDiagramStatelistFiltered(){
         $set = $this->getDiagramStatelist();
         //states to id
@@ -1717,7 +1717,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $set[$s['l']][$s['k']]['options']['fill'] = '#b2f7f9';
             //clickable
             $set[$s['l']][$s['k']]['options']['trigger'] = true;
-            
+
         }
         //may remove substate: reject
         if (!$this->checkPermissionByMap(self::$groups['stateless']['finanzen'])){
@@ -1746,7 +1746,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill'] = '#b2f7f9';
                 //clickable
                 $set[$s['l']][$s['k']]['children'][$s['c']]['options']['trigger'] = true;
-                
+
             }
         }
         //color subchilds if state = child.parent and substate is set
@@ -1760,10 +1760,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill'] = '#CAFF70';
             }
         }
-        
+
         return $set;
     }
-    
+
     /**
      * return complete state diagram data set
      */
@@ -1851,7 +1851,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             ]
         ];
     }
-    
+
     public function getSvgHiddenFields(){
         return '<div class="svg-statechanges hidden">' .
             '<input type="hidden" name="projekt-id" value="' . $this->projekt_id . '">' .
@@ -1860,10 +1860,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
             '<input type="hidden" name="action" value="' . URIBASE . 'rest/forms/auslagen/state">' .
             '</div>';
     }
-    
+
     //---------------------------------------------------------
     /* ---------- TODOS ------------ */
-    
+
     /**
      * decrypt string
      *
@@ -1878,7 +1878,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $p = Crypto::unpad_string($p);
         return $p;
     }
-    
+
     /**
      * masks iban to format
      * xxxx ... ... xx
@@ -1967,11 +1967,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     </div>
                 </div>
             <?php }
-            
+
             foreach ($belege as $b){
                 echo $this->render_beleg_row($b, $editable);
             }
-            
+
             //render hidden beleg for js copy
             if ($editable){
                 echo $this->render_beleg_row([
@@ -1999,7 +1999,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         </div>
         <?php
     }
-    
+
     /**
      * render beleg line
      *
@@ -2014,7 +2014,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         $date = ($beleg['datum']) ? date_create($beleg['datum'])->format('d.m.Y') : '';
         $date_value = ($beleg['datum']) ? date_create($beleg['datum'])->format('Y-m-d') : '';
         $date_form = ($editable) ? $this->templater->getDatePickerForm(($hidden) ? '' : "belege[{$beleg['id']}][datum]", $date_value, 0, "", "", []) : '<strong>am </strong>' . $date;
-        
+
         $file_form = '';
         if (!$hidden){
             if ($beleg['file_id']){
@@ -2037,15 +2037,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
         }else{
             $file_form = $this->templater->getFileForm("", 0, 0, "Datei...", "", []);
         }
-        
+
         $desc_form = '';
         if ($editable){
             $desc_form = $this->templater->getTextareaForm(($hidden) ? '' : "belege[{$beleg['id']}][beschreibung]", ($beleg['beschreibung']) ? $beleg['beschreibung'] : "", 0, "optional", "", [], 1);
         }else{
             $desc_form = '<span>' . ($beleg['beschreibung']) ? $beleg['beschreibung'] : "keine" . '</span>';
         }
-        
-        
+
+
         ?>
         <div class="row row-striped <?= ($hidden) ? 'hidden' : 'bt-dark' ?>" style="padding: 5px;">
             <div class="form-group<?= ($hidden) ? ' beleg-template' : ' beleg-container' ?>"
@@ -2083,7 +2083,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         <?php
         return ob_get_clean();
     }
-    
+
     /**
      * render beleg posten table
      *
@@ -2103,19 +2103,19 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						<div class="col-sm-3"><strong>Ausgaben</strong></div>
 					</div>
 				</div>';
-        
+
         $sum_in = 0;
         $sum_out = 0;
         $out .= '<div class="row row-striped posten-inner-list" style="padding: 5px; border-bottom: 2px solid #ddd;">';
-        
+
         // if empty and !$editable add empty hint
         $out .= '<div class="form-group posten-empty ' . ((count($posten) == 0) ? '' : ' hidden') . '">Keine Angaben</div>';
-        
+
         $inOutPrefix = ['0' => ''];
         foreach ($this->projekt_data['posten'] as $pp){
             $inOutPrefix[$pp['id']] = (($pp['einnahmen']) ? '[Einnahme] ' : '') . (($pp['ausgaben']) ? '[Ausgabe] ' : '');
         }
-        
+
         // if nonempty add lines
         foreach ($posten as $pline){
             $out .= '<div class="form-group posten-entry" data-id="' . $pline['id'] . '" data-projekt-posten-id="' . $pline['projekt_posten_id'] . '">';
@@ -2136,7 +2136,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             }else{
                 $out .= '<div class="col-sm-4 posten-name">' . $pline['projekt.posten_name'] . '</div>';
             }
-            
+
             //einnahmen
             if ($editable){
                 $out .= '<div class="col-sm-3 posten-in">'
@@ -2149,7 +2149,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $out .= '<div class="col-sm-3 posten-in">' . $pline['einnahmen'] . '</div>';
             }
             $sum_in += $pline['einnahmen'];
-            
+
             //ausgaben
             if ($editable){
                 $out .= '<div class="col-sm-3 posten-out">'
@@ -2162,10 +2162,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $out .= '<div class="col-sm-3 posten-out">' . $pline['ausgaben'] . '</div>';
             }
             $sum_out += $pline['ausgaben'];
-            
+
             $out .= '<div style="clear:both;"></div></div>';
         }
-        
+
         //if $ediatable add __auto add line__
         if ($editable){
             $out .= '<div class="form-group posten-entry-new">';
@@ -2183,7 +2183,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 . '<input type="hidden" value="0">'
                 . '</div>'
                 . '</div>';
-            
+
             //einnahmen
             $out .= '<div class="col-sm-3 posten-in">'
                 . '<div class="input-group form-group">'
@@ -2191,7 +2191,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 . '<div class="input-group-addon">€</div>'
                 . '</div>'
                 . '</div>';
-            
+
             //ausgaben
             $out .= '<div class="col-sm-3 posten-out">'
                 . '<div class="input-group form-group">'
@@ -2199,10 +2199,10 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 . '<div class="input-group-addon">€</div>'
                 . '</div>'
                 . '</div>';
-            
+
             $out .= '<div style="clear:both;"></div></div>';
         }
-        
+
         $out .= '</div>';
         $out .= '<div class="row row-striped" style="padding: 5px; border-top: 2px solid #ddd;">
     				<div class="form-group posten-sum-line">
@@ -2214,7 +2214,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     			</div>';
         return $out;
     }
-    
+
     public function render_project_auslagen($echo = false){
         $out = '';
         if (count($this->projekt_data['auslagen']) == 0){
@@ -2227,12 +2227,12 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 $tmp_state = self::state2stateInfo($auslage['state']);
                 $created = self::state2stateInfo('draft;' . $auslage['created']);
                 $name = $auslage['id'] . ' - ' . ($auslage['name_suffix'] ? $auslage['name_suffix'] : '(Ohne Namen)') . '<strong><small style="margin-left: 10px;">' . $created['date'] . '</small>' . (($show_creator) ? '<small style="margin-left: 10px;">[' . $created['realname'] . ']</small>' : '') . '</strong>';
-                
+
                 $tmpList[] = [
                     'html' => $name . '<span class="label label-info pull-right"><span>Status: </span><span>' . self::$states[$tmp_state['state']][0] . '</span></span>',
                     'attr' => ['href' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $auslage['id'],
                         'style' => 'color: #3099c2;'],
-                
+
                 ];
             }
             $out .= $this->templater->generateListGroup($tmpList,
@@ -2241,7 +2241,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         if ($echo) echo $out;
         return $out;
     }
-    
+
     private function render_chat_box(){ ?>
         <div class='clearfix'></div>
         <div id="auslagenchat">
@@ -2267,11 +2267,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
         </div>
         <?php
     }
-    
+
     //TODO private $selectable_users;
     //TODO private $selectable_posten;
-    
-    
+
+
     /*
      'projekt' => [
          'id' => '',
@@ -2298,7 +2298,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
              'status' => ''
          ],
      ]
-     
+
      'belege' => [
          [
              'auslagen_id',
@@ -2336,7 +2336,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
          'data' => NULL,
      ]
      */
-    
+
     public function render_auslagen_links(){
         ?>
         <div class="auslagen-links">
@@ -2401,7 +2401,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     foreach (self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
                         if ($k == 'revocation') continue;
                         if (!$this->state_change_possible($k)) continue;
-                        
+
                         ?>
                         <div class="col-xs-12 form-group">
                             <button type="button" class="btn btn-default state-changes-now"
@@ -2429,15 +2429,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
         </div>
         <?php
     }
-    
+
     public function updateSavedData($data){
         // TODO: Implement updateSavedData() method.
     }
-    
+
     public function setState($stateName){
         // TODO: Implement setState() method.
     }
-    
+
     public function getNextPossibleStates(){
         // TODO: Implement getNextPossibleStates() method.
     }
