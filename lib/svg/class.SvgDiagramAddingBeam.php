@@ -1,7 +1,7 @@
 <?php
 namespace intertopia\Classes\svg;
 
-require_once 'class.SvgDiagramCore.php';
+require_once 'class.SvgDiagramBlock.php';
 
 /**
  * Adding Beam (Block) Diagram Class
@@ -13,7 +13,7 @@ require_once 'class.SvgDiagramCore.php';
  * @version 	02.0.0 since 01.07.2018
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
-class SvgDiagramAddingBeam extends SvgDiagramCore
+class SvgDiagramAddingBeam extends SvgDiagramBlock
 {
 	/**
 	 * this class implements following diagram types
@@ -22,9 +22,9 @@ class SvgDiagramAddingBeam extends SvgDiagramCore
 	private static $types = [
 		'State',
 	];
-	
+
 	// CLASS CONSTRUCTOR --------------------------------------
-	
+
 	/**
 	 * constructor
 	 * @param string $type
