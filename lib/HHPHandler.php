@@ -42,9 +42,9 @@ class HHPHandler extends Renderer{
                 break;
         }
     }
-    
+
     private function renderHHPPicker(){
-        $this->renderHeadline("Haushalspläne");
+        $this->renderHeadline("Haushaltspläne");
         $obj = $this;
         $this->renderTable(
             ["Id", "von", "bis", "Status"],
