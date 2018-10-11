@@ -1534,7 +1534,7 @@ function defaultPostModalHandler(values) {
             }
             if (closereload) closefunc($("#" + values.subtype + "-dlg"));
             $("#" + values.subtype + "-dlg").modal("show");
-            
+
             return true;
         } else if (values.hasOwnProperty('type') && values.type == 'modal' && values.hasOwnProperty('subtype') && values.subtype == 'file') {
             if (values.hasOwnProperty('headline')) {
@@ -1732,7 +1732,6 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
             if (defaultPostModalHandler(values)) {
                 return;
             }
-
             //parse values / backport
             if (typeof(values) == 'object') {
                 // message array
@@ -1799,6 +1798,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                     }
                 });
                 $("#server-question-dlg").modal("show");
+                $("#server-question-dlg").show();
+                $("#server-question-dlg").css({ opacity: 1});
 
             } else if (values.ret) { // txt is empty
                 if (values.altTarget) {
@@ -1823,6 +1824,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                     $('<li/>').text(msg).appendTo($smcu);
                 }
                 $("#server-message-dlg").modal("show");
+                $("#server-message-dlg").show();
+                $("#server-message-dlg").css({ opacity: 1});
             }
         })
         .fail(xpAjaxErrorHandler);
