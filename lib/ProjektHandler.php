@@ -15,7 +15,7 @@ class ProjektHandler extends FormHandlerInterface{
     static private $visibleFields;
     static private $writePermissionAll;
     static private $writePermissionFields;
-    
+
     private $templater;
     private $stateHandler;
     /**
@@ -25,14 +25,14 @@ class ProjektHandler extends FormHandlerInterface{
     private $id;
     private $action;
     private $data;
-    
+
     function __construct($pathInfo){
         //print_r($pathInfo);
         self::initStaticVars();
         if (!isset($pathInfo["action"]))
             ErrorHandler::_errorExit("Aktion nicht gesetzt");
         $this->action = $pathInfo["action"];
-        
+
         if ($this->action === "create" || !isset($pathInfo["pid"])){
             $this->data = self::$emptyData;
             $stateNow = "draft";
@@ -56,13 +56,13 @@ class ProjektHandler extends FormHandlerInterface{
             }
             $stateNow = $this->data["state"];
         }
-        
+
         $editMode = $this->action === "create" || $this->action === "edit";
         $this->stateHandler = new StateHandler("projekte", self::$states, self::$stateChanges, [], [], $stateNow);
         $this->permissionHandler = new PermissionHandler(self::$emptyData, $this->stateHandler, self::$writePermissionAll, self::$writePermissionFields, self::$visibleFields, $editMode);
         $this->templater = new FormTemplater($this->permissionHandler);
     }
-    
+
     static function initStaticVars(){
         if (isset(self::$states))
             return false;
@@ -162,7 +162,7 @@ class ProjektHandler extends FormHandlerInterface{
                         ],
                     ],
             ];
-        
+
         self::$emptyData = [
             'id' => '',
             'creator_id' => '',
@@ -225,8 +225,8 @@ class ProjektHandler extends FormHandlerInterface{
         ];
         return true;
     }
-    
-    
+
+
     /**
      * @param $data
      *
@@ -235,14 +235,14 @@ class ProjektHandler extends FormHandlerInterface{
      * @throws PDOException
      */
     public static function createNewProjekt($data): ProjektHandler{
-        
+
         $maxRows = max(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
         $minRows = min(count($data["posten-name"]), count($data["posten-bemerkung"]), count($data["posten-einnahmen"]), count($data["posten-ausgaben"]));
-        
+
         if ($maxRows !== $minRows){
             throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
         }
-        
+
         $user_id = DBConnector::getInstance()->getUser()["id"];
         $projekt_id = DBConnector::getInstance()->dbInsert("projekte", [
             "creator_id" => $user_id,
@@ -260,7 +260,7 @@ class ProjektHandler extends FormHandlerInterface{
             "date-start" => $data["date-start"],
             "date-end" => $data["date-end"],
         ]);
-        
+
         for ($i = 0; $i < $minRows - 1; $i++){
             DBConnector::getInstance()->dbInsert("projektposten", [
                 "id" => $i+1 ,
@@ -271,15 +271,15 @@ class ProjektHandler extends FormHandlerInterface{
                 "bemerkung" => $data["posten-bemerkung"][$i]
             ]);
         }
-    
+
         return new ProjektHandler(["pid" => $projekt_id, "action" => "none"]);
     }
-    
+
     public static function getStateString($statename){
         self::initStaticVars();
         return self::$states[$statename][0];
     }
-    
+
     /**
      * @param $data
      *
@@ -291,7 +291,7 @@ class ProjektHandler extends FormHandlerInterface{
     public function updateSavedData($data){
         $data = array_intersect_key($data, self::$emptyData);
         $version = $data["version"];
-        
+
         //check if version is the same
         if ($version !== $this->data["version"])
             throw new WrongVersionException("Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!");
@@ -305,7 +305,7 @@ class ProjektHandler extends FormHandlerInterface{
         if (!isset($data["posten-titel"])){
             $data["posten-titel"] = array_fill(0, $maxRows, null);
         }
-        
+
         //wenn anzahl der rows nicht identisch -> error
         if ($maxRows !== $minRows || count($data["posten-titel"]) !== $minRows){
             throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
@@ -316,7 +316,7 @@ class ProjektHandler extends FormHandlerInterface{
         $extractFields = ["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben", "posten-titel"];
         $extractFields = array_intersect_key($data, array_flip($extractFields));
         $data = array_diff_key($data, $generatedFields, $extractFields);
-        
+
         $recht_unset = false;
         if (isset($data["recht-additional"])){
         	if (!isset($data["recht"]) && isset($this->data['recht'])){
@@ -331,11 +331,11 @@ class ProjektHandler extends FormHandlerInterface{
                 $data["recht-additional"] = "";
             }
         }
-        
+
         if ($recht_unset){
         	unset($data["recht"]);
         }
-        
+
         //check if fields editable
         $fields = $generatedFields;
         foreach ($data as $name => $content){
@@ -350,7 +350,7 @@ class ProjektHandler extends FormHandlerInterface{
             }
         }
         $update_rows = DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $version], $fields);
-    
+
         if ($this->permissionHandler->isEditable(['posten-name','posten-bemerkung','posten-einnahmen','posten-ausgaben'], 'and')){
 	        //set new posten values, *delete* old
 	        DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
@@ -369,7 +369,7 @@ class ProjektHandler extends FormHandlerInterface{
         }
         return $update_rows === 1; //true falls nur ein Eintrag geändert
     }
-    
+
     /**
      * @param $stateName
      *
@@ -380,7 +380,7 @@ class ProjektHandler extends FormHandlerInterface{
     public function setState($stateName){
         if (!in_array($stateName, $this->getNextPossibleStates(), true))
             throw new IllegalStateException("In den Status $stateName kann nicht gewechselt werden");
-        
+
         $user_id = DBConnector::getInstance()->getUser()["id"];
         $logID = DBConnector::getInstance()->logThisAction(["user_id" => $user_id, "newState" => $stateName, "id" => $this->id, "version_before" => $this->data["version"]], "changeState");
         DBConnector::getInstance()->dbUpdate("projekte", ["id" => $this->id, "version" => $this->data["version"]], ["state" => $stateName, "stateCreator_id" => $user_id, "lastupdated" => date("Y-m-d H:i:s"), "version" => ($this->data["version"] + 1)]);
@@ -389,17 +389,17 @@ class ProjektHandler extends FormHandlerInterface{
         $this->stateHandler->transitionTo($stateName);
         return true;
     }
-    
+
     public function getNextPossibleStates(){
         return $this->stateHandler->getNextStates(true);
     }
-    
+
     function render(){
         if ($this->action === "create" || !isset($this->id)){
             $this->renderProjekt("neues Projekt anlegen");
             return;
         }
-    
+
         switch ($this->action){
             case "edit":
                 $this->renderBackButton();
@@ -418,27 +418,27 @@ class ProjektHandler extends FormHandlerInterface{
                 break;
         }
     }
-    
+
     private function renderProjekt($title){
     	$auth = (AUTH_HANDLER);
     	/* @var $auth AuthHandler */
     	$auth = $auth::getInstance();
         $validateMe = false;
         $editable = $this->permissionHandler->isAnyDataEditable();
-        
+
         //build dropdowns
         $selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
         $selectable_gremien["values"] = $this->data['org'];
-    
+
         $mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
         $selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
         $selectable_mail["values"] = $this->data['org-mail'];
-        
+
         $sel_recht = self::$selectable_recht;
         $sel_recht["values"] = $this->data['recht'];
-    
+
         $selectable_titel = FormTemplater::generateTitelSelectable(5); //FIXME not fixed 5!
-        
+
         ?>
         <div class='col-xs-12 col-md-10'>
             <?php if ($editable){ ?>
@@ -515,9 +515,9 @@ class ProjektHandler extends FormHandlerInterface{
                     </thead>
                     <tbody>
                     <?php
-                    
+
                     $this->data["posten-name"][] = '';
-                    
+
                     foreach ( $this->data["posten-name"] as $row_nr => $null){
                    		$new_row = ($row_nr) === count($this->data["posten-name"]);
                         if ($new_row && !$tablePartialEditable)
@@ -585,17 +585,17 @@ class ProjektHandler extends FormHandlerInterface{
                     </tfoot>
                 </table>
                 <?= $this->templater->getTextareaForm("beschreibung", $this->data["beschreibung"], 12, "In unserem Projekt geht es um ... \nHat einen Nutzen für die Studierendenschaft weil ... \nFindet dort und dort statt...\nusw.", "Projektbeschreibung", ["required", "min-length" => 100], 5) ?>
-                
+
                 <?php if ($editable){ ?>
                 <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->
                 <div class="pull-right">
                     <?php
-                    
+
                     //foreach ($proposeNewState as $state){
                     //$isEditable = hasPermission($form, ["state" => $state], "canEdit");
                     //$stateTxt = "Entwurf";
                     //$state = "draft";
-                    
+
                     ?>
                     <a href="javascript:void(true);"
                        class='btn btn-success submit-form <?= !$validateMe ? "no-validate" : "validate" ?>'
@@ -608,7 +608,7 @@ class ProjektHandler extends FormHandlerInterface{
         </div><!-- main-container -->
         <?php
     }
-    
+
     private function renderBackButton(){
         ?>
         <div class="">
@@ -618,7 +618,7 @@ class ProjektHandler extends FormHandlerInterface{
         </div>
         <?php
     }
-    
+
     private function renderInteractionPanel(){
         $url = str_replace("//", "/", URIBASE . "projekt/" . $this->id . "/");
         $nextValidStates = $this->stateHandler->getNextStates(true);
@@ -629,7 +629,7 @@ class ProjektHandler extends FormHandlerInterface{
                 <li class="label-info">
                     <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?>
                 </li>
-                
+
                 <?php if (count($nextValidStates) > 0){ ?>
                     <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i
                                     class="fa fa-fw fa-refresh"></i></a></li>
@@ -685,7 +685,7 @@ class ProjektHandler extends FormHandlerInterface{
                                         </optgroup>
                                         <optgroup label="Daten unvollständig">
                                             <?php
-                                            
+
                                             foreach ($disabledStates as $state){
                                                 echo "<option disabled>" . $this->stateHandler->getFullStateNameFrom($state) . "</option>" . PHP_EOL;
                                             }
@@ -707,11 +707,11 @@ class ProjektHandler extends FormHandlerInterface{
             <?php
         }
     }
-    
+
     public function getID(){
         return $this->id;
     }
-    
+
     private function render_chat_box(){ ?>
 		<div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
