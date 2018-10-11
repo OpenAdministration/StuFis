@@ -262,6 +262,9 @@ class ProjektHandler extends FormHandlerInterface{
         ]);
 
         for ($i = 0; $i < $minRows - 1; $i++){
+            if (floatval($data["posten-ausgaben"][$i]) > 0 && floatval($data["posten-einnahmen"][$i]) > 0) {
+                throw new InvalidDataException("Projektposten dürfen nicht gleichzeitig Einnahmen und Ausgaben enthalten.");
+            }
             DBConnector::getInstance()->dbInsert("projektposten", [
                 "id" => $i+1 ,
                 "projekt_id" => $projekt_id,
