@@ -7,12 +7,12 @@
  */
 
 class HHPHandler extends Renderer{
-    
+
     private $routeInfo;
     private $hhps;
     private $stateStrings;
-    
-    
+
+
     public function __construct($routeInfo){
         $this->routeInfo = $routeInfo;
         $this->stateStrings = [
@@ -20,7 +20,7 @@ class HHPHandler extends Renderer{
             "final" => "Rechtskräftig",
         ];
     }
-    
+
     function render(){
         $this->hhps = DBConnector::getInstance()->dbFetchAll(
             "haushaltsplan",
@@ -60,11 +60,11 @@ class HHPHandler extends Renderer{
                 }
             ]
         );
-        
+
     }
-    
+
     public function renderHaushaltsplan(){
-        
+
         $hhp_id = $this->routeInfo["hhp-id"];
         if (!isset($this->hhps[$hhp_id])){
             ErrorHandler::_renderError("Haushaltsplan HP-$hhp_id ist nicht bekannt.");
@@ -84,7 +84,7 @@ class HHPHandler extends Renderer{
                 if (count($group) === 0) continue;
                 if ($type !== array_values($group)[0]["type"])
                     $group_nr = 1;
-                
+
                 $type = array_values($group)[0]["type"];
                 ?>
                 <thead>
@@ -127,8 +127,8 @@ class HHPHandler extends Renderer{
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_saved"], "money") ?>
                         </td>
                     </tr>
-                    
-                    
+
+
                     <?php
                 } ?>
                 <tr class="table-sum-footer">
@@ -138,7 +138,7 @@ class HHPHandler extends Renderer{
                     <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_saved, "money") ?></td>
                 </tr>
                 </tbody>
-                
+
                 <?php
             } ?>
 
@@ -146,7 +146,7 @@ class HHPHandler extends Renderer{
         <?php
         return;
     }
-    
+
     /**
      * @param $should
      * @param $is
@@ -167,6 +167,6 @@ class HHPHandler extends Renderer{
             return $str . " class='money'";
         }
     }
-    
-    
+
+
 }
