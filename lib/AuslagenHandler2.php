@@ -342,7 +342,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             if ($routeInfo['action'] == 'create'
                 || $routeInfo['action'] == 'edit'
                 || ($routeInfo['action'] == 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf')){
-                $this->error = 'Für das aktuelle Projekt sind (momentan) keine Auslagenerstattungen möglich.';
+                $this->error = 'Für das aktuelle Projekt sind (momentan) keine Abrechnungen möglich.';
                 return;
             }
         }
@@ -460,7 +460,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             $this->auslagen_data = $res[0];
             return true;
         }else{
-            $this->error = 'Eine Auslagenerstattung mit der ID: ' . $this->auslagen_id . ' existiert nicht. :(<br>';
+            $this->error = 'Eine Abrechnung mit der ID: ' . $this->auslagen_id . ' existiert nicht. :(<br>';
             return false;
         }
     }
@@ -770,7 +770,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     if ($this->stateInfo['editable']){
                         $this->post_createupdate();
                     }else{
-                        $this->error = 'Die Auslagenerstattnug kann nicht verändert werden.';
+                        $this->error = 'Die Abrechnung kann nicht verändert werden.';
                     }
                 }
                 break;
@@ -779,7 +779,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     if ($this->stateInfo['editable']){
                         $this->post_filedelete();
                     }else{
-                        $this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Datei nicht gelöcht.';
+                        $this->error = 'Die Abrechnung kann nicht verändert werden. Datei nicht gelöcht.';
                     }
                 }
                 break;
@@ -788,16 +788,16 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     if (($this->stateInfo['project-editable'] || $auth->hasGroup("ref-finanzen")) && $this->auslagen_id){
                         $this->post_statechange();
                     }else{
-                        $this->error = 'Die Auslagenerstattnug kann nicht verändert werden. Der Status wurde nicht geändert.';
+                        $this->error = 'Die Abrechnung kann nicht verändert werden. Der Status wurde nicht geändert.';
                     }
                 }
                 break;
             case 'belegpdf':
                 {
                     if (!isset($this->auslagen_data['id'])){
-                        $this->error = 'Die Auslagenerstattung wurde nicht gefunden';
+                        $this->error = 'Die Abrechnung wurde nicht gefunden';
                     }else if (!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0){
-                        $this->error = 'Die Auslagenerstattung enthält keine Belege';
+                        $this->error = 'Die Abrechnung enthält keine Belege';
                     }else{
                         //missing file?
                         foreach ($this->auslagen_data['belege'] as $b){
@@ -848,8 +848,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
         //check etag if no new auslage
         if ($this->routeInfo['validated']['auslagen-id'] != 'NEW' &&
             $this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']){
-            $this->error = '<p>Die Prüfsumme der Auslagenerstattung stimmt nicht mit der gesendeten überein.</p>' .
-                '<p>Die Auslagenerstattung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
+            $this->error = '<p>Die Prüfsumme der Abrechnung stimmt nicht mit der gesendeten überein.</p>' .
+                '<p>Die Abrechnung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
                 '<p>Die übertragene Version liegt ' . ($this->auslagen_data['version'] - $this->routeInfo['validated']['version']) . ' Version(en) zurück.</p>';
             return;
         }else if ($this->routeInfo['validated']['auslagen-id'] == 'NEW'){
@@ -1132,8 +1132,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 
     private function post_filedelete(){
         if ($this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']){
-            $this->error = '<p>Die Prüfsumme der Auslagenerstattung stimmt nicht mit der gesendeten überein.</p>' .
-                '<p>Die Auslagenerstattung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
+            $this->error = '<p>Die Prüfsumme der Abrechnung stimmt nicht mit der gesendeten überein.</p>' .
+                '<p>Die Abrechnung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
                 '<p>Die übertragene Version liegt ' . ($this->auslagen_data['version'] - $this->routeInfo['validated']['version']) . ' Version(en) zurück.</p>';
             return;
         }
@@ -1475,7 +1475,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             ErrorHandler::_renderError($this->error, 404);
             return -1;
         }else{
-            return $this->renderAuslagenerstattung("Auslagenerstattung");
+            return $this->renderAuslagenerstattung("Abrechnung");
         }
     }
 
@@ -1500,7 +1500,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
         <?php //--------------------------------------------------------------------
         ?>
         <?php if ($show_genemigung_state){ ?>
-            <label for="genehmigung">Auslage Status</label>
+            <label for="genehmigung">Abrechnungs Status</label>
             <div id='projekt-well' class="well">
                 <label for="genehmigung">Status</label><br>
                 <div class="col-xs-12 col-xs-12 col-md-4 form-group">
@@ -1989,8 +1989,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 
             $g_sums['in'] += $sums['in'];
             $g_sums['out'] += $sums['out'];
-            if ($sums['in'] > 0) $a_sums['in']['Auslage '. $sums['id'].' - '.$sums['in'].'€'] = [$sums['in']];
-            if ($sums['out'] > 0) $a_sums['out']['Auslage '.$sums['id'].' - '.$sums['out'].'€'] = [$sums['out']];
+            if ($sums['in'] > 0) $a_sums['in']['Abrechnung '. $sums['id'].' - '.$sums['in'].'€'] = [$sums['in']];
+            if ($sums['out'] > 0) $a_sums['out']['Abrechnung '.$sums['id'].' - '.$sums['out'].'€'] = [$sums['out']];
 
             foreach($p_d as $posten_id => $ignore){
                 if (isset($sums['p']['in'])) $p_added_beam_data['in'][$posten_id][$auslage['id']] = (isset($sums['p']['in'][$posten_id]))? $sums['p']['in'][$posten_id]: 0;
@@ -2420,7 +2420,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
     public function render_project_auslagen($echo = false){
         $out = '';
         if (count($this->projekt_data['auslagen']) == 0){
-            $out .= '<label for="auslagen-vorhanden">Im Projekt vorhandene Auslagenerstattungen</label>';
+            $out .= '<label for="auslagen-vorhanden">Im Projekt vorhandene Abrechnungen</label>';
             $out .= '<div  class="well" style="margin-bottom: 0px; background-color: white;"><span>Keine</span></div>';
         }else{
             $tmpList = [];
@@ -2438,7 +2438,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 ];
             }
             $out .= $this->templater->generateListGroup($tmpList,
-                'Im Projekt vorhandene Auslagenerstattungen', false, true, '', 'a', 'col-xs-12 col-md-10');
+                'Im Projekt vorhandene Abrechnungen', false, true, '', 'a', 'col-xs-12 col-md-10');
         }
         if ($echo) echo $out;
         return $out;
@@ -2458,7 +2458,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
             //allow chat only 90 days into next year
             if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90){
                 if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == self::state2stateInfo('wip;' . $this->auslagen_data['created'])['user']){
-                    $btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Auslagen-Ersteller'];
+                    $btns[] = ['label' => 'Private Nachricht', 'color' => 'warning', 'type' => '-1', 'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Abrechnungs-Ersteller'];
                 }
                 if ($auth->hasGroup('ref-finanzen')){
                     $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
