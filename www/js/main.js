@@ -1182,6 +1182,35 @@ $(document).ready(function () {
         selectText(this);
     });
 
+    var validate_project_posten_func = function(a,b,c,elm){
+        if (typeof(elm) == 'undefined'){
+            elm = this;
+        }
+        var $this = $(elm);
+        var $other = null;
+        if (elm.dataset.addtosum=='einnahmen'){
+            $other = $this.parent().parent().parent().next().find('input');
+        } else if (elm.dataset.addtosum=='ausgaben'){
+            $other = $this.parent().parent().parent().prev().find('input');
+        }
+        var ret = true;
+        if ($other != null){
+            if (parseFloat($this.val()) > 0.0 && parseFloat($other.val()) > 0.0){
+                ret = false;
+
+                if (!$this.parent().parent().hasClass('has-error')) $this.parent().parent().addClass('has-error');
+                if (!$other.parent().parent().hasClass('has-error')) $other.parent().parent().addClass('has-error');
+            } else {
+              if ($this.parent().parent().hasClass('has-error')) $this.parent().parent().removeClass('has-error');
+              if ($other.parent().parent().hasClass('has-error')) $other.parent().parent().removeClass('has-error');
+            }
+        }
+        return ret;
+    };
+    $("*[data-addToSum]").on("change",    validate_project_posten_func);
+    $("*[data-addToSum]").on("focus",     validate_project_posten_func);
+    $("*[data-addToSum]").on("input",     validate_project_posten_func);
+    $("*[data-addToSum]").on("focusout",  validate_project_posten_func);
 });
 
 
@@ -1587,6 +1616,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
         $("#server-error-dlg .default-content").show();
         $("#server-error-dlg .js-content").hide();
         $("#server-error-dlg").modal("show");
+        $("#server-error-dlg").css({opacity: 1});
         $("#server-error-dlg .msg").text('(' + data.msg + ')');
         //auto page reload
         if (typeof(data.reload) == 'number') {
@@ -1608,6 +1638,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
     $("#server-message-content").empty();
     var $smcp = $('<pre>').appendTo($smc).html(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
     $("#server-message-dlg").modal("show");
+    $("#server-message-dlg").css({opacity: 1});
 };
 
 function handleSubmitForm($form, evt, isConfirmed, fnMod) {
