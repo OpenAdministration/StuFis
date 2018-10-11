@@ -1626,25 +1626,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 
             $belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
 
-            $head_sum_in = 0;
-            $head_sum_out = 0;
-            if (!($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')){
-                if (count ($belege) > 0){
-                    $head_sum = 0;
-                    foreach ($belege as $bel){
-                        if (isset($bel['posten']) && count($bel['posten']) > 0){
-                            foreach ($bel['posten'] as $ppp) {
-                                $head_sum_in += $ppp['einnahmen'];
-                                $head_sum_out += $ppp['ausgaben'];
-                            }
-                        }
-                    }
-                }
-            }
-
-            if ($head_sum_in > 0 || $head_sum_out > 0){
-                $this->render_beleg_sums($head_sum_in, $head_sum_out, 'Gesamt');
-            }
+            $this->render_beleg_sums($belege, 'Gesamt');
 
             $this->render_beleg_container($belege, $editable, 'Belege');
 
@@ -1898,13 +1880,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
     }
 
     /**
-     * Show Beleg Summen in Auslagenerstattungen
+     * render belege box
      *
      * @param float $in
      * @param float $out
      * @param string $float
      */
-    public function render_beleg_sums($in, $out, $label='') {
+    private function _render_beleg_sums($in, $out, $label='') {
         if ($label){
             echo '<label>' . $label . '</label>';
         }
@@ -1917,6 +1899,226 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     <div class="col-sm-2"><?= number_format( $in, 2); ?></div>
                     <div class="col-sm-3"><strong>Ausgaben:</strong></div>
                     <div class="col-sm-2"><?= number_format( $out, 2); ?></div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * calculate belege sums of 'Auslagenerstattung'
+     *
+     * @param array $belege
+     * @param string $labal
+     */
+    public function render_beleg_sums($belege, $label='', $render = true) {
+        $head_sum_in = 0;
+        $head_sum_out = 0;
+        $p=[];
+        if (!($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')){
+            if (count ($belege) > 0){
+                $head_sum = 0;
+                foreach ($belege as $bel){
+                    if (isset($bel['posten']) && count($bel['posten']) > 0){
+                        foreach ($bel['posten'] as $ppp) {
+                            $head_sum_in += $ppp['einnahmen'];
+                            $head_sum_out += $ppp['ausgaben'];
+                            if($ppp['einnahmen'] > 0){
+                                if (!isset($p['in'][$ppp['projekt_posten_id']])){
+                                    $p['in'][$ppp['projekt_posten_id']] = 0;
+                                }
+                                $p['in'][$ppp['projekt_posten_id']] += $ppp['einnahmen'];
+                            }
+                            if($ppp['ausgaben'] > 0){
+                                if (!isset($p['out'][$ppp['projekt_posten_id']])){
+                                    $p['out'][$ppp['projekt_posten_id']] = 0;
+                                }
+                                $p['out'][$ppp['projekt_posten_id']] += $ppp['ausgaben'];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ( $render && ($head_sum_in > 0 || $head_sum_out > 0)){
+            $this->_render_beleg_sums($head_sum_in, $head_sum_out, $label);
+        }
+
+        return [ 'id' => $this->auslagen_id, 'in' => $head_sum_in, 'out' => $head_sum_out, 'p' => $p ];
+    }
+
+    /**
+     * draw auslagen project diagrams
+     *
+     * @param string $label
+     */
+    public function get_auslagen_beleg_sums(){
+        //project posten ------------------
+        $p_in_max=0;
+        $p_out_max=0;
+        $p_d = [];
+        $p_added_beam_data = ['in' => [], 'out' => []];
+        foreach ( $this->projekt_data["posten"] as $pos =>  $posten){
+            $p_in_max += $posten["einnahmen"];
+            $p_out_max += $posten["ausgaben"];
+            $p_d[$posten["id"]] = [
+                'in_max' => $posten["einnahmen"],
+                'out_max' => $posten["ausgaben"],
+                'pos' => $pos,
+                'name' => $posten["name"],
+            ];
+        }
+
+        // --------------------------
+        //var_dump($p_d);
+
+        $g_sums = [
+          'in' => 0,
+          'out' => 0,
+        ];
+        $a_sums = ['in' => [], 'out' => []];
+
+        foreach ($this->projekt_data['auslagen'] as $auslage){
+            $this->auslagen_id = $auslage['id'];
+            $this->getDbAuslagen();
+            $this->getDbBelegePostenFiles();
+
+            $belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
+            $sums = $this->render_beleg_sums($belege, '', false);
+
+            $g_sums['in'] += $sums['in'];
+            $g_sums['out'] += $sums['out'];
+            if ($sums['in'] > 0) $a_sums['in']['Auslage '. $sums['id'].' - '.$sums['in'].'€'] = [$sums['in']];
+            if ($sums['out'] > 0) $a_sums['out']['Auslage '.$sums['id'].' - '.$sums['out'].'€'] = [$sums['out']];
+
+            foreach($p_d as $posten_id => $ignore){
+                if (isset($sums['p']['in'])) $p_added_beam_data['in'][$posten_id][$auslage['id']] = (isset($sums['p']['in'][$posten_id]))? $sums['p']['in'][$posten_id]: 0;
+                if (isset($sums['p']['out'])) $p_added_beam_data['out'][$posten_id][$auslage['id']] = (isset($sums['p']['out'][$posten_id]))? $sums['p']['out'][$posten_id]: 0;
+            }
+        }
+        foreach($p_d as $posten_id => $posten_info){
+            $p_added_beam_data['in'][$posten_id][] = (array_sum($p_added_beam_data['in'][$posten_id])<$posten_info['in_max'])? $posten_info['in_max'] - array_sum($p_added_beam_data['in'][$posten_id]): 0;
+            $p_added_beam_data['out'][$posten_id][] = (array_sum($p_added_beam_data['out'][$posten_id])<$posten_info['out_max'])? $posten_info['out_max'] - array_sum($p_added_beam_data['out'][$posten_id]): 0;
+        }
+        $a_sums['in'][((($p_in_max - $g_sums['in']) > 0)?'Nicht vergeben' : 'Überzogen').' - '.($p_in_max - $g_sums['in']).'€']=[(($p_in_max - $g_sums['in']) > 0)? $p_in_max - $g_sums['in'] : 0];
+        $a_sums['out'][((($p_out_max - $g_sums['out']) > 0)?'Nicht vergeben' : 'Überzogen').' - '.($p_out_max - $g_sums['out']).'€']=[(($p_out_max - $g_sums['out']) > 0)? $p_out_max - $g_sums['out'] : 0];
+
+        $out_html = [];
+
+        if ($p_out_max < $g_sums['out']) {
+            $out_html['error'][] = 'Das Projektmaximum bei den Einnahmen oder Ausgaben wurde überschritten!';
+        }
+
+        if ($p_in_max > 0){
+          $color = array ('red','blue','green',
+        			'yellow','purple','cyan',
+        			'#ef888d','#d2a7e5','#e5cd87',
+        			'#c639f9','#e5c67e','#2bc6bf',
+        			'#9ef7df','#f2d42e','#e5c97b',
+        			'#e2ae53','#d1a429','#d35d86',
+        			'#caf963','#de54f9','#aae06d',
+        			'#db76f2','#ff0c51','#b6f7a3',
+        			'#ea7598','#09627c','#2547dd',
+        			'#99bedb','#b73331','#aaffbd',
+        			'#ce0a04','#dab0fc','#e8d140',
+        			'#b1ef77','#506cc9','#ed07ca',
+      		);
+          $color[count($a_sums['in'])-1] = '#fff';
+
+          $d_pie = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_PIE);
+          $d_pie->setData($a_sums['in']);
+          $d_pie->setServerAspectRadio(false);
+          $d_pie->setSetting('height', 600);
+          $d_pie->setSetting('width', 600);
+          $d_pie->setPieSetting('perExplanationLineBelow', 1);
+          $d_pie->overrideColorArray($color);
+
+          $d_adding_beam = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_ADDINGBLOCK);
+          $tmp = [];
+          foreach ($p_added_beam_data['in'] as $key => $value) {
+              $tmp["$key - ".substr($p_d[$key]['name'], 0, 6).'..'] = $value;
+          }
+          $d_adding_beam->setData($tmp);
+          $d_adding_beam->setServerAspectRadio(false);
+          $d_adding_beam->setSetting('height', 600);
+          $d_adding_beam->overrideColorArray($color);
+          $d_adding_beam->setAchsisDescription(array('y' =>'€', 'x' => 'Projektposten' ));
+
+          $d_pie->generate();
+          $d_adding_beam->generate();
+          $out_html[] = ['headline' => 'Einnahmen', 'image_pie' => $d_pie->getChart(), 'image_adding_beam' => $d_adding_beam->getChart()];
+        }
+        if ($p_out_max > 0){
+            $color = array ('red','blue','green',
+                'yellow','purple','cyan',
+                '#ef888d','#d2a7e5','#e5cd87',
+                '#c639f9','#e5c67e','#2bc6bf',
+                '#9ef7df','#f2d42e','#e5c97b',
+                '#e2ae53','#d1a429','#d35d86',
+                '#caf963','#de54f9','#aae06d',
+                '#db76f2','#ff0c51','#b6f7a3',
+                '#ea7598','#09627c','#2547dd',
+                '#99bedb','#b73331','#aaffbd',
+                '#ce0a04','#dab0fc','#e8d140',
+                '#b1ef77','#506cc9','#ed07ca',
+            );
+            $color[count($a_sums['out'])-1] = '#fff';
+
+            $d_pie = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_PIE);
+            $d_pie->setData($a_sums['out']);
+            $d_pie->setServerAspectRadio(false);
+            $d_pie->setSetting('height', 600);
+            $d_pie->setSetting('width', 600);
+            $d_pie->setPieSetting('perExplanationLineBelow', 1);
+            $d_pie->overrideColorArray($color);
+
+            $d_adding_beam = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_ADDINGBLOCK);
+            $tmp = [];
+            foreach ($p_added_beam_data['out'] as $key => $value) {
+                $tmp["$key - ".substr($p_d[$key]['name'], 0, 6).'..'] = $value;
+            }
+            $d_adding_beam->setData($tmp);
+            $d_adding_beam->setServerAspectRadio(false);
+            $d_adding_beam->setSetting('height', 600);
+            $d_adding_beam->overrideColorArray($color);
+    	      $d_adding_beam->setAchsisDescription(array('y' =>'€', 'x' => 'Projektposten' ));
+
+            $d_pie->generate();
+            $d_adding_beam->generate();
+            $out_html[] = ['headline' => 'Ausgaben', 'image_pie' => $d_pie->getChart(), 'image_adding_beam' => $d_adding_beam->getChart()];
+        }
+        return $out_html;
+    }
+
+    public function render_auslagen_beleg_diagrams($label=''){
+        ?>
+        <div class="panel-group well col-xs-12 col-md-10" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
+                     href="#collapse_diag_1">
+                    <h4 class="panel-title">
+                        <i class="fa fa-fw fa-togglebox"></i><strong>&nbsp;<?= $label ?></strong>
+                    </h4>
+                </div>
+                <div id="collapse_diag_1" class="panel-collapse collapse">
+                    <div class="panel-body"><?php
+                        $out = $this->get_auslagen_beleg_sums();
+                        if (isset($out['error'])) foreach ($out['error'] as $err_msg) {
+                            echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">'.$err_msg.'</strong>';
+                        }
+                        echo '<div class="row">';
+                        foreach ($out as $value) {
+                            echo '<div class="form-group">';
+                              echo '<div class="col-sm-'.(12).'"><strong>'.$value['headline'].'</strong></div>';
+                            echo '</div>';
+                            echo '<div class="form-group">';
+                              echo '<div class="col-sm-'.(5).' project-svg">'.$value['image_pie'].'</div>';
+                              echo '<div class="col-sm-'.(7).' project-svg">'.$value['image_adding_beam'].'</div>';
+                            echo '</div>';
+                        }
+                        echo '</div>';
+                    ?></div>
                 </div>
             </div>
         </div>

@@ -410,6 +410,7 @@ class ProjektHandler extends FormHandlerInterface{
                 //echo $this->templater->getStateChooser($this->stateHandler);
                 $this->renderProjekt("Internes Projekt");
                 $this->render_chat_box();
+                $this->renderProjektSizeGrafic();
                 $this->renderAuslagenList();
                 break;
             default:
@@ -714,7 +715,7 @@ class ProjektHandler extends FormHandlerInterface{
     private function render_chat_box(){ ?>
 		<div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
-			<?php 
+			<?php
 				$auth = (AUTH_HANDLER);
 				/* @var $auth AuthHandler */
 				$auth = $auth::getInstance();
@@ -735,12 +736,18 @@ class ProjektHandler extends FormHandlerInterface{
 						$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
 					}
 				}
-				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")", 
+				ChatHandler::renderChatPanel('projekt', $this->id, $auth->getUserFullName() . " (" . $auth->getUsername() . ")",
 					$btns); ?>
 		</div>
     <?php
     }
-    
+
+    private function renderProjektSizeGrafic() {
+        echo '<div class="clearfix"></div>'.PHP_EOL;
+        $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
+        $ah->render_auslagen_beleg_diagrams('Nice Diagrams'); 
+    }
+
     private function renderAuslagenList(){ ?>
         <div class="clearfix"></div>
         <div id='projekt-well' class="well col-xs-12 col-md-10">
