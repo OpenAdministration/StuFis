@@ -7,7 +7,7 @@ String.prototype.replaceAll = function (target, replacement) {
         var _org = $.fn[val];
         $.fn[val] = function() {
             this.trigger('main_'+val);
-            _org.apply(this, arguments);
+            return _org.apply(this, arguments);
         };
     });
 })(jQuery);
@@ -1493,7 +1493,7 @@ function defaultPostModalHandler(values) {
             });
         }
     }
-    
+
     //validatr + message boxes
     if (typeof(values) == 'object' && values.hasOwnProperty('success')) {
         //form validation - error after ajax
