@@ -318,7 +318,7 @@ class Validator {
 					$cv = $cv * $ex;
 				}
 				$k = strlen($ex);
-				if ((is_numeric( $cv ) && mb_strpos($value, '.') + ($k) < mb_strlen($value)) || $cv % $mod != 0){
+				if ((is_numeric( $cv ) && mb_strpos($value, '.') && mb_strpos($value, '.') + ($k) < mb_strlen($value)) || $cv % $mod != 0){
 					$msg = (isset($params['error']))? $params['error'] : "float invalid step" ;
 					return !$this->setError(true, 200, $msg, 'float invalid step');
 				}
