@@ -59,6 +59,7 @@ class HHPHandler extends Renderer{
         $this->renderTable(
             ["Id", "von", "bis", "Status"],
             [$this->hhps],
+            [],
             [
                 function($id){
                     return "<a href='hhp/$id'><i class='fa fa-fw fa-chain'></i>&nbsp;HP-$id</a>";
