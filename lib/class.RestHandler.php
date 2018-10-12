@@ -769,7 +769,7 @@ class RestHandler extends JsonController{
                     'status' => '200',
                     'msg' => 'Keine neuen Umsätze gefunden.',
                     'type' => 'modal',
-                    'subtype' => 'server-error',
+                    'subtype' => 'server-warning',
                 ]);
             }
         }

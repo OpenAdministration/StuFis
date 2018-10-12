@@ -30,12 +30,22 @@ class HHPHandler extends Renderer{
             [],
             ["von" => true]
         );
+        if (isset($this->routeInfo["hhp-id"])){
+            $hhp_id = $this->routeInfo["hhp-id"];
+            if (!isset($this->hhps[$hhp_id])){
+                ErrorHandler::_renderError("Haushaltsplan HP-$hhp_id ist nicht bekannt.");
+                return;
+            }
+        }
         switch ($this->routeInfo["action"]){
-            case "pick":
+            case "pick-hhp":
                 $this->renderHHPPicker();
                 break;
-            case "view":
+            case "view-hhp":
                 $this->renderHaushaltsplan();
+                break;
+            case "view-titel":
+                $this->renderTitelDetails();
                 break;
             default:
                 ErrorHandler::_renderError("Action in HHP '{$this->routeInfo["action"]}' not known");
@@ -47,9 +57,7 @@ class HHPHandler extends Renderer{
         $this->renderHeadline("Haushalspläne");
         $obj = $this;
         $this->renderTable(
-            ["Id", "von", "bis", "Status"],
-            [$this->hhps],
-            [
+            ["Id", "von", "bis", "Status"], [$this->hhps], [], [
                 function($id){
                     return "<a href='hhp/$id'><i class='fa fa-fw fa-chain'></i>&nbsp;HP-$id</a>";
                 },
@@ -66,16 +74,11 @@ class HHPHandler extends Renderer{
     public function renderHaushaltsplan(){
         
         $hhp_id = $this->routeInfo["hhp-id"];
-        if (!isset($this->hhps[$hhp_id])){
-            ErrorHandler::_renderError("Haushaltsplan HP-$hhp_id ist nicht bekannt.");
-            return;
-        }
         $hhp = $this->hhps[$hhp_id];
         $groups = DBConnector::getInstance()->dbgetHHP($hhp_id);
         //var_dump($groups);
+        $this->renderHeadline("Haushaltsplan seit " . $this->formatDateToMonthYear($hhp["von"]));
         ?>
-        <h1>
-            Haushaltsplan seit <?= $this->formatDateToMonthYear($hhp["von"]) ?></h1>
         <table class="table table-striped">
             <?php
             $group_nr = 1;
@@ -118,7 +121,8 @@ class HHPHandler extends Renderer{
                     <tr>
                         <td></td>
                         <td><?= $row["titel_nr"] ?></td>
-                        <td><?= $row["titel_name"] ?></td>
+                        <td><a href="<?= URIBASE . "hhp/5/titel/$titel_id" ?>"><i
+                                        class="fa fa-fw fa-search-plus"></i><?= $row["titel_name"] ?></a></td>
                         <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") ?></td>
                         <td <?= $this->checkTitelBudget($row["value"], $row["_booked"]) ?>>
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_booked"], "money") ?>
@@ -168,5 +172,90 @@ class HHPHandler extends Renderer{
         }
     }
     
-    
+    private function renderTitelDetails(){
+        $hhp_id = $this->routeInfo["hhp-id"];
+        $hhp = $this->hhps[$hhp_id];
+        $titel_id = $this->routeInfo["titel-id"];
+        $titel = DBConnector::getInstance()->dbFetchAll(
+            "haushaltstitel",
+            [DBConnector::FETCH_ASSOC],
+            ["titel_nr", "titel_name"],
+            ["id" => $titel_id]
+        );
+        if (count($titel) === 0){
+            ErrorHandler::_renderError("Titel $titel_id kann nicht gefunden werden", 404);
+        }else{
+            $titel = $titel[0];
+        }
+        $this->renderHeadline("HHP seit " . $this->formatDateToMonthYear($hhp["von"]) . " - Titel {$titel["titel_nr"]} - {$titel["titel_name"]}");
+        
+        $this->renderHeadline("Buchungen", 4);
+        $booked = DBConnector::getInstance()->dbFetchAll(
+            "booking",
+            [DBConnector::FETCH_ASSOC],
+            [
+                "booking.zahlung_id",
+                "auslagen.projekt_id", "auslagen.id", "auslagen.name_suffix",
+                "booking.belegposten_id",
+                "booking.value"
+            ],
+            ["titel_id" => $titel_id, "booking.canceled" => 0],
+            [
+                ["type" => "left", "table" => "beleg_posten", "on" => ["beleg_posten.id", "booking.belegposten_id"]],
+                ["type" => "left", "table" => "belege", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                ["type" => "left", "table" => "auslagen", "on" => ["belege.auslagen_id", "auslagen.id"]],
+            ]
+        );
+        $this->renderTable(
+            ["Zahlung", "Auslage", "Belegposten", "Betrag",],
+            [$booked],
+            [],
+            [
+                null,
+                [$this, "auslagenLinkEscapeFunction"],
+                null,
+                [$this, "moneyEscapeFunction"],
+            ]
+        );
+        
+        list($closedMoney, $openMoney) = DBConnector::getInstance()->getMoneyByTitle($hhp_id, false, $titel_id);
+        $this->renderHeadline("Aus nicht beendeten Projekten", 4);
+        //var_dump($openMoney);
+        $this->renderTable(["Projekt", "Betrag"], [$openMoney], ["projekte.id", "projekte.createdat", "projekte.name", "value"],
+            [
+                [$this, "projektLinkEscapeFunction"],
+                [$this, "moneyEscapeFunction"],
+            ]
+        );
+        $this->renderHeadline("Aus beendeten Projekten", 4);
+        //var_dump($closedMoney[0]);
+        $this->renderTable(["Projekt", "Auslage", "Betrag"], [$closedMoney], ["projekte.id", "projekte.createdat", "projekte.name", "projekte.id", "auslagen.id", "auslagen.name_suffix", "value"],
+            [
+                [$this, "projektLinkEscapeFunction"],
+                [$this, "auslagenLinkEscapeFunction"],
+                [$this, "moneyEscapeFunction"],
+            ]
+        );
+        $a = false;
+        $tmp_row = [];
+        foreach ($closedMoney as $row){
+            
+            if ($row["auslagen.id"] == 87){
+                if (!$a){
+                    var_dump($row);
+                    echo "</br></br>";
+                    if (!empty($tmp_row)){
+                        var_dump(array_diff($row, $tmp_row));
+                        echo "</br></br>";
+                        var_dump(array_diff($tmp_row, $row));
+                    }
+                    $tmp_row = $row;
+                    
+                }
+                $a = true;
+            }else{
+                $a = false;
+            }
+        }
+    }
 }

@@ -106,16 +106,30 @@ $routing = [
             'path' => 'hhp',
             'type' => 'path',
             'controller' => 'hhp',
-            'action' => 'pick',
+            'action' => 'pick-hhp',
             'navigation' => 'hhp',
             'children' => [
                 [
                     'path' => '\d+',
                     'type' => 'pattern',
-                    'action' => 'view',
+                    'action' => 'view-hhp',
                     'param' => 'hhp-id',
-                    'load' => [
-                        LoadGroups::SELECTPICKER,
+                    'children' => [
+                        [
+                            'path' => 'titel',
+                            'type' => 'path',
+                            'children' => [
+                                [
+                                    'path' => '\d+',
+                                    'type' => 'pattern',
+                                    'action' => 'view-titel',
+                                    'param' => 'titel-id',
+                                    'load' => [
+                                        LoadGroups::SELECTPICKER,
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                 ],
             ],

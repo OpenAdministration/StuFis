@@ -2,6 +2,7 @@
 
 class DBConnector extends Singleton{
     
+    const GROUP_NOTHING = 0;
     const GROUP_SUM = 1;
     const GROUP_SUM_ROUND2 = 2;
     const GROUP_COUNT = 3;
@@ -427,12 +428,20 @@ class DBConnector extends Singleton{
                 $newShowColumns[$alias] = [$col, $aggregate];
             }
         }
-        
-        foreach ($where as $field => $value){
-            if (!in_array($field, $this->validFields)){
-                ErrorHandler::_errorExit("Unkown column $field in WHERE");
+    
+        //check $where and bring in good shape
+        //check if there are only numeric keys
+        if (count(array_filter(array_keys($where), 'is_string')) > 0){
+            $where = [$where];
+        }
+        foreach ($where as $wheregroup){
+            foreach ($wheregroup as $field => $value){
+                if (!in_array($field, $this->validFields)){
+                    ErrorHandler::_errorExit("Unkown column $field in WHERE");
+                }
             }
         }
+        
         
         //check join
         $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
@@ -506,39 +515,49 @@ class DBConnector extends Singleton{
                 ErrorHandler::_errorExit("Unkown column $col in fetchAll", 500);
             }
         }
-        
-        $c = [];
+    
+        $w = [];
         $vals = [];
-        foreach ($where as $k => $v){
-            if (strpos($k, ".") !== false){
-                $k = self::$DB_PREFIX . $k;
-            }
-            if (is_array($v)){
-                if (is_array($v[1])){
-                    switch (strtolower($v[0])){
-                        case "not in":
-                        case "in":
-                            $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                            $c[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
-                            break;
-                        case "between":
-                            $c[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
-                            if (count($v[1]) !== 2){
-                                ErrorHandler::_errorExit("To many values for " . $v[0]);
-                            }
-                            break;
-                        default:
-                            ErrorHandler::_errorExit("unknown identifier " . $v[0]);
-                    }
-                    $vals = array_merge($vals, $v[1]);
-                    
-                }else{
-                    $c[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                    $vals[] = $v[1];
+        $validWhereOperators = ["=", "<", ">", "<>", "<=", ">=", "like", "in", "between", "not in", "regexp", "not regexp"];
+        foreach ($where as $wheregroup){
+            $wg = [];
+            foreach ($wheregroup as $k => $v){
+                if (strpos($k, ".") !== false){
+                    $k = self::$DB_PREFIX . $k;
                 }
-            }else{
-                $c[] = $this->quoteIdent($k) . " = ?";
-                $vals[] = $v;
+                if (is_array($v)){
+                    if (!in_array(strtolower($v[0]), $validWhereOperators)){
+                        ErrorHandler::_errorExit("Unknown where operator $v[0]");
+                    }
+                    if (is_array($v[1])){
+                        switch (strtolower($v[0])){
+                            case "not in":
+                            case "in":
+                                $tmp = implode(',', array_fill(0, count($v[1]), '?'));
+                                $wg[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
+                                break;
+                            case "between":
+                                $wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
+                                if (count($v[1]) !== 2){
+                                    ErrorHandler::_errorExit("To many values for " . $v[0]);
+                                }
+                                break;
+                            default:
+                                ErrorHandler::_errorExit("unknown identifier " . $v[0]);
+                        }
+                        $vals = array_merge($vals, $v[1]);
+                    
+                    }else{
+                        $wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
+                        $vals[] = $v[1];
+                    }
+                }else{
+                    $wg[] = $this->quoteIdent($k) . " = ?";
+                    $vals[] = $v;
+                }
+            }
+            if (count($wg) > 0){
+                $w[] = implode(" AND ", $wg);
             }
         }
         $j = [];
@@ -591,8 +610,8 @@ class DBConnector extends Singleton{
         if (count($j) > 0){
             $sql .= " " . implode(" ", $j) . " ";
         }
-        if (count($c) > 0){
-            $sql .= PHP_EOL . "WHERE " . implode(" AND ", $c);
+        if (count($w) > 0){
+            $sql .= PHP_EOL . "WHERE (" . implode(") OR (", $w) . ")";
         }
         if (count($groupBy) > 0){
             $sql .= PHP_EOL . "GROUP BY " . implode(",", $g);
@@ -616,15 +635,18 @@ class DBConnector extends Singleton{
             return false;
         
         $PDOfetchType = 0;
-        if (in_array(self::FETCH_NUMERIC, $fetchStyles)){
+        if (in_array(self::FETCH_NUMERIC, $fetchStyles) && in_array(self::FETCH_ASSOC, $fetchStyles)){
+            $PDOfetchType |= PDO::FETCH_BOTH;
+        }else if (in_array(self::FETCH_NUMERIC, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_NUM;
-        }//noelseif
-        if (in_array(self::FETCH_ASSOC, $fetchStyles)){
+        }else if (in_array(self::FETCH_ASSOC, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_ASSOC;
         }
+    
         if (in_array(self::FETCH_ONLY_FIRST_COLUMN, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_COLUMN;
         }//noelsif
+    
         if (in_array(self::FETCH_UNIQUE_FIRST_COL_AS_KEY, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_GROUP | PDO::FETCH_UNIQUE;
         }else if (in_array(self::FETCH_UNIQUE, $fetchStyles)){
@@ -958,6 +980,7 @@ class DBConnector extends Singleton{
      * @return bool
      */
     public function dbHasAnfangsbestand($ktoId, $kpId){
+        //TODO: DELETEME - deprecated
         $sql = "SELECT COUNT(*) FROM " . self::$DB_PREFIX . "antrag a
  INNER JOIN " . self::$DB_PREFIX . "inhalt i1 ON a.id = i1.antrag_id AND i1.fieldname = 'kontenplan.otherForm' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i1.value = ?
  INNER JOIN " . self::$DB_PREFIX . "inhalt i2 ON a.id = i2.antrag_id AND i2.fieldname = 'zahlung.konto' AND a.type = 'zahlung' AND a.revision = 'v1-anfangsbestand' AND i2.value = ?
@@ -1010,7 +1033,37 @@ class DBConnector extends Singleton{
             }
         }
     
+        list($openmoneyByTitel, $closedMoneyByTitel) = $this->getMoneyByTitle($id, true);
+        $moneyByTitel = array_merge($openmoneyByTitel, $closedMoneyByTitel);
     
+        foreach ($moneyByTitel as $row){
+            $value = $row["value"];
+            if (isset($groups[$row["group_id"]][$row["titel_id"]]["_saved"])){
+                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] += $value;
+            }else{
+                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] = $value;
+            }
+        }
+        return $groups;
+    }
+    
+    public function getMoneyByTitle($hhp_id, $summed = true, $titel_id = null){
+        
+        if ($summed){
+            //summed
+            $group_type = DBConnector::GROUP_SUM_ROUND2;
+            $groupBy = ["titel_id"];
+        }else{
+            //not summed
+            $group_type = DBConnector::GROUP_NOTHING;
+            $groupBy = [];
+        }
+        $whereClosed = ["hhp_id" => $hhp_id, "projekte.state" => "terminated"];
+        $whereOpen = ["hhp_id" => $hhp_id, "projekte.state" => ["REGEXP", "ok-by-hv|ok-by-stura|done-hv|done-other"]];
+        if (isset($titel_id)){
+            $whereClosed["titel_id"] = $titel_id;
+            $whereOpen["titel_id"] = $titel_id;
+        }
         //ermittle alle buchungen von projekten die beendet sind
         $closedMoneyByTitel = DBConnector::getInstance()->dbFetchAll(
             "auslagen",
@@ -1019,23 +1072,25 @@ class DBConnector extends Singleton{
                 "titel_id",
                 "titel_type" => "haushaltsgruppen.type",
                 "group_id" => "haushaltsgruppen.id",
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                "ausgaben" => ["beleg_posten.ausgaben", $group_type],
+                "einnahmen" => ["beleg_posten.einnahmen", $group_type],
+                "auslagen" => "auslagen.*",
+                "projekte" => "projekte.*",
             ],
-            ["hhp_id" => $id, "projekte.state" => ["LIKE", "terminated%"]],
+            $whereClosed,
             [
                 ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
-                ["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "auslagen.projekt_id"]],
+                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                ["type" => "inner", "table" => "projektposten", "on" => [["projektposten.projekt_id", "projekte.id"], ["projektposten.id", "beleg_posten.projekt_posten_id"]]],
                 ["type" => "inner", "table" => "haushaltstitel", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
                 ["type" => "inner", "table" => "haushaltsgruppen", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"]],
                 ["type" => "inner", "table" => "haushaltsplan", "on" => ["haushaltsplan.id", "haushaltsgruppen.hhp_id"]],
-                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
-                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
             ],
             [],
-            ["titel_id"]
+            $groupBy
         );
-    
+        
         $openMoneyByTitel = DBConnector::getInstance()->dbFetchAll(
             "projekte",
             [DBConnector::FETCH_ASSOC],
@@ -1043,10 +1098,11 @@ class DBConnector extends Singleton{
                 "titel_id",
                 "titel_type" => "haushaltsgruppen.type",
                 "group_id" => "haushaltsgruppen.id",
-                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                "ausgaben" => ["projektposten.ausgaben", $group_type],
+                "einnahmen" => ["projektposten.einnahmen", $group_type],
+                "projekte" => "projekte.*",
             ],
-            ["hhp_id" => $id, "projekte.state" => ["REGEXP", "ok-by-hv|ok-by-stura|done-hv|done-other"]],
+            $whereOpen,
             [
                 ["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "projekte.id"]],
                 ["type" => "inner", "table" => "haushaltstitel", "on" => ["projektposten.titel_id", "haushaltstitel.id"]],
@@ -1054,13 +1110,12 @@ class DBConnector extends Singleton{
                 ["type" => "inner", "table" => "haushaltsplan", "on" => ["haushaltsplan.id", "haushaltsgruppen.hhp_id"]],
             ],
             [],
-            ["titel_id"]
+            $groupBy
         );
-    
+        $counter = count($closedMoneyByTitel);
+        //merge for adding value
         $moneyByTitel = array_merge($closedMoneyByTitel, $openMoneyByTitel);
-    
-    
-        foreach ($moneyByTitel as $row){
+        foreach ($moneyByTitel as $key => $row){
             $value = 0;
             if ($row["einnahmen"] != 0){
                 $value = floatval($row["einnahmen"]);
@@ -1071,13 +1126,10 @@ class DBConnector extends Singleton{
             if (intval($row["titel_type"]) !== 0){
                 $value = -$value;
             }
-            if (isset($groups[$row["group_id"]][$row["titel_id"]]["_saved"])){
-                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] += $value;
-            }else{
-                $groups[$row["group_id"]][$row["titel_id"]]["_saved"] = $value;
-            }
+            $moneyByTitel[$key]["value"] = $value;
         }
-        return $groups;
+        //split again (close,open)
+        return [array_slice($moneyByTitel, 0, $counter), array_slice($moneyByTitel, $counter)];
     }
     
     private function dbQuote($string, $parameter_type = null){

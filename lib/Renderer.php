@@ -9,7 +9,7 @@
 abstract class Renderer{
     abstract public function render();
     
-    protected function renderTable(array $header, array $groupedContent, array $escapeFunctions = [], array $footer = []){
+    protected function renderTable(array $header, array $groupedContent, array $keys, array $escapeFunctions = [], array $footer = []){
         
         $defaultFunction = ["Renderer", "defaultEscapeFunction"];
         
@@ -25,6 +25,8 @@ abstract class Renderer{
         $reflectionsOfFunctions = [];
         $isReflectionMethods = [];
         $paramSum = 0;
+        
+        
         try{
             foreach ($escapeFunctions as $idx => $escapeFunction){
                 if (is_array($escapeFunction)){
@@ -54,16 +56,23 @@ abstract class Renderer{
             foreach ($groupedContent as $groupName => $content){
                 if (empty($content))
                     continue;
-                if (count(reset($content)) != $paramSum){
+                if (count(reset($content)) != $paramSum && count($keys) != $paramSum){
                     ErrorHandler::_errorExit(
                         "In Gruppe '$groupName' passt Spaltenzahl (" . count(reset($content)) .
-                        ") nicht zur benötigten Parameterzahl $paramSum - es wurden " . count($escapeFunctions) .
+                        ") bzw. Key Anzahl (" . count($keys) . ") nicht zur benötigten Parameterzahl $paramSum \n es wurden " . count($escapeFunctions) .
                         " Funktionen übergeben " . $diff . " wurde(n) hinzugefügt."
                     );
                 }
             }
         }catch (ReflectionException $reflectionException){
             ErrorHandler::_errorExit("Reflection not working..." . $reflectionException->getMessage());
+        }
+        
+        if (count($keys) == 0){
+            $keys = range(0, $paramSum);
+            $assoc = false;
+        }else{
+            $assoc = true;
         }
         
         ?>
@@ -91,11 +100,20 @@ abstract class Renderer{
                     <tr>
                         <?php
                         //throw away keys
-                        $row = array_values($row);
+                        if (!$assoc){
+                            $row = array_values($row);
+                        }
+                        
                         $shiftIdx = 0;
                         foreach ($reflectionsOfFunctions as $idx => $reflectionOfFunction){
-                            $args = array_slice($row, $shiftIdx, $reflectionOfFunction->getNumberOfParameters());
-                            //var_export([$row, $args]);
+                            //var_export($keys);
+                            $arg_keys = array_slice($keys, $shiftIdx, $reflectionOfFunction->getNumberOfParameters());
+                            $args = [];
+                            foreach ($arg_keys as $arg_key){
+                                $args[] = $row[$arg_key];
+                            }
+                            //var_export($args);
+                            //var_export($row);
                             //var_export($reflectionOfFunction->getNumberOfParameters());
                             $shiftIdx += $reflectionOfFunction->getNumberOfParameters();
                             if ($isReflectionMethods[$idx]){
@@ -161,7 +179,7 @@ abstract class Renderer{
     }
     
     protected function renderHiddenInput($name, $value){ ?>
-        <input type="hidden" name="<?= $name ?>" value="<?= $value ?>">
+        <input type="hidden" name="<?= htmlspecialchars($name) ?>" value="<?= htmlspecialchars($value) ?>">
         <?php
     }
     

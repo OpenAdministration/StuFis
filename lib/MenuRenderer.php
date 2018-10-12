@@ -196,20 +196,17 @@ class MenuRenderer extends Renderer{
                                                         }
                                                         
                                                         $this->renderTable(
-                                                            ["Name", "Zahlungsempfänger", "Einnahmen", "Ausgaben", "Status"],
-                                                            [$auslagen[$id]],
-                                                            [
-                                                                [$this, "auslagenLinkEscapeFunction"], // 3 Parameter
-                                                                null,  // 1 parameter
-                                                                [$this, "moneyEscapeFunction"],
-                                                                [$this, "moneyEscapeFunction"],
-                                                                function($stateString){
-                                                                    $text = AuslagenHandler2::getStateString(AuslagenHandler2::state2stateInfo($stateString)['state']);
-                                                                    return "<div class='label label-info'>$text</div>";
-                                                                }
+                                                            ["Name", "Zahlungsempfänger", "Einnahmen", "Ausgaben", "Status"], [$auslagen[$id]], [], [
+                                                            [$this, "auslagenLinkEscapeFunction"], // 3 Parameter
+                                                            null,  // 1 parameter
+                                                            [$this, "moneyEscapeFunction"],
+                                                            [$this, "moneyEscapeFunction"],
+                                                            function($stateString){
+                                                                $text = AuslagenHandler2::getStateString(AuslagenHandler2::state2stateInfo($stateString)['state']);
+                                                                return "<div class='label label-info'>$text</div>";
+                                                            }
 
-                                                            ],
-                                                            [
+                                                        ], [
                                                                 [
                                                                     '',
                                                                     'Eingereicht:',
@@ -283,7 +280,7 @@ class MenuRenderer extends Renderer{
             "zur Verkündung (genehmigt von HV)" => $internContentHV,
         ];
         $this->renderHeadline("Projekte für die nächste StuRa Sitzung");
-        $this->renderTable($header, $groups, $escapeFunctions);
+        $this->renderTable($header, $groups, [], $escapeFunctions);
     }
     
     /**
@@ -334,8 +331,8 @@ class MenuRenderer extends Renderer{
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
     
         $this->renderHeadline("Von den Haushaltsverantwortlichen zu erledigen");
-        $this->renderTable($headerIntern, $groupsIntern, $escapeFunctionsIntern);
-        $this->renderTable($headerAuslagen, $groupsAuslagen, $escapeFunctionsAuslagen);
+        $this->renderTable($headerIntern, $groupsIntern, [], $escapeFunctionsIntern);
+        $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
     }
     
     /**
@@ -393,7 +390,7 @@ class MenuRenderer extends Renderer{
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
         
         $this->renderHeadline("Von den Kassenverantwortlichen zu erledigen");
-        $this->renderTable($headerAuslagen, $groupsAuslagen, $escapeFunctionsAuslagen);
+        $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
         
         $this->renderExportBankButton();
     }
@@ -453,8 +450,12 @@ class MenuRenderer extends Renderer{
                 return $p;
             },                                                       // 1 Parameter
             function($pId, $pCreate, $aId, $vwdzweck, $aName, $pName){  // 6 Parameter - Verwendungszweck
-                $year = date("Y", strtotime($pCreate));
-                $ret = "IP-$year-$pId-A$aId - $vwdzweck - $aName - $pName";
+                $year = date("y", strtotime($pCreate));
+                $ret = ["IP-$year-$pId-A$aId", $vwdzweck, $aName, $pName];
+                $ret = array_filter($ret, function($val){
+                    return !empty(trim($val));
+                });
+                $ret = implode(" - ", $ret);
                 if (strlen($ret) > 140){
                     $ret = substr($ret, 0, 140);
                 }
@@ -465,7 +466,7 @@ class MenuRenderer extends Renderer{
             }
         ];
         if (count($auslagen) > 0){
-            $this->renderTable($header, [$auslagen], $escapeFunctions);
+            $this->renderTable($header, [$auslagen], [], $escapeFunctions);
         }else{
             $this->renderHeadline("Aktuell liegen keine Überweisungen vor.", 2);
         }
@@ -786,7 +787,7 @@ class MenuRenderer extends Renderer{
                 <?php
                 //var_dump($res);
                 $obj = $this;
-                $this->renderTable($header, [$res], [
+                $this->renderTable($header, [$res], [], [
                     function($zahlung_id) use ($obj){
                         return $obj->defaultEscapeFunction($zahlung_id);
                     },
