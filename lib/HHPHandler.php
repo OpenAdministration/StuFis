@@ -54,10 +54,12 @@ class HHPHandler extends Renderer{
     }
     
     private function renderHHPPicker(){
-        $this->renderHeadline("Haushalspläne");
+        $this->renderHeadline("Haushaltspläne");
         $obj = $this;
         $this->renderTable(
-            ["Id", "von", "bis", "Status"], [$this->hhps], [], [
+            ["Id", "von", "bis", "Status"],
+            [$this->hhps],
+            [
                 function($id){
                     return "<a href='hhp/$id'><i class='fa fa-fw fa-chain'></i>&nbsp;HP-$id</a>";
                 },
@@ -68,11 +70,11 @@ class HHPHandler extends Renderer{
                 }
             ]
         );
-        
+
     }
-    
+
     public function renderHaushaltsplan(){
-        
+
         $hhp_id = $this->routeInfo["hhp-id"];
         $hhp = $this->hhps[$hhp_id];
         $groups = DBConnector::getInstance()->dbgetHHP($hhp_id);
@@ -87,7 +89,7 @@ class HHPHandler extends Renderer{
                 if (count($group) === 0) continue;
                 if ($type !== array_values($group)[0]["type"])
                     $group_nr = 1;
-                
+
                 $type = array_values($group)[0]["type"];
                 ?>
                 <thead>
@@ -131,8 +133,8 @@ class HHPHandler extends Renderer{
                             <?= DBConnector::getInstance()->convertDBValueToUserValue($row["_saved"], "money") ?>
                         </td>
                     </tr>
-                    
-                    
+
+
                     <?php
                 } ?>
                 <tr class="table-sum-footer">
@@ -142,7 +144,7 @@ class HHPHandler extends Renderer{
                     <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_saved, "money") ?></td>
                 </tr>
                 </tbody>
-                
+
                 <?php
             } ?>
 
@@ -150,7 +152,7 @@ class HHPHandler extends Renderer{
         <?php
         return;
     }
-    
+
     /**
      * @param $should
      * @param $is

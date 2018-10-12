@@ -787,16 +787,16 @@ button.btn.btn-arrow-left {
 }
 
 @keyframes sk-rotateplane {
-	0% { 
+	0% {
 		transform: perspective(120px) rotateX(0deg) rotateY(0deg);
-		-webkit-transform: perspective(120px) rotateX(0deg) rotateY(0deg) 
-	} 50% { 
+		-webkit-transform: perspective(120px) rotateX(0deg) rotateY(0deg)
+	} 50% {
 		transform: perspective(120px) rotateX(0) rotateY(179.9deg);
-		-webkit-transform: perspective(120px) rotateX(0) rotateY(179.9deg) 
-	} 100% { 
+		-webkit-transform: perspective(120px) rotateX(0) rotateY(179.9deg)
+	} 100% {
 		transform: perspective(120px) rotateX(0) rotateY(359.9deg);
 		-webkit-transform: perspective(120px) rotateX(0) rotateY(359.9deg);
-	} 
+	}
 }
 /* -------- fileview -------- */
 #server-file-dlg{
@@ -864,4 +864,7 @@ button.btn.btn-arrow-left {
 
 .booking__panel-form > div > div > span.money:after {
     content: "\00a0€";
+}
+.project-svg svg {
+  max-height: 300px;
 }

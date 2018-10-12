@@ -2,6 +2,16 @@ String.prototype.replaceAll = function (target, replacement) {
     return this.split(target).join(replacement);
 };
 
+(function($) {
+    $.each(['show','hide'], function(i, val) {
+        var _org = $.fn[val];
+        $.fn[val] = function() {
+            this.trigger('main_'+val);
+            return _org.apply(this, arguments);
+        };
+    });
+})(jQuery);
+
 numeral.locale("de");
 
 $(document).ready(function () {
@@ -1172,6 +1182,35 @@ $(document).ready(function () {
         selectText(this);
     });
 
+    var validate_project_posten_func = function(a,b,c,elm){
+        if (typeof(elm) == 'undefined'){
+            elm = this;
+        }
+        var $this = $(elm);
+        var $other = null;
+        if (elm.dataset.addtosum=='einnahmen'){
+            $other = $this.parent().parent().parent().next().find('input');
+        } else if (elm.dataset.addtosum=='ausgaben'){
+            $other = $this.parent().parent().parent().prev().find('input');
+        }
+        var ret = true;
+        if ($other != null){
+            if (parseFloat($this.val()) > 0.0 && parseFloat($other.val()) > 0.0){
+                ret = false;
+
+                if (!$this.parent().parent().hasClass('has-error')) $this.parent().parent().addClass('has-error');
+                if (!$other.parent().parent().hasClass('has-error')) $other.parent().parent().addClass('has-error');
+            } else {
+              if ($this.parent().parent().hasClass('has-error')) $this.parent().parent().removeClass('has-error');
+              if ($other.parent().parent().hasClass('has-error')) $other.parent().parent().removeClass('has-error');
+            }
+        }
+        return ret;
+    };
+    $("*[data-addToSum]").on("change",    validate_project_posten_func);
+    $("*[data-addToSum]").on("focus",     validate_project_posten_func);
+    $("*[data-addToSum]").on("input",     validate_project_posten_func);
+    $("*[data-addToSum]").on("focusout",  validate_project_posten_func);
 });
 
 
@@ -1429,7 +1468,9 @@ function defaultPostModalHandler(values) {
         }
     }
     //reload function
-    if (values.hasOwnProperty('reload') && (typeof(values.reload) == 'integer' || typeof(values.reload) == 'number')) {
+    var closereload = false;
+    var closefunc = null;
+    if (values.hasOwnProperty('reload') && (typeof(values.reload) == 'integer' || typeof(values.reload) == 'number') && values.reload >= 0) {
         if (values.hasOwnProperty('redirect')) {
             setTimeout(function () {
                 window.location.replace(values.redirect);
@@ -1443,7 +1484,16 @@ function defaultPostModalHandler(values) {
                 window.location.replace(window.location);
             }, values.reload);
         }
+    } else if (values.hasOwnProperty('reload') || values.hasOwnProperty('redirect')) {
+        var closetarget = (values.hasOwnProperty('redirect'))? values.redirect : window.location;
+        closereload = true;
+        closefunc = function ($target) {
+            $target.on('main_hide', function() {
+                window.location.replace(closetarget);
+            });
+        }
     }
+
     //validatr + message boxes
     if (typeof(values) == 'object' && values.hasOwnProperty('success')) {
         //form validation - error after ajax
@@ -1482,7 +1532,9 @@ function defaultPostModalHandler(values) {
                 tmsg += '</ul>';
                 $("#" + values.subtype + "-dlg .js-content").html(tmsg);
             }
+            if (closereload) closefunc($("#" + values.subtype + "-dlg"));
             $("#" + values.subtype + "-dlg").modal("show");
+
             return true;
         } else if (values.hasOwnProperty('type') && values.type == 'modal' && values.hasOwnProperty('subtype') && values.subtype == 'file') {
             if (values.hasOwnProperty('headline')) {
@@ -1564,6 +1616,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
         $("#server-error-dlg .default-content").show();
         $("#server-error-dlg .js-content").hide();
         $("#server-error-dlg").modal("show");
+        $("#server-error-dlg").css({opacity: 1});
         $("#server-error-dlg .msg").text('(' + data.msg + ')');
         //auto page reload
         if (typeof(data.reload) == 'number') {
@@ -1585,6 +1638,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
     $("#server-message-content").empty();
     var $smcp = $('<pre>').appendTo($smc).html(textStatus + "\n" + errorThrown + "\n" + jqXHR.responseText);
     $("#server-message-dlg").modal("show");
+    $("#server-message-dlg").css({opacity: 1});
 };
 
 function handleSubmitForm($form, evt, isConfirmed, fnMod) {
@@ -1678,7 +1732,6 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
             if (defaultPostModalHandler(values)) {
                 return;
             }
-
             //parse values / backport
             if (typeof(values) == 'object') {
                 // message array
@@ -1745,6 +1798,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                     }
                 });
                 $("#server-question-dlg").modal("show");
+                $("#server-question-dlg").show();
+                $("#server-question-dlg").css({ opacity: 1});
 
             } else if (values.ret) { // txt is empty
                 if (values.altTarget) {
@@ -1769,6 +1824,8 @@ function handleSubmitForm($form, evt, isConfirmed, fnMod) {
                     $('<li/>').text(msg).appendTo($smcu);
                 }
                 $("#server-message-dlg").modal("show");
+                $("#server-message-dlg").show();
+                $("#server-message-dlg").css({ opacity: 1});
             }
         })
         .fail(xpAjaxErrorHandler);
