@@ -10,3 +10,4 @@ logs/*
 .settings
 .settings/*
 secret.php
+.directory
