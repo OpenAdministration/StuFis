@@ -801,9 +801,9 @@ class MenuRenderer extends Renderer{
                     [$this, "moneyEscapeFunction"],
                     function($posten_id, $p_name, $a_name){
                         if (empty($a_name)){
-                            return "<textarea name='text[$posten_id]' placeholder='$p_name' class='form-control'></textarea>";
+                            return "<textarea required name='text[$posten_id]' placeholder='$p_name' class='warning-empty form-control'></textarea>";
                         }else{
-                            return "<textarea name='text[$posten_id]' class='form-control'>$p_name - $a_name</textarea>";
+                            return "<textarea required name='text[$posten_id]' class='warning-empty form-control'>$p_name - $a_name</textarea>";
                         }
                     }
                 ]);

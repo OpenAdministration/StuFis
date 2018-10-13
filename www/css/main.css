@@ -868,3 +868,9 @@ button.btn.btn-arrow-left {
 .project-svg svg {
   max-height: 300px;
 }
+.warning-empty:invalid{
+    border-color: #dd3800;
+    -webkit-box-shadow: inset 0px 0px 5px 1px rgba(255,68,0,1);
+    -moz-box-shadow: inset 0px 0px 5px 1px rgba(255,68,0,1);
+    box-shadow: inset 0px 0px 5px 1px rgba(255,68,0,1);
+}
