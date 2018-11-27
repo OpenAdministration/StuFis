@@ -89,6 +89,10 @@ class MenuRenderer extends Renderer{
     public function renderProjekte($gremien){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
+        if (empty($gremien)){
+            $this->renderAlert("Schade!", $this->makeClickableMails("Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de"), "warning");
+            return;
+        }
         $projekte = DBConnector::getInstance()->dbFetchAll(
             "projekte",
             [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
@@ -98,7 +102,7 @@ class MenuRenderer extends Renderer{
                 "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
                 "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
             ],
-            ["org" => ["in", $gremien]],
+            [["org" => ["in", $gremien]], ["org" => ["is", null]]],
             [
                 ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
             ],

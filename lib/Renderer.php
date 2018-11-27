@@ -206,4 +206,36 @@ abstract class Renderer{
             return $past ? "gestern" : "morgen";
         }
     }
+    
+    /**
+     *
+     * @param $strongMsg
+     * @param $msg
+     * @param $type string has to be <i>"success"</i>, "info", "warning" or "danger"
+     */
+    protected function renderAlert($strongMsg, $msg, $type = "success"){
+        if (!in_array($type, ["success", "info", "warning", "danger"])){
+            ErrorHandler::_renderError("Falscher Datentyp in renderAlert()", 405);
+        }
+        ?>
+        <div class="alert alert-<?= $type ?>">
+            <strong><?= $strongMsg ?></strong> <?= $msg ?>
+        </div>
+        <?php
+    }
+    
+    protected function makeClickableMails($text){
+        //$text = htmlspecialchars($text);
+        $matches = [];
+        preg_match_all('#[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}#', $text, $matches);
+        var_dump($matches[0]);
+        foreach ($matches[0] as $match){
+            $text = str_replace($match, $this->mailto($match), $text);
+        }
+        return $text;
+    }
+    
+    protected function mailto($adress){
+        return "<a href='mailto:$adress'><i class='fa fa-fw fa-envelope'></i>$adress</a>";
+    }
 }
