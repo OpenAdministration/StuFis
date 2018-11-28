@@ -379,7 +379,7 @@ class DBConnector extends Singleton{
      *
      * @return array|bool
      */
-    public function dbFetchAll($tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [], $groupBy = []){
+    public function dbFetchAll($tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [], $groupBy = [], $debug = false){
         
         //check if all tables are known
         if (!is_array($tables)){
@@ -428,7 +428,7 @@ class DBConnector extends Singleton{
                 $newShowColumns[$alias] = [$col, $aggregate];
             }
         }
-    
+        
         //check $where and bring in good shape
         //check if there are only numeric keys
         if (count(array_filter(array_keys($where), 'is_string')) > 0){
@@ -515,10 +515,10 @@ class DBConnector extends Singleton{
                 ErrorHandler::_errorExit("Unkown column $col in fetchAll", 500);
             }
         }
-    
+        
         $w = [];
         $vals = [];
-        $validWhereOperators = ["=", "<", ">", "<>", "<=", ">=", "like", "in", "between", "not in", "regexp", "not regexp"];
+        $validWhereOperators = ["=", "<", ">", "<>", "<=", ">=", "like", "in", "between", "not in", "regexp", "not regexp", "is", "is not"];
         foreach ($where as $wheregroup){
             $wg = [];
             foreach ($wheregroup as $k => $v){
@@ -546,7 +546,7 @@ class DBConnector extends Singleton{
                                 ErrorHandler::_errorExit("unknown identifier " . $v[0]);
                         }
                         $vals = array_merge($vals, $v[1]);
-                    
+    
                     }else{
                         $wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
                         $vals[] = $v[1];
@@ -622,8 +622,10 @@ class DBConnector extends Singleton{
         
         //HTMLPageRenderer::registerProfilingBreakpoint($sql);
         HTMLPageRenderer::registerProfilingBreakpoint("sql-start");
-        //var_dump($sql);
-        //var_dump($vals);
+        if ($debug){
+            var_dump($sql);
+            var_dump($vals);
+        }
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($vals);
         if (!$ret){
@@ -642,11 +644,11 @@ class DBConnector extends Singleton{
         }else if (in_array(self::FETCH_ASSOC, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_ASSOC;
         }
-    
+        
         if (in_array(self::FETCH_ONLY_FIRST_COLUMN, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_COLUMN;
         }//noelsif
-    
+        
         if (in_array(self::FETCH_UNIQUE_FIRST_COL_AS_KEY, $fetchStyles)){
             $PDOfetchType |= PDO::FETCH_GROUP | PDO::FETCH_UNIQUE;
         }else if (in_array(self::FETCH_UNIQUE, $fetchStyles)){

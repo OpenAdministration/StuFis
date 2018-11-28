@@ -21,22 +21,22 @@ if (!SAML){
     require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
     (AUTH_HANDLER)::getInstance()->requireAuth();
     (AUTH_HANDLER)::getInstance()->requireGroup('basic');
-	if (!isset($routeInfo['groups'])){
-		$routeInfo['action'] = '403';
-		$routeInfo['controller'] = 'error';
-	}
-} else {
+    if (!isset($routeInfo['groups'])){
+        $routeInfo['action'] = '403';
+        $routeInfo['controller'] = 'error';
+    }
+}else{
     define('AUTH_HANDLER', 'AuthSamlHandler');
     require_once SYSBASE . '/lib/AuthSamlHandler.php';
     (AUTH_HANDLER)::getInstance()->requireAuth();
 }
 if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
-	$routeInfo['action'] = '403';
-	$routeInfo['controller'] = 'error';
+    $routeInfo['action'] = '403';
+    $routeInfo['controller'] = 'error';
 }
 
-if (MAIL_INSTALL) {
-	require_once SYSBASE . '/lib/mail_init.php';
+if (MAIL_INSTALL){
+    require_once SYSBASE . '/lib/mail_init.php';
 }
 
 //TODO ACL on route ? ----------------------------
