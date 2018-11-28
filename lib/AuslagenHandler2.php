@@ -1982,6 +1982,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
         foreach ($this->projekt_data['auslagen'] as $auslage){
             $this->auslagen_id = $auslage['id'];
             $this->getDbAuslagen();
+            $tmp_state = self::state2stateInfo($auslage['state']);
+            if ($tmp_state['state'] == 'draft' || $tmp_state['state'] == 'revocation') continue;
             $this->getDbBelegePostenFiles();
 
             $belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
@@ -2108,7 +2110,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
                             echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">'.$err_msg.'</strong>';
                         }
                         echo '<div class="row">';
-                        foreach ($out as $value) {
+                        foreach ($out as $key => $value) {
+                            if ($key === 'error') continue;
                             echo '<div class="form-group">';
                               echo '<div class="col-sm-'.(12).'"><strong>'.$value['headline'].'</strong></div>';
                             echo '</div>';

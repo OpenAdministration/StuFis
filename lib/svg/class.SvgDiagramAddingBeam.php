@@ -20,7 +20,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 	 * @var array
 	 */
 	private static $types = [
-		'State',
+		'AddingBeam',
 	];
 
 	// CLASS CONSTRUCTOR --------------------------------------
@@ -31,12 +31,12 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 	 */
 	function __construct($type)
 	{
+        parent::__construct($type);
 		if (in_array($type, self::$types)){
 			$this->type = $type;
 		} else {
 			$this->type = self::$types[0];
 		}
-		parent::__construct();
 		$this->settings['ADDBLOCK'] = [
 			'interpret_date' => false,
 			'sub_x_description' => false,
