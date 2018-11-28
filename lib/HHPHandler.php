@@ -224,9 +224,10 @@ class HHPHandler extends Renderer{
         list($closedMoney, $openMoney) = DBConnector::getInstance()->getMoneyByTitle($hhp_id, false, $titel_id);
         $this->renderHeadline("Aus nicht beendeten Projekten", 4);
         //var_dump($openMoney);
-        $this->renderTable(["Projekt", "Betrag"], [$openMoney], ["projekte.id", "projekte.createdat", "projekte.name", "value"],
+        $this->renderTable(["Projekt", "Posten", "Betrag"], [$openMoney], ["projekte.id", "projekte.createdat", "projekte.name", "name", "value"],
             [
                 [$this, "projektLinkEscapeFunction"],
+                null,
                 [$this, "moneyEscapeFunction"],
             ]
         );
@@ -239,26 +240,5 @@ class HHPHandler extends Renderer{
                 [$this, "moneyEscapeFunction"],
             ]
         );
-        $a = false;
-        $tmp_row = [];
-        foreach ($closedMoney as $row){
-            
-            if ($row["auslagen.id"] == 87){
-                if (!$a){
-                    var_dump($row);
-                    echo "</br></br>";
-                    if (!empty($tmp_row)){
-                        var_dump(array_diff($row, $tmp_row));
-                        echo "</br></br>";
-                        var_dump(array_diff($tmp_row, $row));
-                    }
-                    $tmp_row = $row;
-                    
-                }
-                $a = true;
-            }else{
-                $a = false;
-            }
-        }
     }
 }

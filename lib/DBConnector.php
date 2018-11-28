@@ -1100,6 +1100,7 @@ class DBConnector extends Singleton{
                 "titel_id",
                 "titel_type" => "haushaltsgruppen.type",
                 "group_id" => "haushaltsgruppen.id",
+                "projektposten.name",
                 "ausgaben" => ["projektposten.ausgaben", $group_type],
                 "einnahmen" => ["projektposten.einnahmen", $group_type],
                 "projekte" => "projekte.*",
@@ -1111,7 +1112,7 @@ class DBConnector extends Singleton{
                 ["type" => "inner", "table" => "haushaltsgruppen", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"]],
                 ["type" => "inner", "table" => "haushaltsplan", "on" => ["haushaltsplan.id", "haushaltsgruppen.hhp_id"]],
             ],
-            [],
+            ["projekte.id" => true, "ausgaben" => false, "einnahmen" => false],
             $groupBy
         );
         $counter = count($closedMoneyByTitel);
