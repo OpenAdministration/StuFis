@@ -9,65 +9,89 @@ $routing = [
     'load' => [],
     'children' => [
         [
+            'path' => 'konto',
+            'type' => 'path',
+            'action' => 'bank',
+            'navigation' => 'konto',
+            'load' => [
+                LoadGroups::SELECTPICKER,
+                LoadGroups::DATEPICKER,
+            ],
+            'children' => [
+                [
+                    'path' => '\d+',
+                    'type' => 'pattern',
+                    'param' => 'hhp-id',
+                    'children' => [
+                        [
+                            'path' => '(bank|kasse|sparbuch)',
+                            'type' => 'pattern',
+                            'param' => 'action',
+                        ]
+                    ],
+                ],
+            ],
+        ],
+        [
+            'path' => 'booking',
+            'type' => 'path',
+            'navigation' => 'booking',
+            'action' => 'instruct',
+            'load' => [
+                LoadGroups::SELECTPICKER,
+                LoadGroups::MODALS,
+                LoadGroups::BOOKING,
+            ],
+            'children' => [
+                [
+                    'path' => '\d+',
+                    'type' => 'pattern',
+                    'param' => 'hhp-id',
+                    'load' => [
+                        LoadGroups::SELECTPICKER,
+                        LoadGroups::MODALS,
+                    ],
+                    'children' => [
+                        [
+                            'path' => 'history',
+                            'type' => 'path',
+                            'action' => 'history',
+                        ],
+                        [
+                            'path' => 'text',
+                            'type' => 'path',
+                            'action' => 'booking-text',
+                        ],
+                        [
+                            'path' => 'instruct',
+                            'type' => 'path',
+                            'action' => 'instruct',
+                            'load' => [
+                                LoadGroups::BOOKING,
+                                LoadGroups::MODALS,
+                                LoadGroups::SELECTPICKER,
+                            ]
+                        ],
+                    ]
+                ],
+        
+            ]
+        ],
+        [
             'path' => 'menu',
             'type' => 'path',
             'children' => [
                 [
                     'path' => 'mykonto',
                     'type' => 'pattern',
-                    'param' => 'action'
+                    'param' => 'action',
+                    'navigation' => 'mykonto',
                 ],
                 [
-                    'path' => 'konto',
-                    'type' => 'path',
-                    'action' => 'konto',
-                    'navigation' => 'konto',
-                    'load' => [
-                        LoadGroups::SELECTPICKER,
-                    ],
-                    'children' => [
-                        [
-                            'path' => '\d+',
-                            'type' => 'pattern',
-                            'param' => 'hhp-id',
-                        ],
-                    ],
-                ],
-                [
-                    'path' => '(booking|booking-history)',
+                    'path' => '(mygremium|allgremium|mystuff|search)',
                     'type' => 'pattern',
                     'param' => 'action',
-                    'navigation' => 'booking',
-                    'load' => [
-                        LoadGroups::SELECTPICKER,
-                        LoadGroups::BOOKING,
-                    ],
-                    'children' => [
-                        [
-                            'path' => '\d+',
-                            'type' => 'pattern',
-                            'param' => 'hhp-id',
-                        ],
-                    ],
-                ],
-                [
-                    'path' => 'save-booking',
-                    'type' => 'path',
-                    'action' => 'save-booking',
-                    'navigation' => 'booking',
-                    'method' => 'POST',
-                ],
-                [
-                    'path' => 'check-booking',
-                    'type' => 'path',
-                    'action' => 'check-booking',
-                    'navigation' => 'booking',
-                ],
-                [
-                    'path' => 'mygremium',
-                    'type' => 'path',
-                    'action' => 'mygremium',
-                    'navigation' => 'mygremium',
+                    'navigation' => 'overview',
                 ],
                 [
                     'path' => 'hv',
@@ -93,12 +117,6 @@ $routing = [
                     'type' => 'path',
                     'action' => 'stura',
                     'navigation' => 'stura',
-                ],
-                [
-                    'path' => 'allgremium',
-                    'type' => 'path',
-                    'action' => 'allgremium',
-                    'navigation' => 'allgremium',
                 ],
             ],
         ],
@@ -243,7 +261,7 @@ $routing = [
                             'action' => 'auslagen',
                             'children' => [
                                 [
-                                    'path' => '(updatecreate|filedelete|state|belegpdf)',
+                                    'path' => '(updatecreate|filedelete|state|belegpdf|zahlungsanweisung)',
                                     'type' => 'pattern',
                                     'param' => 'mfunction',
                                     'match' => 0,
@@ -269,17 +287,17 @@ $routing = [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'rest',
-                    'action' => 'new-booking',
-                    'groups' => 'ref-finanzen',
-                    'children' => [
-                        [
-                            'path' => 'cancel',
-                            'type' => 'path',
-                            'controller' => 'rest',
-                            'action' => 'cancel-booking',
-                        ],
-                    ],
-                ]
+                    'action' => 'new-booking-instruct',
+                    'groups' => 'ref-finanzen-hv',
+                ],
+                [
+                    'path' => 'kasse',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'save-new-kasse-entry',
+                    'groups' => 'ref-finanzen-kv',
+                ],
+                
             ]
         ],
         [

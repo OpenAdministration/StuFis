@@ -14,9 +14,9 @@
 include_once dirname(__FILE__) . '/class.JsonController.php';
 
 class RestHandler extends JsonController{
-
+    
     // ================================================================================================
-
+    
     /**
      * private class constructor
      * implements singleton pattern
@@ -24,22 +24,21 @@ class RestHandler extends JsonController{
     public function __construct(){
         $this->json_result = [];
     }
-
+    
     // ================================================================================================
-
+    
     /**
      *
      * @param array $routeInfo
      */
     public function handlePost($routeInfo = null){
         global $nonce;
-
         if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
-            ErrorHandler::_renderError('Access Denied.', 403);
+            ErrorHandler::_renderError('Access Denied - you send the wrong form.', 403);
         }else{
             unset($_POST["nonce"]);
         }
-
+    
         switch ($routeInfo['action']){
             case 'projekt':
                 $this->handleProjekt($routeInfo);
@@ -53,19 +52,20 @@ class RestHandler extends JsonController{
             case 'update-konto':
                 $this->updateKonto($routeInfo);
                 break;
-            case "new-booking":
-                $this->newBooking($routeInfo);
+            case "new-booking-instruct":
+                $this->newBookingInstruct($routeInfo);
+                break;
             case "cancel-booking":
                 $this->cancelBooking($routeInfo);
                 break;
-
+        
             case 'nononce':
             default:
                 ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
                 break;
         }
     }
-
+    
     public function handleProjekt($routeInfo = null){
         $ret = false;
         $msgs = [];
@@ -77,13 +77,13 @@ class RestHandler extends JsonController{
             $auth = $auth::getInstance();
             $logId = DBConnector::getInstance()->logThisAction($_POST);
             DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
-
+    
             if (!isset($_POST["action"]))
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");
-
+    
             if (DBConnector::getInstance()->dbBegin() === false)
                 throw new PDOException("cannot start DB transaction");
-
+    
             switch ($_POST["action"]){
                 case "create":
                     $projektHandler = ProjektHandler::createNewProjekt($_POST);
@@ -150,13 +150,13 @@ class RestHandler extends JsonController{
             }else{
                 $msgs[] = "Logging nicht möglich :(";
             }
-
+    
             if (isset($projektHandler))
                 DBConnector::getInstance()->logAppend($logId, "projekt_id", $projektHandler->getID());
         }
         if (DEV)
             $msgs[] = print_r($_POST, true);
-
+        
         $this->json_result["msgs"] = $msgs;
         $this->json_result["ret"] = ($ret !== false);
         $this->json_result["target"] = $target;
@@ -167,7 +167,7 @@ class RestHandler extends JsonController{
         //$result["_FILES"] = $_FILES;
         $this->print_json_result(true);
     }
-
+    
     /**
      * handle auslagen posts
      *
@@ -175,13 +175,14 @@ class RestHandler extends JsonController{
      */
     public function handleAuslagen($routeInfo = null){
         $func = '';
-        if (isset($routeInfo['mfunction'])){
-        }else if (isset($_POST['action'])){
-            $routeInfo['mfunction'] = $_POST['action'];
-        }else{
-            ErrorHandler::_renderError('Unknown Action.', 404);
+        if (!isset($routeInfo['mfunction'])){
+            if (isset($_POST['action'])){
+                $routeInfo['mfunction'] = $_POST['action'];
+            }else{
+                ErrorHandler::_renderError('No Action and mfunction.', 404);
+            }
         }
-
+    
         //validate
         $vali = new Validator();
         $validator_map = [];
@@ -342,6 +343,24 @@ class RestHandler extends JsonController{
                     ],
                 ];
                 break;
+            case "zahlungsanweisung":
+                $auslagen_states = [];
+                $validator_map = [
+                    'projekt-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Projekt ID.'
+                    ],
+                    'auslagen-id' => ['integer',
+                        'min' => '1',
+                        'error' => 'Ungültige Auslagen ID.'
+                    ],
+                    'd' => ['integer', 'optional',
+                        'min' => '0',
+                        'max' => '1',
+                        'error' => 'Ungültige Parameter.'
+                    ],
+                ];
+                break;
             default:
                 ErrorHandler::_renderError('Unknown Action.', 404);
                 break;
@@ -357,6 +376,7 @@ class RestHandler extends JsonController{
                 'field' => $vali->getLastMapKey(),
             ]);
         }
+    
         $validated = $vali->getFiltered();
 
         if ($routeInfo['mfunction'] == 'updatecreate'){
@@ -398,7 +418,7 @@ class RestHandler extends JsonController{
                         }
                     }
                 }
-
+    
                 //check file non empty
                 $fileIdx = 'beleg_' . $kb;
                 if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0){
@@ -438,7 +458,7 @@ class RestHandler extends JsonController{
             ]);
         }
     }
-
+    
     private function handleChat($routeInfo){
         $db = DBConnector::getInstance();
         $chat = new ChatHandler(null, null);
@@ -647,20 +667,20 @@ class RestHandler extends JsonController{
         $chat->answerError();
         die();
     }
-
+    
     private function updateKonto($routeInfo){
         $auth = (AUTH_HANDLER);
         /* @var $auth AuthHandler */
         $auth = $auth::getInstance();
         $auth->requireGroup(HIBISCUSGROUP);
-
+        
         $ret = true;
         if (!DBConnector::getInstance()->dbBegin()){
             ErrorHandler::_errorExit("Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!");
         }
-
+        
         //$newFormAnfangsbestand = HibiscusXMLRPCConnector::getInstance()->fetchFromHibiscusAnfangsbestand();
-
+        
         $allZahlungen = HibiscusXMLRPCConnector::getInstance()->fetchFromHibiscus();
         if ($allZahlungen === false){
             JsonController::print_json([
@@ -675,7 +695,7 @@ class RestHandler extends JsonController{
         if (is_array($lastId)){
             $lastId = $lastId[0]["id"];
         }
-
+        
         $inserted = 0;
         $msg = [];
         foreach ($allZahlungen as $zahlung){
@@ -701,7 +721,7 @@ class RestHandler extends JsonController{
             //$msgs[]= print_r($zahlung,true);
             DBConnector::getInstance()->dbInsert("konto", $fields);
             $inserted++;
-
+    
             $matches = [];
             if (preg_match("/IP-[0-9]{2,4}-[0-9]+-A[0-9]+/", $zahlung["zweck"], $matches)){
                 $beleg_sum = 0;
@@ -736,9 +756,9 @@ class RestHandler extends JsonController{
                 }
             }
         }
-
+        
         $ret = DBConnector::getInstance()->dbCommit();
-
+        
         if (!$ret){
             DBConnector::getInstance()->dbRollBack();
         }else{
@@ -762,7 +782,7 @@ class RestHandler extends JsonController{
                         'subtype' => 'server-warning',
                     ]);
                 }
-
+    
             }else{
                 JsonController::print_json([
                     'success' => false,
@@ -774,28 +794,25 @@ class RestHandler extends JsonController{
             }
         }
     }
-
-    private function newBooking($routeInfo){
-
+    
+    private function newBookingInstruct($routeInfo){
         if (!isset($_POST["zahlung"])
             || !is_array($_POST["zahlung"])
             || !isset($_POST["beleg"])
             || !is_array($_POST["beleg"])
-            || !isset($_POST["booking-text"])
-            || empty($_POST["booking-text"])
         ){
             $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
         }
-
         $zahlung = $_POST["zahlung"];
         $beleg = $_POST["beleg"];
-
-        if ((count($zahlung) === 1 && count($beleg) >= 1)
-            || (count($beleg) === 1 && count($zahlung) >= 1)
+        
+        if ((count($zahlung) > 1 && count($beleg) > 1)
+            || count($beleg) === 0
+            || count($zahlung) === 0
         ){
             $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
         }
-
+        
         if (isset($errorMsg)){
             JsonController::print_json([
                 'success' => false,
@@ -803,27 +820,47 @@ class RestHandler extends JsonController{
                 'msg' => $errorMsg,
                 'type' => 'modal',
                 'subtype' => 'server-error',
-                'reload' => 2000,
-                'headline' => 'Unfolständige Datenübertragung',
-                //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
+                'headline' => 'Fehler bei der Datenübertragung',
             ]);
         }
-
-
-        JsonController::print_json([
-            'success' => true,
-            'status' => '200',
-            'msg' => "Buchung wurde gespeichert",
-            'type' => 'modal',
-            'subtype' => 'server-success',
-            //'reload' => 2000,
-            'headline' => 'Erfolgreich gespeichert',
-            //'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
-        ]);
+        DBConnector::getInstance()->dbBegin();
+        $nextId = DBConnector::getInstance()->dbFetchAll("booking_instruction", [DBConnector::FETCH_NUMERIC], [["id", DBConnector::GROUP_MAX]]);
+        if (is_array($nextId) && !empty($nextId)){
+            $nextId = $nextId[0][0] + 1;
+        }else{
+            $nextId = 1;
+        }
+        foreach ($zahlung as $zahl){
+            foreach ($beleg as $bel){
+                DBConnector::getInstance()->dbInsert("booking_instruction", ["id" => $nextId, "zahlung" => $zahl, "beleg" => $bel]);
+            }
+        }
+        if (DBConnector::getInstance()->dbCommit()){
+            JsonController::print_json([
+                'success' => true,
+                'status' => '200',
+                'msg' => "Buchung wurde angewiesen",
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'reload' => 1000,
+                'headline' => 'Erfolgreich gespeichert',
+            ]);
+        }else{
+            DBConnector::getInstance()->dbRollBack();
+            JsonController::print_json([
+                'success' => false,
+                'status' => '500',
+                'msg' => "Fehler bei der Übertragung zur Datenbank",
+                'type' => 'modal',
+                'subtype' => 'server-error',
+                'headline' => 'Fehler',
+            ]);
+        }
+        
     }
-
+    
     private function cancelBooking($routeInfo){
-
+        
         (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
         if (!isset($_REQUEST["booking_id"])){
             $msgs[] = "Daten wurden nicht korrekt übermittelt";
@@ -835,7 +872,7 @@ class RestHandler extends JsonController{
         if ($ret !== false && !empty($ret)){
             $ret = $ret[0];
             if ($ret["canceled"] !== 0){
-
+    
                 DBConnector::getInstance()->dbBegin();
                 $user_id = DBConnector::getInstance()->getUser()["id"];
                 DBConnector::getInstance()->dbInsert("booking",

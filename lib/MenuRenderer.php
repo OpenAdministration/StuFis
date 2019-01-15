@@ -42,7 +42,15 @@ class MenuRenderer extends Renderer{
                 $gremien[] = "";
                 HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
                 //print_r($this->pathinfo["action"]);
-                $this->renderProjekte($gremien);
+            $this->renderProjekte($gremien, $this->pathinfo["action"]);
+            break;
+            case "search":
+                $this->setOverviewTabs($this->pathinfo["action"]);
+                $this->renderSearch();
+                break;
+            case "mystuff":
+                $this->setOverviewTabs($this->pathinfo["action"]);
+                $this->renderAlert("Hinweis", "Dieser Bereich befindet sich noch im Aufbau", "info");
                 break;
             case "mykonto":
                 $this->renderMyProfile();
@@ -59,26 +67,26 @@ class MenuRenderer extends Renderer{
             case "exportBank":
                 $this->renderExportBank();
                 break;
-            case "booking":
-                (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
-                $this->renderBooking();
-                //TODO: FIXME!;
+            case "instruct":
+                $this->renderBooking("instruct");
                 break;
-            case "check-booking":
-                (AUTH_HANDLER)::getInstance()->requireGroup("ref-finanzen-kv");
-                $this->renderBookingCheck();
+            case "booking-text":
+                $this->setBookingTabs("text", $this->pathinfo["hhp-id"]);
+                $this->renderBookingText();
                 break;
-            case "konto":
+            case "kasse":
+            case "bank":
+            case "sparbuch":
                 (AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
-                $this->renderKonto();
+                $this->renderKonto($this->pathinfo["action"]);
                 break;
             case "save-booking":
                 (AUTH_HANDLER)::getInstance()->requireGroup("ref-finanzen-kv");
                 $this->saveBooking();
                 break;
             //fall through
-            case "booking-history":
-                $this->renderBookingHistory();
+            case "history":
+                $this->renderBookingHistory("history");
                 break;
             default:
                 ErrorHandler::_errorExit("{$this->pathinfo['action']} kann nicht interpretiert werden");
@@ -86,7 +94,7 @@ class MenuRenderer extends Renderer{
         }
     }
     
-    public function renderProjekte($gremien){
+    public function renderProjekte($gremien, $active){
         //$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
         //$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
         if (empty($gremien)){
@@ -146,7 +154,9 @@ class MenuRenderer extends Renderer{
         }*/
         
         //var_dump(end(end($projekte)));
+        $this->setOverviewTabs($active);
         ?>
+
         <div class="panel-group" id="accordion">
             <?php $i = 0;
             if (isset($projekte) && !empty($projekte) && $projekte){
@@ -246,6 +256,28 @@ class MenuRenderer extends Renderer{
             <?php } ?>
         </div>
         
+        
+        <?php
+    }
+    
+    public function setOverviewTabs($active){
+        $linkbase = URIBASE . "menu/";
+        $tabs = [
+            "mygremium" => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
+            "allgremium" => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
+            "mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
+            "search" => "<i class='fa fa-fw fa-search'></i> Suche",
+        ];
+        HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
+    }
+    
+    private function renderSearch(){
+        $this->renderAlert("Hinweis", "Dieser Bereich befindet sich noch im Aufbau", "info");
+        ?>
+        <div class="input-group">
+            <div class="input-group-addon"><i class="fa fa-fw fa-search"></i></div>
+            <input class="form-control" placeholder="Suche ...">
+        </div>
         <?php
     }
     
@@ -261,12 +293,29 @@ class MenuRenderer extends Renderer{
 
         <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"]; ?>" method="POST"
               enctype="multipart/form-data" class="ajax">
-            <input type="hidden" name="action" value="mykonto.update"/>
-            <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>"/>
-            <?php //renderForm($form);
-            ?>
-            <a href="javascript:void(false);" class='btn btn-success submit-form validate pull-right' data-name="iban"
-               data-value="">Speichern</a>
+            <?php $this->renderAlert("Hinweis", "Dieses Formular funktioniert noch nicht :(", "info") ?>
+            <div class="panel panel-default">
+                <div class="panel-heading">Meine Daten aktualisieren</div>
+                <div class="panel-body">
+                    <input type="hidden" name="action" value="mykonto.update"/>
+                    <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"]; ?>"/>
+                    <div class="form-group">
+                        <label for="my-iban">Meine IBAN</label>
+                        <input class="form-control" type="text" name="my-iban">
+                    </div>
+                    <div class="form-group">
+                        <label for="my-adress">Meine Adresse</label>
+                        <textarea class="form-control" type="text" name="my-adress"
+                                  placeholder="Straße Nr&#10;98693 Ilmenau"></textarea>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <a href="javascript:void(false);" class='btn btn-success submit-form validate pull-right'
+                       data-name="iban"
+                       data-value="" disabled="">Speichern</a>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
         </form>
         
         <?php
@@ -476,13 +525,13 @@ class MenuRenderer extends Renderer{
         }
     }
     
-    private function renderBooking(){
+    private function renderBooking($active){
         
         list($hhps, $hhp_id) = $this->renderHHPSelector();
-        
+        $this->setBookingTabs($active, $hhp_id);
         $startDate = $hhps[$hhp_id]["von"];
         $endDate = $hhps[$hhp_id]["bis"];
-    
+        
         $bookedZahlungen = DBConnector::getInstance()->dbFetchAll("booking", [DBConnector::FETCH_ONLY_FIRST_COLUMN], ["zahlung_id"], ["canceled" => 0]);
         if (empty($bookedZahlungen)){
             //only remove nothing - if not set there would be an sql error
@@ -493,7 +542,7 @@ class MenuRenderer extends Renderer{
         }else{
             $alZahlung = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], [], ["date" => ["BETWEEN", [$startDate, $endDate]], "id" => ["NOT IN", $bookedZahlungen]], [], ["value" => true]);
         }
-    
+        
         $this->renderKontoRefreshButton();
         
         $alGrund = DBConnector::getInstance()->dbFetchAll(
@@ -517,7 +566,7 @@ class MenuRenderer extends Renderer{
         array_walk($alGrund, function(&$grund){
             $grund["value"] = floatval($grund["einnahmen"]) - floatval($grund["ausgaben"]);
         });
-    
+        
         //sort with reverse order
         usort($alGrund, function($e1, $e2){
             if ($e1["value"] === $e2["value"]){
@@ -529,11 +578,7 @@ class MenuRenderer extends Renderer{
             }
         });
         ?>
-
-
-        <a href="<?= URIBASE ?>menu/booking-history/" class="btn btn-primary"><i class="fa fa-fw fa-list "></i>
-            Buchungsübersicht</a>
-    
+        
         <?php //var_dump($alZahlung[0]);
         ?>
         <table class="table table-striped">
@@ -564,26 +609,37 @@ class MenuRenderer extends Renderer{
     
                 while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
                     echo "<input type='checkbox' class='booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]["id"]}'>";
-                    $caption = "Z{$alZahlung[$idxZahlung]['id']} - ";
-                    $title = "VALUTA: " . $alZahlung[$idxZahlung]["valuta"] . PHP_EOL .
-                        "IBAN: " . $alZahlung[$idxZahlung]["empf_iban"] . PHP_EOL .
-                        "BIC: " . $alZahlung[$idxZahlung]["empf_bic"];
+    
+    
                     //print_r($alZahlung[$idxZahlung]);
-                    switch ($alZahlung[$idxZahlung]["type"]){
-                        case "FOLGELASTSCHRIFT":
-                            $caption .= "LASTSCHRIFT an ";
+                    switch ($alZahlung[$idxZahlung]['konto_id']){
+                        case 1: //girokonto
+                            $title = "VALUTA: " . $alZahlung[$idxZahlung]["valuta"] . PHP_EOL .
+                                "IBAN: " . $alZahlung[$idxZahlung]["empf_iban"] . PHP_EOL .
+                                "BIC: " . $alZahlung[$idxZahlung]["empf_bic"];
+                            $caption = "Z{$alZahlung[$idxZahlung]['id']} - ";
+                            switch ($alZahlung[$idxZahlung]["type"]){
+                                case "FOLGELASTSCHRIFT":
+                                    $caption .= "LASTSCHRIFT an ";
+                                    break;
+                                case "ONLINE-UEBERWEISUNG":
+                                    $caption .= "ÜBERWEISUNG an ";
+                                    break;
+                                case "GUTSCHRIFT":
+                                    $caption .= "GUTSCHRIFT von ";
+                                    break;
+                                default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
+                                    $caption .= $alZahlung[$idxZahlung]["type"] . " an ";
+                                    break;
+                            }
+                            $caption .= $alZahlung[$idxZahlung]["empf_name"] . " - " . explode("DATUM", $alZahlung[$idxZahlung]["zweck"])[0];
                             break;
-                        case "ONLINE-UEBERWEISUNG":
-                            $caption .= "ÜBERWEISUNG an ";
-                            break;
-                        case "GUTSCHRIFT":
-                            $caption .= "GUTSCHRIFT von ";
-                            break;
-                        default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
-                            $caption .= $alZahlung[$idxZahlung]["type"] . " an ";
+                        case 2: //kasse
+                            $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]["type"]} - {$alZahlung[$idxZahlung]["zweck"]}";
+                            $title = "BELEG: {$alZahlung[$idxZahlung]["comment"]}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]["date"]}";
                             break;
                     }
-                    $caption .= $alZahlung[$idxZahlung]["empf_name"] . " - " . explode("DATUM", $alZahlung[$idxZahlung]["zweck"])[0];
+                    
                     $url = str_replace("//", "/", URIBASE . "/zahlung/" . $alZahlung[$idxZahlung]["id"]);
                     echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars($title) . "'>" . htmlspecialchars($caption) . "</a>";
                     $idxZahlung++;
@@ -607,7 +663,9 @@ class MenuRenderer extends Renderer{
 
             ?>
         </table>
-        <form action="<?= URIBASE ?>menu/check-booking" method="GET" role="form" class="form-inline ajax">
+        <!--<form id="instruct-booking" role="form" action="<?= URIBASE ?>rest/booking/cancel" method="POST"
+                                      enctype="multipart/form-data" class="ajax">-->
+        <form action="<?= URIBASE ?>rest/booking" method="POST" role="form" class="ajax-form">
             <div class="booking__panel-form col-xs-2">
                 <h4>ausgewählte Zahlungen</h4>
                 <div class="booking__zahlung">
@@ -635,10 +693,12 @@ class MenuRenderer extends Renderer{
                     <label>Buchungstext</label>
                     <textarea name="booking-text" rows="3" class="form-control"></textarea>
                 </div>-->
-                <button id="booking__check-button" class="btn btn-primary">Buchung durchführen</button>
+                <input type="hidden" name="action" value="instruct-booking">
+                <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
+                <button type="submit" id="booking__check-button" class="btn btn-primary">Buchung anweisen</button>
             </div>
         </form>
-    
+        
         <?php
     }
     
@@ -677,6 +737,16 @@ class MenuRenderer extends Renderer{
         return [$hhps, $this->pathinfo["hhp-id"]];
     }
     
+    public function setBookingTabs($active, $active_hhp_id){
+        $linkbase = URIBASE . "booking/$active_hhp_id/";
+        $tabs = [
+            "instruct" => "<i class='fa fa-fw fa-legal'></i> Anweisen",
+            "text" => "<i class='fa fa-fw fa-file-text-o'></i> Durchführen",
+            "history" => "<i class='fa fa-fw fa-history'></i> Historie",
+        ];
+        HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
+    }
+    
     private function renderKontoRefreshButton(){ ?>
         <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form" class="form-inline ajax d-inline-block">
             <button type="submit" name="absenden" class="btn btn-primary">
@@ -688,28 +758,25 @@ class MenuRenderer extends Renderer{
         <?php
     }
     
-    private function renderBookingCheck(){
-        if (!isset($_REQUEST["zahlung"])
-            || !is_array($_REQUEST["zahlung"])
-            || !isset($_REQUEST["beleg"])
-            || !is_array($_REQUEST["beleg"])
-        ){
-            $errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
-        }
+    private function renderBookingText(){
         
-        $zahlungen = $_REQUEST["zahlung"];
-        $belege = $_REQUEST["beleg"];
-        if ((count($zahlungen) > 1 && count($belege) > 1)
-            || count($belege) < 1
-            || count($zahlungen) < 1
-            || count($zahlungen) > 1 // FIXME: should be allowed later
-        ){
-            $errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
-        }
-        
-        if (isset($errorMsg)){
-            ErrorHandler::_errorExit($errorMsg);
-        }else{
+        $allInstructions = DBConnector::getInstance()->dbFetchAll(
+            "booking_instruction",
+            [DBConnector::FETCH_GROUPED],
+            ["id", "zahlung", "beleg"],
+            [],
+            [],
+            ["id" => true]
+        );
+        $result = [];
+        foreach ($allInstructions as $vorgang_id => $instruction){
+            $zahlungen = [];
+            $belege = [];
+            foreach ($instruction as $row){
+                $zahlungen[] = $row["zahlung"];
+                $belege[] = $row["beleg"];
+            }
+            
             //titel_id, kostenstelle, zahlung_id, beleg_id, user_id, comment, value
             $zahlungenDB = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], [], ["id" => ["IN", $zahlungen]]);
             $belegeDB = DBConnector::getInstance()->dbFetchAll(
@@ -779,55 +846,57 @@ class MenuRenderer extends Renderer{
                     $res[] = array_merge($rowZahlung, $rowBeleg);
                 }
             }
-            if (abs($sum_zahlung - $sum_beleg) >= 0.01){
+            
+            /*if (abs($sum_zahlung - $sum_beleg) >= 0.01){
                 ErrorHandler::_errorExit("Summe Zahlung ($sum_zahlung) und Summe Beleg ($sum_beleg) passen nicht zusammen!");
-            }
-            $header = [
-                "Zahlung", "Zahlung-Betrag", "Auslage", "Beleg-Posten", "Titel Nr", "Titel", "Posten-Betrag", "Buchungstext",
-            ];
-            $this->renderHeadline("Buchung bestätigen");
+            }*/
+            $result["Angewiesender Vorgang " . $vorgang_id] = $res;
             ?>
-            <form method="POST" action="./save-booking">
-                <?php
-                //var_dump($res);
-                $obj = $this;
-                $this->renderTable($header, [$res], [], [
-                    function($zahlung_id) use ($obj){
-                        return $obj->defaultEscapeFunction($zahlung_id);
-                    },
-                    [$this, "moneyEscapeFunction"],
-                    [$this, "auslagenLinkEscapeFunction"],
-                    null,
-                    function($titelnr){
-                        return str_replace(" ", "&nbsp;", trim($titelnr));
-                    },
-                    null,
-                    [$this, "moneyEscapeFunction"],
-                    function($posten_id, $p_name, $a_name){
-                        if (empty($a_name)){
-                            return "<textarea required name='text[$posten_id]' placeholder='$p_name' class='warning-empty form-control'></textarea>";
-                        }else{
-                            return "<textarea required name='text[$posten_id]' class='warning-empty form-control'>$p_name - $a_name</textarea>";
-                        }
-                    }
-                ]);
-                foreach ($zahlungen as $zahlung){
-                    $this->renderHiddenInput("zahlung[]", $zahlung);
-                }
-                foreach ($belege as $beleg){
-                    $this->renderHiddenInput("beleg[]", $beleg);
-                }
-                ?>
-                <button class="btn btn-primary pull-right" <?= $title_empty ? "disabled title='Ein Titel wurde im Projekt nicht gesetzt. Buchung nicht möglich!'" : "" ?>>
-                    Buchung durchführen
-                </button>
-            </form>
+            
             <?php
         }
-        
+        $header = [
+            "Zahlung", "Zahlung-Betrag", "Auslage", "Beleg-Posten", "Titel Nr", "Titel", "Posten-Betrag", "Buchungstext",
+        ];
+        ?>
+        <form method="POST" action="<?= URIBASE ?>rest/booking/save" class="ajax-form">
+            <?php
+            //var_dump($res);
+            $obj = $this;
+            $title_empty = false;
+            $this->renderTable($header, $result, [], [
+                function($zahlung_id) use ($obj){
+                    return $obj->defaultEscapeFunction($zahlung_id);
+                },
+                [$this, "moneyEscapeFunction"],
+                [$this, "auslagenLinkEscapeFunction"],
+                null,
+                function($titelnr) use (&$title_empty){
+                    if (trim($titelnr) === ""){
+                        $title_empty = true;
+                    }
+                    return str_replace(" ", "&nbsp;", trim($titelnr));
+                },
+                null,
+                [$this, "moneyEscapeFunction"],
+                function($posten_id, $p_name, $a_name){
+                    if (empty($a_name)){
+                        return "<textarea required name='text[$posten_id]' placeholder='$p_name' class='warning-empty form-control'></textarea>";
+                    }else{
+                        return "<textarea required name='text[$posten_id]' class='warning-empty has-feedback form-control'>$p_name - $a_name</textarea>";
+                    }
+                }
+            ]);
+            
+            ?>
+            <button class="btn btn-primary pull-right" <?= $title_empty ? "disabled title='Ein Titel wurde im Projekt nicht gesetzt. Buchung nicht möglich!'" : "" ?>>
+                Buchung durchführen
+            </button>
+        </form>
+        <?php
     }
     
-    public function renderKonto(){
+    public function renderKonto($activeTab){
         
         list($hhps, $selected_id) = $this->renderHHPSelector();
         $startDate = $hhps[$selected_id]["von"];
@@ -851,39 +920,109 @@ class MenuRenderer extends Renderer{
                 ["id" => false]
             );
         }
-        $this->renderKontoRefreshButton();
         
-        ?>
-
-
-        <table class="table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Datum</th>
-                <th>Empfänger</th>
-                <th class="visible-md visible-lg">Verwendungszweck</th>
-                <th class="visible-md visible-lg">IBAN</th>
-                <th class="money">Betrag</th>
-                <th class="money">Saldo</th>
-            </tr>
-            </thead>
-            <tbody>
-            <?php foreach ($alZahlung as $zahlung){ ?>
-                <tr title="<?= htmlspecialchars($zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"]
-                    . PHP_EOL . $zahlung["zweck"]) ?>">
-                    <td><?= htmlspecialchars($zahlung["id"]) ?></td>
-                    <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
-                    <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
-                    <td class="visible-md visible-lg"><?= $this->makeProjektsClickable(explode("DATUM", $zahlung["zweck"])[0]) ?></td>
-                    <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
-                    <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?></td>
-                    <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
-                </tr>
-            <?php } ?>
-            </tbody>
-        </table>
-        <?php
+        $this->setKontoTabs($activeTab, $selected_id);
+        
+        switch ($activeTab){
+            case "bank":
+                $this->renderKontoRefreshButton(); ?>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Datum</th>
+                        <th>Empfänger</th>
+                        <th class="visible-md visible-lg">Verwendungszweck</th>
+                        <th class="visible-md visible-lg">IBAN</th>
+                        <th class="money">Betrag</th>
+                        <th class="money">Saldo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($alZahlung as $zahlung){ ?>
+                        <tr title="<?= htmlspecialchars($zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"]
+                            . PHP_EOL . $zahlung["zweck"]) ?>">
+                            <td><?= htmlspecialchars($zahlung["id"]) ?></td>
+                            <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
+                            <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
+                            <td class="visible-md visible-lg"><?= $this->makeProjektsClickable(explode("DATUM", $zahlung["zweck"])[0]) ?></td>
+                            <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
+                            <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?></td>
+                            <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["saldo"], "money") ?></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+                <?php
+                break;
+            case "kasse":
+                $rows = DBConnector::getInstance()->dbFetchAll("konto", [DBConnector::FETCH_ASSOC], ["*"], ["konto_id" => 2], [], ["id" => true]);
+                ?>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th class="col-xs-2">Lfd</th>
+                        <th>Datum</th>
+                        <th class="col-xs-3">Beschreibung</th>
+                        <th class="col-xs-2">Betrag</th>
+                        <th class="col-xs-2">neues Saldo</th>
+                        <th class="col-xs-2">Erstattung / Aktion</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php $lastId = null;
+                    foreach ($rows as $row){
+                        $lastId = $row["id"];
+                        echo "<tr>";
+                        echo "<td>{$row["id"]}</td>";
+                        echo "<td>{$row["date"]}</td>";
+                        echo "<td>{$row["type"]} - {$row["zweck"]}</td>";
+                        echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") . "</td>";
+                        echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue($row["saldo"], "money") . "</td>";
+                        echo "<td>FIXME</td>";
+                        echo "</tr>";
+                    } ?>
+                    <form id="new-entry" role="form" action="<?= URIBASE ?>rest/kasse/new" method="POST"
+                          enctype="multipart/form-data" class="ajax">
+                        <tr>
+                            <td><input type="number" class="form-control" name="new-nr"
+                                       value="<?= isset($lastId) ? $lastId + 1 : 1 ?>" min="1">
+                            </td>
+                            <td><input type="date" class="form-control" name="new-date"
+                                       value="<?= date("Y-m-d") ?>"></td>
+                            <td><input type="text" class="form-control" name="new-desc"
+                                       placeholder="Text aus Kassenbuch"></td>
+                            <td><input type="number" class="form-control" name="new-money" value="0" step="0.01">
+                            </td>
+                            <td><input type="number" class="form-control" name="new-saldo" value="0" step="0.01">
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-success no-validate">Speichern</button>
+                            </td>
+                        </tr>
+                    </form>
+                    </tbody>
+                </table>
+                
+                <?php
+                break;
+            case "sparbuch":
+                $this->renderAlert("Hinweis", "Diese Funktion ist noch nicht implementiert.", "info");
+                break;
+            default:
+                ErrorHandler::_errorExit("{$this->pathinfo['action']} kann nicht interpretiert werden - something went horrible wrong!");
+                break;
+        }
+    }
+    
+    public function setKontoTabs($active, $selected_hhp_id){
+        $linkbase = URIBASE . "konto/$selected_hhp_id/";
+        $tabs = [
+            "bank" => "<i class='fa fa-fw fa-credit-card'></i> Bank",
+            "kasse" => "<i class='fa fa-fw fa-money'></i> Kasse",
+            "sparbuch" => "<i class='fa fa-fw fa-bank'></i> Sparbuch",
+        ];
+        HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
     
     private function makeProjektsClickable($text){
@@ -1016,19 +1155,16 @@ class MenuRenderer extends Renderer{
         $diff = abs($zahlung_sum - $belege_sum);
         if ($diff >= 0.01){
             DBConnector::getInstance()->dbRollBack();
-    
             ErrorHandler::_errorExit("Falsche Daten wurden übvertragen: Differenz der Posten = $diff (" . var_export($diff >= 0.01, true) . ")");
-            
         }else{
             DBConnector::getInstance()->dbCommit();
             header('Location: ./booking-history');
         }
-        
     }
     
-    public function renderBookingHistory(){
+    public function renderBookingHistory($active){
         list($hhps, $hhp_id) = $this->renderHHPSelector();
-        
+        $this->setBookingTabs($active, $hhp_id);
         $ret = DBConnector::getInstance()->dbFetchAll("booking",
             [DBConnector::FETCH_ASSOC],
             ["booking.id", "titel_nr", "zahlung_id", "booking.value", "canceled", "beleg_posten.short", "auslagen_id", "projekt_id", "timestamp", "username", "fullname", "kostenstelle", "comment"],
@@ -1043,8 +1179,8 @@ class MenuRenderer extends Renderer{
             ],
             ["timestamp" => true, "id" => true]
         );
+        
         if (!empty($ret)){
-    
             //var_dump(reset($ret));
             $this->renderHeadline("Buchungshistorie");
             ?>
@@ -1052,8 +1188,8 @@ class MenuRenderer extends Renderer{
                 <thead>
                 <tr>
                     <th>B-Nr</th>
-                    <th class="col - xs - 1">Betrag (EUR)</th>
-                    <th class="col - xs - 1">Titel</th>
+                    <th class="col-xs-1">Betrag (EUR)</th>
+                    <th class="col-xs-1">Titel</th>
                     <th>Beleg</th>
                     <th>Buchungs-Datum</th>
                     <th>Zahlung</th>
@@ -1087,7 +1223,7 @@ class MenuRenderer extends Renderer{
                         <td><?= generateLinkFromID($row['zahlung_id'], "", TextStyle::BLACK) ?></td>
                         <?php if ($row["canceled"] == 0){ ?>
                             <td>
-                                <form id="cancel" role="form" action="<?= URIBASE ?>/rest/booking/cancel" method="POST"
+                                <form id="cancel" role="form" action="<?= URIBASE ?>rest/booking/cancel" method="POST"
                                       enctype="multipart/form-data" class="ajax">
                                     <input type="hidden" name="action" value="cancel-booking"/>
                                     <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce']; ?>"/>

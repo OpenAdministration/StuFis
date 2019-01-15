@@ -9,6 +9,7 @@
 class HTMLPageRenderer{
     private static $profiling_timing, $profiling_names, $profiling_sources;
     private static $errorPage;
+    private static $tabsConfig;
     private $bodycontent;
     private $titel;
     private $routeInfo;
@@ -31,6 +32,15 @@ class HTMLPageRenderer{
         $bt = debug_backtrace();
         self::$profiling_sources[] = array_shift($bt);
         self::$profiling_names[] = $name;
+    }
+    
+    /**
+     * @param $tabs      array keys are tabnames, values are htmlcode inside tab header
+     * @param $linkbase  string linkbase - where klicked link will go - followed by tabnames
+     * @param $activeTab string
+     */
+    static public function setTabs($tabs, $linkbase, $activeTab){
+        self::$tabsConfig = ["tabs" => $tabs, "linkbase" => $linkbase, "active" => $activeTab];
     }
     
     static public function dieWithErrorPage($param){
@@ -56,7 +66,13 @@ class HTMLPageRenderer{
         if (isset(self::$errorPage)){
             echo self::$errorPage;
         }else{
+            if (!empty(self::$tabsConfig)){
+                $this->renderPanelTabs(self::$tabsConfig["tabs"], self::$tabsConfig["linkbase"], self::$tabsConfig["active"]);
+            }
             echo $this->bodycontent;
+            if (!empty(self::$tabsConfig)){
+                echo "</div></div>";
+            }
         }
         echo "</div>";
         $this->renderModals();
@@ -165,7 +181,8 @@ class HTMLPageRenderer{
             <div class="container">
                 <div class="navbar-header">
                     <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
-                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>"><span class="logo-bg"></span> Finanzformulare
+                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>"><span
+                                class="logo-bg"></span> Finanzformulare
                         <?php
                         if (DEV)
                             echo " TESTSYSTEM";
@@ -173,17 +190,21 @@ class HTMLPageRenderer{
                     </a>
                 </div>
                 <ul class="nav navbar-nav navbar-right">
-                	<li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>"><i class="fa fa-fw fa-database"></i> Datenschutz</a>
+                    <li><a target="_blank"
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>"><i
+                                    class="fa fa-fw fa-database"></i> Datenschutz</a>
                     </li>
                     <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>"><i class="fa fa-fw fa-info"></i> Impressum</a>
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>"><i
+                                    class="fa fa-fw fa-info"></i> Impressum</a>
                     </li>
                     <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>"><i class="fa fa-fw fa-question"></i> Hilfe</a>
+                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>"><i
+                                    class="fa fa-fw fa-question"></i> Hilfe</a>
                     </li>
                     <li>
-                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>"><i class="fa fa-fw fa-power-off"></i> Logout</a>
+                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>"><i
+                                    class="fa fa-fw fa-power-off"></i> Logout</a>
                     </li>
                 </ul>
             </div>
@@ -199,11 +220,11 @@ class HTMLPageRenderer{
         }
         $navButtons = [
             [
-                "title" => "Meine Gremien",
+                "title" => "Übersicht",
                 "show" => true,
                 "fa-icon" => "fa-home",
                 "target" => URIBASE . "menu/mygremium",
-                "tabname" => "mygremium",
+                "tabname" => "overview",
             ],
             [
                 "title" => "Benutzerkonto",
@@ -230,14 +251,14 @@ class HTMLPageRenderer{
                 "title" => "Buchungen",
                 "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-book",
-                "target" => URIBASE . "menu/booking/",
+                "target" => URIBASE . "booking",
                 "tabname" => "booking",
             ],
             [
                 "title" => "Konto",
                 "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-bar-chart",
-                "target" => URIBASE . "menu/konto/",
+                "target" => URIBASE . "konto/",
                 "tabname" => "konto",
             ],
             [
@@ -246,13 +267,6 @@ class HTMLPageRenderer{
                 "fa-icon" => "fa-users",
                 "target" => URIBASE . "menu/stura",
                 "tabname" => "stura",
-            ],
-            [
-                "title" => "Alle Gremien",
-                "show" => true,
-                "fa-icon" => "fa-globe",
-                "target" => URIBASE . "menu/allgremium",
-                "tabname" => "allgremium",
             ],
             [
                 "title" => "Haushaltspläne",
@@ -274,6 +288,14 @@ class HTMLPageRenderer{
                     <?php if ((AUTH_HANDLER)::getInstance()->isAdmin()){ ?>
                         <div class="profile-usertitle-job">
                             Admin
+                        </div>
+                    <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")){ ?>
+                        <div class="profile-usertitle-job">
+                            Haushaltsverantwortlich
+                        </div>
+                    <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv")){ ?>
+                        <div class="profile-usertitle-job">
+                            Kassenverantwortlich
                         </div>
                     <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){ ?>
                         <div class="profile-usertitle-job">
@@ -315,6 +337,21 @@ class HTMLPageRenderer{
         </div>
         <?php
     }
+
+private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
+<div class="panel panel-default">
+    <div class="panel-heading panel-heading-with-tabs">
+        <ul class="nav nav-tabs">
+            <?php
+            foreach ($tabs as $link => $fullname){
+                echo "<li class='" . (($link === $activeTab) ? "active" : "") . "'><a href='$linkbase$link'>$fullname</a></li>";
+            }
+            ?>
+        </ul>
+    </div>
+    <div class="panel-body">
+    <?php
+}
     
     private function renderModals(){
     
@@ -372,7 +409,7 @@ class HTMLPageRenderer{
             null,
             'success'
         );
-         $this->buildModal(
+        $this->buildModal(
             "server-warning",
             "<div class='default-head'>Warnung</div><div class='js-head'></div>",
             "<div class='default-content'><div class='msg'></div></div><div class='js-content'></div>",
@@ -491,6 +528,7 @@ class HTMLPageRenderer{
     public function appendToBody($htmlcontent){
         $this->bodycontent .= $htmlcontent;
     }
+    
     
 }
 

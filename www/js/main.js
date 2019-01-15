@@ -1623,7 +1623,7 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
             setTimeout(function () {
                 window.location.replace(window.location);
             }, data.reload);
-        } else if ((typeof(data.reload) == 'boolean' && data.reloa) || (typeof(data.reload) != 'boolean' && typeof(data.reload) != 'number')) {
+        } else if ((typeof (data.reload) == 'boolean' && data.reload) || (typeof (data.reload) != 'boolean' && typeof (data.reload) != 'number')) {
             setTimeout(function () {
                 window.location.replace(window.location);
             }, 3000);

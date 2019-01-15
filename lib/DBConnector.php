@@ -69,6 +69,12 @@ class DBConnector extends Singleton{
             "value" => "FLOAT NOT NULL",
             "canceled" => "INT NOT NULL DEFAULT 0",];
     
+        $scheme["booking_instruction"] = [
+            "id" => "INT NOT NULL",
+            "zahlung" => "INT NOT NULL",
+            "beleg" => "INT NOT NULL"
+        ];
+        
         $scheme["user"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
             "fullname" => "varchar(255) NOT NULL",

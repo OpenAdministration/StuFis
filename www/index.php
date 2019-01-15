@@ -7,7 +7,6 @@
  */
 //auth ----------------------------------
 include "../lib/inc.all.php";
-
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
