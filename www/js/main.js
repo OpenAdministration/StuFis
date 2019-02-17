@@ -21,26 +21,6 @@ $(document).ready(function () {
 });
 
 $(document).ready(function () {
-    // add a hash to the URL when the user clicks on a tab
-    $('a[data-toggle="tab"]').on('click.tabstate', function (e) {
-        history.pushState(null, null, $(this).attr('href'));
-    });
-
-    // navigate to a tab whn the history changes
-    $(window).on("popstate.tabstate", function (evt) {
-        var activeTab = $('*[href]').filter(function (i, e) {
-            return $(e).attr('href') == location.hash;
-        });
-        if (activeTab.length) {
-            activeTab.tab('show');
-        } else {
-            $('.nav-tabs a:first').tab('show');
-        }
-    });
-    $(window).triggerHandler("popstate");
-});
-
-$(document).ready(function () {
     $("table.checkbox-summing").each(function (i, tbl) {
         var $tbl = $(tbl);
         var $container = $tbl.parent();
@@ -73,7 +53,8 @@ $(document).ready(function () {
     });
 
     $('.selectpicker#hhp-id').on("change", function (evt) {
-        $(this).closest("form").attr("action", $(this).val());
+        var form = $(this).closest("form");
+        form.attr("action", form.attr('data-action').replaceAll("%%", $(this).val()));
     });
 
     //hide special Children in Container in projekt (editable)

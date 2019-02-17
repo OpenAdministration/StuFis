@@ -72,7 +72,9 @@ class DBConnector extends Singleton{
         $scheme["booking_instruction"] = [
             "id" => "INT NOT NULL",
             "zahlung" => "INT NOT NULL",
-            "beleg" => "INT NOT NULL"
+			"beleg" => "INT NOT NULL",
+			"by_user" => "INT NOT NULL",
+			"done" => "BOOLEAN NOT NULL DEFAULT 0",
         ];
         
         $scheme["user"] = [
@@ -120,6 +122,17 @@ class DBConnector extends Singleton{
             "gvcode" => "int NOT NULL",
             "customer_ref" => "varchar(128)"
         ];
+	
+		$scheme["konto_type"] = [
+			"id" => "INT NOT NULL",
+			"name" => "VARCHAR(32) NOT NULL",
+			"short" => "VARCHAR(2) NOT NULL",
+			"sync_from" => "DATE NULL",
+			"sync_until" => "DATE NULL",
+			"iban" => "VARCHAR(32) NULL",
+			"last_sync" => "DATE NULL",
+		];
+        
         $scheme["projekte"] = [
             "id" => "INT NOT NULL AUTO_INCREMENT",
             "creator_id" => "INT NOT NULL",
@@ -435,19 +448,6 @@ class DBConnector extends Singleton{
             }
         }
         
-        //check $where and bring in good shape
-        //check if there are only numeric keys
-        if (count(array_filter(array_keys($where), 'is_string')) > 0){
-            $where = [$where];
-        }
-        foreach ($where as $wheregroup){
-            foreach ($wheregroup as $field => $value){
-                if (!in_array($field, $this->validFields)){
-                    ErrorHandler::_errorExit("Unkown column $field in WHERE");
-                }
-            }
-        }
-        
         
         //check join
         $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
@@ -521,51 +521,9 @@ class DBConnector extends Singleton{
                 ErrorHandler::_errorExit("Unkown column $col in fetchAll", 500);
             }
         }
-        
-        $w = [];
-        $vals = [];
-        $validWhereOperators = ["=", "<", ">", "<>", "<=", ">=", "like", "in", "between", "not in", "regexp", "not regexp", "is", "is not"];
-        foreach ($where as $wheregroup){
-            $wg = [];
-            foreach ($wheregroup as $k => $v){
-                if (strpos($k, ".") !== false){
-                    $k = self::$DB_PREFIX . $k;
-                }
-                if (is_array($v)){
-                    if (!in_array(strtolower($v[0]), $validWhereOperators)){
-                        ErrorHandler::_errorExit("Unknown where operator $v[0]");
-                    }
-                    if (is_array($v[1])){
-                        switch (strtolower($v[0])){
-                            case "not in":
-                            case "in":
-                                $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                                $wg[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
-                                break;
-                            case "between":
-                                $wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
-                                if (count($v[1]) !== 2){
-                                    ErrorHandler::_errorExit("To many values for " . $v[0]);
-                                }
-                                break;
-                            default:
-                                ErrorHandler::_errorExit("unknown identifier " . $v[0]);
-                        }
-                        $vals = array_merge($vals, $v[1]);
-    
-                    }else{
-                        $wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                        $vals[] = $v[1];
-                    }
-                }else{
-                    $wg[] = $this->quoteIdent($k) . " = ?";
-                    $vals[] = $v;
-                }
-            }
-            if (count($wg) > 0){
-                $w[] = implode(" AND ", $wg);
-            }
-        }
+	
+		list($whereSql, $vals) = $this->buildWhereSql($where);
+		
         $j = [];
         //var_dump($joins);
         foreach ($joins as $nr => $join){
@@ -616,9 +574,9 @@ class DBConnector extends Singleton{
         if (count($j) > 0){
             $sql .= " " . implode(" ", $j) . " ";
         }
-        if (count($w) > 0){
-            $sql .= PHP_EOL . "WHERE (" . implode(") OR (", $w) . ")";
-        }
+	
+		$sql .= $whereSql;
+        
         if (count($groupBy) > 0){
             $sql .= PHP_EOL . "GROUP BY " . implode(",", $g);
         }
@@ -665,6 +623,93 @@ class DBConnector extends Singleton{
         
         return $query->fetchAll($PDOfetchType);
     }
+	
+	private function buildWhereSql($where){
+		//check $where and bring in good shape
+		//check if there are only numeric keys
+		if (count(array_filter(array_keys($where), 'is_string')) > 0){
+			$where = [$where];
+		}
+		foreach ($where as $whereGroup){
+			foreach ($whereGroup as $field => $value){
+				if (!in_array($field, $this->validFields)){
+					ErrorHandler::_errorExit("Unkown column $field in WHERE");
+				}
+			}
+		}
+		$w = [];
+		$vals = [];
+		$validWhereOperators = [
+			"=",
+			"<",
+			">",
+			"<>",
+			"<=",
+			">=",
+			"like",
+			"in",
+			"between",
+			"not in",
+			"regexp",
+			"not regexp",
+			"is",
+			"is not"
+		];
+		foreach ($where as $whereGroup){
+			$wg = [];
+			foreach ($whereGroup as $k => $v){
+				if (strpos($k, ".") !== false){
+					$k = self::$DB_PREFIX . $k;
+				}
+				if (is_array($v)){
+					if (!in_array(strtolower($v[0]), $validWhereOperators)){
+						ErrorHandler::_errorExit("Unknown where operator $v[0]");
+					}
+					if (is_array($v[1])){
+						switch (strtolower($v[0])){
+							case "not in":
+							case "in":
+								$tmp = implode(',', array_fill(0, count($v[1]), '?'));
+								$wg[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ")";
+							break;
+							case "between":
+								$wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
+								if (count($v[1]) !== 2){
+									ErrorHandler::_errorExit("To many values for " . $v[0]);
+								}
+							break;
+							default:
+								ErrorHandler::_errorExit("unknown identifier " . $v[0]);
+						}
+						$vals = array_merge($vals, $v[1]);
+						
+					}else{
+						if ((strtolower($v[0]) === 'is' || strtolower($v[0]) === 'is not')
+							&& (is_null($v[1]) || strtolower($v[1]) === "null")){
+							$wg[] = $this->quoteIdent($k) . " " . $v[0] . " null";
+						}else{
+							$wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
+							$vals[] = $v[1];
+						}
+					}
+				}else{
+					$wg[] = $this->quoteIdent($k) . " = ?";
+					$vals[] = $v;
+				}
+			}
+			if (count($wg) > 0){
+				$w[] = implode(" AND ", $wg);
+			}
+		}
+		
+		if (count($w) > 0){
+			$whereSql = PHP_EOL . "WHERE (" . implode(") OR (", $w) . ")";
+		}else{
+			$whereSql = " ";
+		}
+		
+		return [$whereSql, $vals];
+	}
     
     private function quoteIdent($field, $aggregateConst = 0){
         switch ($aggregateConst){
@@ -794,14 +839,13 @@ class DBConnector extends Singleton{
         foreach ($fields as $k => $v){
             $u[] = $this->quoteIdent($k) . " = ?";
         }
-        $c = [];
-        foreach ($filter as $k => $v){
-            $c[] = $this->quoteIdent($k) . " = ?";
-        }
-        $sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . " WHERE " . implode(" AND ", $c);
+	
+		list($whereSql, $val) = $this->buildWhereSql($filter);
+	
+		$sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . $whereSql;
         //print_r($sql);
         $query = $this->pdo->prepare($sql);
-        $values = array_merge(array_values($fields), array_values($filter));
+		$values = array_merge(array_values($fields), $val);
         
         $ret = $query->execute($values) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
         if ($ret === false){
@@ -816,21 +860,15 @@ class DBConnector extends Singleton{
         
         if (!isset($this->scheme[$table]))
             throw new PDOException("Unkown table $table");
-        $filter = array_intersect_key($filter, $this->scheme[$table], array_flip($this->validFields)); # only fetch using id and url
-        
-        if (count($filter) == 0){
-            ErrorHandler::_errorExit("No filter fields given.");
-        }
-        
-        $c = [];
-        foreach ($filter as $k => $v){
-            $c[] = $this->quoteIdent($k) . " = ?";
-        }
-        $sql = "DELETE FROM " . self::$DB_PREFIX . "{$table} WHERE " . implode(" AND ", $c);
+	
+		list($whereSql, $vals) = $this->buildWhereSql($filter);
+	
+	
+		$sql = "DELETE FROM " . self::$DB_PREFIX . $table . $whereSql;
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute(array_values($filter));
+		$ret = $query->execute($vals);
         if ($ret === false)
-            throw new PDOException(print_r($query->errorInfo(), true));;
+			throw new PDOException(print_r($query->errorInfo(), true));
         
         return $query->rowCount();
     }

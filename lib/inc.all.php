@@ -19,6 +19,7 @@ require_once SYSBASE . '/lib/external_libraries/phpmailer/src/Exception.php';
 /* --- */
 require_once SYSBASE . '/lib/class.MailHandler.php';
 require_once SYSBASE . '/lib/svg/class.SvgDiagram.php';
+require_once SYSBASE . '/lib/class.EscFunc.php';
 require_once SYSBASE . '/lib/Renderer.php';
 require_once SYSBASE . '/lib/HibiscusXMLRPCConnector.php';
 require_once SYSBASE . '/lib/class.AuthHandler.php';

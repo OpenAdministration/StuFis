@@ -392,7 +392,6 @@ class ChatHandler{
     		$this->error = "Couln't create comment entry";
     		ErrorHandler::_errorLog('CHAT - Insert Error:' . $this->db->getPdo()->errorInfo()[2]);
     	}
-    	
     }
     
     /**
@@ -410,7 +409,8 @@ class ChatHandler{
     
     /**
      * set error message -> may use this for ACL
-     * @param unknown $msg
+	 *
+	 * @param mixed $msg
      */
     public function setErrorMessage($msg){
     	if (!$this->error && is_string($msg) && $msg){

@@ -565,6 +565,8 @@ tr.booking__canceled-row > td.text-color__primary {
 textarea {
     min-width: 100%;
     max-width: 100%;
+    resize: vertical;
+    min-height: 4em;
 }
 
 button.btn.btn-arrow-left {
@@ -916,6 +918,10 @@ button.btn.btn-arrow-left {
     content: "\00a0€";
 }
 
+textarea.booking__text:invalid {
+    border-color: red;
+}
+
 .project-svg svg {
     max-height: 300px;
 }
@@ -933,4 +939,10 @@ button.btn.btn-arrow-left {
 
 .panel > .panel-heading-with-tabs > .nav-tabs {
     border-bottom: none;
+}
+
+.vertical-center {
+    display: table-cell;
+    vertical-align: middle !important;
+
 }

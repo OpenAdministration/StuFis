@@ -64,6 +64,10 @@ $(document).ready(function () {
 });
 
 function toggleButton(sum_belege, sum_zahlung) {
+    if ($("#booking__check-button").hasClass("user-is-not-hv")) {
+        $("#booking__check-button").prop('disabled', true).attr("title", "Nur Haushaltsverantwortliche können Buchungen anweisen!");
+        return;
+    }
     if (sum_belege.toFixed(2) !== sum_zahlung.toFixed(2)) {
         $("#booking__check-button").prop('disabled', true).attr("title", "Summen stimmen nicht überein");
     } else {

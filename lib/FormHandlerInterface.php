@@ -9,8 +9,8 @@
 abstract class FormHandlerInterface extends Renderer{
     
     abstract public static function initStaticVars();
-    
-    abstract public static function getStateString($statename);
+	
+	abstract public static function getStateStringFromName($statename);
     
     abstract public function updateSavedData($data);
     

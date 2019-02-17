@@ -277,8 +277,8 @@ class ProjektHandler extends FormHandlerInterface{
 
         return new ProjektHandler(["pid" => $projekt_id, "action" => "none"]);
     }
-
-    public static function getStateString($statename){
+	
+	public static function getStateStringFromName($statename){
         self::initStaticVars();
         return self::$states[$statename][0];
     }
