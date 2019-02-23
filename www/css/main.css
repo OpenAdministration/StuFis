@@ -946,3 +946,7 @@ textarea.booking__text:invalid {
     vertical-align: middle !important;
 
 }
+
+.no-wrap {
+    white-space: nowrap;
+}

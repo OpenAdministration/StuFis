@@ -179,3 +179,25 @@ CREATE TABLE IF NOT EXISTS ".self::$DB_PREFIX."beleg_posten (" .
     )ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;
 ") or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
 
+$this->pdo->query(
+	"
+CREATE TABLE IF NOT EXISTS " . self::$DB_PREFIX . "extern_meta (" .
+	$this->buildColDef($this->scheme["extern_meta"]) . "
+    PRIMARY KEY (`id`)
+)ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;"
+) or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));
+
+$this->pdo->query(
+	"
+CREATE TABLE IF NOT EXISTS " . self::$DB_PREFIX . "extern_data (" .
+	$this->buildColDef($this->scheme["extern_data"]) . "
+    PRIMARY KEY (`id`),
+    UNIQUE INDEX `u_id` (`id` ASC, `extern_id` ASC),
+	FOREIGN KEY (`extern_id`) REFERENCES " . self::$DB_PREFIX . "extern_meta(`id`),
+	FOREIGN KEY (`extern_id`) REFERENCES " . self::$DB_PREFIX . "extern_meta(`id`),
+	FOREIGN KEY (`ref_file_id`) REFERENCES " . self::$DB_PREFIX . "fileinfo(`id`),
+	FOREIGN KEY (`widerspruch_file_id`) REFERENCES " . self::$DB_PREFIX . "fileinfo(`id`),
+	FOREIGN KEY (`titel_id`) REFERENCES " . self::$DB_PREFIX . "haushaltstitel(`id`),
+	FOREIGN KEY (`by_user`) REFERENCES " . self::$DB_PREFIX . "user(`id`)
+)ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;"
+) or ErrorHandler::_errorExit(print_r($this->pdo->errorInfo(), true));

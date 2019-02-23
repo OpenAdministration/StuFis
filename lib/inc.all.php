@@ -28,6 +28,7 @@ require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
 require_once SYSBASE . '/lib/DBConnector.php';
 require_once SYSBASE . '/lib/inc.helper.php';
 require_once SYSBASE . '/lib/FormHandlerInterface.php';
+require_once SYSBASE . '/lib/ExternVorgangHandler.php';
 require_once SYSBASE . '/lib/MenuRenderer.php';
 require_once SYSBASE . '/lib/FormTemplater.php';
 require_once SYSBASE . '/lib/ProjektHandler.php';

@@ -965,53 +965,74 @@ class RestHandler
 	}
 	
 	private function newBookingInstruct($routeInfo){
-		if (!isset($_POST["zahlung"])
-			|| !is_array($_POST["zahlung"])
-			|| !isset($_POST["beleg"])
-			|| !is_array($_POST["beleg"])
-		){
-			$errorMsg = "Bitte stelle sicher, das du alle Felder ausgefüllt hast.";
-		}
-		$zahlung = $_POST["zahlung"];
-		$beleg = $_POST["beleg"];
+		$errorMsg = [];
+		$zahlung = isset($_POST["zahlung"]) ? $_POST["zahlung"] : [];
+		$zahlung_type = isset($_POST["zahlung-type"]) ? $_POST["zahlung-type"] : [];
+		$auslage = isset($_POST["auslage"]) ? $_POST["auslage"] : [];
+		$externDataId = isset($_POST["extern"]) ? $_POST["extern"] : [];
 		
-		if ((count($zahlung) > 1 && count($beleg) > 1)
-			|| count($beleg) === 0
+		if (count($zahlung_type) !== count($zahlung)){
+			$errorMsg[] = "Ungleiche Datenübertragung bei Zahlung, falls neu laden (Strg + F5) nichts hilft, kontaktiere bitte den Administrator.";
+		}
+		if ((count($zahlung) > 1 && (count($auslage) + count($externDataId)) > 1)
+			|| (count($auslage) === 0 && count($externDataId) === 0)
 			|| count($zahlung) === 0
 		){
-			$errorMsg = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
+			$errorMsg[] = "Es kann immer nur 1 Zahlung zu n Belegen oder 1 Beleg zu n Zahlungen zugeordnet werden. Andere Zuordnungen sind nicht möglich!";
+		}
+		$where = [];
+		if (count($auslage) > 0){
+			$where[] = ["canceled" => 0, "belege.auslagen_id" => ["IN", $auslage]];
+		}
+		if (count($externDataId) > 0){
+			$where[] = ["canceled" => 0, "extern_data.id" => ["IN", $externDataId]];
 		}
 		
 		//check if allready booked
 		$bookingDBbelege = DBConnector::getInstance()->dbFetchAll(
 			"booking",
 			[DBConnector::FETCH_ASSOC],
-			["belegposten_id"],
-			["canceled" => 0, "belege.auslagen_id" => ["IN", $beleg],],
+			["booking.beleg_id"],
+			$where,
 			[
 				[
 					"table" => "beleg_posten",
-					"type" => "inner",
-					"on" => ["beleg_posten.id", "booking.belegposten_id"]
+					"type" => "left",
+					"on" => [["beleg_posten.id", "booking.beleg_id"], ["booking.beleg_type", "belegposten"]]
 				],
 				["table" => "belege", "type" => "inner", "on" => ["belege.id", "beleg_posten.beleg_id"]],
+				[
+					"table" => "extern_data",
+					"type" => "left",
+					"on" => [["extern_data.id", "booking.belegposten_id"], ["booking.beleg_type", "extern"]]
+				],
 			]
 		);
+		
+		$zahlungByType = [];
+		foreach ($zahlung as $key => $item){
+			$zahlungByType[$zahlung_type[$key]] = $item;
+		}
+		$where = [];
+		foreach ($zahlungByType as $type => $zahlungsArray){
+			$where[] = ["canceled" => 0, "zahlung_id" => ["IN", $zahlung], "zahlung_type" => $type];
+		}
+		
 		$bookingDBzahlung = DBConnector::getInstance()->dbFetchAll(
 			"booking",
 			[DBConnector::FETCH_ASSOC],
-			["zahlung_id"],
-			["canceled" => 0, "zahlung_id" => ["IN", $zahlung],]
+			["zahlung_id", "zahlung_type"],
+			$where
 		);
 		
 		if (count($bookingDBbelege) + count($bookingDBzahlung) > 0){
-			$errorMsg = "Beleg oder Zahlung bereits verknüpft - " . print_r(
+			$errorMsg[] = "Beleg oder Zahlung bereits verknüpft - " . print_r(
 					array_merge($bookingDBzahlung, $bookingDBbelege),
 					true
 				);
 		}
 		
-		if (isset($errorMsg)){
+		if (!empty($errorMsg)){
 			JsonController::print_json(
 				[
 					'success' => false,
@@ -1034,14 +1055,28 @@ class RestHandler
 		}else{
 			$nextId = 1;
 		}
-		foreach ($zahlung as $zahl){
-			foreach ($beleg as $bel){
+		foreach ($zahlung as $zId => $zahl){
+			foreach ($auslage as $bel){
 				DBConnector::getInstance()->dbInsert(
 					"booking_instruction",
 					[
 						"id" => $nextId,
 						"zahlung" => $zahl,
 						"beleg" => $bel,
+						"beleg_type" => "belegposten",
+						"by_user" => DBConnector::getInstance()->getUser()["id"]
+					]
+				);
+			}
+			foreach ($externDataId as $ext){
+				DBConnector::getInstance()->dbInsert(
+					"booking_instruction",
+					[
+						"id" => $nextId,
+						"zahlung" => $zahl,
+						"zahlung_type" => $zahlung_type[$zId],
+						"beleg" => $ext,
+						"beleg_type" => "extern",
 						"by_user" => DBConnector::getInstance()->getUser()["id"]
 					]
 				);
@@ -1130,21 +1165,42 @@ class RestHandler
 		$doneAuslage = [];
 		foreach ($instructions as $instruction){
 			foreach ($belegeDB[$instruction] as $beleg){
-				$ah = new AuslagenHandler2(
-					[
-						"aid" => $beleg["auslagen_id"],
-						"pid" => $beleg["projekt_id"],
-						"action" => "none"
-					]
-				);
-				if (!in_array($beleg["auslagen_id"], $doneAuslage) && $ah->state_change_possible("booked") !== true){
+				switch ($beleg["type"]){
+					case "auslage":
+						$ah = new AuslagenHandler2(
+							[
+								"aid" => $beleg["auslagen_id"],
+								"pid" => $beleg["projekt_id"],
+								"action" => "none"
+							]
+						);
+						if (!in_array("A" . $beleg["auslagen_id"], $doneAuslage)
+							&& $ah->state_change_possible("booked") !== true){
+							
+							$stateChangeNotOk[] = "IP-" . date_create($beleg["projekt_createdate"])->format("y") . "-" .
+								$beleg["projekt_id"] . "-A" . $beleg["auslagen_id"] . " (" . $ah->getStateString(
+								) . ")";
+						}else{
+							$ah->state_change("booked", $beleg["etag"]);
+							$doneAuslage[] = "A" . $beleg["auslagen_id"];
+						}
+					break;
+					case "extern":
+						$evh = new ExternVorgangHandler($beleg["id"]);
+						
+						if (!in_array("E" . $beleg["id"], $doneAuslage)
+							&& $evh->state_change_possible("booked") !== true){
+							$stateChangeNotOk[] = "EP-" .
+								$beleg["extern_id"] . "-V" . $beleg["vorgang_id"] . " (" . $evh->getStateString() .
+								")";
+						}else{
+							$evh->state_change("booked", $beleg["etag"]);
+							$doneAuslage[] = "E" . $beleg["id"];
+						}
 					
-					$stateChangeNotOk[] = "IP-" . date_create($beleg["projekt_createdate"])->format("y") . "-" .
-						$beleg["projekt_id"] . "-A" . $beleg["auslagen_id"] . " (" . $ah->getStateString() . ")";
-				}else{
-					$ah->state_change("booked", $beleg["etag"]);
-					$doneAuslage[] = $beleg["auslagen_id"];
+					break;
 				}
+				
 			}
 		}
 		if (!empty($stateChangeNotOk)){
@@ -1232,7 +1288,9 @@ class RestHandler
 							"id" => ++$maxBookingId,
 							"titel_id" => $row["titel"]["val-raw"],
 							"zahlung_id" => $row["zahlung"]["val-raw"],
-							"belegposten_id" => $row["posten"]["val-raw"],
+							"zahlung_type" => $row["zahlung"]["zahlung-type"],
+							"beleg_id" => $row["posten"]["val-raw"],
+							"beleg_type" => $row["beleg"]["beleg-type"],
 							"user_id" => DBConnector::getInstance()->getUser()["id"],
 							"comment" => $text[$idx++],
 							"value" => $row["posten-ist"]["val-raw"],
@@ -1242,7 +1300,6 @@ class RestHandler
 				}
 			}
 		}
-		
 		
 		//delete from instruction list
 		DBConnector::getInstance()->dbUpdate("booking_instruction", ["id" => ["IN", $instructions]], ["done" => 1]);

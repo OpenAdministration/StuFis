@@ -43,7 +43,7 @@ abstract class EscFunc{
 	}
 	
 	protected function moneyEscapeFunction($money){
-		return number_format($money, 2, ",", " ") . "&nbsp;€";
+		return number_format($money, 2, ",", "&nbsp;") . "&nbsp;€";
 	}
 	
 	protected function date2relstrEscapeFunction($time){
