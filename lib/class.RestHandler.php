@@ -1062,6 +1062,7 @@ class RestHandler
 					[
 						"id" => $nextId,
 						"zahlung" => $zahl,
+						"zahlung_type" => $zahlung_type[$zId],
 						"beleg" => $bel,
 						"beleg_type" => "belegposten",
 						"by_user" => DBConnector::getInstance()->getUser()["id"]
