@@ -679,7 +679,7 @@ class MenuRenderer
 			"booking_instruction",
 			[DBConnector::FETCH_ONLY_FIRST_COLUMN],
 			["beleg"],
-			["beleg_type" => "auslage"]
+			["beleg_type" => "belegposten"]
 		);
 		if (empty($instructedAuslagen)){
 			$instructedAuslagen = [0];
@@ -1228,17 +1228,17 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 				[
 					"type" => "left",
 					"table" => "beleg_posten",
-					"on" => [["booking.beleg_id", "beleg_posten.id"], ["booking.beleg_type", "auslage"]]
+					"on" => [["booking.beleg_id", "beleg_posten.id"], ["booking.beleg_type", "belegposten"]]
 				],
 				[
 					"type" => "left",
 					"table" => "belege",
-					"on" => [["belege.id", "beleg_posten.beleg_id"], ["booking.beleg_type", "auslage"]]
+					"on" => [["belege.id", "beleg_posten.beleg_id"], ["booking.beleg_type", "belegposten"]]
 				],
 				[
 					"type" => "left",
 					"table" => "auslagen",
-					"on" => [["belege.auslagen_id", "auslagen.id"], ["booking.beleg_type", "auslage"]]
+					"on" => [["belege.auslagen_id", "auslagen.id"], ["booking.beleg_type", "belegposten"]]
 				],
 				[
 					"type" => "left",
@@ -1287,7 +1287,7 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
                         </td>
 						<?php
 						switch ($row["beleg_type"]){
-							case "auslage":
+							case "belegposten":
 								$projektId = $row["projekt_id"];
 								$auslagenId = $row["auslagen_id"];
 								echo "<td class='no-wrap'>" . generateLinkFromID(
