@@ -630,7 +630,7 @@ class MenuRenderer
 			];
 		}
 		
-		$konto_type = DBConnector::getInstance()->dbFetchAll(
+		$konto_types = DBConnector::getInstance()->dbFetchAll(
 			"konto_type",
 			[DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
 		);
@@ -653,17 +653,18 @@ class MenuRenderer
 		}
 		
 		$where = [];
-		foreach (array_keys($excludedZahlung) as $zahlung_type){
-			$where[] = array_merge(
-				$fixedWhere,
-				[
-					"konto_id" => $zahlung_type,
-					"id" => [
-						"NOT IN",
-						array_unique($excludedZahlung[$zahlung_type])
+		foreach (array_keys($konto_types) as $konto_id){
+			if (isset($excludedZahlung[$konto_id])){
+				$where[] = array_merge(
+					$fixedWhere,
+					[
+						"konto_id" => $konto_id,
+						"id" => ["NOT IN", array_unique($excludedZahlung[$konto_id])]
 					]
-				]
-			);
+				);
+			}else{
+				$where[] = array_merge($fixedWhere, ["konto_id" => $konto_id,]);
+			}
 		}
 		
 		$alZahlung = DBConnector::getInstance()->dbFetchAll(
@@ -831,7 +832,7 @@ class MenuRenderer
 						$title = "BELEG: {$alZahlung[$idxZahlung]["comment"]}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]["date"]}";
 					}else{
 						$title = "VALUTA: " . $alZahlung[$idxZahlung]["valuta"] . PHP_EOL . "IBAN: " . $alZahlung[$idxZahlung]["empf_iban"] . PHP_EOL . "BIC: " . $alZahlung[$idxZahlung]["empf_bic"];
-						$caption = $konto_type[$alZahlung[$idxZahlung]["konto_id"]]["short"];
+						$caption = $konto_types[$alZahlung[$idxZahlung]["konto_id"]]["short"];
 						$caption .= $alZahlung[$idxZahlung]['id'] . " - ";
 						switch ($alZahlung[$idxZahlung]["type"]){
 							case "FOLGELASTSCHRIFT":
