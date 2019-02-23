@@ -721,6 +721,10 @@ class MenuRenderer
 			["beleg_type" => "extern"]
 		);
 		
+		if (empty($instructedExtern)){
+			$instructedExtern = [-1]; //-1 cannot exist as id, but will not sql error with NOT IN (-1)
+		}
+		
 		$extern = DBConnector::getInstance()->dbFetchAll(
 			"extern_data",
 			[DBConnector::FETCH_ASSOC],
@@ -740,7 +744,7 @@ class MenuRenderer
 					"flag_vorkasse" => 1,
 					"state_payed" => ["IS NOT", null],
 					"state_booked" => ["IS", null],
-					"extern_data.id" => ["NOT IN", $instructedExtern],
+					"extern_data.id" => ["NOT IN", $instructedExtern]
 				],
 				[
 					"flag_pruefbescheid" => 1,
