@@ -2,7 +2,7 @@ $(document).ready(function () {
     $("input[type='checkbox'].booking__form-zahlung").on("change", function (evt) {
         $('.booking__zahlung>div#booking__zahlung-not-selected').hide();
         var zid = $(this).data("id");
-        var type = $(this).data("type")
+        var type = $(this).data("type");
         var newVal = parseFloat($(this).data("value"));
 
         if ($(".booking__zahlung>div#Z" + zid).length === 0) {

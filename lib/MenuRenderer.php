@@ -20,33 +20,13 @@ class MenuRenderer
 	}
 	
 	public function render(){
-		$attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
+		
 		
 		switch ($this->pathinfo["action"]){
 			case "mygremium":
 			case "allgremium":
-				if ($this->pathinfo["action"] === "allgremium")
-					$gremien = $attributes["alle-gremien"];
-				else
-					$gremien = $attributes["gremien"];
-				
-				$gremien = array_filter(
-					$gremien,
-					function($val){
-						global $GremiumPrefix;
-						foreach ($GremiumPrefix as $prefix){
-							if (substr($val, 0, strlen($prefix)) === $prefix){
-								return true;
-							}
-						}
-						return false;
-					}
-				);
-				rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
-				$gremien[] = "";
 				HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
-				//print_r($this->pathinfo["action"]);
-				$this->renderProjekte($gremien, $this->pathinfo["action"]);
+				$this->renderProjekte($this->pathinfo["action"]);
 			break;
 			case "search":
 				$this->setOverviewTabs($this->pathinfo["action"]);
@@ -93,19 +73,44 @@ class MenuRenderer
 		}
 	}
 	
-	public function renderProjekte($gremien, $active){
-		//$enwuerfe = DBConnector::getInstance()->dbFetchAll("antrag",["state" => "draft","creator" => (AUTH_HANDLER)::getInstance()->getUserName()]);
-		//$projekte = DBConnector::getInstance()->getProjectFromGremium($gremien, "projekt-intern");
-		if (empty($gremien)){
-			$this->renderAlert(
-				"Schade!",
-				$this->makeClickableMails(
-					"Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de"
-				),
-				"warning"
-			);
-			return;
+	public function renderProjekte($active){
+		$attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
+		$gremien = $attributes["gremien"];
+		$gremien = array_filter(
+			$gremien,
+			function($val){
+				global $GremiumPrefix;
+				foreach ($GremiumPrefix as $prefix){
+					if (substr($val, 0, strlen($prefix)) === $prefix){
+						return true;
+					}
+				}
+				return false;
+			}
+		);
+		rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
+		switch ($active){
+			case "allgremium":
+				$where = [];
+			break;
+			case "mygremium":
+				if (empty($gremien)){
+					$this->renderAlert(
+						"Schade!",
+						$this->makeClickableMails(
+							"Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de"
+						),
+						"warning"
+					);
+					return;
+				}
+				$where = [["org" => ["in", $gremien]], ["org" => ["is", null]], ["org" => ""]];
+			break;
+			default:
+				ErrorHandler::_errorExit("Not known active Tab: " . $active);
+			break;
 		}
+		
 		$projekte = DBConnector::getInstance()->dbFetchAll(
 			"projekte",
 			[DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
@@ -115,7 +120,7 @@ class MenuRenderer
 				"ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
 				"einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
 			],
-			[["org" => ["in", $gremien]], ["org" => ["is", null]]],
+			$where,
 			[
 				["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
 			],
@@ -156,16 +161,6 @@ class MenuRenderer
 			["auslagen_id"]
 		);
 		
-		//FIXME: do later :)
-		/*if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){
-			$extVereine = ["Bergfest.*", ".*KuKo.*", ".*ILSC.*", "Market Team.*", ".*Second Unit Jazz.*", "hsf.*", "hfc.*", "FuLM.*", "KSG.*", "ISWI.*"]; //TODO: From external source
-			$ret = DBConnector::getInstance()->getProjectFromGremium($extVereine, "extern-express");
-			if ($ret !== false){
-				//var_dump($ret);
-				$projekte = array_merge($projekte, $ret);
-			}
-		}*/
-		
 		//var_dump(end(end($projekte)));
 		$this->setOverviewTabs($active);
 		?>
@@ -180,7 +175,11 @@ class MenuRenderer
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
-                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= empty($gremium) ? "Nicht zugeordnete Projekte" : $gremium ?>
+								<?php
+								$titel = empty($gremium) ? "Nicht zugeordnete Projekte" :
+									(in_array($gremium, $attributes["alle-gremien"]) ? "" : "[INAKTIV] ") . $gremium;
+								?>
+                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= $titel ?>
                             </h4>
                         </div>
                         <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">
