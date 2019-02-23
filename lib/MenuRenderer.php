@@ -744,25 +744,29 @@ class MenuRenderer
 					"flag_vorkasse" => 1,
 					"state_payed" => ["IS NOT", null],
 					"state_booked" => ["IS", null],
-					"extern_data.id" => ["NOT IN", $instructedExtern]
+					"extern_data.id" => ["NOT IN", $instructedExtern],
+					"value" => ["<>", 0],
 				],
 				[
 					"flag_pruefbescheid" => 1,
 					"state_payed" => ["IS NOT", null],
 					"state_booked" => ["IS", null],
 					"extern_data.id" => ["NOT IN", $instructedExtern],
+					"value" => ["<>", 0],
 				],
 				[
 					"flag_rueckforderung" => 1,
 					"state_booked" => ["IS", null],
 					"flag_widersprochen" => 0,
 					"extern_data.id" => ["NOT IN", $instructedExtern],
+					"value" => ["<>", 0],
 				],
 				[
 					"flag_rueckforderung" => 1,
 					"state_payed" => ["IS NOT", null],
 					"state_booked" => ["IS", null],
 					"extern_data.id" => ["NOT IN", $instructedExtern],
+					"value" => ["<>", 0],
 				],
 			],
 			[
