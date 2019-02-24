@@ -1710,7 +1710,7 @@ class BookingTableManager
 	
 	private function process($z, $b, $zSum, $bValDone, bool $exceededLastBeleg){
 		switch ($b["type"]){
-			case "auslage":
+			case "belegposten":
 				$prefilledText = $b["projekt_name"] . " - " . $b["auslagen_name"];
 				$newPostenName = "P" . $b["posten_short"];
 				$newPostenNameRaw = $b["posten_id"];
