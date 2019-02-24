@@ -125,7 +125,7 @@ class MenuRenderer
 				["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
 			],
 			["org" => true],
-			["id"]
+			["projekte.id"]
 		);
 		$pids = [];
 		array_walk(
@@ -157,7 +157,7 @@ class MenuRenderer
 				["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id", "auslagen.id"]],
 				["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
 			],
-			["id" => true],
+			["auslagen.id" => true],
 			["auslagen_id"]
 		);
 		
