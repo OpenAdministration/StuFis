@@ -96,7 +96,7 @@ function toggleButton(sum_belege, sum_zahlung) {
     } else {
         $("#booking__check-button").prop('disabled', false).attr("title", "");
     }
-    if (sum_belege === 0 && sum_zahlung === 0) {
+    if ($('.booking__belege>div').length === 1 && $('.booking__zahlung>div').length === 1) {
         $("#booking__check-button").prop('disabled', true).attr("title", "nichts ausgewählt");
     }
 }
