@@ -1323,8 +1323,8 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 
 
                         <td class="no-wrap">
-							<?= date("d.m.Y", strtotime($row['timestamp'])) ?>&nbsp;<!--
-                    --><i title="<?= $row['timestamp'] . " von " . $userStr ?>"
+							<?= date("d.m.Y", strtotime($row['timestamp'])) ?>
+                            <i title="<?= $row['timestamp'] . " von " . $userStr ?>"
                           class="fa fa-fw fa-question-circle" aria-hidden="true"></i>
                         </td>
 

@@ -366,7 +366,37 @@ $routing = [
 					]
 				]
 			]
-		]
+		],
+		[
+			'path' => 'export',
+			'type' => 'path',
+			'controller' => 'error',
+			'action' => '403',
+			'method' => 'GET',
+			'children' => [
+				[
+					'path' => 'csv',
+					'type' => 'path',
+					'controller' => 'error',
+					'children' => [
+						[
+							'path' => 'hhp',
+							'type' => 'path',
+							'controller' => 'hhp',
+							'children' => [
+								[
+									'path' => '([0-9]*)',
+									'type' => 'pattern',
+									'param' => 'hhp-id',
+									'action' => 'export-csv',
+								],
+							]
+						],
+					]
+				]
+			]
+		],
+		
 	]
 ];
 

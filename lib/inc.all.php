@@ -42,6 +42,7 @@ require_once SYSBASE . '/lib/class.RestHandler.php';
 require_once SYSBASE . '/lib/class.FileController.php';
 require_once SYSBASE . '/lib/class.ErrorHandler.php';
 require_once SYSBASE . '/lib/class.Router.php';
+require_once SYSBASE . '/lib/class.CSVBuilder.php';
 
 require_once SYSBASE . '/lib/exceptions/IllegalStateException.php';
 require_once SYSBASE . '/lib/exceptions/IllegalTransitionException.php';
