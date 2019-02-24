@@ -281,7 +281,7 @@ $routing = [
 					'path' => 'hibiscus',
 					'type' => 'path',
 					'controller' => 'rest',
-					'groups' => 'ref-finanzen',
+					'groups' => 'ref-finanzen-kv',
 					'action' => 'update-konto',
 				],
 				[
