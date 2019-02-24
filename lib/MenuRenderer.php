@@ -1001,7 +1001,10 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 	private function renderKontoRefreshButton(){ ?>
         <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form"
               class="ajax-form">
-            <button type="submit" name="absenden" class="btn btn-primary">
+            <button type="submit" name="absenden" class="btn btn-primary"
+				<?= !(AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv") ?
+					"disabled title='Nur KVs können den Kontoauszug abrufen!'" : "" ?>
+            >
                 <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen
             </button>
             <input type="hidden" name="action" value="hibiscus">
