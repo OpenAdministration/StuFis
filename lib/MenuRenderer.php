@@ -1009,7 +1009,7 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
             </button>
             <input type="hidden" name="action" value="hibiscus">
 			<?php $this->renderNonce(); ?>
-        </form>
+        </form
 		<?php
 	}
 	
@@ -1497,7 +1497,7 @@ class BookingTableManager
 				);
 				foreach ($auslagen as $id => $row){
 					$auslagen[$id]["value"] = floatval($row["einnahmen"]) - floatval($row["ausgaben"]);
-					$auslagen[$id]["type"] = "auslage";
+					$auslagen[$id]["type"] = "belegposten";
 				}
 			}else{
 				$auslagen = [];
