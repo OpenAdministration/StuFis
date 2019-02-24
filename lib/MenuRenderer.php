@@ -1009,7 +1009,7 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
             </button>
             <input type="hidden" name="action" value="hibiscus">
 			<?php $this->renderNonce(); ?>
-        </form
+        </form>
 		<?php
 	}
 	
