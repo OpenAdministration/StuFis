@@ -16,7 +16,6 @@ class BookingHandler
 		
 	}
 	
-	
 	public function render(){
 		
 		switch ($this->routeInfo["action"]){
@@ -36,6 +35,9 @@ class BookingHandler
 			case "history":
 				$this->renderBookingHistory("history");
 			break;
+			case "export-list-csv":
+				$this->renderCSV();
+			break;
 			default:
 				ErrorHandler::_errorExit("Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
 			break;
@@ -52,14 +54,59 @@ class BookingHandler
 		HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
 	}
 	
-	private function renderBookingHistory($active){
-		list($hhps, $hhp_id) = $this->renderHHPSelector(URIBASE . "booking/", "/history");
-		$this->setBookingTabs($active, $hhp_id);
-		$kontoType = DBConnector::getInstance()->dbFetchAll(
+	private function renderCSV(){
+		if (!isset($this->routeInfo["hhp-id"])){
+			ErrorHandler::_errorExit("hhp-id nicht gesetzt");
+		}
+		list($kontoTypes, $data) = $this->fetchBookingHistoryDataFromDB($this->routeInfo["hhp-id"]);
+		$csvData = [];
+		$header = [
+			"id" => "Buchungsnummer",
+			"value" => "Betrag in Euro",
+			"titel_nr" => "Titelnummer",
+			"beleg_name" => "Beleg",
+			"datum" => "Buchungsdatum",
+			"user" => "Buchender Nutzer",
+			"zahlung" => "Zahlungsnummer",
+			"comment" => "Buchungstext",
+		];
+		foreach ($data as $lfdNr => $row){
+			$userStr = isset($row["fullname"]) ? $row["fullname"] . " (" . $row["username"] . ")" : $row["username"];
+			$belegStr = "";
+			
+			switch ($row["beleg_type"]){
+				case "belegposten":
+					$belegStr = "IP{$row["projekt_id"]} A{$row["auslagen_id"]} - P" . $row['short'];
+				break;
+				case "extern":
+					$belegStr = "E{$row["extern_id"]} - V" . $row["vorgang_id"];
+				break;
+				default:
+					ErrorHandler::_errorExit("Unknown beleg_type: " . $row["beleg_type"]);
+				break;
+			}
+			
+			$csvData[] = [
+				"id" => $row["id"],
+				"value" => $row["value"],
+				"titel_nr" => $row["titel_nr"],
+				"beleg_name" => $belegStr,
+				"datum" => $row['timestamp'],
+				"user" => $userStr,
+				"zahlung" => $kontoTypes[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
+				"comment" => $row['comment'],
+			];
+		}
+		$csvBuilder = new CSVBuilder($csvData, $header);
+		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-Buchungsliste");
+	}
+	
+	private function fetchBookingHistoryDataFromDB($hhp_id){
+		$kontoTypes = DBConnector::getInstance()->dbFetchAll(
 			"konto_type",
 			[DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
 		);
-		$ret = DBConnector::getInstance()->dbFetchAll(
+		$data = DBConnector::getInstance()->dbFetchAll(
 			"booking",
 			[DBConnector::FETCH_ASSOC],
 			[
@@ -114,6 +161,15 @@ class BookingHandler
 			["timestamp" => true, "id" => true]
 		);
 		
+		return [$kontoTypes, $data];
+	}
+	
+	private function renderBookingHistory($active){
+		list($hhps, $hhp_id) = $this->renderHHPSelector(URIBASE . "booking/", "/history");
+		$this->setBookingTabs($active, $hhp_id);
+		
+		list($kontoTypes, $ret) = $this->fetchBookingHistoryDataFromDB($hhp_id);
+		
 		if (!empty($ret)){
 			//var_dump(reset($ret));
 			?>
@@ -137,18 +193,14 @@ class BookingHandler
 					?>
                     <tr class=" <?= $row["canceled"] != 0 ? "booking__canceled-row" : "" ?>">
 
-                        <td class="no-wrap"><a class="link-anchor"
-                                               name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?>
+                        <td class="no-wrap">
+                            <a class="link-anchor" name="<?= $row["id"] ?>"></a><?= $row["id"]/*$lfdNr + 1*/ ?>
                         </td>
-
-                        <td class="money no-wrap <?= TextStyle::BOLD ?>"><?= DBConnector::getInstance(
-							)->convertDBValueToUserValue($row['value'], "money") ?></td>
-
-                        <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?> no-wrap"><?= str_replace(
-								" ",
-								"&nbsp;",
-								trim(htmlspecialchars($row['titel_nr']))
-							) ?>
+                        <td class="money no-wrap <?= TextStyle::BOLD ?>">
+							<?= DBConnector::getInstance()->convertDBValueToUserValue($row['value'], "money") ?>
+                        </td>
+                        <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?> no-wrap">
+							<?= trim(htmlspecialchars($row['titel_nr'])) ?>
                         </td>
 						<?php
 						switch ($row["beleg_type"]){
@@ -174,8 +226,6 @@ class BookingHandler
 								ErrorHandler::_errorExit("Unknown beleg_type: " . $row["beleg_type"]);
 						}
 						?>
-
-
                         <td class="no-wrap">
 							<?= date("d.m.Y", strtotime($row['timestamp'])) ?>
                             <i title="<?= $row['timestamp'] . " von " . $userStr ?>"
@@ -183,7 +233,7 @@ class BookingHandler
                         </td>
 
                         <td class="no-wrap"><?= generateLinkFromID(
-								$kontoType[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
+								$kontoTypes[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
 								"",
 								TextStyle::BLACK
 							) ?></td>
@@ -774,5 +824,6 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 		
 		<?php
 	}
+	
 	
 }

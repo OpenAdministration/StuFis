@@ -88,10 +88,9 @@ class CSVBuilder{
 		if (is_string($cell)){
 			if (substr($cell, 0, 1) === "=" && !$this->escapeFormulas){
 				return strip_tags($cell);
-			}else{
-				return $this->cellEscape . strip_tags($cell) . $this->cellEscape;
 			}
 		}
+		return $this->cellEscape . strip_tags($cell) . $this->cellEscape;
 	}
 	
 }
