@@ -12,6 +12,8 @@ class CSVBuilder{
 	private $csvString;
 	private $cellEscape;
 	private $cellSeparator;
+	private $escapeFormulas;
+	private $numberSeparator;
 	
 	const ROW_SEPARATOR = PHP_EOL;
 	
@@ -22,13 +24,20 @@ class CSVBuilder{
 	 * @param array  $data
 	 * @param array  $header        if header is empty data will be printed without checking
 	 * @param string $cellSeparator default is ","
+	 * @param bool   $escapeFormulars
 	 * @param string $cellEscape
+	 * @param string $numberSeparator
 	 */
-	public function __construct(array $data, array $header, $cellSeparator = ",", $cellEscape = "\""){
+	public function __construct(
+		array $data, array $header, $cellSeparator = ";", $escapeFormulars = false,
+		$cellEscape = "\"", $numberSeparator = ","
+	){
 		$this->data = $data;
 		$this->header = $header;
 		$this->cellSeparator = $cellSeparator;
 		$this->cellEscape = $cellEscape;
+		$this->escapeFormulas = $escapeFormulars;
+		$this->numberSeparator = $numberSeparator;
 		$this->csvString = $this->buildCSV();
 	}
 	
@@ -40,7 +49,7 @@ class CSVBuilder{
 		return implode(self::ROW_SEPARATOR, $ret);
 	}
 	
-	public function echoCSV($fileName = "", $withRowHeader = true){
+	public function echoCSV($fileName = "", $withRowHeader = true, $encoding = "WINDOWS-1252"){
 		if ($withRowHeader === true){
 			$ret = implode($this->cellSeparator, $this->header) . self::ROW_SEPARATOR . $this->csvString;
 		}else{
@@ -50,7 +59,7 @@ class CSVBuilder{
 			header('Content-type: text/csv');
 			header("Content-disposition: attachment;filename=$fileName.csv");
 		}
-		echo $ret;
+		echo mb_convert_encoding($ret, $encoding, "UTF-8");
 		die();
 	}
 	
@@ -69,11 +78,20 @@ class CSVBuilder{
 				$rowArray[] = $this->escapeCell($cell);
 			}
 		}
-		return implode(",", $rowArray);
+		return implode($this->cellSeparator, $rowArray);
 	}
 	
 	private function escapeCell($cell){
-		return $this->cellEscape . strip_tags($cell) . $this->cellEscape;
+		if (is_numeric($cell)){
+			return $this->cellEscape . str_replace(".", $this->numberSeparator, $cell) . $this->cellEscape;
+		}
+		if (is_string($cell)){
+			if (substr($cell, 0, 1) === "=" && !$this->escapeFormulas){
+				return strip_tags($cell);
+			}else{
+				return $this->cellEscape . strip_tags($cell) . $this->cellEscape;
+			}
+		}
 	}
 	
 }

@@ -114,18 +114,9 @@ class HHPHandler
 					"group" => "",
 					"titel-nr" => $row["titel_nr"],
 					"titel-name" => $row["titel_name"],
-					"plan-value" => DBConnector::getInstance()->convertDBValueToUserValue(
-						$row["value"],
-						"money"
-					),
-					"booked-value" => DBConnector::getInstance()->convertDBValueToUserValue(
-						$row["_booked"],
-						"money"
-					),
-					"decided-value" => DBConnector::getInstance()->convertDBValueToUserValue(
-						$row["_saved"],
-						"money"
-					),
+					"plan-value" => $row["value"],
+					"booked-value" => $row["_booked"],
+					"decided-value" => $row["_saved"],
 				];
 			}
 			$rowsAfter = count($data) + 1;
@@ -242,7 +233,7 @@ class HHPHandler
 			} ?>
         </table>
         <a class="btn btn-primary" target="_blank" href="<?= URIBASE ?>export/csv/hhp/<?= $hhp_id ?>">
-            <i class="fa fa-fw fa-download"></i> HHA als CSV exportieren
+            <i class="fa fa-fw fa-download"></i> HHA als CSV (WINDOWS-1252 encoded)
         </a>
 		<?php
 		
