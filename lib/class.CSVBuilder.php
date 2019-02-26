@@ -67,10 +67,14 @@ class CSVBuilder{
 		$rowArray = [];
 		if (!empty($this->header)){
 			foreach ($this->header as $key => $name){
-				if (isset($row[$key])){
+				if (array_key_exists($key, $row)){
 					$rowArray[] = $this->escapeCell($row[$key]);
 				}else{
-					$rowArray[] = $this->escapeCell("");
+					if (DEV){
+						$rowArray[] = $this->escapeCell(var_export($row, true));
+					}else{
+						$rowArray[] = $this->escapeCell("error-by-export");
+					}
 				}
 			}
 		}else{

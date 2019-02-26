@@ -67,7 +67,8 @@ class BookingHandler
 			"beleg_name" => "Beleg",
 			"datum" => "Buchungsdatum",
 			"user" => "Buchender Nutzer",
-			"zahlung" => "Zahlungsnummer",
+			"zahlung-name" => "Zahlungsnummer",
+			"zahlung-datum" => "Zahlungsdatum",
 			"comment" => "Buchungstext",
 		];
 		foreach ($data as $lfdNr => $row){
@@ -93,12 +94,17 @@ class BookingHandler
 				"beleg_name" => $belegStr,
 				"datum" => $row['timestamp'],
 				"user" => $userStr,
-				"zahlung" => $kontoTypes[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
+				"zahlung-name" => $kontoTypes[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
+				"zahlung-datum" => $row["zahlung_date"],
 				"comment" => $row['comment'],
 			];
 		}
 		$csvBuilder = new CSVBuilder($csvData, $header);
-		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-Buchungsliste");
+		$hhps = DBConnector::getInstance()->dbFetchAll("haushaltsplan", [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]);
+		$hhp = $hhps[$this->routeInfo["hhp-id"]];
+		$von = date_create($hhp["von"])->format("Y-m");
+		$bis = date_create($hhp["bis"])->format("Y-m");
+		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-Buchungsliste-$von-bis-$bis");
 	}
 	
 	private function fetchBookingHistoryDataFromDB($hhp_id){
@@ -114,6 +120,7 @@ class BookingHandler
 				"titel_nr",
 				"zahlung_id",
 				"zahlung_type",
+				"zahlung_date" => "konto.date",
 				"booking.value",
 				"beleg_type",
 				"canceled",
@@ -124,7 +131,7 @@ class BookingHandler
 				"username",
 				"fullname",
 				"kostenstelle",
-				"comment",
+				"booking.comment",
 				"vorgang_id",
 				"extern_id",
 			],
@@ -156,7 +163,12 @@ class BookingHandler
 					"type" => "left",
 					"table" => "extern_data",
 					"on" => [["booking.beleg_id", "extern_data.id"], ["booking.beleg_type", "extern"]],
-				]
+				],
+				[
+					"type" => "left",
+					"table" => "konto",
+					"on" => [["konto.id", "booking.zahlung_id"], ["booking.zahlung_type", "konto.konto_id"]],
+				],
 			],
 			["timestamp" => true, "id" => true]
 		);
@@ -263,6 +275,9 @@ class BookingHandler
 				<?php } ?>
                 </tbody>
             </table>
+            <a class="btn btn-primary" target="_blank" href="<?= URIBASE ?>export/csv/booking/<?= $hhp_id ?>/full-list">
+                <i class="fa fa-fw fa-download"></i> als CSV (WINDOWS-1252 encoded)
+            </a>
 			<?php
 		}else{
 			$this->renderHeadline("bisher keine Buchungen in diesem HH-Jahr vorhanden.", 2);
