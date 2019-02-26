@@ -62,7 +62,7 @@ class BookingTableManager
 		$this->instructions = DBConnector::getInstance()->dbFetchAll(
 			"booking_instruction",
 			[DBConnector::FETCH_GROUPED],
-			["booking_instruction.id", "zahlung", "beleg", "beleg_type", "user.id", "user.fullname"],
+			["booking_instruction.id", "zahlung", "beleg", "beleg_type", "user.id", "user.fullname", "zahlung_type"],
 			$where,
 			[
 				["table" => "user", "type" => "left", "on" => ["booking_instruction.by_user", "user.id"]],
@@ -78,7 +78,6 @@ class BookingTableManager
 			$auslagen_ids = [];
 			foreach ($instruction as $row){
 				$zahlungen[$row["zahlung_type"]][] = $row["zahlung"];
-				$zahlungen_type[] = $row["zahlung_type"];
 				switch ($row["beleg_type"]){
 					case "belegposten":
 						$auslagen_ids[] = $row["beleg"];
@@ -93,7 +92,7 @@ class BookingTableManager
 			}
 			$where = [];
 			foreach ($zahlungen as $type => $z){
-				$where[] = ["id" => ["IN", $z], ["konto_id" => $type]];
+				$where[] = ["id" => ["IN", $z], "konto_id" => $type];
 			}
 			//titel_id, kostenstelle, zahlung_id, beleg_id, user_id, comment, value
 			$zahlungenDB[$instruct_id] = DBConnector::getInstance()->dbFetchAll(
@@ -519,7 +518,7 @@ class BookingTableManager
 	public function pushZahlung(int $zahlungId, int $zahlungIdType, float $zahlungValue){
 		//FIXME with DB querry
 		if (isset($this->kontoTypes[$zahlungIdType])){
-			$prefix = $this->kontoTypes[$zahlungIdType];
+			$prefix = $this->kontoTypes[$zahlungIdType]["short"];
 		}else{
 			ErrorHandler::_errorExit("Konto Type $zahlungIdType nicht bekannt.");
 		}
