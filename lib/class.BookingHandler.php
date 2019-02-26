@@ -77,7 +77,7 @@ class BookingHandler
 			
 			switch ($row["beleg_type"]){
 				case "belegposten":
-					$belegStr = "IP{$row["projekt_id"]} A{$row["auslagen_id"]} - P" . $row['short'];
+					$belegStr = "IP{$row["projekt_id"]} A{$row["auslagen_id"]} - B" . $row['short'];
 				break;
 				case "extern":
 					$belegStr = "E{$row["extern_id"]} - V" . $row["vorgang_id"];
@@ -124,7 +124,7 @@ class BookingHandler
 				"booking.value",
 				"beleg_type",
 				"canceled",
-				"beleg_posten.short",
+				"belege.short",
 				"auslagen_id",
 				"projekt_id",
 				"timestamp",
@@ -220,7 +220,7 @@ class BookingHandler
 								$projektId = $row["projekt_id"];
 								$auslagenId = $row["auslagen_id"];
 								echo "<td class='no-wrap'>" . generateLinkFromID(
-										"A$auslagenId&nbsp;-&nbsp;" . $row['short'],
+										"A$auslagenId&nbsp;-&nbsp;B" . $row['short'],
 										"projekt/$projektId/auslagen/$auslagenId",
 										TextStyle::BLACK
 									) . "</td>";
