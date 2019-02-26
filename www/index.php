@@ -66,6 +66,11 @@ switch ($routeInfo['controller']){
         $htmlRenderer->appendRendererContent($hhpHandler);
         $htmlRenderer->render();
         break;
+	case "booking":
+		$bHandler = new BookingHandler($routeInfo);
+		$htmlRenderer->appendRendererContent($bHandler);
+		$htmlRenderer->render();
+	break;
     case "rest":
         $restHandler = new RestHandler();
         $restHandler->handlePost($routeInfo);

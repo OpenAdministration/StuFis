@@ -30,6 +30,8 @@ require_once SYSBASE . '/lib/inc.helper.php';
 require_once SYSBASE . '/lib/FormHandlerInterface.php';
 require_once SYSBASE . '/lib/ExternVorgangHandler.php';
 require_once SYSBASE . '/lib/MenuRenderer.php';
+require_once SYSBASE . '/lib/class.BookingTableManager.php';
+require_once SYSBASE . '/lib/class.BookingHandler.php';
 require_once SYSBASE . '/lib/FormTemplater.php';
 require_once SYSBASE . '/lib/ProjektHandler.php';
 require_once SYSBASE . '/lib/AuslagenHandler2.php';

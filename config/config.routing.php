@@ -13,6 +13,7 @@ $routing = [
 			'type' => 'path',
 			'action' => 'bank',
 			'navigation' => 'konto',
+			'controller' => 'booking',
 			'load' => [
 				LoadGroups::SELECTPICKER,
 				LoadGroups::DATEPICKER,
@@ -38,6 +39,7 @@ $routing = [
 			'type' => 'path',
 			'navigation' => 'booking',
 			'action' => 'instruct',
+			'controller' => 'booking',
 			'load' => [
 				LoadGroups::SELECTPICKER,
 				LoadGroups::MODALS,
@@ -61,7 +63,7 @@ $routing = [
 						[
 							'path' => 'text',
 							'type' => 'path',
-							'action' => 'booking-text',
+							'action' => 'confirm-instruct',
 						],
 						[
 							'path' => 'instruct',
@@ -75,7 +77,6 @@ $routing = [
 						],
 					]
 				],
-			
 			]
 		],
 		[
@@ -392,11 +393,29 @@ $routing = [
 								],
 							]
 						],
+						[
+							'path' => 'booking',
+							'type' => 'path',
+							'controller' => 'booking',
+							'children' => [
+								[
+									'path' => '([0-9]*)',
+									'type' => 'pattern',
+									'param' => 'hhp-id',
+									'children' => [
+										[
+											'path' => 'full-list',
+											'type' => 'path',
+											'action' => 'export-list-csv',
+										],
+									]
+								],
+							]
+						],
 					]
 				]
 			]
 		],
-		
 	]
 ];
 

@@ -219,4 +219,21 @@ abstract class Renderer
 	protected function mailto($adress){
 		return "<a href='mailto:$adress'><i class='fa fa-fw fa-envelope'></i>$adress</a>";
 	}
+	
+	protected function makeProjektsClickable($text){
+		$matches = [];
+		$text = htmlspecialchars($text);
+		preg_match("/IP-[0-9]{2,4}-[0-9]+-A[0-9]+/", $text, $matches);
+		foreach ($matches as $match){
+			$array = explode("-", $match);
+			$auslagen_id = substr(array_pop($array), 1);
+			$projekt_id = array_pop($array);
+			$text = str_replace(
+				$match,
+				"<a target='_blank' href='" . URIBASE . "projekt/$projekt_id/auslagen/$auslagen_id'><i class='fa fa-fw fa-chain'></i>$match</a>",
+				$text
+			);
+		}
+		return $text;
+	}
 }
