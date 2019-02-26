@@ -26,6 +26,7 @@ class BookingTableManager
 	private $instructions;
 	private $zahlungDB;
 	private $belegeDB;
+	private $kontoTypes;
 	
 	public function __construct($instructionsWhitelist = []){
 		$this->col_zahlung = 0;
@@ -38,6 +39,7 @@ class BookingTableManager
 		$this->auslage_lastValue = "";
 		$this->zahlung_lastValue = "";
 		$this->executed = false;
+		$this->kontoTypes = [];
 		
 		$this->fetchFromDB($instructionsWhitelist);
 	}
@@ -51,6 +53,11 @@ class BookingTableManager
 		}else{
 			$where = ["booking_instruction.done" => 0];
 		}
+		
+		$this->kontoTypes = DBConnector::getInstance()->dbFetchAll(
+			"konto_types",
+			[DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
+		);
 		
 		$this->instructions = DBConnector::getInstance()->dbFetchAll(
 			"booking_instruction",
@@ -70,7 +77,8 @@ class BookingTableManager
 			$extern_ids = [];
 			$auslagen_ids = [];
 			foreach ($instruction as $row){
-				$zahlungen[] = $row["zahlung"];
+				$zahlungen[$row["zahlung_type"]][] = $row["zahlung"];
+				$zahlungen_type[] = $row["zahlung_type"];
 				switch ($row["beleg_type"]){
 					case "belegposten":
 						$auslagen_ids[] = $row["beleg"];
@@ -83,13 +91,16 @@ class BookingTableManager
 					break;
 				}
 			}
-			
+			$where = [];
+			foreach ($zahlungen as $type => $z){
+				$where[] = ["id" => ["IN", $z], ["konto_id" => $type]];
+			}
 			//titel_id, kostenstelle, zahlung_id, beleg_id, user_id, comment, value
 			$zahlungenDB[$instruct_id] = DBConnector::getInstance()->dbFetchAll(
 				"konto",
 				[DBConnector::FETCH_ASSOC],
 				[],
-				["id" => ["IN", $zahlungen]],
+				$where,
 				[],
 				["value" => false]
 			);
@@ -507,19 +518,10 @@ class BookingTableManager
 	
 	public function pushZahlung(int $zahlungId, int $zahlungIdType, float $zahlungValue){
 		//FIXME with DB querry
-		switch ($zahlungIdType){
-			case 2:
-				$prefix = "S";
-			break;
-			case 1:
-			case 3:
-				$prefix = "Z";
-			break;
-			case 0:
-				$prefix = "K";
-			break;
-			default:
-				$prefix = "error";
+		if (isset($this->kontoTypes[$zahlungIdType])){
+			$prefix = $this->kontoTypes[$zahlungIdType];
+		}else{
+			ErrorHandler::_errorExit("Konto Type $zahlungIdType nicht bekannt.");
 		}
 		$newValue = $prefix . $zahlungId;
 		if ($this->zahlung_lastValue === $newValue){

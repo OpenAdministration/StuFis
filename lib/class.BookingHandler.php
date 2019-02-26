@@ -77,7 +77,7 @@ class BookingHandler
 			
 			switch ($row["beleg_type"]){
 				case "belegposten":
-					$belegStr = "IP{$row["projekt_id"]} A{$row["auslagen_id"]} - B" . $row['short'];
+					$belegStr = "IP{$row["projekt_id"]} A{$row["auslagen_id"]} - " . $row['short'];
 				break;
 				case "extern":
 					$belegStr = "E{$row["extern_id"]} - V" . $row["vorgang_id"];
