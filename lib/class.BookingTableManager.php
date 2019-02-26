@@ -55,7 +55,7 @@ class BookingTableManager
 		}
 		
 		$this->kontoTypes = DBConnector::getInstance()->dbFetchAll(
-			"konto_types",
+			"konto_type",
 			[DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
 		);
 		
