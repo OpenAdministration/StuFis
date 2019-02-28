@@ -121,6 +121,7 @@ class BookingHandler
 				"zahlung_id",
 				"zahlung_type",
 				"zahlung_date" => "konto.date",
+				"zahlung_value" => "konto.value",
 				"booking.value",
 				"beleg_type",
 				"canceled",
@@ -244,11 +245,15 @@ class BookingHandler
                                class="fa fa-fw fa-question-circle" aria-hidden="true"></i>
                         </td>
 
-                        <td class="no-wrap"><?= generateLinkFromID(
+                        <td class="no-wrap"
+                            title="<?= "DATUM: " . $row["zahlung_date"] . PHP_EOL . "WERT: " . $row["zahlung_value"] ?>">
+							<?=
+							generateLinkFromID(
 								$kontoTypes[$row["zahlung_type"]]["short"] . $row['zahlung_id'],
 								"",
 								TextStyle::BLACK
-							) ?></td>
+							) ?>
+                        </td>
 						<?php if ($row["canceled"] == 0){ ?>
                             <td class="no-wrap">
                                 <form id="cancel" role="form" action="<?= URIBASE ?>rest/booking/cancel"

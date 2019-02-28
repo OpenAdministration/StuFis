@@ -117,6 +117,7 @@ class BookingTableManager
 						"auslagen_name" => "name_suffix",
 						"titel_nr",
 						"titel_id" => "haushaltstitel.id",
+						"titel_type" => "haushaltsgruppen.type",
 						"posten_id" => "beleg_posten.id",
 						"posten_short" => "beleg_posten.short",
 						"belege_short" => "belege.short",
@@ -141,6 +142,11 @@ class BookingTableManager
 							"table" => "haushaltstitel",
 							"type" => "left",
 							"on" => ["projektposten.titel_id", "haushaltstitel.id"],
+						],
+						[
+							"table" => "haushaltsgruppen",
+							"type" => "left",
+							"on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"],
 						],
 					]
 				);
@@ -167,6 +173,7 @@ class BookingTableManager
 						"titel_nr",
 						"titel_name",
 						"titel_id" => "haushaltstitel.id",
+						"titel_type" => "haushaltsgruppen.type",
 						"extern_data.value",
 						"etag",
 					],
@@ -181,6 +188,11 @@ class BookingTableManager
 							"table" => "haushaltstitel",
 							"type" => "left",
 							"on" => ["extern_data.titel_id", "haushaltstitel.id"]
+						],
+						[
+							"table" => "haushaltsgruppen",
+							"type" => "left",
+							"on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"],
 						],
 					]
 				);
@@ -241,12 +253,12 @@ class BookingTableManager
 		}
 		$header = [
 			"zahlung" => "Zahlung",
-			"zahlung-value" => "Zahlung-Betrag",
+			"zahlung-value" => "Betrag Zahlung",
 			"beleg" => "Beleg",
-			"posten" => "Posten",
-			"titel" => "Titel Nummer",
-			"posten-ist" => "Posten-Buchung",
-			"posten-soll" => "Posten-soll",
+			"posten" => "Posten/Vorgang",
+			"titel" => "Titel",
+			"posten-ist" => "Betrag Buchung",
+			"posten-soll" => "Betrag Beleg",
 			"text" => "Buchungstext",
 		];
 		$table = $this->getTable(); ?>
@@ -280,7 +292,8 @@ class BookingTableManager
 								$title = isset($cell["title"]) ? $cell["title"] : "";
 								$colspan = isset($cell["colspan"]) ? $cell["colspan"] : 1;
 								$id = "booking-table_" . $key . "-" . $nr_of_rows;
-								echo "<td id='$id' class='vertical-center' colspan='$colspan' rowspan='{$cell["rowspan"]}' title='$title'>{$cell["val"]}</td>";
+								echo "<td id='$id' class='vertical-center no-wrap' colspan='$colspan' rowspan='{$cell["rowspan"]}' title='$title'>
+{$cell["val"]}</td>";
 							}
 						}
 						echo "</tr>";
@@ -385,7 +398,7 @@ class BookingTableManager
 			$this->pushZahlung($z["id"], $z["konto_id"], $z["value"]);
 			$this->extendLastBeleg();
 			$this->extendLastPosten();
-			$this->pushNewPostenIst($z["value"], $prefilledText);
+			$this->pushNewPostenIst($z["value"], $b["titel_type"], $prefilledText);
 			return [0, 0];
 		}
 		
@@ -409,25 +422,25 @@ class BookingTableManager
 		
 		switch ($type){
 			case 0: //ging auf: next zahlung + next beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $prefilledText);
+				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
 			break;
 			case 1: //gleiche Zahlung, neuer Beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $prefilledText);
+				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
 				$bValDoneNew = $bVal;
 			break;
 			case 2: //übertrag -> next zahlung, same beleg
-				$this->pushNewPostenIst($zSum, $prefilledText);
+				$this->pushNewPostenIst($zSum, $b["titel_type"], $prefilledText);
 				$bValDoneNew = $bValDone + $zSum;
 				$zSumNew = 0;
 			break;
 			case 3: //zahlung wird (absolut) mehr
-				$this->pushNewPostenIst($bVal - $bValDone, $prefilledText);
+				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
 			break;
 			case 4: //beleg wird absolut mehr
-				$this->pushNewPostenIst($zSum, $prefilledText);
+				$this->pushNewPostenIst($zSum, $b["titel_type"], $prefilledText);
 			break;
 			case 5: //negative Zahlung, positiver Beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $prefilledText);
+				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
 			break;
 		}
 		
@@ -579,8 +592,10 @@ class BookingTableManager
 		}
 	}
 	
-	public function pushNewPostenIst($postenIstValue, $prefilledText = ""){
-		
+	public function pushNewPostenIst($postenIstValue, $titel_type, $prefilledText = ""){
+		if ($titel_type === "1"){
+			$postenIstValue = -$postenIstValue;
+		}
 		$this->table_tmp[$this->col_rest]["posten-ist"] = [
 			"val" => $this->moneyEscapeFunction($postenIstValue),
 			"val-raw" => $postenIstValue,
