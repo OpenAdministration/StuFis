@@ -229,11 +229,23 @@ class BookingHandler
 							case "extern":
 								$eId = $row["extern_id"];
 								$vId = $row["vorgang_id"];
-								echo "<td class='no-wrap'>" . generateLinkFromID(
-										"E$eId&nbsp;-&nbsp;V" . $vId,
-										"extern/$eId/$vId",
-										TextStyle::BLACK
-									) . "</td>";
+								/*generateLinkFromID(
+									"E$eId&nbsp;-&nbsp;V" . $vId,
+									"rest/extern/$eId/$vId",
+									TextStyle::BLACK
+								);*/
+								?>
+                                <td class='no-wrap'>
+                                    <form method="POST" action="<?= URIBASE
+									?>rest/forms/extern/<?= $eId . "/" . $vId ?>/zahlungsanweisung" class="ajax-form">
+										<?= "E" . $eId . " - V" . $vId ?>
+                                        <button type='submit' class='btn-link'><i class='fa fa-print'></i>
+                                        </button>
+                                        <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
+                                        <input type="hidden" name="d" value="0">
+                                    </form>
+                                </td>
+								<?php
 							break;
 							default:
 								ErrorHandler::_errorExit("Unknown beleg_type: " . $row["beleg_type"]);

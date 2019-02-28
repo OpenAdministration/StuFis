@@ -1621,12 +1621,14 @@ class AuslagenHandler2
 			'APIKEY' => FUI2PDF_APIKEY,
 			'action' => 'zahlungsanweisung',
 			
+			'short-type-projekt' => "IP",
 			'projekt-id' => $this->projekt_data['id'],
 			'projekt-name' => $this->projekt_data['name'],
 			'projekt-org' => $this->projekt_data['org'],
 			'projekt-recht' => $recht,
 			'projekt-create' => $this->projekt_data["createdat"],
 			
+			'short-type-auslage' => "A",
 			'auslage-id' => $this->auslagen_data["id"],
 			'auslage-name' => $this->auslagen_data["name_suffix"],
 			
@@ -2711,17 +2713,16 @@ class AuslagenHandler2
 				&& in_array($this->stateInfo['state'], ["ok", "instructed", "booked"])
 			){ ?>
                 <div class="col-xs-12 form-group">
-
                     <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
                             data-action="<?= URIBASE ?>rest/forms/auslagen/zahlungsanweisung" type="button"
-                            class="btn btn-primary auslagen-belege-pdf"><i class="fa fa-fw fa-print"> </i>Zahlungsanweisung
-                        PDF
+                            class="btn btn-primary auslagen-belege-pdf"><i class="fa fa-fw fa-print"> </i>
+                        Zahlungsanweisung PDF
                     </button>
                 </div>
                 <div class="col-xs-12 form-group">
                     <form method="POST" action="<?= URIBASE ?>rest/forms/auslagen/zahlungsanweisung">
-                        <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>Zahlungsanweisung
-                            PDF
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>
+                            Zahlungsanweisung PDF
                         </button>
                         <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
                         <input type="hidden" name="auslagen-id" value="<?= $this->auslagen_id ?>">

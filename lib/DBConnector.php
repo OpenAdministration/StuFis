@@ -241,7 +241,7 @@ class DBConnector
 			"contact_mail" => "VARCHAR(127) NULL",
 			"contact_name" => "VARCHAR(128) NULL",
 			"contact_phone" => "VARCHAR(32) NULL",
-			"org_adress" => "VARCHAR(255) NULL",
+			"org_address" => "VARCHAR(255) NULL",
 			"org_name" => "VARCHAR(127) NULL",
 			"org_mail" => "VARCHAR(127) NULL",
 			"zahlung_empf" => "VARCHAR(127) NULL",

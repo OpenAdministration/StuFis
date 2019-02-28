@@ -270,6 +270,35 @@ $routing = [
 								],
 							]
 						],
+						[
+							'path' => 'extern',
+							'type' => 'path',
+							'controller' => 'rest',
+							'action' => 'extern',
+							'children' => [
+								[
+									'path' => '\d+',
+									'type' => 'pattern',
+									'param' => 'eid',
+									'children' => [
+										[
+											'path' => '\d+',
+											'type' => 'pattern',
+											'param' => 'vid',
+											'children' => [
+												[
+													'path' => '(zahlungsanweisung)',
+													//updatecreate|filedelete|stat|belegpdf|
+													'type' => 'pattern',
+													'param' => 'mfunction',
+													'match' => 0,
+												],
+											]
+										]
+									]
+								],
+							]
+						],
 					]
 				],
 				[

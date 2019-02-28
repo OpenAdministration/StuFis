@@ -47,6 +47,9 @@ class RestHandler
 			case 'auslagen':
 				$this->handleAuslagen($routeInfo);
 			break;
+			case 'extern':
+				$this->handleExtern($routeInfo);
+			break;
 			case 'chat':
 				$this->handleChat($routeInfo);
 			break;
@@ -70,6 +73,11 @@ class RestHandler
 				ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
 			break;
 		}
+	}
+	
+	private function handleExtern($routeInfo){
+		$extHandler = new ExternVorgangHandler($routeInfo);
+		$extHandler->handlePost();
 	}
 	
 	public function saveNewKasseEntry(){
