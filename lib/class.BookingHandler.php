@@ -236,11 +236,11 @@ class BookingHandler
 								);*/
 								?>
                                 <td class='no-wrap'>
-                                    <form method="POST" action="<?= URIBASE
-									?>rest/forms/extern/<?= $eId . "/" . $vId ?>/zahlungsanweisung" class="ajax-form">
+                                    <form method="POST"
+                                          action="<?= URIBASE ?>rest/forms/extern/<?= $eId . "/" . $vId ?>/zahlungsanweisung"
+                                          class="ajax-form">
 										<?= "E" . $eId . " - V" . $vId ?>
-                                        <button type='submit' class='btn-link'><i class='fa fa-print'></i>
-                                        </button>
+                                        <button type='submit' class='btn-link'><i class='fa fa-print'></i></button>
                                         <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
                                         <input type="hidden" name="d" value="0">
                                     </form>
@@ -455,7 +455,7 @@ class BookingHandler
 			break;
 			default:
 				ErrorHandler::_errorExit(
-					"{$this->pathinfo['action']} kann nicht interpretiert werden - something went horrible wrong!"
+					"{$this->routeInfo['action']} kann nicht interpretiert werden - something went horrible wrong!"
 				);
 			break;
 		}
@@ -496,15 +496,15 @@ class BookingHandler
 		if (!isset($hhps) || empty($hhps)){
 			ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
 		}
-		if (!isset($this->pathinfo["hhp-id"])){
+		if (!isset($this->routeInfo["hhp-id"])){
 			foreach (array_reverse($hhps, true) as $id => $hhp){
 				if ($hhp["state"] === "final"){
-					$this->pathinfo["hhp-id"] = $id;
+					$this->routeInfo["hhp-id"] = $id;
 				}
 			}
 		}
 		?>
-        <form action="<?= $urlPrefix . $this->pathinfo["hhp-id"] . $urlSuffix ?>"
+        <form action="<?= $urlPrefix . $this->routeInfo["hhp-id"] . $urlSuffix ?>"
               data-action='<?= $urlPrefix . "%%" . $urlSuffix ?>'>
             <div class="input-group col-xs-2 pull-right">
                 <select class="selectpicker" id="hhp-id"><?php
@@ -513,7 +513,7 @@ class BookingHandler
 						$bis = !empty($hhp["bis"]) ? date_create($hhp["bis"])->format("M Y") : false;
 						$name = $bis ? $von . " bis " . $bis : "ab " . $von;
 						?>
-                        <option value="<?= $id ?>" <?= $id == $this->pathinfo["hhp-id"] ? "selected" : "" ?>
+                        <option value="<?= $id ?>" <?= $id == $this->routeInfo["hhp-id"] ? "selected" : "" ?>
                                 data-subtext="<?= $hhp["state"] ?>"><?= $name ?>
                         </option>
 					<?php } ?>
@@ -526,7 +526,7 @@ class BookingHandler
             </div>
         </form>
 		<?php
-		return [$hhps, $this->pathinfo["hhp-id"]];
+		return [$hhps, $this->routeInfo["hhp-id"]];
 	}
 	
 	private function renderBooking($active){
