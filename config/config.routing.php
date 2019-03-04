@@ -405,47 +405,51 @@ $routing = [
 			'method' => 'GET',
 			'children' => [
 				[
-					'path' => 'csv',
+					'path' => 'hhp',
 					'type' => 'path',
-					'controller' => 'error',
+					'controller' => 'hhp',
 					'children' => [
 						[
-							'path' => 'hhp',
-							'type' => 'path',
-							'controller' => 'hhp',
+							'path' => '([0-9]*)',
+							'type' => 'pattern',
+							'param' => 'hhp-id',
 							'children' => [
 								[
-									'path' => '([0-9]*)',
-									'type' => 'pattern',
-									'param' => 'hhp-id',
+									'path' => 'csv',
+									'type' => 'path',
 									'action' => 'export-csv',
 								],
-							]
+							],
 						],
+					],
+				],
+				[
+					'path' => 'booking',
+					'type' => 'path',
+					'controller' => 'booking',
+					'children' => [
 						[
-							'path' => 'booking',
-							'type' => 'path',
-							'controller' => 'booking',
+							'path' => '([0-9]*)',
+							'type' => 'pattern',
+							'param' => 'hhp-id',
 							'children' => [
 								[
-									'path' => '([0-9]*)',
-									'type' => 'pattern',
-									'param' => 'hhp-id',
-									'children' => [
-										[
-											'path' => 'full-list',
-											'type' => 'path',
-											'action' => 'export-list-csv',
-										],
-									]
+									'path' => 'csv',
+									'type' => 'path',
+									'action' => 'export-csv',
 								],
-							]
+								[
+									'path' => 'zip',
+									'type' => 'path',
+									'action' => 'export-zip',
+								],
+							],
 						],
-					]
-				]
-			]
+					],
+				],
+			],
 		],
-	]
+	],
 ];
 
 

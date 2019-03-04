@@ -50,17 +50,22 @@ class CSVBuilder{
 	}
 	
 	public function echoCSV($fileName = "", $withRowHeader = true, $encoding = "WINDOWS-1252"){
+		if (!empty($fileName)){
+			header('Content-type: text/csv');
+			header("Content-disposition: attachment;filename=$fileName.csv");
+		}
+		echo $this->getCSV($withRowHeader, $encoding);
+		die();
+	}
+	
+	public function getCSV($withRowHeader = true, $encoding = "WINDOWS-1252"){
 		if ($withRowHeader === true){
 			$ret = implode($this->cellSeparator, $this->header) . self::ROW_SEPARATOR . $this->csvString;
 		}else{
 			$ret = $this->csvString;
 		}
-		if (!empty($fileName)){
-			header('Content-type: text/csv');
-			header("Content-disposition: attachment;filename=$fileName.csv");
-		}
-		echo mb_convert_encoding($ret, $encoding, "UTF-8");
-		die();
+		
+		return mb_convert_encoding($ret, $encoding, "UTF-8");
 	}
 	
 	private function buildRow($row){

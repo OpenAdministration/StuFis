@@ -35,8 +35,11 @@ class BookingHandler
 			case "history":
 				$this->renderBookingHistory("history");
 			break;
-			case "export-list-csv":
+			case "export-csv":
 				$this->renderCSV();
+			break;
+			case "export-zip":
+				$this->renderFullBookingZip();
 			break;
 			default:
 				ErrorHandler::_errorExit("Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
@@ -107,7 +110,78 @@ class BookingHandler
 		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-Buchungsliste-$von-bis-$bis");
 	}
 	
-	private function fetchBookingHistoryDataFromDB($hhp_id){
+	private function renderFullBookingZip(){
+		if (!isset($this->routeInfo["hhp-id"])){
+			ErrorHandler::_errorExit("hhp-id nicht gesetzt");
+		}
+		
+		$zip = new ZipArchive();
+		$zipFileName = "HHA.zip";
+		$zipFilePath = tempnam(sys_get_temp_dir(), "HHA");
+		
+		if (($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true){
+			ErrorHandler::_errorExit("Zip kann nicht erstellt werden. ErrorCode: " . $ret);
+		}
+		
+		list($kontoTypes, $data) = $this->fetchBookingHistoryDataFromDB(
+			$this->routeInfo["hhp-id"],
+			[
+				"titel_nr" => true,
+				"konto.date" => true,
+				"konto.id" => true
+			]
+		);
+		$dataByTitel = [];
+		foreach ($data as $id => $row){
+			$titelNr = str_replace(" ", "", $row["titel_nr"]);
+			$dataByTitel[$titelNr][] = $row;
+		}
+		
+		$header = [
+			"id" => "Buchungsnummer",
+			"zahlung_date" => "Datum der Zahlung",
+			"value" => "Betrag",
+			"zahlung" => "Zahlungsnr",
+			"einnahmen" => "Einnahmen",
+			"ausgaben" => "Ausgaben",
+			"beleg_type" => "Belegtyp",
+			"comment" => "Buchungstext",
+		];
+		
+		foreach ($dataByTitel as $titel_nr => $items){
+			foreach ($items as $key => $row){
+				$items[$key]["zahlung"] = $kontoTypes[$row["zahlung_type"]]["short"] . $row["zahlung_id"];
+				$items[$key]["einnahmen"] = ($row["zahlung_value"] > 0) ? floatval($row["zahlung_value"]) : "0.00";
+				$items[$key]["ausgaben"] = ($row["zahlung_value"] < 0) ? -floatval($row["zahlung_value"]) : "0.00";
+				switch ($row["beleg_type"]){
+					case "belegposten":
+						$items[$key]["beleg_type"] = "Intern";
+					break;
+					case "extern":
+						$items[$key]["beleg_type"] = "Extern";
+					break;
+					default:
+						ErrorHandler::_errorExit($row["beleg_type"] . "kann nicht interpretiert werden");
+					break;
+				}
+			}
+			$csvHandler = new CSVBuilder($items, $header);
+			$csvString = $csvHandler->getCSV();
+			$zip->addFromString($titel_nr . ".csv", $csvString);
+		}
+		
+		if ($zip->close() === true && ($content = file_get_contents($zipFilePath)) !== false){
+			header('Content-Type: application/zip');
+			header('Content-disposition: attachment; filename=' . $zipFileName);
+			header('Content-Length: ' . filesize($zipFileName));
+			echo $content;
+			unlink($zipFilePath);
+		}else{
+			echo "Error :(";
+		}
+	}
+	
+	private function fetchBookingHistoryDataFromDB($hhp_id, $sortBy = ["timestamp" => true, "id" => true]){
 		$kontoTypes = DBConnector::getInstance()->dbFetchAll(
 			"konto_type",
 			[DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
@@ -171,7 +245,7 @@ class BookingHandler
 					"on" => [["konto.id", "booking.zahlung_id"], ["booking.zahlung_type", "konto.konto_id"]],
 				],
 			],
-			["timestamp" => true, "id" => true]
+			$sortBy
 		);
 		
 		return [$kontoTypes, $data];
@@ -292,8 +366,17 @@ class BookingHandler
 				<?php } ?>
                 </tbody>
             </table>
-            <a class="btn btn-primary" target="_blank" href="<?= URIBASE ?>export/csv/booking/<?= $hhp_id ?>/full-list">
-                <i class="fa fa-fw fa-download"></i> als CSV (WINDOWS-1252 encoded)
+            <a class="btn btn-primary"
+               target="_blank"
+               href="<?= URIBASE ?>export/booking/<?= $hhp_id ?>/csv"
+               title="CSV ist WINDOWS-1252 encoded (für Excel optimiert)">
+                <i class="fa fa-fw fa-download"></i> als .csv
+            </a>
+            <a class="btn btn-primary"
+               target="_blank"
+               href="<?= URIBASE ?>export/booking/<?= $hhp_id ?>/zip"
+               title="CSV ist WINDOWS-1252 encoded (für Excel optimiert)">
+                <i class="fa fa-fw fa-download"></i> als .zip
             </a>
 			<?php
 		}else{
@@ -370,6 +453,7 @@ class BookingHandler
 							$zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"] . PHP_EOL . $zahlung["zweck"]
 						) ?>">
                             <td><?= htmlspecialchars($prefix . $zahlung["id"]) ?></td>
+                            <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
                             <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
                             <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
                             <td class="visible-md visible-lg"><?= $this->makeProjektsClickable(
