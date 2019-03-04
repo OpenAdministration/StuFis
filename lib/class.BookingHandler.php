@@ -165,6 +165,16 @@ class BookingHandler
 					break;
 				}
 			}
+			$items[] = [
+				"id" => "",
+				"zahlung_date" => "Summe",
+				"value" => "=SUM(C2:C" . (count($items) + 1) . ")",
+				"zahlung" => "",
+				"einnahmen" => "=SUM(E2:E" . (count($items) + 1) . ")",
+				"ausgaben" => "=SUM(F2:F" . (count($items) + 1) . ")",
+				"beleg_type" => "",
+				"comment" => "",
+			];
 			$csvHandler = new CSVBuilder($items, $header);
 			$csvString = $csvHandler->getCSV();
 			$zip->addFromString($titel_nr . ".csv", $csvString);

@@ -7,13 +7,15 @@
  */
 
 class CSVBuilder{
+	const LANG_DE = 1;
+	const LANG_EN = 2;
 	private $data;
 	private $header;
 	private $csvString;
 	private $cellEscape;
 	private $cellSeparator;
 	private $escapeFormulas;
-	private $numberSeparator;
+	private $lang;
 	
 	const ROW_SEPARATOR = PHP_EOL;
 	
@@ -26,18 +28,18 @@ class CSVBuilder{
 	 * @param string $cellSeparator default is ","
 	 * @param bool   $escapeFormulars
 	 * @param string $cellEscape
-	 * @param string $numberSeparator
+	 * @param int    $lang
 	 */
 	public function __construct(
 		array $data, array $header, $cellSeparator = ";", $escapeFormulars = false,
-		$cellEscape = "\"", $numberSeparator = ","
+		$cellEscape = "\"", $lang = self::LANG_DE
 	){
 		$this->data = $data;
 		$this->header = $header;
 		$this->cellSeparator = $cellSeparator;
 		$this->cellEscape = $cellEscape;
 		$this->escapeFormulas = $escapeFormulars;
-		$this->numberSeparator = $numberSeparator;
+		$this->lang = $lang;
 		$this->csvString = $this->buildCSV();
 	}
 	
@@ -91,12 +93,22 @@ class CSVBuilder{
 	}
 	
 	private function escapeCell($cell){
-		if (is_numeric($cell)){
-			return $this->cellEscape . str_replace(".", $this->numberSeparator, $cell) . $this->cellEscape;
+		if (is_numeric($cell) && $this->lang === self::LANG_DE){
+			return $this->cellEscape . str_replace(".", ",", strip_tags($cell)) . $this->cellEscape;
 		}
 		if (is_string($cell)){
-			if (substr($cell, 0, 1) === "=" && !$this->escapeFormulas){
-				return strip_tags($cell);
+			if (substr($cell, 0, 1) === "="){
+				if ($this->lang === self::LANG_DE){
+					$cell = strtolower($cell);
+					$cell = str_replace("if", "wenn", $cell);
+					$cell = str_replace("sum", "summe", $cell);
+					$cell = str_replace("sumif", "summewenn", $cell);
+					$cell = str_replace("count", "zählen", $cell);
+					$cell = str_replace("countif", "zählenwenn", $cell);
+				}
+				if (!$this->escapeFormulas){
+					return strip_tags($cell);
+				}
 			}
 		}
 		return $this->cellEscape . strip_tags($cell) . $this->cellEscape;
