@@ -7,549 +7,572 @@
  */
 
 class ProjektHandler
-	extends FormHandlerInterface{
-	static private $emptyData;
-	static private $selectable_recht;
-	static private $states;
-	static private $stateChanges;
-	static private $printModes;
-	static private $visibleFields;
-	static private $writePermissionAll;
-	static private $writePermissionFields;
-	
-	private $templater;
-	private $stateHandler;
-	/**
-	 * @var PermissionHandler
-	 */
-	private $permissionHandler;
-	private $id;
-	private $action;
-	private $data;
-	
-	function __construct($pathInfo){
-		//print_r($pathInfo);
-		self::initStaticVars();
-		if (!isset($pathInfo["action"]))
-			ErrorHandler::_errorExit("Aktion nicht gesetzt");
-		$this->action = $pathInfo["action"];
-		
-		if ($this->action === "create" || !isset($pathInfo["pid"])){
-			$this->data = self::$emptyData;
-			$stateNow = "draft";
-		}else{
-			$this->id = $pathInfo["pid"];
-			$res = DBConnector::getInstance()->dbFetchAll(
-				"projekte",
-				[DBConnector::FETCH_ASSOC],
-				[],
-				["projekte.id" => $this->id],
-				[
-					["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
-				],
-				["version" => true]
-			);
-			if (!empty($res))
-				$this->data = $res[0];
-			else
-				die("konnte Projekt nicht finden :(");
-			$tmp = DBConnector::getInstance()->dbFetchAll(
-				"projektposten",
-				[DBConnector::FETCH_ASSOC],
-				[],
-				["projekt_id" => $this->id]
-			);
-			foreach ($tmp as $row){
-				$idx = $row["id"];
-				$this->data["posten-name"][$idx] = $row["name"];
-				$this->data["posten-bemerkung"][$idx] = $row["bemerkung"];
-				$this->data["posten-einnahmen"][$idx] = $row["einnahmen"];
-				$this->data["posten-ausgaben"][$idx] = $row["ausgaben"];
-				$this->data["posten-titel"][$idx] = $row["titel_id"];
-			}
-			$stateNow = $this->data["state"];
-		}
-		
-		$editMode = $this->action === "create" || $this->action === "edit";
-		$this->stateHandler = new StateHandler("projekte", self::$states, self::$stateChanges, [], [], $stateNow);
-		$this->permissionHandler = new PermissionHandler(
-			self::$emptyData,
-			$this->stateHandler,
-			self::$writePermissionAll,
-			self::$writePermissionFields,
-			self::$visibleFields,
-			$editMode
-		);
-		$this->templater = new FormTemplater($this->permissionHandler);
-	}
-	
-	static function initStaticVars(){
-		if (isset(self::$states))
-			return false;
-		self::$states = [
-			"draft" => ["Entwurf",],
-			"wip" => ["Beantragt", "beantragen"],
-			"ok-by-hv" => ["Genehmigt durch HV (nicht verkündet)",],
-			"need-stura" => ["Warte auf StuRa-Beschluss",],
-			"ok-by-stura" => ["Genehmigt durch StuRa-Beschluss",],
-			"done-hv" => ["verkündet durch HV",],
-			"done-other" => ["Genehmigt (Verkündung nicht nötig)",],
-			"revoked" => [
-				"Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)",
-				"zurückziehen / ablehnen",
-			],
-			"terminated" => ["Abgeschlossen (keine weiteren Ausgaben)", "beenden",],
-		];
-		self::$stateChanges = [
-			"draft" => [
-				"wip" => ["groups" => ["sgis"]],
-			],
-			"wip" => [
-				"draft" => true,
-				"need-stura" => ["groups" => ["ref-finanzen-hv"]],
-				"ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
-				"done-other" => ["groups" => ["ref-finanzen-hv"]],
-				"revoked" => ["groups" => ["sgis"]],
-			],
-			"ok-by-hv" => [
-				"done-hv" => ["groups" => ["ref-finanzen-hv"]],
-			],
-			"need-stura" => [
-				"ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
-				"revoked" => ["groups" => ["ref-finanzen-hv"]],
-			],
-			"done-hv" => [
-				"terminated" => true,
-			],
-			"done-other" => [
-				"terminated" => true,
-			],
-			"ok-by-stura" => [
-				"terminated" => true,
-			],
-			"revoked" => [
-				"wip" => ["groups" => ["sgis"]],
-			],
-			"terminated" => [
-				"done-hv" => ["groups" => ["ref-finanzen-hv"]],
-				"done-other" => ["groups" => ["ref-finanzen-hv"]],
-				"ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
-			],
-		];
-		self::$printModes = [
-			"zahlungsanweisung" =>
-				[
-					"title" => "Titelseite drucken",
-					"condition" => [
-						["state" => "draft", "group" => "ref-finanzen"],
-						["state" => "ok-by-stura", "group" => "ref-finanzen"],
-					],
-				],
-		];
-		self::$selectable_recht =
-			[
-				"values" => "",
-				"groups" =>
-					[
-						[
-							//"label" => "Gruppenname",
-							"options" => [
-								[
-									"label" => "Büromaterial",
-									"value" => "buero",
-								],
-								[
-									"label" => "Fahrtkosten",
-									"value" => "fahrt",
-								],
-								[
-									"label" => "Verbrauchsmaterial",
-									"value" => "verbrauch",
-								],
-								[
-									"label" => "Beschluss StuRa-Sitzung",
-									"value" => "stura",
-								],
-								[
-									"label" => "Beschluss Fachschaftsrat/Referat/AG bis zu 250 EUR",
-									"value" => "fsr-ref",
-								],
-								[
-									"label" => "Gremienkleidung",
-									"value" => "kleidung",
-								],
-								[
-									"label" => "Bahncard",
-									"value" => "bahn-card",
-								],
-								[
-									"label" => "Andere Rechtsgrundlage",
-									"value" => "andere",
-								],
-							],
-						],
-					],
-			];
-		
-		self::$emptyData = [
-			'id' => '',
-			'creator_id' => '',
-			'createdat' => '',
-			'lastupdated' => '',
-			'version' => '1',
-			'state' => 'draft',
-			'stateCreator_id' => '',
-			'name' => '',
-			'responsible' => '',
-			'org' => '',
-			'org-mail' => '',
-			'protokoll' => '',
-			'beschreibung' => '',
-			'recht' => '',
-			'recht-additional' => '',
-			'posten-name' => [1 => ""],
-			'posten-bemerkung' => [1 => ""],
-			'posten-titel' => [1 => ""],
-			'posten-einnahmen' => [1 => 0],
-			'posten-ausgaben' => [1 => 0],
-			'date-start' => '',
-			'date-end' => '',
-		];
-		self::$visibleFields = [
-			"recht" => [
-				"wip",
-				"ok-by-hv",
-				"need-stura",
-				"ok-by-stura",
-				"done-hv",
-				"done-other",
-				"terminated",
-			],
-			"posten-titel" => [
-				"wip",
-				"ok-by-hv",
-				"need-stura",
-				"ok-by-stura",
-				"done-hv",
-				"done-other",
-				"terminated",
-			],
-		];
-		self::$writePermissionAll = [
-			"draft" => ["groups" => ["sgis"]],
-			"wip" => ["groups" => ["ref-finanzen-hv"]],
-			"ok-by-hv" => [],
-			"need-stura" => ["groups" => ["ref-finanzen-hv"]],
-			"ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
-			"done-hv" => ["groups" => ["ref-finanzen-hv"]],
-			"done-other" => ["groups" => ["ref-finanzen-hv"]],
-			"terminated" => [],
-			"revoked" => [],
-		];
-		self::$writePermissionFields = [
-			"ok-by-hv" => [
-				"recht-additional" => ["groups" => ["ref-finanzen-hv"]],
-			],
-		];
-		return true;
-	}
-	
-	
-	/**
-	 * @param $data
-	 *
-	 * @return ProjektHandler
-	 * @throws InvalidDataException
-	 * @throws PDOException
-	 */
-	public static function createNewProjekt($data): ProjektHandler{
-		
-		$maxRows = max(
-			count($data["posten-name"]),
-			count($data["posten-bemerkung"]),
-			count($data["posten-einnahmen"]),
-			count($data["posten-ausgaben"])
-		);
-		$minRows = min(
-			count($data["posten-name"]),
-			count($data["posten-bemerkung"]),
-			count($data["posten-einnahmen"]),
-			count($data["posten-ausgaben"])
-		);
-		
-		if ($maxRows !== $minRows){
-			throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
-		}
-		
-		$user_id = DBConnector::getInstance()->getUser()["id"];
-		$projekt_id = DBConnector::getInstance()->dbInsert(
-			"projekte",
-			[
-				"creator_id" => $user_id,
-				"createdat" => date("Y-m-d H:i:s"),
-				"lastupdated" => date("Y-m-d H:i:s"),
-				"version" => 1,
-				"state" => "draft",
-				"stateCreator_id" => $user_id,
-				"name" => $data["name"],
-				"responsible" => $data["responsible"],
-				"org" => $data["org"],
-				"org-mail" => $data["org-mail"],
-				"protokoll" => $data["protokoll"],
-				"beschreibung" => $data["beschreibung"],
-				"date-start" => $data["date-start"],
-				"date-end" => $data["date-end"],
-			]
-		);
-		
-		for ($i = 0; $i < $minRows - 1; $i++){
-			if (floatval($data["posten-ausgaben"][$i]) > 0 && floatval($data["posten-einnahmen"][$i]) > 0){
-				throw new InvalidDataException(
-					"Projektposten dürfen nicht gleichzeitig Einnahmen und Ausgaben enthalten."
-				);
-			}
-			DBConnector::getInstance()->dbInsert(
-				"projektposten",
-				[
-					"id" => $i + 1,
-					"projekt_id" => $projekt_id,
-					"einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
-						$data["posten-einnahmen"][$i],
-						"money"
-					),
-					"ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue(
-						$data["posten-ausgaben"][$i],
-						"money"
-					),
-					"name" => $data["posten-name"][$i],
-					"bemerkung" => $data["posten-bemerkung"][$i]
-				]
-			);
-		}
-		
-		return new ProjektHandler(["pid" => $projekt_id, "action" => "none"]);
-	}
-	
-	public static function getStateStringFromName($statename){
-		self::initStaticVars();
-		return self::$states[$statename][0];
-	}
-	
-	/**
-	 * @param $data
-	 *
-	 * @return bool|int
-	 * @throws PDOException
-	 * @throws WrongVersionException
-	 * @throws InvalidDataException
-	 */
-	public function updateSavedData($data){
-		$data = array_intersect_key($data, self::$emptyData);
-		$version = $data["version"];
-		
-		//check if version is the same
-		if ($version !== $this->data["version"])
-			throw new WrongVersionException("Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!");
-		//check if row count is everywhere the same
-		$maxRows = $minRows = 0;
-		if (isset($data["posten-name"]) && isset($data["posten-bemerkung"]) && isset($data["posten-einnahmen"]) && isset($data["posten-ausgaben"])){
-			$maxRows = max(
-				count($data["posten-name"]),
-				count($data["posten-bemerkung"]),
-				count($data["posten-einnahmen"]),
-				count($data["posten-ausgaben"])
-			);
-			$minRows = min(
-				count($data["posten-name"]),
-				count($data["posten-bemerkung"]),
-				count($data["posten-einnahmen"]),
-				count($data["posten-ausgaben"])
-			);
-		}
-		//wenn posten-titel nicht mit übertragen setze dummy an seine stelle
-		if (!isset($data["posten-titel"])){
-			$data["posten-titel"] = array_fill(0, $maxRows, null);
-		}
-		
-		//wenn anzahl der rows nicht identisch -> error
-		if ($maxRows !== $minRows || count($data["posten-titel"]) !== $minRows){
-			throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
-		}
-		//remove some Autogenerated values
-		$generatedFields = [
-			"id" => $this->id,
-			"lastupdated" => date("Y-m-d H:i:s"),
-			"version" => ($this->data["version"] + 1)
-		];
-		//extract some fields for other db destination
-		$extractFields = ["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben", "posten-titel"];
-		$extractFields = array_intersect_key($data, array_flip($extractFields));
-		$data = array_diff_key($data, $generatedFields, $extractFields);
-		
-		$recht_unset = false;
-		if (isset($data["recht-additional"])){
-			if (!isset($data["recht"]) && isset($this->data['recht'])){
-				$data["recht"] = $this->data['recht'];
-				$recht_unset = true;
-			}
-			if (!isset($data["recht"])){
-				$data["recht-additional"] = "";
-			}else if (isset($data["recht-additional"][$data["recht"]])){
-				$data["recht-additional"] = $data["recht-additional"][$data["recht"]];
-			}else{
-				$data["recht-additional"] = "";
-			}
-		}
-		
-		if ($recht_unset){
-			unset($data["recht"]);
-		}
-		
-		//check if fields editable
-		$fields = $generatedFields;
-		foreach ($data as $name => $content){
-			if ($this->permissionHandler->isEditable($name) && $this->permissionHandler->isVisibleField($name)){
-				if (!empty($content)){
-					$fields[$name] = $content;
-				}else{
-					$fields[$name] = null;
-				}
-			}else{
-				ErrorHandler::_renderJson(["code" => 403, "msg" => "Du hast keine Berechtigung '$name' zu schreiben."]);
-			}
-		}
-		$update_rows = DBConnector::getInstance()->dbUpdate(
-			"projekte",
-			["id" => $this->id, "version" => $version],
-			$fields
-		);
-		
-		if ($this->permissionHandler->isEditable(
-			['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
-			'and'
-		)){
-			//set new posten values, *delete* old
-			DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
-			for ($i = 0; $i < $minRows - 1; $i++){
-				//would throw exception if not working
-				DBConnector::getInstance()->dbInsert(
-					"projektposten",
-					[
-						"id" => $i + 1,
-						"projekt_id" => $this->id,
-						"titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
-						"einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
-							$extractFields["posten-einnahmen"][$i],
-							"money"
-						),
-						"ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue(
-							$extractFields["posten-ausgaben"][$i],
-							"money"
-						),
-						"name" => $extractFields["posten-name"][$i],
-						"bemerkung" => $extractFields["posten-bemerkung"][$i]
-					]
-				);
-			}
-		}
-		return $update_rows === 1; //true falls nur ein Eintrag geändert
-	}
-	
-	/**
-	 * @param $stateName
-	 *
-	 * @return  bool
-	 * @throws IllegalStateException
-	 * @throws IllegalTransitionException
-	 */
-	public function setState($stateName){
-		if (!in_array($stateName, $this->getNextPossibleStates(), true))
-			throw new IllegalStateException("In den Status $stateName kann nicht gewechselt werden");
-		
-		$user_id = DBConnector::getInstance()->getUser()["id"];
-		$logID = DBConnector::getInstance()->logThisAction(
-			[
-				"user_id" => $user_id,
-				"newState" => $stateName,
-				"id" => $this->id,
-				"version_before" => $this->data["version"]
-			],
-			"changeState"
-		);
-		DBConnector::getInstance()->dbUpdate(
-			"projekte",
-			["id" => $this->id, "version" => $this->data["version"]],
-			[
-				"state" => $stateName,
-				"stateCreator_id" => $user_id,
-				"lastupdated" => date("Y-m-d H:i:s"),
-				"version" => ($this->data["version"] + 1)
-			]
-		);
-		$chat = new ChatHandler('projekt', $this->id);
-		$chat->_createComment(
-			'projekt',
-			$this->id,
-			date_create()->format('Y-m-d H:i:s'),
-			'system',
-			'',
-			self::$states[$this->data['state']][0] . ' -> ' . self::$states[$stateName][0],
-			1
-		);
-		$this->stateHandler->transitionTo($stateName);
-		return true;
-	}
-	
-	public function getNextPossibleStates(){
-		return $this->stateHandler->getNextStates(true);
-	}
-	
-	function render(){
-		if ($this->action === "create" || !isset($this->id)){
-			$this->renderProjekt("neues Projekt anlegen");
-			return;
-		}
-		
-		switch ($this->action){
-			case "edit":
-				$this->renderBackButton();
-				$this->renderProjekt("Projekt bearbeiten");
-			break;
-			case "view":
-				$this->renderInteractionPanel();
-				//echo $this->templater->getStateChooser($this->stateHandler);
-				$this->renderProjekt("Internes Projekt");
-				$this->render_chat_box();
-				$this->renderProjektSizeGrafic();
-				$this->renderAuslagenList();
-			break;
-			default:
-				ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
-			break;
-		}
-	}
-	
-	private function renderProjekt($title){
-		$auth = (AUTH_HANDLER);
-		/* @var $auth AuthHandler */
-		$auth = $auth::getInstance();
-		$validateMe = false;
-		$editable = $this->permissionHandler->isAnyDataEditable();
-		
-		//build dropdowns
-		$selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
-		$selectable_gremien["values"] = $this->data['org'];
-		
-		$mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-		$selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
-		$selectable_mail["values"] = $this->data['org-mail'];
-		
-		$sel_recht = self::$selectable_recht;
-		$sel_recht["values"] = $this->data['recht'];
-		
-		$selectable_titel = FormTemplater::generateTitelSelectable(5); //FIXME not fixed 5!
-		
-		?>
+    extends FormHandlerInterface
+{
+    static private $emptyData;
+    static private $selectable_recht;
+    static private $states;
+    static private $stateChanges;
+    static private $printModes;
+    static private $visibleFields;
+    static private $writePermissionAll;
+    static private $writePermissionFields;
+
+    private $templater;
+    private $stateHandler;
+    /**
+     * @var PermissionHandler
+     */
+    private $permissionHandler;
+    private $id;
+    private $action;
+    private $data;
+
+    function __construct($pathInfo)
+    {
+        //print_r($pathInfo);
+        self::initStaticVars();
+        if (!isset($pathInfo["action"]))
+            ErrorHandler::_errorExit("Aktion nicht gesetzt");
+        $this->action = $pathInfo["action"];
+
+        if ($this->action === "create" || !isset($pathInfo["pid"])) {
+            $this->data = self::$emptyData;
+            $stateNow = "draft";
+        } else {
+            $this->id = $pathInfo["pid"];
+            $res = DBConnector::getInstance()->dbFetchAll(
+                "projekte",
+                [DBConnector::FETCH_ASSOC],
+                [],
+                ["projekte.id" => $this->id],
+                [
+                    ["type" => "left", "table" => "user", "on" => [["user.id", "projekte.creator_id"]]],
+                ],
+                ["version" => true]
+            );
+            if (!empty($res))
+                $this->data = $res[0];
+            else
+                die("konnte Projekt nicht finden :(");
+            $tmp = DBConnector::getInstance()->dbFetchAll(
+                "projektposten",
+                [DBConnector::FETCH_ASSOC],
+                [],
+                ["projekt_id" => $this->id]
+            );
+            foreach ($tmp as $row) {
+                $idx = $row["id"];
+                $this->data["posten-name"][$idx] = $row["name"];
+                $this->data["posten-bemerkung"][$idx] = $row["bemerkung"];
+                $this->data["posten-einnahmen"][$idx] = $row["einnahmen"];
+                $this->data["posten-ausgaben"][$idx] = $row["ausgaben"];
+                $this->data["posten-titel"][$idx] = $row["titel_id"];
+            }
+            $stateNow = $this->data["state"];
+        }
+
+        $editMode = $this->action === "create" || $this->action === "edit";
+        $this->stateHandler = new StateHandler("projekte", self::$states, self::$stateChanges, [], [], $stateNow);
+        $this->permissionHandler = new PermissionHandler(
+            self::$emptyData,
+            $this->stateHandler,
+            self::$writePermissionAll,
+            self::$writePermissionFields,
+            self::$visibleFields,
+            $editMode
+        );
+        $this->templater = new FormTemplater($this->permissionHandler);
+    }
+
+    static function initStaticVars()
+    {
+        if (isset(self::$states))
+            return false;
+        self::$states = [
+            "draft" => ["Entwurf",],
+            "wip" => ["Beantragt", "beantragen"],
+            "ok-by-hv" => ["Genehmigt durch HV (nicht verkündet)",],
+            "need-stura" => ["Warte auf StuRa-Beschluss",],
+            "ok-by-stura" => ["Genehmigt durch StuRa-Beschluss",],
+            "done-hv" => ["verkündet durch HV",],
+            "done-other" => ["Genehmigt (Verkündung nicht nötig)",],
+            "revoked" => [
+                "Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)",
+                "zurückziehen / ablehnen",
+            ],
+            "terminated" => ["Abgeschlossen (keine weiteren Ausgaben)", "beenden",],
+        ];
+        self::$stateChanges = [
+            "draft" => [
+                "wip" => ["groups" => ["sgis"]],
+            ],
+            "wip" => [
+                "draft" => true,
+                "need-stura" => ["groups" => ["ref-finanzen-hv"]],
+                "ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
+                "done-other" => ["groups" => ["ref-finanzen-hv"]],
+                "revoked" => ["groups" => ["sgis"]],
+            ],
+            "ok-by-hv" => [
+                "done-hv" => ["groups" => ["ref-finanzen-hv"]],
+            ],
+            "need-stura" => [
+                "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
+                "revoked" => ["groups" => ["ref-finanzen-hv"]],
+            ],
+            "done-hv" => [
+                "terminated" => true,
+            ],
+            "done-other" => [
+                "terminated" => true,
+            ],
+            "ok-by-stura" => [
+                "terminated" => true,
+            ],
+            "revoked" => [
+                "wip" => ["groups" => ["sgis"]],
+            ],
+            "terminated" => [
+                "done-hv" => ["groups" => ["ref-finanzen-hv"]],
+                "done-other" => ["groups" => ["ref-finanzen-hv"]],
+                "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
+            ],
+        ];
+        self::$printModes = [
+            "zahlungsanweisung" =>
+                [
+                    "title" => "Titelseite drucken",
+                    "condition" => [
+                        ["state" => "draft", "group" => "ref-finanzen"],
+                        ["state" => "ok-by-stura", "group" => "ref-finanzen"],
+                    ],
+                ],
+        ];
+        self::$selectable_recht =
+            [
+                "values" => "",
+                "groups" =>
+                    [
+                        [
+                            //"label" => "Gruppenname",
+                            "options" => [
+                                [
+                                    "label" => "Büromaterial",
+                                    "value" => "buero",
+                                ],
+                                [
+                                    "label" => "Fahrtkosten",
+                                    "value" => "fahrt",
+                                ],
+                                [
+                                    "label" => "Verbrauchsmaterial",
+                                    "value" => "verbrauch",
+                                ],
+                                [
+                                    "label" => "Beschluss StuRa-Sitzung",
+                                    "value" => "stura",
+                                ],
+                                [
+                                    "label" => "Beschluss Fachschaftsrat/Referat/AG bis zu 250 EUR",
+                                    "value" => "fsr-ref",
+                                ],
+                                [
+                                    "label" => "Gremienkleidung",
+                                    "value" => "kleidung",
+                                ],
+                                [
+                                    "label" => "Bahncard",
+                                    "value" => "bahn-card",
+                                ],
+                                [
+                                    "label" => "Andere Rechtsgrundlage",
+                                    "value" => "andere",
+                                ],
+                            ],
+                        ],
+                    ],
+            ];
+
+        self::$emptyData = [
+            'id' => '',
+            'creator_id' => '',
+            'createdat' => '',
+            'lastupdated' => '',
+            'version' => '1',
+            'state' => 'draft',
+            'stateCreator_id' => '',
+            'name' => '',
+            'responsible' => '',
+            'org' => '',
+            'org-mail' => '',
+            'protokoll' => '',
+            'beschreibung' => '',
+            'recht' => '',
+            'recht-additional' => '',
+            'posten-name' => [1 => ""],
+            'posten-bemerkung' => [1 => ""],
+            'posten-titel' => [1 => ""],
+            'posten-einnahmen' => [1 => 0],
+            'posten-ausgaben' => [1 => 0],
+            'date-start' => '',
+            'date-end' => '',
+        ];
+        self::$visibleFields = [
+            "recht" => [
+                "wip",
+                "ok-by-hv",
+                "need-stura",
+                "ok-by-stura",
+                "done-hv",
+                "done-other",
+                "terminated",
+            ],
+            "posten-titel" => [
+                "wip",
+                "ok-by-hv",
+                "need-stura",
+                "ok-by-stura",
+                "done-hv",
+                "done-other",
+                "terminated",
+            ],
+        ];
+        self::$writePermissionAll = [
+            "draft" => ["groups" => ["sgis"]],
+            "wip" => ["groups" => ["ref-finanzen-hv"]],
+            "ok-by-hv" => [],
+            "need-stura" => ["groups" => ["ref-finanzen-hv"]],
+            "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
+            "done-hv" => ["groups" => ["ref-finanzen-hv"]],
+            "done-other" => ["groups" => ["ref-finanzen-hv"]],
+            "terminated" => [],
+            "revoked" => [],
+        ];
+        self::$writePermissionFields = [
+            "ok-by-hv" => [
+                "recht-additional" => ["groups" => ["ref-finanzen-hv"]],
+            ],
+        ];
+        return true;
+    }
+
+
+    /**
+     * @param $data
+     *
+     * @return ProjektHandler
+     * @throws InvalidDataException
+     * @throws PDOException
+     */
+    public static function createNewProjekt($data): ProjektHandler
+    {
+
+        $maxRows = max(
+            count($data["posten-name"]),
+            count($data["posten-bemerkung"]),
+            count($data["posten-einnahmen"]),
+            count($data["posten-ausgaben"])
+        );
+        $minRows = min(
+            count($data["posten-name"]),
+            count($data["posten-bemerkung"]),
+            count($data["posten-einnahmen"]),
+            count($data["posten-ausgaben"])
+        );
+
+        if ($maxRows !== $minRows) {
+            throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
+        }
+
+        $user_id = DBConnector::getInstance()->getUser()["id"];
+        $projekt_id = DBConnector::getInstance()->dbInsert(
+            "projekte",
+            [
+                "creator_id" => $user_id,
+                "createdat" => date("Y-m-d H:i:s"),
+                "lastupdated" => date("Y-m-d H:i:s"),
+                "version" => 1,
+                "state" => "draft",
+                "stateCreator_id" => $user_id,
+                "name" => $data["name"],
+                "responsible" => $data["responsible"],
+                "org" => $data["org"],
+                "org-mail" => $data["org-mail"],
+                "protokoll" => $data["protokoll"],
+                "beschreibung" => $data["beschreibung"],
+                "date-start" => $data["date-start"],
+                "date-end" => $data["date-end"],
+            ]
+        );
+
+        for ($i = 0; $i < $minRows - 1; $i++) {
+            if (floatval($data["posten-ausgaben"][$i]) > 0 && floatval($data["posten-einnahmen"][$i]) > 0) {
+                throw new InvalidDataException(
+                    "Projektposten dürfen nicht gleichzeitig Einnahmen und Ausgaben enthalten."
+                );
+            }
+            DBConnector::getInstance()->dbInsert(
+                "projektposten",
+                [
+                    "id" => $i + 1,
+                    "projekt_id" => $projekt_id,
+                    "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
+                        $data["posten-einnahmen"][$i],
+                        "money"
+                    ),
+                    "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue(
+                        $data["posten-ausgaben"][$i],
+                        "money"
+                    ),
+                    "name" => $data["posten-name"][$i],
+                    "bemerkung" => $data["posten-bemerkung"][$i]
+                ]
+            );
+        }
+
+        return new ProjektHandler(["pid" => $projekt_id, "action" => "none"]);
+    }
+
+    public static function getStateStringFromName($statename)
+    {
+        self::initStaticVars();
+        return self::$states[$statename][0];
+    }
+
+    /**
+     * @param $data
+     *
+     * @return bool|int
+     * @throws PDOException
+     * @throws WrongVersionException
+     * @throws InvalidDataException
+     */
+    public function updateSavedData($data)
+    {
+        $data = array_intersect_key($data, self::$emptyData);
+        $version = $data["version"];
+
+        //check if version is the same
+        if ($version !== $this->data["version"])
+            throw new WrongVersionException("Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!");
+        //check if row count is everywhere the same
+        $maxRows = $minRows = 0;
+        if (isset($data["posten-name"]) && isset($data["posten-bemerkung"]) && isset($data["posten-einnahmen"]) && isset($data["posten-ausgaben"])) {
+            $maxRows = max(
+                count($data["posten-name"]),
+                count($data["posten-bemerkung"]),
+                count($data["posten-einnahmen"]),
+                count($data["posten-ausgaben"])
+            );
+            $minRows = min(
+                count($data["posten-name"]),
+                count($data["posten-bemerkung"]),
+                count($data["posten-einnahmen"]),
+                count($data["posten-ausgaben"])
+            );
+        }
+        //wenn posten-titel nicht mit übertragen setze dummy an seine stelle
+        if (!isset($data["posten-titel"])) {
+            $data["posten-titel"] = array_fill(0, $maxRows, null);
+        }
+
+        //wenn anzahl der rows nicht identisch -> error
+        if ($maxRows !== $minRows || count($data["posten-titel"]) !== $minRows) {
+            throw new InvalidDataException("Projekt-Zeilen ungleichmäßig übertragen");
+        }
+        //remove some Autogenerated values
+        $generatedFields = [
+            "id" => $this->id,
+            "lastupdated" => date("Y-m-d H:i:s"),
+            "version" => ($this->data["version"] + 1)
+        ];
+        //extract some fields for other db destination
+        $extractFields = ["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben", "posten-titel"];
+        $extractFields = array_intersect_key($data, array_flip($extractFields));
+        $data = array_diff_key($data, $generatedFields, $extractFields);
+
+        $recht_unset = false;
+        if (isset($data["recht-additional"])) {
+            if (!isset($data["recht"]) && isset($this->data['recht'])) {
+                $data["recht"] = $this->data['recht'];
+                $recht_unset = true;
+            }
+            if (!isset($data["recht"])) {
+                $data["recht-additional"] = "";
+            } else if (isset($data["recht-additional"][$data["recht"]])) {
+                $data["recht-additional"] = $data["recht-additional"][$data["recht"]];
+            } else {
+                $data["recht-additional"] = "";
+            }
+        }
+
+        if ($recht_unset) {
+            unset($data["recht"]);
+        }
+
+        //check if fields editable
+        $fields = $generatedFields;
+        foreach ($data as $name => $content) {
+            if ($this->permissionHandler->isEditable($name) && $this->permissionHandler->isVisibleField($name)) {
+                if (!empty($content)) {
+                    $fields[$name] = $content;
+                } else {
+                    $fields[$name] = null;
+                }
+            } else {
+                ErrorHandler::_renderJson(["code" => 403, "msg" => "Du hast keine Berechtigung '$name' zu schreiben."]);
+            }
+        }
+        $update_rows = DBConnector::getInstance()->dbUpdate(
+            "projekte",
+            ["id" => $this->id, "version" => $version],
+            $fields
+        );
+
+        if ($this->permissionHandler->isEditable(
+            ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
+            'and'
+        )) {
+            //set new posten values, *delete* old
+            DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
+            for ($i = 0; $i < $minRows - 1; $i++) {
+                //would throw exception if not working
+                DBConnector::getInstance()->dbInsert(
+                    "projektposten",
+                    [
+                        "id" => $i + 1,
+                        "projekt_id" => $this->id,
+                        "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
+                        "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
+                            $extractFields["posten-einnahmen"][$i],
+                            "money"
+                        ),
+                        "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue(
+                            $extractFields["posten-ausgaben"][$i],
+                            "money"
+                        ),
+                        "name" => $extractFields["posten-name"][$i],
+                        "bemerkung" => $extractFields["posten-bemerkung"][$i]
+                    ]
+                );
+            }
+        }
+        return $update_rows === 1; //true falls nur ein Eintrag geändert
+    }
+
+    /**
+     * @param $stateName
+     *
+     * @return  bool
+     * @throws IllegalStateException
+     * @throws IllegalTransitionException
+     */
+    public function setState($stateName)
+    {
+        if (!in_array($stateName, $this->getNextPossibleStates(), true))
+            throw new IllegalStateException("In den Status $stateName kann nicht gewechselt werden");
+
+        $user_id = DBConnector::getInstance()->getUser()["id"];
+        $logID = DBConnector::getInstance()->logThisAction(
+            [
+                "user_id" => $user_id,
+                "newState" => $stateName,
+                "id" => $this->id,
+                "version_before" => $this->data["version"]
+            ],
+            "changeState"
+        );
+        DBConnector::getInstance()->dbUpdate(
+            "projekte",
+            ["id" => $this->id, "version" => $this->data["version"]],
+            [
+                "state" => $stateName,
+                "stateCreator_id" => $user_id,
+                "lastupdated" => date("Y-m-d H:i:s"),
+                "version" => ($this->data["version"] + 1)
+            ]
+        );
+        $chat = new ChatHandler('projekt', $this->id);
+        $chat->_createComment(
+            'projekt',
+            $this->id,
+            date_create()->format('Y-m-d H:i:s'),
+            'system',
+            '',
+            self::$states[$this->data['state']][0] . ' -> ' . self::$states[$stateName][0],
+            1
+        );
+        $this->stateHandler->transitionTo($stateName);
+        return true;
+    }
+
+    public function getNextPossibleStates()
+    {
+        return $this->stateHandler->getNextStates(true);
+    }
+
+    function render()
+    {
+        if ($this->action === "create" || !isset($this->id)) {
+            $this->renderProjekt("neues Projekt anlegen");
+            return;
+        }
+
+        switch ($this->action) {
+            case "edit":
+                $this->renderBackButton();
+                $this->renderProjekt("Projekt bearbeiten");
+                break;
+            case "view":
+                $this->renderInteractionPanel();
+                //echo $this->templater->getStateChooser($this->stateHandler);
+                $this->renderProjekt("Internes Projekt");
+                $this->render_chat_box();
+                $this->renderProjektSizeGrafic();
+                $this->renderAuslagenList();
+                break;
+            default:
+                ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
+                break;
+        }
+    }
+
+    private function renderProjekt($title)
+    {
+        $auth = (AUTH_HANDLER);
+        /* @var $auth AuthHandler */
+        $auth = $auth::getInstance();
+        $validateMe = false;
+        $editable = $this->permissionHandler->isAnyDataEditable();
+
+        //build dropdowns
+        $selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
+        $selectable_gremien["values"] = $this->data['org'];
+
+        $mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
+        $selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
+        $selectable_mail["values"] = $this->data['org-mail'];
+
+        $sel_recht = self::$selectable_recht;
+        $sel_recht["values"] = $this->data['recht'];
+        if(isset($data["createdat"]) && !empty($data["createdat"])){
+            $createDate = $this->data["createdat"];
+        }else{
+            $createDate = date_create()->format("Y-m-d");
+        }
+        $hhpId = DBConnector::getInstance()->dbFetchAll(
+            "haushaltsplan", [DBConnector::FETCH_ASSOC],
+            ["id"],
+            ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => ["final"]]
+        );
+        if(!empty($hhpId)){
+            ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
+        }
+        $hhpId = $hhpId[0];
+        $selectable_titel = FormTemplater::generateTitelSelectable($hhpId);
+
+        ?>
         <div class='col-xs-12 col-md-10'>
 			<?php if ($editable){ ?>
             <form role="form" action="<?= URIBASE . "rest/forms/projekt" ?>" method="POST"
