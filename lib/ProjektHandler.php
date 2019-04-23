@@ -564,7 +564,7 @@ class ProjektHandler
         $hhpId = DBConnector::getInstance()->dbFetchAll(
             "haushaltsplan", [DBConnector::FETCH_ASSOC],
             ["id"],
-            ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => ["final"]]
+            ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => "final"]
         );
         if(!empty($hhpId)){
             ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
