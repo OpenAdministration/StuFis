@@ -566,7 +566,7 @@ class ProjektHandler
             ["id"],
             ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => "final"]
         );
-        if(!empty($hhpId)){
+        if(empty($hhpId)){
             ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
         }
         $hhpId = $hhpId[0];
