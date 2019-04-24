@@ -556,7 +556,7 @@ class ProjektHandler
 
         $sel_recht = self::$selectable_recht;
         $sel_recht["values"] = $this->data['recht'];
-        if(isset($data["createdat"]) && !empty($data["createdat"])){
+        if(isset($this->data["createdat"]) && !empty($this->data["createdat"])){
             $createDate = $this->data["createdat"];
         }else{
             $createDate = date_create()->format("Y-m-d");
@@ -574,31 +574,31 @@ class ProjektHandler
 
         ?>
         <div class='col-xs-12 col-md-10'>
-			<?php if ($editable){ ?>
+            <?php if ($editable){ ?>
             <form role="form" action="<?= URIBASE . "rest/forms/projekt" ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
-				<?= $this->templater->getHiddenActionInput(isset($this->id) ? "update" : "create") ?>
+                <?= $this->templater->getHiddenActionInput(isset($this->id) ? "update" : "create") ?>
                 <input type="hidden" name="nonce" value="<?= $GLOBALS["nonce"] ?>">
                 <input type="hidden" name="version" value="<?= $this->data["version"] ?>">
-				<?php if (isset($this->id)){ ?>
+                <?php if (isset($this->id)) { ?>
                     <input type="hidden" name="id" value="<?= $this->id ?>">
-				<?php } ?>
-				<?php } //endif editable
-				?>
-				<?php if ($this->permissionHandler->isVisibleField("recht")){ ?>
+                <?php } ?>
+                <?php } //endif editable
+                ?>
+                <?php if ($this->permissionHandler->isVisibleField("recht")) { ?>
                     <h2>Genehmigung</h2>
                     <div class="well">
                         <div class="hide-wrapper">
                             <div class="hide-picker">
-								<?= $this->templater->getDropdownForm(
-									"recht",
-									$sel_recht,
-									6,
-									"Wähle Rechtsgrundlage...",
-									"Rechtsgrundlage",
-									["required"],
-									false
-								) ?>
+                                <?= $this->templater->getDropdownForm(
+                                    "recht",
+                                    $sel_recht,
+                                    6,
+                                    "Wähle Rechtsgrundlage...",
+                                    "Rechtsgrundlage",
+                                    ["required"],
+                                    false
+                                ) ?>
                             </div>
                             <div class="hide-items">
                                 <div id="buero" class="form-group" style="display: none;">
@@ -611,25 +611,25 @@ class ProjektHandler
                                     <div class="form-group col-xs-12">StuRa-Beschluss 21/20-07: bis zu 50 EUR</div>
                                 </div>
                                 <div id="stura" style="display: none;">
-									<?= $this->templater->getTextForm(
-										"recht-additional[stura]",
-										$this->data["recht-additional"],
-										4,
-										"",
-										"StuRa Beschluss",
-										[]
-									) ?>
+                                    <?= $this->templater->getTextForm(
+                                        "recht-additional[stura]",
+                                        $this->data["recht-additional"],
+                                        4,
+                                        "",
+                                        "StuRa Beschluss",
+                                        []
+                                    ) ?>
                                     <span class="col-xs-12">Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.</span>
                                 </div>
                                 <div id="fsr-ref" style="display: none;">
-									<?= $this->templater->getTextForm(
-										"recht-additional[fsr-ref]",
-										$this->data["recht-additional"],
-										4,
-										"",
-										"StuRa Beschluss (Verkündung)",
-										[]
-									) ?>
+                                    <?= $this->templater->getTextForm(
+                                        "recht-additional[fsr-ref]",
+                                        $this->data["recht-additional"],
+                                        4,
+                                        "",
+                                        "StuRa Beschluss (Verkündung)",
+                                        []
+                                    ) ?>
                                     <span class="col-xs-12">StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu (inkl.) 250 EUR
                                     Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden</span>
                                 </div>
@@ -643,83 +643,83 @@ class ProjektHandler
                                         Semester nach Exma möglich.</span>
                                 </div>
                                 <div id="andere" style="display: none;">
-									<?= $this->templater->getTextForm(
-										"recht-additional[andere]",
-										$this->data["recht-additional"],
-										5,
-										"",
-										"Andere Rechtsgrundlage angeben",
-										[]
-									) ?>
+                                    <?= $this->templater->getTextForm(
+                                        "recht-additional[andere]",
+                                        $this->data["recht-additional"],
+                                        5,
+                                        "",
+                                        "Andere Rechtsgrundlage angeben",
+                                        []
+                                    ) ?>
                                 </div>
                             </div>
                         </div>
                         <div class='clearfix'></div>
                     </div>
-				<?php } ?>
+                <?php } ?>
                 <h2><?= $title ?></h2>
                 <div class="well">
-					<?= $this->templater->getTextForm(
-						"name",
-						$this->data["name"],
-						6,
-						"",
-						"Projektname",
-						["required"]
-					) ?>
-					<?= $this->templater->getMailForm(
-						"responsible",
-						$this->data["responsible"],
-						6,
-						"vorname.nachname",
-						"Projektverantwortlich (Mail)",
-						["required", "email"],
-						"@tu-ilmenau.de"
-					) ?>
+                    <?= $this->templater->getTextForm(
+                        "name",
+                        $this->data["name"],
+                        6,
+                        "",
+                        "Projektname",
+                        ["required"]
+                    ) ?>
+                    <?= $this->templater->getMailForm(
+                        "responsible",
+                        $this->data["responsible"],
+                        6,
+                        "vorname.nachname",
+                        "Projektverantwortlich (Mail)",
+                        ["required", "email"],
+                        "@tu-ilmenau.de"
+                    ) ?>
                     <div class="clearfix"></div>
-					<?= $this->templater->getDropdownForm(
-						"org",
-						$selectable_gremien,
-						6,
-						"Wähle Gremium ...",
-						"Organisation",
-						["required"],
-						true
-					) ?>
-					<?= $this->templater->getDropdownForm(
-						"org-mail",
-						$selectable_mail,
-						6,
-						"Wähle Mailingliste ...",
-						"Organisations-Mail",
-						["required"],
-						true
-					) ?>
-					<?= $this->templater->getWikiLinkForm(
-						"protokoll",
-						$this->data["protokoll"],
-						12,
-						"...",
-						"Beschluss (Wiki-Direktlink)",
-						["required"],
-						"https://wiki.stura.tu-ilmenau.de/protokoll/"
-					) ?>
-					<?= $this->templater->getDatePickerForm(
-						["date-start", "date-end"],
-						[$this->data["date-start"], $this->data["date-end"]],
-						12,
-						["Projekt-Start", "Projekt-Ende"],
-						"Projektzeitraum",
-						["required"],
-						true,
-						"today"
-					) ?>
+                    <?= $this->templater->getDropdownForm(
+                        "org",
+                        $selectable_gremien,
+                        6,
+                        "Wähle Gremium ...",
+                        "Organisation",
+                        ["required"],
+                        true
+                    ) ?>
+                    <?= $this->templater->getDropdownForm(
+                        "org-mail",
+                        $selectable_mail,
+                        6,
+                        "Wähle Mailingliste ...",
+                        "Organisations-Mail",
+                        ["required"],
+                        true
+                    ) ?>
+                    <?= $this->templater->getWikiLinkForm(
+                        "protokoll",
+                        $this->data["protokoll"],
+                        12,
+                        "...",
+                        "Beschluss (Wiki-Direktlink)",
+                        ["required"],
+                        "https://wiki.stura.tu-ilmenau.de/protokoll/"
+                    ) ?>
+                    <?= $this->templater->getDatePickerForm(
+                        ["date-start", "date-end"],
+                        [$this->data["date-start"], $this->data["date-end"]],
+                        12,
+                        ["Projekt-Start", "Projekt-Ende"],
+                        "Projektzeitraum",
+                        ["required"],
+                        true,
+                        "today"
+                    ) ?>
                     <div class='clearfix'></div>
                 </div>
-				<?php $tablePartialEditable = $this->permissionHandler->isEditable(
-					["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"],
-					"and"
-				); ?>
+                <?php $tablePartialEditable = $this->permissionHandler->isEditable(
+                    ["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"],
+                    "and"
+                ); ?>
                 <table class="table table-striped summing-table <?= ($tablePartialEditable ? "dynamic-table" : "dynamic-table-readonly") ?>">
                     <thead>
                     <tr>
@@ -733,72 +733,72 @@ class ProjektHandler
                     </tr>
                     </thead>
                     <tbody>
-					<?php
+                    <?php
 
-					$this->data["posten-name"][] = '';
+                    $this->data["posten-name"][] = '';
 
-					foreach ($this->data["posten-name"] as $row_nr => $null){
-						$new_row = ($row_nr) === count($this->data["posten-name"]);
-						if ($new_row && !$tablePartialEditable)
-							continue;
-						$sel_titel = $selectable_titel;
-						if (isset($this->data['posten-titel'][$row_nr])){
-							$sel_titel["values"] = $this->data['posten-titel'][$row_nr];
-						}
-						?>
+                    foreach ($this->data["posten-name"] as $row_nr => $null) {
+                        $new_row = ($row_nr) === count($this->data["posten-name"]);
+                        if ($new_row && !$tablePartialEditable)
+                            continue;
+                        $sel_titel = $selectable_titel;
+                        if (isset($this->data['posten-titel'][$row_nr])) {
+                            $sel_titel["values"] = $this->data['posten-titel'][$row_nr];
+                        }
+                        ?>
                         <tr class="<?= $new_row ? "new-table-row" : "dynamic-table-row" ?>">
                             <td class="row-number"> <?= $row_nr ?>.</td>
-							<?php if ($tablePartialEditable){ ?>
+                            <?php if ($tablePartialEditable) { ?>
                                 <td class='delete-row'><a href='' class='delete-row'><i
                                                 class='fa fa-fw fa-trash'></i></a></td>
-							<?php }else{
-								echo "<td></td>";
-							} ?>
+                            <?php } else {
+                                echo "<td></td>";
+                            } ?>
                             <td><?= $this->templater->getTextForm(
-									"posten-name[]",
-									!$new_row ? $this->data["posten-name"][$row_nr] : "",
-									null,
-									"Name des Postens",
-									"",
-									["required"]
-								) ?></td>
+                                    "posten-name[]",
+                                    !$new_row ? $this->data["posten-name"][$row_nr] : "",
+                                    null,
+                                    "Name des Postens",
+                                    "",
+                                    ["required"]
+                                ) ?></td>
                             <td><?= $this->templater->getTextForm(
-									"posten-bemerkung[]",
-									!$new_row ? $this->data["posten-bemerkung"][$row_nr] : "",
-									null,
-									"optional",
-									"",
-									[]
-								) ?></td>
+                                    "posten-bemerkung[]",
+                                    !$new_row ? $this->data["posten-bemerkung"][$row_nr] : "",
+                                    null,
+                                    "optional",
+                                    "",
+                                    []
+                                ) ?></td>
                             <td><?= $this->templater->getDropdownForm(
-									"posten-titel[]",
-									$sel_titel,
-									null,
-									"HH-Titel",
-									"",
-									[],
-									true
-								) ?></td>
+                                    "posten-titel[]",
+                                    $sel_titel,
+                                    null,
+                                    "HH-Titel",
+                                    "",
+                                    [],
+                                    true
+                                ) ?></td>
                             <td><?= $this->templater->getMoneyForm(
-									"posten-einnahmen[]",
-									!$new_row ? $this->data["posten-einnahmen"][$row_nr] : 0,
-									null,
-									"",
-									"",
-									["required"],
-									"einnahmen"
-								) ?></td>
+                                    "posten-einnahmen[]",
+                                    !$new_row ? $this->data["posten-einnahmen"][$row_nr] : 0,
+                                    null,
+                                    "",
+                                    "",
+                                    ["required"],
+                                    "einnahmen"
+                                ) ?></td>
                             <td><?= $this->templater->getMoneyForm(
-									"posten-ausgaben[]",
-									!$new_row ? $this->data["posten-ausgaben"][$row_nr] : 0,
-									null,
-									"",
-									"",
-									["required"],
-									"ausgaben"
-								) ?></td>
+                                    "posten-ausgaben[]",
+                                    !$new_row ? $this->data["posten-ausgaben"][$row_nr] : 0,
+                                    null,
+                                    "",
+                                    "",
+                                    ["required"],
+                                    "ausgaben"
+                                ) ?></td>
                         </tr>
-					<?php } ?>
+                    <?php } ?>
                     </tbody>
                     <tfoot>
                     <tr>
@@ -832,27 +832,27 @@ class ProjektHandler
                     </tr>
                     </tfoot>
                 </table>
-				<?= $this->templater->getTextareaForm(
-					"beschreibung",
-					$this->data["beschreibung"],
-					12,
-					"In unserem Projekt geht es um ... \nHat einen Nutzen für die Studierendenschaft weil ... \nFindet dort und dort statt...\nusw.",
-					"Projektbeschreibung",
-					["required", "min-length" => 100],
-					5
-				) ?>
-	
-				<?php if ($editable){ ?>
+                <?= $this->templater->getTextareaForm(
+                    "beschreibung",
+                    $this->data["beschreibung"],
+                    12,
+                    "In unserem Projekt geht es um ... \nHat einen Nutzen für die Studierendenschaft weil ... \nFindet dort und dort statt...\nusw.",
+                    "Projektbeschreibung",
+                    ["required", "min-length" => 100],
+                    5
+                ) ?>
+
+                <?php if ($editable){ ?>
                 <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->
                 <div class="pull-right">
-					<?php
-	
-					//foreach ($proposeNewState as $state){
-					//$isEditable = hasPermission($form, ["state" => $state], "canEdit");
-					//$stateTxt = "Entwurf";
-					//$state = "draft";
-	
-					?>
+                    <?php
+
+                    //foreach ($proposeNewState as $state){
+                    //$isEditable = hasPermission($form, ["state" => $state], "canEdit");
+                    //$stateTxt = "Entwurf";
+                    //$state = "draft";
+
+                    ?>
                     <a href="javascript:void(true);"
                        class='btn btn-success submit-form <?= !$validateMe ? "no-validate" : "validate" ?>'
                        data-name="state" data-value="<?= htmlspecialchars($this->stateHandler->getActualState()) ?>"
@@ -860,44 +860,46 @@ class ProjektHandler
                         als <?= htmlspecialchars($this->stateHandler->getFullStateName()) ?></a>
                 </div>
             </form>
-		<?php } ?>
+        <?php } ?>
         </div><!-- main-container -->
-		<?php
-	}
-	
-	private function renderBackButton(){
-		?>
+        <?php
+    }
+
+    private function renderBackButton()
+    {
+        ?>
         <div class="">
             <a href="./">
                 <button class="btn btn-primary"><i class="fa fa-fw fa-arrow-left"></i>&nbsp;Zurück</button>
             </a>
         </div>
-		<?php
-	}
-	
-	private function renderInteractionPanel(){
-		$url = str_replace("//", "/", URIBASE . "projekt/" . $this->id . "/");
-		$nextValidStates = $this->stateHandler->getNextStates(true);
-		$disabledStates = array_diff($this->stateHandler->getAllAllowedTransitionableStates(), $nextValidStates);
-		?>
+        <?php
+    }
+
+    private function renderInteractionPanel()
+    {
+        $url = str_replace("//", "/", URIBASE . "projekt/" . $this->id . "/");
+        $nextValidStates = $this->stateHandler->getNextStates(true);
+        $disabledStates = array_diff($this->stateHandler->getAllAllowedTransitionableStates(), $nextValidStates);
+        ?>
         <div>
             <ul class="nav nav-pills nav-stacked navbar-right navbar-fixed-right">
                 <li class="label-info">
-					<?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?>
+                    <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?>
                 </li>
-	
-				<?php if (count($nextValidStates) > 0){ ?>
+
+                <?php if (count($nextValidStates) > 0) { ?>
                     <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i
                                     class="fa fa-fw fa-refresh"></i></a></li>
-				<?php } ?>
-				<?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])){ ?>
+                <?php } ?>
+                <?php if (in_array($this->stateHandler->getActualState(), ["ok-by-stura", "done-hv", "done-other"])) { ?>
                     <li><a href="<?= $url ?>auslagen" title="Neue Abrechnung/Rechnung">neue Abrechnung/Rechnung&nbsp;<i
                                     class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
-				<?php } ?>
-				<?php if ($this->permissionHandler->isAnyDataEditable(true) != false){ ?>
+                <?php } ?>
+                <?php if ($this->permissionHandler->isAnyDataEditable(true) != false) { ?>
                     <li><a href="<?= $url ?>edit" title="Bearbeiten">Bearbeiten&nbsp;<i
                                     class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
-				<?php } ?>
+                <?php } ?>
 
                 <!--<li><a href="<?php echo ""; ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
                 <!--<li><a href="<?php echo ""; ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
@@ -910,122 +912,126 @@ class ProjektHandler
                         <i class="fa fa-question" aria-hidden="true"></i></a></li> -->
             </ul>
         </div>
-		<?php if (count($nextValidStates) > 0){ ?>
-            <!-- Modal Zustandsübergang zu anderem State -->
-            <form id="stateantrag" role="form" action="<?= URIBASE . "rest/forms/projekt"; ?>"
-                  method="POST" enctype="multipart/form-data" class="ajax" data-toggle="validator">
-                <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
-                     aria-labelledby="editStateModalLabel">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                                            aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title" id="editStateModalLabel">Status wechseln</h4>
+        <?php if (count($nextValidStates) > 0) { ?>
+        <!-- Modal Zustandsübergang zu anderem State -->
+        <form id="stateantrag" role="form" action="<?= URIBASE . "rest/forms/projekt"; ?>"
+              method="POST" enctype="multipart/form-data" class="ajax" data-toggle="validator">
+            <div class="modal fade" id="editStateModal" tabindex="-1" role="dialog"
+                 aria-labelledby="editStateModalLabel">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                        aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="editStateModalLabel">Status wechseln</h4>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="action" value="changeState">
+                            <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce'] ?>">
+                            <input type="hidden" name="version" value="<?= $this->data["version"] ?>">
+                            <input type="hidden" name="id" value="<?= $this->getID() ?>">
+                            <div class="form-group">
+                                <label for="newantragstate">Neuer Bearbeitungsstatus</label>
+                                <select class="selectpicker form-control" name="newState" size="1"
+                                        title="Neuer Bearbeitungsstatus" required="required" id="newantragstate">
+                                    <optgroup label="Statuswechsel möglich">
+                                        <?php
+                                        foreach ($nextValidStates as $state) {
+                                            echo "<option value=\"" . htmlspecialchars(
+                                                    $state
+                                                ) . "\">" . htmlspecialchars(
+                                                    $this->stateHandler->getFullStateNameFrom($state)
+                                                ) . "</option>" . PHP_EOL;
+                                        }
+                                        ?>
+                                    </optgroup>
+                                    <optgroup label="Daten unvollständig">
+                                        <?php
+
+                                        foreach ($disabledStates as $state) {
+                                            echo "<option disabled>" . $this->stateHandler->getFullStateNameFrom(
+                                                    $state
+                                                ) . "</option>" . PHP_EOL;
+                                        }
+                                        ?>
+                                    </optgroup>
+                                </select>
+                                <div class="help-block with-errors"></div>
                             </div>
-                            <div class="modal-body">
-                                <input type="hidden" name="action" value="changeState">
-                                <input type="hidden" name="nonce" value="<?= $GLOBALS['nonce'] ?>">
-                                <input type="hidden" name="version" value="<?= $this->data["version"] ?>">
-                                <input type="hidden" name="id" value="<?= $this->getID() ?>">
-                                <div class="form-group">
-                                    <label for="newantragstate">Neuer Bearbeitungsstatus</label>
-                                    <select class="selectpicker form-control" name="newState" size="1"
-                                            title="Neuer Bearbeitungsstatus" required="required" id="newantragstate">
-                                        <optgroup label="Statuswechsel möglich">
-											<?php
-											foreach ($nextValidStates as $state){
-												echo "<option value=\"" . htmlspecialchars(
-														$state
-													) . "\">" . htmlspecialchars(
-														$this->stateHandler->getFullStateNameFrom($state)
-													) . "</option>" . PHP_EOL;
-											}
-											?>
-                                        </optgroup>
-                                        <optgroup label="Daten unvollständig">
-											<?php
-	
-											foreach ($disabledStates as $state){
-												echo "<option disabled>" . $this->stateHandler->getFullStateNameFrom(
-														$state
-													) . "</option>" . PHP_EOL;
-											}
-											?>
-                                        </optgroup>
-                                    </select>
-                                    <div class="help-block with-errors"></div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                <button type="submit" name="absenden" class="btn btn-primary pull-right">Speichern
-                                </button>
-                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" name="absenden" class="btn btn-primary pull-right">Speichern
+                            </button>
                         </div>
                     </div>
                 </div>
-            </form>
-			<?php
-		}
-	}
-	
-	public function getID(){
-		return $this->id;
-	}
-	
-	private function render_chat_box(){ ?>
+            </div>
+        </form>
+        <?php
+    }
+    }
+
+    public function getID()
+    {
+        return $this->id;
+    }
+
+    private function render_chat_box()
+    { ?>
         <div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
-			<?php
-			$auth = (AUTH_HANDLER);
-			/* @var $auth AuthHandler */
-			$auth = $auth::getInstance();
-			$btns = [];
-			$pdate = date_create(substr($this->data['createdat'], 0, 4) . '-01-01 00:00:00');
-			$pdate->modify('+1 year');
-			$now = date_create();
-			//allow chat only 90 days into next year
-			if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90){
-				$btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
-				if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->data['username']){
-					$btns[] = [
-						'label' => 'Private Nachricht',
-						'color' => 'warning',
-						'type' => '-1',
-						'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
-					];
-				}
-				if ($auth->hasGroup('ref-finanzen')){
-					$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
-				}
-				if ($auth->hasGroup('admin')){
-					$btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
-				}
-			}
-			ChatHandler::renderChatPanel(
-				'projekt',
-				$this->id,
-				$auth->getUserFullName() . " (" . $auth->getUsername() . ")",
-				$btns
-			); ?>
+            <?php
+            $auth = (AUTH_HANDLER);
+            /* @var $auth AuthHandler */
+            $auth = $auth::getInstance();
+            $btns = [];
+            $pdate = date_create(substr($this->data['createdat'], 0, 4) . '-01-01 00:00:00');
+            $pdate->modify('+1 year');
+            $now = date_create();
+            //allow chat only 90 days into next year
+            if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
+                $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+                if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->data['username']) {
+                    $btns[] = [
+                        'label' => 'Private Nachricht',
+                        'color' => 'warning',
+                        'type' => '-1',
+                        'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
+                    ];
+                }
+                if ($auth->hasGroup('ref-finanzen')) {
+                    $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+                }
+                if ($auth->hasGroup('admin')) {
+                    $btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
+                }
+            }
+            ChatHandler::renderChatPanel(
+                'projekt',
+                $this->id,
+                $auth->getUserFullName() . " (" . $auth->getUsername() . ")",
+                $btns
+            ); ?>
         </div>
-		<?php
-	}
-	
-	private function renderProjektSizeGrafic(){
-		echo '<div class="clearfix"></div>' . PHP_EOL;
-		$ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
-		$ah->render_auslagen_beleg_diagrams('Nice Diagrams');
-	}
-	
-	private function renderAuslagenList(){ ?>
+        <?php
+    }
+
+    private function renderProjektSizeGrafic()
+    {
+        echo '<div class="clearfix"></div>' . PHP_EOL;
+        $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
+        $ah->render_auslagen_beleg_diagrams('Nice Diagrams');
+    }
+
+    private function renderAuslagenList()
+    { ?>
         <div class="clearfix"></div>
         <div id='projekt-well' class="well col-xs-12 col-md-10">
-			<?php
-			$ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
-			$ah->render_project_auslagen(true); ?>
+            <?php
+            $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
+            $ah->render_project_auslagen(true); ?>
         </div>
-		<?php
-	}
+        <?php
+    }
 }
