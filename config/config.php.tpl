@@ -53,6 +53,8 @@ $FUI2PDF_APIKEY = "FIXME";
 $FUI2PDF_URL = "https://box.stura.tu-ilmenau.de/FIXME/index.php";
 define("FUI2PDF_URL", $FUI2PDF_URL);
 define("FUI2PDF_AUTH", base64_encode("FIXME:FIXME"));
+define('TG_ISSUE_LINK', "LINKME");
+define('GIT_ISSUE_LINK', "LINKME");
 
 /* Development Options */
 $ANTRAGMAILTO = "FIXME@tu-ilmenau.de";

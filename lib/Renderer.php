@@ -209,7 +209,7 @@ abstract class Renderer
 		//$text = htmlspecialchars($text);
 		$matches = [];
 		preg_match_all('#[\w.-]+@[\w.-]+\.[a-zA-Z]{2,6}#', $text, $matches);
-		var_dump($matches[0]);
+		//var_dump($matches[0]);
 		foreach ($matches[0] as $match){
 			$text = str_replace($match, $this->mailto($match), $text);
 		}
