@@ -107,7 +107,6 @@ class DBConnector
             "done" => "BOOLEAN NOT NULL DEFAULT 0",
         ];
         $keys["booking_instruction"] = [
-            "primary" => ["id"],
             "foreign" => [
                 "by_user" => ["user", "id"],
             ]
@@ -162,7 +161,7 @@ class DBConnector
             "bemerkung" => " VARCHAR(256) NOT NULL",
         ];
         $keys["projektposten"] = [
-            "primary" => ["id"],
+            "primary" => ["id", "projekt_id"],
             "foreign" => [
                 "projekt_id" => ["projekte", "id"]
             ],
@@ -186,7 +185,7 @@ class DBConnector
             "customer_ref" => "varchar(128)"
         ];
         $keys["konto"] = [
-            "primary" => ["id"],
+            "primary" => ["id", "konto_id"],
             "foreign" => [
                 "konto_id" => ["konto_type", "id"]
             ],
@@ -386,6 +385,32 @@ class DBConnector
             "primary" => ["id"],
             "foreign" => [
                 "extern_id" => ["extern_meta", "id"],
+            ],
+            "unique" => [
+                ["vorgang_id", "extern_id"]
+            ],
+        ];
+
+        $scheme["log"] = [
+            "id" => "int NOT NULL",
+            "action" => "VARCHAR(255) NOT NULL",
+            "evtime" => "TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "user_id" => "INT DEFAULT NULL",
+        ];
+        $keys["log"] = [
+            "primary" => ["id"],
+        ];
+
+        $scheme["log_property"] = [
+            "id" => "INT NOT NULL",
+            "log_id" => "INT NOT NULL",
+            "name" => "VARCHAR(127)",
+            "value" => "LONGTEXT",
+        ];
+        $keys["log_property"] = [
+            "primary" => ["id"],
+            "foreign" => [
+                "extern_id" => ["log", "id"],
             ],
             "unique" => [
                 ["vorgang_id", "extern_id"]
