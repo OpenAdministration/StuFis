@@ -123,29 +123,31 @@ class MenuRenderer
 				);
 			}
 		);
-		$auslagen = DBConnector::getInstance()->dbFetchAll(
-			"auslagen",
-			[DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
-			[
-				"projekt_id",  // group idx
-				"projekt_id",
-				"auslagen.id",
-				"name_suffix", //auslagen Link
-				"zahlung-name", // Empf. Name
-				"einnahmen" => ["einnahmen", DBConnector::GROUP_SUM_ROUND2],
-				"ausgaben" => ["ausgaben", DBConnector::GROUP_SUM_ROUND2],
-				"state"
-			],
-			["projekt_id" => ["IN", $pids]],
-			[
-				["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id", "auslagen.id"]],
-				["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
-			],
-			["auslagen.id" => true],
-			["auslagen_id"]
-		);
-		
-		//var_dump(end(end($projekte)));
+        if(!empty($pids)){
+            $auslagen = DBConnector::getInstance()->dbFetchAll(
+                "auslagen",
+                [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
+                [
+                    "projekt_id",  // group idx
+                    "projekt_id",
+                    "auslagen.id",
+                    "name_suffix", //auslagen Link
+                    "zahlung-name", // Empf. Name
+                    "einnahmen" => ["einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                    "ausgaben" => ["ausgaben", DBConnector::GROUP_SUM_ROUND2],
+                    "state"
+                ],
+                ["projekt_id" => ["IN", $pids]],
+                [
+                    ["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id", "auslagen.id"]],
+                    ["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                ],
+                ["auslagen.id" => true],
+                ["auslagen_id"]
+            );
+        }
+
+        //var_dump(end(end($projekte)));
 		$this->setOverviewTabs($active);
 		?>
 

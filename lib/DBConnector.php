@@ -430,35 +430,42 @@ class DBConnector
                     $this->buildColDef($cols);
                 $sql .= ")ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;";
                 $this->pdo->query($sql) or ErrorHandler::_errorExit(print_r([$this->pdo->errorInfo(), $sql], true));
+                $buildedTables[] = $tablename;
+                //add primary and unique constraints
                 $sql = "ALTER TABLE " . self::$DB_PREFIX . $tablename . " ";
-                if(isset($keys[$tablename]["primary"])) {
+                if (isset($keys[$tablename]["primary"])) {
                     $data = $this->quoteIdent($keys[$tablename]["primary"]);
-                    $sqlPK = $sql . "ADD PRIMARY KEY (" . implode(",", $data) . ")";
+                    if (count($keys[$tablename]["primary"]) === 1) {
+                        $name = $keys[$tablename]["primary"][0];
+                        $type = $scheme[$tablename][$name];
+                        $sqlPK = $sql . "MODIFY {$this->quoteIdent($name)} $type PRIMARY KEY AUTO_INCREMENT";
+                    } else {
+                        $sqlPK = $sql . "ADD PRIMARY KEY (" . implode(",", $data) . ") ";
+                    }
                     if ($this->pdo->query($sqlPK) === false) {
                         $eInfo = $this->pdo->errorInfo();
-                        $this->dbDropTables($buildedTables);
-                        ErrorHandler::_errorExit(print_r([$eInfo, $sqlPK], true));
+                        $ret = $this->dbDropTables($buildedTables);
+                        ErrorHandler::_errorExit(print_r([$eInfo, $sqlPK, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                     }
                 }
-                if(isset($keys[$tablename]["unique"])) {
+                if (isset($keys[$tablename]["unique"])) {
                     $data = $keys[$tablename]["unique"];
                     foreach ($data as $row) {
                         $row = $this->quoteIdent($row);
                         $sqlU = $sql . "ADD UNIQUE (" . implode(",", $row) . ")";
                         if ($this->pdo->query($sqlU) === false) {
                             $eInfo = $this->pdo->errorInfo();
-                            $this->dbDropTables($buildedTables);
-                            ErrorHandler::_errorExit(print_r([$eInfo, $sqlU], true));
+                            $ret = $this->dbDropTables($buildedTables);
+                            ErrorHandler::_errorExit(print_r([$eInfo, $sqlU, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                         }
                     }
                 }
-                $buildedTables[] = $tablename;
             }
         }
         $constrainsNeeded = array_intersect_key($scheme, array_flip($buildedTables));
         foreach ($constrainsNeeded as $tablename => $cols) {
             $sql = "ALTER TABLE " . self::$DB_PREFIX . $tablename . " ";
-            if(isset($keys[$tablename]["foreign"])) {
+            if (isset($keys[$tablename]["foreign"])) {
                 $data = $keys[$tablename]["foreign"];
                 foreach ($data as $ownCol => $otherCol) {
                     if (!isset($cols[$ownCol])) {
@@ -494,16 +501,24 @@ class DBConnector
         }
     }
 
-    private function dbDropTables($tables){
+    private function dbDropTables($tables, $foreignKeyCheck = false)
+    {
         $tbl = [];
-        foreach ($tables as $table){
-            if(!isset($this->scheme[$table])){
+        if ($foreignKeyCheck !== false) {
+            $this->pdo->query("SET FOREIGN_KEY_CHECKS = 0");
+        }
+        foreach ($tables as $table) {
+            if (!isset($this->scheme[$table])) {
                 ErrorHandler::_errorExit("Table $table not know. Cannot be deleted.");
-            }else{
+            } else {
                 $tbl[] = $this->quoteIdent(self::$DB_PREFIX . $table);
             }
         }
-        $this->pdo->query("DROP TABLE " . implode(", ",$tbl));
+        $ret = $this->pdo->query("DROP TABLE " . implode(", ", $tbl));
+        if ($foreignKeyCheck !== false) {
+            $this->pdo->query("SET FOREIGN_KEY_CHECKS = 1");
+        }
+        return $ret;
     }
 
     function convertDBValueToUserValue($value, $type)

@@ -1,7 +1,4 @@
 
-Options +FollowSymLinks
-Options +Indexes
-
 #force https
 RewriteEngine On
 RewriteCond %{HTTPS} !=on
