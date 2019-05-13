@@ -216,7 +216,6 @@ class RestHandler
 			if ($ret === false || $dbret === false){
 				DBConnector::getInstance()->dbRollBack();
 				$msgs[] = "Deine Änderungen wurden nicht gespeichert (DB Rollback)";
-				$target = "./";
 			}else{
 				$msgs[] = "Daten erfolgreich gespeichert!";
 				$target = URIBASE . "projekt/" . $projektHandler->getID();
@@ -233,17 +232,25 @@ class RestHandler
 		}
 		if (DEV)
 			$msgs[] = print_r($_POST, true);
-		
-		JsonController::print_json(
-			[
-				'success' => ($ret !== false),
-				'status' => '200',
-				'msg' => $msgs,
-				'type' => 'modal',
-				'redirect' => $target,
-				'reload' => 1000,
-			]
-		);
+
+		$json = [
+            'success' => ($ret !== false),
+            'status' => '200',
+            'msg' => $msgs,
+            'type' => 'modal',
+
+        ];
+		if(isset($target)){
+            $json['redirect'] = $target;
+        }
+		if($ret === false){
+            $json["subtype"] = "server-error";
+        }else{
+            $json["reload"] = 1000;
+            $json["subtype"] = "server-success";
+        }
+
+		JsonController::print_json($json);
 	}
 	
 	/**
