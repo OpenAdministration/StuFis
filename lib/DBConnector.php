@@ -410,10 +410,7 @@ class DBConnector
         $keys["log_property"] = [
             "primary" => ["id"],
             "foreign" => [
-                "extern_id" => ["log", "id"],
-            ],
-            "unique" => [
-                ["vorgang_id", "extern_id"]
+                "log_id" => ["log", "id"],
             ],
         ];
 
