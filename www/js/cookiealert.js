@@ -3,7 +3,7 @@
  * https://github.com/Wruczek/Bootstrap-Cookie-Alert
  * Released under MIT license
  */
-(function () {
+$(document).ready(function () {
     "use strict";
 
     var cookieAlert = document.querySelector(".cookiealert");
@@ -23,16 +23,16 @@
     // When clicking on the agree button, create a 1 year
     // cookie to remember user's choice and close the banner
     acceptCookies.addEventListener("click", function () {
-        setCookie("acceptCookies", true, 365);
+        setCookie("acceptCookies", true, 365, "/");
         cookieAlert.classList.remove("show");
     });
 
     // Cookie functions from w3schools
-    function setCookie(cname, cvalue, exdays) {
+    function setCookie(cname, cvalue, exdays, path) {
         var d = new Date();
         d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
         var expires = "expires=" + d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=" + path;
     }
 
     function getCookie(cname) {
@@ -50,4 +50,4 @@
         }
         return "";
     }
-})();
+});
