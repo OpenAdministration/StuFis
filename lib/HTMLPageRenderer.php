@@ -114,8 +114,8 @@ class HTMLPageRenderer
         ?>
         <!-- START Bootstrap-Cookie-Alert -->
         <div class="alert text-center cookiealert" role="alert">
-            <b>Das Finanztool isst gerne&#x1F36A;</b>
-            Hier hast du einen&#x1F36A;. Ohne diesen&#x1F36A;arbeitet das Finanztool nicht für dich.
+            <b>Das Finanztool mag &#x1F36A;</b>
+            Hier hast du einen&#x1F36A;. Den brauchst du, damit das Finanztool für dich arbeitet.
             <a href="https://cookiesandyou.com/" target="_blank">Mehr Informationen</a>
             <button type="button" class="btn btn-primary btn-sm acceptcookies" aria-label="Close">
                 Ich werde ihn nicht selbst essen, versprochen!
