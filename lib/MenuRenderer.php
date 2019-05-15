@@ -310,12 +310,16 @@ class MenuRenderer
                             </div>
                         </div>
                     </div>
-					<?php
-					$i++;
-				}
-			}else{ ?>
-                <h2>Bisher wurden leider noch keine Projekte angelegt. :(</h2>
-			<?php } ?>
+                    <?php
+                    $i++;
+                }
+            } else {
+                $this->renderAlert(
+                    "Warnung",
+                    "In deinen Gremien wurden bisher keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
+                    "warning"
+                );
+            } ?>
         </div>
         <?php
     }
