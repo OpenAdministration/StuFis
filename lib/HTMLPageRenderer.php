@@ -118,7 +118,7 @@ class HTMLPageRenderer
             Hier hast du einen&#x1F36A;. Den brauchst du, damit das Finanztool für dich arbeitet.
             <a href="https://cookiesandyou.com/" target="_blank">Mehr Informationen</a>
             <button type="button" class="btn btn-primary btn-sm acceptcookies" aria-label="Close">
-                Ich werde ihn nicht selbst essen, versprochen!
+                Ich werde ihn nicht selbst essen, versprochen &#x1F612;
             </button>
         </div>
         <!-- END Bootstrap-Cookie-Alert -->

@@ -111,6 +111,9 @@ class AuthDummyHandler implements AuthHandler{
     function hasGroup($groups, $delimiter = ","){
         $this->requireAuth();
         $attributes = $this->getAttributes();
+        if($this->isAdmin()){
+            return true;
+        }
         if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
             return false;
         }
