@@ -390,7 +390,7 @@ class BookingHandler
             </a>
 			<?php
 		}else{
-			$this->renderHeadline("bisher keine Buchungen in diesem HH-Jahr vorhanden.", 2);
+			$this->renderAlert("Hinweis","bisher keine Buchungen in diesem HH-Jahr vorhanden.", "info");
 		}
 	}
 	
