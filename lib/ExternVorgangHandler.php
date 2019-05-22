@@ -26,7 +26,7 @@ class ExternVorgangHandler
 			}
 			$this->routeInfo = $routeInfoOrId;
 		}else{
-			$where = ["extern_id" => $routeInfoOrId];
+			$where = ["extern_data.id" => $routeInfoOrId];
 		}
 		$this->data = DBConnector::getInstance()->dbFetchAll(
 			"extern_data",
@@ -54,7 +54,6 @@ class ExternVorgangHandler
 		}
 		$this->meta_data = $this->meta_data[0];
 	}
-	
 	
 	public static function initStaticVars(){
 		// TODO: Implement initStaticVars() method.
