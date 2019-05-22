@@ -7,6 +7,6 @@ php_value max_input_vars 100000
 #
 # or in nginx:
 #   include fastcgi_params;
-#   fastcgi_param PHP_VALUE "upload_max_filesize = 20M \n post_max_size=41M"; 
+#   fastcgi_param PHP_VALUE "upload_max_filesize = 20M \n post_max_size=41M";
 #
 php_value upload_max_filesize 20M

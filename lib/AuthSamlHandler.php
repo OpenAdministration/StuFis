@@ -78,6 +78,9 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
         if (!isset($attributes["groups"])){
             return false;
         }
+        if($this->isAdmin()){
+            return true;
+        }
         if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
             return false;
         }
@@ -117,8 +120,15 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
 		die();
 	}
     
-    function isAdmin(){
-        return $this->hasGroup(self::$ADMINGROUP);
+    function isAdmin($delimiter = ","){
+        $attributes = $this->getAttributes();
+        if (!isset($attributes["groups"])){
+            return false;
+        }
+        if (in_array(self::$ADMINGROUP,$attributes["groups"])){
+            return true;
+        }
+        return false;
     }
     
 }

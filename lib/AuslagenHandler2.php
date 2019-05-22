@@ -732,7 +732,7 @@ class AuslagenHandler2
 					case 'plain_orga':
 						{
 							if (!isset($a['gremien']))
-								continue;
+								continue 2;
 							if (in_array($dynamic[$type], $a['gremien'])){
 								return true;
 							}

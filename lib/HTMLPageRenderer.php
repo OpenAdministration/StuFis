@@ -6,83 +6,92 @@
  * Time: 22:00
  */
 
-class HTMLPageRenderer{
+class HTMLPageRenderer
+{
     private static $profiling_timing, $profiling_names, $profiling_sources;
     private static $errorPage;
     private static $tabsConfig;
     private $bodycontent;
     private $titel;
     private $routeInfo;
-    
-    public function __construct($routeInfo, $bodycontent = ""){
+
+    public function __construct($routeInfo, $bodycontent = "")
+    {
         $this->routeInfo = $routeInfo;
-        if (isset($this->routeInfo["titel"])){
+        if (isset($this->routeInfo["titel"])) {
             $this->titel = $this->routeInfo["titel"];
-        }else{
+        } else {
             $this->titel = "StuRa Finanzen";
         }
         $this->bodycontent = $bodycontent;
     }
-    
+
     /**
      * @param $name string Name des Profiling Flags
      */
-    static public function registerProfilingBreakpoint(string $name){
+    static public function registerProfilingBreakpoint(string $name)
+    {
         self::$profiling_timing[] = microtime(true);
         $bt = debug_backtrace();
         self::$profiling_sources[] = array_shift($bt);
         self::$profiling_names[] = $name;
     }
-    
+
     /**
      * @param $tabs      array keys are tabnames, values are htmlcode inside tab header
      * @param $linkbase  string linkbase - where klicked link will go - followed by tabnames
      * @param $activeTab string
      */
-    static public function setTabs($tabs, $linkbase, $activeTab){
+    static public function setTabs($tabs, $linkbase, $activeTab)
+    {
         self::$tabsConfig = ["tabs" => $tabs, "linkbase" => $linkbase, "active" => $activeTab];
     }
-    
-    static public function dieWithErrorPage($param){
+
+    static public function dieWithErrorPage($param)
+    {
         self::setErrorPage($param);
         $htmlRenderer = new HTMLPageRenderer([]);
         $htmlRenderer->render();
         exit(-1);
     }
-    
-    static private function setErrorPage($param){
+
+    static private function setErrorPage($param)
+    {
         //$param is used in errot.phtml
         ob_start();
         include SYSBASE . "/template/error.phtml";
         self::$errorPage = ob_get_clean();
-        
+
     }
-    
-    public function render(){
+
+    public function render()
+    {
         $this->renderHtmlHeader();
         $this->renderNavbar();
         $this->renderSiteNavigation();
-        echo "<div class='container main col-xs-12 col-md-10'>";
-        if (isset(self::$errorPage)){
+        echo "<div class='container main col-xs-12 col-lg-10'>";
+        if (isset(self::$errorPage)) {
             echo self::$errorPage;
-        }else{
-            if (!empty(self::$tabsConfig)){
+        } else {
+            if (!empty(self::$tabsConfig)) {
                 $this->renderPanelTabs(self::$tabsConfig["tabs"], self::$tabsConfig["linkbase"], self::$tabsConfig["active"]);
             }
             echo $this->bodycontent;
-            if (!empty(self::$tabsConfig)){
+            if (!empty(self::$tabsConfig)) {
                 echo "</div></div>";
             }
         }
         echo "</div>";
         $this->renderModals();
-        if (DEV){
+        $this->renderCookieAlert();
+        if (DEV) {
             $this->renderProfiling();
         }
         $this->renderFooter();
     }
-    
-    private function renderHtmlHeader(){
+
+    private function renderHtmlHeader()
+    {
         $this->setPhpHeader();
         ?>
         <!DOCTYPE html>
@@ -91,7 +100,6 @@ class HTMLPageRenderer{
             <title><?= $this->titel ?></title>
             <?= $this->includeCSS() ?>
             <?= $this->includeJS() ?>
-
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <meta name="description" content="">
@@ -101,8 +109,24 @@ class HTMLPageRenderer{
         <body>
         <?php
     }
-    
-    private function setPhpHeader(){
+
+    private function renderCookieAlert(){
+        ?>
+        <!-- START Bootstrap-Cookie-Alert -->
+        <div class="alert text-center cookiealert" role="alert">
+            <b>Das Finanztool mag &#x1F36A;</b>
+            Hier hast du einen&#x1F36A;. Den brauchst du, damit das Finanztool für dich arbeitet.
+            <a href="https://cookiesandyou.com/" target="_blank">Mehr Informationen</a>
+            <button type="button" class="btn btn-primary btn-sm acceptcookies" aria-label="Close">
+                Ich werde ihn nicht selbst essen, versprochen &#x1F612;
+            </button>
+        </div>
+        <!-- END Bootstrap-Cookie-Alert -->
+        <?php
+    }
+
+    private function setPhpHeader()
+    {
         // by micha-dev
         // http://people.mozilla.com/~bsterne/content-security-policy/details.html
         // https://wiki.mozilla.org/Security/CSP/Specification
@@ -112,25 +136,27 @@ class HTMLPageRenderer{
         header("Cache-Control: post-check=0, pre-check=0", false);
         header("Pragma: no-cache");
     }
-    
-    private function includeCSS(){
+
+    private function includeCSS()
+    {
         $out = "";
-        $defaultCssFiles = ["bootstrap.min", "font-awesome.min"];
+        $defaultCssFiles = ["bootstrap.min", "font-awesome.min","cookiealert"];
         $cssFiles = $defaultCssFiles;
-        if (isset($this->routeInfo["load"])){
-            foreach ($this->routeInfo["load"] as $loadgroupEnum){
+        if (isset($this->routeInfo["load"])) {
+            foreach ($this->routeInfo["load"] as $loadgroupEnum) {
                 $cssFiles = array_merge($cssFiles, $loadgroupEnum["css"]);
             }
         }
-        foreach ($cssFiles as $cssFile){
+        foreach ($cssFiles as $cssFile) {
             $out .= "<link rel='stylesheet' href='" . URIBASE . "css/$cssFile.css'>" . PHP_EOL;
         }
         $out .= "<link rel='stylesheet' href='" . URIBASE . "css/main.css'>" . PHP_EOL;
         return $out;
-        
+
     }
-    
-    private function includeJS(){
+
+    private function includeJS()
+    {
         $out = "";
         $defaultJsFiles = [
             "jquery.min",
@@ -138,6 +164,7 @@ class HTMLPageRenderer{
             "validator",
             "numeral.min",
             "numeral-locales.min",
+            "cookiealert"
         ];
         /*
         jquery-3.1.1.min.js
@@ -156,20 +183,21 @@ class HTMLPageRenderer{
         main.js
         */
         $jsFiles = $defaultJsFiles;
-        if (isset($this->routeInfo["load"])){
-            foreach ($this->routeInfo["load"] as $loadgroupEnum){
+        if (isset($this->routeInfo["load"])) {
+            foreach ($this->routeInfo["load"] as $loadgroupEnum) {
                 $jsFiles = array_merge($jsFiles, $loadgroupEnum["js"]);
             }
         }
         //var_dump($this->routeInfo["load"]);
-        foreach ($jsFiles as $jsFile){
+        foreach ($jsFiles as $jsFile) {
             $out .= "<script src='" . URIBASE . "js/$jsFile.js'></script>" . PHP_EOL;
         }
         $out .= "<script src='" . URIBASE . "js/main.js'></script>" . PHP_EOL;
         return $out;
     }
-    
-    private function renderNavbar(){
+
+    private function renderNavbar()
+    {
         ?>
 
         <nav class="navbar navbar-inverse navbar-fixed-top"
@@ -181,41 +209,50 @@ class HTMLPageRenderer{
             <div class="container">
                 <div class="navbar-header">
                     <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
-                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>"><span
-                                class="logo-bg"></span> Finanzformulare
-                        <?php
-                        if (DEV)
-                            echo " TESTSYSTEM";
-                        ?>
+                    <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>">
+                        <span class="logo-bg"></span>
+                        Finanzformulare<?= DEV ? " TESTSYS" : "" ?>
                     </a>
                 </div>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>"><i
-                                    class="fa fa-fw fa-database"></i> Datenschutz</a>
-                    </li>
-                    <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>"><i
-                                    class="fa fa-fw fa-info"></i> Impressum</a>
-                    </li>
-                    <li><a target="_blank"
-                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>"><i
-                                    class="fa fa-fw fa-question"></i> Hilfe</a>
+                    <li>
+                        <a target="_blank"
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>">
+                            <i class="fa fa-fw fa-lock"></i>
+                            <span class="hidden-sm hidden-xs">Datenschutz</span>
+                        </a>
                     </li>
                     <li>
-                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>"><i
-                                    class="fa fa-fw fa-power-off"></i> Logout</a>
+                        <a target="_blank"
+                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>">
+                            <i class="fa fa-fw fa-info"></i>
+                            <span class="hidden-sm hidden-xs">Impressum</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a target="_blank"
+                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">
+                            <i class="fa fa-fw fa-question"></i>
+                            <span class="hidden-sm hidden-xs">Hilfe</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>">
+                            <i class="fa fa-fw fa-sign-out"></i>
+                            <span class="hidden-sm hidden-xs">Logout</span>
+                        </a>
                     </li>
                 </ul>
             </div>
         </nav>
         <?php
     }
-    
-    private function renderSiteNavigation(){
-        if (isset($this->routeInfo["navigation"])){
+
+    private function renderSiteNavigation()
+    {
+        if (isset($this->routeInfo["navigation"])) {
             $activeButton = $this->routeInfo["navigation"];
-        }else{
+        } else {
             $activeButton = "";
         }
         $navButtons = [
@@ -276,7 +313,7 @@ class HTMLPageRenderer{
                 "tabname" => "hhp",
             ],
         ];
-        
+
         ?>
         <div>
             <div class="profile-sidebar">
@@ -285,23 +322,23 @@ class HTMLPageRenderer{
                     <div class="profile-usertitle-name">
                         <?= (AUTH_HANDLER)::getInstance()->getUserfullname(); ?>
                     </div>
-                    <?php if ((AUTH_HANDLER)::getInstance()->isAdmin()){ ?>
+                    <?php if ((AUTH_HANDLER)::getInstance()->isAdmin()) { ?>
                         <div class="profile-usertitle-job">
                             Admin
                         </div>
-                    <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")){ ?>
+                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")) { ?>
                         <div class="profile-usertitle-job">
                             Haushaltsverantwortlich
                         </div>
-                    <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv")){ ?>
+                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv")) { ?>
                         <div class="profile-usertitle-job">
                             Kassenverantwortlich
                         </div>
-                    <?php }else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")){ ?>
+                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")) { ?>
                         <div class="profile-usertitle-job">
                             Referat Finanzen
                         </div>
-                    <?php }else{ ?>
+                    <?php } else { ?>
                         <div class="profile-usertitle-job">
                             Support Level 1
                         </div>
@@ -320,7 +357,7 @@ class HTMLPageRenderer{
                 <!-- SIDEBAR MENU -->
                 <div class="profile-usermenu">
                     <ul class="nav">
-                        <?php foreach ($navButtons as $navButton){
+                        <?php foreach ($navButtons as $navButton) {
                             if (!$navButton["show"]) continue;
                             ?>
                             <li <?php if ($activeButton == $navButton["tabname"]) echo "class='active'"; ?>>
@@ -338,23 +375,25 @@ class HTMLPageRenderer{
         <?php
     }
 
-private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
-<div class="panel panel-default">
-    <div class="panel-heading panel-heading-with-tabs">
-        <ul class="nav nav-tabs">
-            <?php
-            foreach ($tabs as $link => $fullname){
-                echo "<li class='" . (($link === $activeTab) ? "active" : "") . "'><a href='$linkbase$link'>$fullname</a></li>";
-            }
-            ?>
-        </ul>
-    </div>
-    <div class="panel-body">
-    <?php
-}
-    
-    private function renderModals(){
-    
+    private function renderPanelTabs($tabs, $linkbase, $activeTab)
+    { ?>
+    <div class="panel panel-default">
+        <div class="panel-heading panel-heading-with-tabs">
+            <ul class="nav nav-tabs">
+                <?php
+                foreach ($tabs as $link => $fullname) {
+                    echo "<li class='" . (($link === $activeTab) ? "active" : "") . "'><a href='$linkbase$link'>$fullname</a></li>";
+                }
+                ?>
+            </ul>
+        </div>
+        <div class="panel-body">
+        <?php
+    }
+
+    private function renderModals()
+    {
+
         $this->buildModal("please-wait", "Bitte warten - Die Anfrage wird verarbeitet.", "" .
             '<div class="planespinner"><div class="rotating-plane"></div></div>');
         $this->buildModal("server-message", "Antwort vom Server", "...");
@@ -426,12 +465,13 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
             'success'
         );
     }
-    
-    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false){
-        if ($danger == 'danger'){
+
+    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false)
+    {
+        if ($danger == 'danger') {
             $buttonType1 = "primary";
             $buttonType2 = "danger";
-        }else{
+        } else {
             $buttonType1 = "default";
             $buttonType2 = "primary";
         }
@@ -451,13 +491,13 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
                     <div class='modal-body' id='<?= $id ?>-content'>
                         <?= $bodycontent ?>
                     </div>
-                    <?php if ($hasFooter){ ?>
+                    <?php if ($hasFooter) { ?>
                         <div class='modal-footer'>
-                            <?php if (isset($abortLabel)){ ?>
+                            <?php if (isset($abortLabel)) { ?>
                                 <button type='button' class='btn btn-<?= $buttonType1 ?>'
                                         data-dismiss='modal'><?= $abortLabel ?></button>
                             <?php } ?>
-                            <?php if (isset($actionLabel)){ ?>
+                            <?php if (isset($actionLabel)) { ?>
                                 <button type='button' class='btn btn-<?= $buttonType2 ?>'
                                         id='<?= $id ?>-btn-action'><?= $actionLabel ?></button>
 
@@ -469,15 +509,16 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
         </div>
         <?php
     }
-    
+
     /**
      * Print all Profiling Flags from HTMLPageRenderer::registerProfilingBreakpoint()
      */
-    private function renderProfiling(){
+    private function renderProfiling()
+    {
         $sum = 0;
         $size = count(self::$profiling_timing);
         $out = "";
-        for ($i = 0; $i < $size - 1; $i++){
+        for ($i = 0; $i < $size - 1; $i++) {
             $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . "</strong></span>";
             $out .= "<i class='profiling-source'>" .
                 basename(self::$profiling_sources[$i]["file"]) . ":" .
@@ -496,39 +537,44 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab){ ?>
         $out .= "</div>";
         echo $out;
     }
-    
-    private function renderFooter(){
+
+    private function renderFooter()
+    {
         ?>
         </body>
         </html>
         <?php
     }
-    
+
     /**
      * @return string
      */
-    public function getBodycontent(): string{
+    public function getBodycontent(): string
+    {
         return $this->bodycontent;
     }
-    
+
     /**
      * @param string $bodycontent
      */
-    public function setBodycontent(string $bodycontent){
+    public function setBodycontent(string $bodycontent)
+    {
         $this->bodycontent = $bodycontent;
     }
-    
-    public function appendRendererContent(Renderer $renderObject){
+
+    public function appendRendererContent(Renderer $renderObject)
+    {
         ob_start();
         $renderObject->render();
         $content = ob_get_clean();
         $this->appendToBody($content);
     }
-    
-    public function appendToBody($htmlcontent){
+
+    public function appendToBody($htmlcontent)
+    {
         $this->bodycontent .= $htmlcontent;
     }
-    
-    
+
+
 }
 
