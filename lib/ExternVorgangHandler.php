@@ -26,7 +26,7 @@ class ExternVorgangHandler
 			}
 			$this->routeInfo = $routeInfoOrId;
 		}else{
-			$where = ["id" => $routeInfoOrId];
+			$where = ["extern_id" => $routeInfoOrId];
 		}
 		$this->data = DBConnector::getInstance()->dbFetchAll(
 			"extern_data",
