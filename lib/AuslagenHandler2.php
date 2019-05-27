@@ -1165,7 +1165,7 @@ class AuslagenHandler2
 		}
 		$this->json_result = [
 			'success' => true,
-			'msg' => 'Die Änderungen wurden erfolgreich übernommen.<br>Seite wird aktulisiert...',
+			'msg' => 'Die Änderungen wurden erfolgreich übernommen.<br>Seite wird aktualisiert...',
 			'reload' => 2000,
 			'type' => 'modal',
 			'subtype' => 'server-success',
