@@ -232,7 +232,7 @@ class HHPHandler
 				<?php
 			} ?>
         </table>
-        <a class="btn btn-primary" target="_blank" href="<?= URIBASE ?>export/csv/hhp/<?= $hhp_id ?>">
+        <a class="btn btn-primary" target="_blank" href="<?= URIBASE ?>export/hhp/<?= $hhp_id ?>/csv">
             <i class="fa fa-fw fa-download"></i> HHA als CSV (WINDOWS-1252 encoded)
         </a>
 		<?php
