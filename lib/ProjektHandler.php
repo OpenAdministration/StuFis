@@ -237,6 +237,15 @@ class ProjektHandler
                 "done-other",
                 "terminated",
             ],
+            "createdat" => [
+                "wip",
+                "ok-by-hv",
+                "need-stura",
+                "ok-by-stura",
+                "done-hv",
+                "done-other",
+                "terminated",
+            ],
         ];
         self::$writePermissionAll = [
             "draft" => ["groups" => ["sgis"]],
@@ -556,9 +565,9 @@ class ProjektHandler
 
         $sel_recht = self::$selectable_recht;
         $sel_recht["values"] = $this->data['recht'];
-        if(isset($this->data["createdat"]) && !empty($this->data["createdat"])){
+        if (isset($this->data["createdat"]) && !empty($this->data["createdat"])) {
             $createDate = $this->data["createdat"];
-        }else{
+        } else {
             $createDate = date_create()->format("Y-m-d");
         }
         $hhpId = DBConnector::getInstance()->dbFetchAll(
@@ -567,7 +576,7 @@ class ProjektHandler
             ["id"],
             ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => "final"]
         );
-        if(empty($hhpId)){
+        if (empty($hhpId)) {
             ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
         }
         $hhpId = $hhpId[0]["id"];
@@ -714,7 +723,15 @@ class ProjektHandler
                         ["required"],
                         true,
                         "today"
-                    ) ?>
+                    ); ?>
+                    <?= $this->templater->getDatePickerForm(
+                        "createdat",
+                        $this->data["createdat"],
+                        12,
+                        "",
+                        "Projekt erstellt am"
+                    ); ?>
+
                     <div class='clearfix'></div>
                 </div>
                 <?php $tablePartialEditable = $this->permissionHandler->isEditable(
