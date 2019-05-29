@@ -7,6 +7,3 @@
 [submodule "lib/external_libraries/phpmailer"]
 	path = lib/external_libraries/phpmailer
 	url = https://github.com/PHPMailer/PHPMailer.git
-[submodule "achievement_system_decentral"]
-	path = achievement_system_decentral
-	url = https://gitlab.tu-ilmenau.de/StuRA/ReferatIT/achievement_system_decentral
