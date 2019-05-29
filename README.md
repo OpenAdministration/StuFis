@@ -1,4 +1,4 @@
-##Installation Guide
+## Installation Guide
 ### First steps
   - clone this repository to a local storage
   - copy config/config.php.tpl to /config/config.php
