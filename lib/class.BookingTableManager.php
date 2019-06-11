@@ -593,7 +593,7 @@ class BookingTableManager
 	}
 	
 	public function pushNewPostenIst($postenIstValue, $titel_type, $prefilledText = ""){
-		if ($titel_type === "1"){
+		if ($titel_type === "0"){
 			$postenIstValue = -$postenIstValue;
 		}
 		$this->table_tmp[$this->col_rest]["posten-ist"] = [
