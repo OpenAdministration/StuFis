@@ -412,6 +412,7 @@ class BookingTableManager
 			$newPostenNameRaw,
 			$newBelegName,
 			$b["titel_id"],
+			$b["titel_type"],
 			$b["titel_nr"],
 			$b["titel_name"],
 			$bVal
@@ -560,7 +561,7 @@ class BookingTableManager
 	}
 	
 	public function pushPosten(
-		$newValue, $newValueRaw, $belegName, $titelId, $titelNr, $titelName, $postenSoll
+		$newValue, $newValueRaw, $belegName, $titelId, $titelType, $titelNr, $titelName, $postenSoll
 	){
 		
 		if ($this->posten_lastValue === $newValue && $belegName === $this->auslage_lastValue){
@@ -587,13 +588,14 @@ class BookingTableManager
 				"rowspan" => 1,
 				"colspan" => 1,
 				"title" => $titelName,
+				"type" => $titelType
 			];
 			$this->posten_lastValue = $newValue;
 		}
 	}
 	
 	public function pushNewPostenIst($postenIstValue, $titel_type, $prefilledText = ""){
-		if ($titel_type === "0"){
+		if ($titel_type === "1"){
 			$postenIstValue = -$postenIstValue;
 		}
 		$this->table_tmp[$this->col_rest]["posten-ist"] = [

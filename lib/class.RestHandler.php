@@ -1243,7 +1243,11 @@ class RestHandler
 		$counter = 0;
 		foreach ($instructions as $instruction){
 			foreach ($table[$instruction] as $row){
-				$belege_sum[$instruction] += floatval($row["posten-ist"]["val-raw"]);
+				if($row["titel"]["type"] === "1"){
+					$belege_sum[$instruction] -= floatval($row["posten-ist"]["val-raw"]);	
+				}else{
+					$belege_sum[$instruction] += floatval($row["posten-ist"]["val-raw"]);	
+				}
 				if (isset($row["zahlung-value"])){
 					$zahlung_sum[$instruction] += floatval($row["zahlung-value"]["val-raw"]);
 				}
