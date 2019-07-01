@@ -1,9 +1,18 @@
-##Installation Guide
+## Installation Guide
 ### First steps
   - clone this repository to a local storage
   - copy config/config.php.tpl to /config/config.php
   - install a LAMP Server 
 ### Webserver
+#### Built in PHP Webserver
+For Developing purpose it is recomended to use the built-in php webserver. 
+Therefore lets say /var/www is your public webroot just use 
+```
+$ cd /var/www/
+$ ln -s /path/to/FinanzAntragUI/www/ nameOfSubdirectory
+$ php -S localhost:8000 
+```
+and visit http://localhost:8000/nameOfSubdirectory/
 #### Apache 
 Linux: link /www to your webroot (make sure followSymlinks is activated)
 Windows (or without Linking): add to Apache httpd.conf
