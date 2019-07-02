@@ -951,3 +951,7 @@ textarea.booking__text:invalid {
 .no-wrap {
     white-space: nowrap;
 }
+
+div.hhp-selector {
+    padding-bottom: 15px;
+}

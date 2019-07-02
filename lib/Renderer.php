@@ -348,7 +348,7 @@ abstract class Renderer
         ?>
         <form action="<?= $urlPrefix . $routeInfo["hhp-id"] . $urlSuffix ?>"
               data-action='<?= $urlPrefix . "%%" . $urlSuffix ?>'>
-            <div class="input-group col-xs-2 pull-right">
+            <div class="input-group col-xs-2 pull-right hhp-selector">
                 <select class="selectpicker" id="hhp-id"><?php
                     foreach ($hhps as $id => $hhp){
                         $von = date_create($hhp["von"])->format("M Y");

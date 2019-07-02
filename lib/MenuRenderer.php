@@ -66,6 +66,10 @@ class MenuRenderer
 
     public function renderProjekte($active)
     {
+        list($hhps, $hhp_id) = $this->renderHHPSelector($this->pathinfo, URIBASE. "menu/$active/");
+        echo "<div class='clearfix'></div>";
+        $hhp_von = $hhps[$hhp_id]["von"];
+        $hhp_bis = $hhps[$hhp_id]["bis"];
         $attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
         $gremien = $attributes["gremien"];
         $gremien = array_filter(
@@ -83,7 +87,7 @@ class MenuRenderer
         rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case "allgremium":
-                $where = [];
+                $where = ["createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]];
                 break;
             case "mygremium":
                 if (empty($gremien)) {
@@ -96,7 +100,11 @@ class MenuRenderer
                     );
                     return;
                 }
-                $where = [["org" => ["in", $gremien]], ["org" => ["is", null]], ["org" => ""]];
+                $where = [
+                    ["org" => ["in", $gremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                    ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                    ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                ];
                 break;
             default:
                 ErrorHandler::_errorExit("Not known active Tab: " . $active);
@@ -116,7 +124,7 @@ class MenuRenderer
             [
                 ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
             ],
-            ["org" => true],
+            ["org" => true, "projekte.id" => false],
             ["projekte.id"]
         );
         $pids = [];
@@ -157,7 +165,6 @@ class MenuRenderer
 
         //var_dump(end(end($projekte)));
         $this->setOverviewTabs($active);
-
         ?>
 
         <div class="panel-group" id="accordion">
@@ -339,8 +346,8 @@ class MenuRenderer
             [],
             ["org_name" => true, "id" => false]
         );
-        if(!is_array($extern_meta) || empty($extern_meta)){
-            $this->renderAlert("Schade", "Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!","info");
+        if (!is_array($extern_meta) || empty($extern_meta)) {
+            $this->renderAlert("Schade", "Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!", "info");
             return;
         }
         $idToKeys = [];
@@ -451,11 +458,11 @@ class MenuRenderer
                 function ($value, $pruef, $rueck, $vorkasse) use ($obj, &$sum_value) {
                     if ($pruef === "1") {
                         $out_val = $value - $sum_value;
-                        $sum_value = $value -$sum_value;
+                        $sum_value = $value - $sum_value;
                     } elseif ($rueck === "1") {
-                        $out_val = - $sum_value - $value;
+                        $out_val = -$sum_value - $value;
                         $sum_value -= $value;
-                    } elseif($vorkasse === "1") {
+                    } elseif ($vorkasse === "1") {
                         $out_val = $value - $sum_value;
                         $sum_value = $value;
                     }
