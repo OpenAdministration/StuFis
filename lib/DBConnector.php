@@ -493,7 +493,7 @@ class DBConnector
                     if (!isset($cols[$ownCol])) {
                         ErrorHandler::_errorExit("DB Config Fehler. $tablename.$ownCol not known");
                     }
-                    if (!is_countable($otherCol) || count($otherCol) != 2) {
+                    if (!is_array($otherCol) || count($otherCol) != 2) {
                         ErrorHandler::_errorExit("DB Reference Error. Wrong reference with $tablename.$ownCol");
                     }
                     if (!isset($scheme[$otherCol[0]][$otherCol[1]])) {
