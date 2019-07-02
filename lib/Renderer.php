@@ -321,4 +321,53 @@ abstract class Renderer
         }
         return $text;
     }
+
+    protected function renderHHPSelector($routeInfo, $urlPrefix = URIBASE, $urlSuffix = "/")
+    {
+        $hhps = DBConnector::getInstance()->dbFetchAll(
+            "haushaltsplan",
+            [
+                DBConnector::FETCH_ASSOC,
+                DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY
+            ],
+            [],
+            [],
+            [],
+            ["von" => false]
+        );
+        if (!isset($hhps) || empty($hhps)){
+            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
+        }
+        if (!isset($routeInfo["hhp-id"])){
+            foreach (array_reverse($hhps, true) as $id => $hhp){
+                if ($hhp["state"] === "final"){
+                    $routeInfo["hhp-id"] = $id;
+                }
+            }
+        }
+        ?>
+        <form action="<?= $urlPrefix . $routeInfo["hhp-id"] . $urlSuffix ?>"
+              data-action='<?= $urlPrefix . "%%" . $urlSuffix ?>'>
+            <div class="input-group col-xs-2 pull-right">
+                <select class="selectpicker" id="hhp-id"><?php
+                    foreach ($hhps as $id => $hhp){
+                        $von = date_create($hhp["von"])->format("M Y");
+                        $bis = !empty($hhp["bis"]) ? date_create($hhp["bis"])->format("M Y") : false;
+                        $name = $bis ? $von . " bis " . $bis : "ab " . $von;
+                        ?>
+                        <option value="<?= $id ?>" <?= $id == $routeInfo["hhp-id"] ? "selected" : "" ?>
+                                data-subtext="<?= $hhp["state"] ?>"><?= $name ?>
+                        </option>
+                    <?php } ?>
+                </select>
+                <div class="input-group-btn">
+                    <button type="submit" class="btn btn-primary load-hhp"><i class="fa fa-fw fa-refresh"></i>
+                        Aktualisieren
+                    </button>
+                </div>
+            </div>
+        </form>
+        <?php
+        return [$hhps, $routeInfo["hhp-id"]];
+    }
 }
