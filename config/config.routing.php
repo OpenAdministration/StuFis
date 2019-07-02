@@ -85,7 +85,7 @@ $routing = [
 			'children' => [
 				[
 					'path' => 'mykonto',
-					'type' => 'pattern',
+					'type' => 'path',
 					'action' => 'mykonto',
 					'navigation' => 'mykonto',
 				],
