@@ -339,6 +339,10 @@ class MenuRenderer
             [],
             ["org_name" => true, "id" => false]
         );
+        if(!is_array($extern_meta) || empty($extern_meta)){
+            $this->renderAlert("Schade", "Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!","info");
+            return;
+        }
         $idToKeys = [];
         foreach ($extern_meta as $org_name => $items) {
             foreach ($items as $nr => $item) {
