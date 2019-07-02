@@ -86,7 +86,7 @@ $routing = [
 				[
 					'path' => 'mykonto',
 					'type' => 'pattern',
-					'param' => 'action',
+					'action' => 'mykonto',
 					'navigation' => 'mykonto',
 				],
 				[
@@ -95,6 +95,14 @@ $routing = [
 					'param' => 'action',
 					'navigation' => 'overview',
 				],
+                [
+                    'path' => 'extern',
+                    'type' => 'path',
+                    'action' => 'extern',
+                    'navigation' => 'overview',
+                    'groups' => "ref-finanzen",
+
+                ],
 				[
 					'path' => 'hv',
 					'type' => 'path',
@@ -359,7 +367,7 @@ $routing = [
 						]
 					]
 				],
-			
+
 			]
 		],
 		[
