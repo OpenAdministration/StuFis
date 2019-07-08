@@ -39,6 +39,10 @@ class MenuRenderer
                 $this->setOverviewTabs($this->pathinfo["action"]);
                 $this->renderAlert("Hinweis", "Dieser Bereich befindet sich noch im Aufbau", "info");
                 break;
+            case "extern":
+                $this->setOverviewTabs($this->pathinfo["action"]);
+                $this->renderExtern();
+                break;
             case "mykonto":
                 $this->renderMyProfile();
                 break;
@@ -62,6 +66,10 @@ class MenuRenderer
 
     public function renderProjekte($active)
     {
+        list($hhps, $hhp_id) = $this->renderHHPSelector($this->pathinfo, URIBASE. "menu/$active/");
+        echo "<div class='clearfix'></div>";
+        $hhp_von = $hhps[$hhp_id]["von"];
+        $hhp_bis = $hhps[$hhp_id]["bis"];
         $attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
         $gremien = $attributes["gremien"];
         $gremien = array_filter(
@@ -79,7 +87,7 @@ class MenuRenderer
         rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case "allgremium":
-                $where = [];
+                $where = ["createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]];
                 break;
             case "mygremium":
                 if (empty($gremien)) {
@@ -92,7 +100,11 @@ class MenuRenderer
                     );
                     return;
                 }
-                $where = [["org" => ["in", $gremien]], ["org" => ["is", null]], ["org" => ""]];
+                $where = [
+                    ["org" => ["in", $gremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                    ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                    ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                ];
                 break;
             default:
                 ErrorHandler::_errorExit("Not known active Tab: " . $active);
@@ -112,7 +124,7 @@ class MenuRenderer
             [
                 ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
             ],
-            ["org" => true],
+            ["org" => true, "projekte.id" => false],
             ["projekte.id"]
         );
         $pids = [];
@@ -324,6 +336,178 @@ class MenuRenderer
         <?php
     }
 
+    public function renderExtern()
+    {
+        $extern_meta = DBConnector::getInstance()->dbFetchAll(
+            "extern_meta",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
+            ["org_name", "*"],
+            [],
+            [],
+            ["org_name" => true, "id" => false]
+        );
+        if (!is_array($extern_meta) || empty($extern_meta)) {
+            $this->renderAlert("Schade", "Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!", "info");
+            return;
+        }
+        $idToKeys = [];
+        foreach ($extern_meta as $org_name => $items) {
+            foreach ($items as $nr => $item) {
+                $idToKeys[$item["id"]] = [$org_name, $nr];
+            }
+        }
+        $extern_data = DBConnector::getInstance()->dbFetchAll(
+            "extern_data",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
+            [
+                "extern_id",
+                "extern_id",
+                "extern_data.*",
+                "hhp_id" => "haushaltsgruppen.hhp_id",
+                "titel_name" => "haushaltstitel.titel_name",
+                "titel_nr" => "haushaltstitel.titel_nr",
+            ],
+            ["extern_id" => ["IN", array_keys($idToKeys)]],
+            [
+                ["table" => "haushaltstitel", "type" => "LEFT", "on" => ["extern_data.titel_id", "haushaltstitel.id"],],
+                ["table" => "haushaltsgruppen", "type" => "LEFT", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"],],
+            ],
+            ["extern_id" => true]
+        );
+        foreach ($extern_data as $extern_id => $data) {
+            $extern_meta[$idToKeys[$extern_id][0]][$idToKeys[$extern_id][1]]["subcontent"] = $data;
+        }
+
+        $groupHeaderFun = function ($key) {
+            return $key;
+        };
+        $innerHeaderHeadlineFun = function ($content) {
+            $date = date_create($content["projekt_von"])->format("y");
+            return "<a href=''>EP-" . $date . "-" . $content["id"] . "</a>";
+        };
+        $innerHeaderFun = function ($content) {
+            return $content["projekt_name"];
+        };
+        $obj = $this;
+        $innerContentFun = function ($subContent) use ($obj) {
+            /*'extern_id' => '54',
+              'id' => '57',
+              'vorgang_id' => '1',
+              'titel_id' => '162',
+              'date' => '2018-10-15 00:00:00',
+              'by_user' => NULL,
+              'value' => '9000.00',
+              'description' => NULL,
+              'ok-hv' => 'Haushaltsverantwortliche/r',
+              'ok-kv' => 'Kassenverantwortliche/r',
+              'frist' => NULL,
+              'flag_vorkasse' => '1',
+              'flag_bewilligungsbescheid' => '0',
+              'flag_pruefbescheid' => '0',
+              'flag_rueckforderung' => '0',
+              'flag_mahnung' => '0',
+              'flag_done' => '0',
+              'state_instructed' => 'done',
+              'state_payed' => 'done',
+              'state_booked' => 'Username;2019-02-24T15:34:52+01:00',
+              'ref_file_id' => NULL,
+              'flag_widersprochen' => '0',
+              'widerspruch_date' => NULL,
+              'widerspruch_file_id' => NULL,
+              'widerspruch_text' => NULL,
+              'etag' => 'bG90jIFqngQX5Lob5eISW7Y9Ikncm0Ao',*/
+            $header = [
+                "No",
+                "Typ",
+                "HHP-Titel",
+                "Wert",
+                "Zahlung",
+                "Wiederspruch"
+            ];
+
+            $sum_value = 0;
+
+            $escFun = [
+                function ($extern_id, $vorgang_id) {
+                    return "V$vorgang_id <a href='" . URIBASE . "/print/extern/$extern_id/vorgang/$vorgang_id'>" .
+                        "<i class='fa fa-fw fa-print'></i></a>";
+                },
+                function ($vorkasse, $bewilligung, $preuf, $rueck, $mahn) {
+                    if ($vorkasse === "1") {
+                        $str = "Vorkasse";
+                    } elseif ($bewilligung === "1") {
+                        $str = "Bewilligungsbescheid";
+                    } elseif ($preuf === "1") {
+                        $str = "Prüfbescheid";
+                    } elseif ($rueck === "1") {
+                        $str = "Rückforderungsbescheid";
+                    } elseif ($mahn === "1") {
+                        $str = "Mahnung";
+                    } else {
+                        $str = "";
+                    }
+                    return $str;
+                },
+                function ($hhpId, $titelId, $titelName, $titelNr) {
+                    return "<a title='$titelName' href='" . URIBASE . "/hhp/$hhpId/titel/$titelId' >HP$hhpId - " .
+                        "$titelNr<i class='fa fa-fw fa-info' ></i></a>";
+                },
+                function ($value) use ($obj) {
+                    return $obj->moneyEscapeFunction($value);
+                },
+                function ($value, $pruef, $rueck, $vorkasse) use ($obj, &$sum_value) {
+                    if ($pruef === "1") {
+                        $out_val = $value - $sum_value;
+                        $sum_value = $value - $sum_value;
+                    } elseif ($rueck === "1") {
+                        $out_val = -$sum_value - $value;
+                        $sum_value -= $value;
+                    } elseif ($vorkasse === "1") {
+                        $out_val = $value - $sum_value;
+                        $sum_value = $value;
+                    }
+                    return $obj->moneyEscapeFunction($out_val);
+                },
+                function ($wiederspruch) {
+                    return $wiederspruch === "1" ? "Ja" : "Nein";
+                }
+            ];
+            $keys = [
+                "id",
+                "vorgang_id",
+
+                "flag_vorkasse",
+                'flag_bewilligungsbescheid',
+                'flag_pruefbescheid',
+                'flag_rueckforderung',
+                'flag_mahnung',
+
+                "hhp_id",
+                "titel_id",
+                "titel_name",
+                "titel_nr",
+
+                "value",
+
+                "value",
+                'flag_pruefbescheid',
+                'flag_rueckforderung',
+                "flag_vorkasse",
+
+                'flag_widersprochen'
+            ];
+
+            $obj->renderAlert("Warnung", "Die zweite Spalte könnte noch Rechenfehler beinhalten", "warning");
+            $obj->renderTable($header, [$subContent], $keys, $escFun);
+            // return ??
+        };
+
+        //$this->renderAccordionPanels($test, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
+        $this->renderAccordionPanels($extern_meta, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
+        //$this->renderTable($header,[$extern],array_keys($header));
+
+    }
+
     public function setOverviewTabs($active)
     {
         $linkbase = URIBASE . "menu/";
@@ -331,8 +515,11 @@ class MenuRenderer
             "mygremium" => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             "allgremium" => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
             "mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
-            "search" => "<i class='fa fa-fw fa-search'></i> Suche",
         ];
+        if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")) {
+            $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
+        }
+        $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
