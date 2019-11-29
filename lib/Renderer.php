@@ -182,7 +182,7 @@ abstract class Renderer
 
     protected function formatDateToMonthYear($dateString)
     {
-        return !empty($dateString) ? strftime("%b %G", strtotime($dateString)) : "";
+        return !empty($dateString) ? strftime("%b %Y", strtotime($dateString)) : "";
     }
 
     protected function renderHiddenInput($name, $value)
