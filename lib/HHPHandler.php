@@ -195,8 +195,9 @@ class HHPHandler
                     <tr>
                         <td></td>
                         <td><?= $row["titel_nr"] ?></td>
-                        <td><a href="<?= URIBASE . "hhp/5/titel/$titel_id" ?>"><i
-                                        class="fa fa-fw fa-search-plus"></i><?= $row["titel_name"] ?></a></td>
+                        <td><a href="<?= URIBASE . "hhp/$hhp_id/titel/$titel_id" ?>">
+                                <i class="fa fa-fw fa-search-plus"></i><?= $row["titel_name"] ?></a>
+                        </td>
                         <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue(
 								$row["value"],
 								"money"
