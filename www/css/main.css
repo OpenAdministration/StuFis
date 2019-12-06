@@ -955,3 +955,8 @@ textarea.booking__text:invalid {
 div.hhp-selector {
     padding-bottom: 15px;
 }
+
+input.form-check-input {
+    margin-right: 7px;
+    margin-left: 5px;
+}
