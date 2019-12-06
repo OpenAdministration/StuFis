@@ -68,12 +68,28 @@ class RestHandler
 			case "save-new-kasse-entry":
 				$this->saveNewKasseEntry();
 			break;
+            case "mirror":
+                $this->mirrorInput();
+                break;
 			case 'nononce':
 			default:
 				ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
 			break;
 		}
 	}
+
+	private function mirrorInput(){
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => var_export($_POST,true),
+                'type' => 'modal',
+                'subtype' => 'server-warning',
+                'headline' => 'Mirror des Inputs'
+            ]
+        );
+    }
 	
 	private function handleExtern($routeInfo){
 		$extHandler = new ExternVorgangHandler($routeInfo);

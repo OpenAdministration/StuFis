@@ -196,12 +196,12 @@ class HHPHandler
                         <td></td>
                         <td><?= $row["titel_nr"] ?></td>
                         <td><a href="<?= URIBASE . "hhp/$hhp_id/titel/$titel_id" ?>">
-                                <i class="fa fa-fw fa-search-plus"></i><?= $row["titel_name"] ?></a>
+                                <i class="fa fa-fw fa-search-plus"></i><?= $row["titel_name"] ?>
+                            </a>
                         </td>
-                        <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-								$row["value"],
-								"money"
-							) ?></td>
+                        <td class="money">
+                            <?= DBConnector::getInstance()->convertDBValueToUserValue($row["value"], "money") ?>
+                        </td>
                         <td <?= $this->checkTitelBudget($row["value"], $row["_booked"]) ?>>
 							<?= DBConnector::getInstance()->convertDBValueToUserValue($row["_booked"], "money") ?>
                         </td>
@@ -210,26 +210,21 @@ class HHPHandler
                         </td>
                     </tr>
 	
-	
 					<?php
 				} ?>
                 <tr class="table-sum-footer">
                     <td colspan="3"></td>
-                    <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-							$gsum_soll,
-							"money"
-						) ?></td>
-                    <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-							$gsum_ist,
-							"money"
-						) ?></td>
-                    <td class="money table-sum-hhpgroup"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-							$gsum_saved,
-							"money"
-						) ?></td>
+                    <td class="money table-sum-hhpgroup">
+                        <?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_soll,"money") ?>
+                    </td>
+                    <td class="money table-sum-hhpgroup">
+                        <?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_ist, "money") ?>
+                    </td>
+                    <td class="money table-sum-hhpgroup">
+                        <?= DBConnector::getInstance()->convertDBValueToUserValue($gsum_saved, "money") ?>
+                    </td>
                 </tr>
                 </tbody>
-		
 				<?php
 			} ?>
         </table>
