@@ -173,6 +173,10 @@ abstract class Renderer
         </table>
     <?php }
 
+    protected function renderClearFix(){
+        echo "<div class='clearfix'></div>";
+    }
+
     protected function renderHeadline($text, int $headlineNr = 1)
     {
         echo "<h" . htmlspecialchars($headlineNr) . ">" . htmlspecialchars($text) . "</h" . htmlspecialchars(

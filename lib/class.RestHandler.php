@@ -59,21 +59,40 @@ class RestHandler
 			case "new-booking-instruct":
 				$this->newBookingInstruct($routeInfo);
 			break;
-			case "cancel-booking":
+            case "delete-booking-instruct":
+                $this->deleteBookingInstruction($routeInfo);
+                break;
+            case "cancel-booking":
 				$this->cancelBooking($routeInfo);
 			break;
-			case "confirm-instruct":
+            case "confirm-instruct":
 				$this->saveConfirmedBookingInstruction();
 			break;
-			case "save-new-kasse-entry":
+            case "save-new-kasse-entry":
 				$this->saveNewKasseEntry();
 			break;
+            case "mirror":
+                $this->mirrorInput();
+                break;
 			case 'nononce':
 			default:
 				ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
 			break;
 		}
 	}
+
+	private function mirrorInput(){
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => var_export($_POST,true),
+                'type' => 'modal',
+                'subtype' => 'server-warning',
+                'headline' => 'Mirror des Inputs'
+            ]
+        );
+    }
 	
 	private function handleExtern($routeInfo){
 		$extHandler = new ExternVorgangHandler($routeInfo);
@@ -979,6 +998,35 @@ class RestHandler
 		}
 	}
 	
+	private function deleteBookingInstruction($routeInfo){
+        $instructId = $routeInfo["instruct-id"];
+        $res = DBConnector::getInstance()->dbDelete("booking_instruction", ["id" => $instructId]);
+        if($res > 0){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => "Vorgang $instructId wurde zurückgesetzt.",
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'headline' => 'Erfolgreiche Datenübertragtung',
+                    'reload' => 2000,
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => "Vorgang $instructId konnte nicht gefunden werden!",
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Fehler bei der Datenübertragung',
+                ]
+            );
+        }
+    }
+
 	private function newBookingInstruct($routeInfo){
 		$errorMsg = [];
 		$zahlung = isset($_POST["zahlung"]) ? $_POST["zahlung"] : [];
@@ -1128,12 +1176,25 @@ class RestHandler
 	
 	private function saveConfirmedBookingInstruction(){
 		//var_dump($_POST);
-		$instructions = $_REQUEST["instructions"];
+		$confirmedInstructions = array_keys($_REQUEST["activeInstruction"]);
 		$text = $_REQUEST["text"];
+
+		if(empty($confirmedInstructions)){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => 'Es wurde kein Vorgang ausgewählt.',
+                    'type' => 'modal',
+                    'subtype' => 'server-warning',
+                    //'reload' => 2000,
+                    'headline' => 'Fehlerhafte Eingabe',
+                ]
+            );
+        }
 		
-		$btm = new BookingTableManager($instructions);
+		$btm = new BookingTableManager($confirmedInstructions);
 		$btm->run();
-		
 		
 		$zahlungenDB = $btm->getZahlungDB();
 		$belegeDB = $btm->getBelegeDB();
@@ -1179,7 +1240,7 @@ class RestHandler
 		//check if transferable to new States (payed => booked)
 		$stateChangeNotOk = [];
 		$doneAuslage = [];
-		foreach ($instructions as $instruction){
+		foreach ($confirmedInstructions as $instruction){
 			foreach ($belegeDB[$instruction] as $beleg){
 				switch ($beleg["type"]){
 					case "auslage":
@@ -1216,9 +1277,8 @@ class RestHandler
 					
 					break;
 				}
-				
 			}
-		}
+		} // transfered states to booked - otherwise throw error
 		if (!empty($stateChangeNotOk)){
 			DBConnector::getInstance()->dbRollBack();
 			JsonController::print_json(
@@ -1237,11 +1297,11 @@ class RestHandler
 			);
 		}
 		
-		$zahlung_sum = array_fill_keys($instructions, 0);
-		$belege_sum = array_fill_keys($instructions, 0);
+		$zahlung_sum = array_fill_keys($confirmedInstructions, 0);
+		$belege_sum = array_fill_keys($confirmedInstructions, 0);
 		$table = $btm->getTable();
-		$counter = 0;
-		foreach ($instructions as $instruction){
+		// sammle werte pro instruction auf
+		foreach ($confirmedInstructions as $instruction){
 			foreach ($table[$instruction] as $row){
 				if($row["titel"]["type"] === "1"){
 					$belege_sum[$instruction] -= floatval($row["posten-ist"]["val-raw"]);	
@@ -1251,26 +1311,27 @@ class RestHandler
 				if (isset($row["zahlung-value"])){
 					$zahlung_sum[$instruction] += floatval($row["zahlung-value"]["val-raw"]);
 				}
-				$counter++;
 			}
 		}
+		foreach ($confirmedInstructions as $instruction){
+            if (count($table[$instruction]) !== count($text[$instruction])){
+                DBConnector::getInstance()->dbRollBack();
+                JsonController::print_json(
+                    [
+                        'success' => false,
+                        'status' => '500',
+                        'msg' => "Falsche Daten wurden übvertragen - Textfelder fehlen bei Vorgang $instruction",
+                        'type' => 'modal',
+                        'subtype' => 'server-error',
+                        'reload' => 2000,
+                        'headline' => 'Konnte nicht gespeichert werden',
+                    ]
+                );
+            }
+        }
+
 		
-		if ($counter !== count($text)){
-			DBConnector::getInstance()->dbRollBack();
-			JsonController::print_json(
-				[
-					'success' => false,
-					'status' => '500',
-					'msg' => "Falsche Daten wurden übvertragen - Textfelder fehlen",
-					'type' => 'modal',
-					'subtype' => 'server-error',
-					'reload' => 2000,
-					'headline' => 'Konnte nicht gespeichert werden',
-				]
-			);
-		}
-		
-		foreach ($instructions as $instruction){
+		foreach ($confirmedInstructions as $instruction){
 			//check if algorithm  was correct :'D
 			$diff = abs($zahlung_sum[$instruction] - $belege_sum[$instruction]);
 			if ($diff >= 0.01){
@@ -1298,31 +1359,31 @@ class RestHandler
 		
 		//save in booking-list
 		$table = $btm->getTable(true);
-		$idx = 0;
-		foreach ($instructions as $instruction){
-			foreach ($table[$instruction] as $row){
-				if (isset($text[$idx])){
-					DBConnector::getInstance()->dbInsert(
-						"booking",
-						[
-							"id" => ++$maxBookingId,
-							"titel_id" => $row["titel"]["val-raw"],
-							"zahlung_id" => $row["zahlung"]["val-raw"],
-							"zahlung_type" => $row["zahlung"]["zahlung-type"],
-							"beleg_id" => $row["posten"]["val-raw"],
-							"beleg_type" => $row["beleg"]["beleg-type"],
-							"user_id" => DBConnector::getInstance()->getUser()["id"],
-							"comment" => $text[$idx++],
-							"value" => $row["posten-ist"]["val-raw"],
-							"kostenstelle" => 0,
-						]
-					);
-				}
+
+		foreach ($confirmedInstructions as $instruction){
+            $idx = 0;
+            $bookingText = array_values($text[$instruction]);
+            foreach ($table[$instruction] as $row){
+                DBConnector::getInstance()->dbInsert(
+                    "booking",
+                    [
+                        "id" => ++$maxBookingId,
+                        "titel_id" => $row["titel"]["val-raw"],
+                        "zahlung_id" => $row["zahlung"]["val-raw"],
+                        "zahlung_type" => $row["zahlung"]["zahlung-type"],
+                        "beleg_id" => $row["posten"]["val-raw"],
+                        "beleg_type" => $row["beleg"]["beleg-type"],
+                        "user_id" => DBConnector::getInstance()->getUser()["id"],
+                        "comment" => $bookingText[$idx++],
+                        "value" => $row["posten-ist"]["val-raw"],
+                        "kostenstelle" => 0,
+                    ]
+                );
 			}
 		}
 		
 		//delete from instruction list
-		DBConnector::getInstance()->dbUpdate("booking_instruction", ["id" => ["IN", $instructions]], ["done" => 1]);
+		DBConnector::getInstance()->dbUpdate("booking_instruction", ["id" => ["IN", $confirmedInstructions]], ["done" => 1]);
 		DBConnector::getInstance()->dbCommit();
 		JsonController::print_json(
 			[
@@ -1332,7 +1393,7 @@ class RestHandler
 				'type' => 'modal',
 				'subtype' => 'server-success',
 				'reload' => 2000,
-				'headline' => 'Daten wurden gespeichert',
+				'headline' => count($confirmedInstructions) . (count($confirmedInstructions) >= 1 ? ' Vorgänge ': ' Vorgang ') . ' erfolgreich gespeichert',
 			]
 		);
 	}

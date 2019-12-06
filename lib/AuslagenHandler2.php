@@ -414,7 +414,7 @@ class AuslagenHandler2
 	/**
 	 * get project information from db
 	 *
-	 * @param boolean $renderError
+     * @return boolean
 	 */
 	private function getDbProject(){
 		$res = $this->db->dbFetchAll(
@@ -455,7 +455,7 @@ class AuslagenHandler2
 	/**
 	 * get auslagen information from db
 	 *
-	 * @param boolean $renderError
+	 * @return boolean
 	 */
 	private function getDbProjektPosten(){
 		$res = $this->db->dbFetchAll(
@@ -486,7 +486,7 @@ class AuslagenHandler2
 	/**
 	 * get auslagen information from db
 	 *
-	 * @param boolean $renderError
+	 * @return boolean
 	 */
 	private function getDbAuslagen(){
 		$res = $this->db->dbFetchAll(
@@ -645,7 +645,7 @@ class AuslagenHandler2
 	 * create stateInfo from state
 	 * state may be substate, state or db_state info
 	 *
-	 * @param array $state
+	 * @return array $state
 	 */
 	public static function state2stateInfo($state){
 		$s = $state;

@@ -262,7 +262,7 @@ class BookingTableManager
 			"text" => "Buchungstext",
 		];
 		$table = $this->getTable(); ?>
-        <form method="POST" action="<?= URIBASE ?>rest/booking/save" class="ajax-form">
+        <form method="POST" action="<?= URIBASE ?>rest/booking/instruct/save" class="ajax-form">
             <table class="table">
                 <thead>
                 <tr>
@@ -276,14 +276,23 @@ class BookingTableManager
 				<?php
 				foreach ($this->instructions as $instruct_id => $instruction){
 					echo "<tr><td class='bg-info' colspan='" . count($header) . "'>";
+					echo "<input type='checkbox' class='form-check-input' name='activeInstruction[$instruct_id]'>";
 					$zCount = count($this->zahlungDB[$instruct_id]);
 					$bCount = count($this->belegeDB[$instruct_id]);
 					echo "<strong>Angewiesener Vorgang $instruct_id</strong> - " . $zCount . " Zahlung" . ($zCount === 1
 							? "" : "en") . " und " . $bCount . " Belegposten";
 					echo " - Angewiesen von: " . array_values($instruction)[0]["fullname"];
-					$this->renderHiddenInput("instructions[]", $instruct_id);
+					?>
+                    <form id="#form-delete-instruction-<?= $instruct_id ?>" method="POST" class="ajax-form"
+                          action="<?= URIBASE ?>rest/booking/instruct/<?= $instruct_id?>/delete">
+                        <?= $this->renderNonce(); ?>
+                        <button type="submit" formaction="<?= URIBASE ?>rest/booking/instruct/<?=$instruct_id?>/delete">
+                            <i class="fa fa-fw fa-trash"></i>
+                        </button>
+                    </form>
+                    <?php
 					echo "</td></tr>";
-					
+
 					foreach ($table[$instruct_id] as $nr_of_rows => $row){
 						echo "<tr>";
 						foreach ($header as $key => $text){
@@ -292,8 +301,7 @@ class BookingTableManager
 								$title = isset($cell["title"]) ? $cell["title"] : "";
 								$colspan = isset($cell["colspan"]) ? $cell["colspan"] : 1;
 								$id = "booking-table_" . $key . "-" . $nr_of_rows;
-								echo "<td id='$id' class='vertical-center no-wrap' colspan='$colspan' rowspan='{$cell["rowspan"]}' title='$title'>
-{$cell["val"]}</td>";
+								echo "<td id='$id' class='vertical-center no-wrap' colspan='$colspan' rowspan='{$cell["rowspan"]}' title='$title'>{$cell["val"]}</td>";
 							}
 						}
 						echo "</tr>";
@@ -305,13 +313,10 @@ class BookingTableManager
 			$this->renderNonce();
 			?>
             <button class="btn btn-primary pull-right"
-				<?= !(AUTH_HANDLER)::getInstance()->hasGroup('ref-finanzen-kv') ? "disabled" : "" ?>
-				<?php
-				if (!(AUTH_HANDLER)::getInstance()->hasGroup('ref-finanzen-kv')){
-					echo "title='Nur Kassenverantwortliche können eine Buchung durchführen!'";
-				} ?>
+				<?= !(AUTH_HANDLER)::getInstance()->hasGroup('ref-finanzen-kv') ?
+                    "disabled title='Nur Kassenverantwortliche können eine Buchung durchführen!'" : "" ?>
             >
-                Buchung durchführen
+                Buchung(en) durchführen
             </button>
         </form>
 		<?php
@@ -326,7 +331,7 @@ class BookingTableManager
 			$b = null;
 			$exceededLastBeleg = false;
 			foreach ($this->zahlungDB[$instruction_id] as $z){
-				$zVal = floatval($z["value"]); //Restbetrag der Zahlung
+				$zVal = floatval($z["value"]); //(Rest)betrag der Zahlung
 				while (abs($zVal) >= 0.01){
 					//process akt zahlung + akt beleg
 					if ($bIdx < count($this->belegeDB[$this->actual_instruction])){
@@ -335,17 +340,17 @@ class BookingTableManager
 						$exceededLastBeleg = true;
 					}
 					$bVal = $b["value"];
-					list($zVal, $bValDone) = $this->process($z, $b, $zVal, $bValDone, $exceededLastBeleg);
+					list($zVal, $bValDone) = $this->processLine($z, $b, $zVal, $bValDone, $exceededLastBeleg);
 					//count up if beleg is done (no rest)
 					if (abs($bValDone - $bVal) < 0.01){
-						//beautification only (at last beleg)
+						// beautification only (at last beleg)
 						if ($bIdx === count($this->belegeDB[$this->actual_instruction]) - 1 && abs($zVal) >= 0.01){
 							$this->manipulateLastPostenIst(
 								$zVal + $bVal
 							);
 							$zVal = 0;
 						}
-						//do the counting
+						// do the counting
 						$bIdx++;
 						$bValDone = 0;
 						$bVal = 0;
@@ -362,7 +367,7 @@ class BookingTableManager
 			//add missed belege
 			for ($i = $bIdx; $i < count($this->belegeDB[$this->actual_instruction]); $i++){
 				$b = $this->belegeDB[$this->actual_instruction][$i];
-				$this->process($lastZ, $b, $bVal, 0, false);
+				$this->processLine($lastZ, $b, $bVal, 0, false);
 			}
 			
 		}
@@ -370,7 +375,7 @@ class BookingTableManager
 	}
 	
 	
-	private function process($z, $b, $zSum, $bValDone, bool $exceededLastBeleg){
+	private function processLine($z, $b, $zSum, $bValDone, bool $exceededLastBeleg) : array {
 		switch ($b["type"]){
 			case "belegposten":
 				$prefilledText = $b["projekt_name"] . " - " . $b["auslagen_name"];
@@ -390,7 +395,8 @@ class BookingTableManager
 			break;
 			default:
 				ErrorHandler::_errorExit("Unbekannter Typ: " . $b["type"] . var_export($b, true));
-			break;
+                return [];
+            break;
 		}
 		
 		if ($exceededLastBeleg){
@@ -417,60 +423,11 @@ class BookingTableManager
 			$b["titel_name"],
 			$bVal
 		);
-		$this->pushZahlung($z["id"], $z["konto_id"], $z["value"]);
+		$this->pushZahlung($z["id"], $z["konto_id"], $zVal);
 		$this->pushBeleg($newBelegName, $b["type"]);
-		$type = $this->identifyType($zSum, $zVal, $bValDone, $bVal);
-		
-		switch ($type){
-			case 0: //ging auf: next zahlung + next beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
-			break;
-			case 1: //gleiche Zahlung, neuer Beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
-				$bValDoneNew = $bVal;
-			break;
-			case 2: //übertrag -> next zahlung, same beleg
-				$this->pushNewPostenIst($zSum, $b["titel_type"], $prefilledText);
-				$bValDoneNew = $bValDone + $zSum;
-				$zSumNew = 0;
-			break;
-			case 3: //zahlung wird (absolut) mehr
-				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
-			break;
-			case 4: //beleg wird absolut mehr
-				$this->pushNewPostenIst($zSum, $b["titel_type"], $prefilledText);
-			break;
-			case 5: //negative Zahlung, positiver Beleg
-				$this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
-			break;
-		}
-		
+        $this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
+
 		return [$zSumNew, $bValDoneNew];
-	}
-	
-	private function identifyType(float $zSum, float $zVal, float $bSum, float $Val){
-		return 0;
-		/*
-		if (abs($zSum) < 0.01){
-			return 0;
-		}
-		if ((($zVal <=> 0) * ($zSum <=> 0)) === 1){
-			//falls gleiches vorzeichen
-			if (abs($zVal) > abs($zSum)){
-				//falls näher zur null als vorher
-				return 1;
-			}
-			if((($zVal <=> 0) * ($bSum <=> 0)) === -1){
-				return 4;
-			}
-		}else{
-			// unterschiedliches vorzeichen
-			return 2;
-		}*/
-	}
-	
-	private function sameSign(float $a, float $b){
-		return ((($a <=> 0) * ($b <=> 0)) === 1);
 	}
 	
 	public function nextInstruction(int $i){
@@ -605,7 +562,7 @@ class BookingTableManager
 			"colspan" => 1,
 		];
 		$this->table_tmp[$this->col_rest]["text"] = [
-			"val" => $this->textAreaEscapeFunction("text[]", $prefilledText, true),
+			"val" => $this->textAreaEscapeFunction("text[$this->actual_instruction][]", $prefilledText, true),
 			"rowspan" => 1,
 			"colspan" => 1,
 		];

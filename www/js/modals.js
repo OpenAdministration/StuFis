@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    var frm = $("form.ajax-form");
+    const frm = $("form.ajax-form");
 
     frm.each(function () {
         $(this).on('submit', function (e) {
@@ -13,14 +13,41 @@ $(document).ready(function () {
                     if (!data.hasOwnProperty(name)) {
                         data[name] = [];
                     }
-                    data[name].push($(el).val());
+                    if(el.type === "checkbox"){
+                        if($(el).is(":checked")){
+                            data[name].push($(el).val());
+                        }
+                    }else{
+                        data[name].push($(el).val());
+                    }
                 } else {
-                    data[el.name] = $(el).val();
+                    if(el.type === "checkbox"){
+                        if($(el).is(":checked")){
+                            data[el.name] = $(el).val();
+                        }
+                    }else{
+                        data[el.name] = $(el).val();
+                    }
                 }
             });
+            const submittingButton = $(e.originalEvent.explicitOriginalTarget).closest("input[type=button],button");
+            let action;
+            if(submittingButton.length > 0 && submittingButton.attr("formaction") !== undefined){
+                console.log(submittingButton.attr("formaction"));
+                action = submittingButton.attr("formaction");
+                const buttonData = submittingButton.data();
+                for(const key in buttonData){
+                    // skip loop if the property is from prototype
+                    if (!buttonData.hasOwnProperty(key)) continue;
+                    // add
+                    data["data-" + key] = buttonData[key];
+                }
+            }else{
+                action = $(this).attr('action');
+            }
             $.ajax({
                 type: $(this).attr('method'),
-                url: $(this).attr('action'),
+                url: action,
                 data: data,
                 success: defaultPostModalHandler,
                 error: xpAjaxErrorHandler

@@ -173,15 +173,15 @@ class DBConnector
             "date" => "DATE NOT NULL",
             "valuta" => "DATE NOT NULL",
             "type" => "VARCHAR(128) NOT NULL",
-            "empf_iban" => "VARCHAR(40) NOT NULL",
-            "empf_bic" => "VARCHAR(11)",
-            "empf_name" => "VARCHAR(128) NOT NULL",
-            "primanota" => "float NOT NULL",
+            "empf_iban" => "VARCHAR(40) NOT NULL DEFAULT ''",
+            "empf_bic" => "VARCHAR(11) DEFAULT ''",
+            "empf_name" => "VARCHAR(128) NOT NULL DEFAULT ''",
+            "primanota" => "float NOT NULL DEFAULT 0",
             "value" => "DECIMAL(10,2) NOT NULL",
             "saldo" => "DECIMAL(10,2) NOT NULL",
             "zweck" => "varchar(256) NOT NULL",
-            "comment" => "varchar(128) NOT NULL",
-            "gvcode" => "int NOT NULL",
+            "comment" => "varchar(128) NOT NULL DEFAULT ''",
+            "gvcode" => "int NOT NULL DEFAULT 0",
             "customer_ref" => "varchar(128)"
         ];
         $keys["konto"] = [

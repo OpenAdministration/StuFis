@@ -390,6 +390,7 @@ class BookingHandler
             </a>
 			<?php
 		}else{
+		    $this->renderClearFix();
 			$this->renderAlert("Hinweis","bisher keine Buchungen in diesem HH-Jahr vorhanden.", "info");
 		}
 	}
@@ -470,14 +471,12 @@ class BookingHandler
 									explode("DATUM", $zahlung["zweck"])[0]
 								) ?></td>
                             <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
-                            <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-									$zahlung["value"],
-									"money"
-								) ?></td>
-                            <td class="money"><?= DBConnector::getInstance()->convertDBValueToUserValue(
-									$zahlung["saldo"],
-									"money"
-								) ?></td>
+                            <td class="money">
+                                <?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?>
+                            </td>
+                            <td class="money">
+                                <?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["saldo"], "money") ?>
+                            </td>
                         </tr>
 					<?php } ?>
                     </tbody>
@@ -786,7 +785,7 @@ class BookingHandler
 				echo "<td>";
 				
 				while (isset($alZahlung[$idxZahlung]) && floatval($alZahlung[$idxZahlung]["value"]) === $value){
-					echo "<input type='checkbox' class='booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]["id"]}' data-type='{$alZahlung[$idxZahlung]["konto_id"]}'>";
+					echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]["id"]}' data-type='{$alZahlung[$idxZahlung]["konto_id"]}'>";
 					
 					//print_r($alZahlung[$idxZahlung]);
 					if ($alZahlung[$idxZahlung]['konto_id'] == 0){
@@ -829,7 +828,7 @@ class BookingHandler
 					
 					switch ($alGrund[$idxGrund]["type"]){
 						case "auslage":
-							echo "<input type='checkbox' class='booking__form-beleg' data-value='{$value}' data-type='auslage'
+							echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage'
 data-id='{$alGrund[$idxGrund]['id']}'>";
 							$caption = "A" . $alGrund[$idxGrund]["id"] . " - " . $alGrund[$idxGrund]["name"] . " - " . $alGrund[$idxGrund]["name_suffix"];
 							$url = str_replace(
@@ -839,7 +838,7 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 							);
 						break;
 						case "extern":
-							echo "<input type='checkbox' class='booking__form-beleg' data-value='{$value}' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
+							echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
 							$caption = "E" . $alGrund[$idxGrund]["extern_id"] . "-V" . $alGrund[$idxGrund]["vorgang_id"] .
 								" - " . $alGrund[$idxGrund]["projekt_name"] . " - " . $alGrund[$idxGrund]["org_name"];
 							$url = str_replace(
@@ -860,12 +859,11 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 				echo "</td>";
 				echo "</tr>";
 			}
-			
 			?>
         </table>
         <!--<form id="instruct-booking" role="form" action="<?= URIBASE ?>rest/booking/cancel" method="POST"
                                   enctype="multipart/form-data" class="ajax">-->
-        <form action="<?= URIBASE ?>rest/booking/instruct" method="POST" role="form" class="ajax-form">
+        <form action="<?= URIBASE ?>rest/booking/instruct/new" method="POST" role="form" class="ajax-form">
             <div class="booking__panel-form col-xs-2">
                 <h4>ausgewählte Zahlungen</h4>
                 <div class="booking__zahlung">

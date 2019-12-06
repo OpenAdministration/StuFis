@@ -260,6 +260,12 @@ $routing = [
             'method' => 'POST',
             'children' => [
                 [
+                    'path' => 'mirror',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'mirror',
+                ],
+                [
                     'path' => 'forms',
                     'type' => 'path',
                     'controller' => 'error',
@@ -342,15 +348,36 @@ $routing = [
                             'path' => 'instruct',
                             'type' => 'path',
                             'controller' => 'rest',
-                            'action' => 'new-booking-instruct',
-                            'groups' => 'ref-finanzen-hv',
-                        ],
-                        [
-                            'path' => 'save',
-                            'type' => 'path',
-                            'controller' => 'rest',
-                            'action' => 'confirm-instruct',
-                            'groups' => 'ref-finanzen-kv',
+                            'children' => [
+                                [
+                                    'path' => '([0-9]*)',
+                                    'type' => 'pattern',
+                                    'param' => 'instruct-id',
+                                    'children' => [
+                                        [
+                                            'path' => 'delete',
+                                            'type' => 'path',
+                                            'controller' => 'rest',
+                                            'action' => 'delete-booking-instruct',
+                                            'groups' => 'ref-finanzen-hv,ref-finanzen-kv',
+                                        ]
+                                    ],
+                                ],
+                                [
+                                    'path' => 'new',
+                                    'type' => 'path',
+                                    'controller' => 'rest',
+                                    'action' => 'new-booking-instruct',
+                                    'groups' => 'ref-finanzen-hv',
+                                ],
+                                [
+                                    'path' => 'save',
+                                    'type' => 'path',
+                                    'controller' => 'rest',
+                                    'action' => 'confirm-instruct',
+                                    'groups' => 'ref-finanzen-kv',
+                                ],
+                            ],
                         ],
                         [
                             'path' => 'cancel',
