@@ -260,6 +260,12 @@ $routing = [
             'method' => 'POST',
             'children' => [
                 [
+                    'path' => 'mirror',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'mirror',
+                ],
+                [
                     'path' => 'forms',
                     'type' => 'path',
                     'controller' => 'error',
