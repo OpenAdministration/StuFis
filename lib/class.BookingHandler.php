@@ -859,7 +859,6 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 				echo "</td>";
 				echo "</tr>";
 			}
-			
 			?>
         </table>
         <!--<form id="instruct-booking" role="form" action="<?= URIBASE ?>rest/booking/cancel" method="POST"
