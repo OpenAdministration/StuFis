@@ -662,9 +662,8 @@ class RestHandler
 								if ($auth->hasGroup('ref-finanzen')){
 									$map[] = '3';
 								}
-								if ($auth->hasGroup(
-										'ref-finanzen'
-									) || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()){
+								if ($auth->hasGroup('ref-finanzen')
+                                    || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()){
 									$map[] = '-1';
 								}
 								$chat->setKeep($map);
@@ -685,10 +684,8 @@ class RestHandler
 								//switch type
 								switch ($valid['type']){
 									case '-1':
-										if (!$auth->hasGroup(
-												'ref-finanzen'
-											) && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername(
-												))){
+										if (!$auth->hasGroup('ref-finanzen')
+                                            && (!isset($r[0]['username']) || $r[0]['username'] != $auth->getUsername())){
 											break 3;
 										}
 										if (!$auth->hasGroup('ref-finanzen')){
@@ -1198,43 +1195,7 @@ class RestHandler
 		
 		$zahlungenDB = $btm->getZahlungDB();
 		$belegeDB = $btm->getBelegeDB();
-		/* $belegPostenDB = DBConnector::getInstance()->dbFetchAll(
-			"auslagen",
-			[DBConnector::FETCH_ASSOC],
-			[
-				"auslagen.id",
-				"auslagen.projekt_id",
-				"titel_id",
-				"titel_type" => "haushaltsgruppen.type",
-				"posten_id" => "beleg_posten.id",
-				"beleg_posten.einnahmen",
-				"beleg_posten.ausgaben",
-				"etag",
-			],
-			["auslagen.id" => ["IN", $belege]],
-			[
-				["table" => "belege", "type" => "inner", "on" => ["belege.auslagen_id", "auslagen.id"]],
-				["table" => "beleg_posten", "type" => "inner", "on" => ["beleg_posten.beleg_id", "belege.id"]],
-				[
-					"table" => "projektposten",
-					"type" => "inner",
-					"on" => [
-						["projektposten.id", "beleg_posten.projekt_posten_id"],
-						["auslagen.projekt_id", "projektposten.projekt_id"]
-					],
-				],
-				[
-					"table" => "haushaltstitel",
-					"type" => "inner",
-					"on" => ["projektposten.titel_id", "haushaltstitel.id"]
-				],
-				[
-					"table" => "haushaltsgruppen",
-					"type" => "inner",
-					"on" => ["haushaltsgruppen.id", "haushaltstitel.hhpgruppen_id"]
-				],
-			]
-		);*/
+
 		//start write action
 		DBConnector::getInstance()->dbBegin();
 		//check if transferable to new States (payed => booked)

@@ -23,8 +23,8 @@ class AuslagenHandler2
 	private static $groups = [
 		'editable' => [
 			'draft' => ["groups" => ["sgis"]],
-			'wip' => ["groups" => ["ref-finanzen"]],
-			'ok' => ["groups" => ["ref-finanzen"]],
+			'wip' => ["groups" => ["ref-finanzen-belege"]],
+			'ok' => ["groups" => ["ref-finanzen-belege"]],
 		],
 		'strict_editable' => [
 			'groups' => ["ref-finanzen-hv"],
@@ -34,10 +34,10 @@ class AuslagenHandler2
 			],
 		],
 		'stateless' => [
-			'view_creator' => ["groups" => ["ref-finanzen-hv"]],
-			'finanzen' => ["groups" => ["ref-finanzen"]],
+			'view_creator' => ["groups" => ["ref-finanzen-belege"]],
+			'finanzen' => ["groups" => ["ref-finanzen-belege"]],
 			'belegpdf' => [
-				'groups' => ["ref-finanzen-hv"],
+				'groups' => ["ref-finanzen-belege"],
 				'dynamic' => [
 					'owner',
 					'plain_orga'
@@ -98,7 +98,7 @@ class AuslagenHandler2
 			"wip" => true,
 		],
 		"wip" => [
-			"ok" => ["groups" => ["ref-finanzen"]],
+			"ok" => ["groups" => ["ref-finanzen-belege"]],
 			"revocation" => true,
 		],
 		"ok" => [
@@ -107,7 +107,7 @@ class AuslagenHandler2
 		],
 		"instructed" => [
 			"booked" => ["groups" => ["ref-finanzen-kv"]],
-			"revocation" => ["groups" => ["ref-finanzen"]],
+			"revocation" => ["groups" => ["ref-finanzen-belege"]],
 		],
 		"booked" => [
 		],
@@ -124,14 +124,14 @@ class AuslagenHandler2
 			"wip" => ["groups" => ["ref-finanzen-kv"]],
 		],
 		'ok-belege' => [
-			"wip" => ["groups" => ["ref-finanzen"]],
+			"wip" => ["groups" => ["ref-finanzen-belege"]],
 		],
 		'payed' => [
 			"instructed" => ["groups" => ["ref-finanzen-kv"]],
 		],
 		'revoked' => [
 			"wip" => [
-				'groups' => ["ref-finanzen"],
+				'groups' => ["ref-finanzen-belege"],
 				'dynamic' => [
 					'owner',
 					'plain_orga'
@@ -146,9 +146,9 @@ class AuslagenHandler2
 			],
 		],
 		'rejected' => [
-			"wip" => ["groups" => ["ref-finanzen"]],
-			"ok" => ["groups" => ["ref-finanzen"]],
-			"instructed" => ["groups" => ["ref-finanzen"]],
+			"wip" => ["groups" => ["ref-finanzen-hv"]],
+			"ok" => ["groups" => ["ref-finanzen-hv"]],
+			"instructed" => ["groups" => ["ref-finanzen-belege"]],
 		],
 	];
 	private static $validFieldKeys = [
@@ -182,13 +182,13 @@ class AuslagenHandler2
 			'files' => ['groups' => ['sgis']],
 		],
 		'wip' => [
-			'auslagen-name' => ['groups' => ['ref-finanzen']],
-			'zahlung-name' => ['groups' => ['ref-finanzen']],
-			'zahlung-iban' => ['groups' => ['ref-finanzen']],
-			'zahlung-vwzk' => ['groups' => ['ref-finanzen']],
-			'address' => ['groups' => ['ref-finanzen']],
-			'belege' => ['groups' => ['ref-finanzen']],
-			'files' => ['groups' => ['ref-finanzen']],
+			'auslagen-name' => ['groups' => ['ref-finanzen-belege']],
+			'zahlung-name' => ['groups' => ['ref-finanzen-belege']],
+			'zahlung-iban' => ['groups' => ['ref-finanzen-belege']],
+			'zahlung-vwzk' => ['groups' => ['ref-finanzen-belege']],
+			'address' => ['groups' => ['ref-finanzen-belege']],
+			'belege' => ['groups' => ['ref-finanzen-belege']],
+			'files' => ['groups' => ['ref-finanzen-belege']],
 		],
 		"ok" => [],
 		"instructed" => [],
@@ -344,7 +344,7 @@ class AuslagenHandler2
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
-		if (!$this->stateInfo['project-editable'] && !$auth->hasGroup("ref-finanzen")){
+		if (!$this->stateInfo['project-editable'] && !$auth->hasGroup("ref-finanzen-belege")){
 			if ($routeInfo['action'] == 'create'
 				|| $routeInfo['action'] == 'edit'
 				|| ($routeInfo['action'] == 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf')){
@@ -859,9 +859,8 @@ class AuslagenHandler2
 				break;
 				case 'state':
 					{
-						if (($this->stateInfo['project-editable'] || $auth->hasGroup(
-									"ref-finanzen"
-								)) && $this->auslagen_id){
+						if (($this->stateInfo['project-editable'] || $auth->hasGroup("ref-finanzen-belege"))
+                            && $this->auslagen_id){
 							$this->post_statechange();
 						}else{
 							$this->error = 'Die Abrechnung kann nicht verändert werden. Der Status wurde nicht geändert.';
@@ -1886,7 +1885,7 @@ class AuslagenHandler2
 				if ($iban_text){
 					$iban_text = $this->decryptedStr($iban_text);
 				}
-				if (!$auth->hasGroup('ref-finanzen-hv,ref-finanzen-kv')){
+				if (!$auth->hasGroup('ref-finanzen-belege')){
 					$iban_text = self::trimIban($iban_text);
 				}else if ($iban_text != ''){
 					$iban_text = chunk_split($iban_text, 4, ' ');
@@ -1949,7 +1948,7 @@ class AuslagenHandler2
         </div>
 		<?php
 		if ($this->routeInfo['action'] != 'create' && $this->routeInfo['action'] != 'edit'){
-			if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == $this->state2stateInfo(
+			if ($auth->hasGroup('ref-finanzen-belege') || $auth->getUsername() == $this->state2stateInfo(
 					'wip;' . $this->auslagen_data['created']
 				)['user']){
 				$this->render_chat_box();

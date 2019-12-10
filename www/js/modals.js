@@ -30,7 +30,7 @@ $(document).ready(function () {
                     }
                 }
             });
-            const submittingButton = $(e.originalEvent.explicitOriginalTarget).closest("input[type=button],button");
+            const submittingButton = $(e.originalEvent.explicitOriginalTarget).closest("input[type=button],input[type=sumbit],button");
             let action;
             if(submittingButton.length > 0 && submittingButton.attr("formaction") !== undefined){
                 console.log(submittingButton.attr("formaction"));
