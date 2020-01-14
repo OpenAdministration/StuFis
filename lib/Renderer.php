@@ -259,7 +259,7 @@ abstract class Renderer
             } else {
                 $this->renderAlert(
                     "Warnung",
-                    "In deinen Gremien wurden bisher keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
                     "warning"
                 );
             } ?>
