@@ -993,6 +993,7 @@ class DBConnector
             "<=",
             ">=",
             "like",
+            "not like",
             "in",
             "between",
             "not in",
@@ -1503,7 +1504,7 @@ class DBConnector
             $group_type = DBConnector::GROUP_NOTHING;
             $groupBy = [];
         }
-        $whereClosed = ["hhp_id" => $hhp_id, "projekte.state" => "terminated"];
+        $whereClosed = ["hhp_id" => $hhp_id, "projekte.state" => "terminated", "auslagen.state" => ["NOT LIKE", "revocation%"]];
         $whereOpen = ["hhp_id" => $hhp_id, "projekte.state" => ["REGEXP", "ok-by-hv|ok-by-stura|done-hv|done-other"]];
         if (isset($titel_id)) {
             $whereClosed["titel_id"] = $titel_id;

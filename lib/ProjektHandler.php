@@ -116,9 +116,11 @@ class ProjektHandler
             ],
             "ok-by-hv" => [
                 "done-hv" => ["groups" => ["ref-finanzen-hv"]],
+                "need-stura" => ["groups" => ["ref-finanzen-hv"]],
             ],
             "need-stura" => [
                 "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
+                "ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
                 "revoked" => ["groups" => ["ref-finanzen-hv"]],
             ],
             "done-hv" => [
@@ -250,7 +252,7 @@ class ProjektHandler
         self::$writePermissionAll = [
             "draft" => ["groups" => ["sgis"]],
             "wip" => ["groups" => ["ref-finanzen-hv"]],
-            "ok-by-hv" => [],
+            "ok-by-hv" => ["groups" => ["ref-finanzen-hv"]],
             "need-stura" => ["groups" => ["ref-finanzen-hv"]],
             "ok-by-stura" => ["groups" => ["ref-finanzen-hv"]],
             "done-hv" => ["groups" => ["ref-finanzen-hv"]],
