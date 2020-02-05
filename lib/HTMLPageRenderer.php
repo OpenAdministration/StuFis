@@ -198,23 +198,31 @@ class HTMLPageRenderer
 
     private function renderNavbar()
     {
-        ?>
+        //https://stackoverflow.com/questions/7447472/
+        $gitBasePath = SYSBASE . '/.git'; // e.g in laravel: base_path().'/.git';
 
+        $gitStr = file_get_contents($gitBasePath . '/HEAD');
+        $gitBranchName = rtrim(preg_replace("/(.*?\/){2}/", '', $gitStr));
+        $gitPathBranch = $gitBasePath . '/refs/heads/' . $gitBranchName;
+        $gitHash = file_get_contents($gitPathBranch);
+        $gitDate = new DateTime();
+        $gitDate->setTimestamp(filemtime($gitPathBranch));
+
+        ?>
         <nav class="navbar navbar-inverse navbar-fixed-top"
             <?php
             if (DEV)
                 echo " style='background-color:darkred;'";
             ?>
         >
-            <div class="container">
+            <div class="container-fluid">
                 <div class="navbar-header">
-                    <!--                    <a class="navbar-brand" href="#">FVS - Finanz Verwaltungs System Interne Anträge</a> -->
                     <a class="navbar-brand" href="<?php echo htmlspecialchars(URIBASE); ?>">
                         <span class="logo-bg"></span>
                         Finanzformulare<?= DEV ? " TESTSYS" : "" ?>
                     </a>
                 </div>
-                <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav navbar-right col-xs-6">
                     <li>
                         <a target="_blank"
                            href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>">
@@ -227,6 +235,17 @@ class HTMLPageRenderer
                            href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>">
                             <i class="fa fa-fw fa-info"></i>
                             <span class="hidden-sm hidden-xs">Impressum</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a target="_blank" href="<?= GIT_ISSUE_LINK ?>"
+                           title="<?= htmlspecialchars(
+                               "Commit: " . substr($gitHash,0,7) . PHP_EOL .
+                               "Branch: " . $gitBranchName . PHP_EOL .
+                               "From: " . $gitDate->format(DATE_ATOM)
+                           )?>">
+                            <i class="fa fa-fw fa-gitlab"></i>
+                            <span class="hidden-sm hidden-xs">Fehler melden - V<?= $gitDate->format("Y-m-d") ?></span>
                         </a>
                     </li>
                     <li>

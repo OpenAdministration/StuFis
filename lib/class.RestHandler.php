@@ -1263,10 +1263,15 @@ class RestHandler
 		$table = $btm->getTable();
 		// sammle werte pro instruction auf
 		foreach ($confirmedInstructions as $instruction){
+		    $lastTitel = "";
 			foreach ($table[$instruction] as $row){
-				if($row["titel"]["type"] === "1"){
+				if(isset($row["titel"]["type"]) ){
+				    $lastTitel = $row["titel"]["type"];
+                }
+			    if($lastTitel === "1"){
 					$belege_sum[$instruction] -= floatval($row["posten-ist"]["val-raw"]);	
-				}else{
+				}
+			    if ($lastTitel === "0"){
 					$belege_sum[$instruction] += floatval($row["posten-ist"]["val-raw"]);	
 				}
 				if (isset($row["zahlung-value"])){
@@ -1301,7 +1306,7 @@ class RestHandler
 					[
 						'success' => false,
 						'status' => '500',
-						'msg' => "Falsche Daten wurden übvertragen: Differenz der Posten = $diff (Vorgang $instruction)",
+						'msg' => "Falsche Daten wurden übvertragen: Differenz der Posten = $diff",
 						'type' => 'modal',
 						'subtype' => 'server-error',
 						//'reload' => 2000,
