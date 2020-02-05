@@ -321,115 +321,106 @@ class BookingTableManager
         </form>
 		<?php
 	}
-	
-	public function run(){
-		foreach ($this->instructions as $instruction_id => $someNotUsedValue){
-			$this->nextInstruction($instruction_id);
-			$bIdx = 0;
-			$bValDone = 0;
-			$bVal = 0;
-			$b = null;
-			$exceededLastBeleg = false;
-			foreach ($this->zahlungDB[$instruction_id] as $z){
-				$zVal = floatval($z["value"]); //(Rest)betrag der Zahlung
-				while (abs($zVal) >= 0.01){
-					//process akt zahlung + akt beleg
-					if ($bIdx < count($this->belegeDB[$this->actual_instruction])){
-						$b = $this->belegeDB[$instruction_id][$bIdx];
-					}else{
-						$exceededLastBeleg = true;
-					}
-					$bVal = $b["value"];
-					list($zVal, $bValDone) = $this->processLine($z, $b, $zVal, $bValDone, $exceededLastBeleg);
-					//count up if beleg is done (no rest)
-					if (abs($bValDone - $bVal) < 0.01){
-						// beautification only (at last beleg)
-						if ($bIdx === count($this->belegeDB[$this->actual_instruction]) - 1 && abs($zVal) >= 0.01){
-							$this->manipulateLastPostenIst(
-								$zVal + $bVal
-							);
-							$zVal = 0;
-						}
-						// do the counting
-						$bIdx++;
-						$bValDone = 0;
-						$bVal = 0;
-					}
-				}
-			}
-			$lastZ = array_slice($this->zahlungDB[$instruction_id], -1)[0];
-			//beautification only
-			if ($bIdx < count($this->belegeDB[$this->actual_instruction]) && abs($bValDone - $bVal) > 0.01){
-				$this->manipulateLastPostenIst($bVal - $bValDone + $this->getLastPostenIst());
-				$bIdx++;
-				$bValDone = 0;
-			}
-			//add missed belege
-			for ($i = $bIdx; $i < count($this->belegeDB[$this->actual_instruction]); $i++){
-				$b = $this->belegeDB[$this->actual_instruction][$i];
-				$this->processLine($lastZ, $b, $bVal, 0, false);
-			}
-			
-		}
-		$this->executed = true;
-	}
-	
-	
-	private function processLine($z, $b, $zSum, $bValDone, bool $exceededLastBeleg) : array {
-		switch ($b["type"]){
-			case "belegposten":
-				$prefilledText = $b["projekt_name"] . " - " . $b["auslagen_name"];
-				$newPostenName = "P" . $b["posten_short"];
-				$newPostenNameRaw = $b["posten_id"];
-				$newBelegName = $this->auslagenLinkEscapeFunction(
-					$b["projekt_id"],
-					$b["auslagen_id"],
-					"B" . $b["belege_short"]
-				);
-			break;
-			case "extern":
-				$prefilledText = $b["projekt_name"] . " - " . $b["org_name"];
-				$newPostenName = "V" . $b["vorgang_id"];
-				$newPostenNameRaw = $b["id"];
-				$newBelegName = "E" . $b["extern_id"];
-			break;
-			default:
-				ErrorHandler::_errorExit("Unbekannter Typ: " . $b["type"] . var_export($b, true));
-                return [];
-            break;
-		}
-		
-		if ($exceededLastBeleg){
-			//add new Zahlung, extend last Beleg and Posten
-			$this->pushZahlung($z["id"], $z["konto_id"], $z["value"]);
-			$this->extendLastBeleg();
-			$this->extendLastPosten();
-			$this->pushNewPostenIst($z["value"], $b["titel_type"], $prefilledText);
-			return [0, 0];
-		}
-		
-		$bVal = $b["value"];
-		$zVal = $z["value"];
-		$zSumNew = $zSum - ($bVal - $bValDone);
-		$bValDoneNew = $bVal;
-		
-		$this->pushPosten(
-			$newPostenName,
-			$newPostenNameRaw,
-			$newBelegName,
-			$b["titel_id"],
-			$b["titel_type"],
-			$b["titel_nr"],
-			$b["titel_name"],
-			$bVal
-		);
-		$this->pushZahlung($z["id"], $z["konto_id"], $zVal);
-		$this->pushBeleg($newBelegName, $b["type"]);
-        $this->pushNewPostenIst($bVal - $bValDone, $b["titel_type"], $prefilledText);
 
-		return [$zSumNew, $bValDoneNew];
-	}
-	
+	public function run(){
+
+        foreach ($this->instructions  as $instruction_id => $someNotUsedValue){
+            $this->nextInstruction($instruction_id); //set
+            $zAll = $this->zahlungDB[$instruction_id];
+            $bAll = $this->belegeDB[$instruction_id];
+            foreach ($zAll as $z_key => $z){
+                $zVal = round(floatval($z["value"]),2);
+                //echo "Z".$zVal;
+                foreach ($bAll as $b_key => $b){
+                    $bVal = round(floatval($b["value"]),2);
+                    //echo "B".$bVal;
+                    if($bVal === $zVal){
+                        $this->processLine($z,$b,$bVal);
+                        unset($bAll[$b_key], $zAll[$z_key]);
+                        break;
+                    }
+                }
+            }
+            if(count($bAll) === 1){
+                $b = array_values($bAll)[0];
+                foreach ($zAll as $z){
+                    $zVal = floatval($z["value"]);
+                    $this->processLine($z,$b,$zVal);
+                }
+            }elseif (count($zAll) === 1){
+                $z = array_values($zAll)[0];
+                foreach ($bAll as $b){
+                    $bVal = floatval($b["value"]);
+                    $this->processLine($z,$b,$bVal);
+                }
+            }else{
+                $zValDone = 0;
+                $bValDone = 0;
+                foreach ($zAll as $z){
+                    $zVal = floatval($z["value"]);
+                    foreach ($bAll as $b_key => $b){
+                        $bVal = floatval($b["value"]);
+                        if($zVal - $zValDone < $bVal - $bValDone){
+                            $zValDone = round($zValDone + $bVal-$bValDone,2);
+                            $this->processLine($z,$b,$bVal-$bValDone);
+                            unset($bAll[$b_key]); // remove used belege - single use only
+                            $bValDone = 0;
+                        }else{
+                            $this->processLine($z,$b,$zVal - $zValDone);
+                            $bValDone = round($bValDone + $zVal - $zValDone,2);
+                            $zValDone = 0;
+                            break; //next Zahlung
+                        }
+                    }
+                }
+            }
+        }
+        $this->executed = true;
+    }
+
+    private function processLine($z, $b, $val) {
+        switch ($b["type"]){
+            case "belegposten":
+                $prefilledText = $b["projekt_name"] . " - " . $b["auslagen_name"];
+                $newPostenName = "P" . $b["posten_short"];
+                $newPostenNameRaw = $b["posten_id"];
+                $newBelegName = $this->auslagenLinkEscapeFunction(
+                    $b["projekt_id"],
+                    $b["auslagen_id"],
+                    "B" . $b["belege_short"]
+                );
+                break;
+            case "extern":
+                $prefilledText = $b["projekt_name"] . " - " . $b["org_name"];
+                $newPostenName = "V" . $b["vorgang_id"];
+                $newPostenNameRaw = $b["id"];
+                $newBelegName = "E" . $b["extern_id"];
+                break;
+            default:
+                ErrorHandler::_errorExit("Unbekannter Typ: " . $b["type"] . var_export($b, true));
+                return [];
+                break;
+        }
+
+        $bVal = $b["value"];
+        $zVal = $z["value"];
+
+        $this->pushPosten(
+            $newPostenName,
+            $newPostenNameRaw,
+            $newBelegName,
+            $b["titel_id"],
+            $b["titel_type"],
+            $b["titel_nr"],
+            $b["titel_name"],
+            $bVal
+        );
+        $this->pushZahlung($z["id"], $z["konto_id"], $zVal);
+        $this->pushBeleg($newBelegName, $b["type"]);
+        $this->pushNewPostenIst($val, $b["titel_type"], $prefilledText);
+
+    }
+
 	public function nextInstruction(int $i){
 		if (isset($this->actual_instruction)){
 			$this->table[$this->actual_instruction] = $this->table_tmp;
@@ -487,7 +478,7 @@ class BookingTableManager
 	}
 	
 	public function pushZahlung(int $zahlungId, int $zahlungIdType, float $zahlungValue){
-		//FIXME with DB querry
+        $prefix = "";
 		if (isset($this->kontoTypes[$zahlungIdType])){
 			$prefix = $this->kontoTypes[$zahlungIdType]["short"];
 		}else{
@@ -520,7 +511,6 @@ class BookingTableManager
 	public function pushPosten(
 		$newValue, $newValueRaw, $belegName, $titelId, $titelType, $titelNr, $titelName, $postenSoll
 	){
-		
 		if ($this->posten_lastValue === $newValue && $belegName === $this->auslage_lastValue){
 			$this->extendLastPosten();
 		}else{
@@ -567,22 +557,6 @@ class BookingTableManager
 			"colspan" => 1,
 		];
 		$this->col_rest++;
-	}
-	
-	private function getLastPostenIst(){
-		if ($this->col_rest <= 0){
-			return false;
-		}
-		return $this->table_tmp[$this->col_rest - 1]["posten-ist"]["val-raw"];
-	}
-	
-	private function manipulateLastPostenIst($newVal){
-		if ($this->col_rest <= 0){
-			return false;
-		}
-		$this->table_tmp[$this->col_rest - 1]["posten-ist"]["val"] = $this->moneyEscapeFunction($newVal);
-		$this->table_tmp[$this->col_rest - 1]["posten-ist"]["val-raw"] = $newVal;
-		return true;
 	}
 	
 	public function extendLastBeleg(){
