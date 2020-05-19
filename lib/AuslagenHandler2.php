@@ -1915,8 +1915,8 @@ class AuslagenHandler2
 				$tmpvalue = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create'
 					|| $this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
 					|| $this->checkPermissionByMap(self::$groups['stateless']['owner'])
-					|| $this->checkPermissionByMap(self::$groups['stateless']['orga'])) ?
-					$this->auslagen_data['address'] :
+					//|| $this->checkPermissionByMap(self::$groups['stateless']['orga'])
+                ) ? $this->auslagen_data['address'] :
 					'Versteckt';
 				?>
 				<?= $this->templater->getTextareaForm(
