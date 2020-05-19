@@ -287,9 +287,16 @@ $routing = [
                             'action' => 'auslagen',
                             'children' => [
                                 [
-                                    'path' => '(updatecreate|filedelete|state|belegpdf|zahlungsanweisung)',
+                                    'path' => '(updatecreate|filedelete|state|belegpdf)',
                                     'type' => 'pattern',
                                     'param' => 'mfunction',
+                                    'match' => 0,
+                                ],
+                                [
+                                    'path' => 'zahlungsanweisung',
+                                    'type' => 'pattern',
+                                    'param' => 'mfunction',
+                                    'groups' => 'ref-finanzen',
                                     'match' => 0,
                                 ],
                             ]
@@ -299,6 +306,7 @@ $routing = [
                             'type' => 'path',
                             'controller' => 'rest',
                             'action' => 'extern',
+                            'groups' => 'ref-finanzen',
                             'children' => [
                                 [
                                     'path' => '\d+',

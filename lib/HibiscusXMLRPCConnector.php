@@ -1,7 +1,7 @@
 <?php
 
-//require_once (SYSBASE . "/lib/xmlrpc/xrpcClient.php");
-require_once 'XML/RPC2/Client.php';
+// require_once (SYSBASE . "/lib/xmlrpc/xrpcClient.php");
+// require_once 'XML/RPC2/Client.php';
 
 class HibiscusXMLRPCConnector
 	extends Singleton{

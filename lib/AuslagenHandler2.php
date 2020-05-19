@@ -2710,6 +2710,7 @@ class AuslagenHandler2
 			if ($this->routeInfo['action'] != 'edit'
 				&& isset($this->auslagen_data['id'])
 				&& in_array($this->stateInfo['state'], ["ok", "instructed", "booked"])
+                && (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")
 			){ ?>
                 <div class="col-xs-12 form-group">
                     <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
