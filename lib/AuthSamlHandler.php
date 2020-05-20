@@ -60,6 +60,9 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
     
     function requireGroup($group){
         $this->requireAuth();
+        if($this->isAdmin()){
+            return true;
+        }
         if (!$this->hasGroup($group)){
             header('HTTP/1.0 401 Unauthorized');
             include SYSBASE . "/template/permission-denied.tpl";
