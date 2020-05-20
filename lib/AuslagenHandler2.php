@@ -1024,9 +1024,7 @@ class AuslagenHandler2
 			"zahlung-name" => $this->routeInfo['validated']['zahlung-name'],
 			"zahlung-vwzk" => $this->routeInfo['validated']['zahlung-vwzk'],
             "address" => ((preg_match('/(\s*)versteckt(\s*)/i', $this->routeInfo['validated']['address'])===1)?
-                ((isset($this->auslagen_data['address'])&&$this->auslagen_data['address'])?
-                    $this->auslagen_data['address']:''
-                ):$this->routeInfo['validated']['address']),
+                ($this->auslagen_data['address']):$this->routeInfo['validated']['address']),
 			"last_change" => "{$newInfo['date']}",
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
 			"version" => intval($this->auslagen_data['version']) + 1,
@@ -1915,8 +1913,7 @@ class AuslagenHandler2
 				$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create') ?
 					'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
 					'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
-                $tmpvalue = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')
-                && ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
+                $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
                     || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
                 )? $this->auslagen_data['address'] : 'Versteckt';
 				?>
