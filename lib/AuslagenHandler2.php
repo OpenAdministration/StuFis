@@ -27,7 +27,7 @@ class AuslagenHandler2
 			'ok' => ["groups" => ["ref-finanzen-belege"]],
 		],
 		'strict_editable' => [
-			'groups' => ["ref-finanzen-hv"],
+			'groups' => ["ref-finanzen-belege"],
 			'dynamic' => [
 				'owner',
 				'plain_orga'
