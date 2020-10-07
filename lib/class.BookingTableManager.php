@@ -356,10 +356,18 @@ class BookingTableManager
             }else{
                 $zValDone = 0;
                 $bValDone = 0;
-                foreach ($zAll as $z){
+                foreach ($zAll as $z_key => $z){
                     $zVal = floatval($z["value"]);
                     foreach ($bAll as $b_key => $b){
                         $bVal = floatval($b["value"]);
+                        /* var_dump([
+                            "z_key" => $z_key,
+                            "b_key" => $b_key,
+                            "zValDone" => $zValDone,
+                            "bValDone" => $bValDone,
+                            "zVal" => $zVal,
+                            "bVal" => $bVal,
+                        ]); */
                         if($zVal - $zValDone < $bVal - $bValDone){
                             $zValDone = round($zValDone + $bVal-$bValDone,2);
                             $this->processLine($z,$b,$bVal-$bValDone);

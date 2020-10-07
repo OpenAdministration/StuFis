@@ -62,7 +62,7 @@ class HHPHandler
 		$obj = $this;
 		$this->renderTable(
 			["Id", "von", "bis", "Status"],
-			[$this->hhps],
+			[array_reverse($this->hhps,true)],
 			[],
 			[
 				function($id){

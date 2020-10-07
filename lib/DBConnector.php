@@ -686,6 +686,9 @@ class DBConnector
      *                                  operator
      *                                  (v1,v2,...) AND ...
      *
+     *                                  Version from before can be used as ANDBLOCK, the following syntax is also possible:
+     *                                      [ ANDBLOCK1, ANDBLOCK2, ... ]: WHERE (ANDBLOCK1) OR (ANDBLOCK2) OR (...)
+     *
      * @param array $joins Fields which should be joined:
      *                                      ["type"="inner",table => "tblname","on" =>
      *                                      [["tbl1.col","tbl2.col"],...],"operator"
