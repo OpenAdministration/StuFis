@@ -148,6 +148,22 @@ $routing = [
             'navigation' => 'hhp',
             'children' => [
                 [
+                    'path' => 'import',
+                    'type' => 'path',
+                    'action' => 'import',
+                    'groups' => 'ref-finanzen-hv',
+                    'load' => [LoadGroups::DATEPICKER],
+                    'children' => [
+                        [
+                            'path' => 'preview',
+                            'type' => 'path',
+                            'action' => 'preview',
+                            'method' => 'POST',
+                            'load' => [LoadGroups::MODALS],
+                        ],
+                    ],
+                ],
+                [
                     'path' => '\d+',
                     'type' => 'pattern',
                     'action' => 'view-hhp',
@@ -330,6 +346,19 @@ $routing = [
                                     ]
                                 ],
                             ]
+                        ],
+                        [
+                            'path' => 'hhp',
+                            'type' => 'path',
+                            'controller' => 'rest',
+                            'children' => [
+                                [
+                                    'path' => 'save-import',
+                                    'type' => 'path',
+                                    'action' => 'save-hhp-import',
+                                    'groups' => 'ref-finanzen-hv',
+                                ]
+                            ],
                         ],
                     ]
                 ],

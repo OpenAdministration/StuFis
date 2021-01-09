@@ -72,4 +72,13 @@ abstract class EscFunc{
 		$requiered = $requiered ? "required" : "";
 		return "<textarea name='$name' rows='1' class='form-control booking__text' $requiered>$value</textarea>";
 	}
+
+	protected function arrayToListEscapeFunction($array){
+	    $out = "<ul>";
+	    foreach ($array as $item){
+	        $out .= "<li>$item</li>";
+        }
+	    $out .= "</ul>";
+	    return $out;
+    }
 }

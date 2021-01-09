@@ -20,17 +20,18 @@ class HHPHandler
 			"draft" => "Entwurf",
 			"final" => "Rechtskräftig",
 		];
+        $this->hhps = DBConnector::getInstance()->dbFetchAll(
+            "haushaltsplan",
+            [DBConnector::FETCH_ASSOC, DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
+            ["id", "id", "haushaltsplan.*"],
+            [],
+            [],
+            ["von" => true]
+        );
 	}
 	
 	function render(){
-		$this->hhps = DBConnector::getInstance()->dbFetchAll(
-			"haushaltsplan",
-			[DBConnector::FETCH_ASSOC, DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
-			["id", "id", "haushaltsplan.*"],
-			[],
-			[],
-			["von" => true]
-		);
+
 		if (isset($this->routeInfo["hhp-id"])){
 			$hhp_id = $this->routeInfo["hhp-id"];
 			if (!isset($this->hhps[$hhp_id])){
@@ -51,6 +52,15 @@ class HHPHandler
 			case "view-titel":
 				$this->renderTitelDetails();
 			break;
+            case "import":
+                $this->renderImporter();
+                break;
+            case "preview":
+                $this->renderImportPreview();
+                break;
+            case "save":
+                $this->saveNewHHP();
+                break;
 			default:
 				ErrorHandler::_renderError("Action in HHP '{$this->routeInfo["action"]}' not known");
 			break;
@@ -77,6 +87,13 @@ class HHPHandler
 				}
 			]
 		);
+		?>
+            <a href="<?= URIBASE ?>hhp/import" class="btn btn-primary" <?=
+                (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")? "" : "disabled"?>>
+                <span class="fa fa-fw fa-plus"></span>Neu Importieren
+            </a>
+        <?php
+
 		
 	}
 	
@@ -103,7 +120,14 @@ class HHPHandler
 				$group_nr = 1;
 			
 			$type = array_values($group)[0]["type"];
-			$data[] = ["group" => ($type + 1) . "." . $group_nr++ . " " . array_values($group)[0]["gruppen_name"]];
+			$data[] = [
+                "group" => ($type + 1) . "." . $group_nr++ . " " . array_values($group)[0]["gruppen_name"],
+                "titel-nr" => "",
+                "titel-name" => "",
+                "plan-value" => "",
+                "booked-value" => "",
+                "decided-value" => "",
+            ];
 			$rowsBefore = count($data) + 2;
 			foreach ($group as $titel_id => $row){
 				if (!isset($row["_booked"]))
@@ -135,6 +159,136 @@ class HHPHandler
 		$bis = date_create($hhp["bis"])->format("Y-m");
 		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-HHA-" . $von . "-bis-" . $bis);
 	}
+	
+	public function renderImporter(){
+        $this->renderHeadline('Importiere HHP per CSV');
+        $this->renderAlert('Hinweis', [
+            'CSV mit ; getrennt, Umlaute ok. Zellen können mit " " escaped sein müssen aber nicht, keine Leerzeilen, die erste Zeile (header) wird aktiv weggeworfen, dort sollten keine wichtigen Infos stehen',
+            'Als Vorlage sollte der Download des HHP von letztem Jahr dienen (Encoding beachten!)',
+            'Zeitpunkt der Gültigkeit des HHP eintragen. Der vorherige HHP wird dann zum Vortag beendet',
+            'Fehler können nur durch Administratoren in der Datenbank selbst behoben werden'
+        ], 'info')
+        ?>
+	    <form action="<?= URIBASE ?>hhp/import/preview" method="POST" role="form">
+            <div class="input-group form-group input-daterange" data-provide="datepicker" data-date-format="yyyy-mm-dd" data-date-calendar-weeks="true" data-date-language="de">
+                <div class="input-group-addon" style="background-color: transparent; border: none;">von
+                </div><div class="input-group">
+                    <input class="form-control" name="date-start" type="text">
+                    <div class="input-group-addon">
+                        <span class="fa fa-fw fa-calendar"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <textarea class="form-control" name="importCSV" rows="20"></textarea>
+            </div>
+            <?= $this->renderNonce() ?>
+            <button type="submit"
+                    class="btn btn-primary  <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                        "ref-finanzen-hv"
+                    ) ? "" : "user-is-not-hv" ?>"
+                <?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
+                Vorschau anzeigen
+            </button>
+        </form>
+        <?php
+    }
+
+    public function renderImportPreview(){
+        list($groups, $titel,) = $this->reverseCSV($_POST['importCSV']);
+        $dateStart = date_create($_POST['date-start'])->format("Y-m-d");;
+        $mergedGroups = [];
+        foreach ($groups as $number => $group){
+            $typeName = $group['type'] === 0 ? "[EINNAHME]" : "[AUSGABE]";
+            $mergedGroups[$typeName . " " . $group['gruppen_name']] = $titel[$number];
+        }
+        $this->renderHeadline('Vorschau Import HHP ab ' . htmlspecialchars($dateStart));
+        $this->renderTable(['Titel Nr', 'Titelname', 'Wert'], $mergedGroups,[],[
+                null,null, [$this, 'moneyEscapeFunction']
+        ]);
+
+        $this->renderHeadline('Speichern');
+        ?>
+        <form action="<?= URIBASE ?>rest/forms/hhp/save-import" method="POST" role="form" class="ajax-form">
+            <?= $this->renderHiddenInput('importCSV', htmlspecialchars($_POST['importCSV'])) ?>
+            <?= $this->renderHiddenInput('date-start', htmlspecialchars($_POST['date-start'])) ?>
+            <?= $this->renderNonce() ?>
+            <button type="submit"
+                    class="btn btn-primary  <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                        "ref-finanzen-hv"
+                    ) ? "" : "user-is-not-hv" ?>"
+                <?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
+                Entgültig abspeichern
+            </button>
+        </form>
+        <?php
+    }
+
+    public function saveNewHHP(){
+
+        list($groups, $titels, $newHHPid) = $this->reverseCSV($_POST['importCSV']);
+        $dateStart = date_create($_POST['date-start'])->format("Y-m-d");
+        $db = DBConnector::getInstance();
+
+        $db->dbInsert('haushaltsplan', [
+            "id" => $newHHPid,
+            "von" => $dateStart,
+            "state" => "final",
+        ]);
+
+        $db->dbUpdate('haushaltsplan', [
+            "id" => $newHHPid-1,
+            "state" => "final",
+        ],[
+            "bis" => date_create($dateStart . " -1 day")->format("Y-m-d"),
+        ]);
+
+        foreach ($groups as $groupNr => $group){
+            $groupDBnr = $db->dbInsert('haushaltsgruppen', $group);
+            $titelInGroup = $titels[$groupNr];
+            foreach ($titelInGroup as $titel){
+                $titel['hhpgruppen_id'] = $groupDBnr;
+                $db->dbInsert('haushaltstitel', $titel);
+            }
+        }
+
+        return true;
+
+    }
+	
+	public function reverseCSV($csvString){
+	    $newHHPid = max(array_keys($this->hhps)) +1;
+	    $rows = explode(PHP_EOL, $csvString);
+	    $rows = array_slice($rows,1); // throw away header
+	    $activeGroupId = '';
+	    $groups = [];
+	    $titel = [];
+	    foreach ($rows as $row){
+	        $cells = explode(';', str_replace('"','',$row));
+	        //new group
+            if(!empty($cells[0])){
+                $groupString = $cells[0];
+                list($activeGroupId, $groupName) = explode(" ", $groupString,2);
+                $groupType = explode(".", $activeGroupId)[0] === '1' ? 0 /* Einnahme */ : 1 /* Ausgabe */;
+                $groups[$activeGroupId] = [
+                    'hhp_id' => $newHHPid,
+                    'gruppen_name' => $groupName,
+                    'type' => $groupType,
+                ];
+            }else{
+                $titelnr = $cells[1];
+                if(empty($titelnr))
+                    continue; // group sum here, trash this info
+                $titel[$activeGroupId][] = [
+                    // hhpgruppen_id not available here, set later
+                    'titel_nr' => $titelnr,
+                    'titel_name' => $cells[2],
+                    'value' => (int) $cells[3],
+                ];
+            }
+        }
+	    return [$groups, $titel, $newHHPid];
+    }
 	
 	public function renderHaushaltsplan(){
 		
