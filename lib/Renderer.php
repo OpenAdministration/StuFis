@@ -284,6 +284,9 @@ abstract class Renderer
         if (!in_array($type, ["success", "info", "warning", "danger"])) {
             ErrorHandler::_renderError("Falscher Datentyp in renderAlert()", 405);
         }
+        if(is_array($msg)){
+            $msg = $this->arrayToListEscapeFunction($msg);
+        }
         ?>
         <div class="alert alert-<?= $type ?>">
             <strong><?= $strongMsg ?></strong> <?= $msg ?>

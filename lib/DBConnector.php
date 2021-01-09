@@ -1106,7 +1106,7 @@ class DBConnector
      * @param $table    string  table in db
      * @param $fields   array   all fields which should be filled
      *
-     * @return bool|string
+     * @return bool|string last inserted id
      */
     public function dbInsert($table, $fields)
     {
@@ -1442,7 +1442,12 @@ class DBConnector
         return $query->fetchColumn() > 0;
     }
 
-    function dbgetHHP($id)
+    /**
+     * @param $id
+     * @return array
+     *
+     */
+    public function dbgetHHP($id)
     {
         $sql = "
             SELECT t.hhpgruppen_id,t.id,g.type,g.gruppen_name,t.titel_nr,t.titel_name,t.value,g.type

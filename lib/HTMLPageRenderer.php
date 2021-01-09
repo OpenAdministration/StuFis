@@ -535,7 +535,9 @@ class HTMLPageRenderer
     private function renderProfiling()
     {
         $sum = 0;
-        $size = count(self::$profiling_timing);
+        $size = isset(self::$profiling_timing) ? count(self::$profiling_timing) : 0;
+        if($size === 0)
+            return;
         $out = "";
         for ($i = 0; $i < $size - 1; $i++) {
             $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . "</strong></span>";

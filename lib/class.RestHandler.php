@@ -11,7 +11,7 @@
  * @platform          PHP
  * @requirements      PHP 7.0 or higher
  */
-include_once dirname(__FILE__) . '/class.JsonController.php';
+include_once __DIR__ . '/class.JsonController.php';
 
 class RestHandler
 	extends EscFunc{
@@ -71,6 +71,9 @@ class RestHandler
             case "save-new-kasse-entry":
 				$this->saveNewKasseEntry();
 			break;
+            case "save-hhp-import":
+                $this->saveHhpImport($routeInfo);
+                break;
             case "mirror":
                 $this->mirrorInput();
                 break;
@@ -1433,4 +1436,40 @@ class RestHandler
 			}
 		}
 	}
+
+    private function saveHhpImport($routeInfo)
+    {
+        $hhpHandler = new HHPHandler($routeInfo);
+        $db = DBConnector::getInstance();
+        $db->dbBegin();
+        $res = $hhpHandler->saveNewHHP();
+        if($res === true){
+           $res = $db->dbCommit();
+        }
+        if($res === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => 'Erfolgreich gespeichert',
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten gespeichert',
+                    'redirect' => URIBASE . 'hhp',
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Ein Fehler ist aufgetreten',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+    }
 }
