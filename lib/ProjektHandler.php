@@ -576,7 +576,10 @@ class ProjektHandler
             "haushaltsplan",
             [DBConnector::FETCH_ASSOC],
             ["id"],
-            ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => "final"]
+            [
+                ["von" => ["<=", $createDate], "bis" => [">=", $createDate], "state" => "final"],
+                ["von" => ["<=", $createDate], "bis" => ["is", null], "state" => "final"]
+            ]
         );
         if (empty($hhpId)) {
             ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
