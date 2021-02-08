@@ -87,7 +87,15 @@ class MenuRenderer
         rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case "allgremium":
-                $where = ["createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]];
+                if (is_null($hhp_bis)){
+                    $where = [
+                        ["createdat" => [">=", $hhp_von]]
+                    ];
+                }else{
+                    $where = [
+                        ["createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                    ];
+                }
                 break;
             case "mygremium":
                 if (empty($gremien)) {
@@ -100,11 +108,19 @@ class MenuRenderer
                     );
                     return;
                 }
-                $where = [
-                    ["org" => ["in", $gremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
-                    ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
-                    ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
-                ];
+                if (is_null($hhp_bis)){
+                    $where = [
+                        ["org" => ["in", $gremien], "createdat" => [">=", $hhp_von]],
+                        ["org" => ["is", null], "createdat" => [">=", $hhp_von]],
+                        ["org" => "", "createdat" => [">=", $hhp_von]]
+                    ];
+                }else{
+                    $where = [
+                        ["org" => ["in", $gremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                        ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                        ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                    ];
+                }
                 break;
             default:
                 ErrorHandler::_errorExit("Not known active Tab: " . $active);
