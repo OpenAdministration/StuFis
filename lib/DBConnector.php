@@ -391,6 +391,55 @@ class DBConnector
             ],
         ];
 
+        $scheme['konto_bank'] = [
+            "id" => "INT NOT NULL",
+            "url" => "VARCHAR(256) NOT NULL",
+            "blz" => "INT NOT NULL",
+            "name" => "VARCHAR(256) NOT NULL",
+        ];
+        $keys['konto_bank'] = [
+            "primary" => ["id"],
+        ];
+
+        $scheme['konto_credentials'] = [
+            'id' => "INT NOT NULL",
+            'name' => "VARCHAR(63) NOT NULL",
+            'bank_id' => "INT NOT NULL",
+            'owner_id' => "INT NOT NULL",
+            'encrypted_credentials' => "TEXT NOT NULL",
+            'crypto_key' => "TEXT NOT NULL",
+            'default_tan_mode' => 'INT NULL',
+        ];
+        $keys['konto_credentials'] = [
+            "primary" => ["id"],
+            "foreign" => [
+                "owner_id" => ["user", "id"],
+                "bank_id" => ["konto_bank", "id"],
+            ],
+        ];
+
+        $scheme['konto_action_log'] = [
+            'id' => "INT NOT NULL",
+            'konto_id' => "INT NULL",
+            'konto_credential_id' => "INT NOT NULL",
+            'action_name' => "VARCHAR(63) NOT NULL",
+            'state' => "VARCHAR(15) NOT NULL",
+            'action_serialized' => "VARCHAR(1023)",
+            'last_fints_persist' => "VARCHAR(63)",
+            'timestamp' => "DATETIME NOT NULL",
+            'tanmode' => "INT DEFAULT NULL",
+            'generated_tan' => "VARCHAR(15) NOT NULL DEFAULT ''"
+        ];
+        $keys['konto_tan_log'] = [
+            "primary" => ["id"],
+            "foreign" => [
+                "konto_credential_id" => ["konto_bank", "id"],
+                "konto_id" => ["konto_type", "id"],
+            ],
+        ];
+
+        // ---------------- //
+
         $scheme["log"] = [
             "id" => "int NOT NULL",
             "action" => "VARCHAR(255) NOT NULL",
@@ -424,7 +473,7 @@ class DBConnector
             $validFields[] = "$tblname.*";
             if (!is_array($content))
                 continue;
-            if (in_array($tblname, $blacklist))
+            if (in_array($tblname, $blacklist, true))
                 continue;
             $colnames = array_keys($content);
             //all all colnames of this table
@@ -772,7 +821,7 @@ class DBConnector
         foreach (array_keys($joins) as $nr) {
             if (!isset($joins[$nr]["table"])) {
                 ErrorHandler::_errorExit("no Jointable set in '" . $nr . "' use !");
-            } else if (!in_array($joins[$nr]["table"], array_keys($this->scheme))) {
+            } else if (!array_key_exists($joins[$nr]["table"], $this->scheme)) {
                 ErrorHandler::_errorExit("Unknown Table " . $joins[$nr]["table"]);
             } else if (isset($joins[$nr]["type"]) && !in_array(
                     strtolower($joins[$nr]["type"]),

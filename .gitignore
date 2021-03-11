@@ -11,3 +11,4 @@ logs/*
 .settings/*
 secret.php
 .directory
+/vendor/

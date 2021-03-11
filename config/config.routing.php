@@ -32,8 +32,37 @@ $routing = [
                         ]
                     ],
                 ],
+                [
+                    'path' => 'credentials',
+                    'type' => 'path',
+                    'controller' => 'fints',
+                    'children' => [
+                        [
+                            'path' => 'new',
+                            'type' => 'path',
+                            'action' => 'new-credentials',
+                        ],
+                        [
+                            'path' => '\d+',
+                            'type' => 'pattern',
+                            'param' => 'credential-id',
+                            'children' => [
+                                [
+                                    'path' => 'tan-mode',
+                                    'type' => 'path',
+                                    'action' => 'pick-tan-mode',
+                                ],
+                                [
+                                    'path' => 'sepa',
+                                    'type' => 'path',
+                                    'action' => 'pick-sepa-konto',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
             ],
-        ],
+        ], // konto
         [
             'path' => 'booking',
             'type' => 'path',
@@ -78,7 +107,7 @@ $routing = [
                     ]
                 ],
             ]
-        ],
+        ], // booking
         [
             'path' => 'menu',
             'type' => 'path',
@@ -139,7 +168,7 @@ $routing = [
                     'navigation' => 'stura',
                 ],
             ],
-        ],
+        ], // menu
         [
             'path' => 'hhp',
             'type' => 'path',
@@ -187,7 +216,7 @@ $routing = [
                     ],
                 ],
             ],
-        ],
+        ], // hhp
         [
             'path' => 'projekt',
             'type' => 'path',
@@ -267,7 +296,7 @@ $routing = [
                     'action' => 'create',
                 ]
             ]
-        ],
+        ], // projekt
         [
             'path' => 'rest',
             'type' => 'path',
@@ -376,6 +405,25 @@ $routing = [
                     'action' => 'update-konto',
                 ],
                 [
+                    'path' => 'konto',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'groups' => 'ref-finanzen-kv',
+                    'children' => [
+                        [
+                            'path' => 'credentials',
+                            'type' => 'path',
+                            'children' => [
+                                [
+                                    'path' => 'save',
+                                    'type' => 'path',
+                                    'action' => 'save-new-konto-credentials'
+                                ]
+                            ]
+                        ],
+                    ]
+                ],
+                [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'error',
@@ -443,7 +491,7 @@ $routing = [
                 ],
 
             ]
-        ],
+        ], // rest
         [
             'path' => 'files',
             'type' => 'path',
@@ -478,7 +526,7 @@ $routing = [
                     ]
                 ]
             ]
-        ],
+        ], // files
         [
             'path' => 'export',
             'type' => 'path',
@@ -530,7 +578,7 @@ $routing = [
                     ],
                 ],
             ],
-        ],
+        ], // export
     ],
 ];
 

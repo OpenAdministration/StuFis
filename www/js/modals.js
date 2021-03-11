@@ -5,7 +5,7 @@ $(document).ready(function () {
     frm.each(function () {
         $(this).on('submit', function (e) {
             var data = {};
-            $(this).find('input[name],textarea[name]').each(function (i, el) {
+            $(this).find('input[name],textarea[name],select[name]').each(function (i, el) {
                 if (el.name === 'nononce')
                     return;
                 if (el.name.slice(-2) === "[]") {

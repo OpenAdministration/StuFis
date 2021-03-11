@@ -1,0 +1,7 @@
+{
+
+    "require": {
+        "nemiah/php-fints" : "~3",
+        "ext-json": "*"
+    }
+}

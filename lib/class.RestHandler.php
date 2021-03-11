@@ -74,6 +74,9 @@ class RestHandler
             case "save-hhp-import":
                 $this->saveHhpImport($routeInfo);
                 break;
+            case "save-new-konto-credentials":
+                $this->newKontoCredentials($routeInfo);
+                break;
             case "mirror":
                 $this->mirrorInput();
                 break;
@@ -1471,5 +1474,43 @@ class RestHandler
                 ]
             );
         }
+    }
+
+    private function newKontoCredentials(?array $routeInfo)
+    {
+        $fHandler = new FinTSHandler($routeInfo);
+        $bankId = $_POST['bank-id'];
+        $bankuser = $_POST['bank-username'];
+        $bankpw = $_POST['bank-password'];
+        $custompw = $_POST['password-custom'];
+        $name = $_POST['name'];
+        $ret = $fHandler->saveCredentials($bankId,$bankuser, $bankpw,$custompw,$name);
+
+        if(is_numeric($ret)){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => 'Erfolgreich gespeichert',
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten gespeichert',
+                    'redirect' => URIBASE . 'konto/credentials/' . $ret,
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => $ret,
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+
     }
 }
