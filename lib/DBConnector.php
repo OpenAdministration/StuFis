@@ -27,6 +27,7 @@ class DBConnector
     private $validFields;
     private $dbWriteCounter = 0;
     private $transactionCount = 0;
+    private $user;
 
     public function __construct()
     {
@@ -478,7 +479,7 @@ class DBConnector
             $colnames = array_keys($content);
             //all all colnames of this table
             $validFields = array_merge($colnames, $validFields);
-            $func = function (&$val, $key) use ($tblname) {
+            $func = static function (&$val, $key) use ($tblname) {
                 $val = $tblname . "." . $val;
             };
             //add all colnames with tablename.colname
@@ -563,7 +564,7 @@ class DBConnector
     }
 
 
-    final static protected function static__set($name, $value)
+    final protected static function static__set($name, $value)
     {
         if (property_exists(get_class(), $name))
             self::$$name = $value;
@@ -576,7 +577,7 @@ class DBConnector
     {
         $tbl = [];
         if ($foreignKeyCheck !== false) {
-            $this->pdo->query("SET FOREIGN_KEY_CHECKS = 0");
+            $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
         }
         foreach ($tables as $table) {
             if (!isset($this->scheme[$table])) {
@@ -587,18 +588,19 @@ class DBConnector
         }
         $ret = $this->pdo->query("DROP TABLE " . implode(", ", $tbl));
         if ($foreignKeyCheck !== false) {
-            $this->pdo->query("SET FOREIGN_KEY_CHECKS = 1");
+            $this->pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
         }
         return $ret;
     }
 
-    function convertDBValueToUserValue($value, $type)
+    public function convertDBValueToUserValue($value, $type)
     {
         switch ($type) {
             case "money":
-                $value = (string)$value;
-                if ($value === false || $value == "")
+                $value = (string) $value;
+                if ($value === false || $value === "") {
                     return $value;
+                }
                 return number_format($value, 2, ',', '');
             case "date":
             case "daterange":
@@ -683,6 +685,10 @@ class DBConnector
 
     function getUser()
     {
+        if(isset($this->user)){
+            return $this->user;
+        }
+
         $user = $this->dbFetchAll(
             "user",
             [DBConnector::FETCH_ASSOC],
@@ -707,6 +713,7 @@ class DBConnector
             }
         }
         //print_r($user);
+        $this->user = $user;
         return $user;
     }
 
@@ -1155,7 +1162,7 @@ class DBConnector
      * @param $table    string  table in db
      * @param $fields   array   all fields which should be filled
      *
-     * @return bool|string last inserted id
+     * @return int|string last inserted id
      */
     public function dbInsert($table, $fields)
     {
@@ -1178,10 +1185,12 @@ class DBConnector
 
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute(array_values($fields));
-        //print_r($sql);
-        //print_r(array_values($fields));
         if ($ret === false) {
-            ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+            $info = $query->errorInfo();
+            if(DEV === true){
+                $info += ['sql' => $sql, 'values' => $fields];
+            }
+            ErrorHandler::_errorExit(print_r($info, true));
         }
         return $this->pdo->lastInsertId();
     }
@@ -1215,11 +1224,13 @@ class DBConnector
         return $ret && $this->transactionCount >= 0;
     }
 
-    public function dbCommitRollbackOnFailure()
+    public function dbCommitRollbackOnFailure() : bool
     {
         if (!$this->dbCommit()) {
             $this->dbRollBack();
+            return  false;
         }
+        return true;
     }
 
     public function dbCommit()

@@ -9,44 +9,50 @@
 abstract class EscFunc{
 	
 	
-	protected function projektLinkEscapeFunction($id, $createdate, $name){
+	protected function projektLinkEscapeFunction($id, $createdate, $name) : string
+    {
 		$year = date("y", strtotime($createdate));
-		return $this->renderInternalHyperLink("IP-$year-$id $name", "projekt/$id");
+		return $this->internalHyperLinkEscapeFunction("IP-$year-$id $name", "projekt/$id");
 	}
 	
-	protected function auslagenLinkEscapeFunction($projektId, $auslagenId, $name){
-		return $this->renderInternalHyperLink(
+	protected function auslagenLinkEscapeFunction($projektId, $auslagenId, $name) : string
+    {
+		return $this->internalHyperLinkEscapeFunction(
 			"A$auslagenId " . $this->defaultEscapeFunction($name),
 			"projekt/$projektId/auslagen/$auslagenId"
 		);
 	}
 	
-	protected function renderInternalHyperLink($text, $dest){
+	protected function internalHyperLinkEscapeFunction($text, $dest) : string
+    {
 		return "<a href='" . htmlspecialchars(
 				URIBASE . $dest
 			) . "'><i class='fa fa-fw fa-link' aria-hidden='true'></i>&nbsp;$text</a>";
 	}
 	
-	protected function defaultEscapeFunction($val){
+	protected function defaultEscapeFunction($val) : string
+    {
 		//default escape-funktion to use if nothing is
-		if (empty($val)){
+		if ($val === "null" || empty($val)){
 			return "<i>keine Angabe</i>";
-		}else{
-			return htmlspecialchars($val);
 		}
-	}
+        return htmlspecialchars($val);
+    }
 	
-	protected function hiddenInputEscapeFunction($name, $value){
+	protected function hiddenInputEscapeFunction($name, $value) : string
+    {
 		$name = htmlspecialchars($name);
 		$value = htmlspecialchars($value);
 		return "<input type='hidden' name='$name' value='$value'>";
 	}
 	
-	protected function moneyEscapeFunction($money){
+	protected function moneyEscapeFunction($money) : string
+    {
 		return number_format($money, 2, ",", "&nbsp;") . "&nbsp;€";
 	}
 	
-	protected function date2relstrEscapeFunction($time){
+	protected function date2relstrEscapeFunction($time) : string
+    {
 		if ($time === "")
 			return $this->defaultEscapeFunction("");
 		if (!ctype_digit($time))
@@ -66,14 +72,16 @@ abstract class EscFunc{
 		}
 	}
 	
-	protected function textAreaEscapeFunction($name, $value, $requiered = false){
+	protected function textAreaEscapeFunction($name, $value, $required = false) : string
+    {
 		$name = htmlspecialchars($name);
 		$value = htmlspecialchars($value);
-		$requiered = $requiered ? "required" : "";
-		return "<textarea name='$name' rows='1' class='form-control booking__text' $requiered>$value</textarea>";
+		$required = $required ? "required" : "";
+		return "<textarea name='$name' rows='1' class='form-control booking__text' $required>$value</textarea>";
 	}
 
-	protected function arrayToListEscapeFunction($array){
+	protected function arrayToListEscapeFunction($array) : string
+    {
 	    $out = "<ul>";
 	    foreach ($array as $item){
 	        $out .= "<li>$item</li>";
