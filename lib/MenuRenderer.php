@@ -77,7 +77,7 @@ class MenuRenderer
             function ($val) {
                 global $GremiumPrefix;
                 foreach ($GremiumPrefix as $prefix) {
-                    if (substr($val, 0, strlen($prefix)) === $prefix) {
+                    if (strpos($val, $prefix) === 0) {
                         return true;
                     }
                 }
@@ -195,7 +195,7 @@ class MenuRenderer
                             <h4 class="panel-title">
                                 <?php
                                 $titel = empty($gremium) ? "Nicht zugeordnete Projekte" :
-                                    (in_array($gremium, $attributes["alle-gremien"]) ? "" : "[INAKTIV] ") . $gremium;
+                                    (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") . $gremium;
                                 ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= $titel ?>
                             </h4>
@@ -239,27 +239,11 @@ class MenuRenderer
                                                         $sum_e_in = 0;
                                                         $sum_e_out = 0;
                                                         foreach ($auslagen[$id] as $a) {
-                                                            if (substr(
-                                                                    $a['state'],
-                                                                    0,
-                                                                    6
-                                                                ) == 'booked' || substr(
-                                                                    $a['state'],
-                                                                    0,
-                                                                    10
-                                                                ) == 'instructed') {
+                                                            if (strpos($a['state'], 'booked') === 0 || strpos($a['state'], 'instructed') === 0) {
                                                                 $sum_a_in += $a['einnahmen'];
                                                                 $sum_a_out += $a['ausgaben'];
                                                             }
-                                                            if (substr(
-                                                                    $a['state'],
-                                                                    0,
-                                                                    10
-                                                                ) != 'revocation' && substr(
-                                                                    $a['state'],
-                                                                    0,
-                                                                    5
-                                                                ) != 'draft') {
+                                                            if (strpos($a['state'], 'revocation') !== 0 && strpos($a['state'], 'draft') !== 0) {
                                                                 $sum_e_in += $a['einnahmen'];
                                                                 $sum_e_out += $a['ausgaben'];
                                                             }

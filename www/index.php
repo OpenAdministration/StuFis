@@ -71,6 +71,11 @@ switch ($routeInfo['controller']){
 		$htmlRenderer->appendRendererContent($bHandler);
 		$htmlRenderer->render();
 	break;
+    case "fints":
+        $fintsHandler = new FinTSHandler($routeInfo);
+        $htmlRenderer->appendRendererContent($fintsHandler);
+        $htmlRenderer->render();
+        break;
     case "rest":
         $restHandler = new RestHandler();
         $restHandler->handlePost($routeInfo);

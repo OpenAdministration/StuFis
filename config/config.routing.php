@@ -32,8 +32,72 @@ $routing = [
                         ]
                     ],
                 ],
+                [
+                    'path' => 'credentials',
+                    'type' => 'path',
+                    'controller' => 'fints',
+                    'action' => 'pick-my-credentials',
+                    'groups' => 'ref-finanzen-kv',
+                    'children' => [
+                        [
+                            'path' => 'new',
+                            'type' => 'path',
+                            'action' => 'new-credentials',
+                        ],
+                        [
+                            'path' => '\d+',
+                            'type' => 'pattern',
+                            'param' => 'credential-id',
+                            'action' => 'pick-sepa-action',
+                            'children' => [
+                                [
+                                    'path' => 'tan-mode',
+                                    'type' => 'path',
+                                    'action' => 'pick-tan-mode',
+                                    'children' => [
+                                        [
+                                            'path' => '\d+',
+                                            'type' => 'pattern',
+                                            'param' => 'tan-mode-id',
+                                            'children' => [
+                                                [
+                                                    'path' => 'medium',
+                                                    'type' => 'path',
+                                                    'action' => 'pick-tan-medium',
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'path' => 'sepa',
+                                    'type' => 'path',
+                                    'action' => 'pick-sepa-konto',
+                                ],
+                                [
+                                    'path' => '([A-Z]{2}[0-9]{6})',
+                                    'type' => 'pattern',
+                                    'param' => 'short-iban',
+                                    'action' => 'sepa-details',
+                                    'children' => [
+                                        [
+                                            'path' => 'import',
+                                            'type' => 'path',
+                                            'action' => 'new-sepa-konto-import',
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'path' => 'delete',
+                                    'type' => 'path',
+                                    'action' => 'delete-credentials',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
             ],
-        ],
+        ], // konto
         [
             'path' => 'booking',
             'type' => 'path',
@@ -78,7 +142,7 @@ $routing = [
                     ]
                 ],
             ]
-        ],
+        ], // booking
         [
             'path' => 'menu',
             'type' => 'path',
@@ -139,7 +203,7 @@ $routing = [
                     'navigation' => 'stura',
                 ],
             ],
-        ],
+        ], // menu
         [
             'path' => 'hhp',
             'type' => 'path',
@@ -187,7 +251,7 @@ $routing = [
                     ],
                 ],
             ],
-        ],
+        ], // hhp
         [
             'path' => 'projekt',
             'type' => 'path',
@@ -267,7 +331,7 @@ $routing = [
                     'action' => 'create',
                 ]
             ]
-        ],
+        ], // projekt
         [
             'path' => 'rest',
             'type' => 'path',
@@ -280,6 +344,12 @@ $routing = [
                     'type' => 'path',
                     'controller' => 'rest',
                     'action' => 'mirror',
+                ],
+                [
+                    'path' => 'clear-session',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'clear-session',
                 ],
                 [
                     'path' => 'forms',
@@ -376,6 +446,57 @@ $routing = [
                     'action' => 'update-konto',
                 ],
                 [
+                    'path' => 'konto',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'groups' => 'ref-finanzen-kv',
+                    'children' => [
+                        [
+                            'path' => 'credentials',
+                            'type' => 'path',
+                            'children' => [
+                                [
+                                    'path' => 'save',
+                                    'type' => 'path',
+                                    'action' => 'save-new-konto-credentials'
+                                ],
+                                [
+                                    'path' => 'import-konto',
+                                    'type' => 'path',
+                                    'action' => 'import-konto'
+                                ],
+                                [
+                                    'path' => 'unlock',
+                                    'type' => 'path',
+                                    'action' => 'unlock-credentials',
+                                ],
+                                [
+                                    'path' => 'lock',
+                                    'type' => 'path',
+                                    'action' => 'lock-credentials',
+                                ],
+                                [
+                                    'path' => 'submit-tan',
+                                    'type' => 'path',
+                                    'action' => 'submit-tan'
+                                ]
+                            ]
+                        ],
+                        [
+                            'path' => 'tan-mode',
+                            'type' => 'path',
+                            'children' => [
+                                [
+                                    'path' => 'save',
+                                    'type' => 'path',
+                                    'action' => 'save-default-tan-mode'
+                                ]
+                            ]
+                        ],
+
+                    ]
+                ],
+                [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'error',
@@ -443,7 +564,7 @@ $routing = [
                 ],
 
             ]
-        ],
+        ], // rest
         [
             'path' => 'files',
             'type' => 'path',
@@ -478,7 +599,7 @@ $routing = [
                     ]
                 ]
             ]
-        ],
+        ], // files
         [
             'path' => 'export',
             'type' => 'path',
@@ -530,7 +651,7 @@ $routing = [
                     ],
                 ],
             ],
-        ],
+        ], // export
     ],
 ];
 

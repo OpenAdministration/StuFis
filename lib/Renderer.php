@@ -329,6 +329,19 @@ abstract class Renderer
         return $text;
     }
 
+    protected function renderRadioButtons($textValueArray, $formName)
+    {
+        $formName = htmlspecialchars(strip_tags($formName));
+        foreach ($textValueArray as $value => $text){
+            $text = htmlspecialchars($text);
+            echo "<div class='radio'><label><input type='radio' value='$value' name='$formName'>$text</label></div>";
+        }
+    }
+
+    protected function renderInternalHyperLink($text, $dest){
+        echo $this->internalHyperLinkEscapeFunction($text, $dest);
+    }
+
     protected function renderHHPSelector($routeInfo, $urlPrefix = URIBASE, $urlSuffix = "/")
     {
         $hhps = DBConnector::getInstance()->dbFetchAll(
@@ -376,5 +389,23 @@ abstract class Renderer
         </form>
         <?php
         return [$hhps, $routeInfo["hhp-id"]];
+    }
+
+    protected function renderList($items, $escapeItems = true, $unorderedList = true)
+    {
+        if($unorderedList){
+            $el = "ul";
+        }else{
+            $el = "ol";
+        }
+        echo "<$el>";
+        foreach ($items as $item){
+            if($escapeItems){
+                $item = htmlspecialchars($item);
+            }
+            echo "<li>$item</li>";
+        }
+        echo "</$el>";
+
     }
 }

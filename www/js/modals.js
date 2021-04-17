@@ -5,10 +5,10 @@ $(document).ready(function () {
     frm.each(function () {
         $(this).on('submit', function (e) {
             var data = {};
-            $(this).find('input[name],textarea[name]').each(function (i, el) {
+            $(this).find('input[name],textarea[name],select[name]').each(function (i, el) {
                 if (el.name === 'nononce')
                     return;
-                if (el.name.slice(-2) === "[]") {
+                if (el.name.slice(-2) === "[]") { // array input
                     var name = el.name.slice(0, -2);
                     if (!data.hasOwnProperty(name)) {
                         data[name] = [];
@@ -20,12 +20,16 @@ $(document).ready(function () {
                     }else{
                         data[name].push($(el).val());
                     }
-                } else {
-                    if(el.type === "checkbox"){
+                } else { // no array input
+                    if(el.type === "checkbox"){ // single checkbox
                         if($(el).is(":checked")){
                             data[el.name] = $(el).val();
                         }
-                    }else{
+                    }else if(el.type === "radio"){ // radio buttons
+                        if($(el).is(":checked")){
+                            data[el.name] = $(el).val();
+                        }
+                    }else {
                         data[el.name] = $(el).val();
                     }
                 }

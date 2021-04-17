@@ -143,9 +143,7 @@ class HTMLPageRenderer
         $defaultCssFiles = ["bootstrap.min", "font-awesome.min","cookiealert"];
         $cssFiles = $defaultCssFiles;
         if (isset($this->routeInfo["load"])) {
-            foreach ($this->routeInfo["load"] as $loadgroupEnum) {
-                $cssFiles = array_merge($cssFiles, $loadgroupEnum["css"]);
-            }
+            $cssFiles = array_merge($cssFiles, ...array_column($this->routeInfo["load"], 'css'));
         }
         foreach ($cssFiles as $cssFile) {
             $out .= "<link rel='stylesheet' href='" . URIBASE . "css/$cssFile.css'>" . PHP_EOL;
@@ -184,9 +182,7 @@ class HTMLPageRenderer
         */
         $jsFiles = $defaultJsFiles;
         if (isset($this->routeInfo["load"])) {
-            foreach ($this->routeInfo["load"] as $loadgroupEnum) {
-                $jsFiles = array_merge($jsFiles, $loadgroupEnum["js"]);
-            }
+            $jsFiles = array_merge($jsFiles, ...array_column($this->routeInfo["load"], 'js'));
         }
         //var_dump($this->routeInfo["load"]);
         foreach ($jsFiles as $jsFile) {
@@ -487,7 +483,7 @@ class HTMLPageRenderer
 
     private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false)
     {
-        if ($danger == 'danger') {
+        if ($danger === 'danger') {
             $buttonType1 = "primary";
             $buttonType2 = "danger";
         } else {
@@ -498,7 +494,7 @@ class HTMLPageRenderer
         ?>
         <div class='modal fade' id='<?= $id ?>-dlg' tabindex='-1' role='dialog'
              aria-labelledby='<?= $id ?>-label'>
-            <div class='modal-dialog' <?= ($danger == 'danger') ? 'style="min-width: 75%;"' : '' ?> role='document'>
+            <div class='modal-dialog' <?= ($danger === 'danger') ? 'style="min-width: 75%;"' : '' ?> role='document'>
                 <div class='modal-content'>
                     <div class='modal-header<?=
                     (($danger) ? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : '') ?>'>
@@ -536,8 +532,9 @@ class HTMLPageRenderer
     {
         $sum = 0;
         $size = isset(self::$profiling_timing) ? count(self::$profiling_timing) : 0;
-        if($size === 0)
+        if($size === 0) {
             return;
+        }
         $out = "";
         for ($i = 0; $i < $size - 1; $i++) {
             $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . "</strong></span>";
@@ -594,6 +591,12 @@ class HTMLPageRenderer
     public function appendToBody($htmlcontent)
     {
         $this->bodycontent .= $htmlcontent;
+    }
+
+    public static function redirect($url)
+    {
+        header('Location: ' . $url);
+        die();
     }
 
 

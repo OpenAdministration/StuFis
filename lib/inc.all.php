@@ -1,5 +1,8 @@
 <?php
 
+ini_set('session.use_strict_mode', 1);
+session_start();
+
 define('SYSBASE', dirname(dirname(__FILE__)));
 include SYSBASE . "/config/config.php";
 require_once SYSBASE . '/lib/inc.nonce.php';
@@ -36,6 +39,7 @@ require_once SYSBASE . '/lib/FormTemplater.php';
 require_once SYSBASE . '/lib/ProjektHandler.php';
 require_once SYSBASE . '/lib/AuslagenHandler2.php';
 require_once SYSBASE . '/lib/HHPHandler.php';
+require_once SYSBASE . '/lib/FinTSHandler.php';
 require_once SYSBASE . '/lib/StateHandler.php';
 require_once SYSBASE . '/lib/chat/ChatHandler.php';
 require_once SYSBASE . '/lib/PermissionHandler.php';
@@ -55,6 +59,8 @@ require_once SYSBASE . '/lib/exceptions/OldFormException.php';
 require_once SYSBASE . '/lib/exceptions/WrongVersionException.php';
 
 require_once SYSBASE . '/lib/php-sepa-xml/SepaTransferFile.php';
+
+require_once SYSBASE . '/vendor/autoload.php';
 
 Singleton::configureAll($conf);
 
