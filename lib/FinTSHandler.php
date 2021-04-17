@@ -82,10 +82,10 @@ class FinTSHandler extends Renderer
         switch ($pageAction){
             case 'pick-my-credentials':
                 $this->renderCredentialPick();
-                break;
+                return;
             case 'new-credentials':
                 $this->renderNewCredentials();
-                break;
+                return;
         }
 
         if(!isset($_SESSION['fints'][$this->credentialId]['key-password'])){
