@@ -962,6 +962,7 @@ class FinTSHandler extends Renderer
 
     private function convertCentForDB(int $amount) : string
     {
-        return number_format(round($amount / 100.0,2),2, '.', '');
+        // rounds implicit
+        return number_format($amount / 100.0,2, '.', '');
     }
 }
