@@ -79,9 +79,13 @@ class FinTSHandler extends Renderer
     {
         $pageAction = $this->routeInfo['action'];
 
-        if($pageAction === 'pick-my-credentials'){
-            $this->renderCredentialPick();
-            return;
+        switch ($pageAction){
+            case 'pick-my-credentials':
+                $this->renderCredentialPick();
+                break;
+            case 'new-credentials':
+                $this->renderNewCredentials();
+                break;
         }
 
         if(!isset($_SESSION['fints'][$this->credentialId]['key-password'])){
@@ -93,9 +97,7 @@ class FinTSHandler extends Renderer
 
 
         switch ($pageAction){
-            case 'new-credentials':
-                $this->renderNewCredentials();
-                break;
+
             case 'pick-sepa-konto':
                 $this->renderSepaAccountsList();
                 break;
