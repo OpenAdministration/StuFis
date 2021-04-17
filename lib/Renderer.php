@@ -329,7 +329,7 @@ abstract class Renderer
         return $text;
     }
 
-    protected function renderRadioButtons($textValueArray, $formName) : void
+    protected function renderRadioButtons($textValueArray, $formName)
     {
         $formName = htmlspecialchars(strip_tags($formName));
         foreach ($textValueArray as $value => $text){
@@ -391,7 +391,8 @@ abstract class Renderer
         return [$hhps, $routeInfo["hhp-id"]];
     }
 
-    protected function renderList($items, $escapeItems = true, $unorderedList = true) : void {
+    protected function renderList($items, $escapeItems = true, $unorderedList = true)
+    {
         if($unorderedList){
             $el = "ul";
         }else{

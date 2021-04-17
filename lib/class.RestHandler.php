@@ -77,8 +77,26 @@ class RestHandler
             case "save-new-konto-credentials":
                 $this->newKontoCredentials($routeInfo);
                 break;
+            case "save-default-tan-mode":
+                $this->saveDefaultTanMode($routeInfo);
+                break;
+            case "unlock-credentials":
+                $this->unlockCredentials($routeInfo);
+                break;
+            case "lock-credentials":
+                $this->lockCredentials($routeInfo);
+                break;
+            case "submit-tan":
+                $this->submitTan($routeInfo);
+                break;
+            case "import-konto":
+                $this->importKonto($routeInfo);
+                break;
             case "mirror":
                 $this->mirrorInput();
+                break;
+            case "clear-session":
+                $this->clearSession();
                 break;
 			case 'nononce':
 			default:
@@ -553,8 +571,8 @@ class RestHandler
 			$posten_text_empty = ['out', 'in'];
 			if ($empty)
 				foreach ($auslagen_test_empty as $e){
-					if (is_string($validated[$e]) && !!$validated[$e]
-						|| is_array($validated[$e]) && count($validated[$e])){
+					if ((is_string($validated[$e]) && (bool)$validated[$e])
+						|| (is_array($validated[$e]) && count($validated[$e]))){
 						$empty = false;
 						break;
 					}
@@ -562,16 +580,16 @@ class RestHandler
 			if ($empty)
 				foreach ($validated['belege'] as $kb => $belege){
 					foreach ($belege_test_empty as $e){
-						if (is_string($belege[$e]) && !!$belege[$e]
-							|| is_array($belege[$e]) && count($belege[$e])){
+						if ((is_string($belege[$e]) && (bool)$belege[$e])
+							|| (is_array($belege[$e]) && count($belege[$e]))){
 							$empty = false;
 							break 2;
 						}
 					}
 					foreach ($belege['posten'] as $posten){
 						foreach ($posten_text_empty as $e){
-							if (is_string($posten[$e]) && !!$posten[$e]
-								|| is_array($posten[$e]) && count($posten[$e])){
+							if ((is_string($posten[$e]) && (bool)$posten[$e])
+								|| (is_array($posten[$e]) && count($posten[$e]))){
 								$empty = false;
 								break 3;
 							}
@@ -599,7 +617,7 @@ class RestHandler
 			}
 		}
 		$routeInfo['pid'] = $validated['projekt-id'];
-		if ($validated['auslagen-id'] != 'NEW'){
+		if ($validated['auslagen-id'] !== 'NEW'){
 			$routeInfo['aid'] = $validated['auslagen-id'];
 		}
 		$routeInfo['validated'] = $validated;
@@ -649,7 +667,7 @@ class RestHandler
 							ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
 							break;
 						}
-						if (!$r || count($r) == 0){
+						if (!$r || count($r) === 0){
 							break;
 						}
 						$pdate = date_create(substr($r[0]['createdat'], 0, 4) . '-01-01 00:00:00');
@@ -669,7 +687,7 @@ class RestHandler
 									$map[] = '3';
 								}
 								if ($auth->hasGroup('ref-finanzen')
-                                    || isset($r[0]['username']) && $r[0]['username'] == $auth->getUsername()){
+                                    || (isset($r[0]['username']) && $r[0]['username'] === $auth->getUsername())){
 									$map[] = '-1';
 								}
 								$chat->setKeep($map);
@@ -974,6 +992,7 @@ class RestHandler
 		}else{
 			if (!empty($inserted)){
 				$type = (count($msg_xmlrpc) + count($msg)) > 1 ? "warning" : "success";
+
 				foreach ($inserted as $konto_id => $number){
 					$msg = array_merge(["$number neue Umsätze auf Konto $konto_id gefunden und hinzugefügt!"], $msg);
 				}
@@ -1476,7 +1495,7 @@ class RestHandler
         }
     }
 
-    private function newKontoCredentials(?array $routeInfo)
+    private function newKontoCredentials($routeInfo)
     {
         $fHandler = new FinTSHandler($routeInfo);
         $bankId = $_POST['bank-id'];
@@ -1496,7 +1515,7 @@ class RestHandler
                     'subtype' => 'server-success',
                     'reload' => 1000,
                     'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . 'konto/credentials/' . $ret,
+                    'redirect' => URIBASE . 'konto/credentials/'  . $ret . "/tan-mode",
                 ]
             );
         }else{
@@ -1512,5 +1531,241 @@ class RestHandler
             );
         }
 
+    }
+
+    private function saveDefaultTanMode($routeInfo)
+    {
+        if(!isset($_POST['tan-mode'])){
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Es wurde keine TAN Methode ausgewählt',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+
+        $fHandler = new FinTSHandler($routeInfo);
+        $credId = (int) $_POST['credential-id'];
+        $fHandler->loadCredentials($credId);
+        $tanMode = (int) $_POST['tan-mode'];
+        $ret = $fHandler->saveDefaultTanMode($credId, $tanMode);
+
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => "Tan $tanMode für Zugangsdaten $credId gespeichert",
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten gespeichert',
+                    'redirect' => URIBASE . "konto/credentials/$credId/tan-mode/$tanMode/medium",
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Default Tan-Methode kann nicht gespeichert werden.',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+    }
+
+    private function unlockCredentials(array $routeInfo)
+    {
+        $fHandler = new FinTSHandler($routeInfo);
+        $credId = (int) $_POST['credential-id'];
+        $keypw = (string) $_POST['credential-key'];
+
+        $ret = $fHandler->unlockCredentials($credId, $keypw);
+
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => "Zugangsdaten $credId erfolgreich entsperrt",
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten gespeichert',
+                    'redirect' => URIBASE . "konto/credentials/",
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Falsches Passwort',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+
+    }
+
+    private function submitTan(array $routeInfo)
+    {
+        $fHandler = new FinTSHandler($routeInfo);
+        $credId = (int) $_POST['credential-id'];
+        $fHandler->loadCredentials($credId);
+
+        $tan = $_POST['tan'];
+        list($ret, $msg) = $fHandler->submitTan($tan,$credId);
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => $msg,
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten erfolgreich übertragen',
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => $msg,
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht korrekt',
+                ]
+            );
+        }
+    }
+
+    private function importKonto(array $routeInfo)
+    {
+        $syncFrom = date_create($_POST['sync-from'])->format('Y-m-d');
+        $kontoIban = $_POST['konto-iban'];
+        $ibanCorrect = checkIBAN($kontoIban);
+        $kontoName = substr(htmlspecialchars(strip_tags(trim($_POST['konto-name']))),0,32);
+        $kontoShort = strtoupper(substr((string) $_POST['konto-short'],0,2));
+        $credId = (int) $_POST['credential-id'];
+
+        if($ibanCorrect === false){
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'IBAN nicht korrekt',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+
+        $ret = DBConnector::getInstance()->dbInsert('konto_type', [
+            'name' => $kontoName,
+            'short' => $kontoShort,
+            'sync_from' => $syncFrom,
+            'iban' => $kontoIban,
+        ]);
+
+        if($ret !== false){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => "Meta Daten des Kontos für den Import vorbereitet",
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Daten gespeichert',
+                    'redirect' => URIBASE . "konto/credentials/$credId/sepa",
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Eingabe konnte nicht geichert werden',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+        }
+    }
+
+    private function clearSession()
+    {
+        $ret = session_destroy();
+
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => 'Session zurückgesetzt',
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Erfolgreich',
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Session wurde nicht zurückgesetzt',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Ein Fehler ist aufgetreten',
+                ]
+            );
+        }
+
+    }
+
+    private function lockCredentials(array $routeInfo)
+    {
+        $fHandler = new FinTSHandler($routeInfo);
+        $credId = (int) $_POST['credential-id'];
+        list($ret, $msg) = $fHandler->lockCredentials($credId);
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => $msg,
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Zugangsdaten gesperrt',
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => $msg,
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Ein Fehler ist aufgetreten',
+                ]
+            );
+        }
     }
 }

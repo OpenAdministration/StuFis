@@ -1,6 +1,7 @@
 <?php
 
-
+ini_set('session.use_strict_mode', 1);
+session_start();
 
 define('SYSBASE', dirname(dirname(__FILE__)));
 include SYSBASE . "/config/config.php";

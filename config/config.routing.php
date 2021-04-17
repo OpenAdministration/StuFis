@@ -36,6 +36,8 @@ $routing = [
                     'path' => 'credentials',
                     'type' => 'path',
                     'controller' => 'fints',
+                    'action' => 'pick-my-credentials',
+                    'groups' => 'ref-finanzen-kv',
                     'children' => [
                         [
                             'path' => 'new',
@@ -46,16 +48,49 @@ $routing = [
                             'path' => '\d+',
                             'type' => 'pattern',
                             'param' => 'credential-id',
+                            'action' => 'pick-sepa-action',
                             'children' => [
                                 [
                                     'path' => 'tan-mode',
                                     'type' => 'path',
                                     'action' => 'pick-tan-mode',
+                                    'children' => [
+                                        [
+                                            'path' => '\d+',
+                                            'type' => 'pattern',
+                                            'param' => 'tan-mode-id',
+                                            'children' => [
+                                                [
+                                                    'path' => 'medium',
+                                                    'type' => 'path',
+                                                    'action' => 'pick-tan-medium',
+                                                ],
+                                            ],
+                                        ],
+                                    ],
                                 ],
                                 [
                                     'path' => 'sepa',
                                     'type' => 'path',
                                     'action' => 'pick-sepa-konto',
+                                ],
+                                [
+                                    'path' => '([A-Z]{2}[0-9]{6})',
+                                    'type' => 'pattern',
+                                    'param' => 'short-iban',
+                                    'action' => 'sepa-details',
+                                    'children' => [
+                                        [
+                                            'path' => 'import',
+                                            'type' => 'path',
+                                            'action' => 'new-sepa-konto-import',
+                                        ],
+                                    ],
+                                ],
+                                [
+                                    'path' => 'delete',
+                                    'type' => 'path',
+                                    'action' => 'delete-credentials',
                                 ],
                             ],
                         ],
@@ -311,6 +346,12 @@ $routing = [
                     'action' => 'mirror',
                 ],
                 [
+                    'path' => 'clear-session',
+                    'type' => 'path',
+                    'controller' => 'rest',
+                    'action' => 'clear-session',
+                ],
+                [
                     'path' => 'forms',
                     'type' => 'path',
                     'controller' => 'error',
@@ -418,9 +459,41 @@ $routing = [
                                     'path' => 'save',
                                     'type' => 'path',
                                     'action' => 'save-new-konto-credentials'
+                                ],
+                                [
+                                    'path' => 'import-konto',
+                                    'type' => 'path',
+                                    'action' => 'import-konto'
+                                ],
+                                [
+                                    'path' => 'unlock',
+                                    'type' => 'path',
+                                    'action' => 'unlock-credentials',
+                                ],
+                                [
+                                    'path' => 'lock',
+                                    'type' => 'path',
+                                    'action' => 'lock-credentials',
+                                ],
+                                [
+                                    'path' => 'submit-tan',
+                                    'type' => 'path',
+                                    'action' => 'submit-tan'
                                 ]
                             ]
                         ],
+                        [
+                            'path' => 'tan-mode',
+                            'type' => 'path',
+                            'children' => [
+                                [
+                                    'path' => 'save',
+                                    'type' => 'path',
+                                    'action' => 'save-default-tan-mode'
+                                ]
+                            ]
+                        ],
+
                     ]
                 ],
                 [
