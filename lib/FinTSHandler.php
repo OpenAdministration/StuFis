@@ -616,8 +616,13 @@ class FinTSHandler extends Renderer
             $syncUntil = date_create();
         }else{
             $syncUntil = date_create($syncUntil);
+            if($syncUntil->diff(date_create())->invert === -1){
+                $syncUntil = date_create();
+            }else{
+                $syncUntil = $syncUntil->add(new DateInterval('PT23H59M59S'));
+            }
         }
-        $syncUntil = $syncUntil->add(new DateInterval('PT23H59M59S')); // add 23h 59m and 59s
+        // add 23h 59m and 59s
 
         //find earliest
         if($syncFrom->diff($lastSync)->invert === 0){ //is last sync älter
