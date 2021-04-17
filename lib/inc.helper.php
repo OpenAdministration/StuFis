@@ -78,7 +78,7 @@ function checkIBAN($iban) : bool
         $newString .= $movedCharArray[$key];
     }
 
-    return bcmod($newString, '97') === "1";
+    return bcmod($newString, '97') == 1;
 
 }
 
