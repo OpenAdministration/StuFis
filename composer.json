@@ -1,10 +1,10 @@
 {
     "name": "lukas-staab/finanzantragui",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung nach Deutschem Recht für Studierendenschaften",
-    "version": "2.1.0",
+    "version": "2.1.1",
 
     "require": {
-        "php": "^7.0",
+        "php": "^7.1",
         "nemiah/php-fints" : "dev-master",
         "ext-json": "*",
         "ext-bcmath": "*",
