@@ -4,14 +4,17 @@
     "version": "2.1.1",
 
     "require": {
-        "php": "^7.1",
+        "php": "^7.2",
+        "defuse/php-encryption": "^2.3",
         "nemiah/php-fints" : "dev-master",
         "ext-json": "*",
         "ext-bcmath": "*",
         "ext-pdo": "*",
-        "ext-ctype": "*"
-    }
-    ,
+        "ext-ctype": "*",
+        "ext-mbstring": "*",
+        "ext-simplexml": "*"
+    },
+
     "require-dev": {
         "roave/security-advisories": "dev-latest"
     }

@@ -17,8 +17,6 @@ use Fhp\Options\Credentials;
 use Fhp\Options\FinTsOptions;
 use Fhp\Protocol\ServerException;
 
-require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
-
 class FinTSHandler extends Renderer
 {
 
@@ -96,7 +94,6 @@ class FinTSHandler extends Renderer
 
         $this->loadCredentials($this->credentialId);
 
-
         switch ($pageAction){
 
             case 'pick-sepa-konto':
@@ -142,13 +139,14 @@ class FinTSHandler extends Renderer
             );
         }catch (WrongKeyOrModifiedCiphertextException $ciphertextException){
             return $ciphertextException->getMessage();
+        } catch (EnvironmentIsBrokenException $e) {
+            ErrorHandler::_errorExit($e->getMessage());
         }
         return false;
     }
 
     public function loadCredentials($credentialId) : bool
     {
-
         $db = DBConnector::getInstance();
         $res = $db->dbFetchAll('konto_credentials',
             [DBConnector::FETCH_ASSOC],
@@ -158,7 +156,6 @@ class FinTSHandler extends Renderer
                 'konto_credentials.id' => $credentialId,
             ],
             [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_credentials.bank_id', 'konto_bank.id']]]
-
         );
 
         if(count($res) === 1){

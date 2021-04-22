@@ -47,13 +47,9 @@ class Crypto
 	public static function generateRandomString($length) {
 		if (!is_int($length)){
 			throw new \Exception('Invalid argument type. Integer expected.');
-			return null;
 		}
-		if (version_compare(PHP_VERSION, '7.0.0') >= 0 && function_exists('random_bytes')){
-			return bin2hex(random_bytes($length));
-		} else {
-			return bin2hex(openssl_random_pseudo_bytes($length));
-		}
+        return bin2hex(random_bytes($length));
+
 	}
 	
 	/**
@@ -63,7 +59,7 @@ class Crypto
 	 * @param boolean $overwrite
 	 */
 	private static function key_to_file($filename, $text, $overwrite = false){
-		if (overwrite && file_exists($filename) && is_file($filename) && fileperms($filename) != '0777' ){
+		if ($overwrite && file_exists($filename) && is_file($filename) && fileperms($filename) !== 777 ){
 			chmod($filename, 0777);
 		}
 		
@@ -75,7 +71,7 @@ class Crypto
 		$key_file_content .= '$KEY_SECRET = \''.$text."';\n ?>";
 		
 		//create file
-		$handle = fopen ($filename, 'w');
+		$handle = fopen ($filename, 'wb');
 		fwrite ($handle, $key_file_content);
 		fclose ($handle);
 		chmod($filename, 0400);
@@ -93,13 +89,14 @@ class Crypto
 	 * @param integer $length
 	 * @return string
 	 */
-	public static function pad_string($string, $length = 128){
+	public static function pad_string(string $string, $length = 128): string
+    {
 		$padlength = 0;
 		if (mb_strlen($string) < $length){
 			$padlength = $length - mb_strlen($string);
 		}
 		$exp = strlen(''.$length);
-		$base = pow(10, $exp);
+		$base = 10 ** $exp;
 		$base += $padlength;
 		$padstr = substr(self::generateRandomString(intval(floor($padlength/2)+1)), 0, $padlength);
 		$string .= $padstr . '__padded__'.$base.'__';
@@ -138,7 +135,6 @@ class Crypto
 	 * @return string encrypted string
 	 */
 	public static function encrypt_by_key ($data, $keyAscii){
-		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
 		$key = Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
 		$ciphertext = Defuse\Crypto\Crypto::encrypt($data, $key);
 		return $ciphertext;
@@ -152,18 +148,17 @@ class Crypto
 	 * @return string|false decrypted string | false if cipher was manipulated
 	 */
 	public static function decrypt_by_key ($ciphertext, $keyAscii){
-		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
 		$key = Defuse\Crypto\Key::loadFromAsciiSafeString($keyAscii);
 		try {
 			$data = Defuse\Crypto\Crypto::decrypt($ciphertext, $key);
 			return $data;
-		} catch (Defuse\Crypto\WrongKeyOrModifiedCiphertextException $ex) {
-			// An attack! Either the wrong key was loaded, or the ciphertext has
-			// changed since it was created -- either corrupted in the database or
-			// intentionally modified by Eve trying to carry out an attack.
-			return false;
-		}
-	}
+        } catch (\Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException $e) {
+		    // An attack! Either the wrong key was loaded, or the ciphertext has
+            // changed since it was created -- either corrupted in the database or
+            // intentionally modified by Eve trying to carry out an attack.
+            return false;
+        }
+    }
 	
 	// with password --------------------------------------------------
 	
@@ -176,7 +171,6 @@ class Crypto
 	 * @return string encrypted string
 	 */
 	public static function encrypt_by_key_pw ($data, $keyAscii, $password){
-		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
 		$key = Defuse\Crypto\KeyProtectedByPassword::loadFromAsciiSafeString($keyAscii);
 		$key = $key->unlockKey($password);
 		$ciphertext = Defuse\Crypto\Crypto::encrypt($data, $key);
@@ -213,7 +207,6 @@ class Crypto
 	 * @param string $filename path to file
 	 */
 	public static function new_key_to_file($filename) {
-		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
 		$key = Defuse\Crypto\Key::createNewRandomKey();
 		$pass_key = $key->saveToAsciiSafeString();
 		
@@ -227,7 +220,6 @@ class Crypto
 	 * @param string $password
 	 */
 	public static function new_protected_key_to_file($filename, $password) {
-		require_once(FRAMEWORK_PATH.'/external_libraries/crypto/defuse-crypto.phar');
 		$key = Defuse\Crypto\KeyProtectedByPassword::createRandomPasswordProtectedKey($password);
 		
 		//create file
