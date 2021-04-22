@@ -1,6 +1,7 @@
 <?php
 
 
+use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\KeyProtectedByPassword;
 use Fhp\Action\GetSEPAAccounts;
@@ -129,20 +130,20 @@ class FinTSHandler extends Renderer
             $credential_array = ['username' => $username, 'password' => $password];
             $credentialJson = json_encode($credential_array);
             $encCredentialJson = \Defuse\Crypto\Crypto::encrypt($credentialJson, $key);
+            return DBConnector::getInstance()->dbInsert(
+                'konto_credentials',
+                [
+                    'name' => $name,
+                    'bank_id' => $bankId,
+                    'owner_id' => DBConnector::getInstance()->getUser()['id'],
+                    'encrypted_credentials' => $encCredentialJson,
+                    'crypto_key' => $encKey->saveToAsciiSafeString()
+                ]
+            );
         }catch (WrongKeyOrModifiedCiphertextException $ciphertextException){
             return $ciphertextException->getMessage();
         }
-
-        return DBConnector::getInstance()->dbInsert(
-            'konto_credentials',
-            [
-                'name' => $name,
-                'bank_id' => $bankId,
-                'owner_id' => DBConnector::getInstance()->getUser()['id'],
-                'encrypted_credentials' => $encCredentialJson,
-                'crypto_key' => $encKey->saveToAsciiSafeString()
-            ]
-        );
+        return false;
     }
 
     public function loadCredentials($credentialId) : bool
@@ -284,7 +285,8 @@ class FinTSHandler extends Renderer
      * @throws CurlException
      * @throws ServerException
      */
-    private function renderTanModePicker() {
+    private function renderTanModePicker(): void
+    {
 
         $tanModes = $this->fints->getTanModes();
         if (empty($tanModes)) {
@@ -306,7 +308,7 @@ class FinTSHandler extends Renderer
 
     }
 
-    private function renderTanMediumPicker()
+    private function renderTanMediumPicker(): void
     {
         $tanModeInt = (int) $this->routeInfo['tan-mode-id'];
         $this->fints->selectTanMode($tanModeInt);
@@ -437,7 +439,7 @@ class FinTSHandler extends Renderer
         return [false, "Aktion kann nicht gefunden werden"];
     }
 
-    private function renderNewCredentials()
+    private function renderNewCredentials(): void
     {
         $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
         $this->renderHeadline('Lege neue Zugangsdaten an');
@@ -642,7 +644,7 @@ class FinTSHandler extends Renderer
         var_dump($this->evaluateAction($action, $this->credentialId));
     }
 
-    private function renderSepaActionPick()
+    private function renderSepaActionPick(): void
     {
         $this->renderList([
             $this->internalHyperLinkEscapeFunction('Wähle TAN Modus', 'konto/credentials/' . $this->credentialId . "/tan-mode"),
@@ -727,7 +729,7 @@ class FinTSHandler extends Renderer
         }))[0];
     }
 
-    private function renderNewSepaKontoImport()
+    private function renderNewSepaKontoImport(): void
     {
         $iban = $this->getIbanFromShort($this->credentialId, $this->shortIBAN);
         if($iban === false) {
@@ -772,7 +774,7 @@ class FinTSHandler extends Renderer
      * @param $action BaseAction
      * @return void
      */
-    private function renderTanInput(BaseAction $action)
+    private function renderTanInput(BaseAction $action): void
     {
         $tanRequest = $action->getTanRequest();
         if(is_null($tanRequest)){
@@ -814,7 +816,7 @@ class FinTSHandler extends Renderer
         //session_write_close();
     }
 
-    private function renderPasswordForm(int $credentialId)
+    private function renderPasswordForm(int $credentialId): void
     {
         $this->renderHeadline('Bitte internes Passwort eingeben');
 
