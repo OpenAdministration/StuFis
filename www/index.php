@@ -6,18 +6,20 @@
  * Time: 22:19
  */
 //auth ----------------------------------
+use auth\AuthBasicHandler;
+use auth\AuthDummyHandler;
+use auth\AuthSamlHandler;
+
 include "../lib/inc.all.php";
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
 
 if (!SAML){
-    require_once(SYSBASE . "/lib/AuthDummyHandler.php");
-    define('AUTH_HANDLER', 'AuthDummyHandler');
+    define('AUTH_HANDLER', AuthDummyHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
 }else if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
-    define('AUTH_HANDLER', 'AuthBasicHandler');
-    require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
+    define('AUTH_HANDLER', AuthBasicHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
     (AUTH_HANDLER)::getInstance()->requireGroup('basic');
     if (!isset($routeInfo['groups'])){
@@ -25,8 +27,7 @@ if (!SAML){
         $routeInfo['controller'] = 'error';
     }
 }else{
-    define('AUTH_HANDLER', 'AuthSamlHandler');
-    require_once SYSBASE . '/lib/AuthSamlHandler.php';
+    define('AUTH_HANDLER', AuthSamlHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
 }
 if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){

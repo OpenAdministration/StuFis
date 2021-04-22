@@ -12,6 +12,9 @@
  * @platform        PHP
  * @requirements    PHP 7.0 or higher
  */
+
+namespace auth;
+
 interface AuthHandler
 {	
 	/**
@@ -19,79 +22,75 @@ interface AuthHandler
 	 * singleton class
 	 * return same instance on every call
 	 *
-	 * @param bool $noPermCheck
-     *
      * @return AuthHandler
 	 */
-	public static function getInstance();
+	public static function getInstance(): AuthHandler;
 	
 	/**
 	 * handle session and user login
 	 */
-	function requireAuth();
+	public function requireAuth() : void;
 	
 	/**
 	 * check group permission - die on error
-	 * return true if successfull
-	 * @param string $groups    String of groups
-	 * @return bool  true if the user has one or more groups from $group
+	 * return void if successful
+	 * @param string|array $groups    String of groups
+	 * @return void die() if group is not there
 	 */
-    function requireGroup($groups);
+    public function requireGroup($groups): void;
 	
 	/**
 	 * check group permission - return result of check as boolean
-	 * @param string $groups    String of groups
+	 * @param string|array $groups    String of groups
 	 * @param string $delimiter Delimiter of the groups in $group
 	 * @return bool  true if the user has one or more groups from $group
 	 */
-    function hasGroup($groups, $delimiter = ",");
+    public function hasGroup($groups, $delimiter = ","): bool;
 	
 	/**
 	 * return log out url
 	 * @return string
 	 */
-	function getLogoutURL();
+	public function getLogoutURL(): string;
 	
 	/**
 	 * send html header to redirect to logout url
 	 */
-	function logout();
+	public function logout() : void;
 	
 	/**
 	 * return current user attributes
 	 * @return array
 	 */
-	function getAttributes();
+	public function getAttributes(): array;
 	
 	/**
 	 * return username or user mail address
 	 * if not set return null
 	 * @return string|NULL
 	 */
-	function getUsername();
+	public function getUsername(): ?string;
 	
 	/**
 	 * return user displayname
 	 * @return string
 	 */
-	function getUserFullName();
+	public function getUserFullName(): string;
 	
 	/**
 	 * return user mail address
 	 * @return string
 	 */
-	function getUserMail();
+	public function getUserMail(): string;
     
     /**
      * @return bool if user has Admin Privileges
      */
-    function isAdmin();
+    public function isAdmin(): bool;
     
     /**
      * @param $gremien   string with $delimiter concat sting
      * @param $delimiter string delimiter between gremien
      */
-    function hasGremium($gremien, $delimiter);
+    public function hasGremium(string $gremien, string $delimiter) : bool;
 }
-
-?>

@@ -1,13 +1,18 @@
 <?php
 
-class  AuthSamlHandler extends Singleton implements AuthHandler{
+namespace auth;
+
+use Singleton;
+
+class AuthSamlHandler extends Singleton implements AuthHandler{
     private static $SIMPLESAMLDIR;
     private static $SIMPLESAMLAUTHSOURCE;
     private static $AUTHGROUP;
     private static $ADMINGROUP;
     private $saml;
-    
+
     /**
+     * @param mixed ...$pars
      * @return AuthHandler
      */
     public static function getInstance(...$pars): AuthHandler{
@@ -19,19 +24,23 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
         $this->saml = new SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
     }
     
-    final static protected function static__set($name, $value){
-        if (property_exists(get_class(), $name))
+    final protected static function static__set($name, $value): void
+    {
+        if (property_exists(get_class(), $name)) {
             self::$$name = $value;
-        else
+        } else {
             die("$name ist keine Variable in " . get_class());
+        }
     }
     
-    function getUserFullName(){
+    public function getUserFullName() : string
+    {
         $this->requireAuth();
         return $this->getAttributes()["displayName"][0];
     }
     
-    function requireAuth(){
+    function requireAuth() : void
+    {
         if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$this->saml->isAuthenticated()){
             header('HTTP/1.0 401 UNATHORISED');
             die("Login nicht (mehr) gueltig");
@@ -43,27 +52,27 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
         }
     }
     
-    function getAttributes(){
+    public function getAttributes() : array
+    {
         $attributes = $this->saml->getAttributes();
         //var_dump($attributes['groups']);
-        if (!DEV){
-            return $attributes;
-        }else{
-            return $attributes;
-        }
+        return $attributes;
+
     }
     
-    function getUserMail(){
+    public function getUserMail() : string
+    {
         $this->requireAuth();
         return $this->getAttributes()["mail"][0];
     }
     
-    function requireGroup($group){
+    public function requireGroup($groups) : void
+    {
         $this->requireAuth();
         if($this->isAdmin()){
-            return true;
+            return;
         }
-        if (!$this->hasGroup($group)){
+        if (!$this->hasGroup($groups)){
             header('HTTP/1.0 401 Unauthorized');
             include SYSBASE . "/template/permission-denied.tpl";
             die();
@@ -76,7 +85,8 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
      *
      * @return bool  true if the user has one or more groups from $group
      */
-    function hasGroup($groups, $delimiter = ","){
+    public function hasGroup($groups, $delimiter = ","): bool
+    {
         $attributes = $this->getAttributes();
         if (!isset($attributes["groups"])){
             return false;
@@ -84,51 +94,51 @@ class  AuthSamlHandler extends Singleton implements AuthHandler{
         if($this->isAdmin()){
             return true;
         }
-        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) == 0){
+        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map("strtolower", $attributes["groups"]))) === 0){
             return false;
         }
         return true;
     }
     
-    function hasGremium($gremien, $delimiter = ","){
+    public function hasGremium($gremien, $delimiter = ",") : bool
+    {
         $attributes = $this->getAttributes();
         if (!isset($attributes["gremien"])){
             return false;
         }
-        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) == 0){
+        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) === 0){
             return false;
         }
         return true;
     }
     
-    function getUsername(){
+    public function getUsername() : ?string
+    {
         $attributes = $this->getAttributes();
-        if (isset($attributes["eduPersonPrincipalName"]) && isset($attributes["eduPersonPrincipalName"][0]))
-            return $attributes["eduPersonPrincipalName"][0];
-        if (isset($attributes["mail"]) && isset($attributes["mail"][0]))
-            return $attributes["mail"][0];
-        return null;
+        return $attributes["eduPersonPrincipalName"][0] ?? $attributes["mail"][0] ?? null;
     }
     
-    function getLogoutURL(){
+    public function getLogoutURL() : string
+    {
         return $this->saml->getLogoutURL();
     }
     
 	/**
 	 * send html header to redirect to logout url
-	 * @param string $param
 	 */
-	function logout(){
+	public function logout() :void
+    {
 		header('Location: '. $this->getLogoutURL());
 		die();
 	}
     
-    function isAdmin($delimiter = ","){
+    public function isAdmin($delimiter = ",") :bool
+    {
         $attributes = $this->getAttributes();
         if (!isset($attributes["groups"])){
             return false;
         }
-        if (in_array(self::$ADMINGROUP,$attributes["groups"])){
+        if (in_array(self::$ADMINGROUP, $attributes["groups"], true)){
             return true;
         }
         return false;

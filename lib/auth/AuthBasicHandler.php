@@ -13,7 +13,6 @@
  * @requirements    PHP 7.0 or higher
  */
  
-require_once (dirname(__FILE__).'/class.AuthHandler.php');
 
 /**
  * BasicAuth Handler
@@ -28,6 +27,10 @@ require_once (dirname(__FILE__).'/class.AuthHandler.php');
  * @platform        PHP
  * @requirements    PHP 7.0 or higher
  */
+namespace auth;
+
+use Singleton;
+
 class AuthBasicHandler extends Singleton implements AuthHandler{
 	
 	/**
@@ -63,7 +66,6 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 	/**
 	 * class constructor
 	 * private cause of singleton class
-	 * @param bool $noPermCheck
 	 */
 	protected function __construct(){
 		$noPermCheck = false;
@@ -77,31 +79,34 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 	 * return instance of this class
 	 * singleton class
 	 * return same instance on every call
-	 * @param bool $noPermCheck
-	 * @return BasicAuthHandler
 	 */
 	public static function getInstance(...$pars): AuthHandler{
 		return parent::getInstance(...$pars);
 	}
 	
-	final static protected function static__set($name, $value){
-		if (property_exists(get_class(), $name))
-			self::$$name = $value;
-		else
-			die("$name ist keine Variable in " . get_class());
+	final protected static function static__set($name, $value): void
+    {
+		if (property_exists(get_class(), $name)) {
+            self::$$name = $value;
+        } else {
+            die("$name ist keine Variable in " . get_class());
+        }
 	}
 	private static $ADMINGROUP;
-	function isAdmin(){
+
+	public function isAdmin() :bool
+    {
 		return $this->hasGroup(self::$ADMINGROUP);
 	}
 	
 	/**
 	 * handle session and user login
 	 */
-	function requireAuth(){
+	public function requireAuth() : void
+    {
 		//check IP and user agent
-		if(isset($_SESSION['SILMPH']) && isset($_SESSION['SILMPH']['CLIENT_IP']) && isset($_SESSION['SILMPH']['CLIENT_AGENT'])){
-			if ($_SESSION['SILMPH']['CLIENT_IP'] != $_SERVER['REMOTE_ADDR'] || $_SESSION['SILMPH']['CLIENT_AGENT'] != ((isset($_SERVER ['HTTP_USER_AGENT']))? $_SERVER['HTTP_USER_AGENT']: 'Unknown-IP:'.$_SERVER['REMOTE_ADDR'])){
+		if(isset($_SESSION['SILMPH']['CLIENT_IP'], $_SESSION['SILMPH']['CLIENT_AGENT'])){
+			if ($_SESSION['SILMPH']['CLIENT_IP'] !== $_SERVER['REMOTE_ADDR'] || $_SESSION['SILMPH']['CLIENT_AGENT'] !== ((isset($_SERVER ['HTTP_USER_AGENT']))? $_SERVER['HTTP_USER_AGENT']: 'Unknown-IP:'.$_SERVER['REMOTE_ADDR'])){
 				//die or reload page is IP isn't the same when session was created -> need new login
 				session_destroy();
 				session_start();
@@ -110,7 +115,7 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 			}
 		} else {
 			$_SESSION['SILMPH']['CLIENT_IP'] = $_SERVER['REMOTE_ADDR'];
-			$_SESSION['SILMPH']['CLIENT_AGENT'] = ((isset($_SERVER ['HTTP_USER_AGENT']))? $_SERVER['HTTP_USER_AGENT']: 'Unknown-IP:'.$_SERVER['REMOTE_ADDR']);
+			$_SESSION['SILMPH']['CLIENT_AGENT'] = ($_SERVER['HTTP_USER_AGENT'] ?? ('Unknown-IP:' . $_SERVER['REMOTE_ADDR']));
 		}
 		
 		if(!isset($_SESSION['SILMPH']['USER_ID'])){
@@ -139,105 +144,76 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 			header('HTTP/1.0 401 Unauthorized');
 			echo '<strong>You are not allowd to access this page. Please Login.</strong>';
 			die();
-		} else {
-			if (!self::$noPermCheck) {
-				$_SESSION['SILMPH']['USER_ID'] = 0;
-				if (isset(self::$usermap[$_SERVER['PHP_AUTH_USER']]) && 
-					self::$usermap[$_SERVER['PHP_AUTH_USER']]['password'] == $_SERVER['PHP_AUTH_PW']){
-					$this->attributes = array_slice(self::$usermap[$_SERVER['PHP_AUTH_USER']], 1 );
-				} else {
-					header('WWW-Authenticate: Basic realm="basic_'.BASE_TITLE.'_realm"');
-					header('HTTP/1.0 401 Unauthorized');
-					echo '<strong>You are not allowd to access this page. Please Login.</strong>';
-					die();
-				}
-			} else {
-				$this->attributes = [
-					'displayName' => 'Anonymous',
-					'mail' => '',
-					'groups' => ['anonymous'],
-					'eduPersonPrincipalName' => ['nologin'],
-				];
-			}
 		}
+        if (!self::$noPermCheck) {
+            $_SESSION['SILMPH']['USER_ID'] = 0;
+            if (isset(self::$usermap[$_SERVER['PHP_AUTH_USER']]) &&
+                self::$usermap[$_SERVER['PHP_AUTH_USER']]['password'] === $_SERVER['PHP_AUTH_PW']){
+                $this->attributes = array_slice(self::$usermap[$_SERVER['PHP_AUTH_USER']], 1 );
+            } else {
+                header('WWW-Authenticate: Basic realm="basic_'.BASE_TITLE.'_realm"');
+                header('HTTP/1.0 401 Unauthorized');
+                echo '<strong>You are not allowd to access this page. Please Login.</strong>';
+                die();
+            }
+        } else {
+            $this->attributes = [
+                'displayName' => 'Anonymous',
+                'mail' => '',
+                'groups' => ['anonymous'],
+                'eduPersonPrincipalName' => ['nologin'],
+            ];
+        }
 	}
 	
-	/**
-	 * check group permission - die on error
-	 * return true if successfull
-	 * @param string $groups    String of groups
-	 * @return bool  true if the user has one or more groups from $group
-	 */
-	function requireGroup($group){
+    /** {@inheritDoc} */
+	public function requireGroup($groups) :void
+    {
 		$this->requireAuth();
-		if (!$this->hasGroup($group)){
+		if (!$this->hasGroup($groups)){
 			header('WWW-Authenticate: Basic realm="'.BASE_TITLE.' Please Login"');
 			header('HTTP/1.0 401 Unauthorized');
 			echo 'You have no permission to access this page.';
 			die();
 		}
-		return true;
 	}
-	
-	/**
-	 * check group permission - return result of check as boolean
-	 * @param string $groups    String of groups
-	 * @param string $delimiter Delimiter of the groups in $group
-	 * @return bool  true if the user has one or more groups from $group
-	 */
-	function hasGroup($group, $delimiter = ","){
+
+    /** {@inheritDoc} */
+	public function hasGroup($group, $delimiter = ",") : bool
+    {
 		$this->requireAuth();
 		$attributes = $this->getAttributes();
-		if (count(array_intersect(explode($delimiter, strtolower($group)), array_map("strtolower", $attributes["groups"]))) == 0){
-			return false;
-		}
-		return true;
-	}
-	
-	/**
-	 * return log out url
-	 * @return string
-	 */
-	function getLogoutURL(){
+        return count(array_intersect(explode($delimiter, strtolower($group)), array_map("strtolower", $attributes["groups"]))) !== 0;
+    }
+
+    /** {@inheritDoc} */
+	public function getLogoutURL(): string
+    {
 		return BASE_URL.$_SERVER['REQUEST_URI'] . '?logout=1';
 	}
-	
-	/**
-	 * send html header to redirect to logout url
-	 * @param string $param
-	 */
-	function logout(){
+
+    /** {@inheritDoc} */
+	public function logout(): void
+    {
 		header('Location: '. $this->getLogoutURL());
 		die();
 	}
-	
-	/**
-	 * return current user attributes
-	 * @return array
-	 */
-	function getAttributes(){
+
+    /** {@inheritDoc} */
+	public function getAttributes() : array
+    {
 		return $this->attributes;
 	}
-	
-	/**
-	 * return username or user mail address
-	 * if not set return null
-	 * @return string|NULL
-	 */
-	function getUsername(){
+
+    /** {@inheritDoc} */
+	public function getUsername(): ?string
+    {
 		$attributes = $this->getAttributes();
-		if (isset($attributes["eduPersonPrincipalName"]) && isset($attributes["eduPersonPrincipalName"][0]))
-			return $attributes["eduPersonPrincipalName"][0];
-		if (isset($attributes["mail"]) && isset($attributes["mail"]))
-			return $attributes["mail"];
-		return null;
-	}
-	
-	/**
-	 * return user displayname
-	 * @return string
-	 */
-	function getUserFullName(){
+        return $attributes["eduPersonPrincipalName"][0] ?? $attributes["mail"] ?? null;
+    }
+
+    /** {@inheritDoc} */
+	public function getUserFullName(): string{
 		$this->requireAuth();
 		return $this->getAttributes()["displayName"];
 	}
@@ -246,19 +222,19 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 	 * return user mail address
 	 * @return string
 	 */
-	function getUserMail(){
+	public function getUserMail():string
+    {
 		$this->requireAuth();
 		return $this->getAttributes()["mail"];
 	}
-    
-    function hasGremium($gremien, $delimiter = ","){
+
+    /** {@inheritDoc} */
+    public function hasGremium($gremien, $delimiter = ","): bool
+    {
         $attributes = $this->getAttributes();
         if (!isset($attributes["gremien"])){
             return false;
         }
-        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) == 0){
-            return false;
-        }
-        return true;
+        return count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) !== 0;
     }
 }

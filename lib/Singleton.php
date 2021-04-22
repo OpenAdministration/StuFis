@@ -18,17 +18,18 @@ abstract class Singleton{
      */
     public static function getInstance(...$pars){
         $c = static::class;
-        if (!isset(self::$hasCredentialsSet[$c]))
+        if (!isset(self::$hasCredentialsSet[$c])) {
             die("Credentials of " . static::class . " not set!");
+        }
         if (!isset(self::$instances[static::class])){
             self::$instances[static::class] = new $c(...$pars);
             return self::$instances[static::class];
-        }else{
-            if (count($pars) > 0){
-                die("Instance allready initialized, no Parameter Allowed after first init");
-            }
-            return self::$instances[static::class];
         }
+
+        if (count($pars) > 0){
+            die("Instance allready initialized, no Parameter Allowed after first init");
+        }
+        return self::$instances[static::class];
     }
     
     /**
@@ -41,13 +42,14 @@ abstract class Singleton{
         
         $visVars = get_class_vars(static::class); // gets all public and protected vars
         foreach ($confArray as $varName => $value){
-            if (property_exists(static::class, $varName))
-                if (!in_array($varName, array_keys($visVars)))
+            if (property_exists(static::class, $varName)) {
+                if (!array_key_exists($varName, $visVars)) {
                     static::static__set($varName, $value);
-                else
+                } else
                     die("static \$$varName ist nicht private in Klasse " . static::class);
-            else
+            } else {
                 die("static \$$varName existiert nicht in Klasse " . static::class);
+            }
         }
     }
     
@@ -62,8 +64,9 @@ abstract class Singleton{
             die("No array passed in Singelton::configureAll()");
         }
         foreach ($conf as $className => $variables){
-            if (!is_subclass_of($className, "Singleton"))
+            if (!is_subclass_of($className, "Singleton")) {
                 die("$className is not a Child of Singleton!");
+            }
             $className::setCredentials($variables);
             self::$hasCredentialsSet[$className] = true;
         }
@@ -75,6 +78,7 @@ abstract class Singleton{
     
     final public function __debugInfo(){
         //No debug Info
+        return null;
     }
     
     /* wanted Implementation in child to access (and set) PRIVATE static variables*/

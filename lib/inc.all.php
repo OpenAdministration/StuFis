@@ -5,6 +5,8 @@ session_start();
 
 define('SYSBASE', dirname(__DIR__));
 
+require_once SYSBASE . '/vendor/autoload.php';
+
 include SYSBASE . "/config/config.php";
 require_once SYSBASE . '/lib/inc.nonce.php';
 
@@ -20,9 +22,6 @@ require_once SYSBASE . '/lib/svg/class.SvgDiagram.php';
 require_once SYSBASE . '/lib/class.EscFunc.php';
 require_once SYSBASE . '/lib/Renderer.php';
 require_once SYSBASE . '/lib/HibiscusXMLRPCConnector.php';
-require_once SYSBASE . '/lib/class.AuthHandler.php';
-require_once SYSBASE . '/lib/AuthSamlHandler.php';
-require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
 require_once SYSBASE . '/lib/DBConnector.php';
 require_once SYSBASE . '/lib/inc.helper.php';
 require_once SYSBASE . '/lib/FormHandlerInterface.php';
@@ -53,7 +52,7 @@ require_once SYSBASE . '/lib/exceptions/InvalidDataException.php';
 require_once SYSBASE . '/lib/exceptions/OldFormException.php';
 require_once SYSBASE . '/lib/exceptions/WrongVersionException.php';
 
-require_once SYSBASE . '/vendor/autoload.php';
+
 
 Singleton::configureAll($conf);
 
