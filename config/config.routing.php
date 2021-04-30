@@ -1,5 +1,8 @@
 <?php
-$routing = [
+
+use framework\LoadGroups;
+
+return [
     'path' => '',
     'type' => 'path',
     'controller' => 'menu',

@@ -7,12 +7,20 @@
         "php": "^7.2",
         "defuse/php-encryption": "^2.3",
         "nemiah/php-fints" : "dev-master",
+        "phpmailer/phpmailer" : "^6",
+        "pear/xml_rpc2" : "^1",
         "ext-json": "*",
         "ext-bcmath": "*",
         "ext-pdo": "*",
         "ext-ctype": "*",
         "ext-mbstring": "*",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-openssl": "*",
+        "ext-curl": "*",
+        "ext-zip": "*",
+        "ext-intl": "*",
+        "ext-fileinfo": "*",
+        "ext-zlib": "*"
     },
 
     "require-dev": {

@@ -6,9 +6,20 @@
  * Time: 22:19
  */
 //auth ----------------------------------
-use auth\AuthBasicHandler;
-use auth\AuthDummyHandler;
-use auth\AuthSamlHandler;
+use booking\BookingHandler;
+use booking\HHPHandler;
+use booking\konto\FinTSHandler;
+use forms\projekte\auslagen\AuslagenHandler2;
+use forms\projekte\ProjektHandler;
+use framework\auth\AuthBasicHandler;
+use framework\auth\AuthDummyHandler;
+use framework\auth\AuthSamlHandler;
+use framework\file\FileController;
+use framework\render\ErrorHandler;
+use framework\render\HTMLPageRenderer;
+use framework\render\MenuRenderer;
+use framework\render\RestHandler;
+use framework\Router;
 
 include "../lib/inc.all.php";
 // routing ------------------------------
@@ -18,7 +29,7 @@ $routeInfo = $router->route();
 if (!SAML){
     define('AUTH_HANDLER', AuthDummyHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
-}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
+}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] === 'Basic' || $routeInfo['auth'] === 'basic')){
     define('AUTH_HANDLER', AuthBasicHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
     (AUTH_HANDLER)::getInstance()->requireGroup('basic');

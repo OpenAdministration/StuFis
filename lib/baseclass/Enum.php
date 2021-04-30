@@ -9,6 +9,8 @@
 namespace baseclass;
 
 
+use ReflectionClass;
+
 abstract class Enum{
     private static $constCacheArray = null;
     
@@ -18,7 +20,8 @@ abstract class Enum{
         */
     }
     
-    public static function isValidName($name, $strict = false){
+    public static function isValidName($name, $strict = false): bool
+    {
         $constants = self::getConstants();
         
         if ($strict){
@@ -26,14 +29,15 @@ abstract class Enum{
         }
         
         $keys = array_map('strtolower', array_keys($constants));
-        return in_array(strtolower($name), $keys);
+        return in_array(strtolower($name), $keys, true);
     }
     
-    private static function getConstants(){
-        if (self::$constCacheArray == null){
+    private static function getConstants()
+    {
+        if (self::$constCacheArray === null){
             self::$constCacheArray = [];
         }
-        $calledClass = get_called_class();
+        $calledClass = static::class;
         if (!array_key_exists($calledClass, self::$constCacheArray)){
             $reflect = new ReflectionClass($calledClass);
             self::$constCacheArray[$calledClass] = $reflect->getConstants();
@@ -41,7 +45,8 @@ abstract class Enum{
         return self::$constCacheArray[$calledClass];
     }
     
-    public static function isValidValue($value){
+    public static function isValidValue($value): bool
+    {
         $values = array_values(self::getConstants());
         return in_array($value, $values, $strict = true);
     }
