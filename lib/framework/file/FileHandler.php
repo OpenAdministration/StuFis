@@ -1136,7 +1136,6 @@ class FileHandler {
 					file_put_contents(self::getDiskpathOfFile($file), $data);
 					// apache deliver
 					if (self::hasModXSendfile()){
-						$this->close_db_file();
 						// apache deliver
 						header("X-Sendfile: ".self::getDiskpathOfFile($file));
 						return;
@@ -1144,7 +1143,6 @@ class FileHandler {
 				}
 				header('Content-Disposition: '.(!$noinline?'inline':'attachment').'; filename="'.$file->filename.(($file->fileextension)?'.'.$file->fileextension:'').'"');
 				echo $data;
-				$this->close_db_file();
 				return;
 			}
 		}

@@ -161,18 +161,18 @@ class ChatHandler{
 
     /**
      * class constructor
-     * @param string $group
-     * @param int $group_id
-     * @param null $user
-     * @param null $userfullname
+     * @param ?string $group
+     * @param ?int $group_id
+     * @param ?string $userName
+     * @param ?string $userfullname
      */
-    public function __construct(string $group, int $group_id, $user = NULL, $userfullname = NULL){
+    public function __construct(?string $group, ?int $group_id, ?string $userName = NULL, ?string $userfullname = NULL){
     	$this->db = DBConnector::getInstance();
     	$this->group = $group;
     	$this->group_id = $group_id;
     	/* @var $auth AuthHandler */
     	$auth = AUTH_HANDLER;
-    	$this->user = ($user) ?: $auth::getInstance()->getUsername();
+    	$this->user = ($userName) ?: $auth::getInstance()->getUsername();
     	$this->userfullname = ($userfullname) ?: $auth::getInstance()->getUserFullName();
     }
     

@@ -11,6 +11,7 @@ use booking\HHPHandler;
 use booking\konto\FinTSHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
+use forms\RestHandler;
 use framework\auth\AuthBasicHandler;
 use framework\auth\AuthDummyHandler;
 use framework\auth\AuthSamlHandler;
@@ -18,7 +19,6 @@ use framework\file\FileController;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
 use framework\render\MenuRenderer;
-use framework\render\RestHandler;
 use framework\Router;
 
 include "../lib/inc.all.php";
@@ -103,5 +103,3 @@ switch ($routeInfo['controller']){
         $htmlRenderer->render();
         break;
 }
-
-

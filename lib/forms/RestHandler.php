@@ -12,7 +12,7 @@
  * @requirements      PHP 7.0 or higher
  */
 
-namespace framework\render;
+namespace forms;
 
 use booking\konto\FinTSHandler;
 use booking\konto\HibiscusXMLRPCConnector;
@@ -26,10 +26,12 @@ use forms\projekte\exceptions\IllegalTransitionException;
 use forms\projekte\exceptions\InvalidDataException;
 use forms\projekte\exceptions\WrongVersionException;
 use forms\projekte\ProjektHandler;
-use framework\DBConnector;
-use forms\ExternVorgangHandler;
 use framework\auth\AuthHandler;
+use framework\DBConnector;
 use framework\MailHandler;
+use framework\render\ErrorHandler;
+use framework\render\EscFunc;
+use framework\render\JsonController;
 use framework\Validator;
 use PDOException;
 

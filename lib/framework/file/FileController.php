@@ -32,7 +32,8 @@ class FileController {
 		$this->db = DBConnector::getInstance();
 	}
 	
-	public function handle($routeInfo){
+	public function handle($routeInfo): void
+    {
 		if ($routeInfo['action'] === 'get'){
 			if (!isset($routeInfo['fdl'])){
 				$routeInfo['fdl'] = 0;
@@ -54,7 +55,7 @@ class FileController {
 			ErrorHandler::_renderError(NULL, 404);
 			return;
 		}
-		//TODO ACL - user has permission to download/view this file?
+		//TODO FIXME ACL - user has permission to download/view this file?
 		if (false){//!checkUserPermission($top['gname'])) {
 			ErrorHandler::_renderError(NULL, 403);
 			die();

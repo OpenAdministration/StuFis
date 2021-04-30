@@ -86,7 +86,7 @@ class HTMLPageRenderer
             }
         }
         echo "</div>";
-        if (isset(self::$errorPageHtml)) {
+        if (!isset(self::$errorPageHtml)) {
             $this->renderModals();
             $this->renderCookieAlert();
         }
