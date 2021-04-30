@@ -16,6 +16,6 @@ abstract class FormHandlerInterface extends Renderer{
     
     abstract public function getNextPossibleStates();
     
-    abstract public function getID() : int ;
+    abstract public function getID() : ?int;
     
 }

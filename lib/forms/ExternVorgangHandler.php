@@ -116,7 +116,8 @@ class ExternVorgangHandler extends FormHandlerInterface{
 		// TODO: Implement getNextPossibleStates() method.
 	}
 	
-	public function getID(){
+	public function getID(): ?int
+    {
 		// TODO: Implement getID() method.
 	}
 	

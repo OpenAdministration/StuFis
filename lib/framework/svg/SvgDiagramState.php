@@ -27,7 +27,7 @@ class SvgDiagramState extends SvgDiagramCore
 	 * constructor
 	 * @param string $type
 	 */
-	public function __construct($type)
+	public function __construct(string $type)
 	{
 		if (in_array($type, self::$types, true)){
 			$this->type = $type;
@@ -216,7 +216,7 @@ class SvgDiagramState extends SvgDiagramCore
 						$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, (($b['index']<$boxes[$next]['index'])?$arrowsize['h']:-$arrowsize['h']), $arrowsize['a'], 0, 'black');
 					}
 				//levelshift right side out
-				} elseif ($outpos == 1 || $outpos == NULL && $b['index'] < $boxes[$next]['index']) {
+				} elseif ($outpos == 1 || ($outpos == NULL && $b['index'] < $boxes[$next]['index'])) {
 					$outpos_y = (!$center_lines)? $b['y'] + ($boxes[$s]['out_pos']+1) * $b['h'] / (count($b['out'])+1)
 								: $b['y'] + $b['h'] / 2;
 					$outpos_x = $b['x'] + $b['w'];
@@ -227,8 +227,8 @@ class SvgDiagramState extends SvgDiagramCore
 					$outpos_y+=$outoffset['y'];
 					//tmp
 					$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black');
-					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
-					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
+					$boxes[$s]['out_pos'] += 1;
+					$boxes[$next]['in_pos'] += 1;
 		
 					//line after levelshift
 					if ($inpos_x != $boxes[$next]['x']){
@@ -244,7 +244,7 @@ class SvgDiagramState extends SvgDiagramCore
 						}
 					}
 				//arrows up down
-				} else if ($outpos == 2 || $outpos == NULL && $b['index'] == $boxes[$next]['index']) {
+				} else if ($outpos == 2 || ($outpos === NULL && $b['index'] == $boxes[$next]['index'])) {
 					$outpos_y = $b['y'] + (($b['level'] > $boxes[$next]['level'])? 0 : $b['h']);
 					$inpos_y = $boxes[$next]['y'] + (($b['level'] > $boxes[$next]['level'])? $boxes[$next]['h'] : 0);
 					$outpos_x = $b['x'] + $b['w']/2;
@@ -253,13 +253,13 @@ class SvgDiagramState extends SvgDiagramCore
 					$outpos_y+=$outoffset['y'];
 					//tmp
 					$boxelement .= $this->drawAutoBez($outpos_x, $outpos_y, $inpos_x, $inpos_y, 1, 'black', NULL, 1);
-					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
-					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
+					$boxes[$s]['out_pos'] += 1;
+					$boxes[$next]['in_pos'] += 1;
 					if ($arrows) {
 						$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, $arrowsize['h'], $arrowsize['a'], (($b['level'] > $boxes[$next]['level'])? -90 : 90), 'black');
 					}
 				// lines back to left -> manhatten
-				} else if ($outpos == 3 || $outpos == NULL && $b['index'] > $boxes[$next]['index'] && $b['level'] != $boxes[$next]['level']){
+				} else if ($outpos == 3 || ($outpos == NULL && $b['index'] > $boxes[$next]['index'] && $b['level'] != $boxes[$next]['level'])){
 					$outpos_y = $b['y'] + (($b['level'] > $boxes[$next]['level'])? 0 : $b['h']);
 					$outpos_x = $b['x'] + $b['w']/2;
 					$inpos_x = $boxes[$next]['x'] + $boxes[$next]['w'];
@@ -267,8 +267,8 @@ class SvgDiagramState extends SvgDiagramCore
 					: $boxes[$next]['y'] + $boxes[$next]['h'] / 2;
 					$outpos_x+=$outoffset['x'];
 					$outpos_y+=$outoffset['y'];
-					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
-					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
+					$boxes[$next]['in_pos'] += 1;
+					$boxes[$s]['out_pos'] += 1;
 					$boxelement .= $this->drawManhattenLine($outpos_x, $outpos_y, $inpos_x, $inpos_y, 10, 1, 1, NULL, $arrows? $arrowsize: NULL );
 				} else if ($outpos == 4) {
 					$outpos_y = (!$center_lines)? $b['y'] + ($boxes[$s]['out_pos']+1) * $b['h'] / (count($b['out'])+1)
@@ -304,9 +304,9 @@ class SvgDiagramState extends SvgDiagramCore
 							$boxelement .= $this->drawTriangle($inpos_x, $inpos_y, -$arrowsize['h'], $arrowsize['a'], 0, 'black');
 						}
 					}
-					$boxes[$s]['out_pos'] = $boxes[$s]['out_pos'] + 1;
-					$boxes[$next]['in_pos'] = $boxes[$next]['in_pos'] + 1;
-				} else if ($outpos == 5||$outpos == 6) {
+					$boxes[$s]['out_pos'] += 1;
+					$boxes[$next]['in_pos'] += 1;
+				} else if ($outpos == 5 || $outpos == 6) {
 					$outpos_x = $b['x'] + $b['w']/2 + $outoffset['x'];
 					$outpos_y = $b['y'] + (($outpos == 6)? $b['h'] : 0);
 					

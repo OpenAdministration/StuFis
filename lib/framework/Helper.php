@@ -131,7 +131,6 @@ class Helper
 		} elseif ($postresult){
 			$result['data'] = strip_tags($postresult);
 		}
-        
         return $result;
     }
     

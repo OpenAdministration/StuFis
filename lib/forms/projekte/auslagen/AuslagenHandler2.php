@@ -2,12 +2,25 @@
 
 namespace forms\projekte\auslagen;
 
-use FormHandlerInterface;
+use Exception;
+use forms\chat\ChatHandler;
+use forms\FormHandlerInterface;
+use forms\FormTemplater;
+use forms\projekte\PermissionHandler;
+use forms\projekte\StateHandler;
 use framework\auth\AuthHandler;
+use framework\CryptoHandler;
 use framework\DBConnector;
+use framework\file\File;
 use framework\file\FileHandler;
 use framework\Helper;
 use framework\render\ErrorHandler;
+use framework\render\JsonController;
+use framework\svg\SvgDiagram;
+use framework\svg\SvgDiagramAddingBeam;
+use framework\svg\SvgDiagramPie;
+use framework\svg\SvgDiagramRaw;
+use framework\svg\SvgDiagramState;
 
 /**
  * implement auslagen handler
@@ -18,8 +31,7 @@ use framework\render\ErrorHandler;
  * @since             07.05.2018
  * @copyright         Copyright Referat IT (C) 2018 - All rights reserved
  */
-class AuslagenHandler2
-	extends FormHandlerInterface{
+class AuslagenHandler2 extends FormHandlerInterface{
 	
 	//---------------------------------------------------------
 	/* ------- MEMBER VARIABLES -------- */
@@ -211,7 +223,7 @@ class AuslagenHandler2
 	 *
 	 * @var boolean
 	 */
-	private $error = null;
+	private $error;
 	/**
 	 * jeson result set
 	 *
@@ -296,7 +308,7 @@ class AuslagenHandler2
 	 *    required keys:
 	 *    action, pid
 	 */
-	public function __construct($routeInfo){
+	public function __construct(array $routeInfo){
 		$this->error = false;
 		//errors ----------------------------
 		if (!isset($routeInfo['pid'])){
@@ -338,24 +350,25 @@ class AuslagenHandler2
 		}
 		//check if editable and action != create
 		// if user is owner or in same organisation or is ref-finanzen
-		if ($this->stateInfo['editable'] && $this->routeInfo['action'] !== 'create' && !(isset($this->routeInfo['mfunction']) && $this->routeInfo['mfunction'] == 'updatecreate' && !isset($this->routeInfo['aid']))){
-			if (!$this->checkPermissionByMap(self::$groups['strict_editable'])){
-				$this->stateInfo['editable'] = false;
-			}
-		}
+		if ($this->stateInfo['editable'] && $this->routeInfo['action'] !== 'create' && !(isset($this->routeInfo['mfunction'])
+            && $this->routeInfo['mfunction'] === 'updatecreate'
+            && !isset($this->routeInfo['aid'])) && !$this->checkPermissionByMap(self::$groups['strict_editable']))
+		{
+            $this->stateInfo['editable'] = false;
+        }
 		$this->stateInfo['project-editable'] = (
-			$this->projekt_data['state'] == 'ok-by-stura' ||
-			$this->projekt_data['state'] == 'done-hv' ||
-			$this->projekt_data['state'] == 'done-other');
+			$this->projekt_data['state'] === 'ok-by-stura' ||
+			$this->projekt_data['state'] === 'done-hv' ||
+			$this->projekt_data['state'] === 'done-other');
 		
 		//check if there auslage should be edited
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
 		if (!$this->stateInfo['project-editable'] && !$auth->hasGroup("ref-finanzen-belege")){
-			if ($routeInfo['action'] == 'create'
-				|| $routeInfo['action'] == 'edit'
-				|| ($routeInfo['action'] == 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] != 'belegpdf')){
+			if ($routeInfo['action'] === 'create'
+				|| $routeInfo['action'] === 'edit'
+				|| ($routeInfo['action'] === 'post' && isset($routeInfo['mfunction']) && $routeInfo['mfunction'] !== 'belegpdf')){
 				$this->error = 'Für das aktuelle Projekt sind (momentan) keine Abrechnungen möglich.';
 				return;
 			}
@@ -363,37 +376,27 @@ class AuslagenHandler2
 		
 		switch ($routeInfo['action']){
 			case 'create':
-				{
 					//page title
 					$this->title = ' - Erstellen';
 					break;
-				};
 			case 'edit':
-				{
 					//page title
 					$this->title = ' - Bearbeiten';
 					break;
-				};
 			case 'view':
-				{
 					$this->stateInfo['editable_link'] = $this->stateInfo['editable'];
 					$this->stateInfo['editable'] = false;
 					break;
-				};
 			case 'post':
-				{
 					break;
-				};
 			default:
-				{
 					$this->error = 'Ungültiger request in AuslagenHandler.php';
 					return;
-				}
 		}
 		// TODO -------------------------
 		//was wird davon noch gebraucht?
 		//TODO render auslagen
-		if ($this->routeInfo['action'] != 'post'){
+		if ($this->routeInfo['action'] !== 'post'){
 			$this->stateHandler = new StateHandler(
 				"projekte",
 				self::$states,
@@ -424,7 +427,8 @@ class AuslagenHandler2
 	 *
      * @return boolean
 	 */
-	private function getDbProject(){
+	private function getDbProject(): bool
+    {
 		$res = $this->db->dbFetchAll(
 			"projekte",
 			[DBConnector::FETCH_ASSOC],
@@ -465,7 +469,8 @@ class AuslagenHandler2
 	 *
 	 * @return boolean
 	 */
-	private function getDbProjektPosten(){
+	private function getDbProjektPosten(): bool
+    {
 		$res = $this->db->dbFetchAll(
 			"projektposten",
 			[DBConnector::FETCH_ASSOC],
@@ -496,7 +501,8 @@ class AuslagenHandler2
 	 *
 	 * @return boolean
 	 */
-	private function getDbAuslagen(){
+	private function getDbAuslagen(): bool
+    {
 		$res = $this->db->dbFetchAll(
 			"auslagen",
 			[DBConnector::FETCH_ASSOC],
@@ -510,16 +516,16 @@ class AuslagenHandler2
 			]
 		);
 		if (!empty($res)){
-			$out = [];
 			$this->auslagen_data = $res[0];
 			return true;
-		}else{
-			$this->error = 'Eine Abrechnung mit der ID: ' . $this->auslagen_id . ' existiert nicht. :(<br>';
-			return false;
 		}
-	}
+
+        $this->error = 'Eine Abrechnung mit der ID: ' . $this->auslagen_id . ' existiert nicht. :(<br>';
+        return false;
+    }
 	
-	private function getDbBelegePostenFiles(){
+	private function getDbBelegePostenFiles(): bool
+    {
 		$res = $this->db->dbFetchAll(
 			'belege',
 			[DBConnector::FETCH_ASSOC],
@@ -557,8 +563,8 @@ class AuslagenHandler2
 			$last_posten = -1;
 			foreach ($res as $row){
 				//belege
-				if ($last_beleg != $row['belege.id']){
-					$last_beleg = $row['belege.id'];
+				if ($last_beleg !== (int) $row['belege.id']){
+					$last_beleg = (int) $row['belege.id'];
 					$belege[$last_beleg] = [
 						'id' => $row['belege.id'],
 						'short' => $row['belege.short'],
@@ -587,8 +593,8 @@ class AuslagenHandler2
 					}
 				}
 				//posten
-				if ($last_posten != $row['beleg_posten.id']){
-					$last_posten = $row['beleg_posten.id'];
+				if ($last_posten !== $row['beleg_posten.id']){
+					$last_posten = (int) $row['beleg_posten.id'];
 					if ($last_posten){
 						$belege[$last_beleg]['posten'][$last_posten] = [
 							'id' => $row['beleg_posten.id'],
@@ -610,19 +616,21 @@ class AuslagenHandler2
 	/**
 	 * calculate stateInfo von aktueller auslage
 	 */
-	private function stateFromAuslagenData(){
+	private function stateFromAuslagenData(): void
+    {
 		$this->stateInfo = self::state2stateInfo($this->auslagen_data['state']);
-		if (!$this->auslagen_id)
-			return;
+		if (!$this->auslagen_id) {
+            return;
+        }
 		//sub states - revocation
-		if ($this->stateInfo['state'] == 'revocation'){
+		if ($this->stateInfo['state'] === 'revocation'){
 			$this->stateInfo['substate'] .=
 				(($this->stateInfo['substate']) ? ',' : '')
 				. ($this->auslagen_data['rejected'] ?
 					'rejected' : 'revoked');
 		}
 		//sub states - wip - ok_*
-		if ($this->stateInfo['state'] == 'wip'){
+		if ($this->stateInfo['state'] === 'wip'){
 			$this->stateInfo['substate'] .=
 				($this->auslagen_data['ok-belege'] ?
 					(($this->stateInfo['substate']) ? ',' : '')
@@ -640,7 +648,7 @@ class AuslagenHandler2
 					: '');
 		}
 		//sub state - instructed
-		if ($this->stateInfo['state'] == 'instructed'){
+		if ($this->stateInfo['state'] === 'instructed'){
 			$this->stateInfo['substate'] .=
 				($this->auslagen_data['payed'] ?
 					(($this->stateInfo['substate']) ? ',' : '')
@@ -655,7 +663,8 @@ class AuslagenHandler2
 	 *
 	 * @return array $state
 	 */
-	public static function state2stateInfo($state){
+	public static function state2stateInfo($state): array
+    {
 		$s = $state;
 		$split = null;
 		if (strpos($state, ';')){
@@ -701,7 +710,8 @@ class AuslagenHandler2
 	 *
 	 * @return bool
 	 */
-	private function checkPermissionByMap($map){
+	private function checkPermissionByMap($map): bool
+    {
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
@@ -727,21 +737,23 @@ class AuslagenHandler2
 			//check dynamic permissions
 			$a = $auth->getAttributes();
 			foreach ($map['dynamic'] as $type){
-				if (!isset($dynamic[$type]))
-					continue;
+				if (!isset($dynamic[$type])) {
+                    continue;
+                }
 				switch ($type){
 					case 'owner':
 						{
-							if ($auth->getUsername() == $dynamic[$type]){
+							if ($auth->getUsername() === $dynamic[$type]){
 								return true;
 							}
 						}
 					break;
 					case 'plain_orga':
 						{
-							if (!isset($a['gremien']))
-								continue 2;
-							if (in_array($dynamic[$type], $a['gremien'])){
+							if (!isset($a['gremien'])) {
+                                continue 2;
+                            }
+							if (in_array($dynamic[$type], $a['gremien'], true)){
 								return true;
 							}
 						}
@@ -752,7 +764,8 @@ class AuslagenHandler2
 		return false;
 	}
 	
-	public function getStateString(){
+	public function getStateString(): string
+    {
 		$subStateName = $this->stateInfo["substate"];
 		if (isset(self::$subStates[$subStateName])){
 			$sub = " - " . self::$subStates[$subStateName][2];
@@ -765,7 +778,7 @@ class AuslagenHandler2
 	//---------------------------------------------------------
 	/* ---------- DB FUNCTIONS ---------- */
 	
-	public static function initStaticVars(){
+	public static function initStaticVars() : void{
 	
 	}
 	
@@ -774,11 +787,9 @@ class AuslagenHandler2
 	}
 	
 	public function getAuslagenEtag(){
-		if (!isset($this->auslagen_data['etag'])){
-			if (!$this->getDbAuslagen()){
-				return false;
-			}
-		}
+		if (!isset($this->auslagen_data['etag']) && !$this->getDbAuslagen()) {
+            return false;
+        }
 		return $this->auslagen_data['etag'];
 	}
 	
@@ -792,43 +803,39 @@ class AuslagenHandler2
 	//---------------------------------------------------------
 	/* ---------- HANDLER FUNCTIONS ------------ */
 	
-	public function getProjektPosten(){
+	public function getProjektPosten()
+    {
 		if ($this->getDbProjektPosten()){
 			return $this->projekt_data['posten'];
-		}else{
-			return false;
 		}
-	}
+
+        return false;
+    }
 	
 	//---------------------------------------------------------
 	/* ---------- JSON FUNCTIONS ------------ */
 	
 	/**
-	 * @return the $auslagen_id
+	 * @return int|null $auslagen_id
 	 */
-	public function getID(){
-		if (isset($this->auslagen_id))
-			return $this->auslagen_id;
-		else
-			return null;
-	}
+	public function getID() : ?int
+    {
+        return $this->auslagen_id ?? -1;
+    }
 	
 	//handle auslagen state change
 	
 	/**
-	 * @return the $projekt_id
+	 * @return int|null $projekt_id
 	 */
-	public function getProjektID(){
-		if (isset($this->projekt_id))
-			return $this->projekt_id;
-		else
-			return null;
-	}
+	public function getProjektID(): ?int {
+        return $this->projekt_id ?? null;
+    }
 	
 	//handle file delete request
 	
 	/**
-	 * @return mixed $error
+	 * @return bool|string $error
 	 */
 	public function getError(){
 		return $this->error;
@@ -836,80 +843,83 @@ class AuslagenHandler2
 	
 	//handle create or update auslage
 	
-	public function handlePost(){
+	public function handlePost(): void
+    {
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
-		if ($this->error)
-			$this->_renderPostError();
+		if ($this->error) {
+            $this->_renderPostError();
+        }
 		if (!isset($this->routeInfo['mfunction'])){
 			$this->error = 'mfunction not set.';
 		}
-		if (!$this->error)
-			switch ($this->routeInfo['mfunction']){
-				case 'updatecreate':
-					{
-						if ($this->stateInfo['editable']){
-							$this->post_createupdate();
-						}else{
-							$this->error = 'Die Abrechnung kann nicht verändert werden.';
-						}
-					}
-				break;
-				case 'filedelete':
-					{
-						if ($this->stateInfo['editable']){
-							$this->post_filedelete();
-						}else{
-							$this->error = 'Die Abrechnung kann nicht verändert werden. Datei nicht gelöcht.';
-						}
-					}
-				break;
-				case 'state':
-					{
-						if (($this->stateInfo['project-editable'] || $auth->hasGroup("ref-finanzen-belege"))
-                            && $this->auslagen_id){
-							$this->post_statechange();
-						}else{
-							$this->error = 'Die Abrechnung kann nicht verändert werden. Der Status wurde nicht geändert.';
-						}
-					}
-				break;
-				case 'belegpdf':
-					{
-						if (!isset($this->auslagen_data['id'])){
-							$this->error = 'Die Abrechnung wurde nicht gefunden';
-						}else if (!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0){
-							$this->error = 'Die Abrechnung enthält keine Belege';
-						}else{
-							//missing file?
-							foreach ($this->auslagen_data['belege'] as $b){
-								if (!$b['file']){
-									$this->error = 'Für den Beleg [ID: ' . $b['id'] . '][NR: B' . $b['short'] . '] muss noch eine Datei hinterlegt werden.';
-									break;
-								}
-							}
-							if (!$this->error){
-								$this->post_belegpdf();
-							}
-						}
-					}
-				break;
-				case "zahlungsanweisung":
-					if (!isset($this->auslagen_data['id'])){
-						$this->error = 'Die Abrechnung wurde nicht gefunden';
-					}else{
-						if (in_array($this->stateInfo["state"], ["ok", "instructed", "booked"])){
-							$this->post_zahlungsanweisungpdf();
-						}
-					}
-				break;
-				default:
-					$this->error = 'Unknown Action.';
-				break;
-			}
-		if ($this->error)
-			$this->_renderPostError();
+		if (!$this->error) {
+            switch ($this->routeInfo['mfunction']) {
+                case 'updatecreate':
+                    {
+                        if ($this->stateInfo['editable']) {
+                            $this->post_createupdate();
+                        } else {
+                            $this->error = 'Die Abrechnung kann nicht verändert werden.';
+                        }
+                    }
+                    break;
+                case 'filedelete':
+                    {
+                        if ($this->stateInfo['editable']) {
+                            $this->post_filedelete();
+                        } else {
+                            $this->error = 'Die Abrechnung kann nicht verändert werden. Datei nicht gelöcht.';
+                        }
+                    }
+                    break;
+                case 'state':
+                    {
+                        if ($this->auslagen_id &&
+                            ($this->stateInfo['project-editable'] || $auth->hasGroup("ref-finanzen-belege"))
+                        ) {
+                            $this->post_statechange();
+                        } else {
+                            $this->error = 'Die Abrechnung kann nicht verändert werden. Der Status wurde nicht geändert.';
+                        }
+                    }
+                    break;
+                case 'belegpdf':
+                    {
+                        if (!isset($this->auslagen_data['id'])) {
+                            $this->error = 'Die Abrechnung wurde nicht gefunden';
+                        } else if (!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0) {
+                            $this->error = 'Die Abrechnung enthält keine Belege';
+                        } else {
+                            //missing file?
+                            foreach ($this->auslagen_data['belege'] as $b) {
+                                if (!$b['file']) {
+                                    $this->error = 'Für den Beleg [ID: ' . $b['id'] . '][NR: B' . $b['short'] . '] muss noch eine Datei hinterlegt werden.';
+                                    break;
+                                }
+                            }
+                            if (!$this->error) {
+                                $this->post_belegpdf();
+                            }
+                        }
+                    }
+                    break;
+                case "zahlungsanweisung":
+                    if (!isset($this->auslagen_data['id'])) {
+                        $this->error = 'Die Abrechnung wurde nicht gefunden';
+                    } else if (in_array($this->stateInfo["state"], ["ok", "instructed", "booked"])) {
+                        $this->post_zahlungsanweisungpdf();
+                    }
+                    break;
+                default:
+                    $this->error = 'Unknown Action.';
+                    break;
+            }
+        }
+		if ($this->error) {
+            $this->_renderPostError();
+        }
 		else{
 			$this->_renderPostResult();
 		}
@@ -918,7 +928,8 @@ class AuslagenHandler2
 	//---------------------------------------------------------
 	/* ---------- RENDER FUNCTIONS ------------ */
 	
-	private function _renderPostError(){
+	private function _renderPostError(): void
+    {
 		$this->json_result = [
 			'success' => false,
 			'status' => '200',
@@ -930,23 +941,26 @@ class AuslagenHandler2
 		$this->_renderPostResult();
 	}
 	
-	private function _renderPostResult(){
+	private function _renderPostResult(): void
+    {
 		JsonController::print_json($this->json_result);
 	}
 	
-	private function post_createupdate(){
+	private function post_createupdate(): void
+    {
 		//auslage =============================================
 		//check etag if no new auslage
-		if ($this->routeInfo['validated']['auslagen-id'] != 'NEW' &&
-			$this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']){
+		if ($this->routeInfo['validated']['auslagen-id'] !== 'NEW' &&
+			$this->auslagen_data['etag'] !== $this->routeInfo['validated']['etag']){
 			$this->error = '<p>Die Prüfsumme der Abrechnung stimmt nicht mit der gesendeten überein.</p>' .
 				'<p>Die Abrechnung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
 				'<p>Die übertragene Version liegt ' . ($this->auslagen_data['version'] - $this->routeInfo['validated']['version']) . ' Version(en) zurück.</p>';
 			return;
-		}else if ($this->routeInfo['validated']['auslagen-id'] == 'NEW'){
-			$this->auslagen_data = $this->get_empty_auslage();
 		}
-		$auth = (AUTH_HANDLER);
+        if ($this->routeInfo['validated']['auslagen-id'] === 'NEW'){
+            $this->auslagen_data = $this->get_empty_auslage();
+        }
+        $auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
 		//fill data
@@ -980,22 +994,23 @@ class AuslagenHandler2
 						$changed_belege_flag = true;
 					}
 				}
-				if (isset($b['posten']))
-					foreach ($b['posten'] as $kp => $p){
-						if (strpos($kp, 'new_') !== false){
-							$changed_posten_flag = true;
-							$new_posten[$kp] = ['posten' => $p, 'beleg_id' => $kb];
-						}else if (!isset($this->auslagen_data['belege'][$kb]['posten'][$kp])){
-							$changed_posten_flag = true;
-							//ignore invalid elements
-						}else{
-							$op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
-							$changed_posten[$kp] = $op;
-							if ($op['einnahmen'] != $p['in'] || $op['ausgaben'] != $p['out']){
-								$changed_posten_flag = true;
-							}
-						}
-					}
+				if (isset($b['posten'])) {
+                    foreach ($b['posten'] as $kp => $p) {
+                        if (strpos($kp, 'new_') !== false) {
+                            $changed_posten_flag = true;
+                            $new_posten[$kp] = ['posten' => $p, 'beleg_id' => $kb];
+                        } else if (!isset($this->auslagen_data['belege'][$kb]['posten'][$kp])) {
+                            $changed_posten_flag = true;
+                            //ignore invalid elements
+                        } else {
+                            $op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
+                            $changed_posten[$kp] = $op;
+                            if ($op['einnahmen'] != $p['in'] || $op['ausgaben'] != $p['out']) {
+                                $changed_posten_flag = true;
+                            }
+                        }
+                    }
+                }
 			}
 		}
 		//gelöschte elemente
@@ -1026,16 +1041,16 @@ class AuslagenHandler2
 			"zahlung-iban" => strpos(
 				$this->routeInfo['validated']['zahlung-iban'],
 				'... ...'
-			) ? $this->auslagen_data['zahlung-iban'] : $this->encryptedStr(
+			) ? $this->auslagen_data['zahlung-iban'] : self::encryptedStr(
 				$this->routeInfo['validated']['zahlung-iban']
 			),
 			"zahlung-name" => $this->routeInfo['validated']['zahlung-name'],
 			"zahlung-vwzk" => $this->routeInfo['validated']['zahlung-vwzk'],
             "address" => ((preg_match('/(\s*)versteckt(\s*)/i', $this->routeInfo['validated']['address'])===1)?
                 ($this->auslagen_data['address']):$this->routeInfo['validated']['address']),
-			"last_change" => "{$newInfo['date']}",
+			"last_change" => (string)($newInfo['date']),
 			"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
-			"version" => intval($this->auslagen_data['version']) + 1,
+			"version" => (int)$this->auslagen_data['version'] + 1,
 			"etag" => CryptoHandler::generateRandomString(16),
 		];
 		//insert/update in db
@@ -1076,7 +1091,7 @@ class AuslagenHandler2
 			}
 			//update values
 			$db_beleg = [
-				'datum' => ($this->routeInfo['validated']['belege'][$kb]['datum']) ? $this->routeInfo['validated']['belege'][$kb]['datum'] : null,
+				'datum' => ($this->routeInfo['validated']['belege'][$kb]['datum']) ?: null,
 				'beschreibung' => $this->routeInfo['validated']['belege'][$kb]['beschreibung'],
 			];
 			$where = [
@@ -1093,7 +1108,7 @@ class AuslagenHandler2
 			$db_beleg = [
 				'short' => $this->auslagen_data['version'] . '' . $beleg_shortcounter,
 				'created_on' => date_create()->format('Y-m-d H:i:s'),
-				'datum' => ($b['datum']) ? $b['datum'] : null,
+				'datum' => ($b['datum']) ?: null,
 				'beschreibung' => $b['beschreibung'],
 				'auslagen_id' => $this->auslagen_data['id'],
 			];
@@ -1152,7 +1167,7 @@ class AuslagenHandler2
 		foreach ($beleg_file_map as $fileInfo){
 			$file_id = 0;
 			//handle file upload
-			$res = $fh->upload(intval($fileInfo['link']), $fileInfo['file']);
+			$res = $fh->upload((int)$fileInfo['link'], $fileInfo['file']);
 			if (count($res['error']) > 0){
 				$emsg = '';
 				foreach ($res['error'] as $e){
@@ -1160,7 +1175,7 @@ class AuslagenHandler2
 				}
 				$this->error = $emsg;
 			}else{
-				/** @var file\File $file */
+				/** @var File $file */
 				foreach ($res['fileinfo'] as $file){
 					$file_id = $file->id;
 					break;
@@ -1184,9 +1199,10 @@ class AuslagenHandler2
 	
 	/**
 	 *
-	 * @return multitype:NULL string number multitype:
+	 * @return array:NULL string number multitype:
 	 */
-	private function get_empty_auslage(){
+	private function get_empty_auslage(): array
+    {
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
@@ -1209,31 +1225,35 @@ class AuslagenHandler2
 			"zahlung-name" => '',
 			"zahlung-vwzk" => '',
 			'address' => '',
-			"last_change" => "{$newInfo['date']}",
+			"last_change" => $newInfo['date'],
 			"last_change_by" => '',
 			"version" => 0,
 			"etag" => '',
 			'belege' => [],
 		];
 	}
-	
-	/**
-	 * encrypt string
-	 *
-	 * @param string $str
-	 *
-	 * @return string
-	 */
-	protected static function encryptedStr($str){
+
+    /**
+     * encrypt string
+     *
+     * @param string $str
+     *
+     * @return string
+     * @throws \Exception
+     */
+	protected static function encryptedStr(string $str): string
+    {
 		$p = $str;
-		if (!$p)
-			return '';
+		if (!$p) {
+            return '';
+        }
 		$p = CryptoHandler::pad_string($p);
 		return CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
 	}
 	
-	private function post_filedelete(){
-		if ($this->auslagen_data['etag'] != $this->routeInfo['validated']['etag']){
+	private function post_filedelete(): void
+    {
+		if ($this->auslagen_data['etag'] !== $this->routeInfo['validated']['etag']){
 			$this->error = '<p>Die Prüfsumme der Abrechnung stimmt nicht mit der gesendeten überein.</p>' .
 				'<p>Die Abrechnung wurde in der Zwischenzeit geändert, daher muss die Seite neu geladen werden...</p>' .
 				'<p>Die übertragene Version liegt ' . ($this->auslagen_data['version'] - $this->routeInfo['validated']['version']) . ' Version(en) zurück.</p>';
@@ -1269,9 +1289,9 @@ class AuslagenHandler2
 			'auslagen',
 			['id' => $this->auslagen_data['id']],
 			[
-				"last_change" => "{$newInfo['date']}",
+				"last_change" => ($newInfo['date']),
 				"last_change_by" => "{$newInfo['user']};{$newInfo['realname']}",
-				"version" => intval($this->auslagen_data['version']) + 1,
+				"version" => (int)$this->auslagen_data['version'] + 1,
 				"etag" => CryptoHandler::generateRandomString(16),
 			]
 		);
@@ -1289,7 +1309,8 @@ class AuslagenHandler2
 	//---------------------------------------------------------
 	/* ---------- RENDER HELPER ------------ */
 	
-	private function post_statechange(){
+	private function post_statechange(): void
+    {
 		$newState = $this->routeInfo['validated']['state'];
 		if (!$this->state_change_possible($newState) ||
 			!$this->state_change($newState, $this->routeInfo['validated']['etag'])){
@@ -1304,25 +1325,26 @@ class AuslagenHandler2
 				'headline' => 'Erfolgreich',
 				'redirect' => URIBASE . 'projekt/' . $this->projekt_id . '/auslagen/' . $this->auslagen_data['id'],
 			];
-			if ($newState == 'wip' && !$this->auslagen_data['ok-belege']){
+			if ($newState === 'wip' && !$this->auslagen_data['ok-belege']){
 				$this->json_result['reload'] = 5000;
 				$this->json_result['msg'] .= '<br><strong>Bitte beachte, dass gegebenenfalls noch Belege eingereicht werden müssen.<br><i>(Vorlage: "Belege PDF")</i></strong>';
 			}
 		}
 		
 	}
-	
-	/**
-	 * check if state change into new state is possible
-	 * check state
-	 * check substate
-	 * check permission
-	 *
-	 * @param string $newState
-	 *
-	 * @return boolean
-	 */
-	public function state_change_possible($newState, $is_sub = false){
+
+    /**
+     * check if state change into new state is possible
+     * check state
+     * check substate
+     * check permission
+     *
+     * @param string $newState
+     * @param bool $is_sub
+     * @return boolean
+     */
+	public function state_change_possible(string $newState, $is_sub = false): bool
+    {
 		//current state
 		$c = $this->stateInfo['state'];
 		//main stateChange -----------------------------------
@@ -1338,12 +1360,13 @@ class AuslagenHandler2
 					$required_sub[] = $sub;
 				}
 			}
-			if (!$is_sub)
-				foreach ($required_sub as $required){
-					if (strpos($this->stateInfo['substate'], $required) === false){
-						return false;
-					}
-				}
+			if (!$is_sub) {
+                foreach ($required_sub as $required) {
+                    if (strpos($this->stateInfo['substate'], $required) === false) {
+                        return false;
+                    }
+                }
+            }
 			
 			//state change permission
 			if ($this->checkPermissionByMap(self::$stateChanges[$c][$newState])){
@@ -1358,11 +1381,10 @@ class AuslagenHandler2
 					$newState
 				)){
 				//if substatechange possible
-				if (isset(self::$stateChanges[$newState][$c])){
-					if ($this->checkPermissionByMap(self::$stateChanges[$newState][$c])){
-						return true;
-					}
-				}
+				if (isset(self::$stateChanges[$newState][$c])
+                    && $this->checkPermissionByMap(self::$stateChanges[$newState][$c])) {
+                    return true;
+                }
 			}
 		}
 		return false;
@@ -1380,7 +1402,7 @@ class AuslagenHandler2
 	 *
 	 * @return bool
 	 */
-	public function state_change($newState, $etag): bool{
+	public function state_change(string $newState, string $etag): bool{
 		
 		if ($this->state_change_possible($newState)){
 			$auth = (AUTH_HANDLER);
@@ -1404,7 +1426,7 @@ class AuslagenHandler2
 				'id' => $this->auslagen_data['id'],
 				'etag' => $etag
 			];
-			if ($this->stateInfo['state'] != $newInfo['state']){
+			if ($this->stateInfo['state'] !== $newInfo['state']){
 				$set['state'] = "{$newInfo['state']};{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}";
 			}
 			//reset values
@@ -1447,7 +1469,7 @@ class AuslagenHandler2
 			}
 			$this->db->dbUpdate('auslagen', $where, $set);
 			//automagic -> all ok -> set state ok -> auto genehmigt
-			if ($newState == 'ok-belege' || $newState == 'ok-hv' || $newState == 'ok-kv'){
+			if ($newState === 'ok-belege' || $newState === 'ok-hv' || $newState === 'ok-kv'){
 				$tmp_auslage = $this->db->dbFetchAll(
 					'auslagen',
 					[DBConnector::FETCH_ASSOC],
@@ -1462,7 +1484,7 @@ class AuslagenHandler2
 					&& $tmp_auslage[0]['ok-hv']
 					&& isset($tmp_auslage[0]['ok-kv'])
 					&& $tmp_auslage[0]['ok-kv']
-					&& substr($tmp_auslage[0]['state'], 0, 3) == 'wip'
+					&& strpos($tmp_auslage[0]['state'], 'wip') === 0
 				){
 					$this->db->dbUpdate(
 						'auslagen',
@@ -1477,9 +1499,10 @@ class AuslagenHandler2
 		return false;
 	}
 	
-	private function post_belegpdf(){
+	private function post_belegpdf(): void
+    {
 		// get auslagen info
-		$info = $this->state2stateInfo('draft;' . $this->auslagen_data['created']);
+		$info = self::state2stateInfo('draft;' . $this->auslagen_data['created']);
 		$out = [
 			'APIKEY' => FUI2PDF_APIKEY,
 			'action' => 'belegpdf',
@@ -1564,7 +1587,7 @@ class AuslagenHandler2
 					'subtype' => 'server-error',
 					'status' => '200',
 					'msg' => '<div style="white-space: pre-wrap;">' . print_r(
-							(isset($result['data']['error'])) ? $result['data']['error'] : $result['data'],
+							$result['data']['error'] ?? $result['data'],
 							true
 						) . '</div>',
 				];
@@ -1587,7 +1610,8 @@ class AuslagenHandler2
 		}
 	}
 	
-	private function post_zahlungsanweisungpdf(){
+	private function post_zahlungsanweisungpdf(): void
+    {
 		$summed_value = 0;
 		$details = [];
 		//var_dump($this->auslagen_data["belege"]);
@@ -1623,7 +1647,7 @@ class AuslagenHandler2
 			"bahn-card" => "BahnCard: StuRa Beschluss 29/21-W01",
 		];
 		
-		$recht = isset($recht_all[$this->projekt_data["recht"]]) ? $recht_all[$this->projekt_data["recht"]] : "";
+		$recht = $recht_all[$this->projekt_data["recht"]] ?? "";
 		
 		$out = [
 			'APIKEY' => FUI2PDF_APIKEY,
@@ -1648,9 +1672,8 @@ class AuslagenHandler2
 			'details' => $details,
 		];
 		$result = Helper::do_post_request2(FUI2PDF_URL . '/pdfbuilder', $out, FUI2PDF_AUTH);
-		
 		// return result to
-		if ($result['success'] && !isset($this->routeInfo['validated']['d']) || $this->routeInfo['validated']['d'] == 0){
+		if (($result['success'] && !isset($this->routeInfo['validated']['d'])) || $this->routeInfo['validated']['d'] == 0){
 			if (isset($result['data']['success']) && $result['data']['success']){
 				$this->json_result = [
 					'success' => true,
@@ -1695,7 +1718,7 @@ class AuslagenHandler2
 					'subtype' => 'server-error',
 					'status' => '200',
 					'msg' => '<div style="white-space: pre-wrap;">' . print_r(
-							(isset($result['data']['error'])) ? $result['data']['error'] : $result['data'],
+							$result['data']['error'] ?? $result['data'],
 							true
 						) . '</div>',
 				];
@@ -1725,10 +1748,12 @@ class AuslagenHandler2
 	 *
 	 * @return string
 	 */
-	protected static function decryptedStr($str){
+	protected static function decryptedStr(string $str): string
+    {
 		$p = $str;
-		if (!$p)
-			return '';
+		if (!$p) {
+            return '';
+        }
 		$p = CryptoHandler::decrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
 		$p = CryptoHandler::unpad_string($p);
 		return $p;
@@ -1739,32 +1764,32 @@ class AuslagenHandler2
 	 *
 	 * @see Renderer::render()
 	 */
-	public function render(){
+	public function render():void{
 		if ($this->error){
 			ErrorHandler::_renderError($this->error, 404);
-			return -1;
-		}else{
-			return $this->renderAuslagenerstattung("Abrechnung");
 		}
-	}
+        $this->renderAuslagenerstattung("Abrechnung");
+    }
 	
 	/**
 	 * render auslagenerstattung html page
 	 *
 	 * @param string $titel
 	 */
-	private function renderAuslagenerstattung($titel){
-		$auth = (AUTH_HANDLER);
+	private function renderAuslagenerstattung(string $titel): void
+    {
+        $auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
 		$editable = $this->stateInfo['editable'];
 		?>
-        <h3><?= $titel . (($this->title) ? $this->title : '') ?></h3>
+        <h3><?= "Abrechnung" . (($this->title) ?: '') ?></h3>
 		<?php //--------------------------------------------------------------------
 		?>
 		
-		<?= ($this->routeInfo['action'] == 'view') ? $this->getStateSvg() . $this->getSvgHiddenFields() : ''; ?>
-		<?php $show_genemigung_state = ($this->routeInfo['action'] != 'create' || isset($this->auslagen_data['state']) && $this->auslagen_data['state'] != 'draft'); ?>
+		<?= ($this->routeInfo['action'] === 'view') ? $this->getStateSvg() . $this->getSvgHiddenFields() : ''; ?>
+		<?php $show_genemigung_state = ($this->routeInfo['action'] !== 'create'
+        || (isset($this->auslagen_data['state']) && $this->auslagen_data['state'] !== 'draft')); ?>
 		
 		<?php //--------------------------------------------------------------------
 		?>
@@ -1775,12 +1800,12 @@ class AuslagenHandler2
                 <div class="col-xs-12 col-xs-12 col-md-4 form-group">
                     <label class="control-label" for="belege-ok__5b3d1833c1532">Status</label>
                     <div><?php
-						if ($this->stateInfo['state'] == 'instructed' && strpos(
+						if ($this->stateInfo['state'] === 'instructed' && strpos(
 								$this->stateInfo['substate'],
 								'payed'
 							) !== false){
 							echo 'Bezahlt';
-						}else if ($this->stateInfo['state'] == 'revocation'){
+						}else if ($this->stateInfo['state'] === 'revocation'){
 							echo ($this->auslagen_data['rejected']) ? 'Abgelehnt' : 'Zurückgezogen';
 						}else{
 							echo self::$states[$this->stateInfo['state']][0];
@@ -1790,12 +1815,12 @@ class AuslagenHandler2
                 <div class="col-xs-12 col-xs-12 col-md-4 form-group">
                     <label class="control-label" for="belege-ok__5b3d1833c1532">Erstellt</label>
                     <div><?php
-						if ($this->routeInfo['action'] != 'create'){
-							$tmpState = $this->state2stateInfo('draft;' . $this->auslagen_data['created']);
+						if ($this->routeInfo['action'] !== 'create'){
+							$tmpState = self::state2stateInfo('draft;' . $this->auslagen_data['created']);
 							if ($this->checkPermissionByMap(self::$groups['stateless']['view_creator'])){
 								echo "{$tmpState['date']} {$tmpState['realname']}";
 							}else{
-								echo "{$tmpState['date']}";
+								echo $tmpState['date'];
 							}
 						}else{
 							echo '-';
@@ -1804,8 +1829,8 @@ class AuslagenHandler2
                 </div>
                 <div class="col-xs-12 col-xs-12 col-md-4 form-group">
                     <label class="control-label" for="belege-ok__5b3d1833c1532">Version</label>
-                    <div><?= ($this->routeInfo['action'] != 'create') ?
-							$this->auslagen_data['version'] . " ({$this->auslagen_data['last_change']})" : '-'; ?></div>
+                    <div><?= ($this->routeInfo['action'] !== 'create') ?
+							$this->auslagen_data['version'] . " ({$this->auslagen_data['last_change']})" : '-' ?></div>
                 </div>
                 <div class="clearfix"></div>
                 <label for="genehmigung">Genehmigung</label>
@@ -1853,13 +1878,13 @@ class AuslagenHandler2
 		$this->formSubmitButtons[] = $current_form_id;
 		echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data"
               action="<?= URIBASE ?>rest/forms/auslagen/updatecreate">
-            <input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
+            <input type="hidden" name="projekt-id" value="<?= $this->projekt_id ?>">
             <input type="hidden" name="auslagen-id"
-                   value="<?= ($this->routeInfo['action'] == 'create') ? 'NEW' : $this->auslagen_id; ?>">
+                   value="<?= ($this->routeInfo['action'] === 'create') ? 'NEW' : $this->auslagen_id ?>">
             <input type="hidden" name="version"
-                   value="<?= ($this->routeInfo['action'] == 'create') ? '1' : $this->auslagen_data['version']; ?>">
+                   value="<?= ($this->routeInfo['action'] === 'create') ? '1' : $this->auslagen_data['version'] ?>">
             <input type="hidden" name="etag"
-                   value="<?= ($this->routeInfo['action'] == 'create') ? '0' : $this->auslagen_data['etag']; ?>">
+                   value="<?= ($this->routeInfo['action'] === 'create') ? '0' : $this->auslagen_data['etag'] ?>">
 			<?= $this->templater->getHiddenActionInput(''); ?>
 			<?php //--------------------------------------------------------------------
 			?>
@@ -1892,11 +1917,11 @@ class AuslagenHandler2
 				<?php // iban only show trimmed if not hv/kv important!
 				$iban_text = $this->auslagen_data['zahlung-iban'];
 				if ($iban_text){
-					$iban_text = $this->decryptedStr($iban_text);
+					$iban_text = self::decryptedStr($iban_text);
 				}
 				if (!$auth->hasGroup('ref-finanzen-belege')){
 					$iban_text = self::trimIban($iban_text);
-				}else if ($iban_text != ''){
+				}else if ($iban_text !== ''){
 					$iban_text = chunk_split($iban_text, 4, ' ');
 				}
 				echo $this->templater->getTextForm(
@@ -1918,7 +1943,7 @@ class AuslagenHandler2
 				) ?>
                 <div class="clearfix"></div>
 				<?php
-				$tmplabel = ($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create') ?
+				$tmplabel = ($this->routeInfo['action'] === 'edit' || $this->routeInfo['action'] === 'create') ?
 					'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
 					'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
                 $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
@@ -1938,7 +1963,7 @@ class AuslagenHandler2
 			?>
 			<?php
 	
-			$belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
+			$belege = $this->auslagen_data['belege'] ?? [];
 	
 			$this->render_beleg_sums($belege, 'Gesamt');
 	
@@ -1953,8 +1978,8 @@ class AuslagenHandler2
 			<?php $this->render_project_auslagen(true); ?>
         </div>
 		<?php
-		if ($this->routeInfo['action'] != 'create' && $this->routeInfo['action'] != 'edit'){
-			if ($auth->hasGroup('ref-finanzen-belege') || $auth->getUsername() == $this->state2stateInfo(
+		if ($this->routeInfo['action'] !== 'create' && $this->routeInfo['action'] !== 'edit'){
+			if ($auth->hasGroup('ref-finanzen-belege') || $auth->getUsername() === self::state2stateInfo(
 					'wip;' . $this->auslagen_data['created']
 				)['user']){
 				$this->render_chat_box();
@@ -1966,8 +1991,10 @@ class AuslagenHandler2
 		return;
 	}
 	
-	public function getStateSvg(){
-		$diagram = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_STATE);
+	public function getStateSvg(): string
+    {
+	    /** @var SvgDiagramState $diagram */
+		$diagram = SvgDiagram::newDiagram(SvgDiagram::TYPE_STATE);
 		$diagram->setData($this->getDiagramStatelistFiltered());
 		$diagram->setServerAspectRadio(false);
 		$diagram->setSetting('height', 160);
@@ -1975,8 +2002,8 @@ class AuslagenHandler2
 		$diagram->setStateSetting('center_lines', false);
 		
 		//add state Beschreibung/Legende
-		/* @var $r intertopia\Classes\svg\SvgDiagramRaw */
-		$r = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_RAW);
+		/* @var $r SvgDiagramRaw */
+		$r = SvgDiagram::newDiagram(SvgDiagram::TYPE_RAW);
 		$diagram->addResultAddons(
 			$r->drawShape(650, 100, 120, 25, 0, 'Aktueller Status', 0, ['stroke' => 'none', 'fill' => '#CAFF70'])
 		);
@@ -1988,7 +2015,8 @@ class AuslagenHandler2
 		return $diagram->getChart();
 	}
 	
-	public function getDiagramStatelistFiltered(){
+	public function getDiagramStatelistFiltered(): array
+    {
 		$set = $this->getDiagramStatelist();
 		//states to id
 		$keymap = [];
@@ -2013,10 +2041,12 @@ class AuslagenHandler2
 		$set[$s['l']][$s['k']]['options']['fill'] = '#CAFF70';
 		//possible states
 		foreach (self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
-			if ($k == 'revocation')
-				continue;
-			if (!$this->state_change_possible($k))
-				continue;
+			if ($k === 'revocation') {
+                continue;
+            }
+			if (!$this->state_change_possible($k)) {
+                continue;
+            }
 			$s = $keymap[$k];
 			//color
 			$set[$s['l']][$s['k']]['options']['fill'] = '#b2f7f9';
@@ -2041,11 +2071,13 @@ class AuslagenHandler2
 		foreach (self::$subStates as $k => $info){
 			$s = $keymap[$k];
 			//if substate was unset
-			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']]))
-				continue;
+			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']])) {
+                continue;
+            }
 			//if state = child.parent and substate is set -> continue
-			if (strpos($this->stateInfo['substate'], $k) !== false && $this->stateInfo['state'] == $info[0])
-				continue;
+			if (strpos($this->stateInfo['substate'], $k) !== false && $this->stateInfo['state'] == $info[0]) {
+                continue;
+            }
 			if ($this->state_change_possible($k)){
 				//color clickable
 				$set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill'] = '#b2f7f9';
@@ -2057,10 +2089,12 @@ class AuslagenHandler2
 		//color subchilds if state = child.parent and substate is set
 		foreach (self::$subStates as $ss => $info){
 			$s = $keymap[$ss];
-			if ($info[0] == 'revocation')
-				continue;
-			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']]))
-				continue;
+			if ($info[0] === 'revocation') {
+                continue;
+            }
+			if (!isset($set[$s['l']][$s['k']]['children'][$s['c']])) {
+                continue;
+            }
 			if (strpos($this->stateInfo['substate'], $ss) !== false && $this->stateInfo['state'] == $info[0]){
 				$set[$s['l']][$s['k']]['children'][$s['c']]['options']['fill'] = '#CAFF70';
 			}
@@ -2072,7 +2106,8 @@ class AuslagenHandler2
 	/**
 	 * return complete state diagram data set
 	 */
-	public function getDiagramStatelist(){
+	public function getDiagramStatelist(): array
+    {
 		return [
 			'line0' => [
 				0 => [
@@ -2163,11 +2198,12 @@ class AuslagenHandler2
 	//---------------------------------------------------------
 	/* ---------- TODOS ------------ */
 	
-	public function getSvgHiddenFields(){
+	public function getSvgHiddenFields(): string
+    {
 		return '<div class="svg-statechanges hidden">' .
 			'<input type="hidden" name="projekt-id" value="' . $this->projekt_id . '">' .
-			'<input type="hidden" name="auslagen-id" value="' . (($this->routeInfo['action'] == 'create') ? 'NEW' : $this->auslagen_id) . '">' .
-			'<input type="hidden" name="etag" value="' . (($this->routeInfo['action'] == 'create') ? '0' : $this->auslagen_data['etag']) . '">' .
+			'<input type="hidden" name="auslagen-id" value="' . (($this->routeInfo['action'] === 'create') ? 'NEW' : $this->auslagen_id) . '">' .
+			'<input type="hidden" name="etag" value="' . (($this->routeInfo['action'] === 'create') ? '0' : $this->auslagen_data['etag']) . '">' .
 			'<input type="hidden" name="action" value="' . URIBASE . 'rest/forms/auslagen/state">' .
 			'</div>';
 	}
@@ -2180,52 +2216,55 @@ class AuslagenHandler2
 	 *
 	 * @return string
 	 */
-	public static function trimIban($in){
+	public static function trimIban(string $in): string
+    {
 		$in = trim($in);
-		if ($in === '')
-			return '';
+		if ($in === '') {
+            return '';
+        }
 		if (mb_strlen($in) >= 5){
 			return mb_substr($in, 0, 4) . ' ... ... ' . mb_substr($in, -2);
-		}else{
-			return $in;
 		}
-	}
-	
-	/**
-	 * calculate belege sums of 'Auslagenerstattung'
-	 *
-	 * @param array  $belege
-	 * @param string $labal
-	 */
-	public function render_beleg_sums($belege, $label = '', $render = true){
+
+        return $in;
+    }
+
+    /**
+     * calculate belege sums of 'Auslagenerstattung'
+     *
+     * @param array $belege
+     * @param string $label
+     * @param bool $render
+     * @return array
+     */
+	public function render_beleg_sums(array $belege, $label = '', $render = true): array
+    {
 		$head_sum_in = 0;
 		$head_sum_out = 0;
 		$p = [];
-		if (!($this->routeInfo['action'] == 'edit' || $this->routeInfo['action'] == 'create')){
-			if (count($belege) > 0){
-				$head_sum = 0;
-				foreach ($belege as $bel){
-					if (isset($bel['posten']) && count($bel['posten']) > 0){
-						foreach ($bel['posten'] as $ppp){
-							$head_sum_in += $ppp['einnahmen'];
-							$head_sum_out += $ppp['ausgaben'];
-							if ($ppp['einnahmen'] > 0){
-								if (!isset($p['in'][$ppp['projekt_posten_id']])){
-									$p['in'][$ppp['projekt_posten_id']] = 0;
-								}
-								$p['in'][$ppp['projekt_posten_id']] += $ppp['einnahmen'];
-							}
-							if ($ppp['ausgaben'] > 0){
-								if (!isset($p['out'][$ppp['projekt_posten_id']])){
-									$p['out'][$ppp['projekt_posten_id']] = 0;
-								}
-								$p['out'][$ppp['projekt_posten_id']] += $ppp['ausgaben'];
-							}
-						}
-					}
-				}
-			}
-		}
+		if (!($this->routeInfo['action'] === 'edit' || $this->routeInfo['action'] === 'create') && count($belege) > 0) {
+            $head_sum = 0;
+            foreach ($belege as $bel){
+                if (isset($bel['posten']) && count($bel['posten']) > 0){
+                    foreach ($bel['posten'] as $ppp){
+                        $head_sum_in += $ppp['einnahmen'];
+                        $head_sum_out += $ppp['ausgaben'];
+                        if ($ppp['einnahmen'] > 0){
+                            if (!isset($p['in'][$ppp['projekt_posten_id']])){
+                                $p['in'][$ppp['projekt_posten_id']] = 0;
+                            }
+                            $p['in'][$ppp['projekt_posten_id']] += $ppp['einnahmen'];
+                        }
+                        if ($ppp['ausgaben'] > 0){
+                            if (!isset($p['out'][$ppp['projekt_posten_id']])){
+                                $p['out'][$ppp['projekt_posten_id']] = 0;
+                            }
+                            $p['out'][$ppp['projekt_posten_id']] += $ppp['ausgaben'];
+                        }
+                    }
+                }
+            }
+        }
 		
 		if ($render && ($head_sum_in > 0 || $head_sum_out > 0)){
 			$this->_render_beleg_sums($head_sum_in, $head_sum_out, $label);
@@ -2233,15 +2272,16 @@ class AuslagenHandler2
 		
 		return ['id' => $this->auslagen_id, 'in' => $head_sum_in, 'out' => $head_sum_out, 'p' => $p];
 	}
-	
-	/**
-	 * render belege box
-	 *
-	 * @param float  $in
-	 * @param float  $out
-	 * @param string $float
-	 */
-	private function _render_beleg_sums($in, $out, $label = ''){
+
+    /**
+     * render belege box
+     *
+     * @param float $in
+     * @param float $out
+     * @param string $label
+     */
+	private function _render_beleg_sums(float $in, float $out, $label = ''): void
+    {
 		if ($label){
 			echo '<label>' . $label . '</label>';
 		}
@@ -2251,31 +2291,32 @@ class AuslagenHandler2
                 <div class="form-group">
                     <div class="col-sm-2"></div>
                     <div class="col-sm-3"><strong>Einnahmen:</strong></div>
-                    <div class="col-sm-2"><?= number_format($in, 2); ?></div>
+                    <div class="col-sm-2"><?= number_format($in, 2) ?></div>
                     <div class="col-sm-3"><strong>Ausgaben:</strong></div>
-                    <div class="col-sm-2"><?= number_format($out, 2); ?></div>
+                    <div class="col-sm-2"><?= number_format($out, 2) ?></div>
                 </div>
             </div>
         </div>
 		<?php
 	}
-	
-	/**
-	 *
-	 * @param array   $beleg
-	 *        [
-	 *        'id' => NULL,
-	 *        'short' => '',
-	 *        'created_on' => date_create()->format('Y-m-d H:i:s'),
-	 *        'datum' => '',
-	 *        'beschreibung' => '',
-	 *        'file_id' => NULL,
-	 *        'file' => NULL,
-	 *        'posten' => []
-	 *        ]
-	 * @param boolean $hidden
-	 */
-	public function render_beleg_container($belege, $editable = true, $label = ''){
+
+    /**
+     * @param array $belege
+     *     [
+     *        'id' => NULL,
+     *        'short' => '',
+     *        'created_on' => date_create()->format('Y-m-d H:i:s'),
+     *        'datum' => '',
+     *        'beschreibung' => '',
+     *        'file_id' => NULL,
+     *        'file' => NULL,
+     *        'posten' => []
+     *     ]
+     * @param bool $editable
+     * @param string $label
+     */
+	public function render_beleg_container(array $belege, bool $editable = true, string $label = ''): void
+    {
 		if ($label){
 			echo '<label>' . $label . '</label>';
 		} ?>
@@ -2286,7 +2327,7 @@ class AuslagenHandler2
                     <option value="0" data-alias="Bitte Wählen">
 						<?php foreach ($this->projekt_data['posten'] as $p){
 						?>
-                    <option value="<?= $p['id']; ?>"
+                    <option value="<?= $p['id'] ?>"
                             data-alias="<?= (($p['einnahmen']) ? '[Einnahme] ' : '') . (($p['ausgaben']) ? '[Ausgabe] ' : '') . $p['name'] ?>">
 						<?php } ?>
                 </datalist>
@@ -2297,7 +2338,7 @@ class AuslagenHandler2
                     <div class="col-sm-11"></div>
                 </div>
             </div>
-			<?php if (count($belege) == 0){ ?>
+			<?php if (count($belege) === 0){ ?>
                 <div class="row row-striped">
                     <div class="form-group no-belege-info">
                         <div class="col-sm-12"><strong style="font-size: 2em;">Keine Belege eingereicht</strong></div>
@@ -2350,7 +2391,8 @@ class AuslagenHandler2
 	 *
 	 * @return string
 	 */
-	public function render_beleg_row($beleg, $editable = true, $hidden = false){
+	public function render_beleg_row(array $beleg, $editable = true, $hidden = false): string
+    {
 		ob_start();
 		$date = ($beleg['datum']) ? date_create($beleg['datum'])->format('d.m.Y') : '';
 		$date_value = ($beleg['datum']) ? date_create($beleg['datum'])->format('Y-m-d') : '';
@@ -2375,20 +2417,18 @@ class AuslagenHandler2
 					'<span>' . $beleg['file']['mime'] . '</span></small>' .
 					'</div>' .
 					'</div>';
-			}else{
-				if ($editable){
-					$file_form = $this->templater->getFileForm(
-						"files[beleg_{$beleg['id']}][]",
-						0,
-						0,
-						"Datei...",
-						"",
-						[]
-					);
-				}else{
-					$file_form = '<span>Keine Datei verknüpft.</span>';
-				}
-			}
+			}else if ($editable){
+                $file_form = $this->templater->getFileForm(
+                    "files[beleg_{$beleg['id']}][]",
+                    0,
+                    0,
+                    "Datei...",
+                    "",
+                    []
+                );
+            }else{
+                $file_form = '<span>Keine Datei verknüpft.</span>';
+            }
 		}else{
 			$file_form = $this->templater->getFileForm("", 0, 0, "Datei...", "", []);
 		}
@@ -2397,7 +2437,7 @@ class AuslagenHandler2
 		if ($editable){
 			$desc_form = $this->templater->getTextareaForm(
 				($hidden) ? '' : "belege[{$beleg['id']}][beschreibung]",
-				($beleg['beschreibung']) ? $beleg['beschreibung'] : "",
+                ($beleg['beschreibung']) ?: "",
 				0,
 				"optional",
 				"",
@@ -2412,11 +2452,11 @@ class AuslagenHandler2
 		?>
         <div class="row row-striped <?= ($hidden) ? 'hidden' : 'bt-dark' ?>" style="padding: 5px;">
             <div class="form-group<?= ($hidden) ? ' beleg-template' : ' beleg-container' ?>"
-                 data-id="<?= $beleg['id']; ?>">
+                 data-id="<?= $beleg['id'] ?>">
                 <div class="col-sm-1 beleg-idx-box">
                     <div class="form-group">
                         <div class="col-sm-6 beleg-idx"></div>
-                        <div class="col-sm-6 beleg-nr"><?= $beleg['short']; ?><?=
+                        <div class="col-sm-6 beleg-nr"><?= $beleg['short'] ?><?=
 							($editable) ? '<a href="#" class="delete-row"> <i class="fa fa-fw fa-trash"></i></a>' : '' ?></div>
                     </div>
                 </div>
@@ -2451,13 +2491,14 @@ class AuslagenHandler2
 	 * render beleg posten table
 	 *
 	 * @param array $posten
-	 * @param bool  $editable
+	 * @param bool $editable
 	 * @param bool  $hidden
-	 * @param bool  $beleg_id
+	 * @param bool $beleg_id
 	 *
 	 * @return string
 	 */
-	public function render_beleg_posten_table($posten, $editable, $hidden, $beleg_id){
+	public function render_beleg_posten_table(array $posten, bool $editable, bool $hidden, bool $beleg_id): string
+    {
 		$out = '<div class="row row-striped" style="padding: 5px; border-bottom: 2px solid #ddd;">
 					<div class="form-group posten-headline">
 						<div class="col-sm-1"></div>
@@ -2474,7 +2515,7 @@ class AuslagenHandler2
 		// if empty and !$editable add empty hint
 		$out .= '<div class="form-group posten-empty ' . ((count(
 					$posten
-				) == 0) ? '' : ' hidden') . '">Keine Angaben</div>';
+				) === 0) ? '' : ' hidden') . '">Keine Angaben</div>';
 		
 		$inOutPrefix = ['0' => ''];
 		foreach ($this->projekt_data['posten'] as $pp){
@@ -2586,9 +2627,10 @@ class AuslagenHandler2
 		return $out;
 	}
 	
-	public function render_project_auslagen($echo = false){
+	public function render_project_auslagen($echo = false): string
+    {
 		$out = '';
-		if (count($this->projekt_data['auslagen']) == 0){
+		if (count($this->projekt_data['auslagen']) === 0){
 			$out .= '<label for="auslagen-vorhanden">Im Projekt vorhandene Abrechnungen</label>';
 			$out .= '<div  class="well" style="margin-bottom: 0px; background-color: white;"><span>Keine</span></div>';
 		}else{
@@ -2597,7 +2639,7 @@ class AuslagenHandler2
 			foreach ($this->projekt_data['auslagen'] as $auslage){
 				$tmp_state = self::state2stateInfo($auslage['state']);
 				$created = self::state2stateInfo('draft;' . $auslage['created']);
-				$name = $auslage['id'] . ' - ' . ($auslage['name_suffix'] ? $auslage['name_suffix'] : '(Ohne Namen)') . '<strong><small style="margin-left: 10px;">' . $created['date'] . '</small>' . (($show_creator) ? '<small style="margin-left: 10px;">[' . $created['realname'] . ']</small>' : '') . '</strong>';
+				$name = $auslage['id'] . ' - ' . ($auslage['name_suffix'] ?: '(Ohne Namen)') . '<strong><small style="margin-left: 10px;">' . $created['date'] . '</small>' . (($show_creator) ? '<small style="margin-left: 10px;">[' . $created['realname'] . ']</small>' : '') . '</strong>';
 				
 				$tmpList[] = [
 					'html' => $name . '<span class="label label-info pull-right"><span>Status: </span><span>' . self::$states[$tmp_state['state']][0] . '</span></span>',
@@ -2618,12 +2660,14 @@ class AuslagenHandler2
 				'col-xs-12 col-md-10'
 			);
 		}
-		if ($echo)
-			echo $out;
+		if ($echo) {
+            echo $out;
+        }
 		return $out;
 	}
 	
-	private function render_chat_box(){ ?>
+	private function render_chat_box(): void
+    { ?>
         <div class='clearfix'></div>
         <div id="auslagenchat">
 			<?php
@@ -2636,7 +2680,8 @@ class AuslagenHandler2
 			$now = date_create();
 			//allow chat only 90 days into next year
 			if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90){
-				if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() == self::state2stateInfo(
+				if ($auth->hasGroup('ref-finanzen')
+                    || $auth->getUsername() === self::state2stateInfo(
 						'wip;' . $this->auslagen_data['created']
 					)['user']){
 					$btns[] = [
@@ -2660,13 +2705,14 @@ class AuslagenHandler2
 		<?php
 	}
 	
-	public function render_auslagen_links(){
+	public function render_auslagen_links(): void
+    {
 		?>
         <div class="auslagen-links">
-			<?php if ($this->routeInfo['action'] != 'edit' && isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']){ ?>
+			<?php if ($this->routeInfo['action'] !== 'edit' && isset($this->stateInfo['editable_link']) && $this->stateInfo['editable_link']){ ?>
                 <div class="col-xs-12 form-group">
                     <strong><a class="btn btn-success text-center" style="font-weight: bold;"
-                               href="<?= URIBASE . "projekt/{$this->projekt_id}/auslagen/{$this->auslagen_id}/edit" ?>"><i
+                               href="<?= URIBASE . "projekt/$this->projekt_id/auslagen/{$this->auslagen_id}/edit" ?>"><i
                                     class="fa fa-fw fa-edit"> </i>Bearbeiten</a></strong>
                 </div>
                 <div class="clearfix"></div>
@@ -2684,15 +2730,12 @@ class AuslagenHandler2
 				<?php }
 				if (isset($this->auslagen_data['id'])){ ?>
                     <div class="col-xs-12 form-group">
-                        <strong><a href="<?= URIBASE . "projekt/{$this->projekt_id}/auslagen/{$this->auslagen_data['id']}" ?>"
+                        <strong><a href="<?= URIBASE . "projekt/$this->projekt_id/auslagen/{$this->auslagen_data['id']}" ?>"
                                    class="btn btn-danger" style="font-weight: bold;"><i class="fa fa-fw fa-times"> </i>Abbrechen</a></strong>
                     </div>
 				<?php } ?>
 			<?php } ?>
-			<?php if ($this->routeInfo['action'] != 'edit'
-				&& isset($this->auslagen_data['id'])
-				&& isset($this->auslagen_data['belege'])
-				&& count($this->auslagen_data['belege']) > 0){ ?>
+			<?php if (isset($this->auslagen_data['id'], $this->auslagen_data['belege']) && $this->routeInfo['action'] !== 'edit' && count($this->auslagen_data['belege']) > 0){ ?>
                 <div class="col-xs-12 form-group">
 
                     <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"
@@ -2713,7 +2756,7 @@ class AuslagenHandler2
                 </div>
                 <div class="clearfix"></div>
 			<?php }
-			if ($this->routeInfo['action'] != 'edit'
+			if ($this->routeInfo['action'] !== 'edit'
 				&& isset($this->auslagen_data['id'])
 				&& in_array($this->stateInfo['state'], ["ok", "instructed", "booked"])
                 && (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")
@@ -2739,19 +2782,22 @@ class AuslagenHandler2
                 <div class="clearfix"></div>
 				<?php
 			}
-			if (false && $this->routeInfo['action'] != 'edit'){ ?>
-                <input type="hidden" name="projekt-id" value="<?= $this->projekt_id; ?>">
+			//FIXME if(false) ???
+			if (false && $this->routeInfo['action'] !== 'edit'){ ?>
+                <input type="hidden" name="projekt-id" value="<?= $this->projekt_id ?>">
                 <input type="hidden" name="auslagen-id"
-                       value="<?= ($this->routeInfo['action'] == 'create') ? 'NEW' : $this->auslagen_id; ?>">
+                       value="<?= ($this->routeInfo['action'] === 'create') ? 'NEW' : $this->auslagen_id; ?>">
                 <input type="hidden" name="etag"
-                       value="<?= ($this->routeInfo['action'] == 'create') ? '0' : $this->auslagen_data['etag']; ?>">
+                       value="<?= ($this->routeInfo['action'] === 'create') ? '0' : $this->auslagen_data['etag']; ?>">
                 <input type="hidden" name="action" value="<?= URIBASE ?>rest/forms/auslagen/state">
 				<?php if ($this->auslagen_id){
 					foreach (self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null){
-						if ($k == 'revocation')
-							continue;
-						if (!$this->state_change_possible($k))
-							continue;
+						if ($k === 'revocation') {
+                            continue;
+                        }
+						if (!$this->state_change_possible($k)) {
+                            continue;
+                        }
 				
 						?>
                         <div class="col-xs-12 form-group">
@@ -2781,7 +2827,8 @@ class AuslagenHandler2
 		<?php
 	}
 	
-	public function render_auslagen_beleg_diagrams($label = ''){
+	public function render_auslagen_beleg_diagrams($label = ''): void
+    {
 		?>
         <div class="panel-group well col-xs-12 col-md-10" id="accordion">
             <div class="panel panel-default">
@@ -2794,14 +2841,16 @@ class AuslagenHandler2
                 <div id="collapse_diag_1" class="panel-collapse collapse">
                     <div class="panel-body"><?php
 						$out = $this->get_auslagen_beleg_sums();
-						if (isset($out['error']))
-							foreach ($out['error'] as $err_msg){
-								echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">' . $err_msg . '</strong>';
-							}
+						if (isset($out['error'])) {
+                            foreach ($out['error'] as $err_msg) {
+                                echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">' . $err_msg . '</strong>';
+                            }
+                        }
 						echo '<div class="row">';
 						foreach ($out as $key => $value){
-							if ($key === 'error')
-								continue;
+							if ($key === 'error') {
+                                continue;
+                            }
 							echo '<div class="form-group">';
 							echo '<div class="col-sm-' . (12) . '"><strong>' . $value['headline'] . '</strong></div>';
 							echo '</div>';
@@ -2886,13 +2935,14 @@ class AuslagenHandler2
 		 'data' => NULL,
 	 ]
 	 */
-	
-	/**
-	 * draw auslagen project diagrams
-	 *
-	 * @param string $label
-	 */
-	public function get_auslagen_beleg_sums(){
+
+    /**
+     * draw auslagen project diagrams
+     *
+     * @return array
+     */
+	public function get_auslagen_beleg_sums(): array
+    {
 		//project posten ------------------
 		$p_in_max = 0;
 		$p_out_max = 0;
@@ -2922,25 +2972,30 @@ class AuslagenHandler2
 			$this->auslagen_id = $auslage['id'];
 			$this->getDbAuslagen();
 			$tmp_state = self::state2stateInfo($auslage['state']);
-			if ($tmp_state['state'] == 'draft' || $tmp_state['state'] == 'revocation')
-				continue;
+			if ($tmp_state['state'] === 'draft' || $tmp_state['state'] === 'revocation') {
+                continue;
+            }
 			$this->getDbBelegePostenFiles();
 			
-			$belege = (isset($this->auslagen_data['belege'])) ? $this->auslagen_data['belege'] : [];
+			$belege = $this->auslagen_data['belege'] ?? [];
 			$sums = $this->render_beleg_sums($belege, '', false);
 			
 			$g_sums['in'] += $sums['in'];
 			$g_sums['out'] += $sums['out'];
-			if ($sums['in'] > 0)
-				$a_sums['in']['Abrechnung ' . $sums['id'] . ' - ' . $sums['in'] . '€'] = [$sums['in']];
-			if ($sums['out'] > 0)
-				$a_sums['out']['Abrechnung ' . $sums['id'] . ' - ' . $sums['out'] . '€'] = [$sums['out']];
+			if ($sums['in'] > 0) {
+                $a_sums['in']['Abrechnung ' . $sums['id'] . ' - ' . $sums['in'] . '€'] = [$sums['in']];
+            }
+			if ($sums['out'] > 0) {
+                $a_sums['out']['Abrechnung ' . $sums['id'] . ' - ' . $sums['out'] . '€'] = [$sums['out']];
+            }
 			
 			foreach ($p_d as $posten_id => $ignore){
-				if (isset($sums['p']['in']))
-					$p_added_beam_data['in'][$posten_id][$auslage['id']] = (isset($sums['p']['in'][$posten_id])) ? $sums['p']['in'][$posten_id] : 0;
-				if (isset($sums['p']['out']))
-					$p_added_beam_data['out'][$posten_id][$auslage['id']] = (isset($sums['p']['out'][$posten_id])) ? $sums['p']['out'][$posten_id] : 0;
+				if (isset($sums['p']['in'])) {
+                    $p_added_beam_data['in'][$posten_id][$auslage['id']] = (isset($sums['p']['in'][$posten_id])) ? $sums['p']['in'][$posten_id] : 0;
+                }
+				if (isset($sums['p']['out'])) {
+                    $p_added_beam_data['out'][$posten_id][$auslage['id']] = (isset($sums['p']['out'][$posten_id])) ? $sums['p']['out'][$posten_id] : 0;
+                }
 			}
 		}
 		foreach ($p_d as $posten_id => $posten_info){
@@ -3004,17 +3059,19 @@ class AuslagenHandler2
 				'#ed07ca',
 			);
 			$color[count($a_sums['in']) - 1] = '#fff';
-			
-			$d_pie = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_PIE);
+
+			/** @var SvgDiagramPie $d_pie */
+			$d_pie = SvgDiagram::newDiagram(SvgDiagram::TYPE_PIE);
 			$d_pie->setData($a_sums['in']);
 			$d_pie->setServerAspectRadio(false);
 			$d_pie->setSetting('height', 600);
 			$d_pie->setSetting('width', 600);
 			$d_pie->setPieSetting('perExplanationLineBelow', 1);
 			$d_pie->overrideColorArray($color);
-			
-			$d_adding_beam = intertopia\Classes\svg\SvgDiagram::newDiagram(
-				intertopia\Classes\svg\SvgDiagram::TYPE_ADDINGBLOCK
+
+			/** @var SvgDiagramAddingBeam $d_adding_beam */
+			$d_adding_beam = SvgDiagram::newDiagram(
+				SvgDiagram::TYPE_ADDINGBLOCK
 			);
 			$tmp = [];
 			foreach ($p_added_beam_data['in'] as $key => $value){
@@ -3074,17 +3131,17 @@ class AuslagenHandler2
 				'#ed07ca',
 			);
 			$color[count($a_sums['out']) - 1] = '#fff';
-			
-			$d_pie = intertopia\Classes\svg\SvgDiagram::newDiagram(intertopia\Classes\svg\SvgDiagram::TYPE_PIE);
+			/** @var SvgDiagramPie $d_pie */
+			$d_pie = SvgDiagram::newDiagram(SvgDiagram::TYPE_PIE);
 			$d_pie->setData($a_sums['out']);
 			$d_pie->setServerAspectRadio(false);
 			$d_pie->setSetting('height', 600);
 			$d_pie->setSetting('width', 600);
 			$d_pie->setPieSetting('perExplanationLineBelow', 1);
 			$d_pie->overrideColorArray($color);
-			
-			$d_adding_beam = intertopia\Classes\svg\SvgDiagram::newDiagram(
-				intertopia\Classes\svg\SvgDiagram::TYPE_ADDINGBLOCK
+			/** @var SvgDiagramAddingBeam $d_adding_beam */
+			$d_adding_beam = SvgDiagram::newDiagram(
+				SvgDiagram::TYPE_ADDINGBLOCK
 			);
 			$tmp = [];
 			foreach ($p_added_beam_data['out'] as $key => $value){

@@ -2,6 +2,7 @@
 namespace framework\svg;
 
 
+
 /**
  * factory class for diagram generation
  * Factory
@@ -99,26 +100,19 @@ class SvgDiagram
 	/**
 	 * return Svg Diagram by type name
 	 * @param string Svg$type
-	 * @return SvgDiagramCore or inherited class object
+	 * @return static -> inherited class object FIXME: in php8
 	 */
-	public static function newDiagram($type): ?SvgDiagramCore
+	public static function newDiagram(string $type)
     {
-		if (!is_string($type)) {
-            return NULL;
-        }
-		if (mb_strpos($type, 'SvgDiagram')===0){
+		if (mb_strpos($type, 'SvgDiagram') === 0){
 			$type = str_replace('SvgDiagram', '', $type);
 		}
-		$c = 'SvgDiagramDummy';
-		if (isset(self::$types['SvgDiagram' .$type])){
-			$c = 'SvgDiagram' . self::$types['SvgDiagram' .$type];
-		} else {
-			$type = 'None';
+		$c = SvgDiagramDummy::class;
+		$idx = 'SvgDiagram' . $type;
+		if (isset(self::$types[$idx])){
+			$c = __CLASS__ . self::$types[$idx];
 		}
-		require_once 'class.'.$c.'.php';
-		$c = 'intertopia\\Classes\\svg\\'.$c;
+
 		return new $c($type);
 	}
 }
-
-?>

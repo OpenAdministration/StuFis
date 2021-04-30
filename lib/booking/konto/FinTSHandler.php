@@ -2,6 +2,7 @@
 
 namespace booking\konto;
 
+use Composer\InstalledVersions;
 use framework\CryptoHandler;
 use DateInterval;
 use DateTime;
@@ -200,7 +201,7 @@ class FinTSHandler extends Renderer
         $options->url = $res['bank.url'];
         $options->bankCode = $res['bank.blz'];
         $options->productName = FINTS_REGNR;
-        $options->productVersion = FINTS_SOFTWARE_VERSION;
+        $options->productVersion = InstalledVersions::getRootPackage()['version'] . DEV ? '-dev' : '';
 
         if(isset($_SESSION['fints'][$credentialId]['fints-persist'])){
             $persist = (string) $_SESSION['fints'][$credentialId]['fints-persist'];
