@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 26.02.19
- * Time: 19:36
- */
 
 namespace booking;
 

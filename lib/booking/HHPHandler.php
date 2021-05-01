@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 29.06.18
- * Time: 03:34
- */
 
 namespace booking;
 
-use CSVBuilder;
+use framework\CSVBuilder;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\Renderer;

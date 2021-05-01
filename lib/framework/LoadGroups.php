@@ -1,47 +1,41 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 26.06.18
- * Time: 02:39
- */
 
 namespace framework;
 
 use baseclass\Enum;
 
 class LoadGroups extends Enum{
-    const __default = [];
+    public const __default = [];
     
-    const SELECTPICKER = [
+    public const SELECTPICKER = [
         "js" => ["bootstrap-select.min"],
         "css" => ["bootstrap-select.min"],
     ];
-    const DATEPICKER = [
+    public const DATEPICKER = [
         "js" => ["bootstrap-datepicker.min", "bootstrap-datepicker.de.min"],
         "css" => ["bootstrap-datepicker.min"],
     ];
-    const FILEINPUT = [
+    public const FILEINPUT = [
         "js" => ["fileinput.min", "fileinput.de", "fileinput-themes/gly/theme"],
         "css" => ["fileinput.min"],
     ];
-    const IBAN = [
+    public const IBAN = [
         "js" => ["iban"],
         "css" => [],
     ];
-    const AUSLAGEN = [
+    public const AUSLAGEN = [
         "js" => ["auslagen"],
         "css" => [],
     ];
-    const CHAT = [
+    public const CHAT = [
         "js" => ["chat"],
         "css" => ["chat"],
     ];
-    const BOOKING = [
+    public const BOOKING = [
         "js" => ["booking"],
         "css" => [],
     ];
-    const MODALS = [
+    public const MODALS = [
         "js" => ["modals"],
         "css" => [],
     ];

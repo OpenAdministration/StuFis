@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 26.06.18
- * Time: 02:43
- */
 
 namespace baseclass;
 

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 28.04.18
- * Time: 22:19
- */
 //auth ----------------------------------
 use booking\BookingHandler;
 use booking\HHPHandler;

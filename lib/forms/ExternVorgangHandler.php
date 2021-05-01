@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 22.02.19
- * Time: 19:40
- */
 
 namespace forms;
 

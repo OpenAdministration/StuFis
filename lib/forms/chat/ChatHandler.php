@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 16.07.18
- * Time: 16:21
- */
 
 namespace forms\chat;
 

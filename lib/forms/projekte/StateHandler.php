@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 01.05.18
- * Time: 01:39
- */
 
 namespace forms\projekte;
 

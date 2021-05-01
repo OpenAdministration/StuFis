@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 12.05.18
- * Time: 22:26
- */
 
 namespace forms\projekte\exceptions;
 

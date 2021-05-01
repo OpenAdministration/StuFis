@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 30.01.19
- * Time: 14:54
- */
 
 namespace framework\render;
 
