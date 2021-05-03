@@ -52,12 +52,12 @@ class FileController {
 		//get file
 		$file = $fh->checkFileHash($routeInfo['key']);
 		if (!$file){
-			ErrorHandler::_renderError(NULL, 404);
+            ErrorHandler::handleError(404);
 			return;
 		}
 		//TODO FIXME ACL - user has permission to download/view this file?
 		if (false){//!checkUserPermission($top['gname'])) {
-			ErrorHandler::_renderError(NULL, 403);
+            ErrorHandler::handleError(403);
 			die();
 		}
 		$fh->deliverFileData($file, $routeInfo['fdl']);

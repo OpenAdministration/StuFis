@@ -313,11 +313,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		//errors ----------------------------
 		if (!isset($routeInfo['pid'])){
 			$this->error = true;
-			ErrorHandler::_errorExit('missing parameter: pid - project id');
+            ErrorHandler::handleError(400,'missing parameter: pid - project id');
 		}
 		if (!isset($routeInfo['action'])){
 			$this->error = true;
-			ErrorHandler::_errorExit('missing parameter: action');
+            ErrorHandler::handleError(400,'missing parameter: action');
 		}
 		// init variables ---------------------
 		$this->routeInfo = $routeInfo;
@@ -1605,7 +1605,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			echo base64_decode($result['data']['data']);
 			die();
 		}else{
-			ErrorHandler::_errorLog(print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
+            ErrorHandler::handleError(500, '[' . get_class($this) . '][PDF-Creation] failed' , print_r($result, true));
 			$this->error = 'Error during PDF creation.';
 		}
 	}
@@ -1736,7 +1736,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			echo base64_decode($result['data']['data']);
 			die();
 		}else{
-			ErrorHandler::_errorLog(print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
+            ErrorHandler::handleError(500,'[' . get_class($this) . '][PDF-Creation] failed', print_r($result, true));
 			$this->error = 'Error during PDF creation.';
 		}
 	}
@@ -1766,7 +1766,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 */
 	public function render():void{
 		if ($this->error){
-			ErrorHandler::_renderError($this->error, 404);
+			ErrorHandler::handleError( 404, $this->error);
 		}
         $this->renderAuslagenerstattung("Abrechnung");
     }

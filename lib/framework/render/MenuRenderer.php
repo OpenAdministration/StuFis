@@ -65,7 +65,7 @@ class MenuRenderer extends Renderer
                 $this->renderExportBank();
                 break;
             default:
-                ErrorHandler::_errorExit("{$this->pathinfo['action']} kann nicht interpretiert werden");
+                ErrorHandler::handleError(400,"{$this->pathinfo['action']} kann nicht interpretiert werden");
                 break;
         }
     }
@@ -129,7 +129,7 @@ class MenuRenderer extends Renderer
                 }
                 break;
             default:
-                ErrorHandler::_errorExit("Not known active Tab: " . $active);
+                ErrorHandler::handleError(400,"Not known active Tab: " . $active);
                 break;
         }
 

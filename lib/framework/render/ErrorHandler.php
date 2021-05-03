@@ -55,14 +55,14 @@ class ErrorHandler extends Renderer{
     private $errorInformation;
 
 
-    public static function handleException(Exception $e, string $additionalInformation, string $debugInfo, int $htmlCode = 500) : void
+    public static function handleException(Exception $e, string $additionalInformation = '', string $debugInfo = '', int $htmlCode = 500) : void
     {
         $stackTrace = $e->getTrace();
         $eh = new self(self::getDefaultErrorInfo($htmlCode), $stackTrace, $additionalInformation, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
-    public static function handleError(int $htmlCode, string $message, string $debugInfo) : void{
+    public static function handleError(int $htmlCode = 500, string $message = '', string $debugInfo = '') : void{
         $eh = new self(self::getDefaultErrorInfo($htmlCode), debug_backtrace(), $message, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);
     }

@@ -2,12 +2,12 @@
 
 namespace booking;
 
+use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
 use framework\render\Renderer;
-use baseclass\TextStyle;
 use ZipArchive;
 
 class BookingHandler extends Renderer{
@@ -46,12 +46,13 @@ class BookingHandler extends Renderer{
 				$this->renderFullBookingZip();
 			break;
 			default:
-				ErrorHandler::_errorExit("Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
+				ErrorHandler::handleError(400,"Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
 			break;
 		}
 	}
 	
-	private function setBookingTabs($active, $active_hhp_id){
+	private function setBookingTabs($active, $active_hhp_id): void
+    {
 		$linkbase = URIBASE . "booking/$active_hhp_id/";
 		$tabs = [
 			"instruct" => "<i class='fa fa-fw fa-legal'></i> Anweisen",
@@ -61,11 +62,12 @@ class BookingHandler extends Renderer{
 		HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
 	}
 	
-	private function renderCSV(){
+	private function renderCSV(): void
+    {
 		if (!isset($this->routeInfo["hhp-id"])){
-			ErrorHandler::_errorExit("hhp-id nicht gesetzt");
+			ErrorHandler::handleError(400,"hhp-id nicht gesetzt");
 		}
-		list($kontoTypes, $data) = $this->fetchBookingHistoryDataFromDB($this->routeInfo["hhp-id"]);
+		[$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB($this->routeInfo["hhp-id"]);
 		$csvData = [];
 		$header = [
 			"id" => "Buchungsnummer",
@@ -90,7 +92,7 @@ class BookingHandler extends Renderer{
 					$belegStr = "E{$row["extern_id"]} - V" . $row["vorgang_id"];
 				break;
 				default:
-					ErrorHandler::_errorExit("Unknown beleg_type: " . $row["beleg_type"]);
+                    ErrorHandler::handleError(400,"Unknown beleg_type: " . $row["beleg_type"]);
 				break;
 			}
 			
@@ -114,9 +116,10 @@ class BookingHandler extends Renderer{
 		$csvBuilder->echoCSV(date_create()->format("Y-m-d") . "-Buchungsliste-$von-bis-$bis");
 	}
 	
-	private function renderFullBookingZip(){
+	private function renderFullBookingZip(): void
+    {
 		if (!isset($this->routeInfo["hhp-id"])){
-			ErrorHandler::_errorExit("hhp-id nicht gesetzt");
+            ErrorHandler::handleError(400,"hhp-id nicht gesetzt");
 		}
 		
 		$zip = new ZipArchive();
@@ -124,7 +127,7 @@ class BookingHandler extends Renderer{
 		$zipFilePath = tempnam(sys_get_temp_dir(), "HHA");
 		
 		if (($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true){
-			ErrorHandler::_errorExit("Zip kann nicht erstellt werden. ErrorCode: " . $ret);
+            ErrorHandler::handleError(500,"Zip kann nicht erstellt werden.","ErrorCode: " . $ret);
 		}
 		
 		[$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB(
@@ -165,7 +168,7 @@ class BookingHandler extends Renderer{
 						$items[$key]["beleg_type"] = "Extern";
 					break;
 					default:
-						ErrorHandler::_errorExit($row["beleg_type"] . "kann nicht interpretiert werden");
+                        ErrorHandler::handleError(400,$row["beleg_type"] . "kann nicht interpretiert werden");
 					break;
 				}
 			}
@@ -301,7 +304,7 @@ class BookingHandler extends Renderer{
                         </td>
                         <td class="money no-wrap <?= TextStyle::BOLD ?>">
 							<?= DBConnector::getInstance()->convertDBValueToUserValue($row['value'], "money") ?>
-                        </td>
+                        </td>^
                         <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?> no-wrap">
 							<?= trim(htmlspecialchars($row['titel_nr'])) ?>
                         </td>
@@ -338,7 +341,7 @@ class BookingHandler extends Renderer{
 								<?php
 							break;
 							default:
-								ErrorHandler::_errorExit("Unknown beleg_type: " . $row["beleg_type"]);
+                                ErrorHandler::handleError(400,"Unknown beleg_type: " . $row["beleg_type"]);
 						}
 						?>
                         <td class="no-wrap">
@@ -555,7 +558,7 @@ class BookingHandler extends Renderer{
 				<?php
 			break;
 			default:
-				ErrorHandler::_errorExit(
+                ErrorHandler::handleError(400,
 					"{$this->routeInfo['action']} kann nicht interpretiert werden - something went horrible wrong!"
 				);
 			break;
@@ -853,7 +856,7 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
 							);
 						break;
 						default:
-							ErrorHandler::_errorExit("Type " . $alGrund[$idxGrund]["type"] . " not known");
+                            ErrorHandler::handleError(400,"Type " . $alGrund[$idxGrund]["type"] . " not known");
 						break;
 					}
 					

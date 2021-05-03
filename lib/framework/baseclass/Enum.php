@@ -1,6 +1,6 @@
 <?php
 
-namespace baseclass;
+namespace framework\baseclass;
 
 
 use ReflectionClass;

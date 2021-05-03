@@ -86,7 +86,7 @@ class BookingTableManager extends Renderer{
 						$extern_ids[] = $row["beleg"];
 					break;
 					default:
-						ErrorHandler::_errorExit("False whatever ... " . $row["beleg_type"]);
+                        ErrorHandler::handleError(400,"Beleg" . $row["beleg_type"]);
 					break;
 				}
 			}
@@ -409,9 +409,8 @@ class BookingTableManager extends Renderer{
                 $newBelegName = "E" . $b["extern_id"];
                 break;
             default:
-                ErrorHandler::_errorExit("Unbekannter Typ: " . $b["type"] . var_export($b, true));
+                ErrorHandler::handleError(500,"Unbekannter Typ: " . $b["type"] , var_export($b, true));
                 return;
-                break;
         }
 
         $bVal = $b["value"];
@@ -498,7 +497,7 @@ class BookingTableManager extends Renderer{
 		if (isset($this->kontoTypes[$zahlungIdType])){
 			$prefix = $this->kontoTypes[$zahlungIdType]["short"];
 		}else{
-			ErrorHandler::_errorExit("Konto Type $zahlungIdType nicht bekannt.");
+			ErrorHandler::handleError(500,"Konto Type $zahlungIdType nicht bekannt.");
 		}
 		$newValue = $prefix . $zahlungId;
 		if ($this->zahlung_lastValue === $newValue){

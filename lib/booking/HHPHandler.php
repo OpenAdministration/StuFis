@@ -37,7 +37,7 @@ class HHPHandler
 		if (isset($this->routeInfo["hhp-id"])){
 			$hhp_id = $this->routeInfo["hhp-id"];
 			if (!isset($this->hhps[$hhp_id])){
-				ErrorHandler::_renderError("Haushaltsplan HP-$hhp_id ist nicht bekannt.");
+                ErrorHandler::handleError(500,"Haushaltsplan HP-$hhp_id ist nicht bekannt.");
 				return;
 			}
 		}
@@ -64,7 +64,7 @@ class HHPHandler
                 $this->saveNewHHP();
                 break;
 			default:
-				ErrorHandler::_renderError("Action in HHP '{$this->routeInfo["action"]}' not known");
+                ErrorHandler::handleError(500,"Action in HHP '{$this->routeInfo["action"]}' not known");
 			break;
 		}
 	}
@@ -432,7 +432,7 @@ class HHPHandler
 			["id" => $titel_id]
 		);
 		if (count($titel) === 0){
-			ErrorHandler::_renderError("Titel $titel_id kann nicht gefunden werden", 404);
+            ErrorHandler::handleError(404,"Titel $titel_id kann nicht gefunden werden");
 		}else{
 			$titel = $titel[0];
 		}

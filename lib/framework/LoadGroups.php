@@ -2,7 +2,7 @@
 
 namespace framework;
 
-use baseclass\Enum;
+use framework\baseclass\Enum;
 
 class LoadGroups extends Enum{
     public const __default = [];

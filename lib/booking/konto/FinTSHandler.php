@@ -127,7 +127,7 @@ class FinTSHandler extends Renderer
                 $this->renderNewSepaKontoImport();
                 break;
             default:
-                ErrorHandler::_errorExit("Action $pageAction nicht bekannt");
+                ErrorHandler::handleError(404,"Action $pageAction nicht bekannt");
                 break;
         }
     }
@@ -152,7 +152,7 @@ class FinTSHandler extends Renderer
         }catch (WrongKeyOrModifiedCiphertextException $ciphertextException){
             return $ciphertextException->getMessage();
         } catch (EnvironmentIsBrokenException $e) {
-            ErrorHandler::_errorExit($e->getMessage());
+            ErrorHandler::handleException($e);
         }
         return false;
     }
@@ -173,11 +173,11 @@ class FinTSHandler extends Renderer
         if(count($res) === 1){
             $res = $res[0];
         }else{
-            ErrorHandler::_errorExit("This should also not happen ...");
+            ErrorHandler::handleError();
         }
 
         if(!isset($_SESSION['fints'][$credentialId]['key-password'])){
-            ErrorHandler::_errorExit("Passwort für Credentials $credentialId benötigt");
+            ErrorHandler::handleError(400,"Passwort für Credentials $credentialId benötigt");
         }
 
         $encryptedKeyString = $res['crypto_key'];
@@ -279,7 +279,7 @@ class FinTSHandler extends Renderer
         $action = new $actionClassName();
 
         if(!($action instanceof BaseAction)){
-            ErrorHandler::_errorExit($row['action_class'] . 'is not a valid BaseAction');
+            ErrorHandler::handleError(500,$row['action_class'] . 'is not a valid BaseAction');
         }
 
         $action->unserialize($row['action_serialized']);
@@ -328,7 +328,7 @@ class FinTSHandler extends Renderer
             HTMLPageRenderer::redirect(URIBASE . "konto/credentials/");
             return;
         } catch (Exception $e) {
-            ErrorHandler::_errorExit($e->getMessage());
+            ErrorHandler::handleException($e);
         }
 
         if (empty($tanMedium)) {
@@ -383,9 +383,9 @@ class FinTSHandler extends Renderer
                 //$this->saveActionToDB($action, $actionId, self::STATE_INIT_ACTION);
                 $this->loggedIn = true;
             }catch (ServerException $e){
-                ErrorHandler::_errorExit("Fehler beim Login: " . $e->getMessage());
+                ErrorHandler::handleException($e, 'Fehler beim Login');
             }catch (Exception $e){
-                ErrorHandler::_errorExit($e->getMessage());
+                ErrorHandler::handleException($e);
             }
         }
         // check if action in session is finished or unfinished
@@ -412,9 +412,9 @@ class FinTSHandler extends Renderer
                 return false;
             }
         } catch (CurlException $e) {
-            ErrorHandler::_errorExit("Keine Verbindung zur Bank möglich");
+            ErrorHandler::handleException($e, "Keine Verbindung zur Bank möglich");
         } catch (ServerException $e) {
-            ErrorHandler::_errorExit("Konto Aktion konnte nicht ausgeführt werden " . $e->getMessage());
+            ErrorHandler::handleException($e, "Konto Aktion konnte nicht ausgeführt werden ");
         }
         return $action;
 
@@ -440,9 +440,9 @@ class FinTSHandler extends Renderer
                 return $this->evaluateAction($restoredAction, $credentialId);
 
             } catch (CurlException $e) {
-                ErrorHandler::_errorExit("Keine Verbindung zur Bank möglich");
+                ErrorHandler::handleException($e, "Keine Verbindung zur Bank möglich");
             } catch (ServerException $e) {
-                ErrorHandler::_errorExit("Tan nicht akzeptiert " . $e->getMessage());
+                ErrorHandler::handleException($e, "Tan nicht akzeptiert");
             }
         }
         return [false, "Aktion kann nicht gefunden werden"];
@@ -787,7 +787,7 @@ class FinTSHandler extends Renderer
     {
         $tanRequest = $action->getTanRequest();
         if(is_null($tanRequest)){
-            ErrorHandler::_errorExit('Tan Request kann nicht ausgelesen werden' . var_export([$action, $_SESSION['fints']],true));
+            ErrorHandler::handleError(500,'Tan Request kann nicht ausgelesen werden', var_export([$action, $_SESSION['fints']],true));
         }
         $mediumName = $tanRequest->getTanMediumName();
         $challengeText = $tanRequest->getChallenge();

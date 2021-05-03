@@ -50,7 +50,7 @@ class DBConnector extends Singleton
                 ]
             );
         } catch (PDOException $e) {
-            ErrorHandler::_errorExit("konnte nicht mit der Datenbank vebinden" . $e->getMessage());
+            ErrorHandler::handleException($e, "konnte nicht mit der Datenbank vebinden");
         }
 
         if (self::$BUILD_DB) {
@@ -512,7 +512,7 @@ class DBConnector extends Singleton
                 $sql = "CREATE TABLE " . self::$DB_PREFIX . "$tablename (" . PHP_EOL .
                     $this->buildColDef($cols);
                 $sql .= ")ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;";
-                $this->pdo->query($sql) or ErrorHandler::_errorExit(print_r([$this->pdo->errorInfo(), $sql], true));
+                $this->pdo->query($sql) or ErrorHandler::handleError(500,print_r([$this->pdo->errorInfo()], true), $sql);
                 $buildedTables[] = $tablename;
                 //add primary and unique constraints
                 $sql = "ALTER TABLE " . self::$DB_PREFIX . $tablename . " ";
@@ -528,7 +528,7 @@ class DBConnector extends Singleton
                     if ($this->pdo->query($sqlPK) === false) {
                         $eInfo = $this->pdo->errorInfo();
                         $ret = $this->dbDropTables($buildedTables);
-                        ErrorHandler::_errorExit(print_r([$eInfo, $sqlPK, "creationRollback" => $ret, "dropped" => $buildedTables], true));
+                        ErrorHandler::handleError(500, print_r([$eInfo, $sqlPK, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                     }
                 }
                 if (isset($keys[$tablename]["unique"])) {
@@ -539,7 +539,7 @@ class DBConnector extends Singleton
                         if ($this->pdo->query($sqlU) === false) {
                             $eInfo = $this->pdo->errorInfo();
                             $ret = $this->dbDropTables($buildedTables);
-                            ErrorHandler::_errorExit(print_r([$eInfo, $sqlU, "creationRollback" => $ret, "dropped" => $buildedTables], true));
+                            ErrorHandler::handleError(500, print_r([$eInfo, $sqlU, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                         }
                     }
                 }
@@ -552,13 +552,13 @@ class DBConnector extends Singleton
                 $data = $keys[$tablename]["foreign"];
                 foreach ($data as $ownCol => $otherCol) {
                     if (!isset($cols[$ownCol])) {
-                        ErrorHandler::_errorExit("DB Config Fehler. $tablename.$ownCol not known");
+                        ErrorHandler::handleError(500,"DB Config Fehler. $tablename.$ownCol not known");
                     }
                     if (!is_array($otherCol) || count($otherCol) != 2) {
-                        ErrorHandler::_errorExit("DB Reference Error. Wrong reference with $tablename.$ownCol");
+                        ErrorHandler::handleError(500,"DB Reference Error. Wrong reference with $tablename.$ownCol");
                     }
                     if (!isset($scheme[$otherCol[0]][$otherCol[1]])) {
-                        ErrorHandler::_errorExit("DB Reference Error. $otherCol[0].$otherCol[1] not known");
+                        ErrorHandler::handleError(500,"DB Reference Error. $otherCol[0].$otherCol[1] not known");
                     }
                     $sqlFK = $sql . "ADD FOREIGN KEY (" . $this->quoteIdent($ownCol) . ")" .
                         " REFERENCES " . self::$DB_PREFIX . $otherCol[0] .
@@ -566,7 +566,7 @@ class DBConnector extends Singleton
                     if ($this->pdo->query($sqlFK) === false) {
                         $eInfo = $this->pdo->errorInfo();
                         $this->dbDropTables(array_keys($constrainsNeeded));
-                        ErrorHandler::_errorExit(print_r([$eInfo, $sqlFK], true));
+                        ErrorHandler::handleError(500,print_r([$eInfo, $sqlFK], true));
                     }
                 }
             }
@@ -577,10 +577,10 @@ class DBConnector extends Singleton
 
     final protected static function static__set($name, $value)
     {
-        if (property_exists(get_class(), $name))
+        if (property_exists(__CLASS__, $name)) {
             self::$$name = $value;
-        else {
-            ErrorHandler::_errorExit("$name ist keine Variable in " . get_class());
+        } else {
+            ErrorHandler::handleError(500,"$name ist keine Variable in " . __CLASS__);
         }
     }
 
@@ -592,7 +592,7 @@ class DBConnector extends Singleton
         }
         foreach ($tables as $table) {
             if (!isset($this->scheme[$table])) {
-                ErrorHandler::_errorExit("Table $table not know. Cannot be deleted.");
+                ErrorHandler::handleError(500,"Table $table not know. Cannot be deleted.");
             } else {
                 $tbl[] = $this->quoteIdent(self::$DB_PREFIX . $table);
             }
@@ -684,7 +684,7 @@ class DBConnector extends Singleton
         $query = $this->pdo->prepare("INSERT INTO " . self::$DB_PREFIX . "log (action, user_id) VALUES (?, ?)");
         $res = $query->execute([$actionName, DBConnector::getInstance()->getUser()["id"]]);
         if ($res === false) {
-            ErrorHandler::_errorExit("Log ist nicht möglich!" . print_r($query->errorInfo(), true));
+            ErrorHandler::handleError(500,"Log ist nicht möglich!" , print_r($query->errorInfo(), true));
         }
         $logId = $this->pdo->lastInsertId();
         foreach ($data as $key => $value) {
@@ -784,7 +784,6 @@ class DBConnector extends Singleton
         $groupBy = [], int $limit = 0, $debug = false
     )
     {
-
         //check if all tables are known
         if (!is_array($tables)) {
             $tables = [$tables];
@@ -792,7 +791,7 @@ class DBConnector extends Singleton
 
         foreach ($tables as $table) {
             if (!isset($this->scheme[$table])) {
-                ErrorHandler::_errorExit("Unkown table $table");
+                ErrorHandler::handleError(500,"Unkown table $table");
             }
         }
 
@@ -802,8 +801,8 @@ class DBConnector extends Singleton
         }
 
         //substitute * with tablename.*
-        if (in_array("*", $showColumns)) {
-            unset($showColumns[array_search("*", $showColumns)]);
+        if (in_array("*", $showColumns, true)) {
+            unset($showColumns[array_search("*", $showColumns, true)]);
             foreach ($tables as $k => $t) {
                 $showColumns[] = "$t.*";
             }
@@ -838,29 +837,29 @@ class DBConnector extends Singleton
         $validJoinOnOperators = ["=", "<", ">", "<>", "<=", ">="];
         foreach (array_keys($joins) as $nr) {
             if (!isset($joins[$nr]["table"])) {
-                ErrorHandler::_errorExit("no Jointable set in '" . $nr . "' use !");
+                ErrorHandler::handleError(500,"no Jointable set in '" . $nr . "' use !");
             } else if (!array_key_exists($joins[$nr]["table"], $this->scheme)) {
-                ErrorHandler::_errorExit("Unknown Table " . $joins[$nr]["table"]);
+                ErrorHandler::handleError(500,"Unknown Table " . $joins[$nr]["table"]);
             } else if (isset($joins[$nr]["type"]) && !in_array(
                     strtolower($joins[$nr]["type"]),
                     ["inner", "left", "natural", "right"]
                 )) {
-                ErrorHandler::_errorExit("Unknown Join type " . $joins[$nr]["type"]);
+                ErrorHandler::handleError(500,"Unknown Join type " . $joins[$nr]["type"]);
             }
             if (!isset($joins[$nr]["on"]))
                 $joins[$nr]["on"] = [];
             if (!is_array($joins[$nr]["on"])) {
-                ErrorHandler::_errorExit("on '{$joins[$nr]["on"]}' has to be an array!");
+                ErrorHandler::handleError(500,"on '{$joins[$nr]["on"]}' has to be an array!");
             }
             if (count($joins[$nr]["on"]) === 2 && !is_array($joins[$nr]["on"][0])) {
                 $joins[$nr]["on"] = [$joins[$nr]["on"]]; //if only 1 "on" set bring it into an array-form
             }
             foreach ($joins[$nr]["on"] as $pair) {
                 if (!is_array($pair)) {
-                    ErrorHandler::_errorExit("Join on '$pair' is not an array");
+                    ErrorHandler::handleError(500,"Join on '$pair' is not an array");
                 }
                 if (count($pair) !== 2) {
-                    ErrorHandler::_errorExit("unvalid joinon pair:" . implode(", ", $pair));
+                    ErrorHandler::handleError(500,"unvalid joinon pair:" . implode(", ", $pair));
                 }
             }
             if (isset($joins[$nr]["operator"])) {
@@ -868,14 +867,14 @@ class DBConnector extends Singleton
                     $joins[$nr]["operator"] = [$joins[$nr]["operator"]];
                 foreach ($joins[$nr]["operator"] as $op) {
                     if (!in_array($op, $validJoinOnOperators, true)) {
-                        ErrorHandler::_errorExit("unallowed join operator '$op' in {$nr}th join");
+                        ErrorHandler::handleError(500,"unallowed join operator '$op' in {$nr}th join");
                     }
                 }
             } else {
                 $joins[$nr]["operator"] = array_fill(0, count($joins[$nr]["on"]), "=");
             }
             if (count($joins[$nr]["on"]) !== count($joins[$nr]["operator"])) {
-                ErrorHandler::_errorExit(
+                ErrorHandler::handleError(500,
                     "not same amount of on-pairs(" . count($joins[$nr]["on"]) . ") and operators (" . count(
                         $joins[$nr]["operator"]
                     ) . ")!"
@@ -885,13 +884,13 @@ class DBConnector extends Singleton
 
         foreach ($sort as $field => $value) {
             if (!in_array($field, $this->validFields, true)) {
-                ErrorHandler::_errorExit("Unkown column $field in ORDER");
+                ErrorHandler::handleError(500,"Unkown column $field in ORDER");
             }
         }
 
         foreach ($groupBy as $field) {
             if (!in_array($field, $this->validFields, true)) {
-                ErrorHandler::_errorExit("Unkown column $field in GROUP");
+                ErrorHandler::handleError(500,"Unkown column $field in GROUP");
             }
         }
 
@@ -910,7 +909,7 @@ class DBConnector extends Singleton
                     $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
                 }
             } else {
-                ErrorHandler::_errorExit("Unkown column $col in fetchAll");
+                ErrorHandler::handleError(500,"Unkown column $col in fetchAll");
             }
         }
 
@@ -968,7 +967,7 @@ class DBConnector extends Singleton
                     $g[] = $this->quoteIdent($item);
                 }
             } else {
-                ErrorHandler::_errorExit(["$item ist für sql nicht bekannt."]);
+                ErrorHandler::handleError(500,"$item ist für sql nicht bekannt.");
             }
         }
         $vals = array_merge($joinVals, $whereVals);
@@ -1013,7 +1012,7 @@ class DBConnector extends Singleton
                 $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
                 $errormsg["stacktrace"] = $trace;
             }
-            ErrorHandler::_renderError(print_r($errormsg, true), 500);
+            ErrorHandler::handleError(500,print_r($errormsg, true));
         }
         HTMLPageRenderer::registerProfilingBreakpoint("sql-done");
         if ($ret === false)
@@ -1053,7 +1052,7 @@ class DBConnector extends Singleton
         foreach ($where as $whereGroup) {
             foreach ($whereGroup as $field => $value) {
                 if (!in_array($field, $this->validFields)) {
-                    ErrorHandler::_errorExit("Unkown column $field in WHERE");
+                    ErrorHandler::handleError(500,"Unkown column $field in WHERE");
                 }
             }
         }
@@ -1084,7 +1083,7 @@ class DBConnector extends Singleton
                 }
                 if (is_array($v)) {
                     if (!in_array(strtolower($v[0]), $validWhereOperators)) {
-                        ErrorHandler::_errorExit("Unknown where operator $v[0]");
+                        ErrorHandler::handleError(500,"Unknown where operator $v[0]");
                     }
                     if (is_array($v[1])) {
                         switch (strtolower($v[0])) {
@@ -1096,11 +1095,11 @@ class DBConnector extends Singleton
                             case "between":
                                 $wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
                                 if (count($v[1]) !== 2) {
-                                    ErrorHandler::_errorExit("To many values for " . $v[0]);
+                                    ErrorHandler::handleError(500,"To many values for " . $v[0]);
                                 }
                                 break;
                             default:
-                                ErrorHandler::_errorExit("unknown identifier " . $v[0]);
+                                ErrorHandler::handleError(500,"unknown identifier " . $v[0]);
                         }
                         $vals = array_merge($vals, $v[1]);
 
@@ -1183,7 +1182,7 @@ class DBConnector extends Singleton
         $this->dbWriteCounter++;
 
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::_errorExit("Unkown table $table");
+            ErrorHandler::handleError(500,"Unkown table $table");
         }
         //if (isset($fields["id"])) unset($fields["id"]);
 
@@ -1204,7 +1203,7 @@ class DBConnector extends Singleton
             if(DEV === true){
                 $info += ['sql' => $sql, 'values' => $fields];
             }
-            ErrorHandler::_errorExit(print_r($info, true));
+            ErrorHandler::handleError(500,print_r($info, true));
         }
         return $this->pdo->lastInsertId();
     }
@@ -1227,7 +1226,7 @@ class DBConnector extends Singleton
         if (is_array($value)) {
             $value = print_r($value, true);
         }
-        $query->execute(Array($logId, $key, $value)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        $query->execute(Array($logId, $key, $value)) or ErrorHandler::handleError(500,print_r($query->errorInfo(), true));
     }
 
     public function dbBegin(): bool
@@ -1281,7 +1280,7 @@ class DBConnector extends Singleton
     {
         $this->dbWriteCounter++;
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::_errorExit("Unkown table $table");
+            ErrorHandler::handleError(500,"Unkown table $table");
         }
 
         $filter = array_intersect_key(
@@ -1292,10 +1291,10 @@ class DBConnector extends Singleton
         //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         if (count($filter) === 0) {
-            ErrorHandler::_errorExit("No filter fields given.");
+            ErrorHandler::handleError(500,"No filter fields given.");
         }
         if (count($fields) === 0) {
-            ErrorHandler::_errorExit("No fields given.");
+            ErrorHandler::handleError(500,"No fields given.");
         }
         $u = [];
         foreach ($fields as $k => $v) {
@@ -1309,7 +1308,7 @@ class DBConnector extends Singleton
         $query = $this->pdo->prepare($sql);
         $values = array_merge(array_values($fields), $val);
 
-        $ret = $query->execute($values) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        $ret = $query->execute($values) or ErrorHandler::handleError(500,print_r($query->errorInfo(), true));
         if ($ret === false) {
             return false;
         }
@@ -1352,7 +1351,7 @@ class DBConnector extends Singleton
             WHERE `hhp_id` = ?
             ORDER BY `type` ASC,`g`.`id` ASC,`titel_nr` ASC";
         $query = $this->pdo->prepare($sql);
-        $query->execute([$id]) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        $query->execute([$id]) or ErrorHandler::handleError(500,print_r($query->errorInfo(), true));
         $groups = [];
         $titelIdsToGroupId = [];
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -1369,7 +1368,7 @@ class DBConnector extends Singleton
             FROM " . self::$DB_PREFIX . "booking AS b
             WHERE b.titel_id IN (" . implode(",", array_fill(0, count($titelIdsToGroupId), "?")) . ")";
         $query = $this->pdo->prepare($sql);
-        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::_errorExit(print_r($query->errorInfo(), true));
+        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::handleError(500,print_r($query->errorInfo(), true));
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
             $tId = array_shift($row);
             $val = $row["value"];

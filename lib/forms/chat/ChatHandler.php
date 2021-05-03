@@ -403,7 +403,7 @@ class ChatHandler{
     		]);
     	} catch (Exception $e){
     		$this->error = "Couln't create comment entry";
-    		ErrorHandler::_errorLog('CHAT - Insert Error:' . $this->db->getPdo()->errorInfo()[2]);
+            ErrorHandler::handleException($e,'CHAT - Insert Error', $this->db->getPdo()->errorInfo()[2]);
     	}
     }
     
@@ -550,7 +550,7 @@ class ChatHandler{
     			]);
     		} break;
     		default: {
-    			ErrorHandler::_errorLog('Chat: Error: Unhandles Action passed Validation: '.$post['action']);
+                ErrorHandler::handleError(400,'Chat: Error: Unhandles Action passed Validation: '.$post['action']);
     		} break;
     	}
     }
@@ -561,7 +561,8 @@ class ChatHandler{
      * create crypto keys
      * RSA @ 4096
      */
-    private function createKeys(){
+    private function createKeys(): void
+    {
     	//check files exists
     	if (!file_exists(__DIR__.'/secret_private.php')||filesize(__DIR__.'/secret_private.php') == 0){
 	    	$config = array(

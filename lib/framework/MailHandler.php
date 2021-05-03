@@ -633,7 +633,7 @@ class MailHandler extends Singleton
 			return true;
 		} else {
 			$emsg = 'Es konnte keine Mail versendet werden. Prüfen Sie bitte die Konfiguration. '.((isset($this->mail) && isset($this->mail->ErrorInfo))? $this->mail->ErrorInfo: '' );
-			ErrorHandler::_errorLog($emsg);
+            ErrorHandler::handleError(500, $emsg);
 			if ($echoError) {
                 echo $emsg;
             }

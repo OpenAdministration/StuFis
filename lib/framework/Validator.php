@@ -155,7 +155,7 @@ class Validator {
 		}
 
         $this->setError(true, 403, 'Access Denied', "POST unknown validator: $validatorName");
-        ErrorHandler::_errorLog("Validator: Unknown Validator: $validatorName", 'Validator: validate');
+        ErrorHandler::handleError(500,"Validator: Unknown Validator: $validatorName", 'Validator: validate');
         return !$this->isError;
     }
 
@@ -783,11 +783,6 @@ class Validator {
 			}
 		}
 		if (isset($emsg) && $msg){
-			if (class_exists()){
-				ErrorHandler::_errorTraceLog($emsg);
-			} else {
-				error_log($emsg);
-			}
 			if (isset($params['error'])) $emsg = $params['error'];
 			return !$this->setError(true, 200, $emsg);
 		}

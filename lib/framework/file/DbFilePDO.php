@@ -90,7 +90,7 @@ class DbFilePDO{
         if (!$this->db){
             $this->_isError = true;
             $this->msgError = "Connect failed: No PDO object\n";
-            ErrorHandler::_renderError($this->msgError);
+            ErrorHandler::handleError(500, $this->msgError);
             exit();
         }
     }

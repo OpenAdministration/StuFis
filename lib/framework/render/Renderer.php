@@ -80,7 +80,7 @@ abstract class Renderer
                     continue;
                 }
                 if (count(reset($content)) !== $paramSum && count($keys) !== $paramSum) {
-                    ErrorHandler::_errorExit(
+                    ErrorHandler::handleError(500,
                         "In Gruppe '$groupName' passt Spaltenzahl (" . count(
                             reset($content)
                         ) . ") bzw. Key Anzahl (" . count(
@@ -92,8 +92,7 @@ abstract class Renderer
                 }
             }
         } catch (ReflectionException $reflectionException) {
-            ErrorHandler::_renderException($reflectionException, "Reflection not working." , 500);
-
+            ErrorHandler::handleException($reflectionException);
         }
 
         if (count($keys) === 0) {
@@ -286,7 +285,7 @@ abstract class Renderer
     protected function renderAlert($strongMsg, $msg, $type = "success"): void
     {
         if (!in_array($type, ["success", "info", "warning", "danger"])) {
-            ErrorHandler::_renderError("Falscher Datentyp in renderAlert()", 405);
+            ErrorHandler::handleError(500,"Falscher Datentyp in renderAlert()");
         }
         if(is_array($msg)){
             $msg = $this->arrayToListEscapeFunction($msg);
@@ -360,7 +359,7 @@ abstract class Renderer
             ["von" => false]
         );
         if (!isset($hhps) || empty($hhps)){
-            ErrorHandler::_errorExit("Konnte keine Haushaltspläne finden");
+            ErrorHandler::handleError(500,"Konnte keine Haushaltspläne finden");
         }
         if (!isset($routeInfo["hhp-id"])){
             foreach (array_reverse($hhps, true) as $id => $hhp){

@@ -47,7 +47,7 @@ class RestHandler extends EscFunc{
     {
 		global $nonce;
 		if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
-			ErrorHandler::_renderError('Access Denied - you send the wrong form.');
+            ErrorHandler::handleError(400,'Das Formular ist nicht gültig, bitte lade die Seite neu');
 		}else{
 			unset($_POST["nonce"]);
 		}
@@ -112,7 +112,7 @@ class RestHandler extends EscFunc{
                 break;
 			case 'nononce':
 			default:
-				ErrorHandler::_errorExit('Unknown Action: ' . $routeInfo['action']);
+            ErrorHandler::handleError(400,'Unknown Action: ' . $routeInfo['action']);
 			break;
 		}
 	}
@@ -309,7 +309,7 @@ class RestHandler extends EscFunc{
 			if (isset($_POST['action'])){
 				$routeInfo['mfunction'] = $_POST['action'];
 			}else{
-				ErrorHandler::_renderError('No Action and mfunction.', 404);
+                ErrorHandler::handleError(400,'No Action and mfunction.');
 			}
 		}
 		
@@ -507,7 +507,7 @@ class RestHandler extends EscFunc{
 				];
 			break;
             default:
-				ErrorHandler::_renderError('Unknown Action.', 404);
+                ErrorHandler::handleError(400,'Unknown Action.');
 			break;
 		}
 		$vali->validateMap($_POST, $validator_map);
@@ -645,7 +645,7 @@ class RestHandler extends EscFunc{
 								]
 							);
 						}catch (Exception $e){
-							ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+                            ErrorHandler::handleException($e);
 							break;
 						}
 						if (!$r || count($r) === 0){
@@ -756,7 +756,7 @@ class RestHandler extends EscFunc{
 								[]
 							);
 						}catch (Exception $e){
-							ErrorHandler::_errorLog('RestHandler:  ' . $e->getMessage());
+							ErrorHandler::handleException($e);
 							break;
 						}
 						if (!$r || count($r) === 0){
@@ -864,7 +864,7 @@ class RestHandler extends EscFunc{
 		
 		$ret = true;
 		if (!DBConnector::getInstance()->dbBegin()){
-			ErrorHandler::_errorExit(
+            ErrorHandler::handleError(500,
 				"Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!"
 			);
 		}

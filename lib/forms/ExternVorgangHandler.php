@@ -22,7 +22,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 				$eId = $routeInfoOrId["eid"];
 				$where = ["vorgang_id" => $vId, "extern_id" => $eId];
 			}else{
-				ErrorHandler::_errorExit("non valid array. vid or eid is not set");
+                ErrorHandler::handleError(400,"non valid array. vid or eid is not set");
 			}
 			$this->routeInfo = $routeInfoOrId;
 		}else{
@@ -38,7 +38,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 			]
 		);
 		if (!is_array($this->data) || count($this->data) !== 1){
-			ErrorHandler::_errorExit("Datensatz konnte nicht gefunden werden");
+            ErrorHandler::handleError(400,"Datensatz konnte nicht gefunden werden");
 		}
 		$this->data = $this->data[0];
 		$this->meta_data = DBConnector::getInstance()->dbFetchAll(
@@ -50,7 +50,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 			]
 		);
 		if (!is_array($this->meta_data) || count($this->meta_data) !== 1){
-			ErrorHandler::_errorExit("Datensatz konnte nicht gefunden werden");
+            ErrorHandler::handleError(400,"Datensatz konnte nicht gefunden werden");
 		}
 		$this->meta_data = $this->meta_data[0];
 	}
@@ -67,7 +67,8 @@ class ExternVorgangHandler extends FormHandlerInterface{
 		// TODO: Implement updateSavedData() method.
 	}
 
-	public function state_change($stateName, $etag){
+	public function state_change($stateName, $etag): void
+    {
 		// TODO: Implement method and use etag :/
 		switch ($stateName){
 			case "instructed":
@@ -76,7 +77,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 				$colName = "state_$stateName";
 			break;
 			default:
-				ErrorHandler::_errorExit("Wrong State $stateName in External");
+				ErrorHandler::handleError(400,"Wrong State $stateName in External");
 			break;
 		}
 		$newEtag = randomstring();
@@ -86,7 +87,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 			["id" => $this->id, "etag" => $etag],
 			[
 				$colName =>
-					DBConnector::getInstance()->getUser()["fullname"] . ";" . date_create()->format(DateTime::ATOM),
+					DBConnector::getInstance()->getUser()["fullname"] . ";" . date_create()->format(DateTime),
 				"etag" => $newEtag
 			]
 		);
@@ -115,18 +116,20 @@ class ExternVorgangHandler extends FormHandlerInterface{
 		// TODO: Implement getID() method.
 	}
 	
-	public function render(){
+	public function render() : void
+    {
 		// TODO: Implement render() method.
 	}
 
-	public function handlePost(){
+	public function handlePost(): void
+    {
 		if (isset($this->routeInfo["mfunction"])){
 			switch ($this->routeInfo["mfunction"]){
 				case "zahlungsanweisung":
 					$this->post_pdf_zahlungsanweisung($_POST["d"] === "0");
 				break;
 				default:
-					ErrorHandler::_errorExit("mfunction " . $this->routeInfo["mfunction"] . " not known");
+                    ErrorHandler::handleError(400,"mfunction " . $this->routeInfo["mfunction"] . " not known");
 				break;
 			}
 		}
@@ -253,7 +256,7 @@ class ExternVorgangHandler extends FormHandlerInterface{
 			echo base64_decode($result['data']['data']);
 			die();
 		}else{
-			ErrorHandler::_errorLog(print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
+            ErrorHandler::handleError(400, print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
 			$this->error = 'Error during PDF creation.';
 		}
 	}

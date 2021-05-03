@@ -41,7 +41,7 @@ class ProjektHandler
         //print_r($pathInfo);
         self::initStaticVars();
         if (!isset($pathInfo["action"])) {
-            ErrorHandler::_errorExit("Aktion nicht gesetzt");
+            ErrorHandler::handleError(400, "Aktion nicht gesetzt");
         }
         $this->action = $pathInfo["action"];
 
@@ -444,7 +444,7 @@ class ProjektHandler
                     $fields[$name] = null;
                 }
             } else {
-                ErrorHandler::_renderJson(["code" => 403, "msg" => "Du hast keine Berechtigung '$name' zu schreiben."]);
+                ErrorHandler::handleError(403, "Du hast keine Berechtigung '$name' zu schreiben.");
             }
         }
         $update_rows = DBConnector::getInstance()->dbUpdate(
@@ -556,7 +556,7 @@ class ProjektHandler
                 $this->renderAuslagenList();
                 break;
             default:
-                ErrorHandler::_renderError("Aktion: $this->action bei Projekt $this->id nicht bekannt.", 404);
+                ErrorHandler::handleError(404,"Aktion: $this->action bei Projekt $this->id nicht bekannt.");
                 break;
         }
     }
@@ -594,7 +594,7 @@ class ProjektHandler
             ]
         );
         if (empty($hhpId)) {
-            ErrorHandler::_errorExit("HHP-id kann nicht ermittelt werden. Bitte benachritigen sie den Administrator");
+            ErrorHandler::handleError(400,"HHP-id kann nicht ermittelt werden. Bitte benachrichtigen sie den Administrator");
         }
         $hhpId = $hhpId[0]["id"];
         $selectable_titel = FormTemplater::generateTitelSelectable($hhpId);

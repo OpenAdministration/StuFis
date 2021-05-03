@@ -1,6 +1,7 @@
 <?php
 
-namespace baseclass;
+namespace framework\baseclass;
+
 
 class TextStyle extends Enum{
     const __default = self::NORMAL;
