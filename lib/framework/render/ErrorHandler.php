@@ -3,6 +3,7 @@
 namespace framework\render;
 
 use Exception;
+use framework\render\html\SmartyFactory;
 use ReflectionClass;
 
 class ErrorHandler extends Renderer{

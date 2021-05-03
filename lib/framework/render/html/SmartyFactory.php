@@ -1,7 +1,7 @@
 <?php
 
 
-namespace framework\render;
+namespace framework\render\html;
 
 use Smarty;
 

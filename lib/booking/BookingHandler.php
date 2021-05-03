@@ -6,6 +6,9 @@ use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
+use framework\render\html\FA;
+use framework\render\html\Html;
+use framework\render\html\HtmlButton;
 use framework\render\HTMLPageRenderer;
 use framework\render\Renderer;
 use ZipArchive;
@@ -455,7 +458,7 @@ class BookingHandler extends Renderer{
 		switch ($activeTab){
 			case "sparbuch":
 			case "bank":
-				$this->renderKontoRefreshButton(); ?>
+				$this->renderFintsButton(); ?>
                 <table class="table">
                     <thead>
                     <tr>
@@ -565,21 +568,29 @@ class BookingHandler extends Renderer{
 		}
 	}
 	
-	private function renderKontoRefreshButton(): void
+	private function renderHibiscusButton(): void
     { ?>
         <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form"
               class="ajax-form">
-            <button type="submit" name="absenden" class="btn btn-primary"
+            <a type="submit" class="btn btn-primary"
 				<?= !(AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv") ?
 					"disabled title='Nur KVs können den Kontoauszug abrufen!'" : "" ?>
             >
-                <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen
-            </button>
+                <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen (Hibiscus)
+            </a>
             <input type="hidden" name="action" value="hibiscus">
 			<?php $this->renderNonce(); ?>
         </form>
 		<?php
 	}
+
+	private function renderFintsButton() : void
+    {
+        echo HtmlButton::make()
+            ->asLink(URIBASE . 'konto/credentials')
+            ->style( 'primary')
+            ->body(FA::make('fa-refresh') . " Kontoauszüge importieren (FINTS)");
+    }
 	
 	private function renderBookingText(): void
     {
@@ -587,7 +598,7 @@ class BookingHandler extends Renderer{
 		$btm->render();
 	}
 
-	private function renderBooking($active): void
+	private function renderBooking(string $active): void
     {
 
 		[$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . "booking/", "/instruct");
@@ -762,7 +773,7 @@ class BookingHandler extends Renderer{
 			    return $e1["value"] <=> $e2["value"];
 			}
 		);
-		$this->renderKontoRefreshButton();
+		$this->renderFintsButton();
 		?>
         <table class="table table-striped">
             <thead>

@@ -55,7 +55,6 @@ class FinTSHandler extends Renderer
 
     public function __construct(array $routeInfo)
     {
-
         $this->routeInfo = $routeInfo;
         $this->loggedIn = false;
 
