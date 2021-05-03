@@ -339,7 +339,7 @@ return [
             'path' => 'rest',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'POST',
             'children' => [
                 [
@@ -358,7 +358,7 @@ return [
                     'path' => 'forms',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => '(projekt)(.*)',
@@ -503,7 +503,7 @@ return [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => 'instruct',
@@ -572,14 +572,14 @@ return [
             'path' => 'files',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'GET',
             'children' => [
                 [
                     'path' => 'get',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => '([0-9a-f]{64})',
@@ -607,7 +607,7 @@ return [
             'path' => 'export',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'GET',
             'children' => [
                 [

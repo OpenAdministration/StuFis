@@ -17,6 +17,8 @@
 
 namespace framework\auth;
 
+use framework\render\ErrorHandler;
+
 class AuthDummyHandler implements AuthHandler{
     
     /**
@@ -62,9 +64,7 @@ class AuthDummyHandler implements AuthHandler{
     {
         $this->requireAuth();
         if (!$this->hasGroup($groups)){
-            header('HTTP/1.0 403 Unauthorized');
-            echo 'You have no permission to access this page.';
-            die();
+            $this->reportPermissionDenied('Eine der Gruppen ' . $groups . ' wird benötigt');
         }
     }
 
@@ -139,5 +139,12 @@ class AuthDummyHandler implements AuthHandler{
         }
         return count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) !== 0;
     }
-    
+
+    public function reportPermissionDenied(string $errorMsg, string $debug = null): void
+    {
+        if(isset($debug)){
+            $debug = var_export($this->attributes,true);
+        }
+        ErrorHandler::handleError(403, $errorMsg, $debug);
+    }
 }

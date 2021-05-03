@@ -2,18 +2,19 @@
 
 namespace framework\render;
 
+use Composer\InstalledVersions;
 use DateTime;
 
 class HTMLPageRenderer
 {
     private static $profiling_timing, $profiling_names, $profiling_sources;
-    private static $errorPageHtml;
+    private static $errorHandler;
     private static $tabsConfig;
     private $bodyContent;
     private $titel;
     private $routeInfo;
 
-    public function __construct($routeInfo, $bodycontent = "")
+    public function __construct($routeInfo, $bodyContent = "")
     {
         $this->routeInfo = $routeInfo;
         if (isset($this->routeInfo["titel"])) {
@@ -21,7 +22,7 @@ class HTMLPageRenderer
         } else {
             $this->titel = "StuRa Finanzen";
         }
-        $this->bodyContent = $bodycontent;
+        $this->bodyContent = $bodyContent;
     }
 
     /**
@@ -45,21 +46,25 @@ class HTMLPageRenderer
         self::$tabsConfig = ["tabs" => $tabs, "linkbase" => $linkbase, "active" => $activeTab];
     }
 
-    public static function dieWithErrorPage($param): void
+    public static function showErrorAndDie(ErrorHandler $errorHandler): void
     {
-        self::setErrorPage($param);
-        $htmlRenderer = new HTMLPageRenderer([]);
-        $htmlRenderer->render();
-        exit(-1);
+        self::$errorHandler = $errorHandler;
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            self::$errorHandler->renderJson();
+            die();
+        }
+        (new self([]))->render();
+        die();
     }
 
-    private static function setErrorPage($param): void
+    private function hasError() : bool
     {
-        /** @var $param array is used in error.phtml */
-        ob_start();
-        include SYSBASE . "/template/error.phtml";
-        self::$errorPageHtml = ob_get_clean();
+        return isset(self::$errorHandler);
+    }
 
+    private function renderError(): void
+    {
+        self::$errorHandler->render();
     }
 
     public function render(): void
@@ -68,8 +73,8 @@ class HTMLPageRenderer
         $this->renderNavbar();
         $this->renderSiteNavigation();
         echo "<div class='container main col-xs-12 col-lg-10'>";
-        if (isset(self::$errorPageHtml)) {
-            echo self::$errorPageHtml;
+        if ($this->hasError()) {
+            $this->renderError();
         } else {
             if (!empty(self::$tabsConfig)) {
                 $this->renderPanelTabs(self::$tabsConfig["tabs"], self::$tabsConfig["linkbase"], self::$tabsConfig["active"]);
@@ -80,7 +85,7 @@ class HTMLPageRenderer
             }
         }
         echo "</div>";
-        if (!isset(self::$errorPageHtml)) {
+        if (!$this->hasError()) {
             $this->renderModals();
             $this->renderCookieAlert();
         }
@@ -141,7 +146,7 @@ class HTMLPageRenderer
     private function includeCSS(): string
     {
         $out = "";
-        $defaultCssFiles = ["bootstrap.min", "font-awesome.min","cookiealert"];
+        $defaultCssFiles = ["bootstrap.min", "font-awesome.min", "cookiealert"];
         $cssFiles = $defaultCssFiles;
         if (isset($this->routeInfo["load"])) {
             $cssFiles = array_merge($cssFiles, ...array_column($this->routeInfo["load"], 'css'));
@@ -205,6 +210,9 @@ class HTMLPageRenderer
         $gitDate = new DateTime();
         $gitDate->setTimestamp(filemtime($gitPathBranch));
 
+        $prettyVersionString = InstalledVersions::getRootPackage()["pretty_version"];
+        $versionString = InstalledVersions::getRootPackage()["version"];
+
         ?>
         <nav class="navbar navbar-inverse navbar-fixed-top"
             <?php
@@ -238,12 +246,13 @@ class HTMLPageRenderer
                     <li>
                         <a target="_blank" href="<?= GIT_ISSUE_LINK ?>"
                            title="<?= htmlspecialchars(
-                               "Commit: " . substr($gitHash,0,7) . PHP_EOL .
-                               "Branch: " . $gitBranchName . PHP_EOL .
-                               "From: " . $gitDate->format(DATE_ATOM)
+                               "Commit:\t" . substr($gitHash,0,7) . PHP_EOL .
+                               "Branch:\t" . $gitBranchName . PHP_EOL .
+                               "From:\t" . $gitDate->format(DATE_ATOM) . PHP_EOL .
+                               "Version:\t" . $versionString
                            )?>">
                             <i class="fa fa-fw fa-gitlab"></i>
-                            <span class="hidden-sm hidden-xs">Fehler melden - V<?= $gitDate->format("Y-m-d") ?></span>
+                            <span class="hidden-sm hidden-xs">Fehler melden - v<?= $prettyVersionString ?></span>
                         </a>
                     </li>
                     <li>
@@ -267,6 +276,7 @@ class HTMLPageRenderer
 
     private function renderSiteNavigation(): void
     {
+        $auth = (AUTH_HANDLER)::getInstance();
         $activeButton = $this->routeInfo["navigation"] ?? "";
         $navButtons = [
             [
@@ -285,28 +295,28 @@ class HTMLPageRenderer
             ],
             [
                 "title" => "TODO HV",
-                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "show" => $auth->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-legal",
                 "target" => URIBASE . "menu/hv",
                 "tabname" => "hv",
             ],
             [
                 "title" => "TODO KV",
-                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "show" => $auth->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-calculator",
                 "target" => URIBASE . "menu/kv",
                 "tabname" => "kv",
             ],
             [
                 "title" => "Buchungen",
-                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "show" => $auth->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-book",
                 "target" => URIBASE . "booking",
                 "tabname" => "booking",
             ],
             [
                 "title" => "Konto",
-                "show" => (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen"),
+                "show" => $auth->hasGroup("ref-finanzen"),
                 "fa-icon" => "fa-bar-chart",
                 "target" => URIBASE . "konto/",
                 "tabname" => "konto",
@@ -326,37 +336,27 @@ class HTMLPageRenderer
                 "tabname" => "hhp",
             ],
         ];
-
         ?>
         <div>
             <div class="profile-sidebar">
                 <!-- SIDEBAR USER TITLE -->
                 <div class="profile-usertitle">
                     <div class="profile-usertitle-name">
-                        <?= (AUTH_HANDLER)::getInstance()->getUserfullname(); ?>
+                        <?= $auth->getUserfullname(); ?>
                     </div>
-                    <?php if ((AUTH_HANDLER)::getInstance()->isAdmin()) { ?>
-                        <div class="profile-usertitle-job">
+                    <div class="profile-usertitle-job">
+                    <?php if ($auth->isAdmin()) { ?>
                             Admin
-                        </div>
-                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")) { ?>
-                        <div class="profile-usertitle-job">
+                    <?php } else if ($auth->hasGroup("ref-finanzen-hv")) { ?>
                             Haushaltsverantwortlich
-                        </div>
-                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv")) { ?>
-                        <div class="profile-usertitle-job">
+                    <?php } else if ($auth->hasGroup("ref-finanzen-kv")) { ?>
                             Kassenverantwortlich
-                        </div>
-                    <?php } else if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")) { ?>
-                        <div class="profile-usertitle-job">
+                    <?php } else if ($auth->hasGroup("ref-finanzen")) { ?>
                             Referat Finanzen
-                        </div>
                     <?php } else { ?>
-                        <div class="profile-usertitle-job">
                             Support Level 1
-                        </div>
                     <?php } ?>
-
+                    </div>
                 </div>
                 <!-- END SIDEBAR USER TITLE -->
                 <!-- SIDEBAR BUTTONS -->
@@ -570,14 +570,6 @@ class HTMLPageRenderer
     public function getBodyContent() : string
     {
         return $this->bodyContent;
-    }
-
-    /**
-     * @param string $bodyContent
-     */
-    public function setBodyContent(string $bodyContent) : void
-    {
-        $this->bodyContent = $bodyContent;
     }
 
     public function appendRendererContent(Renderer $renderObject) : void

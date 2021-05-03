@@ -92,8 +92,6 @@ switch ($routeInfo['controller']){
         break;
     case 'error':
     default:
-        $errorHdl = new ErrorHandler($routeInfo);
-        $htmlRenderer->appendRendererContent($errorHdl);
-        $htmlRenderer->render();
+        ErrorHandler::handleErrorRoute($routeInfo);
         break;
 }

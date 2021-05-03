@@ -93,4 +93,6 @@ interface AuthHandler
      * @param $delimiter string delimiter between gremien
      */
     public function hasGremium(string $gremien, string $delimiter) : bool;
+
+    public function reportPermissionDenied(string $errorMsg, string $debug) : void;
 }

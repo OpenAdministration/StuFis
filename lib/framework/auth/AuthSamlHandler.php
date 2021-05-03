@@ -2,6 +2,7 @@
 
 namespace framework\auth;
 
+use framework\render\ErrorHandler;
 use framework\Singleton;
 
 class AuthSamlHandler extends Singleton implements AuthHandler{
@@ -42,13 +43,11 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
     public function requireAuth() : void
     {
         if (isset($_REQUEST["ajax"]) && $_REQUEST["ajax"] && !$this->saml->isAuthenticated()){
-            header('HTTP/1.0 401 UNATHORISED');
-            die("Login nicht (mehr) gueltig");
+            $this->reportPermissionDenied('Login nicht (mehr) gültig');
         }
         $this->saml->requireAuth();
         if (!$this->hasGroup(self::$AUTHGROUP)){
-            header('HTTP/1.0 403 FORBIDDEN');
-            die("Du besitzt nicht die nötigen Rechte um diese Seite zu sehen.");
+            $this->reportPermissionDenied('Eine der Gruppen ' . self::$AUTHGROUP . ' wird benötigt');
         }
     }
     
@@ -73,9 +72,7 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
             return;
         }
         if (!$this->hasGroup($groups)){
-            header('HTTP/1.0 401 Unauthorized');
-            include SYSBASE . "/template/permission-denied.tpl";
-            die();
+            $this->reportPermissionDenied('Eine der Gruppen ' . $groups . ' wird benötigt');
         }
     }
     
@@ -143,7 +140,14 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
         }
         return false;
     }
-    
+
+    public function reportPermissionDenied(string $errorMsg, string $debug = null): void
+    {
+        if(isset($debug)){
+            $debug = var_export($this->getAttributes(),true);
+        }
+        ErrorHandler::handleError(403, $errorMsg, $debug);
+    }
 }
 
 

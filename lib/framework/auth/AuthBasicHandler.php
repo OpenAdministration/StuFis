@@ -129,10 +129,7 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 		if ( isset($_GET['logout']) && (strpos($_SERVER['REQUEST_URI'], '?logout=1') !== false || strpos($_SERVER['REQUEST_URI'], '&logout=1') !== false )){
 			session_destroy();
 			session_start();
-			header('WWW-Authenticate: Basic realm="'.BASE_TITLE.' Please Login"');
-			header('HTTP/1.0 401 Unauthorized');
-			echo 'You have no permission to access this page.';
-			die();
+			$this->reportPermissionDenied('You have no permission to access this page.');
 		}
 		
 		if(!isset($_SESSION['SILMPH']['MESSAGES'])){
@@ -140,10 +137,7 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
 		}
 		if (!self::$noPermCheck && !isset($_SERVER['PHP_AUTH_USER'])){
 			$_SESSION['SILMPH']['USER_ID'] = 0;
-			header('WWW-Authenticate: Basic realm="'.BASE_TITLE.' Please Login"');
-			header('HTTP/1.0 401 Unauthorized');
-			echo '<strong>You are not allowd to access this page. Please Login.</strong>';
-			die();
+			$this->reportPermissionDenied('<strong>You are not allowd to access this page. Please Login.</strong>');
 		}
         if (!self::$noPermCheck) {
             $_SESSION['SILMPH']['USER_ID'] = 0;
@@ -151,10 +145,7 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
                 self::$usermap[$_SERVER['PHP_AUTH_USER']]['password'] === $_SERVER['PHP_AUTH_PW']){
                 $this->attributes = array_slice(self::$usermap[$_SERVER['PHP_AUTH_USER']], 1 );
             } else {
-                header('WWW-Authenticate: Basic realm="basic_'.BASE_TITLE.'_realm"');
-                header('HTTP/1.0 401 Unauthorized');
-                echo '<strong>You are not allowd to access this page. Please Login.</strong>';
-                die();
+                $this->reportPermissionDenied('<strong>You are not allowd to access this page. Please Login.</strong>');
             }
         } else {
             $this->attributes = [
@@ -171,10 +162,7 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
     {
 		$this->requireAuth();
 		if (!$this->hasGroup($groups)){
-			header('WWW-Authenticate: Basic realm="'.BASE_TITLE.' Please Login"');
-			header('HTTP/1.0 401 Unauthorized');
-			echo 'You have no permission to access this page.';
-			die();
+            $this->reportPermissionDenied('You have no permission to access this page.');
 		}
 	}
 
@@ -236,5 +224,16 @@ class AuthBasicHandler extends Singleton implements AuthHandler{
             return false;
         }
         return count(array_intersect(explode($delimiter, strtolower($gremien)), array_map("strtolower", $attributes["gremien"]))) !== 0;
+    }
+
+    public function reportPermissionDenied(string $errorMsg = '', string $debug = ''): void
+    {
+        header('WWW-Authenticate: Basic realm="'.BASE_TITLE.' Please Login"');
+        header('HTTP/1.0 401 Unauthorized');
+        echo $errorMsg;
+        if(DEV){
+            echo $debug;
+        }
+        die();
     }
 }

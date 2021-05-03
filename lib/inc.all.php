@@ -11,7 +11,6 @@ require_once SYSBASE . '/vendor/autoload.php';
 
 $conf = include SYSBASE . "/config/config.php";
 require_once SYSBASE . '/lib/inc.nonce.php';
-
 require_once SYSBASE . '/lib/inc.helper.php';
 
 Singleton::configureAll($conf);

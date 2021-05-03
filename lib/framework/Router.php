@@ -2,6 +2,8 @@
 
 namespace framework;
 
+use Exception;
+
 /**
  * @author michael
  *

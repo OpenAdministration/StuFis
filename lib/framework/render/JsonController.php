@@ -45,7 +45,7 @@ class JsonController {
 	 */
 	public function json_access_denied($message = false){
 		http_response_code (403);
-		$this->json_result = array('success' => false, 'eMsg' => $this->translate( ($message)? $message : 'Access Denied.'));
+		$this->json_result = array('success' => false, 'eMsg' => $this->translate(($message) ?: 'Access Denied.'));
 		$this->print_json_result();
 	}
 	
@@ -63,7 +63,8 @@ class JsonController {
 	 * echo json result  stored in $this->json_result
 	 * @param boolean $jsonHeader, default: false
 	 */
-	protected function print_json_result($jsonHeader = false){
+	protected function print_json_result($jsonHeader = false): void
+    {
 		self::print_json($this->json_result, $jsonHeader);
 	}
 	
@@ -72,7 +73,8 @@ class JsonController {
 	 * @param array $json json data
 	 * @param boolean $jsonHeader, default: true
 	 */
-	public static function print_json($json, $jsonHeader = true){
+	public static function print_json(array $json, $jsonHeader = true): void
+    {
 		if ($jsonHeader) {
             header("Content-Type: application/json");
         }
