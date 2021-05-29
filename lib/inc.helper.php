@@ -1,26 +1,31 @@
 <?php
 
-function human_filesize($bytes, $decimals = 2){
+use baseclass\TextStyle;
+
+function human_filesize($bytes, $decimals = 2): string
+{
     $size = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
     $factor = floor((strlen($bytes) - 1) / 3);
-    return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$size[$factor];
+    return sprintf("%.{$decimals}f", $bytes / (1024 ** $factor)) . @$size[$factor];
 }
 
-function escapeMe($d, $row){
+function escapeMe($d, $row): string
+{
     return htmlspecialchars($d);
 }
 
 function trimMe($d){
     if (is_array($d)){
         return array_map("trimMe", $d);
-    }else{
-        return trim($d);
     }
+
+    return trim($d);
 }
 
-function hexEscape($string){
+function hexEscape($string): string
+{
     $return = '';
-    for ($x = 0; $x < strlen($string); $x++){
+    for ($x = 0, $xMax = strlen($string); $x < $xMax; $x++){
         $return .= '\x' . bin2hex($string[$x]);
     }
     return $return;
@@ -31,19 +36,7 @@ function sanitizeName($name){
 }
 
 
-class TextStyle extends baseclass\Enum{
-    const __default = self::NORMAL;
-    
-    const NORMAL = "";
-    const BLACK = "text-color__black";
-    const SECONDARY = "text-color__secondary";
-    const PRIMARY = "text-color__primary";
-    const DANGER = "text-color__danger";
-    const DANGER_DARK = "text-color__danger-dark";
-    const BOLD = "text-bold";
-    const GREEN = "text-color__green";
-    
-}
+
 
 
 function generateLinkFromID($text, $dest, $linkColor = TextStyle::__default): string

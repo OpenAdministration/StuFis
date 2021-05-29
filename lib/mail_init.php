@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+<?php
+
+use framework\auth\AuthHandler;
+use framework\MailHandler;
+
+?>
+    <!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="UTF-8">
@@ -35,19 +41,19 @@
 				margin-top: 1px;
 			}
 		</style>
-		<link rel="stylesheet" type="text/css" href="<?= URIBASE.'css/logging.css' ?>" media="screen,projection">
+		<link rel="stylesheet" type="text/css" href="<?= URIBASE . 'css/logging.css' ?>" media="screen,projection">
 	</head>
 	<body>
 <?php
 // install - secret key
-if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') == 0){
-	Crypto::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
+if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') === 0){
+	CryptoHandler::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
 }
 
 // show encrypted password =============================================
 echo '<div class="box monospace wrap">'."\n";
 echo '<strong>Mail Passwort encrypted:</strong><br>';
-echo '<span><i class="red">'.((MailHandler::encryptPassword())?MailHandler::encryptPassword():'Empty').'</i></span>';
+echo '<span><i class="red">'.((MailHandler::encryptPassword()) ?: 'Empty').'</i></span>';
 echo "\n</div>\n";
 
 // test connection  ===============================================
@@ -78,8 +84,11 @@ $mh = MailHandler::getInstance();
 $auth = (AUTH_HANDLER);
 /* @var $auth AuthHandler */
 $auth = $auth::getInstance();
-if ($auth->getUserMail() != '' ) $mail_address = $auth->getUserMail();
-else $mail_address = 'ref-if@tu-ilmenau.de';
+if ($auth->getUserMail() !== '' ) {
+    $mail_address = $auth->getUserMail();
+} else {
+    $mail_address = 'ref-if@tu-ilmenau.de';
+}
 	
 $tMail = [];
 $tMail['to'][] = $mail_address;

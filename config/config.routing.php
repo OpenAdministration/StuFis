@@ -1,5 +1,8 @@
 <?php
-$routing = [
+
+use framework\LoadGroups;
+
+$pathConfig =  [
     'path' => '',
     'type' => 'path',
     'controller' => 'menu',
@@ -48,7 +51,7 @@ $routing = [
                             'path' => '\d+',
                             'type' => 'pattern',
                             'param' => 'credential-id',
-                            'action' => 'pick-sepa-action',
+                            'action' => 'pick-sepa-konto',
                             'children' => [
                                 [
                                     'path' => 'tan-mode',
@@ -78,7 +81,7 @@ $routing = [
                                     'path' => '([A-Z]{2}[0-9]{6})',
                                     'type' => 'pattern',
                                     'param' => 'short-iban',
-                                    'action' => 'sepa-details',
+                                    'action' => 'import-new-sepa-statements',
                                     'children' => [
                                         [
                                             'path' => 'import',
@@ -91,6 +94,11 @@ $routing = [
                                     'path' => 'delete',
                                     'type' => 'path',
                                     'action' => 'delete-credentials',
+                                ],
+                                [
+                                    'path' => 'change-password',
+                                    'type' => 'path',
+                                    'action' => 'change-password',
                                 ],
                             ],
                         ],
@@ -336,7 +344,7 @@ $routing = [
             'path' => 'rest',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'POST',
             'children' => [
                 [
@@ -355,7 +363,7 @@ $routing = [
                     'path' => 'forms',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => '(projekt)(.*)',
@@ -479,6 +487,11 @@ $routing = [
                                     'path' => 'submit-tan',
                                     'type' => 'path',
                                     'action' => 'submit-tan'
+                                ],
+                                [
+                                    'path' => 'abort-tan',
+                                    'type' => 'path',
+                                    'action' => 'abort-tan'
                                 ]
                             ]
                         ],
@@ -500,7 +513,7 @@ $routing = [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => 'instruct',
@@ -569,14 +582,14 @@ $routing = [
             'path' => 'files',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'GET',
             'children' => [
                 [
                     'path' => 'get',
                     'type' => 'path',
                     'controller' => 'error',
-                    'action' => '403',
+                    'action' => '404',
                     'children' => [
                         [
                             'path' => '([0-9a-f]{64})',
@@ -604,7 +617,7 @@ $routing = [
             'path' => 'export',
             'type' => 'path',
             'controller' => 'error',
-            'action' => '403',
+            'action' => '404',
             'method' => 'GET',
             'children' => [
                 [
@@ -654,6 +667,23 @@ $routing = [
         ], // export
     ],
 ];
+
+if (DEV){
+    $pathConfig['children'][] = [
+        'path' => 'dev',
+        'type' => 'path',
+        'controller' => 'dev',
+        'children' => [
+            [
+                'path' => '[\w-]+',
+                'type' => 'pattern',
+                'param' => 'action',
+            ],
+        ]
+    ];
+}
+
+return $pathConfig;
 
 
 

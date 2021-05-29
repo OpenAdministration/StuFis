@@ -1,23 +1,31 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: konsul
- * Date: 28.04.18
- * Time: 22:19
- */
 //auth ----------------------------------
-include "../lib/inc.all.php";
+use booking\BookingHandler;
+use booking\HHPHandler;
+use booking\konto\FintsController;
+use forms\projekte\auslagen\AuslagenHandler2;
+use forms\projekte\ProjektHandler;
+use forms\RestHandler;
+use framework\auth\AuthBasicHandler;
+use framework\auth\AuthDummyHandler;
+use framework\auth\AuthSamlHandler;
+use framework\file\FileController;
+use framework\render\ErrorHandler;
+use framework\render\HTMLPageRenderer;
+use framework\render\MenuRenderer;
+use framework\render\Renderer;
+use framework\Router;
+define('SYSBASE', dirname(__DIR__));
+require_once SYSBASE . '/vendor/autoload.php';
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
 
 if (!SAML){
-    require_once(SYSBASE . "/lib/AuthDummyHandler.php");
-    define('AUTH_HANDLER', 'AuthDummyHandler');
+    define('AUTH_HANDLER', AuthDummyHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
-}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] == 'Basic' || $routeInfo['auth'] == 'basic')){
-    define('AUTH_HANDLER', 'AuthBasicHandler');
-    require_once SYSBASE . '/lib/class.AuthBasicHandler.php';
+}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] === 'Basic' || $routeInfo['auth'] === 'basic')){
+    define('AUTH_HANDLER', AuthBasicHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
     (AUTH_HANDLER)::getInstance()->requireGroup('basic');
     if (!isset($routeInfo['groups'])){
@@ -25,8 +33,7 @@ if (!SAML){
         $routeInfo['controller'] = 'error';
     }
 }else{
-    define('AUTH_HANDLER', 'AuthSamlHandler');
-    require_once SYSBASE . '/lib/AuthSamlHandler.php';
+    define('AUTH_HANDLER', AuthSamlHandler::class);
     (AUTH_HANDLER)::getInstance()->requireAuth();
 }
 if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
@@ -45,7 +52,8 @@ $idebug = false;
 //print_r($routeInfo);
 //print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
-switch ($routeInfo['controller']){
+$controllerName = $routeInfo['controller'];
+switch ($controllerName){
     case "menu":
         $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
@@ -72,7 +80,7 @@ switch ($routeInfo['controller']){
 		$htmlRenderer->render();
 	break;
     case "fints":
-        $fintsHandler = new FinTSHandler($routeInfo);
+        $fintsHandler = new FintsController($routeInfo);
         $htmlRenderer->appendRendererContent($fintsHandler);
         $htmlRenderer->render();
         break;
@@ -85,11 +93,18 @@ switch ($routeInfo['controller']){
         $fileController->handle($routeInfo);
         break;
     case 'error':
+        ErrorHandler::handleErrorRoute($routeInfo);
+        break;
     default:
-        $errorHdl = new ErrorHandler($routeInfo);
-        $htmlRenderer->appendRendererContent($errorHdl);
-        $htmlRenderer->render();
+        $className = "\\framework\\render\\" . ucfirst($controllerName) . "Controller";
+        if(class_exists($className)){
+            $controller = new $className($routeInfo);
+            if($controller instanceof Renderer){
+                $htmlRenderer->appendRendererContent($controller);
+                $htmlRenderer->render();
+                break;
+            }
+        }
+        ErrorHandler::handleErrorRoute($routeInfo);
         break;
 }
-
-
