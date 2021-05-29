@@ -4,13 +4,13 @@
 namespace framework\render\html;
 
 
-class HtmlButton extends Html
+class HtmlButton extends AbstractHtmlTag
 {
     /**
      * @param string $type button|submit|reset are valid
      * @return self
      */
-    public static function make(string $type = 'button') : self
+    public static function make(string $type = 'submit') : self
     {
         return new self(['type' => $type], ['btn']);
     }
@@ -31,9 +31,22 @@ class HtmlButton extends Html
     public function asLink($href) : self
     {
         $this->tag = 'a';
+        $this->attr('type', 'button');
         $this->attr('href', $href);
         return $this;
     }
 
+    /**
+     * @param $fa string|FA faName in @see FA::make or an FA object
+     * @return HtmlButton
+     */
+    public function icon($fa) : self
+    {
+        if(!($fa instanceof FA)){
+            $fa = FA::make($fa);
+        }
+        $this->bodyPrefix($fa . ' ');
+        return $this;
+    }
 
 }

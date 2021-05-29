@@ -4,32 +4,57 @@
 namespace framework\render\html;
 
 
-class HtmlInput extends Html
+class HtmlInput extends AbstractHtmlTag
 {
+    /** @var Html */
+    protected $label;
+
     public function value($value) : self
     {
         $this->attributes['value'] = $value;
         return $this;
     }
 
-    public function name($value) : self
+    public function name($name) : self
     {
-        $this->attributes['name'] = $value;
+        $this->attributes['name'] = $name;
+        return $this;
+    }
+
+    public function placeholder($value) : self
+    {
+        $this->attributes['placeholder'] = $value;
+        return $this;
+    }
+
+    public function label($value) : self
+    {
+        $id = $this->generateId();
+        $this->label = Html::tag('label')
+            ->body($value)
+            ->attr('for', $id);
         return $this;
     }
 
     public static function make(string $type) : self
     {
-        return new self(['type' => $type], ['form-control']);
+        $class = [];
+        $wrapStack = [];
+        if($type !== 'hidden'){
+            $class = ['form-control'];
+            $wrapStack[] = Html::tag('div')->addClasses(['form-group']);
+        }
+        return new self(['type' => $type], $class, [], $wrapStack);
     }
 
-    protected function __construct(array $attributes = [], array $classes = [], array $dataAttributes = [])
+    protected function __construct(array $attributes = [], array $classes = [], array $dataAttributes = [], array $wrapStack = [])
     {
-        parent::__construct('input', $attributes, $classes, $dataAttributes);
+        $this->label = '';
+        parent::__construct('input', $attributes, $classes, $dataAttributes, $wrapStack);
     }
 
     public function __toString() : string
     {
-        return $this->begin();
+        return $this->beginWrap() . $this->label . $this->begin() . $this->wrapEnd();
     }
 }

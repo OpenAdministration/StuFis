@@ -137,6 +137,15 @@ class Helper
     public static function make_links_clickable($text){
         return preg_replace('!((http(s)?://)[-a-zA-Zа-яА-Я()0-9@:%_+.~#?&;/=]+)!iu', '<a target="_blank" href="$1"><i class="fa fa-fw fa-chain"></i>&nbsp;$1</a>', $text);
     }
-}
 
-?>
+    public static function hasMultipleKeys(array $keys, array $array) : bool
+    {
+	    foreach ($keys as $key){
+	        if(!array_key_exists($key, $array)){
+	            return false;
+            }
+        }
+	    return true;
+    }
+
+}

@@ -2,7 +2,7 @@
 //auth ----------------------------------
 use booking\BookingHandler;
 use booking\HHPHandler;
-use booking\konto\FinTSHandler;
+use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use forms\RestHandler;
@@ -13,9 +13,10 @@ use framework\file\FileController;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
 use framework\render\MenuRenderer;
+use framework\render\Renderer;
 use framework\Router;
-
-include "../lib/inc.all.php";
+define('SYSBASE', dirname(__DIR__));
+require_once SYSBASE . '/vendor/autoload.php';
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
@@ -51,7 +52,8 @@ $idebug = false;
 //print_r($routeInfo);
 //print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
-switch ($routeInfo['controller']){
+$controllerName = $routeInfo['controller'];
+switch ($controllerName){
     case "menu":
         $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
@@ -78,7 +80,7 @@ switch ($routeInfo['controller']){
 		$htmlRenderer->render();
 	break;
     case "fints":
-        $fintsHandler = new FinTSHandler($routeInfo);
+        $fintsHandler = new FintsController($routeInfo);
         $htmlRenderer->appendRendererContent($fintsHandler);
         $htmlRenderer->render();
         break;
@@ -91,7 +93,18 @@ switch ($routeInfo['controller']){
         $fileController->handle($routeInfo);
         break;
     case 'error':
+        ErrorHandler::handleErrorRoute($routeInfo);
+        break;
     default:
+        $className = "\\framework\\render\\" . ucfirst($controllerName) . "Controller";
+        if(class_exists($className)){
+            $controller = new $className($routeInfo);
+            if($controller instanceof Renderer){
+                $htmlRenderer->appendRendererContent($controller);
+                $htmlRenderer->render();
+                break;
+            }
+        }
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
 }

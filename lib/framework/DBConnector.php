@@ -22,6 +22,10 @@ class DBConnector extends Singleton
     public const FETCH_ONLY_FIRST_COLUMN = 4;
     public const FETCH_UNIQUE = 5;
     public const FETCH_GROUPED = 6;
+
+    public const SQL_DATE_FORMAT = "Y-m-d";
+    public const SQL_DATETIME_FORMAT = "Y-m-d H:i:s";
+
     private static $DB_DSN;
     private static $DB_USERNAME;
     private static $DB_PASSWORD;
@@ -31,7 +35,6 @@ class DBConnector extends Singleton
     private $scheme;
     private $schemeKeys;
     private $validFields;
-    private $dbWriteCounter = 0;
     private $transactionCount = 0;
     private $user;
 
@@ -97,7 +100,11 @@ class DBConnector extends Singleton
         $keys["booking"] = [
             "primary" => ["id"],
             "foreign" => [
-                "zahlung_id" => ["konto", "id"],
+                [
+                    'refTable' => 'konto',
+                    'columns' => ['zahlung_id', 'zahlung_type'],
+                    'refColumns' => ['id', 'konto_id'],
+                ],
                 // "zahlung_type" => ["", "id"],
                 "titel_id" => ["haushaltstitel", "id"],
                 "user_id" => ["user", "id"],
@@ -186,7 +193,7 @@ class DBConnector extends Singleton
             "primanota" => "float NOT NULL DEFAULT 0",
             "value" => "DECIMAL(10,2) NOT NULL",
             "saldo" => "DECIMAL(10,2) NOT NULL",
-            "zweck" => "varchar(256) NOT NULL",
+            "zweck" => "varchar(512) NOT NULL",
             "comment" => "varchar(128) NOT NULL DEFAULT ''",
             "gvcode" => "int NOT NULL DEFAULT 0",
             "customer_ref" => "varchar(128)"
@@ -292,7 +299,10 @@ class DBConnector extends Singleton
             "einnahmen" => "DECIMAL(10,2) NOT NULL DEFAULT 0",
         ];
         $keys["beleg_posten"] = [
-            "primary" => ["short", "beleg_id"],
+            "primary" => ["id"],
+            "unique" => [
+                "uid" => ["short", "beleg_id"],
+            ],
             "foreign" => [
                 "beleg_id" => ["belege", "id"],
                 "projekt_posten_id" => ["projektposten", "id"],
@@ -551,18 +561,39 @@ class DBConnector extends Singleton
             if (isset($keys[$tablename]["foreign"])) {
                 $data = $keys[$tablename]["foreign"];
                 foreach ($data as $ownCol => $otherCol) {
-                    if (!isset($cols[$ownCol])) {
-                        ErrorHandler::handleError(500,"DB Config Fehler. $tablename.$ownCol not known");
+                    if(is_numeric($ownCol)){
+                        if(!isset($otherCol['refTable'], $this->scheme[$otherCol['refTable']])){
+                            ErrorHandler::handleError(500, "DB Config Fehler. refTable in $tablename wrong set", $otherCol);
+                        }
+                        $refTable = $otherCol['refTable'];
+                        if(!isset($otherCol['refColumns']) && !$this->hasTableColumns($refTable, $otherCol['refColumns'])){
+                            ErrorHandler::handleError(500, "DB Config Fehler. refColumns in $tablename wrong set", $otherCol);
+                        }
+                        $refColumns = $otherCol['refColumns'];
+                        if(!isset($otherCol['columns']) && $this->hasTableColumns($tablename, $otherCol['columns']) ){
+                            ErrorHandler::handleError(500, "DB Config Fehler. columns in $tablename wrong set", $otherCol);
+                        }
+                        $columns = $otherCol['columns'];
+
+                        $sqlFK = $sql . "ADD FOREIGN KEY (" . implode(',', $this->quoteIdent($columns)) . ")" .
+                            " REFERENCES " . self::$DB_PREFIX . $refTable .
+                            "(" . implode(',', $this->quoteIdent($refColumns)) . ")";
+
+                    }else{
+                        if (!isset($cols[$ownCol])) {
+                            ErrorHandler::handleError(500,"DB Config Fehler. $tablename.$ownCol not known");
+                        }
+                        if (!is_array($otherCol) || count($otherCol) !== 2) {
+                            ErrorHandler::handleError(500,"DB Reference Error. Wrong reference with $tablename.$ownCol");
+                        }
+                        if (!isset($scheme[$otherCol[0]][$otherCol[1]])) {
+                            ErrorHandler::handleError(500,"DB Reference Error. $otherCol[0].$otherCol[1] not known");
+                        }
+                        $sqlFK = $sql . "ADD FOREIGN KEY (" . $this->quoteIdent($ownCol) . ")" .
+                            " REFERENCES " . self::$DB_PREFIX . $otherCol[0] .
+                            "(" . $this->quoteIdent($otherCol[1]) . ")";
+
                     }
-                    if (!is_array($otherCol) || count($otherCol) != 2) {
-                        ErrorHandler::handleError(500,"DB Reference Error. Wrong reference with $tablename.$ownCol");
-                    }
-                    if (!isset($scheme[$otherCol[0]][$otherCol[1]])) {
-                        ErrorHandler::handleError(500,"DB Reference Error. $otherCol[0].$otherCol[1] not known");
-                    }
-                    $sqlFK = $sql . "ADD FOREIGN KEY (" . $this->quoteIdent($ownCol) . ")" .
-                        " REFERENCES " . self::$DB_PREFIX . $otherCol[0] .
-                        "(" . $this->quoteIdent($otherCol[1]) . ")";
                     if ($this->pdo->query($sqlFK) === false) {
                         $eInfo = $this->pdo->errorInfo();
                         $this->dbDropTables(array_keys($constrainsNeeded));
@@ -1051,7 +1082,7 @@ class DBConnector extends Singleton
         }
         foreach ($where as $whereGroup) {
             foreach ($whereGroup as $field => $value) {
-                if (!in_array($field, $this->validFields)) {
+                if (!in_array($field, $this->validFields, true)) {
                     ErrorHandler::handleError(500,"Unkown column $field in WHERE");
                 }
             }
@@ -1103,14 +1134,12 @@ class DBConnector extends Singleton
                         }
                         $vals = array_merge($vals, $v[1]);
 
+                    } else if ((strtolower($v[0]) === 'is' || strtolower($v[0]) === 'is not')
+                        && (is_null($v[1]) || strtolower($v[1]) === "null")) {
+                        $wg[] = $this->quoteIdent($k) . " " . $v[0] . " null";
                     } else {
-                        if ((strtolower($v[0]) === 'is' || strtolower($v[0]) === 'is not')
-                            && (is_null($v[1]) || strtolower($v[1]) === "null")) {
-                            $wg[] = $this->quoteIdent($k) . " " . $v[0] . " null";
-                        } else {
-                            $wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
-                            $vals[] = $v[1];
-                        }
+                        $wg[] = $this->quoteIdent($k) . " " . $v[0] . " ?";
+                        $vals[] = $v[1];
                     }
                 } else {
                     $wg[] = $this->quoteIdent($k) . " = ?";
@@ -1175,12 +1204,10 @@ class DBConnector extends Singleton
      * @param $table    string  table in db
      * @param $fields   array   all fields which should be filled
      *
-     * @return int|string last inserted id
+     * @return string last inserted id
      */
-    public function dbInsert($table, $fields)
+    public function dbInsert(string $table, array $fields): string
     {
-        $this->dbWriteCounter++;
-
         if (!isset($this->scheme[$table])) {
             ErrorHandler::handleError(500,"Unkown table $table");
         }
@@ -1207,6 +1234,55 @@ class DBConnector extends Singleton
         }
         return $this->pdo->lastInsertId();
     }
+
+    /**
+     * @param string $table
+     * @param array $fieldSchema array values equal keys of fields in multiFields, non valid entries will be removed
+     * @param mixed ...$multiFields multiple rows of $fields @see DBConnector::dbInsert()
+     * @return string last inserted id (from pdo)
+     */
+    public function dbInsertMultiple(string $table, array $fieldSchema, array ...$multiFields): string
+    {
+        if (!isset($this->scheme[$table])) {
+            ErrorHandler::handleError(500,"Unknown table $table");
+        }
+        $fieldSchema = array_flip(array_intersect_key(array_flip($fieldSchema), $this->scheme[$table]));
+
+        $sql = "INSERT " . self::$DB_PREFIX . "{$table} (" . implode(
+                ",",
+                $this->quoteIdent($fieldSchema)
+            ) . ") VALUES ";
+        $values = [];
+        foreach ($multiFields as $fields){
+            $fields = array_intersect_key($fields, array_flip($fieldSchema));
+            if(count($fields) !== count($fieldSchema)){
+                ErrorHandler::handleError(500, 'Ein Datenfehler ist aufgetreten - Falsche Dimension', [
+                    'ist' => $fields,
+                    'soll' => $fieldSchema,
+                ]);
+            }
+            $values[] = array_values($fields);
+        }
+
+        $placeholderSingle = '(' . implode(',' , array_fill(0, count($fieldSchema), "?")) . ')';
+        $placeholder = array_fill(0, count($values), $placeholderSingle);
+        $sql .= implode(',' . PHP_EOL, $placeholder);
+
+        //TODO: php 7.4: [] can be removed, array merge accepts also no arguments there
+        $values = array_merge([], ...$values);
+
+        $query = $this->pdo->prepare($sql);
+        $ret = $query->execute($values);
+        if ($ret === false) {
+            $info = $query->errorInfo();
+            if(DEV === true){
+                $info += ['sql' => $sql, 'values' => $values, 'multiInput' => $multiFields];
+            }
+            ErrorHandler::handleError(500, 'Ein Datenbank Fehler ist aufgetreten', $info);
+        }
+        return $this->pdo->lastInsertId();
+    }
+
 
     /**
      * @param array ...$pars
@@ -1264,21 +1340,15 @@ class DBConnector extends Singleton
         return $this->pdo->rollback();
     }
 
-    public function dbGetWriteCounter(): int
-    {
-        return $this->dbWriteCounter;
-    }
-
     /**
      * @param $table  string tablename
      * @param $filter array where clause
      * @param $fields array new values
      *
-     * @return bool|int
+     * @return false|int
      */
-    public function dbUpdate($table, $filter, $fields)
+    public function dbUpdate(string $table, array $filter, array $fields)
     {
-        $this->dbWriteCounter++;
         if (!isset($this->scheme[$table])) {
             ErrorHandler::handleError(500,"Unkown table $table");
         }
@@ -1312,26 +1382,37 @@ class DBConnector extends Singleton
         if ($ret === false) {
             return false;
         }
-
         return $query->rowCount();
     }
 
-    public function dbDelete($table, $filter): int
+    /**
+     * @param $table string table name
+     * @param $filter array
+     * @return int amount of deleted rows, otherwise handles Error
+     */
+    public function dbDelete(string $table, array $filter): int
     {
-        //$this->dbWriteCounter++;
 
         if (!isset($this->scheme[$table])) {
-            throw new PDOException("Unknown table $table");
+            ErrorHandler::handleError(
+                500,
+                'Ein Datenbankfehler ist aufgetreten',
+                "Deletion of table entries from $table not possible, table name unknown"
+            );
         }
 
-        list($whereSql, $vals) = $this->buildWhereSql($filter);
+        [$whereSql, $values] = $this->buildWhereSql($filter);
 
 
         $sql = "DELETE FROM " . self::$DB_PREFIX . $table . $whereSql;
         $query = $this->pdo->prepare($sql);
-        $ret = $query->execute($vals);
+        $ret = $query->execute($values);
         if ($ret === false) {
-            throw new PDOException(print_r($query->errorInfo(), true));
+            ErrorHandler::handleError(
+                500,
+                'Ein Datenbank Fehler ist aufgetreten',
+                "Deletion of table $table not possible:" . PHP_EOL . print_r($query->errorInfo(), true)
+            );
         }
 
         return $query->rowCount();
@@ -1529,5 +1610,20 @@ class DBConnector extends Singleton
             $r[] = $this->quoteIdent($key) . " $val";
         }
         return implode("," . PHP_EOL, $r);
+    }
+
+    public function isValidField($field) : bool
+    {
+        return in_array($field, $this->validFields, true);
+    }
+
+    public function hasTableColumns(string $tableName, string ... $columns) : bool
+    {
+        foreach ($columns as $column){
+            if(!isset($this->scheme[$tableName][$column])){
+                return false;
+            }
+        }
+        return true;
     }
 }

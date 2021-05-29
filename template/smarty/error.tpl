@@ -33,7 +33,7 @@
             <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
                 <div class="panel-body">
                     <pre>{strip}{foreach $trace as $item}
-                        {$item.file}({$item.line}) - {$item.class}::{$item.function}()
+                         {$item.class}::{$item.function}() [called in {$item.file}({$item.line})]{PHP_EOL}
                     {/foreach}{/strip}</pre>
                 </div>
             </div>

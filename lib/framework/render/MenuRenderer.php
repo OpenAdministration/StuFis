@@ -81,8 +81,7 @@ class MenuRenderer extends Renderer
         $gremien = array_filter(
             $gremien,
             static function ($val) {
-                global $GremiumPrefix;
-                foreach ($GremiumPrefix as $prefix) {
+                foreach (GREMIUM_PREFIX as $prefix) {
                     if (strpos($val, $prefix) === 0) {
                         return true;
                     }

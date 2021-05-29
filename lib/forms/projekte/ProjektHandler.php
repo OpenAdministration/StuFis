@@ -29,7 +29,7 @@ class ProjektHandler
     private $templater;
     private $stateHandler;
     /**
-     * @var \forms\projekte\PermissionHandler
+     * @var PermissionHandler
      */
     private $permissionHandler;
     private $id;

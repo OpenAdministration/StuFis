@@ -10,7 +10,7 @@ use framework\render\Renderer;
 class HHPHandler
 	extends Renderer{
 	
-	private $routeInfo;
+	protected $routeInfo;
 	private $hhps;
 	private $stateStrings;
 	

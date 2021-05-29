@@ -15,7 +15,7 @@ use ZipArchive;
 
 class BookingHandler extends Renderer{
 	
-	private $routeInfo;
+	protected $routeInfo;
 	
 	public function __construct($routeInfo){
 		$this->routeInfo = $routeInfo;
@@ -589,7 +589,8 @@ class BookingHandler extends Renderer{
         echo HtmlButton::make()
             ->asLink(URIBASE . 'konto/credentials')
             ->style( 'primary')
-            ->body(FA::make('fa-refresh') . " Kontoauszüge importieren (FINTS)");
+            ->icon('refresh')
+            ->body('Kontoauszüge importieren (FINTS)');
     }
 	
 	private function renderBookingText(): void

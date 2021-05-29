@@ -2,7 +2,7 @@
 
 use framework\LoadGroups;
 
-return [
+$pathConfig =  [
     'path' => '',
     'type' => 'path',
     'controller' => 'menu',
@@ -51,7 +51,7 @@ return [
                             'path' => '\d+',
                             'type' => 'pattern',
                             'param' => 'credential-id',
-                            'action' => 'pick-sepa-action',
+                            'action' => 'pick-sepa-konto',
                             'children' => [
                                 [
                                     'path' => 'tan-mode',
@@ -81,7 +81,7 @@ return [
                                     'path' => '([A-Z]{2}[0-9]{6})',
                                     'type' => 'pattern',
                                     'param' => 'short-iban',
-                                    'action' => 'sepa-details',
+                                    'action' => 'import-new-sepa-statements',
                                     'children' => [
                                         [
                                             'path' => 'import',
@@ -94,6 +94,11 @@ return [
                                     'path' => 'delete',
                                     'type' => 'path',
                                     'action' => 'delete-credentials',
+                                ],
+                                [
+                                    'path' => 'change-password',
+                                    'type' => 'path',
+                                    'action' => 'change-password',
                                 ],
                             ],
                         ],
@@ -482,6 +487,11 @@ return [
                                     'path' => 'submit-tan',
                                     'type' => 'path',
                                     'action' => 'submit-tan'
+                                ],
+                                [
+                                    'path' => 'abort-tan',
+                                    'type' => 'path',
+                                    'action' => 'abort-tan'
                                 ]
                             ]
                         ],
@@ -657,6 +667,23 @@ return [
         ], // export
     ],
 ];
+
+if (DEV){
+    $pathConfig['children'][] = [
+        'path' => 'dev',
+        'type' => 'path',
+        'controller' => 'dev',
+        'children' => [
+            [
+                'path' => '[\w-]+',
+                'type' => 'pattern',
+                'param' => 'action',
+            ],
+        ]
+    ];
+}
+
+return $pathConfig;
 
 
 

@@ -14,7 +14,8 @@
 
 namespace forms;
 
-use booking\konto\FinTSHandler;
+use booking\BookingTableManager;
+use booking\konto\FintsConnectionHandler;
 use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
 use forms\chat\ChatHandler;
@@ -100,6 +101,15 @@ class RestHandler extends EscFunc{
                 break;
             case "submit-tan":
                 $this->submitTan($routeInfo);
+                break;
+            case "abort-tan":
+                $this->abortTan($routeInfo);
+                break;
+            case "change-credential-password":
+                $this->changeCredentialPassword($routeInfo);
+                break;
+            case "delete-credentials":
+                $this->deleteCredentials($routeInfo);
                 break;
             case "import-konto":
                 $this->importKonto($routeInfo);
@@ -253,7 +263,7 @@ class RestHandler extends EscFunc{
 			$ret = false;
 			$msgs[] = "In diesen Status darf nicht gewechselt werden!";
 			$msgs[] = $exception->getMessage();
-		} finally{
+		} finally {
 			if ($ret) {
                 $dbret = DBConnector::getInstance()->dbCommit();
             }
@@ -297,13 +307,13 @@ class RestHandler extends EscFunc{
 
 		JsonController::print_json($json);
 	}
-	
-	/**
-	 * handle auslagen posts
-	 *
-	 * @param string $routeInfo
-	 */
-	public function handleAuslagen($routeInfo = null): void
+
+    /**
+     * handle auslagen posts
+     *
+     * @param array $routeInfo
+     */
+	public function handleAuslagen(array $routeInfo = []): void
     {
 		if (!isset($routeInfo['mfunction'])){
 			if (isset($_POST['action'])){
@@ -1481,13 +1491,12 @@ class RestHandler extends EscFunc{
 
     private function newKontoCredentials($routeInfo): void
     {
-        $fHandler = new FinTSHandler($routeInfo);
         $bankId = $_POST['bank-id'];
         $bankuser = $_POST['bank-username'];
         $bankpw = $_POST['bank-password'];
         $custompw = $_POST['password-custom'];
         $name = $_POST['name'];
-        $ret = $fHandler->saveCredentials($bankId,$bankuser, $bankpw,$custompw,$name);
+        $ret = FintsConnectionHandler::saveCredentials($bankId,$bankuser, $bankpw,$custompw,$name);
 
         if(is_numeric($ret)){
             JsonController::print_json(
@@ -1532,18 +1541,20 @@ class RestHandler extends EscFunc{
             );
         }
 
-        $fHandler = new FinTSHandler($routeInfo);
         $credId = (int) $_POST['credential-id'];
-        $fHandler->loadCredentials($credId);
+        $fHandler = FintsConnectionHandler::load($credId);
         $tanMode = (int) $_POST['tan-mode'];
         $ret = $fHandler->saveDefaultTanMode($credId, $tanMode);
 
         if($ret === true){
+            if($tanClosed = $fHandler->hasTanSessionInformation()){
+                $fHandler->deleteTanSessionInformation();
+            }
             JsonController::print_json(
                 [
                     'success' => true,
                     'status' => '200',
-                    'msg' => "Tan $tanMode für Zugangsdaten $credId gespeichert",
+                    'msg' => "Tan $tanMode für Zugangsdaten $credId gespeichert". ($tanClosed ? " - offene Tans wurden abgebrochen":""),
                     'type' => 'modal',
                     'subtype' => 'server-success',
                     'reload' => 1000,
@@ -1567,11 +1578,10 @@ class RestHandler extends EscFunc{
 
     private function unlockCredentials(array $routeInfo): void
     {
-        $fHandler = new FinTSHandler($routeInfo);
         $credId = (int) $_POST['credential-id'];
         $keypw = (string) $_POST['credential-key'];
 
-        $ret = $fHandler->unlockCredentials($credId, $keypw);
+        $ret = FintsConnectionHandler::unlockCredentials($credId, $keypw);
 
         if($ret === true){
             JsonController::print_json(
@@ -1603,12 +1613,11 @@ class RestHandler extends EscFunc{
 
     private function submitTan(array $routeInfo): void
     {
-        $fHandler = new FinTSHandler($routeInfo);
         $credId = (int) $_POST['credential-id'];
-        $fHandler->loadCredentials($credId);
+        $fHandler = FintsConnectionHandler::load($credId);
 
         $tan = $_POST['tan'];
-        [$ret, $msg] = $fHandler->submitTan($tan, $credId);
+        [$ret, $msg] = $fHandler->submitTan($tan);
         if($ret === true){
             JsonController::print_json(
                 [
@@ -1724,9 +1733,9 @@ class RestHandler extends EscFunc{
 
     private function lockCredentials(array $routeInfo): void
     {
-        $fHandler = new FinTSHandler($routeInfo);
         $credId = (int) $_POST['credential-id'];
-        [$ret, $msg] = $fHandler->lockCredentials($credId);
+        [$ret, $msg] = FintsConnectionHandler::lockCredentials($credId);
+
         if($ret === true){
             JsonController::print_json(
                 [
@@ -1751,5 +1760,77 @@ class RestHandler extends EscFunc{
                 ]
             );
         }
+    }
+
+    private function abortTan(array $routeInfo) : void
+    {
+        $credId = (int) $_POST['credential-id'];
+        $fHandler = FintsConnectionHandler::load($credId);
+        $fHandler->deleteTanSessionInformation();
+
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => 'Du wirst gleich weitergeleitet',
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'reload' => 1000,
+                'redirect' => URIBASE . 'konto/credentials/' . $credId . '/sepa',
+                'headline' => 'Tan Verfahren abgebrochen',
+            ]
+        );
+    }
+
+    private function deleteCredentials(array $routeInfo) : void
+    {
+        $credId = (int) $_POST['credential-id'];
+        $ret = FintsConnectionHandler::deleteCredential($credId);
+
+        if($ret === true){
+            JsonController::print_json(
+                [
+                    'success' => true,
+                    'status' => '200',
+                    'msg' => 'Zugangsdaten wurden erfolgreich gelöscht',
+                    'type' => 'modal',
+                    'subtype' => 'server-success',
+                    'reload' => 1000,
+                    'headline' => 'Zugangsdaten gelöscht',
+                ]
+            );
+        }else{
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Zugangsdaten konnten nicht gelöscht werden',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Ein Fehler ist aufgetreten',
+                ]
+            );
+        }
+    }
+
+    private function changeCredentialPassword(array $routeInfo) : void
+    {
+        $credId = (int) $_POST['credential-id'];
+        $pw = (string) $_POST['password'];
+        $pw_repeat = (string) $_POST['password-repeat'];
+        if($pw !== $pw_repeat){
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Passwörter stimmen nicht überein',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Ein Fehler ist aufgetreten',
+                ]
+            );
+        }
+        $fHandler = FintsConnectionHandler::load($credId);
+        [$success, $msg] = $fHandler->changePassword($pw);
     }
 }

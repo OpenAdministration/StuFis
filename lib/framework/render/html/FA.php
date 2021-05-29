@@ -4,8 +4,15 @@ namespace framework\render\html;
 
 class FA extends Html
 {
+    /**
+     * @param string $faName can but has not to start with 'fa-'
+     * @return FA
+     */
     public static function make(string $faName) : self
     {
+        if(strpos($faName, 'fa-') !== 0){
+            $faName = 'fa-' . $faName;
+        }
         return new self(['aria-hidden' => true], ['fa', $faName], []);
     }
 

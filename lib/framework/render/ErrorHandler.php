@@ -56,14 +56,15 @@ class ErrorHandler extends Renderer{
     private $errorInformation;
 
 
-    public static function handleException(Exception $e, string $additionalInformation = '', string $debugInfo = '', int $htmlCode = 500) : void
+    public static function handleException(Exception $e, string $additionalInformation = '', $debugInfo = '', int $htmlCode = 500) : void
     {
         $stackTrace = $e->getTrace();
+        $debugInfo .= $e->getMessage();
         $eh = new self(self::getDefaultErrorInfo($htmlCode), $stackTrace, $additionalInformation, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
-    public static function handleError(int $htmlCode = 500, string $message = '', string $debugInfo = '') : void{
+    public static function handleError(int $htmlCode = 500, string $message = '', $debugInfo = '') : void{
         $eh = new self(self::getDefaultErrorInfo($htmlCode), debug_backtrace(), $message, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);
     }
@@ -78,8 +79,20 @@ class ErrorHandler extends Renderer{
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
-    public function __construct(array $errorInformation, array $stackTrace = null, string $additionalInfo = '', string $debugInfo = ''){
+    /**
+     * ErrorHandler constructor.
+     * @param array $errorInformation
+     * @param array|null $stackTrace
+     * @param string $additionalInfo
+     * @param string|array $debugInfo
+     */
+    public function __construct(array $errorInformation, array $stackTrace = null, string $additionalInfo = '', $debugInfo = ''){
+        if(is_array($debugInfo)){
+            $debugInfo = var_export($debugInfo,true);
+        }
         $stackTrace = $stackTrace ?? debug_backtrace(); // set default if null
+        $stackTrace = $this->cleanStackTrace($stackTrace);
+        $errorInformation['additional'] = $additionalInfo;
         $errorInformation['trace'] = $this->cleanStackTrace($stackTrace);
         $errorInformation['debug'] = $debugInfo;
         $this->errorInformation = $errorInformation;
@@ -98,8 +111,6 @@ class ErrorHandler extends Renderer{
         //throw another Error ^^'
         return self::UNKOWN_ERROR_CODE;
     }
-
-
 
     public function render():void
     {
@@ -134,7 +145,10 @@ class ErrorHandler extends Renderer{
     private function cleanStackTrace(array $stackTrace) : array
     {
         foreach ($stackTrace as &$item){
-            $item['file'] = str_replace(SYSBASE, '', $item['file']);
+            $item['file'] = substr($item['file'], strrpos($item['file'], '/'));
+            $item['file'] = str_replace('.php', '',$item['file']);
+
+            $item['class'] = substr($item['class'], strrpos($item['class'], '\\'));
         }
         return $stackTrace;
     }

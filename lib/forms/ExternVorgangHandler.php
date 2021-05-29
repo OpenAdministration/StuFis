@@ -10,7 +10,7 @@ use framework\render\JsonController;
 class ExternVorgangHandler extends FormHandlerInterface{
 	
 	private $id;
-	private $routeInfo;
+	protected $routeInfo;
 	private $data;
 	private $meta_data;
 	

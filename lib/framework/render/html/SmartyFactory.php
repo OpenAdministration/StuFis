@@ -7,7 +7,6 @@ use Smarty;
 
 class SmartyFactory
 {
-
     public static function make() : Smarty
     {
         $smarty = new Smarty();

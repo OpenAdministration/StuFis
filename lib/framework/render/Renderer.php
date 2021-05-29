@@ -7,10 +7,20 @@ use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
 
-abstract class Renderer
-    extends EscFunc
+abstract class Renderer extends EscFunc
 {
-    abstract public function render() : void;
+
+    protected $routeInfo;
+
+    public function render() : void{
+        $action = $this->routeInfo['action'];
+        $methodName = 'action' . str_replace('-', '', ucwords($action, '-'));
+        if(method_exists($this,$methodName)){
+            $this->$methodName();
+        }else{
+            ErrorHandler::handleError(404, "Methode $methodName not found in " . __CLASS__);
+        }
+    }
 
     /**
      * @param array $header

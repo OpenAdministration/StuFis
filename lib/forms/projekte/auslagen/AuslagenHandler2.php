@@ -272,7 +272,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 *
 	 * @var array
 	 */
-	private $routeInfo;
+	protected $routeInfo;
 	
 	//---------------------------------------------------------
 	/* ---------- MEMBER GETTER ----------- */

@@ -12,7 +12,7 @@ class HTMLPageRenderer
     private static $tabsConfig;
     private $bodyContent;
     private $titel;
-    private $routeInfo;
+    protected $routeInfo;
 
     public function __construct($routeInfo, $bodyContent = "")
     {
