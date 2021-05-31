@@ -134,7 +134,6 @@ class FormTemplater{
     }
     
     static function generateGremienSelectable($all = false){
-        $GremiumPrefix = $GLOBALS["GremiumPrefix"];
         if ($all) {
             $gremien = (AUTH_HANDLER)::getInstance()->getAttributes()["alle-gremien"];
         } else {
@@ -143,14 +142,15 @@ class FormTemplater{
         sort($gremien);
         $selectable = [];
         
-        foreach ($GremiumPrefix as $gremiumgroupname){
+        foreach (GREMIUM_PREFIX as $gremiumgroupname){
             $group = [];
             $group["label"] = $gremiumgroupname;
             
             $options = [];
             foreach ($gremien as $gremium){
-                if (strpos($gremium, $gremiumgroupname) !== false)
+                if (strpos($gremium, $gremiumgroupname) !== false) {
                     $options[] = ["label" => $gremium];
+                }
             }
             $group["options"] = $options;
             $selectable["groups"][] = $group;

@@ -1,6 +1,7 @@
 <?php
 
-use baseclass\TextStyle;
+
+use framework\baseclass\TextStyle;
 
 function human_filesize($bytes, $decimals = 2): string
 {

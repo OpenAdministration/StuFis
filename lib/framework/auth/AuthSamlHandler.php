@@ -22,7 +22,7 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
     
     protected function __construct(){
         require_once(self::$SIMPLESAMLDIR . '/lib/_autoload.php');
-        $this->saml = new SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
+        $this->saml = new \SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
     }
     
     final protected static function static__set($name, $value): void
