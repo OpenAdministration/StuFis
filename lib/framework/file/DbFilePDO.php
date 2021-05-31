@@ -537,9 +537,9 @@ class DbFilePDO{
      * @param string $tablename database table name
      * @param string $datacolname database data table column name
      * @param bool $id
-     * @return false error -> false, last inserted id or
+     * @return string|false error -> false, last inserted id or
      */
-    protected function _storeFile2Filedata(string $filename, $filesize = null, string $tablename = 'filedata', string $datacolname = 'data', $id = false): bool
+    protected function _storeFile2Filedata(string $filename, $filesize = null, string $tablename = 'filedata', string $datacolname = 'data', $id = false)
     {
         if ($id){
             $sql = "INSERT INTO `" . $this->TABLE_PREFIX . "$tablename` (id, $datacolname) VALUES(?, ?)";

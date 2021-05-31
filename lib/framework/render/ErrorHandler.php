@@ -132,9 +132,9 @@ class ErrorHandler extends Renderer{
     {
         JsonController::print_json(
             [
-                'success' => true,
+                'success' => false,
                 'status' => $this->errorInformation['code'],
-                'msg' => $this->errorInformation['msg'],
+                'msg' => $this->errorInformation['msg'] . PHP_EOL . $this->errorInformation['additional'] ?? '' . PHP_EOL . DEV ? $this->errorInformation['debug'] ?? '' : '',
                 'type' => 'modal',
                 'subtype' => 'server-error',
                 'headline' => $this->errorInformation['headline']

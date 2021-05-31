@@ -1345,7 +1345,7 @@ class DBConnector extends Singleton
      * @param $filter array where clause
      * @param $fields array new values
      *
-     * @return false|int
+     * @return int
      */
     public function dbUpdate(string $table, array $filter, array $fields)
     {
@@ -1371,16 +1371,16 @@ class DBConnector extends Singleton
             $u[] = $this->quoteIdent($k) . " = ?";
         }
 
-        list($whereSql, $val) = $this->buildWhereSql($filter);
+        [$whereSql, $val] = $this->buildWhereSql($filter);
 
         $sql = "UPDATE " . self::$DB_PREFIX . "{$table} SET " . implode(", ", $u) . $whereSql;
         //print_r($sql);
         $query = $this->pdo->prepare($sql);
         $values = array_merge(array_values($fields), $val);
 
-        $ret = $query->execute($values) or ErrorHandler::handleError(500,print_r($query->errorInfo(), true));
+        $ret = $query->execute($values);
         if ($ret === false) {
-            return false;
+            ErrorHandler::handleError(500,"DB Update in $table failed", $query->errorInfo());
         }
         return $query->rowCount();
     }
