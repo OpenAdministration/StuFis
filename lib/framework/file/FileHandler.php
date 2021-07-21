@@ -1422,7 +1422,7 @@ class FileHandler {
 						unset($files[$tmp_name]);
 					}
 				}
-				if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0){
+				if (($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0) || $this->db->isError()){
 					$result['error'][] = 'Upload aborted due to an error.';
 					$result['success'] = false;
 				} else {
