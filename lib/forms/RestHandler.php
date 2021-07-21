@@ -216,22 +216,28 @@ class RestHandler extends EscFunc{
 		$msgs = [];
 		$projektHandler = null;
 		$dbret = false;
+
+        if (DEV) {
+            $msgs[] = print_r($_POST, true);
+        }
+
 		try{
-			$auth = (AUTH_HANDLER);
-			/* @var $auth AuthHandler */
-			$auth = $auth::getInstance();
-			$logId = DBConnector::getInstance()->logThisAction($_POST);
-			DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
-			
-			if (!isset($_POST["action"])) {
+            $auth = (AUTH_HANDLER);
+            /* @var $auth AuthHandler */
+            $auth = $auth::getInstance();
+            //$logId = DBConnector::getInstance()->logThisAction($_POST);
+            //DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
+
+            if (!isset($_POST["action"])) {
                 throw new ActionNotSetException("Es wurde keine Aktion übertragen");
             }
-			
-			if (DBConnector::getInstance()->dbBegin() === false) {
+
+            if (DBConnector::getInstance()->dbBegin() === false) {
                 throw new PDOException("cannot start DB transaction");
             }
-			
-			switch ($_POST["action"]){
+
+
+            switch ($_POST["action"]){
 				case "create":
 					$projektHandler = ProjektHandler::createNewProjekt($_POST);
 					if ($projektHandler !== null) {
@@ -246,11 +252,13 @@ class RestHandler extends EscFunc{
 					$ret = $projektHandler->setState($_POST["newState"]);
 				break;
 				case "update":
+
 					if (!isset($_POST["id"]) || !is_numeric($_POST["id"])){
 						throw new IdNotSetException("ID nicht gesetzt.");
 					}
 					$projektHandler = new ProjektHandler(["pid" => $_POST["id"], "action" => "edit"]);
-					$ret = $projektHandler->updateSavedData($_POST);
+                    $ret = $projektHandler->updateSavedData($_POST);
+                    $msgs[] = "Try to update";
 				break;
 				default:
 					throw new ActionNotSetException("Unbekannte Aktion verlangt!");
@@ -258,12 +266,14 @@ class RestHandler extends EscFunc{
 		}catch (ActionNotSetException | IdNotSetException | WrongVersionException |
                 InvalidDataException | PDOException | IllegalTransitionException $exception){
 			$ret = false;
+			$msgs[] = "Ein Fehler ist aufgetreten";
 			$msgs[] = $exception->getMessage();
 		} catch (IllegalStateException $exception){
 			$ret = false;
 			$msgs[] = "In diesen Status darf nicht gewechselt werden!";
 			$msgs[] = $exception->getMessage();
 		} finally {
+
 			if ($ret) {
                 $dbret = DBConnector::getInstance()->dbCommit();
             }
@@ -274,6 +284,7 @@ class RestHandler extends EscFunc{
 				$msgs[] = "Daten erfolgreich gespeichert!";
 				$target = URIBASE . "projekt/" . $projektHandler->getID();
 			}
+			/*
 			if (isset($logId)){
 				DBConnector::getInstance()->logAppend($logId, "result", $ret);
 				DBConnector::getInstance()->logAppend($logId, "msgs", $msgs);
@@ -283,17 +294,16 @@ class RestHandler extends EscFunc{
 			}else{
 				$msgs[] = "Logging nicht möglich :(";
 			}
+			*/
 		}
-		if (DEV) {
-            $msgs[] = print_r($_POST, true);
-        }
+
+
 
 		$json = [
             'success' => ($ret !== false),
             'status' => '200',
             'msg' => $msgs,
             'type' => 'modal',
-
         ];
 		if(isset($target)){
             $json['redirect'] = $target;

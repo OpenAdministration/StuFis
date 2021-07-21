@@ -134,7 +134,7 @@ class ErrorHandler extends Renderer{
             [
                 'success' => false,
                 'status' => $this->errorInformation['code'],
-                'msg' => $this->errorInformation['msg'] . PHP_EOL . $this->errorInformation['additional'] ?? '' . PHP_EOL . DEV ? $this->errorInformation['debug'] ?? '' : '',
+                'msg' => $this->errorInformation['msg'] . (PHP_EOL . $this->errorInformation['additional'] ?? '') . (PHP_EOL . DEV ? $this->errorInformation['debug'] ?? '' : ''),
                 'type' => 'modal',
                 'subtype' => 'server-error',
                 'headline' => $this->errorInformation['headline']
