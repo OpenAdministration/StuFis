@@ -4,6 +4,7 @@
 #### DB changes
  * konto.zweck changed to varchar(512)
  * changed foreign key from booking.zahlung_id -> konto.id to booking(zahlung_id, zahlung_type) -> konto(id, konto_id) 
+ * ALTER TABLE finanzformular__beleg_posten DROP CONSTRAINT finanzformular__beleg_posten_ibfk_2; (projektposten_id FK)
 
 #### new Features 
 * TAN QR and TAN Flicker implemented

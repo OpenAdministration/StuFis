@@ -1069,30 +1069,41 @@ class Validator {
 	/**
 	 * check if string is valid iban,
 	 *
-	 * @param $iban iban srstring to check
+	 * @param string $iban to check
 	 *
 	 * @return bool
 	 * @see https://en.wikipedia.org/wiki/International_Bank_Account_Number#Validating_the_IBAN
+     * @see https://stackoverflow.com/questions/20983339/validate-iban-php
 	 */
-	public static function _checkIBAN($iban){
+	public static function _checkIBAN(string $iban): bool
+    {
 		$iban = strtoupper(str_replace(' ', '', $iban));
-		$Countries = ARRAY('AL' => 28, 'AD' => 24, 'AT' => 20, 'AZ' => 28, 'BH' => 22, 'BE' => 16, 'BA' => 20, 'BR' => 29, 'BG' => 22, 'CR' => 21, 'HR' => 21, 'CY' => 28, 'CZ' => 24, 'DK' => 18, 'DO' => 28, 'EE' => 20, 'FO' => 18, 'FI' => 18, 'FR' => 27, 'GE' => 22, 'DE' => 22, 'GI' => 23, 'GR' => 27, 'GL' => 18, 'GT' => 28, 'HU' => 28, 'IS' => 26, 'IE' => 22, 'IL' => 23, 'IT' => 27, 'JO' => 30, 'KZ' => 20, 'KW' => 30, 'LV' => 21, 'LB' => 28, 'LI' => 21, 'LT' => 20, 'LU' => 20, 'MK' => 19, 'MT' => 31, 'MR' => 27, 'MU' => 30, 'MC' => 27, 'MD' => 24, 'ME' => 22, 'NL' => 18, 'NO' => 15, 'PK' => 24, 'PS' => 29, 'PL' => 28, 'PT' => 25, 'QA' => 29, 'RO' => 24, 'SM' => 27, 'SA' => 24, 'RS' => 22, 'SK' => 24, 'SI' => 19, 'ES' => 24, 'SE' => 24, 'CH' => 21, 'TN' => 24, 'TR' => 26, 'AE' => 23, 'GB' => 22, 'VG' => 24);
+		$countries = array('AL' => 28, 'AD' => 24, 'AT' => 20, 'AZ' => 28, 'BH' => 22, 'BE' => 16, 'BA' => 20, 'BR' => 29, 'BG' => 22, 'CR' => 21, 'HR' => 21, 'CY' => 28, 'CZ' => 24, 'DK' => 18, 'DO' => 28, 'EE' => 20, 'FO' => 18, 'FI' => 18, 'FR' => 27, 'GE' => 22, 'DE' => 22, 'GI' => 23, 'GR' => 27, 'GL' => 18, 'GT' => 28, 'HU' => 28, 'IS' => 26, 'IE' => 22, 'IL' => 23, 'IT' => 27, 'JO' => 30, 'KZ' => 20, 'KW' => 30, 'LV' => 21, 'LB' => 28, 'LI' => 21, 'LT' => 20, 'LU' => 20, 'MK' => 19, 'MT' => 31, 'MR' => 27, 'MU' => 30, 'MC' => 27, 'MD' => 24, 'ME' => 22, 'NL' => 18, 'NO' => 15, 'PK' => 24, 'PS' => 29, 'PL' => 28, 'PT' => 25, 'QA' => 29, 'RO' => 24, 'SM' => 27, 'SA' => 24, 'RS' => 22, 'SK' => 24, 'SI' => 19, 'ES' => 24, 'SE' => 24, 'CH' => 21, 'TN' => 24, 'TR' => 26, 'AE' => 23, 'GB' => 22, 'VG' => 24);
 
 		//1. check country code exists + iban has valid length
-		if( !array_key_exists(substr($iban,0,2), $Countries)
-			|| strlen($iban) != $Countries[substr($iban,0,2)]){
+		if( !array_key_exists(substr($iban,0,2), $countries)){
 			return false;
 		}
+        // check if censored iban
+        if(preg_match("/^[A-Z]{2}\d{2}[\.]{6}\d{2}$/", $iban)){
+            return true;
+        }
 
-		//2. Rearrange countrycode and checksum
+        // check length
+        if(strlen($iban) !== $countries[substr($iban,0,2)]){
+            return false;
+        }
+
+		//2. Rearrange country code and checksum
 		$rearranged = substr($iban, 4) . substr($iban, 0, 4);
 
 		//3. convert to integer
 		$iban_letters = str_split($rearranged);
 		$iban_int_only = '';
-		foreach ($iban_int_only as $char){
-			if (is_int($char)) $iban_int_only .= $char;
-			else {
+		foreach ($iban_letters as $char){
+			if (is_numeric($char)) {
+                $iban_int_only .= $char;
+            } else {
 				$ord = ord($char) - 55; // ascii representation - 55, so a => 10, b => 11, ...
 				if ($ord >= 10 && $ord <= 35){
 					$iban_int_only .= $ord;
@@ -1101,41 +1112,38 @@ class Validator {
 				}
 			}
 		}
-
 		//4. calculate mod 97 -> have to be 1
-		if (self::_bcmod($iban_int_only, '97') == 1){
-			return true;
-		}else{
-			return false;
-		}
-	}
+        return self::_bcmod($iban_int_only, '97') === 1;
+    }
 
-	/**
-	 * _bcmod - get modulus (substitute for bcmod)
-	 * be careful with big $modulus values
-	 *
-	 * @param string $left_operand <p>The left operand, as a string.</p>
-	 * @param int $modulus <p>The modulus, as a string. </p>
-	 *
-	 * based on
-	 * https://stackoverflow.com/questions/10626277/function-bcmod-is-not-available
-	 * by Andrius Baranauskas and Laurynas Butkus :) Vilnius, Lithuania
-	 **/
-	public static function _bcmod($left_operand, $modulus){
+    /**
+     * _bcmod - get modulus (substitute for bcmod)
+     * be careful with big $modulus values
+     *
+     * @param string $left_operand <p>The left operand, as a string.</p>
+     * @param int $modulus <p>The modulus, as a string. </p>
+     *
+     * based on
+     * https://stackoverflow.com/questions/10626277/function-bcmod-is-not-available
+     * by Andrius Baranauskas and Laurynas Butkus :) Vilnius, Lithuania
+     *
+     * @return int
+     */
+	public static function _bcmod($left_operand, $modulus): int
+    {
 		if (function_exists('bcmod')){
-			return bcmod($left_operand, $modulus);
+			return (int) (bcmod($left_operand, $modulus) ?? -1);
 		} else {
 			$take = 5; // how many numbers to take at once?
 			$mod = '';
-			do
-			{
-				$a = (int)$mod.substr( $left_operand, 0, $take );
+			do {
+				$a = (int) $mod . substr( $left_operand, 0, $take );
 				$left_operand = substr( $left_operand, $take );
 				$mod = $a % $modulus;
 			}
-			while ( strlen($left_operand) );
+			while ($left_operand !== '');
 
-			return (int)$mod;
+			return (int) $mod;
 		}
 	}
 

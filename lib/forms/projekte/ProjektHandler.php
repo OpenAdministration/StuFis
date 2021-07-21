@@ -447,25 +447,30 @@ class ProjektHandler
                 ErrorHandler::handleError(403, "Du hast keine Berechtigung '$name' zu schreiben.");
             }
         }
-        $update_rows = DBConnector::getInstance()->dbUpdate(
+        $retMetaUpdate = DBConnector::getInstance()->dbUpdate(
             "projekte",
             ["id" => $this->id, "version" => $version],
             $fields
-        );
+        ) === 1;
 
         if ($this->permissionHandler->isEditable(
             ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
             'and'
         )) {
-            //set new posten values, *delete* old
-            DBConnector::getInstance()->dbDelete("projektposten", ["projekt_id" => $this->id]);
-            for ($i = 0; $i < $minRows - 1; $i++) {
+            // update old posten, create new, delete old
+            $oldRows = count($this->data['posten-name']);
+
+            // update old posten (last minrow is empty all the time
+            $retUpdate = true;
+            for ($i = 0; $i < $minRows-1 && $i < $oldRows; $i++) {
                 //would throw exception if not working
-                DBConnector::getInstance()->dbInsert(
+                $retUpdate = $retUpdate && DBConnector::getInstance()->dbUpdate(
                     "projektposten",
                     [
                         "id" => $i + 1,
                         "projekt_id" => $this->id,
+                    ],
+                    [
                         "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
                         "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
                             $extractFields["posten-einnahmen"][$i],
@@ -480,8 +485,46 @@ class ProjektHandler
                     ]
                 );
             }
+
+            // add new posten
+            $retInsert = true;
+            for ($i = $oldRows ; $i < $minRows-1; $i++) {
+                $retInsert = $retInsert && (DBConnector::getInstance()->dbInsert(
+                    "projektposten",
+                    [
+                        "id" => $i+1,
+                        "projekt_id" => $this->id,
+                        "titel_id" => $extractFields["posten-titel"][$i] === "" ? null : $extractFields["posten-titel"][$i],
+                        "einnahmen" => DBConnector::getInstance()->convertUserValueToDBValue(
+                            $extractFields["posten-einnahmen"][$i],
+                            "money"
+                        ),
+                        "ausgaben" => DBConnector::getInstance()->convertUserValueToDBValue(
+                            $extractFields["posten-ausgaben"][$i],
+                            "money"
+                        ),
+                        "name" => $extractFields["posten-name"][$i],
+                        "bemerkung" => $extractFields["posten-bemerkung"][$i]
+                    ]
+                )) === "0"; // lastInsertedId returns "0" due to auto increment is not used (multikey)
+
+            }
+            // delete old ones
+            $retDelete = true;
+            if($minRows - 1 < $oldRows){
+                $retDelete = DBConnector::getInstance()->dbDelete(
+                    'projektposten',
+                    [
+                        "id" => [">", $minRows -1],
+                        "projekt_id" => $this->id,
+                    ]
+                );
+                $retDelete = $retDelete > 0;
+            }
+            //var_dump($retMetaUpdate, $retDelete, $retInsert, $retUpdate);
+            return $retMetaUpdate && $retDelete && $retInsert && $retUpdate;
         }
-        return $update_rows === 1; //true falls nur ein Eintrag geändert
+        return $retMetaUpdate;
     }
 
     /**

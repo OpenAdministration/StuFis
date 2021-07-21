@@ -1145,6 +1145,18 @@ class AuslagenHandler2 extends FormHandlerInterface{
 		}
 		//new ------
 		$posten_shortcounter = 0;
+		$nextBelegPostenId = $this->db->dbFetchAll(
+            'beleg_posten',
+            [DBConnector::FETCH_ASSOC],
+            ['id' => ['id', DBConnector::GROUP_MAX]]
+        );
+		if(empty($nextBelegPostenId)){
+		    $nextBelegPostenId = 1;
+        }else{
+            $nextBelegPostenId = ((int) $nextBelegPostenId[0]['id']) +1;
+        }
+
+
 		foreach ($new_posten as $kb => $map){
 			if (strpos($map['beleg_id'], 'new_') === false
 				&& isset($removed_belege[$map['beleg_id']])){
@@ -1152,14 +1164,13 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			}
 			$posten_shortcounter++;
 			$db_posten = [
+                'id' => $nextBelegPostenId++,
 				'short' => (int)($this->auslagen_data['version'] . '' . $posten_shortcounter),
 				'projekt_posten_id' => $map['posten']['projekt-posten'],
 				'ausgaben' => $map['posten']['out'],
 				'einnahmen' => $map['posten']['in'],
-				'beleg_id' => (strpos(
-						$map['beleg_id'],
-						'new_'
-					) !== false) ? $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
+				'beleg_id' => (strpos($map['beleg_id'], 'new_') !== false) ?
+                    $map_new_beleg_beleg_idx[$map['beleg_id']] : $map['beleg_id'],
 			];
 			$idd = $this->db->dbInsert('beleg_posten', $db_posten);
 		}
@@ -1906,7 +1917,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 <label for="zahlung">Zahlungsinformationen</label><br>
 				<?= $this->templater->getTextForm(
 					"zahlung-name",
-					$this->auslagen_data['zahlung-name'],
+					$this->auslagen_data['zahlung-name'] ?? null,
 					[12, 12, 6],
 					"Name Zahlungsempfänger",
 					"Zahlungsempfänger Name",
@@ -1915,7 +1926,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 				) ?>
 	
 				<?php // iban only show trimmed if not hv/kv important!
-				$iban_text = $this->auslagen_data['zahlung-iban'];
+				$iban_text = $this->auslagen_data['zahlung-iban'] ?? null;
 				if ($iban_text){
 					$iban_text = self::decryptedStr($iban_text);
 				}
@@ -1934,7 +1945,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                 <div class='clearfix'></div>
 				<?= $this->templater->getTextForm(
 					"zahlung-vwzk",
-					$this->auslagen_data['zahlung-vwzk'],
+					$this->auslagen_data['zahlung-vwzk'] ?? null,
 					12,
 					"z.B. Rechnungsnr. o.Ä.",
 					"Verwendungszweck (verpflichtend bei Firmen)",
@@ -1948,7 +1959,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
                 $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
                     || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
-                )? $this->auslagen_data['address'] : 'Versteckt';
+                ) ? $this->auslagen_data['address'] ?? null : 'Versteckt';
 				?>
 				<?= $this->templater->getTextareaForm(
 					'address',
@@ -2212,12 +2223,15 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * masks iban to format
 	 * xxxx ... ... xx
 	 *
-	 * @param string $in iban string
+	 * @param ?string $in iban string
 	 *
 	 * @return string
 	 */
-	public static function trimIban(string $in): string
+	public static function trimIban(?string $in): string
     {
+        if(empty($in)){ // is null is included
+            return '';
+        }
 		$in = trim($in);
 		if ($in === '') {
             return '';
@@ -2477,7 +2491,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
                     </div>
                     <div class="form-group">
                         <div class="col-sm-12 beleg-data well" style="margin-top: 10px;"><?php
-							echo $this->render_beleg_posten_table($beleg['posten'], $editable, $hidden, $beleg['id']);
+							echo $this->render_beleg_posten_table($beleg['posten'], $editable, $hidden, (int) $beleg['id']);
 							?></div>
                     </div>
                 </div>
@@ -2493,11 +2507,11 @@ class AuslagenHandler2 extends FormHandlerInterface{
 	 * @param array $posten
 	 * @param bool $editable
 	 * @param bool  $hidden
-	 * @param bool $beleg_id
+	 * @param int $beleg_id
 	 *
 	 * @return string
 	 */
-	public function render_beleg_posten_table(array $posten, bool $editable, bool $hidden, bool $beleg_id): string
+	public function render_beleg_posten_table(array $posten, bool $editable, bool $hidden, int $beleg_id): string
     {
 		$out = '<div class="row row-striped" style="padding: 5px; border-bottom: 2px solid #ddd;">
 					<div class="form-group posten-headline">

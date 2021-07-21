@@ -271,13 +271,14 @@ class DbFilePDO{
                 [DBConnector::FETCH_ASSOC],
                 [],
                 ["fileinfo.link" => $linkId, "fileinfo.filename" => $filename, "fileinfo.fileextension" => $extension]);
+            return count($res) >= 1;
         }catch (Exception $e){
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
             $this->affectedRows = -1;
+            return false;
         }
-        return $res;
     }
     
     /**

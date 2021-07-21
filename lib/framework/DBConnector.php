@@ -305,7 +305,7 @@ class DBConnector extends Singleton
             ],
             "foreign" => [
                 "beleg_id" => ["belege", "id"],
-                "projekt_posten_id" => ["projektposten", "id"],
+                //"projekt_posten_id" => ["projektposten", "id"], would need to be double key -> info missing
             ],
         ];
 
@@ -1227,10 +1227,10 @@ class DBConnector extends Singleton
         $ret = $query->execute(array_values($fields));
         if ($ret === false) {
             $info = $query->errorInfo();
-            if(DEV === true){
+            if(DEV){
                 $info += ['sql' => $sql, 'values' => $fields];
             }
-            ErrorHandler::handleError(500,print_r($info, true));
+            ErrorHandler::handleError(500, print_r($info, true));
         }
         return $this->pdo->lastInsertId();
     }
@@ -1411,7 +1411,7 @@ class DBConnector extends Singleton
             ErrorHandler::handleError(
                 500,
                 'Ein Datenbank Fehler ist aufgetreten',
-                "Deletion of table $table not possible:" . PHP_EOL . print_r($query->errorInfo(), true)
+                "Deletion of table $table not possible:" . PHP_EOL . print_r($query->errorInfo(), true) . PHP_EOL . $sql . print_r($values, true)
             );
         }
 
