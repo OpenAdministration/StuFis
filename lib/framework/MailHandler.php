@@ -420,7 +420,7 @@ class MailHandler extends Singleton
 		foreach ($settings as $k => $v){
 			$out($k.' -> '.$v, 0, 0, 1);
 		}
-		if (DEBUG > 0){
+		if (DEV > 0){
 			$out('PW[Decrypted] -> '.$mail_pw, 1, 0, 1);
 		} else {
 			$out('PW[Decrypted] -> ****** NO DEBUG MODE ******', 1, 0, 1);

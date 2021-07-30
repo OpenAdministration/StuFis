@@ -1,10 +1,10 @@
 {
     "name": "lukas-staab/finanzantragui",
-    "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung nach Deutschem Recht für Studierendenschaften",
-    "version": "2.2.0-RC2",
+    "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
+    "version": "3.0.0-dev",
 
     "require": {
-        "php": "^7.2",
+        "php": "^7.4",
         "composer-runtime-api": "^2.0",
         "defuse/php-encryption": "^2.3",
         "nemiah/php-fints" : "dev-master",
@@ -22,7 +22,9 @@
         "ext-zip": "*",
         "ext-intl": "*",
         "ext-fileinfo": "*",
-        "ext-zlib": "*"
+        "ext-zlib": "*",
+        "jasig/phpcas": "^1.4.0",
+        "monolog/monolog": "^2.3"
     },
 
     "require-dev": {

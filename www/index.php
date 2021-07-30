@@ -6,9 +6,6 @@ use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use forms\RestHandler;
-use framework\auth\AuthBasicHandler;
-use framework\auth\AuthDummyHandler;
-use framework\auth\AuthSamlHandler;
 use framework\file\FileController;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
@@ -21,32 +18,10 @@ require_once SYSBASE . '/vendor/autoload.php';
 $router = new Router();
 $routeInfo = $router->route();
 
-if (!SAML){
-    define('AUTH_HANDLER', AuthDummyHandler::class);
-    (AUTH_HANDLER)::getInstance()->requireAuth();
-}else if (isset($routeInfo['auth']) && ($routeInfo['auth'] === 'Basic' || $routeInfo['auth'] === 'basic')){
-    define('AUTH_HANDLER', AuthBasicHandler::class);
-    (AUTH_HANDLER)::getInstance()->requireAuth();
-    (AUTH_HANDLER)::getInstance()->requireGroup('basic');
-    if (!isset($routeInfo['groups'])){
-        $routeInfo['action'] = '403';
-        $routeInfo['controller'] = 'error';
-    }
-}else{
-    define('AUTH_HANDLER', AuthSamlHandler::class);
-    (AUTH_HANDLER)::getInstance()->requireAuth();
-}
-if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
-    $routeInfo['action'] = '403';
-    $routeInfo['controller'] = 'error';
-}
 
 if (MAIL_INSTALL){
     require_once SYSBASE . '/lib/mail_init.php';
 }
-
-//TODO ACL on route ? ----------------------------
-$idebug = false;
 
 // handle route -------------------------
 //print_r($routeInfo);

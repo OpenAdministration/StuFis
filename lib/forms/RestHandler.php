@@ -15,6 +15,7 @@
 namespace forms;
 
 use booking\BookingTableManager;
+use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
 use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
@@ -878,7 +879,7 @@ class RestHandler extends EscFunc{
 		$auth = (AUTH_HANDLER);
 		/* @var $auth AuthHandler */
 		$auth = $auth::getInstance();
-		$auth->requireGroup(HIBISCUSGROUP);
+		$auth->requireGroup('ref-finanzen-kv');
 		
 		$ret = true;
 		if (!DBConnector::getInstance()->dbBegin()){
@@ -1393,7 +1394,7 @@ class RestHandler extends EscFunc{
 	
 	private function cancelBooking($routeInfo): void
     {
-		(AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+		(AUTH_HANDLER)::getInstance()->requireGroup('ref-finanzen-hv');
 		if (!isset($_REQUEST["booking_id"])){
 			$msgs[] = "Daten wurden nicht korrekt übermittelt";
 			die();

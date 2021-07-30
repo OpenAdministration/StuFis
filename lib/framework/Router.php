@@ -76,14 +76,16 @@ class Router{
     
     // public member functions --------------------------------
     
-    public function route($path = null): array
+    public function route($validateAuthGroup = true): array
     {
-        if ($path === null || !is_string($path)){
-            $path = $this->requested_path;
-        }
         //route request
-        $routeInfo = $this->_route($path, [$this->routes]);
-        
+        $routeInfo = $this->_route($this->requested_path, [$this->routes]);
+
+        if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
+            $routeInfo['action'] = '403';
+            $routeInfo['controller'] = 'error';
+        }
+
         //check request method ------------------
         if ($routeInfo['controller'] !== 'error'
             && stripos($routeInfo['method'], $_SERVER['REQUEST_METHOD']) === false){

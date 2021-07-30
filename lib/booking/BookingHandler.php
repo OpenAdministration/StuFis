@@ -36,7 +36,7 @@ class BookingHandler extends Renderer{
 			case "kasse":
 			case "bank":
 			case "sparbuch":
-				(AUTH_HANDLER)::getInstance()->requireGroup(HIBISCUSGROUP);
+				(AUTH_HANDLER)::getInstance()->requireGroup('ref-finanzen-kv');
 				$this->renderKonto($this->routeInfo["action"]);
 			break;
 			case "history":
