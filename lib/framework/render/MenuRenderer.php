@@ -726,10 +726,10 @@ class MenuRenderer extends Renderer
             [],
             ["auslagen.id"]
         );
-
+        $disabled = count($auslagen) === 0 || ((int) $auslagen[0]['count']) === 0;
         ?>
         <form action="<?= URIBASE ?>menu/kv/exportBank">
-            <button class="btn btn-primary" <?= end($auslagen)["count"] === 0 ? "disabled" : "" ?>>
+            <button class="btn btn-primary" <?= $disabled ? "disabled" : "" ?>>
                 <i class="fa fa-fw fa-money"></i>&nbsp;Exportiere Überweisungen
             </button>
         </form>

@@ -2,6 +2,8 @@
 
 use framework\Singleton;
 
+const FINANRANTRAGUI_FW_SI = true; // secret check
+
 ini_set('session.use_strict_mode', 1);
 session_start();
 
