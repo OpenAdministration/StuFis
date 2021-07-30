@@ -1058,7 +1058,7 @@ class Validator {
 		}
 		//check iban
 		if (!self::_checkIBAN($iban)){
-			$msg = (isset($params['error']))? $params['error'] : 'iban validation failed';
+			$msg = $params['error'] ?? 'iban validation failed';
 			return !$this->setError(true, 200, $msg, 'iban validation failed');
 		} else {
 			$this->filtered=$iban;
@@ -1133,19 +1133,19 @@ class Validator {
     {
 		if (function_exists('bcmod')){
 			return (int) (bcmod($left_operand, $modulus) ?? -1);
-		} else {
-			$take = 5; // how many numbers to take at once?
-			$mod = '';
-			do {
-				$a = (int) $mod . substr( $left_operand, 0, $take );
-				$left_operand = substr( $left_operand, $take );
-				$mod = $a % $modulus;
-			}
-			while ($left_operand !== '');
-
-			return (int) $mod;
 		}
-	}
+
+        $take = 5; // how many numbers to take at once?
+        $mod = '';
+        do {
+            $a = (int) $mod . substr( $left_operand, 0, $take );
+            $left_operand = substr( $left_operand, $take );
+            $mod = $a % $modulus;
+        }
+        while ($left_operand !== '');
+
+        return (int) $mod;
+    }
 
 	private function _capsule_lastMapKey(){
 		$capsuled = $this->lastMapKey;
