@@ -1,18 +1,11 @@
 
-#force https
-RewriteEngine On
-RewriteCond %{HTTPS} !=on
-RewriteRule ^(.*)$ https://%{SERVER_NAME}%{REQUEST_URI} [R=301,L]
-Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
-
-
 #Redirect everything else to index.php
 RewriteCond   %{REQUEST_FILENAME}   !-f
 RewriteCond   %{REQUEST_FILENAME}   !-d
-RewriteRule   ^(.*)$                index.php/$1  [L]
+RewriteRule   ^(.*)$                /index.php/$1  [L]
 
-php_flag display_errors on
-php_flag  log_errors on
+#php_flag display_errors on
+#php_flag  log_errors on
 #php_value error_log  /var/www/tu-ilmenau.de/helfer.stura/FinanzAntragUI/PHP_errors.log
 #SetENV TMP /var/www.iscsi/tu-ilmenau.de/helfer.stura/FinanzAntragUI/tmp/
 #SetENV TMPDIR /var/www.iscsi/tu-ilmenau.de/helfer.stura/FinanzAntragUI/tmp/
@@ -22,4 +15,4 @@ php_flag  log_errors on
 #php_flag  log_errors on
 #php_value error_log  /var/www/tu-ilmenau.de/wiki.stura/tmp/PHP_errors.log
 
-php_value max_input_vars 100000
+#php_value max_input_vars 100000
