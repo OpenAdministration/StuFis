@@ -18,7 +18,6 @@ class ProjektHandler
     extends FormHandlerInterface
 {
     static private $emptyData;
-    static private $selectable_recht;
     static private $states;
     static private $stateChanges;
     static private $printModes;
@@ -162,50 +161,6 @@ class ProjektHandler
                     ],
                 ],
         ];
-        self::$selectable_recht =
-            [
-                "values" => "",
-                "groups" =>
-                    [
-                        [
-                            //"label" => "Gruppenname",
-                            "options" => [
-                                [
-                                    "label" => "Büromaterial",
-                                    "value" => "buero",
-                                ],
-                                [
-                                    "label" => "Fahrtkosten",
-                                    "value" => "fahrt",
-                                ],
-                                [
-                                    "label" => "Verbrauchsmaterial",
-                                    "value" => "verbrauch",
-                                ],
-                                [
-                                    "label" => "Beschluss StuRa-Sitzung",
-                                    "value" => "stura",
-                                ],
-                                [
-                                    "label" => "Beschluss Fachschaftsrat/Referat/AG bis zu 250 EUR",
-                                    "value" => "fsr-ref",
-                                ],
-                                [
-                                    "label" => "Gremienkleidung",
-                                    "value" => "kleidung",
-                                ],
-                                [
-                                    "label" => "Bahncard",
-                                    "value" => "bahn-card",
-                                ],
-                                [
-                                    "label" => "Andere Rechtsgrundlage",
-                                    "value" => "andere",
-                                ],
-                            ],
-                        ],
-                    ],
-            ];
 
         self::$emptyData = [
             'id' => '',
@@ -620,7 +575,12 @@ class ProjektHandler
         $selectable_mail = FormTemplater::generateSelectable($mailingLists);
         $selectable_mail["values"] = $this->data['org-mail'];
 
-        $sel_recht = self::$selectable_recht;
+        $sel_recht = FormTemplater::generateSelectable(array_combine(
+                array_keys(ORG_DATA['rechtsgrundlagen']),
+                array_map(static function ($val){
+                    return $val['label'];
+                }, ORG_DATA['rechtsgrundlagen'])
+        ));
         $sel_recht["values"] = $this->data['recht'];
         if (isset($this->data["createdat"]) && !empty($this->data["createdat"])) {
             $createDate = $this->data["createdat"];
@@ -671,57 +631,23 @@ class ProjektHandler
                                 ) ?>
                             </div>
                             <div class="hide-items">
-                                <div id="buero" class="form-group" style="display: none;">
-                                    <div class="col-xs-12">Finanzordnung §11: bis zu 150 EUR</div>
-                                </div>
-                                <div id="fahrt" class="form-group" style="display: none;">
-                                    <span class="col-xs-12">StuRa-Beschluss 21/20-08: Fahrtkosten</span>
-                                </div>
-                                <div id="verbrauch" class="" style="display: none;">
-                                    <div class="form-group col-xs-12">StuRa-Beschluss 21/20-07: bis zu 50 EUR</div>
-                                </div>
-                                <div id="stura" style="display: none;">
-                                    <?= $this->templater->getTextForm(
-                                        "recht-additional[stura]",
-                                        $this->data["recht-additional"],
-                                        4,
-                                        "",
-                                        "StuRa Beschluss",
-                                        []
-                                    ) ?>
-                                    <span class="col-xs-12">Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.</span>
-                                </div>
-                                <div id="fsr-ref" style="display: none;">
-                                    <?= $this->templater->getTextForm(
-                                        "recht-additional[fsr-ref]",
-                                        $this->data["recht-additional"],
-                                        4,
-                                        "",
-                                        "StuRa Beschluss (Verkündung)",
-                                        []
-                                    ) ?>
-                                    <span class="col-xs-12">StuRa-Beschluss 21/21-05: für ein internes Projekt bis zu (inkl.) 250 EUR
-                                    Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden</span>
-                                </div>
-                                <div id="kleidung" style="display: none;">
-                                    <span class="col-xs-12">StuRa Beschluss 24/04-09 bis zu 25€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.</span>
-                                </div>
-                                <div id="bahn-card" style="display: none">
-                                    <span class="col-xs-12">StuRa Beschluss 29/21-W01: Privat gekaufte Bahn-Cards
-                                        können nachträglich gefördert werden, falls für den StuRa die
-                                        Anschaffung der Bahncard nachweislich günstiger war. Antrag ist bis zu einem
-                                        Semester nach Exma möglich.</span>
-                                </div>
-                                <div id="andere" style="display: none;">
-                                    <?= $this->templater->getTextForm(
-                                        "recht-additional[andere]",
-                                        $this->data["recht-additional"],
-                                        5,
-                                        "",
-                                        "Andere Rechtsgrundlage angeben",
-                                        []
-                                    ) ?>
-                                </div>
+                                <?php foreach (ORG_DATA['rechtsgrundlagen'] as $shortName => $def){ ?>
+                                        <div id="<?= $shortName?>" class="form-group" style="display: none;">
+                                            <?php if(isset($def['placeholder'], $def['label-additional'])){
+                                                echo $this->templater->getTextForm(
+                                                    "recht-additional[$shortName]",
+                                                    $this->data["recht-additional"],
+                                                    4,
+                                                    $def['placeholder'] ?? '',
+                                                    $def['label-additional'] ?? 'Zusatzinformationen',
+                                                    []
+                                                );
+                                            } ?>
+                                            <span class="col-xs-12"><?= $def['hint-text'] ?? '' ?></span>
+                                        </div>
+                                        <?php
+                                    }
+                                ?>
                             </div>
                         </div>
                         <div class='clearfix'></div>

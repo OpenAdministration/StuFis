@@ -5,11 +5,9 @@ namespace framework\cli;
 
 
 use Ahc\Cli\Application as App;
-use Ahc\Cli\Output\Color;
+use Ahc\Cli\Output\Writer;
 use framework\ArrayHelper;
 use framework\NewValidator;
-use framework\Validator;
-use JetBrains\PhpStorm\ArrayShape;
 
 class ConfigOrgCommand extends \Ahc\Cli\Input\Command
 {
@@ -20,12 +18,12 @@ class ConfigOrgCommand extends \Ahc\Cli\Input\Command
 
     public function execute(): void
     {
-        $color = new Color();
+        $out = new Writer();
         $orgs = include SYSBASE . '/config/config.orgs.php';
 
         foreach ($orgs as $realmName => $org){
             if(strtolower($realmName) !== $realmName){
-                echo $color->warn("Realm $realmName only small letters") . PHP_EOL;
+                $out->warn("Realm $realmName only small letters", true);
             }
             $v = new NewValidator();
             [$error, $filteredOrg] = $v->validateArray($org, $this->getOrgValidationMap());
@@ -33,20 +31,19 @@ class ConfigOrgCommand extends \Ahc\Cli\Input\Command
             if(!empty($ignored)){
                 $ignored = ArrayHelper::convolve_keys($ignored);
                 foreach ($ignored as $key => $value){
-                    echo $color->warn("org:$realmName:$key unchecked (unused)") . PHP_EOL;
+                    $out->warn("org:$realmName:$key unchecked (unused)", true);
                 }
             }
             if($error){
                 foreach ($v->getErrors() as [$msg, $validator, $key, $val]){
-                    echo $color->error("org:$realmName:$key $validator-Validation: $msg") . PHP_EOL;
+                    $out->error("org:$realmName:$key $validator-Validation: $msg", true);
                 }
             }else{
-                echo $color->ok("[ok] realm $realmName") . PHP_EOL;
+                $out->ok("[ok] realm $realmName", true);
             }
         }
     }
 
-    /** @noinspection PhpArrayShapeAttributeCanBeAddedInspection */
     private function getOrgValidationMap() : array
     {
         return [
@@ -63,6 +60,26 @@ class ConfigOrgCommand extends \Ahc\Cli\Input\Command
             ],
             'mailinglists' => [
                 'array', 'empty', 'required'
+            ],
+            'projekt-form' => [
+                'array',
+                'required' => false,
+                'values' => [
+                    'in',
+                    ['hide-protokoll'],
+                ],
+            ],
+            'rechtsgrundlagen' => [
+                'array',
+                'key' => 'text',
+                'values' => [
+                    'array',
+                    'required' => true,
+                    'label' => 'text',
+                    'label-additional' => 'text',
+                    'placeholder' => 'text',
+                    'hint-text' => 'text',
+                ]
             ],
             'impressum-url' => ['url', 'empty'],
             'datenschutz-url' => ['url', 'empty'],

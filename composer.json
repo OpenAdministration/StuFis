@@ -28,7 +28,9 @@
         "ext-intl": "*",
         "ext-fileinfo": "*",
         "ext-zlib": "*",
-        "ext-mysqlnd": "*"
+        "ext-mysqlnd": "*",
+        "czproject/git-php": "^4.0",
+        "symfony/process": "^5.3"
     },
 
     "require-dev": {

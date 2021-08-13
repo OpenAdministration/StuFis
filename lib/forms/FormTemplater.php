@@ -163,8 +163,12 @@ class FormTemplater{
         
         $selectable = [];
         $options = [];
-        foreach ($list as $item){
-            $options[] = ["label" => $item];
+        foreach ($list as $key => $item){
+            $opt = ["label" => $item];
+            if(is_string($key)){
+                $opt += ['value' => $key];
+            }
+            $options[] = $opt;
         }
         //only 1 group
         $selectable["groups"][0]["options"] = $options;

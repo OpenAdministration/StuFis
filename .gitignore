@@ -12,5 +12,6 @@ logs/*
 secret.php
 .directory
 /vendor/
-composer.phar
 /.env
+/composer-setup.php
+/composer.phar

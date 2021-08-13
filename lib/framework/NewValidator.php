@@ -109,7 +109,6 @@ class NewValidator {
     }
 
     /**
-     * validate POST data with a validation list
      *
      * $map format:
      *    [
@@ -196,6 +195,21 @@ class NewValidator {
             $this->addError($msg, 'integer', $keys, $value);
         }
         return [$this->isError, $v];
+    }
+
+    #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
+    private function V_in(mixed $value, array $params, array $keys) : array
+    {
+        if(!isset($params[0]) || !is_array($params[0])){
+            $this->addError('Options/Choices not set', 'in', $keys, $value);
+            return [false, null];
+        }
+        $choices = $params[0];
+        if(!in_array($value, $choices, true)){
+            $this->addError('Not in choices/options', 'in', $keys, $value);
+            return [false, null];
+        }
+        return [true, $value];
     }
 
     /**
@@ -636,6 +650,9 @@ class NewValidator {
 		if (!isset($params['values'])){
 			return [$this->isError, $a];
 		}
+
+		// todo: implement low(er) level required as well, not only top level in other function
+
 		$out = [];
 		foreach($a as $arrayKey => $entry){
 			//key

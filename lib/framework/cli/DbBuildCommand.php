@@ -5,8 +5,7 @@ namespace framework\cli;
 
 
 use Ahc\Cli\Application as App;
-use Ahc\Cli\Input\Command;
-use Ahc\Cli\Output\Color;
+use Ahc\Cli\Output\Writer;
 use framework\DBConnector;
 
 class DbBuildCommand extends \Ahc\Cli\Input\Command
@@ -19,7 +18,7 @@ class DbBuildCommand extends \Ahc\Cli\Input\Command
     public function execute() : void
     {
         $ret = DBConnector::getInstance()->buildDB();
-        $cli = new Color();
+        $cli = new Writer();
         if($ret){
             $cli->ok('[ok] built db');
         }else{
