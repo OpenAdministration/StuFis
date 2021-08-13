@@ -4,6 +4,7 @@ namespace framework\render;
 
 use Composer\InstalledVersions;
 use DateTime;
+use framework\auth\AuthHandler;
 
 class HTMLPageRenderer
 {
@@ -108,7 +109,8 @@ class HTMLPageRenderer
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <meta name="description" content="">
-            <meta name="author" content="">
+            <meta name="author" content="Open-Administration">
+            <link rel="icon" type="image/png" sizes="86x86" href="<?= URIBASE?>favicon86.png">
             <meta charset="utf-8">
         </head>
         <body>
@@ -134,7 +136,7 @@ class HTMLPageRenderer
     private function setPhpHeader(): void
     {
         // by micha-dev
-        // http://people.mozilla.com/~bsterne/content-security-policy/details.html
+        // https://people.mozilla.com/~bsterne/content-security-policy/details.html
         // https://wiki.mozilla.org/Security/CSP/Specification
         header("X-Content-Security-Policy: allow 'self'; options inline-script eval-script");
         header("X-Frame-Options: DENY");
@@ -156,7 +158,6 @@ class HTMLPageRenderer
         }
         $out .= "<link rel='stylesheet' href='" . URIBASE . "css/main.css'>" . PHP_EOL;
         return $out;
-
     }
 
     private function includeJS(): string
@@ -243,6 +244,7 @@ class HTMLPageRenderer
                             <span class="hidden-sm hidden-xs">Impressum</span>
                         </a>
                     </li>
+                    <?php if(defined('GIT_ISSUE_LINK')){ ?>
                     <li>
                         <a target="_blank" href="<?= GIT_ISSUE_LINK ?>"
                            title="<?= htmlspecialchars(
@@ -255,6 +257,7 @@ class HTMLPageRenderer
                             <span class="hidden-sm hidden-xs">Fehler melden - v<?= $prettyVersionString ?></span>
                         </a>
                     </li>
+                    <?php } ?>
                     <li>
                         <a target="_blank"
                            href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">
@@ -263,7 +266,7 @@ class HTMLPageRenderer
                         </a>
                     </li>
                     <li>
-                        <a href="<?php echo htmlspecialchars((AUTH_HANDLER)::getInstance()->getLogoutURL()); ?>">
+                        <a href="<?php echo htmlspecialchars(AuthHandler::getInstance()->getLogoutURL()); ?>">
                             <i class="fa fa-fw fa-sign-out"></i>
                             <span class="hidden-sm hidden-xs">Logout</span>
                         </a>
@@ -276,7 +279,7 @@ class HTMLPageRenderer
 
     private function renderSiteNavigation(): void
     {
-        $auth = (AUTH_HANDLER)::getInstance();
+        $auth = AuthHandler::getInstance();
         $activeButton = $this->routeInfo["navigation"] ?? "";
         $navButtons = [
             [
@@ -288,7 +291,7 @@ class HTMLPageRenderer
             ],
             [
                 "title" => "Benutzerkonto",
-                "show" => true,
+                "show" => false,
                 "fa-icon" => "fa-user-circle",
                 "target" => URIBASE . "menu/mykonto",
                 "tabname" => "mykonto",
@@ -342,7 +345,7 @@ class HTMLPageRenderer
                 <!-- SIDEBAR USER TITLE -->
                 <div class="profile-usertitle">
                     <div class="profile-usertitle-name">
-                        <?= $auth->getUserfullname(); ?>
+                        <?= $auth->getUserfullname() ?>
                     </div>
                     <div class="profile-usertitle-job">
                     <?php if ($auth->isAdmin()) { ?>
@@ -497,7 +500,7 @@ class HTMLPageRenderer
             <div class='modal-dialog' <?= ($danger === 'danger') ? 'style="min-width: 75%;"' : '' ?> role='document'>
                 <div class='modal-content'>
                     <div class='modal-header<?=
-                    (($danger) ? " btn-{$danger}' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : '') ?>'>
+                    (($danger) ? " btn-$danger' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : '') ?>'>
                         <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
                                     aria-hidden='true'>&times;</span>
                         </button>

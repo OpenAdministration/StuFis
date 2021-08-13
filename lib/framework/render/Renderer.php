@@ -12,11 +12,11 @@ abstract class Renderer extends EscFunc
 
     protected $routeInfo;
 
-    public function render() : void{
+    public function render() : void {
         $action = $this->routeInfo['action'];
         $methodName = 'action' . str_replace('-', '', ucwords($action, '-'));
         if(method_exists($this,$methodName)){
-            $this->$methodName();
+            echo $this->$methodName();
         }else{
             ErrorHandler::handleError(404, "Methode $methodName not found in " . __CLASS__);
         }

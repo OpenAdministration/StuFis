@@ -60,7 +60,7 @@ class AuthDummyHandler implements AuthHandler{
     }
 
     /** {@inheritDoc} */
-    public function requireGroup($groups) : void
+    public function requireGroup(array|string $groups) : void
     {
         $this->requireAuth();
         if (!$this->hasGroup($groups)){
@@ -74,7 +74,7 @@ class AuthDummyHandler implements AuthHandler{
     }
 
     /** {@inheritDoc} */
-    public function hasGroup($groups, $delimiter = ",") : bool
+    public function hasGroup(array|string $groups, string $delimiter = ",") : bool
     {
         $this->requireAuth();
         $attributes = $this->getAttributes();

@@ -5,21 +5,14 @@ namespace framework\auth;
 use framework\render\ErrorHandler;
 use framework\Singleton;
 
-class AuthSamlHandler extends Singleton implements AuthHandler{
+class AuthSamlHandler extends AuthHandler{
     private static $SIMPLESAMLDIR;
     private static $SIMPLESAMLAUTHSOURCE;
     private static $AUTHGROUP;
     private static $ADMINGROUP;
     private $saml;
 
-    /**
-     * @param mixed ...$pars
-     * @return AuthHandler
-     */
-    public static function getInstance(...$pars): AuthHandler{
-        return parent::getInstance(...$pars);
-    }
-    
+
     protected function __construct(){
         require_once(self::$SIMPLESAMLDIR . '/lib/_autoload.php');
         $this->saml = new \SimpleSAML_Auth_Simple(self::$SIMPLESAMLAUTHSOURCE);
@@ -65,7 +58,7 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
         return $this->getAttributes()["mail"][0];
     }
     
-    public function requireGroup($groups) : void
+    public function requireGroup(array|string $groups) : void
     {
         $this->requireAuth();
         if($this->isAdmin()){
@@ -77,12 +70,12 @@ class AuthSamlHandler extends Singleton implements AuthHandler{
     }
     
     /**
-     * @param string $groups    String of groups
+     * @param array|string $groups    String of groups
      * @param string $delimiter Delimiter of the groups in $group
      *
      * @return bool  true if the user has one or more groups from $group
      */
-    public function hasGroup($groups, $delimiter = ","): bool
+    public function hasGroup(array|string $groups, string $delimiter = ","): bool
     {
         $attributes = $this->getAttributes();
         if (!isset($attributes["groups"])){

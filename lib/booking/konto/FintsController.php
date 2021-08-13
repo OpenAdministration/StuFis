@@ -8,6 +8,7 @@ use Fhp\Model\SEPAAccount;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\TanMode;
 use Fhp\Model\TanRequestChallengeImage;
+use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\html\Html;
@@ -172,10 +173,10 @@ class FintsController extends Renderer
             </div>
             <?php $this->renderNonce() ?>
             <button type="submit"
-                    class="btn btn-primary  <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                    class="btn btn-primary  <?= AuthHandler::getInstance()->hasGroup(
                         "ref-finanzen-kv"
                     ) ? "" : "user-is-not-kv" ?>"
-                <?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv") ? "" : "disabled" ?>>
+                <?= AuthHandler::getInstance()->hasGroup("ref-finanzen-kv") ? "" : "disabled" ?>>
                 Speichern
             </button>
         </form>
@@ -346,7 +347,7 @@ class FintsController extends Renderer
         $iban = $this->fintsConnection->getIbanFromShort($this->shortIBAN);
 
         $this->renderHeadline('Neues Konto Importieren');
-        $auth = (AUTH_HANDLER)::getInstance();
+        $auth = AuthHandler::getInstance();
         ?>
         <form action="<?= URIBASE ?>rest/konto/credentials/import-konto" method="POST" role="form" class="ajax-form">
 

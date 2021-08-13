@@ -13,3 +13,4 @@ secret.php
 .directory
 /vendor/
 composer.phar
+/.env

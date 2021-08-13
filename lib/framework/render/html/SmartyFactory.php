@@ -10,7 +10,16 @@ class SmartyFactory
     public static function make() : Smarty
     {
         $smarty = new Smarty();
-        $smarty->setTemplateDir(SYSBASE . "/template/smarty");
+        $smarty->setTemplateDir(SYSBASE . "/template/view");
+        $smarty->setCacheDir(SYSBASE . "/runtime/smarty-cache");
+        $smarty->setCompileDir(SYSBASE . "/runtime/smarty-compile");
+        return $smarty;
+    }
+
+    public static function mail() : Smarty
+    {
+        $smarty = new Smarty();
+        $smarty->setTemplateDir(SYSBASE . "/template/mail");
         $smarty->setCacheDir(SYSBASE . "/runtime/smarty-cache");
         $smarty->setCompileDir(SYSBASE . "/runtime/smarty-compile");
         return $smarty;

@@ -2,6 +2,7 @@
 
 namespace booking;
 
+use framework\auth\AuthHandler;
 use framework\CSVBuilder;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
@@ -92,7 +93,7 @@ class HHPHandler
 		);
 		?>
             <a href="<?= URIBASE ?>hhp/import" class="btn btn-primary" <?=
-                (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv")? "" : "disabled"?>>
+                AuthHandler::getInstance()->hasGroup("ref-finanzen-hv")? "" : "disabled"?>>
                 <span class="fa fa-fw fa-plus"></span>Neu Importieren
             </a>
         <?php
@@ -193,10 +194,10 @@ class HHPHandler
             </div>
             <?php $this->renderNonce() ?>
             <button type="submit"
-                    class="btn btn-primary <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                    class="btn btn-primary <?= AuthHandler::getInstance()->hasGroup(
                         "ref-finanzen-hv"
                     ) ? "" : "user-is-not-hv" ?>"
-                <?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
+                <?= AuthHandler::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
                 Vorschau anzeigen
             </button>
         </form>
@@ -224,10 +225,10 @@ class HHPHandler
             <?php $this->renderHiddenInput('date-start', htmlspecialchars($_POST['date-start'])) ?>
             <?php $this->renderNonce() ?>
             <button type="submit"
-                    class="btn btn-primary  <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                    class="btn btn-primary  <?= AuthHandler::getInstance()->hasGroup(
                         "ref-finanzen-hv"
                     ) ? "" : "user-is-not-hv" ?>"
-                <?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
+                <?= AuthHandler::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
                 Entgültig abspeichern
             </button>
         </form>

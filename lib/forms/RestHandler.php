@@ -43,9 +43,9 @@ class RestHandler extends EscFunc{
 	
 	/**
 	 *
-	 * @param array $routeInfo
+	 * @param array|null $routeInfo
 	 */
-	public function handlePost($routeInfo = null): void
+	public function handlePost(array $routeInfo = null): void
     {
 		global $nonce;
 		if (!isset($_POST["nonce"]) || $_POST["nonce"] !== $nonce || isset($_POST["nononce"])){
@@ -223,9 +223,6 @@ class RestHandler extends EscFunc{
         }
 
 		try{
-            $auth = (AUTH_HANDLER);
-            /* @var $auth AuthHandler */
-            $auth = $auth::getInstance();
             //$logId = DBConnector::getInstance()->logThisAction($_POST);
             //DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
 
@@ -1657,7 +1654,7 @@ class RestHandler extends EscFunc{
     {
         $syncFrom = date_create($_POST['sync-from'])->format('Y-m-d');
         $kontoIban = $_POST['konto-iban'];
-        $ibanCorrect = checkIBAN($kontoIban);
+        $ibanCorrect = Validator::_checkIBAN($kontoIban);
         $kontoName = substr(htmlspecialchars(strip_tags(trim($_POST['konto-name']))),0,32);
         $kontoShort = strtoupper(substr((string) $_POST['konto-short'],0,2));
         $credId = (int) $_POST['credential-id'];

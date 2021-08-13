@@ -1,98 +1,113 @@
 <?php
-/**
- * FRAMEWORK ProtocolHelper
- * interface AuthHandler
- *
- * @package         Stura - Referat IT - ProtocolHelper
- * @category        framework interface
- * @author 			michael gnehr
- * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
- * @since 			07.05.2018
- * @copyright 		Copyright (C) Michael Gnehr 2018, All rights reserved
- * @platform        PHP
- * @requirements    PHP 7.0 or higher
- */
-
 namespace framework\auth;
 
-interface AuthHandler
-{	
-	/**
-	 * return instance of this class
-	 * singleton class
-	 * return same instance on every call
-	 *
-     * @return AuthHandler
-	 */
-	public static function getInstance(): AuthHandler;
-	
-	/**
+use framework\render\ErrorHandler;
+use framework\Singleton;
+
+/**
+ * Class AuthHandler
+ * @package framework\auth
+ * @static requireAuth()
+ * @static hasGroup()
+ *
+ */
+abstract class AuthHandler extends Singleton
+{
+    public static function getInstance(): static
+    {
+        return self::initSingleton(AUTH_HANDLER);
+    }
+
+    public function __call(string $name, array $arguments)
+    {
+        self::initSingleton(AUTH_HANDLER)->$name(...$arguments);
+    }
+
+    public function getUserGroups() : array
+    {
+        return $this->getAttributes()['groups'] ?? [];
+    }
+
+    public function getUserGremien() : array
+    {
+        return $this->getAttributes()['gremien'] ?? [];
+    }
+
+    public function getUserMailinglists() : array
+    {
+        return $this->getAttributes()['mailinglists'] ?? [];
+    }
+
+    /**
 	 * handle session and user login
 	 */
-	public function requireAuth() : void;
+	abstract public function requireAuth() : void;
 	
 	/**
 	 * check group permission - die on error
 	 * return void if successful
-	 * @param string|array $groups    String of groups
+	 * @param array|string $groups    String of groups
 	 * @return void die() if group is not there
 	 */
-    public function requireGroup($groups): void;
+    abstract public function requireGroup(array|string $groups): void;
 	
 	/**
 	 * check group permission - return result of check as boolean
-	 * @param string|array $groups    String of groups
+	 * @param array|string $groups    String of groups
 	 * @param string $delimiter Delimiter of the groups in $group
 	 * @return bool  true if the user has one or more groups from $group
 	 */
-    public function hasGroup($groups, $delimiter = ","): bool;
+    abstract public function hasGroup(array|string $groups, string $delimiter = ","): bool;
 	
 	/**
 	 * return log out url
 	 * @return string
 	 */
-	public function getLogoutURL(): string;
+    abstract public function getLogoutURL(): string;
 	
 	/**
 	 * send html header to redirect to logout url
 	 */
-	public function logout() : void;
+    abstract public function logout() : void;
 	
 	/**
 	 * return current user attributes
 	 * @return array
 	 */
-	public function getAttributes(): array;
+    abstract public function getAttributes(): array;
 	
 	/**
 	 * return username or user mail address
 	 * if not set return null
 	 * @return string|NULL
 	 */
-	public function getUsername(): ?string;
+    abstract public function getUsername(): ?string;
 	
 	/**
 	 * return user displayname
 	 * @return string
 	 */
-	public function getUserFullName(): string;
+    abstract public function getUserFullName(): string;
 	
 	/**
 	 * return user mail address
 	 * @return string
 	 */
-	public function getUserMail(): string;
+    abstract public function getUserMail(): string;
     
     /**
      * @return bool if user has Admin Privileges
      */
-    public function isAdmin(): bool;
+    abstract public function isAdmin(): bool;
     
     /**
-     * @param $gremien   string with $delimiter concat sting
+     * @param $gremien   array|string with $delimiter concat sting
      * @param $delimiter string delimiter between gremien
      */
-    public function hasGremium(string $gremien, string $delimiter) : bool;
+    abstract public function hasGremium(array|string $gremien, string $delimiter = ',') : bool;
 
-    public function reportPermissionDenied(string $errorMsg, string $debug) : void;
+    public function reportPermissionDenied(string $errorMsg, string $debug): void
+    {
+        ErrorHandler::handleError(403, $errorMsg, $debug);
+    }
 }

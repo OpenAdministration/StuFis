@@ -32,7 +32,7 @@ class MailHandler extends Singleton
 
 	/**
 	 *
-	 * @var PHPMailer
+	 * @var
 	 */
 	protected $mail;
 
@@ -81,29 +81,16 @@ class MailHandler extends Singleton
 		$this->initOk = false;
 		$this->templateVars = array();
 		$this->templateName = '';
-		$this->logoImagePath = '/www/img/stura_black.svg';
-		$this->settings = ($settings) ?: self::$_settings;
-	}
-
-    /**
-     * return instance of this class
-     * singleton class
-     * return same instance on every call
-     * @param mixed ...$pars
-     * @return MailHandler
-     */
-	public static function getInstance(...$pars): MailHandler
-    {
-		return parent::getInstance(...$pars);
-	}
-	
-	final protected static function static__set($name, $value): void
-    {
-		if (property_exists(get_class(), $name)) {
-            self::$$name = $value;
-        } else {
-            die("$name ist keine Variable in " . get_class());
-        }
+		$this->logoImagePath = '/www/favicon86.png';
+		$this->settings = [
+            'MAIL_PASSWORD' => $_ENV['MAIL_SMTP_PASSWORD'],
+            'SMTP_HOST' => $_ENV['MAIL_SMTP_HOST'],
+            'SMTP_USER' => $_ENV['MAIL_SMTP_USER'],
+            'SMTP_SECURE' => $_ENV['MAIL_SMTP_ENCRYPT'], //tls|ssl' //tls = startls
+            'SMTP_PORT' => $_ENV['MAIL_SMTP_PORT'],
+            'MAIL_FROM' => $_ENV['MAIL_FROM_EMAIL'],
+            'MAIL_FROM_ALIAS' => $_ENV['MAIL_FROM_NAME'],
+        ];
 	}
 
 	// modify settings =========================================
@@ -158,7 +145,8 @@ class MailHandler extends Singleton
 
 	public static function encryptPassword($p = NULL)
     {
-		if ($p === NULL) {
+		/*
+        if ($p === NULL) {
             $p = self::$_settings['MAIL_PASSWORD'];
         }
 		if (!$p) {
@@ -166,7 +154,9 @@ class MailHandler extends Singleton
         }
 		$p = CryptoHandler::pad_string($p);
 		return CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE.'/secret.php'), URIBASE);
-	}
+	    */
+        return $_ENV['MAIL_SMTP_PASSWORD'];
+    }
 
 	private static function decryptPassword($p): string
     {
@@ -179,33 +169,49 @@ class MailHandler extends Singleton
 
 	// init ==================================================
 
-	/**
-	 * test if settings array has all required parameters
-	 * @param array $settings
-	 */
-	public static function checkMailsettings($settings){
-		if (!is_array($settings)) return false;
-		if (!isset($settings['MAIL_PASSWORD']) 	|| $settings['MAIL_PASSWORD'] == '') return false;
-		if (!isset($settings['SMTP_HOST']) 		|| $settings['SMTP_HOST'] == '') return false;
-		if (!isset($settings['SMTP_USER']) 		|| $settings['SMTP_USER'] == '') return false;
-		if (!isset($settings['SMTP_SECURE']) 	|| $settings['SMTP_SECURE'] == '') return false;
+    /**
+     * test if settings array has all required parameters
+     * @param array $settings
+     * @return bool
+     */
+	public static function checkMailsettings(array $settings): bool
+    {
+		if (!is_array($settings)) {
+            return false;
+        }
+		if (!isset($settings['MAIL_PASSWORD']) 	|| $settings['MAIL_PASSWORD'] == '') {
+            return false;
+        }
+		if (!isset($settings['SMTP_HOST']) 		|| $settings['SMTP_HOST'] == '') {
+            return false;
+        }
+		if (!isset($settings['SMTP_USER']) 		|| $settings['SMTP_USER'] == '') {
+            return false;
+        }
+		if (!isset($settings['SMTP_SECURE']) 	|| $settings['SMTP_SECURE'] == '') {
+            return false;
+        }
 		if (!isset($settings['SMTP_PORT']) 		|| $settings['SMTP_PORT'] == '' ||
-				(!strtolower($settings['SMTP_PORT']) == 'tls' &&
-				 !strtolower($settings['SMTP_PORT']) == 'ssl')) return false;
-		if (!isset($settings['MAIL_FROM']) 		|| $settings['MAIL_FROM'] == '') return false;
-		if (!isset($settings['MAIL_FROM_ALIAS'])|| $settings['MAIL_FROM_ALIAS'] == '') return false;
+				(!strtolower($settings['SMTP_PORT']) === 'tls' &&
+				 !strtolower($settings['SMTP_PORT']) === 'ssl')) {
+            return false;
+        }
+		if (!isset($settings['MAIL_FROM']) 		|| $settings['MAIL_FROM'] == '') {
+            return false;
+        }
+		if (!isset($settings['MAIL_FROM_ALIAS'])|| $settings['MAIL_FROM_ALIAS'] == '') {
+            return false;
+        }
 		return true;
 	}
 
 	/**
 	 * initialize phpmailer object
-	 * @param $settings mail settings
-	 * @param array $settings
 	 */
-	public function init() {
+	public function init(): bool
+    {
 		$settings = $this->settings;
 		if (!self::checkMailsettings($settings)){
-			error_log("Mailsettings unvollständig");
 			return false;
 		}
 		$this->mail = new PHPMailer;

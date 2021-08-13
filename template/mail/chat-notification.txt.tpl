@@ -1,0 +1,1 @@
+Es gibt ein neues Kommentar im Finanztool.

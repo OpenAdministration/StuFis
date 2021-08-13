@@ -2,12 +2,11 @@
 
 namespace booking;
 
+use framework\auth\AuthHandler;
 use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
-use framework\render\html\FA;
-use framework\render\html\Html;
 use framework\render\html\HtmlButton;
 use framework\render\HTMLPageRenderer;
 use framework\render\Renderer;
@@ -36,7 +35,7 @@ class BookingHandler extends Renderer{
 			case "kasse":
 			case "bank":
 			case "sparbuch":
-				(AUTH_HANDLER)::getInstance()->requireGroup('ref-finanzen-kv');
+				AuthHandler::getInstance()->requireGroup('ref-finanzen-kv');
 				$this->renderKonto($this->routeInfo["action"]);
 			break;
 			case "history":
@@ -573,7 +572,7 @@ class BookingHandler extends Renderer{
         <form action="<?= URIBASE ?>rest/hibiscus" method="POST" role="form"
               class="ajax-form">
             <a type="submit" class="btn btn-primary"
-				<?= !(AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-kv") ?
+				<?= !AuthHandler::getInstance()->hasGroup("ref-finanzen-kv") ?
 					"disabled title='Nur KVs können den Kontoauszug abrufen!'" : "" ?>
             >
                 <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen (Hibiscus)
@@ -909,10 +908,10 @@ data-id='{$alGrund[$idxGrund]['id']}'>";
                 </div>
 				<?php $this->renderNonce(); ?>
                 <button type="submit" id="booking__check-button"
-                        class="btn btn-primary  <?= (AUTH_HANDLER)::getInstance()->hasGroup(
+                        class="btn btn-primary  <?= AuthHandler::getInstance()->hasGroup(
 							"ref-finanzen-hv"
 						) ? "" : "user-is-not-hv" ?>"
-					<?= (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
+					<?= AuthHandler::getInstance()->hasGroup("ref-finanzen-hv") ? "" : "disabled" ?>>
                     Buchung anweisen
                 </button>
             </div>

@@ -121,8 +121,12 @@ class ErrorHandler extends Renderer{
         $smarty->assign('additional', $this->errorInformation['additional'] ?? '');
         $smarty->assign('trace', $this->errorInformation['trace'] ?? '');
         $smarty->assign('debug', $this->errorInformation['debug'] ?? '');
-        $smarty->assign('telegramIssueLink', TG_ISSUE_LINK);
-        $smarty->assign('githubIssueLink', GIT_ISSUE_LINK);
+        if(defined('TG_ISSUE_LINK')){
+            $smarty->assign('telegramIssueLink', TG_ISSUE_LINK);
+        }
+        if(defined('GIT_ISSUE_LINK')){
+            $smarty->assign('githubIssueLink', GIT_ISSUE_LINK);
+        }
 
         $smarty->display('error.tpl');
 
@@ -147,23 +151,10 @@ class ErrorHandler extends Renderer{
         foreach ($stackTrace as &$item){
             $item['file'] = substr($item['file'], strrpos($item['file'], '/'));
             $item['file'] = str_replace('.php', '',$item['file']);
-
-            $item['class'] = substr($item['class'], strrpos($item['class'], '\\'));
+            if(isset($item['class'])){
+                $item['class'] = substr($item['class'], strrpos($item['class'], '\\'));
+            }
         }
         return $stackTrace;
     }
-
-    /**
-     * @deprecated ?
-     * @param $msg
-     * @param string $caller
-     */
-    private function log($msg, $caller = ''): void
-    {
-        error_log(date_create()->format('Y-m-d H:i:s') . "\t" .
-            ($caller ? $caller . "\t" : '') .
-            strip_tags(str_replace('<br>', "\n\t", $msg)));
-    }
-
-
 }

@@ -4,13 +4,18 @@
     "version": "3.0.0-dev",
 
     "require": {
-        "php": "^7.4",
+        "php": "^8.0",
         "composer-runtime-api": "^2.0",
         "defuse/php-encryption": "^2.3",
         "nemiah/php-fints" : "dev-master",
         "phpmailer/phpmailer" : "^6",
         "smarty/smarty": "~3.1",
         "pear/xml_rpc2" : "^1",
+        "jasig/phpcas": "^1.4.0",
+        "monolog/monolog": "^2.3",
+        "vlucas/phpdotenv": "^5.3",
+        "adhocore/cli": "^0.9.0",
+        "swiftmailer/swiftmailer": "^6.0",
         "ext-json": "*",
         "ext-bcmath": "*",
         "ext-pdo": "*",
@@ -23,16 +28,16 @@
         "ext-intl": "*",
         "ext-fileinfo": "*",
         "ext-zlib": "*",
-        "jasig/phpcas": "^1.4.0",
-        "monolog/monolog": "^2.3"
+        "ext-mysqlnd": "*"
     },
 
     "require-dev": {
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+        "phpunit/phpunit": "^9"
     },
 
     "autoload": {
         "psr-4": { "": "lib/" },
-        "files": ["lib/inc.all.php"]
+        "files": []
     }
 }

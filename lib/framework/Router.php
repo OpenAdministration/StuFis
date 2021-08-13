@@ -3,6 +3,7 @@
 namespace framework;
 
 use Exception;
+use framework\auth\AuthHandler;
 
 /**
  * @author michael
@@ -81,7 +82,7 @@ class Router{
         //route request
         $routeInfo = $this->_route($this->requested_path, [$this->routes]);
 
-        if (isset($routeInfo['groups']) && !(AUTH_HANDLER)::getInstance()->hasGroup($routeInfo['groups'])){
+        if (isset($routeInfo['groups']) && !AuthHandler::getInstance()->hasGroup($routeInfo['groups'])){
             $routeInfo['action'] = '403';
             $routeInfo['controller'] = 'error';
         }

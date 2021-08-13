@@ -7,9 +7,10 @@ $pathConfig =  [
     'type' => 'path',
     'controller' => 'menu',
     'action' => 'mygremium',
-    'not_found' => '404',
     'method' => 'GET',
-    'load' => [],
+    'load' => [
+        LoadGroups::SELECTPICKER,
+    ],
     'children' => [
         [
             'path' => 'konto',
@@ -218,6 +219,7 @@ $pathConfig =  [
             'controller' => 'hhp',
             'action' => 'pick-hhp',
             'navigation' => 'hhp',
+            'load' => [],
             'children' => [
                 [
                     'path' => 'import',
@@ -345,6 +347,7 @@ $pathConfig =  [
             'type' => 'path',
             'controller' => 'error',
             'action' => '404',
+            'load' => [],
             'method' => 'POST',
             'children' => [
                 [
@@ -583,6 +586,7 @@ $pathConfig =  [
             'type' => 'path',
             'controller' => 'error',
             'action' => '404',
+            'load' => [],
             'method' => 'GET',
             'children' => [
                 [
@@ -618,6 +622,7 @@ $pathConfig =  [
             'type' => 'path',
             'controller' => 'error',
             'action' => '404',
+            'load' => [],
             'method' => 'GET',
             'children' => [
                 [

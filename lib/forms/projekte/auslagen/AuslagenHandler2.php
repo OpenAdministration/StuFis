@@ -362,9 +362,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$this->projekt_data['state'] === 'done-other');
 		
 		//check if there auslage should be edited
-		$auth = (AUTH_HANDLER);
-		/* @var $auth AuthHandler */
-		$auth = $auth::getInstance();
+		$auth = AuthHandler::getInstance();
 		if (!$this->stateInfo['project-editable'] && !$auth->hasGroup("ref-finanzen-belege")){
 			if ($routeInfo['action'] === 'create'
 				|| $routeInfo['action'] === 'edit'
@@ -2773,7 +2771,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			if ($this->routeInfo['action'] !== 'edit'
 				&& isset($this->auslagen_data['id'])
 				&& in_array($this->stateInfo['state'], ["ok", "instructed", "booked"])
-                && (AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")
+                && AuthHandler::getInstance()->hasGroup("ref-finanzen")
 			){ ?>
                 <div class="col-xs-12 form-group">
                     <button data-afor="<?= $this->auslagen_data['id']; ?>" data-pfor="<?= $this->projekt_id; ?>"

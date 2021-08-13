@@ -1,3 +1,10 @@
+## Version 3.0.0
+* php switch from 7.2 to 8.0
+* migrated config.php to dotenv
+* support CAS 
+* introduced realms and config.org.php
+
+
 ## Version 2.2.0 (not released yet)
 #### Changes in config File
 * const array GREMIUM_PREFIX

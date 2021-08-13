@@ -2,6 +2,11 @@
 
 namespace forms\projekte;
 
+use forms\projekte\exceptions\IllegalStateException;
+use forms\projekte\exceptions\IllegalTransitionException;
+use framework\auth\AuthHandler;
+use InvalidArgumentException;
+
 class StateHandler{
     /**
      * @var string
@@ -44,10 +49,11 @@ class StateHandler{
         }
         
         if ($start === null || empty($start)){
-            if (isset($allStates["draft"]))
+            if (isset($allStates["draft"])) {
                 $start = "draft";
-            else
+            } else {
                 $start = array_keys($allStates)[0];
+            }
         }
         
         $this->actualState = $start;
@@ -55,22 +61,18 @@ class StateHandler{
         
         foreach ($this->states as $state => $desc){
             if (!isset($validations[$state])){
-                $validations[$state] = function($newState){
+                $validations[$state] = static function($newState){
                     return true;
                 };
-            }else{
-                if (!is_callable($validations[$state])){
-                    throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
-                }
+            }else if (!is_callable($validations[$state])){
+                throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
             }
             if (!isset($postTransitionHooks[$state])){
-                $postTransitionHooks[$state] = function($newState){
+                $postTransitionHooks[$state] = static function($newState){
                     return true;
                 };
-            }else{
-                if (!is_callable($postTransitionHooks[$state])){
-                    throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
-                }
+            }else if (!is_callable($postTransitionHooks[$state])){
+                throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
             }
             if (!isset($transitions[$state])){
                 throw new InvalidArgumentException("Cannot find state '$state' in \$transition array as key");
@@ -98,8 +100,9 @@ class StateHandler{
      * @throws IllegalTransitionException
      */
     public function transitionTo($newState){
-        if (!$this->isExitingState($newState))
+        if (!$this->isExitingState($newState)) {
             throw new IllegalStateException("$newState nicht bekannt!");
+        }
         if (!$this->isTransitionableTo($newState)){
             throw new IllegalTransitionException("$this->actualState nicht in $newState überführbar - Daten fehlen!");
         }
@@ -131,10 +134,11 @@ class StateHandler{
     public function isTransitionableTo($newState): bool{
         if ($this->isExitingState($newState)){
             //var_dump(["$newState" => $this->transitions[$this->actualState][$newState]]);
-            
-            if ($this->transitions[$newState])
+
+            if ($this->transitions[$newState]) {
                 return $this->validations[$this->actualState]($newState);
-            
+            }
+
         }
         die("$newState nicht bekannt!");
     }
@@ -142,32 +146,36 @@ class StateHandler{
     public function isAllowedToTransitionTo($newState): bool{
         if (isset($this->transitions[$this->actualState][$newState])){
             return $this->checkPermissionArray($this->transitions[$this->actualState][$newState]);
-        }else{
-            return false;
         }
-        
+
+        return false;
+
     }
     
-    private function checkPermissionArray($permArray){
+    private function checkPermissionArray($permArray): bool
+    {
         //TODO: use same function as in PermissionHandler
         //var_dump($permArray);
         if ($permArray === true){
             return true;
         }
-        $ret = (AUTH_HANDLER)::getInstance()->isAdmin();
-        if (isset($permArray["groups"]))
-            $ret |= (AUTH_HANDLER)::getInstance()->hasGroup(implode(",", $permArray["groups"]));
-        if (isset($permArray["gremien"]))
-            $ret |= (AUTH_HANDLER)::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
+        $ret = AuthHandler::getInstance()->isAdmin();
+        if (isset($permArray["groups"])) {
+            $ret = $ret || AuthHandler::getInstance()->hasGroup($permArray["groups"]);
+        }
+        if (isset($permArray["gremien"])) {
+            $ret = $ret || AuthHandler::getInstance()->hasGremium($permArray["gremien"]);
+        }
         if (isset($permArray["persons"])){
-            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUsername(), $permArray["persons"], true);
-            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUserFullName(), $permArray["persons"], true);
+            $ret = $ret || in_array(AuthHandler::getInstance()->getUsername(), $permArray["persons"], true);
+            $ret = $ret || in_array(AuthHandler::getInstance()->getUserFullName(), $permArray["persons"], true);
         }
         //var_dump($ret);
-        return (bool)$ret;
+        return $ret;
     }
     
-    public function getAllAllowedTransitionableStates(){
+    public function getAllAllowedTransitionableStates(): array
+    {
         $ret = [];
         foreach ($this->states as $stateName => $desc){
             if ($this->isAllowedToTransitionTo($stateName)){
@@ -223,16 +231,16 @@ class StateHandler{
      *
      * @return string
      */
-    public function getFullStateNameFrom($state): string{
-        if (!$this->isExitingState($state))
+    public function getFullStateNameFrom(string $state): string
+    {
+        if (!$this->isExitingState($state)) {
             return false;
-        if (isset($this->states[$state][0]))
-            return $this->states[$state][0];
-        else
-            return $state;
+        }
+        return $this->states[$state][0] ?? $state;
     }
     
-    public function getAltStateName(): string{
+    public function getAltStateName(): string
+    {
         return $this->getAltStateNameFrom($this->actualState);
     }
     
@@ -241,11 +249,9 @@ class StateHandler{
      *
      * @return string
      */
-    public function getAltStateNameFrom($state): string{
-        if (isset($this->states[$state][1]))
-            return $this->states[$state][1];
-        else
-            return $this->states[$state][0];
+    public function getAltStateNameFrom($state): string
+    {
+        return $this->states[$state][1] ?? $this->states[$state][0];
     }
     
 }

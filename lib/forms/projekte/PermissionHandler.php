@@ -3,6 +3,7 @@
 namespace forms\projekte;
 
 use forms\projekte\StateHandler;
+use framework\auth\AuthHandler;
 
 class PermissionHandler{
     /**
@@ -140,14 +141,14 @@ class PermissionHandler{
         if (is_bool($permArray)){
             return $permArray;
         }
-        $ret = (AUTH_HANDLER)::getInstance()->isAdmin();
+        $ret = AuthHandler::getInstance()->isAdmin();
         if (isset($permArray["groups"]))
-            $ret |= (AUTH_HANDLER)::getInstance()->hasGroup(implode(",", $permArray["groups"]));
+            $ret |= AuthHandler::getInstance()->hasGroup(implode(",", $permArray["groups"]));
         if (isset($permArray["gremien"]))
-            $ret |= (AUTH_HANDLER)::getInstance()->hasGremium(implode(",", $permArray["gremien"]));
+            $ret |= AuthHandler::getInstance()->hasGremium($permArray["gremien"]);
         if (isset($permArray["persons"])){
-            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUsername(), $permArray["persons"], true);
-            $ret |= in_array((AUTH_HANDLER)::getInstance()->getUserFullName(), $permArray["persons"], true);
+            $ret |= in_array(AuthHandler::getInstance()->getUsername(), $permArray["persons"], true);
+            $ret |= in_array(AuthHandler::getInstance()->getUserFullName(), $permArray["persons"], true);
         }
         //var_dump($ret);
         return (bool)$ret;

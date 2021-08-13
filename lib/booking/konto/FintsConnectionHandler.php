@@ -404,9 +404,8 @@ class FintsConnectionHandler
                         $transactionData[] = [
                             'id' => ++$lastKontoId,
                             'konto_id' => $param['konto-id'],
-                            // TODO: PHP 8.0: nullsafe operator ?-> for format()
-                            'date' => $transaction->getBookingDate()->format('Y-m-d'),
-                            'valuta' => $transaction->getValutaDate()->format('Y-m-d'),
+                            'date' => $transaction->getBookingDate()?->format('Y-m-d'),
+                            'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
                             'type' => $transaction->getBookingText(),
                             'empf_iban' => $transaction->getAccountNumber(),
                             'empf_bic' => $transaction->getBankCode(),

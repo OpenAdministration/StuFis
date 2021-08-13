@@ -5,7 +5,7 @@
 }
 
 .logo-bg {
-    background-image: url(../img/stura.svg);
+    background-image: url(../favicon86.png);
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;
@@ -13,7 +13,7 @@
     min-width: 60px;
     height: 150%;
     vertical-align: top;
-    margin-top: -3px;
+    margin-top: -6px;
 }
 
 .modal-dialog {
@@ -812,7 +812,7 @@ button.btn.btn-arrow-left {
     margin: 10px auto;
     -webkit-animation: sk-rotateplane 2.4s infinite ease-in-out;
     animation: sk-rotateplane 2.4s infinite linear;
-    background-image: url(../img/stura.svg);
+    background-image: url(../favicon86.png);
     background-repeat: no-repeat;
     background-position: center center;
     background-size: contain;

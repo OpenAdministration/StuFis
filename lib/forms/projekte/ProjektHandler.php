@@ -320,8 +320,8 @@ class ProjektHandler
                 "name" => $data["name"],
                 "responsible" => $data["responsible"],
                 "org" => $data["org"],
-                "org-mail" => $data["org-mail"],
-                "protokoll" => $data["protokoll"],
+                "org-mail" => $data["org-mail"] ?? '',
+                "protokoll" => $data["protokoll"] ?? '',
                 "beschreibung" => $data["beschreibung"],
                 "date-start" => $data["date-start"],
                 "date-end" => $data["date-end"],
@@ -613,11 +613,11 @@ class ProjektHandler
         $editable = $this->permissionHandler->isAnyDataEditable();
 
         //build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable($auth->hasGroup("ref-finanzen"));
+        $selectable_gremien = FormTemplater::generateGremienSelectable();
         $selectable_gremien["values"] = $this->data['org'];
 
-        $mail_selector = $auth->hasGroup("ref-finanzen") ? "alle-mailinglists" : "mailinglists";
-        $selectable_mail = FormTemplater::generateSelectable($auth->getAttributes()[$mail_selector]);
+        $mailingLists = $auth->hasGroup("ref-finanzen") ? MAILINGLISTS : AuthHandler::getInstance()->getUserMailinglists();
+        $selectable_mail = FormTemplater::generateSelectable($mailingLists);
         $selectable_mail["values"] = $this->data['org-mail'];
 
         $sel_recht = self::$selectable_recht;
@@ -744,7 +744,7 @@ class ProjektHandler
                         "vorname.nachname",
                         "Projektverantwortlich (Mail)",
                         ["required", "email"],
-                        "@tu-ilmenau.de"
+                        "@" . ORG_DATA['mail-domain']
                     ) ?>
                     <div class="clearfix"></div>
                     <?= $this->templater->getDropdownForm(
@@ -756,24 +756,30 @@ class ProjektHandler
                         ["required"],
                         true
                     ) ?>
-                    <?= $this->templater->getDropdownForm(
-                        "org-mail",
-                        $selectable_mail,
-                        6,
-                        "Wähle Mailingliste ...",
-                        "Organisations-Mail",
-                        ["required"],
-                        true
-                    ) ?>
-                    <?= $this->templater->getWikiLinkForm(
-                        "protokoll",
-                        $this->data["protokoll"],
-                        12,
-                        "...",
-                        "Beschluss (Wiki-Direktlink)",
-                        ["required"],
-                        "https://wiki.stura.tu-ilmenau.de/protokoll/"
-                    ) ?>
+                    <?php if(count(ORG_DATA['mailinglists']) > 0){
+                        echo $this->templater->getDropdownForm(
+                            "org-mail",
+                            $selectable_mail,
+                            6,
+                            "Wähle Mailingliste ...",
+                            "Organisations-Mail",
+                            ["required"],
+                            true
+                        );
+                    } ?>
+                    <?php
+                    if(!in_array('hide-protokoll', ORG_DATA['projekt-form'], true)){
+                        echo $this->templater->getWikiLinkForm(
+                            "protokoll",
+                            $this->data["protokoll"],
+                            12,
+                            "...",
+                            "Beschluss (Wiki-Direktlink)",
+                            ["required"],
+                            "https://wiki.stura.tu-ilmenau.de/protokoll/"
+                        );
+                    }
+                     ?>
                     <?= $this->templater->getDatePickerForm(
                         ["date-start", "date-end"],
                         [$this->data["date-start"], $this->data["date-end"]],
@@ -1098,9 +1104,10 @@ class ProjektHandler
 
     private function renderProjektSizeGrafic(): void
     {
-        echo '<div class="clearfix"></div>' . PHP_EOL;
+        /* echo '<div class="clearfix"></div>' . PHP_EOL;
         $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
-        $ah->render_auslagen_beleg_diagrams('Nice Diagrams');
+        $ah->render_auslagen_beleg_diagrams('Nice Diagrams'); */
+        return;
     }
 
     private function renderAuslagenList(): void

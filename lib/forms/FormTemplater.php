@@ -4,6 +4,7 @@ namespace forms;
 
 use forms\projekte\PermissionHandler;
 use forms\projekte\StateHandler;
+use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\Helper;
 
@@ -133,23 +134,21 @@ class FormTemplater{
         return $selectable;
     }
     
-    static function generateGremienSelectable($all = false){
-        if ($all) {
-            $gremien = (AUTH_HANDLER)::getInstance()->getAttributes()["alle-gremien"];
-        } else {
-            $gremien = (AUTH_HANDLER)::getInstance()->getAttributes()["gremien"];
-        }
-        sort($gremien);
+    public static function generateGremienSelectable(): array
+    {
+        $userGremien = AuthHandler::getInstance()->getAttributes()['gremien'];
+        $showAll = AuthHandler::getInstance()->hasGroup('ref-finanzen');
+
         $selectable = [];
-        
-        foreach (GREMIUM_PREFIX as $gremiumgroupname){
+        foreach (GREMIEN as $groupName => $gremien){
             $group = [];
-            $group["label"] = $gremiumgroupname;
+            $group["label"] = $groupName;
             
             $options = [];
-            foreach ($gremien as $gremium){
-                if (strpos($gremium, $gremiumgroupname) !== false) {
-                    $options[] = ["label" => $gremium];
+            sort($gremien);
+            foreach ($gremien as $gremiumName){
+                if($showAll || in_array($gremiumName, $userGremien, true)){
+                    $options[] = ["label" => $gremiumName];
                 }
             }
             $group["options"] = $options;
@@ -159,7 +158,7 @@ class FormTemplater{
         return $selectable;
     }
     
-    static function generateSelectable($list): array
+    public static function generateSelectable(array $list): array
     {
         
         $selectable = [];
@@ -320,7 +319,7 @@ class FormTemplater{
             $ret[] = "data-minlength=" . $validatorArray["min-length"];
         }
         if (isset($validatorArray["email"])) {
-            $ret[] = "data-remote='" . $GLOBALS['URIBASE'] . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
+            $ret[] = "data-remote='" . URIBASE . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
         }
         if (isset($validatorArray["iban"])) {
             $ret[] = "data-validateiban='1'";
@@ -586,8 +585,11 @@ class FormTemplater{
         if ($editable){
             $additonal_array = $this->constructValidatorStrings($validator);
             $additonal_array[] = "data-live-search=" . ($searchable ? "'true'" : "'false'");
+            $additonal_array[] = "data-style=''";
+            $additonal_array[] = "data-style-base='form-control'";
             $additonal_str = implode(" ", $additonal_array);
-            $out .= "<select name='$name' id='$unique_id' class='selectpicker form-control' title='$placeholder' $additonal_str>";
+            $out .= "<div>"; // needed for new line after label
+            $out .= "<select name='$name' id='$unique_id' class='selectpicker' data-width='100%' title='$placeholder' $additonal_str>";
             foreach ($selectable["groups"] as $group){
                 $group_label = $group["label"] ?? "";
                 $out .= "<optgroup label='$group_label'>";
@@ -596,15 +598,13 @@ class FormTemplater{
                         continue;
                     }
                     $val = $option["value"] ?? $option["label"];
-                    $sub = "";
-                    if (isset($option["subtext"])) {
-                        $sub = $option["subtext"];
-                    }
+                    $sub = $option["subtext"] ?? "";
                     $out .= "<option data-subtext='$sub' value='$val' " . (in_array($val, $values, true) ? "selected" : "") . ">{$option['label']}</option>";
                 }
                 $out .= "</optgroup>";
             }
             $out .= "</select>";
+            $out .= "</div>";
         }else{
             //re-substitute ids => names
             $tmp_vals = [];
@@ -630,7 +630,7 @@ class FormTemplater{
             $out .= "<div data-value='" . json_encode(array_keys($tmp_vals)) . "' data-name='$name' id='$unique_id'>";
             $out .= implode(",", $res);
             $out .= "</div>";
-            
+
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }

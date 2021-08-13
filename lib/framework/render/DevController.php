@@ -4,6 +4,8 @@
 namespace framework\render;
 
 
+use framework\auth\AuthHandler;
+
 class DevController extends Renderer
 {
     public function __construct(array $routeInfo)
@@ -18,11 +20,16 @@ class DevController extends Renderer
 
     public function actionAttributes() : void
     {
-        echo "<pre>" . var_export((AUTH_HANDLER)::getInstance()->getAttributes(),true) . "</pre>";
+        echo "<pre>" . var_export(AuthHandler::getInstance()->getAttributes(),true) . "</pre>";
     }
 
     public function actionLogout(){
-        (AUTH_HANDLER)::getInstance()->logout();
+        AuthHandler::getInstance()->logout();
+    }
+
+    public function actionPhpInfo(){
+        echo "hi";
+        phpinfo();
     }
 
 }

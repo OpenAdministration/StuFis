@@ -3,41 +3,18 @@
 
 namespace framework\auth;
 
-
-use framework\render\ErrorHandler;
-use framework\Singleton;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use phpCAS;
 
-class AuthCasHandler extends Singleton implements AuthHandler
+class AuthCasHandler extends AuthHandler
 {
 
-    private static $HOST;
-    private static $PORT;
-    private static $PATH;
-    private static $CAS_VERSION;
-    private static $CERT_FILE;
-
-    private static $ADMINGROUP;
-    private static $AUTH_REALM;
-
-    private static $DEBUG_CAS;
-
-    private static $attributes;
-
-    /**
-     * @param mixed ...$pars
-     * @return AuthHandler
-     */
-    public static function getInstance(...$pars): AuthHandler
-    {
-        return parent::getInstance(...$pars);
-    }
+    private static array $attributes;
 
     protected function __construct()
     {
-        if(self::$DEBUG_CAS){
+        if($_ENV['AUTH_DEBUG']){
             $logger = new Logger('phpCAS');
             $logger->pushHandler(new RotatingFileHandler(SYSBASE . '/runtime/logs/cas.log'));
             phpCAS::setLogger($logger);
@@ -45,21 +22,12 @@ class AuthCasHandler extends Singleton implements AuthHandler
                 phpCAS::setVerbose(true);
             }
         }
-        phpCAS::client(self::$CAS_VERSION, self::$HOST, (int) self::$PORT, self::$PATH);
+        phpCAS::client($_ENV['CAS_VERSION'], $_ENV['CAS_HOST'], (int) $_ENV['CAS_PORT'], $_ENV['CAS_PATH']);
         phpCAS::setFixedServiceURL(FULL_APP_PATH);
-        if(empty(self::$CERT_FILE)){
+        if(empty($_ENV['CAS_CERTFILE'])){
             phpCAS::setNoCasServerValidation();
         }else{
-            phpCAS::setCasServerCACert(self::$CERT_FILE);
-        }
-    }
-
-    final protected static function static__set($name, $value): void
-    {
-        if (property_exists(__CLASS__, $name)) {
-            self::$$name = $value;
-        } else {
-            die("$name ist keine Variable in " . __CLASS__);
+            phpCAS::setCasServerCACert($_ENV['CAS_CERTFILE']);
         }
     }
 
@@ -76,7 +44,7 @@ class AuthCasHandler extends Singleton implements AuthHandler
     /**
      * @inheritDoc
      */
-    public function requireGroup($groups): void
+    public function requireGroup(array|string $groups): void
     {
         if(!$this->hasGroup($groups)){
             $this->reportPermissionDenied("Fehlende Gruppenberechtigung", $groups);
@@ -86,7 +54,7 @@ class AuthCasHandler extends Singleton implements AuthHandler
     /**
      * @inheritDoc
      */
-    public function hasGroup($groups, $delimiter = ","): bool
+    public function hasGroup(array|string $groups, string $delimiter = ","): bool
     {
         $this->requireAuth();
 
@@ -96,8 +64,8 @@ class AuthCasHandler extends Singleton implements AuthHandler
         $attrGroups = $this->getAttributes()['groups'];
         if (is_string($groups)){
             $groups = explode($delimiter, $groups);
-            $realm = self::$AUTH_REALM;
-            array_walk($groups, static function (&$val, $key) use ($realm) {
+            $realm = $_ENV['AUTH_REALM'];
+            array_walk($groups, static function (&$val) use ($realm) {
                  $val = $realm . '-' . $val;
             });
         }
@@ -134,6 +102,8 @@ class AuthCasHandler extends Singleton implements AuthHandler
             self::$attributes['groups'] = (array) self::$attributes['groups'];
             self::$attributes['gremien'] ??= [];
             self::$attributes['gremien'] = (array) self::$attributes['gremien'];
+            self::$attributes['mailinglists'] ??= [];
+            self::$attributes['mailinglists'] = (array) self::$attributes['mailinglists'];
         }
         return self::$attributes;
     }
@@ -168,13 +138,13 @@ class AuthCasHandler extends Singleton implements AuthHandler
      */
     public function isAdmin(): bool
     {
-        return in_array(self::$AUTH_REALM . '-' . self::$ADMINGROUP, $this->getAttributes()['groups'], true);
+        return in_array($_ENV['AUTH_REALM'] . '-' . $_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
     }
 
     /**
      * @inheritDoc
      */
-    public function hasGremium(string $gremien, string $delimiter = ','): bool
+    public function hasGremium(string|array $gremien, string $delimiter = ','): bool
     {
         if($this->isAdmin()){
             return true;
@@ -184,10 +154,5 @@ class AuthCasHandler extends Singleton implements AuthHandler
         $hasGremien = array_intersect($gremienArray, $attrGremien);
 
         return count($hasGremien) > 1;
-    }
-
-    public function reportPermissionDenied(string $errorMsg, string $debug): void
-    {
-        ErrorHandler::handleError(403, $errorMsg, $debug);
     }
 }

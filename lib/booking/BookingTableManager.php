@@ -2,11 +2,12 @@
 
 namespace booking;
 
+use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\Renderer;
 
-class BookingTableManager extends Renderer{
+class BookingTableManager extends Renderer {
 	
 	private $col_zahlung;
 	private $col_auslagen;
@@ -28,6 +29,7 @@ class BookingTableManager extends Renderer{
 	private $kontoTypes;
 	
 	public function __construct($instructionsWhitelist = []){
+
 		$this->col_zahlung = 0;
 		$this->col_auslagen = 0;
 		$this->col_posten = 0;
@@ -243,9 +245,10 @@ class BookingTableManager extends Renderer{
 	}
 	
 	/**
-	 * @return mixed
+	 * @return array
 	 */
-	public function getInstructions(){
+	public function getInstructions() : array
+    {
 		return $this->instructions;
 	}
 	
@@ -316,7 +319,7 @@ class BookingTableManager extends Renderer{
 			$this->renderNonce();
 			?>
             <button class="btn btn-primary pull-right"
-				<?= !(AUTH_HANDLER)::getInstance()->hasGroup('ref-finanzen-kv') ?
+				<?= !AuthHandler::getInstance()->hasGroup('ref-finanzen-kv') ?
                     "disabled title='Nur Kassenverantwortliche können eine Buchung durchführen!'" : "" ?>
             >
                 Buchung(en) durchführen
@@ -359,7 +362,7 @@ class BookingTableManager extends Renderer{
             }else{
                 $zValDone = 0;
                 $bValDone = 0;
-                foreach ($zAll as $z_key => $z){
+                foreach ($zAll as /* $z_key => */ $z){
                     $zVal = (float)$z["value"];
                     foreach ($bAll as $b_key => $b){
                         $bVal = (float)$b["value"];

@@ -1,18 +1,6 @@
 
-#Redirect everything else to index.php
+#Redirect everything to index.php
 RewriteCond   %{REQUEST_FILENAME}   !-f
 RewriteCond   %{REQUEST_FILENAME}   !-d
 RewriteRule   ^(.*)$                /index.php/$1  [L]
 
-#php_flag display_errors on
-#php_flag  log_errors on
-#php_value error_log  /var/www/tu-ilmenau.de/helfer.stura/FinanzAntragUI/PHP_errors.log
-#SetENV TMP /var/www.iscsi/tu-ilmenau.de/helfer.stura/FinanzAntragUI/tmp/
-#SetENV TMPDIR /var/www.iscsi/tu-ilmenau.de/helfer.stura/FinanzAntragUI/tmp/
-#SetENV TEMP /var/www.iscsi/tu-ilmenau.de/helfer.stura/FinanzAntragUI/tmp/
-#php_value include_path "/var/www/tu-ilmenau.de/helfer.stura/pear/pear/php:."
-
-#php_flag  log_errors on
-#php_value error_log  /var/www/tu-ilmenau.de/wiki.stura/tmp/PHP_errors.log
-
-#php_value max_input_vars 100000

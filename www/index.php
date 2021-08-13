@@ -12,16 +12,14 @@ use framework\render\HTMLPageRenderer;
 use framework\render\MenuRenderer;
 use framework\render\Renderer;
 use framework\Router;
+
 define('SYSBASE', dirname(__DIR__));
 require_once SYSBASE . '/vendor/autoload.php';
+require_once SYSBASE . '/lib/inc.all.php';
+
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
-
-
-if (MAIL_INSTALL){
-    require_once SYSBASE . '/lib/mail_init.php';
-}
 
 // handle route -------------------------
 //print_r($routeInfo);

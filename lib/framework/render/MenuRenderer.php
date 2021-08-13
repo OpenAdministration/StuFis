@@ -8,6 +8,7 @@
 
 namespace framework\render;
 
+use framework\auth\AuthHandler;
 use framework\CryptoHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
@@ -29,8 +30,6 @@ class MenuRenderer extends Renderer
 
     public function render() : void
     {
-
-
         switch ($this->pathinfo["action"]) {
             case "mygremium":
             case "allgremium":
@@ -76,20 +75,20 @@ class MenuRenderer extends Renderer
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]["von"];
         $hhp_bis = $hhps[$hhp_id]["bis"];
-        $attributes = (AUTH_HANDLER)::getInstance()->getAttributes();
-        $gremien = $attributes["gremien"];
-        $gremien = array_filter(
-            $gremien,
+        $attributes = AuthHandler::getInstance()->getAttributes();
+        $userGremien = $attributes["gremien"];
+        $userGremien = array_filter(
+            $userGremien,
             static function ($val) {
                 foreach (GREMIUM_PREFIX as $prefix) {
-                    if (strpos($val, $prefix) === 0) {
+                    if (str_starts_with($val, $prefix)) {
                         return true;
                     }
                 }
                 return false;
             }
         );
-        rsort($gremien, SORT_STRING | SORT_FLAG_CASE);
+        rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case "allgremium":
                 if (is_null($hhp_bis)){
@@ -103,7 +102,7 @@ class MenuRenderer extends Renderer
                 }
                 break;
             case "mygremium":
-                if (empty($gremien)) {
+                if (empty($userGremien)) {
                     $this->renderAlert(
                         "Schade!",
                         $this->makeClickableMails(
@@ -115,13 +114,13 @@ class MenuRenderer extends Renderer
                 }
                 if (is_null($hhp_bis)){
                     $where = [
-                        ["org" => ["in", $gremien], "createdat" => [">=", $hhp_von]],
+                        ["org" => ["in", $userGremien], "createdat" => [">=", $hhp_von]],
                         ["org" => ["is", null], "createdat" => [">=", $hhp_von]],
                         ["org" => "", "createdat" => [">=", $hhp_von]]
                     ];
                 }else{
                     $where = [
-                        ["org" => ["in", $gremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
+                        ["org" => ["in", $userGremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
                         ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
                         ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
                     ];
@@ -522,7 +521,7 @@ class MenuRenderer extends Renderer
             "allgremium" => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
             "mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
         ];
-        if ((AUTH_HANDLER)::getInstance()->hasGroup("ref-finanzen")) {
+        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")) {
             $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
         }
         $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";

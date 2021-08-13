@@ -1321,7 +1321,7 @@ class FileHandler {
 					// filename
 					$tmp_name = $_FILES[$base_key]['tmp_name'][$id];
 					$vali->V_filename($pathinfo['filename']);
-					$pathinfo['filename'] = $vali->getIsError() ? $tmp_name : $vali->getFiltered();
+					$pathinfo['filename'] = $vali->getIsError() ? $tmp_name : $vali->getSanitizedValue();
 					$file->filename = $pathinfo['filename'];
 					$file->filename = str_replace('..', '.', $file->filename);
 					$file->filename = str_replace('..', '.', $file->filename);
@@ -1359,7 +1359,7 @@ class FileHandler {
 					}
 					if ($ext1 != ''){
 						$vali->V_filename($ext1);
-						$ext1 = $vali->getIsError() ? '' : $vali->getFiltered();
+						$ext1 = $vali->getIsError() ? '' : $vali->getSanitizedValue();
 					}
 
 					$file->fileextension = $ext1;
