@@ -20,9 +20,9 @@ class DbBuildCommand extends \Ahc\Cli\Input\Command
         $ret = DBConnector::getInstance()->buildDB();
         $cli = new Writer();
         if($ret){
-            $cli->ok('[ok] built db');
+            $cli->ok('[ok] built db', true);
         }else{
-            $cli->error('failed to build db');
+            $cli->error('failed to build db', true);
         }
     }
 }

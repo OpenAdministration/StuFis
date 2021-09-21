@@ -1654,7 +1654,7 @@ class RestHandler extends EscFunc{
     {
         $syncFrom = date_create($_POST['sync-from'])->format('Y-m-d');
         $kontoIban = $_POST['konto-iban'];
-        $ibanCorrect = Validator::_checkIBAN($kontoIban);
+        $ibanCorrect = Validator::_checkIBAN($kontoIban, false);
         $kontoName = substr(htmlspecialchars(strip_tags(trim($_POST['konto-name']))),0,32);
         $kontoShort = strtoupper(substr((string) $_POST['konto-short'],0,2));
         $credId = (int) $_POST['credential-id'];
