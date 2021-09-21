@@ -1037,8 +1037,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			"payed" => $this->auslagen_data['payed'],
 			"rejected" => $this->auslagen_data['rejected'],
 			"zahlung-iban" => strpos(
-				$this->routeInfo['validated']['zahlung-iban'],
-				'... ...'
+				str_replace(' ', '', $this->routeInfo['validated']['zahlung-iban']),
+				'......'
 			) ? $this->auslagen_data['zahlung-iban'] : self::encryptedStr(
 				$this->routeInfo['validated']['zahlung-iban']
 			),
