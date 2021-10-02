@@ -71,7 +71,7 @@ class AuthCasHandler extends AuthHandler
         });
         $hasGroups = array_intersect($groups, $attrGroups);
 
-        return count($hasGroups) > 1;
+        return count($hasGroups) > 0;
     }
 
     /**

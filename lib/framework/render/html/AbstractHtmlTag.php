@@ -4,6 +4,8 @@
 namespace framework\render\html;
 
 
+use framework\ArrayHelper;
+
 abstract class AbstractHtmlTag
 {
     protected $tag;
@@ -156,8 +158,12 @@ abstract class AbstractHtmlTag
         return $wrap;
     }
 
-    public function disable() : self {
-        $this->unaryAttributes[] = 'disabled';
+    public function disable(bool $disable = true) : self {
+        if($disable){
+            $this->unaryAttributes[] = 'disabled';
+        }else{
+            $this->unaryAttributes = array_diff($this->unaryAttributes, ['disabled']);
+        }
         return $this;
     }
 

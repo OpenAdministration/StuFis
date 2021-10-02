@@ -35,7 +35,6 @@ class BookingHandler extends Renderer{
 			case "kasse":
 			case "bank":
 			case "sparbuch":
-				AuthHandler::getInstance()->requireGroup('ref-finanzen-kv');
 				$this->renderKonto($this->routeInfo["action"]);
 			break;
 			case "history":
@@ -585,10 +584,13 @@ class BookingHandler extends Renderer{
 
 	private function renderFintsButton() : void
     {
+        $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen-kv');
         echo HtmlButton::make()
             ->asLink(URIBASE . 'konto/credentials')
             ->style( 'primary')
             ->icon('refresh')
+            ->disable(!$isKv)
+            ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich': '')
             ->body('Kontoauszüge importieren (FINTS)');
     }
 	

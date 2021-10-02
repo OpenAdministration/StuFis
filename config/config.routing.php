@@ -18,6 +18,7 @@ $pathConfig =  [
             'action' => 'bank',
             'navigation' => 'konto',
             'controller' => 'booking',
+            'groups' => 'ref-finanzen',
             'load' => [
                 LoadGroups::SELECTPICKER,
                 LoadGroups::DATEPICKER,
