@@ -46,7 +46,7 @@ class AuthCasHandler extends AuthHandler
      */
     public function requireGroup(array|string $groups): void
     {
-        if(!$this->hasGroup($groups)){
+        if (!$this->hasGroup($groups)) {
             $this->reportPermissionDenied("Fehlende Gruppenberechtigung", $groups);
         }
     }
@@ -64,11 +64,11 @@ class AuthCasHandler extends AuthHandler
         $attrGroups = $this->getAttributes()['groups'];
         if (is_string($groups)){
             $groups = explode($delimiter, $groups);
-            $realm = $_ENV['AUTH_REALM'];
-            array_walk($groups, static function (&$val) use ($realm) {
-                 $val = $realm . '-' . $val;
-            });
         }
+        $realm = $_ENV['AUTH_REALM'];
+        array_walk($groups, static function (&$val) use ($realm) {
+            $val = $realm . '-' . $val;
+        });
         $hasGroups = array_intersect($groups, $attrGroups);
 
         return count($hasGroups) > 1;
