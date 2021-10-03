@@ -524,12 +524,12 @@ class MenuRenderer extends Renderer
         $tabs = [
             "mygremium" => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             "allgremium" => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
-            "mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
+            //"mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
         ];
         if (AuthHandler::getInstance()->hasGroup("ref-finanzen")) {
-            $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
+            //$tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
         }
-        $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
+        //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
