@@ -751,10 +751,10 @@ class RestHandler extends EscFunc{
 						// all ok -> handle all
 						$chat->answerAll($_POST);
 						if (count($mail) > 0){
-							$mh = MailHandler::getInstance();
+							//$mh = MailHandler::getInstance();
 							foreach ($mail as $m){
 								//create and send email
-								$mail_result = $mh->easyMail($m);
+							//	$mail_result = $mh->easyMail($m);
 							}
 						}
 						die();
@@ -853,10 +853,10 @@ class RestHandler extends EscFunc{
 						// all ok -> handle all
 						$chat->answerAll($_POST);
 						if (count($mail) > 0){
-							$mh = MailHandler::getInstance();
+							//$mh = MailHandler::getInstance();
 							foreach ($mail as $m){
 								//create and send email
-								$mail_result = $mh->easyMail($m);
+								//$mail_result = $mh->easyMail($m);
 							}
 						}
 						die();
