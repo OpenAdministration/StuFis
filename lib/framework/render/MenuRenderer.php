@@ -205,7 +205,8 @@ class MenuRenderer extends Renderer
                             <h4 class="panel-title">
                                 <?php
                                 $titel = empty($gremium) ? "Nicht zugeordnete Projekte" :
-                                    (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") . $gremium;
+                                    // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
+                                    $gremium;
                                 ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= $titel ?>
                             </h4>
