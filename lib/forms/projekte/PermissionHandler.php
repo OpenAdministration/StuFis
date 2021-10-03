@@ -113,9 +113,9 @@ class PermissionHandler{
             $this->editMode = true;
         }
         $ret = false;
-        $ret |= $this->checkWritePermission();
+        $ret = $ret || $this->checkWritePermission();
         foreach ($this->dataFields as $dataFieldName => $content){
-            $ret |= $this->checkWritePermissionField($dataFieldName);
+            $ret = $ret || $this->checkWritePermissionField($dataFieldName);
         }
         if ($couldBe === true) {
             $this->editMode = $oldEditMode;
@@ -131,7 +131,6 @@ class PermissionHandler{
         }
         // https://stackoverflow.com/questions/2715026/are-php5-objects-passed-by-reference -> yes
         $state = $this->stateHandler->getActualState();
-        //var_dump($this->writePermissionAll);
         return $this->checkPermissionArray($this->writePermissionAll[$state]);
     }
     

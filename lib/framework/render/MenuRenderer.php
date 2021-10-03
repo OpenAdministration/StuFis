@@ -79,8 +79,8 @@ class MenuRenderer extends Renderer
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]["von"];
         $hhp_bis = $hhps[$hhp_id]["bis"];
-        $attributes = AuthHandler::getInstance()->getAttributes();
-        $userGremien = $attributes["gremien"];
+        $userGremien = AuthHandler::getInstance()->getUserGremien();
+        /*
         $userGremien = array_filter(
             $userGremien,
             static function ($val) {
@@ -92,6 +92,7 @@ class MenuRenderer extends Renderer
                 return false;
             }
         );
+        */
         rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case "allgremium":

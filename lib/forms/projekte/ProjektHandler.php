@@ -43,7 +43,6 @@ class ProjektHandler
             ErrorHandler::handleError(400, "Aktion nicht gesetzt");
         }
         $this->action = $pathInfo["action"];
-
         if ($this->action === "create" || !isset($pathInfo["pid"])) {
             $this->data = self::$emptyData;
             $stateNow = "draft";
@@ -566,7 +565,6 @@ class ProjektHandler
         $auth = $auth::getInstance();
         $validateMe = false;
         $editable = $this->permissionHandler->isAnyDataEditable();
-
         //build dropdowns
         $selectable_gremien = FormTemplater::generateGremienSelectable();
         $selectable_gremien["values"] = $this->data['org'];

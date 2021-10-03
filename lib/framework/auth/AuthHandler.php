@@ -124,8 +124,10 @@ abstract class AuthHandler extends Singleton
             return true;
         }
         $attrGremien = $this->getUserGremien();
-        $gremienArray = explode($delimiter, $gremien);
-        $hasGremien = array_intersect($gremienArray, $attrGremien);
+        if(is_string($gremien)){
+            $gremien = explode($delimiter, $gremien);
+        }
+        $hasGremien = array_intersect($gremien, $attrGremien);
 
         return count($hasGremien) > 0;
     }

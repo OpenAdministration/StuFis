@@ -117,4 +117,23 @@ class AuthCasHandler extends AuthHandler
     {
         return in_array($_ENV['AUTH_REALM'] . '-' . $_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
     }
+
+    /**
+     * DEBUG PURPOSE ONLY!!
+     * @return array
+     */
+    public function getUserGremien(): array
+    {
+        $gremien = array_values(ORG_DATA['gremien']);
+        return array_merge(...$gremien);
+    }
+
+    /**
+     * DEBUG PURPOSE ONLY!!
+     * @return array
+     */
+    public function getUserGroups(): array
+    {
+        return array_merge([REALM . '-sgis'], parent::getUserGroups());
+    }
 }
