@@ -266,7 +266,7 @@ class HTMLPageRenderer
                         </a>
                     </li>
                     <li>
-                        <a href="<?php echo htmlspecialchars(AuthHandler::getInstance()->getLogoutURL()); ?>">
+                        <a href="<?= URIBASE . "menu/logout" ?>">
                             <i class="fa fa-fw fa-sign-out"></i>
                             <span class="hidden-sm hidden-xs">Logout</span>
                         </a>

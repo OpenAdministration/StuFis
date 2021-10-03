@@ -158,6 +158,11 @@ $pathConfig =  [
             'type' => 'path',
             'children' => [
                 [
+                    'path' => 'logout',
+                    'type' => 'path',
+                    'action' => 'logout',
+                ],
+                [
                     'path' => 'mykonto',
                     'type' => 'path',
                     'action' => 'mykonto',

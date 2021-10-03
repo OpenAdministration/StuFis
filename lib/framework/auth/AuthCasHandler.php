@@ -54,29 +54,6 @@ class AuthCasHandler extends AuthHandler
     /**
      * @inheritDoc
      */
-    public function hasGroup(array|string $groups, string $delimiter = ","): bool
-    {
-        $this->requireAuth();
-
-        if($this->isAdmin()){
-            return true;
-        }
-        $attrGroups = $this->getAttributes()['groups'];
-        if (is_string($groups)){
-            $groups = explode($delimiter, $groups);
-        }
-        $realm = $_ENV['AUTH_REALM'];
-        array_walk($groups, static function (&$val) use ($realm) {
-            $val = $realm . '-' . $val;
-        });
-        $hasGroups = array_intersect($groups, $attrGroups);
-
-        return count($hasGroups) > 0;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function getLogoutURL(): string
     {
         return phpCAS::getServerLogoutURL();
@@ -139,20 +116,5 @@ class AuthCasHandler extends AuthHandler
     public function isAdmin(): bool
     {
         return in_array($_ENV['AUTH_REALM'] . '-' . $_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function hasGremium(string|array $gremien, string $delimiter = ','): bool
-    {
-        if($this->isAdmin()){
-            return true;
-        }
-        $attrGremien = self::$attributes['gremien'] ?? [];
-        $gremienArray = explode($delimiter, $gremien);
-        $hasGremien = array_intersect($gremienArray, $attrGremien);
-
-        return count($hasGremien) > 1;
     }
 }

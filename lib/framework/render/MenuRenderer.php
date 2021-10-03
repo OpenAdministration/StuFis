@@ -31,6 +31,10 @@ class MenuRenderer extends Renderer
     public function render() : void
     {
         switch ($this->pathinfo["action"]) {
+            case "logout":
+                AuthHandler::getInstance()->logout();
+                HTMLPageRenderer::redirect(AuthHandler::getInstance()->getLogoutURL());
+                break;
             case "mygremium":
             case "allgremium":
                 HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
