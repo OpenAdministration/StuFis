@@ -355,7 +355,7 @@ class HTMLPageRenderer
                     <?php } else if ($auth->hasGroup("ref-finanzen")) { ?>
                             Referat Finanzen
                     <?php } else { ?>
-                            Support Level 1
+                            Nutzer:in
                     <?php } ?>
                     </div>
                 </div>

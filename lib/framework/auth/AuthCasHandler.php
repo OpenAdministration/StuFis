@@ -99,7 +99,7 @@ class AuthCasHandler extends AuthHandler
      */
     public function getUserFullName(): string
     {
-        return $this->getAttributes()['name'] ?? phpCAS::getUser();
+        return $this->getAttributes()['fullName'] ?? phpCAS::getUser();
     }
 
     /**
