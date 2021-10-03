@@ -1001,6 +1001,7 @@ class ProjektHandler
             //allow chat only 90 days into next year
             if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
                 $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+                /*
                 if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() === $this->data['username']) {
                     $btns[] = [
                         'label' => 'Private Nachricht',
@@ -1009,6 +1010,7 @@ class ProjektHandler
                         'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
                     ];
                 }
+                */
                 if ($auth->hasGroup('ref-finanzen')) {
                     $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
                 }

@@ -2692,7 +2692,8 @@ class AuslagenHandler2 extends FormHandlerInterface{
 			$now = date_create();
 			//allow chat only 90 days into next year
 			if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90){
-				if ($auth->hasGroup('ref-finanzen')
+				/*
+			    if ($auth->hasGroup('ref-finanzen')
                     || $auth->getUsername() === self::state2stateInfo(
 						'wip;' . $this->auslagen_data['created']
 					)['user']){
@@ -2703,6 +2704,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 						'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Abrechnungs-Ersteller'
 					];
 				}
+				*/
 				if ($auth->hasGroup('ref-finanzen')){
 					$btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
 				}
