@@ -232,21 +232,20 @@ class HTMLPageRenderer
                 <ul class="nav navbar-nav navbar-right col-xs-6">
                     <li>
                         <a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/datenschutz"); ?>">
+                           href="<?php echo htmlspecialchars(ORG_DATA['datenschutz-url']); ?>">
                             <i class="fa fa-fw fa-lock"></i>
                             <span class="hidden-sm hidden-xs">Datenschutz</span>
                         </a>
                     </li>
                     <li>
                         <a target="_blank"
-                           href="<?php echo htmlspecialchars("https://stura.tu-ilmenau.de/impressum"); ?>">
+                           href="<?php echo htmlspecialchars(ORG_DATA['impressum-url']); ?>">
                             <i class="fa fa-fw fa-info"></i>
                             <span class="hidden-sm hidden-xs">Impressum</span>
                         </a>
                     </li>
-                    <?php if(defined('GIT_ISSUE_LINK')){ ?>
                     <li>
-                        <a target="_blank" href="<?= GIT_ISSUE_LINK ?>"
+                        <a target="_blank" href="<?=  htmlspecialchars(ORG_DATA['issues-url']) ?>"
                            title="<?= htmlspecialchars(
                                "Commit:\t" . substr($gitHash,0,7) . PHP_EOL .
                                "Branch:\t" . $gitBranchName . PHP_EOL .
@@ -257,10 +256,9 @@ class HTMLPageRenderer
                             <span class="hidden-sm hidden-xs">Fehler melden - v<?= $prettyVersionString ?></span>
                         </a>
                     </li>
-                    <?php } ?>
                     <li>
                         <a target="_blank"
-                           href="<?php echo htmlspecialchars("https://wiki.stura.tu-ilmenau.de/leitfaden/finanzenantraege"); ?>">
+                           href="<?php echo htmlspecialchars(htmlspecialchars(ORG_DATA['help-url'])); ?>">
                             <i class="fa fa-fw fa-question"></i>
                             <span class="hidden-sm hidden-xs">Hilfe</span>
                         </a>

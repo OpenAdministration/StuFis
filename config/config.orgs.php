@@ -82,7 +82,7 @@ return [
         'impressum-url' => '',
         'datenschutz-url' => '',
         'issues-url' => '',
-        'help-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
         'mail-domain' => 'uni-erfurt.de',
         'finanzen-mail' => 'lukas.staab@tu-ilmenau.de',
         'projekt-form' => [
