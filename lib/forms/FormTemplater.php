@@ -136,7 +136,7 @@ class FormTemplater{
     
     public static function generateGremienSelectable(): array
     {
-        $userGremien = AuthHandler::getInstance()->getAttributes()['gremien'];
+        $userGremien = AuthHandler::getInstance()->getUserGremien();
         $showAll = AuthHandler::getInstance()->hasGroup('ref-finanzen');
 
         $selectable = [];
