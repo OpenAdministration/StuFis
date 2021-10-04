@@ -37,7 +37,7 @@ return [
                 'FSR Lehramt',
                 'FSR Musik',
                 'FSR PEB',
-                'FSR Pychologie',
+                'FSR Psychologie',
                 'FSR Sport',
                 'FSR Technik',
             ],

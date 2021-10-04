@@ -66,6 +66,7 @@ define('DEV', $_ENV['DEBUG']);
 define('URIBASE', $_ENV['URIBASE']);
 define('BASE_URL', 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://'. $_SERVER["SERVER_NAME"] . ':' . $_SERVER['SERVER_PORT']);
 const FULL_APP_PATH = BASE_URL . URIBASE;
+define('FINTS_REGNR', $_ENV['FINTS_REG_NR'] ?? '');
 
 setlocale(LC_TIME, 'de_DE.UTF8', 'de_DE.UTF-8');
 
