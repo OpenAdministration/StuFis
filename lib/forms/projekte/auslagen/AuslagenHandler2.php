@@ -1904,7 +1904,7 @@ class AuslagenHandler2 extends FormHandlerInterface{
 					"auslagen-name",
 					(isset($this->auslagen_data['id'])) ? $this->auslagen_data['name_suffix'] : '',
 					12,
-					"Pflichtfeld",
+					"Name der Abrechnung (zur internen Wiedererkennung möglichst eindeutig)",
 					"",
 					[],
 					'<a href="' . URIBASE . 'projekt/' . $this->projekt_id . '"><i class="fa fa-fw fa-link"> </i>' . htmlspecialchars(

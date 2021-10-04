@@ -547,7 +547,7 @@ class ProjektHandler
             case "view":
                 $this->renderInteractionPanel();
                 //echo $this->templater->getStateChooser($this->stateHandler);
-                $this->renderProjekt("Internes Projekt");
+                $this->renderProjekt("Projekt " . $this->id);
                 $this->render_chat_box();
                 $this->renderProjektSizeGrafic();
                 $this->renderAuslagenList();

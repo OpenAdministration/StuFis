@@ -638,7 +638,7 @@ class MenuRenderer extends Renderer
 
         //Projekte -------------------------------------------------------------------------------------------------
         [$headerIntern, $internWIP, $escapeFunctionsIntern] = $this->fetchProjectsWithState("wip");
-        $groupsIntern["zu prüfende Interne Projekte"] = $internWIP;
+        $groupsIntern["zu prüfende Projekte"] = $internWIP;
 
         //Auslagenerstattungen -------------------------------------------------------------------------------------
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState("wip", "hv");
