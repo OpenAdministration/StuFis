@@ -268,7 +268,8 @@ class HHPHandler
 	
 	public function reverseCSV($csvString): array
     {
-	    $newHHPid = max(0, ...array_keys($this->hhps)) +1;
+        $hhpIds = array_keys($this->hhps ?? [0]);
+	    $newHHPid = max($hhpIds) +1;
 	    $rows = explode(PHP_EOL, $csvString);
 	    $rows = array_slice($rows,1); // throw away header
 	    $activeGroupId = '';
