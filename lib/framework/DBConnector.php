@@ -7,6 +7,7 @@ use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
 use PDO;
 use PDOException;
+use RuntimeException;
 
 class DBConnector extends Singleton
 {
@@ -518,7 +519,7 @@ class DBConnector extends Singleton
                 $sql = "CREATE TABLE " . $this->dbPrefix  . "$tablename (" . PHP_EOL .
                     $this->buildColDef($cols);
                 $sql .= ")ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;";
-                $this->pdo->query($sql) or ErrorHandler::handleError(500,print_r([$this->pdo->errorInfo()], true), $sql);
+                $this->pdo->query($sql) or throw new RuntimeException(print_r(['error' => $this->pdo->errorInfo(), 'sql' => $sql], true));
                 $buildedTables[] = $tablename;
                 //add primary and unique constraints
                 $sql = "ALTER TABLE " . $this->dbPrefix  . $tablename . " ";
@@ -534,7 +535,7 @@ class DBConnector extends Singleton
                     if ($this->pdo->query($sqlPK) === false) {
                         $eInfo = $this->pdo->errorInfo();
                         $ret = $this->dbDropTables($buildedTables);
-                        ErrorHandler::handleError(500, print_r([$eInfo, $sqlPK, "creationRollback" => $ret, "dropped" => $buildedTables], true));
+                        throw new RuntimeException(print_r([$eInfo, $sqlPK, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                     }
                 }
                 if (isset($keys[$tablename]["unique"])) {
@@ -545,7 +546,7 @@ class DBConnector extends Singleton
                         if ($this->pdo->query($sqlU) === false) {
                             $eInfo = $this->pdo->errorInfo();
                             $ret = $this->dbDropTables($buildedTables);
-                            ErrorHandler::handleError(500, print_r([$eInfo, $sqlU, "creationRollback" => $ret, "dropped" => $buildedTables], true));
+                            throw new RuntimeException(print_r([$eInfo, $sqlU, "creationRollback" => $ret, "dropped" => $buildedTables], true));
                         }
                     }
                 }
@@ -559,15 +560,15 @@ class DBConnector extends Singleton
                 foreach ($data as $ownCol => $otherCol) {
                     if(is_numeric($ownCol)){
                         if(!isset($otherCol['refTable'], $this->scheme[$otherCol['refTable']])){
-                            ErrorHandler::handleError(500, "DB Config Fehler. refTable in $tablename wrong set", $otherCol);
+                            throw new RuntimeException("DB Config Fehler. refTable in $tablename wrong set (other: $otherCol)");
                         }
                         $refTable = $otherCol['refTable'];
                         if(!isset($otherCol['refColumns']) && !$this->hasTableColumns($refTable, $otherCol['refColumns'])){
-                            ErrorHandler::handleError(500, "DB Config Fehler. refColumns in $tablename wrong set", $otherCol);
+                            throw new RuntimeException("DB Config Fehler. refColumns in $tablename wrong set (other: $otherCol)");
                         }
                         $refColumns = $otherCol['refColumns'];
                         if(!isset($otherCol['columns']) && $this->hasTableColumns($tablename, $otherCol['columns']) ){
-                            ErrorHandler::handleError(500, "DB Config Fehler. columns in $tablename wrong set", $otherCol);
+                            throw new RuntimeException("DB Config Fehler. columns in $tablename wrong set (other: $otherCol)");
                         }
                         $columns = $otherCol['columns'];
 
@@ -577,13 +578,13 @@ class DBConnector extends Singleton
 
                     }else{
                         if (!isset($cols[$ownCol])) {
-                            ErrorHandler::handleError(500,"DB Config Fehler. $tablename.$ownCol not known");
+                            throw new RuntimeException("DB Config Fehler. $tablename.$ownCol not known");
                         }
                         if (!is_array($otherCol) || count($otherCol) !== 2) {
-                            ErrorHandler::handleError(500,"DB Reference Error. Wrong reference with $tablename.$ownCol");
+                            throw new RuntimeException("DB Reference Error. Wrong reference with $tablename.$ownCol");
                         }
                         if (!isset($scheme[$otherCol[0]][$otherCol[1]])) {
-                            ErrorHandler::handleError(500,"DB Reference Error. $otherCol[0].$otherCol[1] not known");
+                            throw new RuntimeException("DB Reference Error. $otherCol[0].$otherCol[1] not known");
                         }
                         $sqlFK = $sql . "ADD FOREIGN KEY (" . $this->quoteIdent($ownCol) . ")" .
                             " REFERENCES " . $this->dbPrefix  . $otherCol[0] .
@@ -593,7 +594,7 @@ class DBConnector extends Singleton
                     if ($this->pdo->query($sqlFK) === false) {
                         $eInfo = $this->pdo->errorInfo();
                         $this->dbDropTables(array_keys($constrainsNeeded));
-                        ErrorHandler::handleError(500,print_r([$eInfo, $sqlFK], true));
+                        throw new RuntimeException(print_r([$eInfo, $sqlFK], true));
                     }
                 }
             }

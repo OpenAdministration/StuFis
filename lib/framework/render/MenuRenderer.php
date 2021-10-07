@@ -635,7 +635,6 @@ class MenuRenderer extends Renderer
 
     private function renderHVView(): void
     {
-
         //Projekte -------------------------------------------------------------------------------------------------
         [$headerIntern, $internWIP, $escapeFunctionsIntern] = $this->fetchProjectsWithState("wip");
         $groupsIntern["zu prüfende Projekte"] = $internWIP;
