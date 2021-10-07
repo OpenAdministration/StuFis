@@ -51,7 +51,11 @@ class DBConnector extends Singleton
                 ]
             );
         } catch (PDOException $e) {
-            ErrorHandler::handleException($e, "konnte nicht mit der Datenbank verbinden");
+            if(isset($_SERVER['REQUEST_METHOD'])){
+                ErrorHandler::handleException($e, "konnte nicht mit der Datenbank verbinden");
+            }else{
+                throw $e;
+            }
         }
 
         $this->dbPrefix = $_ENV['DB_PREFIX'];
