@@ -518,8 +518,8 @@ class DBConnector extends Singleton
         $buildedTables = [];
         //build tabels
         foreach ($scheme as $tablename => $cols) {
-            $r = $this->pdo->query("SELECT COUNT(*) FROM " . $this->dbPrefix  . $tablename);
-            if ($r === false) {
+            $r = $this->pdo->query("Show tables like " . $this->dbPrefix  . $tablename);
+            if ($r === false || empty($r->fetchAll())) {
                 $sql = "CREATE TABLE " . $this->dbPrefix  . "$tablename (" . PHP_EOL .
                     $this->buildColDef($cols);
                 $sql .= ")ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;";
