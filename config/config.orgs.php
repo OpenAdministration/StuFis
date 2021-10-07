@@ -130,8 +130,8 @@ return [
         'impressum-url' => '',
         'datenschutz-url' => '',
         'issues-url' => '',
-        'help-url' => '',
-        'mail-domain' => 'stura-hs-sm.de',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'hs-schmalkalden.de',
         'finanzen-mail' => 'lukas.staab@tu-ilmenau.de',
         'projekt-form' => [
             'hide-protokoll',
