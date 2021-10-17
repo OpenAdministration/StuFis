@@ -230,7 +230,7 @@ class FintsConnectionHandler
      */
     public function getTanMedia(int $tanModeInt): array
     {
-        $this->fints->selectTanMode($tanModeInt); //FIXME: might be unexpected behavior
+        $this->fints->selectTanMode($tanModeInt); //FIXME: might be unexpected behavior and unneeded
         try {
             return $this->fints->getTanMedia($tanModeInt);
         } catch (InvalidArgumentException $e) {
@@ -394,8 +394,8 @@ class FintsConnectionHandler
                                     'konto_id' => $kontoId,
                                     'value' => $this->convertCentForDB($valCent),
                                     'saldo' => $this->convertCentForDB($saldoCent),
-                                    'date' => $transaction->getBookingDate()->format('Y-m-d'),
-                                    'valuta' => $transaction->getValutaDate()->format('Y-m-d'),
+                                    'date' => $transaction->getBookingDate()?->format('Y-m-d'),
+                                    'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
                                     'customer_ref' => $transaction->getEndToEndID(),
                                 ],
                                 [],

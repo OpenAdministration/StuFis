@@ -422,18 +422,13 @@ class BookingHandler extends Renderer{
 		[$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . "konto/", "/" . $activeTab);
 		$startDate = $hhps[$selected_id]["von"];
 		$endDate = $hhps[$selected_id]["bis"];
-		switch ($activeTab){
-			case "kasse":
-				$where = ["konto_id" => 0];
-			break;
-			case "sparbuch":
-				$where = ["konto_id" => 2];
-			break;
-			default:
-				$where = ["konto_id" => ["NOT IN", [0, 2]]];
-		}
-		if (is_null($endDate) || empty($endDate)){
-			$where = array_merge($where, ["date" => [">", $startDate]]);
+        $where = match ($activeTab) {
+            "kasse" => ["konto_id" => 0],
+            "sparbuch" => ["konto_id" => 2],
+            default => ["konto_id" => ["NOT IN", [0, 2]]],
+        };
+		if (empty($endDate)){
+			$where = array_merge($where, ["date" => [">=", $startDate]]);
 		}else{
 			$where = array_merge($where, ["date" => ["BETWEEN", [$startDate, $endDate]]]);
 		}
@@ -471,7 +466,12 @@ class BookingHandler extends Renderer{
                     </thead>
                     <tbody>
 					<?php foreach ($alZahlung as $zahlung){
-						$prefix = $konto_type[$zahlung["konto_id"]]["short"] ?>
+						$prefix = $konto_type[$zahlung["konto_id"]]["short"];
+                        $vzweck = explode("DATUM", $zahlung["zweck"])[0];
+                        if(empty($vzweck)){
+                            $vzweck = $zahlung['type'];
+                        }
+                        ?>
                         <tr title="<?= htmlspecialchars(
 							$zahlung["type"] . " - IBAN: " . $zahlung["empf_iban"] . " - BIC: " . $zahlung["empf_bic"] . PHP_EOL . $zahlung["zweck"]
 						) ?>">
@@ -479,9 +479,7 @@ class BookingHandler extends Renderer{
                             <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
                             <td><?= htmlspecialchars($zahlung["valuta"]) ?></td>
                             <td><?= htmlspecialchars($zahlung["empf_name"]) ?></td>
-                            <td class="visible-md visible-lg"><?= $this->makeProjektsClickable(
-									explode("DATUM", $zahlung["zweck"])[0]
-								) ?></td>
+                            <td class="visible-md visible-lg"><?= $this->makeProjektsClickable($vzweck) ?></td>
                             <td class="visible-md visible-lg"><?= htmlspecialchars($zahlung["empf_iban"]) ?></td>
                             <td class="money">
                                 <?= DBConnector::getInstance()->convertDBValueToUserValue($zahlung["value"], "money") ?>
@@ -602,7 +600,6 @@ class BookingHandler extends Renderer{
 
 	private function renderBooking(string $active): void
     {
-
 		[$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . "booking/", "/instruct");
 		$this->setBookingTabs($active, $hhp_id);
 		$startDate = $hhps[$hhp_id]["von"];
