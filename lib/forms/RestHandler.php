@@ -1534,7 +1534,7 @@ class RestHandler extends EscFunc{
 
     private function saveDefaultTanMode($routeInfo): void
     {
-        if(!isset($_POST['tan-mode'])){
+        if(!isset($_POST['tan-mode-id'])){
             JsonController::print_json(
                 [
                     'success' => false,
@@ -1549,8 +1549,9 @@ class RestHandler extends EscFunc{
 
         $credId = (int) $_POST['credential-id'];
         $fHandler = FintsConnectionHandler::load($credId);
-        $tanMode = (int) $_POST['tan-mode'];
-        $ret = $fHandler->saveDefaultTanMode($credId, $tanMode);
+        $tanMode = (int) $_POST['tan-mode-id'];
+        $tanMediumName = $_POST['tan-medium-name'] ?? null;
+        $ret = $fHandler->saveDefaultTanMode($credId, $tanMode, $tanMediumName);
 
         if($ret === true){
             if($tanClosed = $fHandler->hasTanSessionInformation()){

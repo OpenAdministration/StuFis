@@ -47,7 +47,8 @@ class FintsConnectionHandler
         FinTsOptions $options,
         Credentials $credentials,
         ?string $persist = null,
-        ?int $tanModeInt = null
+        ?int $tanModeInt = null,
+        ?string $tanMediumName = null
     )
     {
         $this->credentialId = $credentialId;
@@ -58,7 +59,7 @@ class FintsConnectionHandler
         }
 
         if (!is_null($tanModeInt)) {
-            $this->fints->selectTanMode($tanModeInt);
+            $this->fints->selectTanMode($tanModeInt, $tanMediumName);
         }
 
         $this->logger = new Logger('fints', [
@@ -219,12 +220,13 @@ class FintsConnectionHandler
 
     /**
      * @param int $tanModeInt
-     * @return TanMedium[]|empty
-     * @throws CurlException|ServerException
+     * @return array
+     * @throws CurlException
+     * @throws ServerException
      */
     public function getTanMedia(int $tanModeInt): array
     {
-        $this->fints->selectTanMode($tanModeInt);
+        $this->fints->selectTanMode($tanModeInt); //FIXME: might be unexpected behavior
         try {
             return $this->fints->getTanMedia($tanModeInt);
         } catch (InvalidArgumentException $e) {
@@ -232,16 +234,22 @@ class FintsConnectionHandler
         }
     }
 
-    public function saveDefaultTanMode(int $credentialId, int $tanMode): bool
+    public function saveDefaultTanMode(int $credentialId, int $tanModeInt, ?string $tanMediumName = null): bool
     {
         try {
-            $tanModeName = $this->fints->getTanModes()[$tanMode]->getName();
+            $tanMode = $this->fints->getTanModes()[$tanModeInt];
+            if(!$tanMode->needsTanMedium() && $tanMediumName !== null){
+                ErrorHandler::handleError(400, 'Tan Mode does not need medium, but there was one supplied');
+            }
+            $tanModeName = $tanMode->getName();
+
             $ret = DBConnector::getInstance()->dbUpdate(
                 'konto_credentials',
                 ['id' => $credentialId],
                 [
-                    'default_tan_mode' => $tanMode,
+                    'default_tan_mode' => $tanModeInt,
                     'default_tan_mode_name' => $tanModeName,
+                    'default_tan_medium_name' => $tanMediumName,
                 ]
             );
             return $ret === 1;
@@ -405,7 +413,7 @@ class FintsConnectionHandler
                         }
 
                         // are we exceeding sync_until?
-                        if($syncUntil && $transaction->getValutaDate()->diff($syncUntil)->invert === 1){
+                        if($syncUntil && $transaction->getValutaDate()?->diff($syncUntil)->invert === 1){
                             break 2;
                         }
 

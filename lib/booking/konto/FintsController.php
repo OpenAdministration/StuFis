@@ -106,7 +106,7 @@ class FintsController extends Renderer
         echo $form->begin();
         $this->renderHeadline("Bitte TAN-Modus auswählen");
         $this->renderHiddenInput('credential-id', $this->credentialId);
-        $this->renderRadioButtons($tanModes, 'tan-mode');
+        $this->renderRadioButtons($tanModes, 'tan-mode-id');
         $this->renderNonce();
         echo HtmlButton::make('submit')
             ->body('Speichern')
@@ -118,23 +118,26 @@ class FintsController extends Renderer
     {
         $tanModeInt = (int) $this->routeInfo['tan-mode-id'];
 
-        $tanMedium = $this->fintsConnection->getTanMedia($tanModeInt);
+        $tanMedien = $this->fintsConnection->getTanMedia($tanModeInt);
 
-        if (empty($tanMedium)) {
+        if (empty($tanMedien)) {
             HTMLPageRenderer::redirect(URIBASE . "konto/credentials/");
             return;
         }
+        $tanMediumNames = [];
 
-        $tanModeNames = array_map(static function (TanMedium $tanMedium) {
-            return "[" . $tanMedium->getName(). "] " . $tanMedium->getPhoneNumber();
-        }, $tanMedium);
+        foreach ($tanMedien as $tanMedium){
+            /** @var TanMedium $tanMedium */
+            $name = $tanMedium->getName();
+            $tanModeNames[$name] = "[$name] {$tanMedium->getPhoneNumber()}";
+        }
 
         echo "<form method='post' action=" . URIBASE . "rest/konto/tan-mode/save class='ajax-form'>";
         $this->renderHeadline("Bitte TAN-Modus auswählen");
         $this->renderHiddenInput('tan-mode-id', $this->credentialId);
         $this->renderHiddenInput('credential-id', $this->credentialId);
         $this->renderNonce();
-        $this->renderRadioButtons($tanModeNames, 'tan-mode');
+        $this->renderRadioButtons($tanMediumNames, 'tan-medium-name');
         echo "<button class='btn btn-primary' type='submit'>Speichern</button>";
         echo "</form>";
     }
