@@ -134,7 +134,7 @@ class FintsController extends Renderer
 
         echo "<form method='post' action=" . URIBASE . "rest/konto/tan-mode/save class='ajax-form'>";
         $this->renderHeadline("Bitte TAN-Medium auswählen");
-        $this->renderHiddenInput('tan-mode-id', $this->credentialId);
+        $this->renderHiddenInput('tan-mode-id', $tanModeInt);
         $this->renderHiddenInput('credential-id', $this->credentialId);
         $this->renderNonce();
         $this->renderRadioButtons($tanMediumNames, 'tan-medium-name');
