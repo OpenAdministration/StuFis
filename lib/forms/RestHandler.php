@@ -1557,6 +1557,7 @@ class RestHandler extends EscFunc{
             if($tanClosed = $fHandler->hasTanSessionInformation()){
                 $fHandler->deleteTanSessionInformation();
             }
+            $redirectUrl = $tanMediumName === null ? URIBASE . "konto/credentials/$credId/tan-mode/$tanMode/medium" : URIBASE . "konto/credentials/";
             JsonController::print_json(
                 [
                     'success' => true,
@@ -1566,7 +1567,7 @@ class RestHandler extends EscFunc{
                     'subtype' => 'server-success',
                     'reload' => 1000,
                     'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . "konto/credentials/$credId/tan-mode/$tanMode/medium",
+                    'redirect' => $redirectUrl,
                 ]
             );
         }else{

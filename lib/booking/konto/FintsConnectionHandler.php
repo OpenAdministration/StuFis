@@ -135,9 +135,13 @@ class FintsConnectionHandler
         if ($res['default_tan_mode'] !== "null" && !is_null($res['default_tan_mode'])) {
             $tanModeInt = (int)$res['default_tan_mode'];
         }
+        $tanMediumName = null;
+        if ($res['default_tan_medium_name'] !== "null" && !is_null($res['default_tan_medium_name'])) {
+            $tanMediumName = $res['default_tan_mode'];
+        }
         $persist = self::getPersist($credentialId);
 
-        return new self($credentialId, $options, $credentials, $persist, $tanModeInt);
+        return new self($credentialId, $options, $credentials, $persist, $tanModeInt, $tanMediumName);
     }
 
     public static function getPersist(int $credentialId): ?string
