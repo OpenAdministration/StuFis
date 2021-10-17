@@ -7,8 +7,11 @@ use Fhp\BaseAction;
 use Fhp\FinTs;
 use Fhp\Model\SEPAAccount;
 use Fhp\Model\StatementOfAccount\Statement;
+use Fhp\Model\TanMedium;
 use Fhp\Model\TanMode;
 use Fhp\Model\TanRequestChallengeImage;
+use Fhp\Segment\TAB\TanMediumListe;
+use Fhp\Segment\TAB\TanMediumListeV4;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
@@ -122,8 +125,8 @@ class FintsController extends Renderer
             return;
         }
 
-        $tanModeNames = array_map(static function (TanMode $tanMode) {
-            return "[" . $tanMode->getId(). "] " . $tanMode->getName();
+        $tanModeNames = array_map(static function (TanMedium $tanMedium) {
+            return "[" . $tanMedium->getName(). "] " . $tanMedium->getPhoneNumber();
         }, $tanMedium);
 
         echo "<form method='post' action=" . URIBASE . "rest/konto/tan-mode/save class='ajax-form'>";
