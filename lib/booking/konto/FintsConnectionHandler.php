@@ -27,6 +27,8 @@ use framework\CryptoHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use InvalidArgumentException;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Logger;
 
 class FintsConnectionHandler
 {
@@ -36,6 +38,8 @@ class FintsConnectionHandler
     private $fints;
 
     private $loggedIn;
+
+    private $logger;
 
 
     protected function __construct(
@@ -56,6 +60,11 @@ class FintsConnectionHandler
         if (!is_null($tanModeInt)) {
             $this->fints->selectTanMode($tanModeInt);
         }
+
+        $this->logger = new Logger('fints', [
+            new RotatingFileHandler(SYSBASE . 'runtime/logs/fints.log')
+        ]);
+
     }
 
     public static function unlockCredentials($credentialId, $password): bool
@@ -66,7 +75,6 @@ class FintsConnectionHandler
             //session_write_close();
             return true;
         }
-
         return false;
     }
 
@@ -91,7 +99,7 @@ class FintsConnectionHandler
         if (count($res) === 1) {
             $res = $res[0];
         } else {
-            ErrorHandler::handleError();
+            ErrorHandler::handleError(500,'found multiple DB entries');
         }
 
         if (!isset($_SESSION['fints'][$credentialId]['key-password'])) {

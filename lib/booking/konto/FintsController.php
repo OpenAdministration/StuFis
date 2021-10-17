@@ -2,6 +2,7 @@
 
 namespace booking\konto;
 
+use Exception;
 use Fhp\BaseAction;
 use Fhp\FinTs;
 use Fhp\Model\SEPAAccount;
@@ -21,7 +22,6 @@ use framework\render\Renderer;
 
 class FintsController extends Renderer
 {
-
     private $credentialId;
 
     protected $routeInfo;
@@ -90,6 +90,8 @@ class FintsController extends Renderer
             }
         } catch (NeedsTanException $exception) {
             $this->renderTanInput($exception->getAction());
+        } catch (Exception $exception){
+            ErrorHandler::handleException($exception, 'something went wrong in FINTS controller');
         }
     }
 
