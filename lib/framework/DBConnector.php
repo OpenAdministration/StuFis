@@ -427,6 +427,7 @@ class DBConnector extends Singleton
             'crypto_key' => "TEXT NOT NULL",
             'default_tan_mode' => 'INT NULL',
             'default_tan_mode_name' => 'VARCHAR(63) NULL',
+            'default_tan_medium_name' => 'VARCHAR(63) NULL',
         ];
         $keys['konto_credentials'] = [
             "primary" => ["id"],

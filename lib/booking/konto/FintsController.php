@@ -125,15 +125,15 @@ class FintsController extends Renderer
             return;
         }
         $tanMediumNames = [];
-
         foreach ($tanMedien as $tanMedium){
             /** @var TanMedium $tanMedium */
             $name = $tanMedium->getName();
-            $tanModeNames[$name] = "[$name] {$tanMedium->getPhoneNumber()}";
+            $phone = $tanMedium->getPhoneNumber() ?? "keine Telefon-Nr. hinterlegt";
+            $tanMediumNames[$name] = "[$name] $phone";
         }
 
         echo "<form method='post' action=" . URIBASE . "rest/konto/tan-mode/save class='ajax-form'>";
-        $this->renderHeadline("Bitte TAN-Modus auswählen");
+        $this->renderHeadline("Bitte TAN-Medium auswählen");
         $this->renderHiddenInput('tan-mode-id', $this->credentialId);
         $this->renderHiddenInput('credential-id', $this->credentialId);
         $this->renderNonce();
