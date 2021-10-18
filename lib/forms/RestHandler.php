@@ -1095,11 +1095,11 @@ class RestHandler extends EscFunc{
 		
 		$zahlungByType = [];
 		foreach ($zahlung as $key => $item){
-			$zahlungByType[$zahlung_type[$key]] = $item;
+			$zahlungByType[$zahlung_type[$key]][] = $item;
 		}
 		$where = [];
 		foreach ($zahlungByType as $type => $zahlungsArray){
-			$where[] = ["canceled" => 0, "zahlung_id" => ["IN", $zahlung], "zahlung_type" => $type];
+			$where[] = ["canceled" => 0, "zahlung_id" => ["IN", $zahlungsArray], "zahlung_type" => $type];
 		}
 		
 		$bookingDBzahlung = DBConnector::getInstance()->dbFetchAll(
