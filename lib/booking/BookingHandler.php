@@ -305,7 +305,7 @@ class BookingHandler extends Renderer{
                         </td>
                         <td class="money no-wrap <?= TextStyle::BOLD ?>">
 							<?= DBConnector::getInstance()->convertDBValueToUserValue($row['value'], "money") ?>
-                        </td>^
+                        </td>
                         <td class="<?= TextStyle::PRIMARY . " " . TextStyle::BOLD ?> no-wrap">
 							<?= trim(htmlspecialchars($row['titel_nr'])) ?>
                         </td>
