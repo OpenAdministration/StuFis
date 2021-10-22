@@ -596,6 +596,7 @@ class FintsConnectionHandler
                 $this->loggedIn = true;
                 $actionClass = ArrayHelper::remove($param, 0);
                 $action = new $actionClass();
+                $this->deleteTanSessionInformation();
                 return $this->prepareAction($action, $param);
             }
             try {
