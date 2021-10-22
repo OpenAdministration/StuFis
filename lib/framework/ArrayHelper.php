@@ -54,4 +54,14 @@ class ArrayHelper
         }
         return $out;
     }
+
+    public static function remove(array &$array, int|string $key) : mixed
+    {
+        if(!isset($array[$key])){
+            throw new \InvalidArgumentException('Key not found');
+        }
+        $el = $array[$key];
+        unset($array[$key]);
+        return $el;
+    }
 }

@@ -9,7 +9,6 @@ use DateTime;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
-use Defuse\Crypto\Key;
 use Defuse\Crypto\KeyProtectedByPassword;
 use Fhp\Action\GetSEPAAccounts;
 use Fhp\Action\GetStatementOfAccount;
@@ -18,15 +17,16 @@ use Fhp\CurlException;
 use Fhp\FinTs;
 use Fhp\Model\SEPAAccount;
 use Fhp\Model\StatementOfAccount\Statement;
-use Fhp\Model\TanMedium;
 use Fhp\Model\TanMode;
 use Fhp\Options\Credentials;
 use Fhp\Options\FinTsOptions;
 use Fhp\Protocol\ServerException;
+use framework\ArrayHelper;
 use framework\CryptoHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use InvalidArgumentException;
+use JetBrains\PhpStorm\ArrayShape;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 
@@ -119,7 +119,7 @@ class FintsConnectionHandler
             ErrorHandler::handleError(500, 'JSON kaputt');
         }
 
-        $credentialArray = json_decode($credentialsJson, true);
+        $credentialArray = json_decode($credentialsJson, true, 512, JSON_THROW_ON_ERROR);
         if (!isset($credentialArray['username'], $credentialArray['password'])) {
             ErrorHandler::handleError(500, 'JSON Inhalte kaputt');
         }
@@ -169,7 +169,7 @@ class FintsConnectionHandler
             $encKey = KeyProtectedByPassword::createRandomPasswordProtectedKey($keyPhrase);
             $key = $encKey->unlockKey($keyPhrase);
             $credential_array = ['username' => $username, 'password' => $password];
-            $credentialJson = json_encode($credential_array);
+            $credentialJson = json_encode($credential_array, JSON_THROW_ON_ERROR);
             $encCredentialJson = Crypto::encrypt($credentialJson, $key);
             return DBConnector::getInstance()->dbInsert(
                 'konto_credentials',
@@ -274,9 +274,15 @@ class FintsConnectionHandler
                 /** @var BaseAction $restoredAction */
                 [$restoredAction, $params] = $this->loadTanActionFromSession();
                 $this->fints->submitTan($restoredAction, $tan);
-                $this->deleteTanSessionInformation();
+                if($restoredAction->isDone()){
+                    $this->deleteTanSessionInformation();
+                    if(!empty($params) && is_subclass_of($params[0], BaseAction::class)){
+                        $className = ArrayHelper::remove($params, 0);
+                        $restoredAction = new $className();
+                        $this->prepareAction($restoredAction,$params);
+                    }
+                }
                 $this->savePersistant();
-
                 $result = $this->evaluateAction($restoredAction, $params);
                 $this->savePersistant();
                 return [true, $result];
@@ -284,7 +290,7 @@ class FintsConnectionHandler
         } catch (CurlException | ServerException $e) {
             return [false, $e->getMessage()];
         }
-        return [false, "Aktion kann nicht gefunden werden"];
+        return [false, "Aktion nicht gefunden"];
     }
 
     public function hasTanSessionInformation(): bool
@@ -292,6 +298,10 @@ class FintsConnectionHandler
         return isset($_SESSION['fints'][$this->credentialId]['tan']);
     }
 
+    #[ArrayShape([
+        0 => BaseAction::class,
+        1 => 'array'
+    ])]
     private function loadTanActionFromSession(): array
     {
         $tan = $_SESSION['fints'][$this->credentialId]['tan'];
@@ -577,10 +587,21 @@ class FintsConnectionHandler
     {
         if (!$this->loggedIn) {
             // there was a login (attempt) before
+            if($this->hasTanSessionInformation()){
+                [$loginAction, $param] = $this->loadTanActionFromSession();
+                /** @var BaseAction $loginAction */
+                if (!$loginAction->isDone()){
+                    throw new NeedsTanException('Tan wird zum login benötigt', $loginAction);
+                }
+                $this->loggedIn = true;
+                $actionClass = ArrayHelper::remove($param, 0);
+                $action = new $actionClass();
+                return $this->prepareAction($action, $param);
+            }
             try {
                 $loginAction = $this->fints->login();
                 if ($loginAction->needsTan()) {
-                    $this->saveTanInfoToSession($action, $param);
+                    $this->saveTanInfoToSession($loginAction, [$action::class, ...$param]);
                     throw new NeedsTanException('Für den Login wird eine TAN benötigt', $action);
                 }
                 //TODO: log the login
