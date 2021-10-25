@@ -86,14 +86,16 @@ class Router{
             $routeInfo['action'] = '403';
             $routeInfo['controller'] = 'error';
         }
-
+        $allowedMethods = (array) $routeInfo['method'];
+        $allowedMethods = array_map('strtoupper', $allowedMethods);
         //check request method ------------------
         if ($routeInfo['controller'] !== 'error'
-            && stripos($routeInfo['method'], $_SERVER['REQUEST_METHOD']) === false){
+            && in_array(strtoupper($_SERVER['REQUEST_METHOD']), $allowedMethods)){
             $routeInfo = [
                 'method' => $_SERVER['REQUEST_METHOD'],
+                'path' => $routeInfo['path'],
                 'controller' => 'error',
-                'action' => '403',
+                'action' => '405',
             ];
         }
         return $routeInfo;
