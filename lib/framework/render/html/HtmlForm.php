@@ -48,4 +48,13 @@ class HtmlForm extends AbstractHtmlTag
         $this->appendBody($htmlTag,false);
         return $this;
     }
+
+    public function addSubmitButton(string $text = 'Absenden'){
+        $btn = HtmlButton::make('submit')
+            ->style('primary')
+            ->body($text);
+        $this->appendBody($btn, false);
+        return $this;
+    }
+
 }

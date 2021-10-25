@@ -6,6 +6,10 @@ namespace framework\render\html;
 
 class HtmlInput extends AbstractHtmlTag
 {
+    const TYPE_STRING = 'string';
+    const TYPE_PASSWORD = 'password';
+    const TYPE_HIDDEN = 'hidden';
+
     /** @var Html */
     protected $label;
 
