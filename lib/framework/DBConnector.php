@@ -595,9 +595,11 @@ class DBConnector extends Singleton
                             "(" . $this->quoteIdent($otherCol[1]) . ")";
 
                     }
-                    if ($this->pdo->query($sqlFK) === false) {
-                        $eInfo = $this->pdo->errorInfo();
+                    try {
+                        $this->pdo->query($sqlFK);
+                    }catch (PDOException $e){
                         $this->dbDropTables(array_keys($constrainsNeeded));
+                        $eInfo = $this->pdo->errorInfo();
                         throw new RuntimeException(print_r([$eInfo, $sqlFK], true));
                     }
                 }
