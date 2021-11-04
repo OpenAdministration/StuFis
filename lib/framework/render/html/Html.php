@@ -23,4 +23,10 @@ class Html extends AbstractHtmlTag
     {
         return new self($tagname);
     }
+
+    public static function div() : self
+    {
+        return new self('div');
+    }
+
 }

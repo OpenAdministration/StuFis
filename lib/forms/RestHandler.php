@@ -17,6 +17,7 @@ namespace forms;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
+use booking\konto\FintsConnectionHandler;
 use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
 use forms\chat\ChatHandler;
@@ -30,7 +31,6 @@ use forms\projekte\exceptions\WrongVersionException;
 use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
-use framework\MailHandler;
 use framework\render\ErrorHandler;
 use framework\render\EscFunc;
 use framework\render\JsonController;
@@ -94,9 +94,9 @@ class RestHandler extends EscFunc{
             case "save-default-tan-mode":
                 $this->saveDefaultTanMode($routeInfo);
                 break;
-            case "unlock-credentials":
-                $this->unlockCredentials($routeInfo);
-                break;
+            /*case "login-credentials":
+                $this->loginCredentials($routeInfo);
+                break;*/
             case "lock-credentials":
                 $this->lockCredentials($routeInfo);
                 break;
@@ -1495,43 +1495,6 @@ class RestHandler extends EscFunc{
         }
     }
 
-    private function newKontoCredentials($routeInfo): void
-    {
-        $bankId = $_POST['bank-id'];
-        $bankuser = $_POST['bank-username'];
-        $bankpw = $_POST['bank-password'];
-        $custompw = $_POST['password-custom'];
-        $name = $_POST['name'];
-        $ret = FintsConnectionHandler::saveCredentials($bankId,$bankuser, $bankpw,$custompw,$name);
-
-        if(is_numeric($ret)){
-            JsonController::print_json(
-                [
-                    'success' => true,
-                    'status' => '200',
-                    'msg' => 'Erfolgreich gespeichert',
-                    'type' => 'modal',
-                    'subtype' => 'server-success',
-                    'reload' => 1000,
-                    'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . 'konto/credentials/'  . $ret . "/tan-mode",
-                ]
-            );
-        }else{
-            JsonController::print_json(
-                [
-                    'success' => false,
-                    'status' => '500',
-                    'msg' => $ret,
-                    'type' => 'modal',
-                    'subtype' => 'server-error',
-                    'headline' => 'Daten nicht gespeichert',
-                ]
-            );
-        }
-
-    }
-
     private function saveDefaultTanMode($routeInfo): void
     {
         if(!isset($_POST['tan-mode-id'])){
@@ -1582,41 +1545,6 @@ class RestHandler extends EscFunc{
                 ]
             );
         }
-    }
-
-    private function unlockCredentials(array $routeInfo): void
-    {
-        $credId = (int) $_POST['credential-id'];
-        $keypw = (string) $_POST['credential-key'];
-
-        $ret = FintsConnectionHandler::unlockCredentials($credId, $keypw);
-
-        if($ret === true){
-            JsonController::print_json(
-                [
-                    'success' => true,
-                    'status' => '200',
-                    'msg' => "Zugangsdaten $credId erfolgreich entsperrt",
-                    'type' => 'modal',
-                    'subtype' => 'server-success',
-                    'reload' => 1000,
-                    'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . "konto/credentials/",
-                ]
-            );
-        }else{
-            JsonController::print_json(
-                [
-                    'success' => false,
-                    'status' => '500',
-                    'msg' => 'Falsches Passwort',
-                    'type' => 'modal',
-                    'subtype' => 'server-error',
-                    'headline' => 'Daten nicht gespeichert',
-                ]
-            );
-        }
-
     }
 
     private function submitTan(array $routeInfo): void

@@ -4,6 +4,7 @@
 namespace framework\render;
 
 
+use booking\konto\tan\FlickerParser;
 use framework\auth\AuthHandler;
 
 class DevController extends Renderer
@@ -11,6 +12,7 @@ class DevController extends Renderer
     public function __construct(array $routeInfo)
     {
         $this->routeInfo = $routeInfo;
+        parent::__construct($routeInfo);
     }
 
     public function actionSession() : void
@@ -27,9 +29,19 @@ class DevController extends Renderer
         AuthHandler::getInstance()->logout();
     }
 
-    public function actionPhpInfo(){
-        echo "hi";
-        phpinfo();
+    public function actionFlicker(){
+        echo "<pre>";
+        //var_dump($hexSol);
+        // $challenge = "024 8A 01 2043801998 08 12345678";
+        //$challenge = "0388A01239230520422DE87795625140006626408"; // <- works
+        //$challenge = "038 8A 01 2392307899 22 DE87795625140006626408"; // <- works
+        $challenge = "038 8A 01 2392302069 22 DE87795625140006626408"; // <- works
+        $p = new FlickerParser($challenge);
+        //var_dump($p);
+        //var_dump(str_replace(' ', '', $hexSol));
+        echo "</pre>";
+        $svg = $p->getSVG(10, 300);
+        echo PHP_EOL . $svg;
     }
 
 }

@@ -4,6 +4,9 @@
 namespace framework;
 
 
+use booking\konto\NeedsTanException;
+use framework\render\html\Html;
+
 class ArrayHelper
 {
     /**
@@ -63,5 +66,15 @@ class ArrayHelper
         $el = $array[$key];
         unset($array[$key]);
         return $el;
+    }
+
+    public static function allIn(array $haystack, array $needles) : bool
+    {
+        return count(array_diff(array_values($needles), array_values($haystack))) === 0;
+    }
+
+    public static function dump(array $array) : string
+    {
+        return Html::tag('pre')->body(var_export($array, true), false);
     }
 }

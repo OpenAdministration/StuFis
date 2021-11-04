@@ -4,6 +4,8 @@
 namespace framework\render\html;
 
 
+use SVG\SVG;
+
 class HtmlImage extends AbstractHtmlTag
 {
     public static function make(string $altText) : self

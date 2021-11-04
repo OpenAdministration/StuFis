@@ -10,7 +10,7 @@ class FA extends Html
      */
     public static function make(string $faName) : self
     {
-        if(strpos($faName, 'fa-') !== 0){
+        if(!str_starts_with($faName, 'fa-')){
             $faName = 'fa-' . $faName;
         }
         return new self(['aria-hidden' => true], ['fa', $faName], []);
@@ -19,6 +19,11 @@ class FA extends Html
     protected function __construct(array $attributes, array $classes, array $dataAttributes)
     {
         parent::__construct('i', $attributes, $classes, $dataAttributes);
+    }
+
+    public function href(string $link){
+        $this->wrapStack[] = Html::a($link);
+        return $this;
     }
 
     /**

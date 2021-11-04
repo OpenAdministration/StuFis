@@ -6,11 +6,24 @@ use framework\DBConnector;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
+use Symfony\Component\HttpFoundation\Request;
 
 abstract class Renderer extends EscFunc
 {
+    const ALERT_WARNING = 'warning';
+    const ALERT_INFO = 'info';
+    const ALERT_DANGER = 'danger';
+    const ALERT_SUCCESS = 'success';
 
     protected $routeInfo;
+
+    protected Request $request;
+
+    public function __construct(array $routeInfo = [])
+    {
+        $this->routeInfo = $routeInfo;
+        $this->request = Request::createFromGlobals();
+    }
 
     public function render() : void {
         $action = $this->routeInfo['action'];
@@ -292,9 +305,9 @@ abstract class Renderer extends EscFunc
      * @param $msg
      * @param $type string has to be <i>"success"</i>, "info", "warning" or "danger"
      */
-    protected function renderAlert($strongMsg, $msg, $type = "success"): void
+    protected function renderAlert($strongMsg, $msg, string $type = self::ALERT_SUCCESS): void
     {
-        if (!in_array($type, ["success", "info", "warning", "danger"])) {
+        if (!in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER])) {
             ErrorHandler::handleError(500,"Falscher Datentyp in renderAlert()");
         }
         if(is_array($msg)){

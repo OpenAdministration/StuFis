@@ -5,12 +5,17 @@ namespace framework\render;
 use Composer\InstalledVersions;
 use DateTime;
 use framework\auth\AuthHandler;
+use framework\render\html\BT;
+use framework\render\html\Html;
+use framework\render\html\HtmlAlert;
+use JetBrains\PhpStorm\NoReturn;
 
 class HTMLPageRenderer
 {
     private static $profiling_timing, $profiling_names, $profiling_sources;
     private static $errorHandler;
     private static $tabsConfig;
+
     private $bodyContent;
     private $titel;
     protected $routeInfo;
@@ -77,6 +82,7 @@ class HTMLPageRenderer
         if ($this->hasError()) {
             $this->renderError();
         } else {
+            $this->renderFlash();
             if (!empty(self::$tabsConfig)) {
                 $this->renderPanelTabs(self::$tabsConfig["tabs"], self::$tabsConfig["linkbase"], self::$tabsConfig["active"]);
             }
@@ -94,6 +100,15 @@ class HTMLPageRenderer
             $this->renderProfiling();
         }
         $this->renderFooter();
+    }
+
+    private function renderFlash() : void
+    {
+        foreach ($_SESSION['flash'] ?? [] as $alertHtml)
+        {
+            echo $alertHtml->__toString();
+        }
+        unset($_SESSION['flash']);
     }
 
     private function renderHtmlHeader(): void
@@ -565,6 +580,26 @@ class HTMLPageRenderer
         <?php
     }
 
+    public static function addFlash(string $TYPE, string $string, mixed $debugInfo = '') : void
+    {
+        $alert = HtmlAlert::make($TYPE)->body($string);
+        if(DEV) {
+            if(!is_string($debugInfo)){
+                $debugInfo = var_export($debugInfo, true);
+            }
+            $strong = match ($TYPE){
+                BT::TYPE_SUCCESS => 'Erfolg',
+                BT::TYPE_WARNING => 'Warnung',
+                BT::TYPE_DANGER => 'Fehler',
+                BT::TYPE_INFO => ' Info',
+                // primary?
+                // secondary?
+            };
+            $alert->appendBody(PHP_EOL . Html::tag('i')->body($debugInfo), false)->strongMsg($strong);
+        }
+        $_SESSION['flash'][] = $alert;
+    }
+
     /**
      * @return string
      */
@@ -586,6 +621,7 @@ class HTMLPageRenderer
         $this->bodyContent .= $htmlContent;
     }
 
+    #[NoReturn]
     public static function redirect($url) : void
     {
         header('Location: ' . $url);

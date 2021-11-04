@@ -6,85 +6,290 @@ namespace booking\konto;
 
 use Composer\InstalledVersions;
 use DateTime;
-use Defuse\Crypto\Crypto;
-use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
-use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
-use Defuse\Crypto\KeyProtectedByPassword;
 use Fhp\Action\GetSEPAAccounts;
 use Fhp\Action\GetStatementOfAccount;
 use Fhp\BaseAction;
 use Fhp\CurlException;
 use Fhp\FinTs;
 use Fhp\Model\SEPAAccount;
-use Fhp\Model\StatementOfAccount\Statement;
+use Fhp\Model\StatementOfAccount\StatementOfAccount;
 use Fhp\Model\TanMode;
 use Fhp\Options\Credentials;
 use Fhp\Options\FinTsOptions;
+use Fhp\Protocol\DialogInitialization;
 use Fhp\Protocol\ServerException;
+use Fhp\Protocol\UnexpectedResponseException;
 use framework\ArrayHelper;
-use framework\CryptoHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
+use framework\render\html\BT;
+use framework\render\HTMLPageRenderer;
 use InvalidArgumentException;
-use JetBrains\PhpStorm\ArrayShape;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 
 class FintsConnectionHandler
 {
-    private $credentialId;
+    private FinTs $finTs;
 
-    /** @var FinTs */
-    private $fints;
+    private ?BaseAction $activeAction;
 
-    private $loggedIn;
-
-    private $logger;
-
-
-    protected function __construct(
-        int $credentialId,
+    /**
+     * FintsConnectionHandler2 constructor.
+     * @param int $credentialId
+     * @param FinTsOptions $options
+     * @param Credentials $credentials
+     * @param int|null $tanModeInt
+     * @param string|null $tanMediumName
+     */
+    public function __construct(
+        private int $credentialId,
         FinTsOptions $options,
         Credentials $credentials,
-        ?string $persist = null,
         ?int $tanModeInt = null,
         ?string $tanMediumName = null
     )
     {
-        $this->credentialId = $credentialId;
-        $this->fints = FinTs::new($options, $credentials, $persist);
-
-        if (!is_null($persist)) {
-            $this->loggedIn = true;
-        }
+        $persist = $this->getCache('persist');
+        $this->finTs = FinTs::new($options, $credentials, $persist);
 
         if (!is_null($tanModeInt)) {
-            $this->fints->selectTanMode($tanModeInt, $tanMediumName);
+            $this->finTs->selectTanMode($tanModeInt, $tanMediumName);
         }
 
-        $this->logger = new Logger('fints', [
+        $logger = new Logger('fints', [
             new RotatingFileHandler(SYSBASE . 'runtime/logs/fints.log')
         ]);
 
+        $this->finTs->setLogger($logger);
     }
 
-    public static function unlockCredentials($credentialId, $password): bool
+    public static function saveCredentials(mixed $bankId, mixed $bankuser, mixed $name) : int
     {
-        $_SESSION['fints'][$credentialId]['key-password'] = $password;
-        $ret = self::load($credentialId);
-        if ($ret) {
-            //session_write_close();
+        $db = DBConnector::getInstance();
+        return ((int) $db->dbInsert('konto_credentials', [
+           'bank_id' => $bankId,
+           'owner_id' => $db->getUser()['id'],
+           'bank_username' => $bankuser,
+           'name' => $name
+        ]));
+    }
+
+    /**
+     * try to login. If wrong credentials, delete saved pw and add Flash to PageRenderer
+     * @return bool $success login
+     * @throws NeedsTanException
+     */
+    public function login(): bool
+    {
+        // resume execution if any
+        $resumableAction = $this->resumableAction();
+        if($resumableAction instanceof DialogInitialization){
+            if(!$resumableAction->isDone()){
+                throw new NeedsTanException($resumableAction, 'Tan wird zum Login benötigt');
+            }
+            $this->setCache('logged-in', true);
+            $this->save();
             return true;
         }
-        return false;
+        // regular execution
+        try {
+            if($this->finTs->getSelectedTanMode() === null){
+                HTMLPageRenderer::addFlash(BT::TYPE_INFO, 'Vor dem ersten Login muss der TAN Modus gesetzt werden');
+                HTMLPageRenderer::redirect(URIBASE . 'konto/credentials/' . $this->credentialId . '/tan-mode');
+            }
+            $loginAction = $this->finTs->login();
+            $this->save($loginAction);
+            if($loginAction->needsTan()){
+                throw new NeedsTanException(
+                    $loginAction,
+                    'Tan wird zum Login benötigt'
+                );
+            }
+            HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Login erfolgreich');
+            $this->setCache('logged-in', true);
+            return true;
+        }catch (CurlException  $e){
+            ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen');
+        } catch (ServerException | UnexpectedResponseException $e) {
+            $this->setCache('logged-in', null);
+            static::deleteLoginPassword($this->credentialId);
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Login nicht erfolgreich, bitte überprüfe die Login Daten', $e->getMessage());
+            return false;
+        }
     }
 
-    public static function loadable($credentialId) : bool
+
+    public function logout(): bool
     {
-        return isset($_SESSION['fints'][$credentialId]['key-password']);
+        try {
+            $this->finTs->close(); // logout @ server
+        } catch (ServerException $e){
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
+            return false;
+        }
+        unset($_SESSION['fints'][$this->credentialId]); // delete cache for this credential
+        return true;
     }
 
-    public static function load($credentialId): self
+    /**
+     * @return TanMode[]
+     */
+    public function getUserTanModes(): array
+    {
+        if($this->isCached('TanModes')){
+            return $this->getCache('TanModes');
+        }
+        try {
+            $tanModes = $this->finTs->getTanModes();
+        } catch (CurlException | ServerException $e) {
+            ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbringung zur Bank gestört');
+        }
+        if (empty($tanModes)) {
+            return [];
+        }
+
+        return array_map(static function (TanMode $tanMode) {
+            return "[" . $tanMode->getId() . "] " . $tanMode->getName();
+        }, $tanModes);
+
+    }
+
+    /**
+     * @param int $tanModeId
+     * @return array name (uid) => desc
+     */
+    public function getTanMedias(int $tanModeId): array
+    {
+        try {
+            $tanMedia =  $this->finTs->getTanMedia($tanModeId);
+            $tanMediumNames = [];
+            foreach ($tanMedia as $tanMedium){
+                $name = $tanMedium->getName();
+                $phone = $tanMedium->getPhoneNumber() ?? "keine Telefon-Nr. hinterlegt";
+                $tanMediumNames[$name] = "[$name] $phone";
+            }
+
+            return $tanMediumNames;
+        } catch (CurlException | ServerException $e) {
+            ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbindung zur Bank gestört');
+        }
+    }
+
+    public function getSepaAccount($iban) : SEPAAccount
+    {
+        $accounts = $this->getSepaAccounts();
+        $filtered = array_filter($accounts, static function(SEPAAccount $account) use ($iban){
+            return $account->getIban() === $iban;
+        });
+        if(count($filtered) > 1){
+            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'Es existieren mehrere Kontos mit der selben IBAN, bitte kontaktiere einen Administrator', $filtered);
+        }
+        if(count($filtered) === 0){
+            throw new InvalidArgumentException("Iban $iban nicht vorhanden");
+        }
+        return array_values($filtered)[0];
+    }
+
+    /**
+     * @return SEPAAccount[]
+     * @throws NeedsTanException
+     */
+    public function getSepaAccounts() : array
+    {
+        if($this->isCached('SepaAccounts')){
+            return $this->getCache('SepaAccounts');
+        }
+        $action = $this->resumableAction();
+        if($action instanceof GetSEPAAccounts){
+            if(!$action->isDone()){
+                throw new NeedsTanException($action);
+            }
+        }else{
+            $action = GetSEPAAccounts::create();
+            $this->execute($action);
+        }
+        $accounts = $action->getAccounts();
+        $this->setCache('SepaAccounts', $accounts);
+        return $accounts;
+    }
+
+    /**
+     * @return array
+     * @throws NeedsTanException (hardly)
+     */
+    public function getIbans() : array
+    {
+        if($this->isCached('ibans')){
+            return $this->getCache('ibans');
+        }
+
+        $accounts = $this->getSepaAccounts();
+        $ibans = array_map(static function (SEPAAccount $account){
+            return $account->getIban();
+        }, $accounts);
+        $this->setCache('ibans', $ibans);
+        return $ibans;
+    }
+
+    /**
+     * @param $shortIban string DE12[...]0009 styled: DE120009
+     * @return string|null full iban string from this credential konto
+     */
+    public function lengthenIban(string $shortIban) : ?string
+    {
+        $ibans = $this->getIbans();
+        $ibanStart = substr($shortIban, 0, 4);
+        $ibanEnd = substr($shortIban, -4, 4);
+        // return only first element -> very high possibility all have the same iban
+        $filtered_ibans = array_values(array_filter($ibans, static function (string $el) use ($ibanStart, $ibanEnd) {
+            return str_starts_with($el, $ibanStart) && str_ends_with($el, $ibanEnd);
+        }));
+
+        return $filtered_ibans[0] ?? null;
+    }
+
+    public static function shortenIban(string $fullIban) : string
+    {
+        return substr($fullIban, 0, 4) . substr($fullIban, -4);
+    }
+
+    private function save(BaseAction $action = null) : void
+    {
+        // remember action if any
+        $this->activeAction = $action;
+        if($action?->needsTan() && !$action?->isDone()){
+            // chache it if tan is missing
+            $this->setCache('action', $action);
+        }else{
+            // delete it from cache otherwise
+            $this->setCache('action', null);
+        }
+        // save persist in cache
+        $this->setCache('persist', $this->finTs->persist());
+    }
+
+    private function isCached(string|int $key) : bool
+    {
+        return isset($_SESSION['fints'][$this->credentialId][$key]);
+    }
+
+    private function setCache(string|int $key, mixed $value) : void
+    {
+        $_SESSION['fints'][$this->credentialId][$key] = $value;
+    }
+
+    private function getCache(string|int $key)
+    {
+        return $_SESSION['fints'][$this->credentialId][$key] ?? null;
+    }
+
+    /**
+     * creates FINTS Connection Instance. Password needs to be set already
+     * @param int $credentialId
+     * @return static
+     */
+    public static function load(int $credentialId) : self
     {
         $db = DBConnector::getInstance();
         $res = $db->dbFetchAll('konto_credentials',
@@ -103,27 +308,12 @@ class FintsConnectionHandler
             ErrorHandler::handleError(500,'found multiple DB entries');
         }
 
-        if (!isset($_SESSION['fints'][$credentialId]['key-password'])) {
-            ErrorHandler::handleError(400, "Passwort für Credentials $credentialId benötigt");
+        if (!self::hasPassword($credentialId)) {
+            ErrorHandler::handleError(400, "Bank Passwort für Credentials $credentialId benötigt");
         }
+        $username = $res['bank_username'];
 
-        $encryptedKeyString = $res['crypto_key'];
-        $encryptedCredentials = $res['encrypted_credentials'];
-
-        $credentialsJson = CryptoHandler::decrypt_by_key_pw(
-            $encryptedCredentials,
-            $encryptedKeyString,
-            $_SESSION['fints'][$credentialId]['key-password']
-        );
-        if ($credentialsJson === false) {
-            ErrorHandler::handleError(500, 'JSON kaputt');
-        }
-
-        $credentialArray = json_decode($credentialsJson, true, 512, JSON_THROW_ON_ERROR);
-        if (!isset($credentialArray['username'], $credentialArray['password'])) {
-            ErrorHandler::handleError(500, 'JSON Inhalte kaputt');
-        }
-        $credentials = Credentials::create($credentialArray['username'], $credentialArray['password']);
+        $credentials = Credentials::create($username, self::getPassword($credentialId));
 
         $options = new FinTsOptions();
         $options->url = $res['bank.url'];
@@ -132,614 +322,130 @@ class FintsConnectionHandler
         $options->productVersion = InstalledVersions::getRootPackage()['version'] . DEV ? '-dev' : '';
 
         $tanModeInt = null;
-        if ($res['default_tan_mode'] !== "null" && !is_null($res['default_tan_mode'])) {
-            $tanModeInt = (int)$res['default_tan_mode'];
+        if ($res['tan_mode'] !== "null" && !is_null($res['tan_mode'])) {
+            $tanModeInt = (int)$res['tan_mode'];
         }
         $tanMediumName = null;
-        if ($res['default_tan_medium_name'] !== "null" && !is_null($res['default_tan_medium_name'])) {
-            $tanMediumName = $res['default_tan_mode'];
-        }
-        $persist = self::getPersist($credentialId);
-
-        return new self($credentialId, $options, $credentials, $persist, $tanModeInt, $tanMediumName);
-    }
-
-    public static function getPersist(int $credentialId): ?string
-    {
-        if (self::hasPersist($credentialId)) {
-            return $_SESSION['fints'][$credentialId]['fints-persist'];
-        }
-        return null;
-    }
-
-    public static function hasPersist(int $credentialId): bool
-    {
-        return isset($_SESSION['fints'][$credentialId]['fints-persist']);
-    }
-
-    public static function lockCredentials($credentialId): array
-    {
-        unset($_SESSION['fints'][$credentialId]);
-        return [true, "Zugangsdaten $credentialId gesperrt"];
-    }
-
-    public static function saveCredentials($bankId, $username, $password, $keyPhrase, $name = '')
-    {
-        try {
-            $encKey = KeyProtectedByPassword::createRandomPasswordProtectedKey($keyPhrase);
-            $key = $encKey->unlockKey($keyPhrase);
-            $credential_array = ['username' => $username, 'password' => $password];
-            $credentialJson = json_encode($credential_array, JSON_THROW_ON_ERROR);
-            $encCredentialJson = Crypto::encrypt($credentialJson, $key);
-            return DBConnector::getInstance()->dbInsert(
-                'konto_credentials',
-                [
-                    'name' => $name,
-                    'bank_id' => $bankId,
-                    'owner_id' => DBConnector::getInstance()->getUser()['id'],
-                    'encrypted_credentials' => $encCredentialJson,
-                    'crypto_key' => $encKey->saveToAsciiSafeString()
-                ]
-            );
-        } catch (WrongKeyOrModifiedCiphertextException $ciphertextException) {
-            return $ciphertextException->getMessage();
-        } catch (EnvironmentIsBrokenException $e) {
-            ErrorHandler::handleException($e);
-        }
-        return false;
-    }
-
-    public static function deleteCredential(int $credId) : bool
-    {
-        return DBConnector::getInstance()->dbDelete('konto_credentials', ['id' => $credId]) === 1;
-    }
-
-    public function closeFintsSession(): bool
-    {
-        try {
-            $this->fints->close();
-            unset($_SESSION['fints'][$this->credentialId]);
-            $this->loggedIn = false;
-            return true;
-        } catch (ServerException $e) {
-            return false;
-        }
-    }
-
-    public function getTanModes(): array
-    {
-        try {
-            $tanModes = $this->fints->getTanModes();
-        } catch (CurlException | ServerException $e) {
-            ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbringung zur Bank gestört');
-        }
-        if (empty($tanModes)) {
-            return [];
+        if ($res['tan_medium_name'] !== "null" && !is_null($res['tan_medium_name'])) {
+            $tanMediumName = $res['tan_medium_name'];
         }
 
-        return array_map(static function (TanMode $tanMode) {
-            return "[" . $tanMode->getId() . "] " . $tanMode->getName();
-        }, $tanModes);
+        return new self($credentialId, $options, $credentials, $tanModeInt, $tanMediumName);
     }
 
     /**
-     * @param int $tanModeInt
-     * @return array
-     * @throws CurlException
-     * @throws ServerException
+     * @param BaseAction $action - has the result afterwards if successful
+     * @throws NeedsTanException
      */
-    public function getTanMedia(int $tanModeInt): array
+    private function execute(BaseAction $action) : void
     {
-        $this->fints->selectTanMode($tanModeInt); //FIXME: might be unexpected behavior and unneeded
         try {
-            return $this->fints->getTanMedia($tanModeInt);
-        } catch (InvalidArgumentException $e) {
-            return [];
+            $this->finTs->execute($action);
+            $this->save($action);
+            if($action->needsTan()){
+                // TODO decoupled tan stuff here
+                throw new NeedsTanException($action);
+            }
+        }catch (CurlException | ServerException $e) {
+            ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt',);
         }
     }
 
-    public function saveDefaultTanMode(int $credentialId, int $tanModeInt, ?string $tanMediumName = null): bool
+    /**
+     * @param int $credentialId
+     * @return bool if system has unclosed session, which was logged in to bank before
+     */
+    public static function hasActiveSession(int $credentialId) : bool
     {
-        try {
-            $tanMode = $this->fints->getTanModes()[$tanModeInt];
-            if(!$tanMode->needsTanMedium() && $tanMediumName !== null){
-                ErrorHandler::handleError(400, 'Tan Mode does not need medium, but there was one supplied');
-            }
-            $tanModeName = $tanMode->getName();
+        return isset($_SESSION['fints'][$credentialId]['persist'], $_SESSION['fints'][$credentialId]['logged-in']) && self::hasPassword($credentialId);
+    }
 
-            $ret = DBConnector::getInstance()->dbUpdate(
-                'konto_credentials',
-                ['id' => $credentialId],
-                [
-                    'default_tan_mode' => $tanModeInt,
-                    'default_tan_mode_name' => $tanModeName,
-                    'default_tan_medium_name' => $tanMediumName,
-                ]
-            );
-            return $ret === 1;
-        } catch (CurlException | ServerException $e) {
-            ErrorHandler::handleException($e, 'Tan Mode Name kann nicht ermittelt werden');
-        }
-        return false;
+    public static function setLoginPassword(int $credentialId, string $pw): void
+    {
+        $_SESSION['fints'][$credentialId]['password'] = $pw;
+    }
+
+    public static function deleteLoginPassword(int $credentialId) : void
+    {
+        unset($_SESSION['fints'][$credentialId]['password']);
+    }
+
+    public static function hasPassword(int $credentialId): bool
+    {
+        return isset($_SESSION['fints'][$credentialId]['password']);
+    }
+
+    private static function getPassword(int $credentialId) : string
+    {
+        return $_SESSION['fints'][$credentialId]['password'];
     }
 
     /**
      * @param string $tan
-     * @return array [bool $success, string $msg]
+     * @return bool $success
      */
-    public function submitTan(string $tan): array
+    public function submitTan(string $tan) : bool
     {
+        $action = $this->getCache('action');
         try {
-            if ($this->hasTanSessionInformation()) {
-                /** @var BaseAction $restoredAction */
-                [$restoredAction, $params] = $this->loadTanActionFromSession();
-                $this->fints->submitTan($restoredAction, $tan);
-                if($restoredAction->isDone()){
-                    $this->deleteTanSessionInformation();
-                    if(!empty($params) && is_subclass_of($params[0], BaseAction::class)){
-                        $className = ArrayHelper::remove($params, 0);
-                        $restoredAction = new $className();
-                        $this->prepareAction($restoredAction,$params);
-                    }
-                }
-                $this->savePersistant();
-                $result = $this->evaluateAction($restoredAction, $params);
-                $this->savePersistant();
-                return [true, $result];
-            }
-        } catch (CurlException | ServerException $e) {
-            return [false, $e->getMessage()];
-        }
-        return [false, "Aktion nicht gefunden"];
-    }
-
-    public function hasTanSessionInformation(): bool
-    {
-        return isset($_SESSION['fints'][$this->credentialId]['tan']);
-    }
-
-    #[ArrayShape([
-        0 => BaseAction::class,
-        1 => 'array'
-    ])]
-    private function loadTanActionFromSession(): array
-    {
-        $tan = $_SESSION['fints'][$this->credentialId]['tan'];
-        $fintsPersist = $tan['fints-persist'];
-        $actionSerialized = $tan['action-serialized'];
-        $actionClassName = $tan['action-classname'];
-        $params = $tan['action-param'];
-
-        /** @var $action BaseAction */
-        $action = new $actionClassName();
-        $action->unserialize($actionSerialized);
-
-        $this->fints->loadPersistedInstance($fintsPersist);
-
-        return [$action, $params];
-    }
-
-    public function deleteTanSessionInformation(): void
-    {
-        unset($_SESSION['fints'][$this->credentialId]['tan']);
-    }
-
-    private function savePersistant(): void
-    {
-        $_SESSION['fints'][$this->credentialId]['fints-persist'] = $this->fints->persist();
-    }
-
-    /**
-     * @param BaseAction $action
-     * @param array $param
-     * @return array [bool $success, string $msg]
-     */
-    private function evaluateAction(BaseAction $action, array $param = []): array
-    {
-        if (!$action->isDone()) {
-            return [false, "Aktion " . get_class($action) . " benötigt immer noch eine TAN - ausführen nicht möglich"];
-        }
-
-        switch (get_class($action)) {
-
-            case GetStatementOfAccount::class:
-                /** @var GetStatementOfAccount $action */
-                $statements = $action->getStatement();
-
-                $kontoId = $param['konto-id'];
-
-                $db = DBConnector::getInstance();
-
-                $lastKontoRow = $db->dbFetchAll(
-                    'konto',
-                    [DBConnector::FETCH_ASSOC],
-                    ['*'],
-                    ['konto_id' => $kontoId],
-                    [],
-                    ['id' => false],
-                    [],
-                    1
-                );
-                $lastKontoId = 0;
-                $oldSaldoCent = null;
-                $tryRewind = false;
-                $rewindDiff = 0;
-                $skipped = false;
-
-                $kontoRow = $db->dbFetchAll('konto_type', [DBConnector::FETCH_ASSOC], ['*'], ['id' => $kontoId])[0];
-                $syncUntil = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $kontoRow['sync_until']);
-
-                if (!empty($lastKontoRow)) {
-                    $lastKontoRow = $lastKontoRow[0];
-                    $lastKontoId = $lastKontoRow['id'];
-                    $lastKontoSaldo = $lastKontoRow['saldo'];
-                    $oldSaldoCent = $this->convertToCent($lastKontoSaldo);
-                    $tryRewind = true;
-                }
-
-                $db->dbBegin();
-                $transactionData = [];
-
-                $dateString = date_create()->format(DBConnector::SQL_DATE_FORMAT);
-
-                foreach ($statements->getStatements() as $statement) {
-                    $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
-                    $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
-                    if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
-                        $db->dbRollBack();
-                        return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
-                    }
-                    //echo "Statement $dateString Saldo: $saldoCent";
-                    foreach ($statement->getTransactions() as $transaction) {
-                        $valCent = $this->convertToCent($transaction->getAmount(), $transaction->getCreditDebit());
-                        $saldoCent += $valCent;
-
-                        if ($tryRewind === true) {
-                            //do rewind if necessary
-                            $rewindRow = $db->dbFetchAll(
-                                'konto',
-                                [DBConnector::FETCH_ASSOC],
-                                ['id'],
-                                [
-                                    'konto_id' => $kontoId,
-                                    'value' => $this->convertCentForDB($valCent),
-                                    'saldo' => $this->convertCentForDB($saldoCent),
-                                    'date' => $transaction->getBookingDate()?->format('Y-m-d'),
-                                    'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
-                                    'customer_ref' => $transaction->getEndToEndID(),
-                                ],
-                                [],
-                                ['id' => false],
-                                [],
-                                1
-                            );
-                            if(count($rewindRow) === 1){
-                                $rewindId = $rewindRow[0]['id'];
-                                $rewindDiff = $lastKontoId - $rewindId + 1;
-                                $tryRewind = false;
-                            }
-                        }
-
-                        if($rewindDiff > 0){
-                            $rewindDiff--;
-                            $skipped = $skipped === false ? 1 :  $skipped + 1;
-                            continue; // skip this entry, it was in the db before
-                        }
-
-                        // are we exceeding sync_until?
-                        if($syncUntil && $transaction->getValutaDate()?->diff($syncUntil)->invert === 1){
-                            break 2;
-                        }
-
-                        $transactionData[] = [
-                            'id' => ++$lastKontoId,
-                            'konto_id' => $param['konto-id'],
-                            'date' => $transaction->getBookingDate()?->format('Y-m-d'),
-                            'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
-                            'type' => $transaction->getBookingText(),
-                            'empf_iban' => $transaction->getAccountNumber(),
-                            'empf_bic' => $transaction->getBankCode(),
-                            'empf_name' => $transaction->getName(),
-                            'primanota' => $transaction->getPN(),
-                            'value' => $this->convertCentForDB($valCent),
-                            'saldo' => $this->convertCentForDB($saldoCent),
-                            'zweck' => $transaction->getMainDescription(),
-                            'comment' => $transaction->getTextKeyAddition(),
-                            'gvcode' => $transaction->getBookingCode(),
-                            'customer_ref' => $transaction->getEndToEndID(),
-                        ];
-                    }
-                    $oldSaldoCent = $saldoCent;
-                }
-
-                if(count($transactionData) > 0){
-                    $db->dbInsertMultiple('konto', array_keys($transactionData[0]), ...$transactionData);
-                    $db->dbUpdate('konto_type', ['id' => $kontoId], ['last_sync' => $dateString]);
-                }
-                $ret = $db->dbCommitRollbackOnFailure();
-
-                if ($ret === true) {
-                    $msg = count($transactionData) . " Einträge importiert.";
-                } else {
-                    $msg = "Ein Fehler ist aufgetreten - DBRollback - Import von " .
-                        count($transactionData) . " Einträgen ausstehend.";
-                }
-                if(DEV && $skipped !== false){
-                    $msg .= " $skipped Einträge wurden übersprungen";
-                }
-
-                return [$ret, $msg];
-
-            case BaseAction::class: // login Action
-                return [true, "Login erfolgreich"];
-            default:
-                return [false, "Aktion " . get_class($action) . " nicht bekannt, kann nicht ausgeführt werden"];
-        }
-    }
-
-    /**
-     * @param float|string $amount
-     * @param string|null $creditDebit either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
-     *                    assumed by sign of $amount
-     * @return float|int
-     */
-    private function convertToCent($amount, string $creditDebit = null)
-    {
-        $float = (float)$amount;
-        $int = (int)round($float * 100);
-
-        if(is_null($creditDebit)){
-            $sign = ($float > 0) - ($float < 0);
-            return $sign * $int;
-        }
-        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * $int;
-    }
-
-    private function convertCentForDB(int $amount): string
-    {
-        // rounds implicit
-        return number_format($amount / 100.0, 2, '.', '');
-    }
-
-    /**
-     * @param string $shortIban
-     * @return array
-     * @throws NeedsTanException
-     */
-    public function saveNewSepaStatements(string $shortIban): array
-    {
-        $accounts = $this->getSEPAAccounts();
-        $iban = $this->getIbanFromShort($shortIban);
-
-        // filter the full matching IBAN
-        $account = array_values(array_filter($accounts, static function (SEPAAccount $el) use ($iban) {
-            return $el->getIban() === $iban;
-        }))[0];
-
-        $dbKontos = DBConnector::getInstance()->dbFetchAll('konto_type',
-            [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
-            ['iban', '*']
-        );
-        $dbKonto = $dbKontos[$iban];
-        $syncFrom = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $dbKonto['sync_from']);
-        $lastSync = DateTime::createFromFormat(DBConnector::SQL_DATETIME_FORMAT, $dbKonto['last_sync']);
-        $syncUntil = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $dbKonto['sync_until']);
-
-        // set default for lastsync
-        if ($lastSync === false) {
-            $lastSync = clone $syncFrom;
-        }
-
-        if ($syncUntil === false) {
-            $syncUntil = date_create();
-        }
-
-        if ($syncUntil->diff(date_create())->invert === -1) { // if in the future
-            $syncUntil = date_create();
-        }
-
-        //find earliest
-        if ($syncFrom->diff($lastSync)->invert === 0) { //if last sync is older
-            $startDate = $lastSync;
-        } else {
-            $startDate = $syncFrom;
-        }
-
-        $action = GetStatementOfAccount::create($account, $startDate, $syncUntil);
-        $param = ['konto-id' => $dbKonto['id']];
-        $action = $this->prepareAction($action, $param);
-        return $this->evaluateAction($action, $param);
-    }
-
-    /**
-     * @return SEPAAccount[]
-     * @throws NeedsTanException
-     */
-    public function getSEPAAccounts(): array
-    {
-        if (isset($_SESSION['fints'][$this->credentialId]['SepaAccounts'])) {
-            return $_SESSION['fints'][$this->credentialId]['SepaAccounts'];
-        }
-
-        $action = GetSEPAAccounts::create();
-        $action = $this->prepareAction($action, []);
-
-        /** @var GetSEPAAccounts $action */
-        $accounts = $action->getAccounts();
-        $allIbans = [];
-        foreach ($accounts as $SEPAAccount) {
-            $allIbans[] = $SEPAAccount->getIban();
-        }
-
-        $_SESSION['fints'][$this->credentialId]['ibans'] = $allIbans;
-        $_SESSION['fints'][$this->credentialId]['bic'] = $accounts[0]->getBic();
-        $_SESSION['fints'][$this->credentialId]['SepaAccounts'] = $accounts;
-
-        return $accounts;
-    }
-
-    /**
-     * @param BaseAction $action if provided will take this action instead of reload from db
-     * @param array $param
-     * @return BaseAction
-     */
-    private function prepareAction(BaseAction $action, array $param): BaseAction
-    {
-        if (!$this->loggedIn) {
-            // there was a login (attempt) before
-            if($this->hasTanSessionInformation()){
-                [$loginAction, $param] = $this->loadTanActionFromSession();
-                /** @var BaseAction $loginAction */
-                if (!$loginAction->isDone()){
-                    throw new NeedsTanException('Tan wird zum login benötigt', $loginAction);
-                }
-                $this->loggedIn = true;
-                $actionClass = ArrayHelper::remove($param, 0);
-                $action = new $actionClass();
-                $this->deleteTanSessionInformation();
-                return $this->prepareAction($action, $param);
-            }
-            try {
-                $loginAction = $this->fints->login();
-                if ($loginAction->needsTan()) {
-                    $this->saveTanInfoToSession($loginAction, [$action::class, ...$param]);
-                    throw new NeedsTanException('Für den Login wird eine TAN benötigt', $action);
-                }
-                //TODO: log the login
-                //$this->saveActionToDB($action, $actionId, self::STATE_INIT_ACTION);
-                $this->loggedIn = true;
-            } catch (ServerException $e) {
-                ErrorHandler::handleException($e, 'Fehler beim Login - Zugangsdaten (Bank) vermutlich falsch.');
-            } catch (CurlException $e) {
-                ErrorHandler::handleException($e, 'Fehler beim Login - Bank Server nicht erreichbar.');
-            }
-        }
-        // check if action in session is finished or unfinished
-        if ($this->hasTanSessionInformation()) {
-            [$action, $param] = $this->loadTanActionFromSession();
-            if (!$action->isDone()) {
-                // unfinished action -> render tan input again
-                throw new NeedsTanException('Eine TAN wird benötigt', $action);
-            }
-            //should never happen but for safety
-            $this->deleteTanSessionInformation();
-            return $action;
-
-        }
-        // login successful, no action in session found -> execute main action
-        try {
-            $this->fints->execute($action);
-            if ($action->needsTan()) {
-                $this->saveTanInfoToSession($action, $param);
-                throw new NeedsTanException('Eine TAN wird für die Aktion benötigt', $action);
-            }
+            $this->finTs->submitTan($action, $tan);
+            $this->save($action);
         } catch (CurlException $e) {
-            ErrorHandler::handleException($e, "Keine Verbindung zur Bank möglich");
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
+            return false;
         } catch (ServerException $e) {
-            ErrorHandler::handleException($e, "Konto Aktion konnte nicht ausgeführt werden ");
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN nicht akzeptiert', $e->getMessage());
+            return false;
         }
-        return $action;
-
+        return true;
     }
 
-    private function saveTanInfoToSession(BaseAction $action, $param): void
+    public function resumableAction() : ?BaseAction
     {
-        // save persisant stuff for later
-        $tan['fints-persist'] = $this->fints->persist();
-        $tan['action-serialized'] = $action->serialize();
-        $tan['action-classname'] = get_class($action);
-        $tan['action-param'] = $param;
-        //$tan['tan-mode'] = $this->fints->getSelectedTanMode()->getId();
+        return $this->activeAction ?? $this->getCache('action') ?? null;
+    }
 
-        $_SESSION['fints'][$this->credentialId]['tan'] = $tan;
-
-        if (DEV) {
-            echo "<pre>" . var_export($_SESSION['fints'][$this->credentialId]['tan']['action-classname'], true) . "</pre>";
+    public function setTanMode(int $tanModeId, ?string $tanMediumName = null): bool
+    {
+        try{
+            $tanMode = $this->finTs->getTanModes()[$tanModeId];
+            if($tanMediumName === null && $tanMode->needsTanMedium()){
+                throw new InvalidArgumentException('Tan Medium wird benötigt');
+            }
+            $this->save();
+        }catch (CurlException | ServerException  $e){
+            ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
         }
-    }
-
-    /**
-     * @throws NeedsTanException
-     */
-    public function getIbanFromShort($shortIban)
-    {
-        $allIbans = $this->getIbans();
-
-        $ibanStart = substr($shortIban, 0, 4);
-        $ibanEnd = substr($shortIban, -4, 4);
-        // return only first element -> very high possibility all have the same iban
-        return array_values(array_filter($allIbans, static function (string $el) use ($ibanStart, $ibanEnd) {
-            return (strpos($el, $ibanStart) === 0) && (substr($el, -4, 4) === $ibanEnd);
-        }))[0];
-    }
-
-    /**
-     * @return string[]
-     * @throws NeedsTanException
-     */
-    public function getIbans(): array
-    {
-        if (!isset($_SESSION['fints'][$this->credentialId]['SepaAccounts'])) {
-            $this->getSEPAAccounts();
-        }
-        return $_SESSION['fints'][$this->credentialId]['ibans'];
-    }
-
-    /**
-     * @param $newPassword
-     * @return array [bool $success, string $msg]
-     */
-    public function changePassword($newPassword) : array
-    {
         $db = DBConnector::getInstance();
-        $res = $db->dbFetchAll('konto_credentials',
-            [DBConnector::FETCH_ASSOC],
-            ['encrypted_credentials', 'crypto_key'],
-            [
-                'owner_id' => $db->getUser()["id"],
-                'id' => $this->credentialId,
+        return $db->dbUpdate(
+            table: 'konto_credentials',
+            filter: ['id' => $this->credentialId, 'owner_id' => $db->getUser()['id']],
+            fields: [
+                'tan_mode' => $tanModeId,
+                'tan_mode_name' => $tanMode->getName(),
+                'tan_medium_name' => $tanMediumName
             ]
-        );
+        ) === 1;
+    }
 
-        if (count($res) === 1) {
-            $res = $res[0];
-        } else {
-            return [false, 'Die Credentials konnten nicht gefunden werden'];
+    public function getStatements(string $iban, DateTime $start, DateTime $end) : StatementOfAccount
+    {
+        $action = $this->resumableAction();
+        if($action instanceof GetStatementOfAccount){
+            if($action->isDone()){
+                $this->save();
+                return $action->getStatement();
+            }
+            throw new NeedsTanException($action);
         }
 
-        if (!isset($_SESSION['fints'][$this->credentialId]['key-password'])) {
-            return [false, "Passwort für Credentials $this->credentialId benötigt"];
-        }
+        $account = $this->getSepaAccount($iban);
+        $account = clone $account; // weird fix, without the clone the session var is changed to DateTime object
+        // might be a bug in fints TODO: see if minimal example with the same bug can be found
+        $action = GetStatementOfAccount::create($account, $start, $end);
+        $this->execute($action);
 
-        $encryptedKeyString = $res['crypto_key'];
-        $encryptedCredentials = $res['encrypted_credentials'];
-
-        $credentialsJson = CryptoHandler::decrypt_by_key_pw(
-            $encryptedCredentials,
-            $encryptedKeyString,
-            $_SESSION['fints'][$this->credentialId]['key-password']
-        );
-        if ($credentialsJson === false) {
-            return [false, 'Die Zugangsdaten konnten nicht entschlüsselt werden'];
-        }
-
-        try {
-            $encKey = KeyProtectedByPassword::createRandomPasswordProtectedKey($newPassword);
-            $key = $encKey->unlockKey($newPassword);
-            $encCredentialJson = Crypto::encrypt($credentialsJson, $key);
-            $ret = DBConnector::getInstance()->dbUpdate(
-                'konto_credentials',
-                ['id' => $this->credentialId],
-                [
-                    'encrypted_credentials' => $encCredentialJson,
-                    'crypto_key' => $encKey->saveToAsciiSafeString()
-                ]
-            );
-        } catch (WrongKeyOrModifiedCiphertextException | EnvironmentIsBrokenException $e) {
-           return [false, 'Ein Crypto Fehler ist aufgetreten ' . $e->getMessage()];
-        }
-
-        return [$ret === 1, $ret === 1 ? 'Das Passwort wurde erfolgreich gewechselt' : 'Das Passwort konnte nicht gewechselt werden'];
+        return $action->getStatement();
     }
 
 }

@@ -27,6 +27,7 @@ final class ArrayHelperTest extends TestCase
         ],
     ];
 
+    private array $a3 = ['a', 'b', 'c']
 
 
     public function testDiff_recursive(): void
@@ -64,5 +65,10 @@ final class ArrayHelperTest extends TestCase
             'a:d:e' => 1,
         ];
         $this->assertEquals($conA2, $res2);
+    }
+
+    public function testAllIn() : void
+    {
+
     }
 }

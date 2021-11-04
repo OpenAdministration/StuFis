@@ -423,11 +423,10 @@ class DBConnector extends Singleton
             'name' => "VARCHAR(63) NOT NULL",
             'bank_id' => "INT NOT NULL",
             'owner_id' => "INT NOT NULL",
-            'encrypted_credentials' => "TEXT NOT NULL",
-            'crypto_key' => "TEXT NOT NULL",
-            'default_tan_mode' => 'INT NULL',
-            'default_tan_mode_name' => 'VARCHAR(63) NULL',
-            'default_tan_medium_name' => 'VARCHAR(63) NULL',
+            'bank_username' => "VARCHAR(32) NOT NULL",
+            'tan_mode' => 'INT NULL',
+            'tan_mode_name' => 'VARCHAR(63) NULL',
+            'tan_medium_name' => 'VARCHAR(63) NULL',
         ];
         $keys['konto_credentials'] = [
             "primary" => ["id"],
@@ -805,7 +804,7 @@ class DBConnector extends Singleton
      * @return array|bool
      */
     public function dbFetchAll(
-        $tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [],
+        string|array $tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [],
         $groupBy = [], int $limit = 0, $debug = false
     )
     {
@@ -1328,8 +1327,7 @@ class DBConnector extends Singleton
      * @param $table  string tablename
      * @param $filter array where clause
      * @param $fields array new values
-     *
-     * @return int
+     * @return int amount of changed rows
      */
     public function dbUpdate(string $table, array $filter, array $fields): int
     {

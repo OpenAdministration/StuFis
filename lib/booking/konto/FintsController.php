@@ -1,111 +1,223 @@
 <?php
 
+
 namespace booking\konto;
 
-use Exception;
-use Fhp\BaseAction;
-use Fhp\FinTs;
-use Fhp\Model\SEPAAccount;
+
+use booking\konto\tan\FlickerParser;
 use Fhp\Model\StatementOfAccount\Statement;
-use Fhp\Model\TanMedium;
-use Fhp\Model\TanMode;
+use Fhp\Model\StatementOfAccount\StatementOfAccount;
+use Fhp\Model\TanRequest;
 use Fhp\Model\TanRequestChallengeImage;
-use Fhp\Segment\TAB\TanMediumListe;
-use Fhp\Segment\TAB\TanMediumListeV4;
-use framework\auth\AuthHandler;
+use framework\ArrayHelper;
+use framework\DateHelper;
 use framework\DBConnector;
+use framework\NewValidator;
 use framework\render\ErrorHandler;
+use framework\render\html\BT;
+use framework\render\html\FA;
 use framework\render\html\Html;
 use framework\render\html\HtmlButton;
+use framework\render\html\HtmlCard;
+use framework\render\html\HtmlDropdown;
 use framework\render\html\HtmlForm;
 use framework\render\html\HtmlImage;
 use framework\render\html\HtmlInput;
 use framework\render\HTMLPageRenderer;
 use framework\render\Renderer;
+use InvalidArgumentException;
 
 class FintsController extends Renderer
 {
-    private $credentialId;
+    private ?FintsConnectionHandler $fintsHandler;
 
-    protected $routeInfo;
+    private ?int $credentialId;
 
-    private $shortIBAN;
-
-    /** @var FintsConnectionHandler $fintsConnection */
-    private $fintsConnection;
-
-    public function __construct(array $routeInfo)
+    public function __construct(array $routeInfo = [])
     {
-        $this->routeInfo = $routeInfo;
-
-        if(isset($this->routeInfo['credential-id'])){
-            $this->credentialId = (int) $this->routeInfo['credential-id'];
+        $this->credentialId = $routeInfo['credential-id'] ?? null;
+        if($this->credentialId !== null && FintsConnectionHandler::hasPassword($this->credentialId)){
+            $this->fintsHandler = FintsConnectionHandler::load($this->credentialId);
         }
-
-        if(isset($this->routeInfo['short-iban'])){
-            $this->shortIBAN = $this->routeInfo['short-iban'];
-        }
+        parent::__construct($routeInfo);
     }
 
-    public function render() : void
+    public function render(): void
     {
-        $pageAction = $this->routeInfo['action'];
-
-        // accessible without password
-        switch ($pageAction){
-            case 'pick-my-credentials':
-                $this->renderCredentialPick();
-                return;
-            case 'new-credentials':
-                $this->renderNewCredentials();
-                return;
+        $post = $this->request->request;
+        if($post->has('tan')){
+            $this->fintsHandler->submitTan($post->getAlnum('tan'));
         }
-
-        if(!FintsConnectionHandler::loadable($this->credentialId)){
-            $this->renderPasswordForm($this->credentialId);
-            return;
-        }
-        $this->fintsConnection = FintsConnectionHandler::load($this->credentialId);
         try {
-            //only accessible with password
-            switch ($pageAction){
-                case 'pick-sepa-konto':
-                    $this->renderSepaAccountsList();
-                    break;
-                case 'pick-tan-mode':
-                    $this->renderTanModePicker();
-                    break;
-                case 'pick-tan-medium':
-                    $this->renderTanMediumPicker();
-                    break;
-                case 'import-new-sepa-statements':
-                    $this->actionImportNewSepaStatements();
-                    break;
-                case 'new-sepa-konto-import':
-                    $this->renderNewSepaKontoImport();
-                    break;
-                case 'change-password':
-                    $this->renderChangePassword();
-                    break;
-                default:
-                    ErrorHandler::handleError(404,"Action $pageAction nicht bekannt");
-                    break;
-            }
-        } catch (NeedsTanException $exception) {
-            $this->renderTanInput($exception->getAction());
-        } catch (Exception $exception){
-            ErrorHandler::handleException($exception, 'something went wrong in FINTS controller');
+            parent::render();
+        } catch (NeedsTanException $e){
+            $this->renderTanInput($e->getMessage(), $e->getTanRequest());
         }
     }
 
-    private function renderTanModePicker(): void
+    private function renderTanInput(string $msg, TanRequest $tanRequest) : void
     {
-        $tanModes = $this->fintsConnection->getTanModes();
+        $mediumName = $tanRequest->getTanMediumName() ?? '';
+        $challengeText = $tanRequest->getChallenge();
 
-        $form = HtmlForm::make()->urlTarget(URIBASE . 'rest/konto/tan-mode/save');
+        echo Html::headline(1)->body($msg);
+
+        echo Html::headline(3)->body($mediumName);
+        echo Html::p()->body($challengeText, false);
+        $challengeBinary = $tanRequest->getChallengeHhdUc();
+        if (!is_null($challengeBinary)){
+            try {
+                $p = new FlickerParser($challengeBinary->getData());
+                echo $p->getSVG(10, 300);
+            }catch (InvalidArgumentException $e1){
+                try {
+                    $challengeImage = new TanRequestChallengeImage($challengeBinary);
+                    $challengePhotoBinBase64 = base64_encode($challengeImage->getData());
+                    echo HtmlImage::make('TAN Challenge Bild')
+                        ->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
+                }catch (InvalidArgumentException $e2){
+                    ErrorHandler::handleError(500, 'TAN Format unbekannt', $e1->getMessage() . ' ' . $e2->getMessage());
+                }
+            }
+            if(strlen($challengeBinary->getData()) < 50){
+                // TODO: implement flicker code
+                echo $challengeBinary->getData();
+            }else{
+                $challengeImage = new TanRequestChallengeImage($challengeBinary);
+                $challengePhotoBinBase64 = base64_encode($challengeImage->getData());
+                echo HtmlImage::make('TAN Challenge Bild')
+                    ->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
+            }
+        }
+        echo HtmlForm::make('POST', false)
+            ->urlTarget('')
+            ->addHtmlEntity(HtmlInput::make('text')->label('TAN')->name('tan'))
+            ->addSubmitButton();
+    }
+
+    /**
+     * Action to render fints home screen
+     */
+    protected function actionViewCredentials() : void
+    {
+        $myCredentials = DBConnector::getInstance()->dbFetchAll(
+            'konto_credentials',
+            [DBConnector::FETCH_ASSOC],
+            [
+                'konto_credentials.id',
+                'konto_credentials.name',
+                'bank_name' => 'konto_bank.name',
+                'tan_mode',
+                'tan_mode_name',
+                'tan_medium_name'
+            ],
+            ['owner_id' => DBConnector::getInstance()->getUser()['id']],
+            [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
+        );
+        echo HtmlButton::make()
+            ->asLink(URIBASE.'konto/credentials/new')
+            ->style('primary')
+            ->icon('plus')
+            ->body('Neue Zugangsdaten anlegen');
+        $obj = $this;
+        if(count($myCredentials) > 0) {
+            $this->renderTable(
+                ['ID', 'Name', 'Bank', 'Tanmodus', 'Action'],
+                [$myCredentials],
+                ['id', 'name', 'bank_name','tan_mode','tan_mode_name', 'tan_medium_name', 'id','id'],
+                [
+                    null,
+                    null,
+                    null,
+                    static function($tanMode, $tanModeName, $tanMediumName, $id) use ($obj) {
+                        $tanString = '[' . $obj->defaultEscapeFunction($tanMode) . '] ' . $obj->defaultEscapeFunction($tanModeName);
+                        if(isset($tanMediumName)){
+                            $tanString .= ": " . $obj->defaultEscapeFunction($tanMediumName);
+                        }
+                        if(FintsConnectionHandler::hasActiveSession($id)){
+                            $tanString .= " " . FA::make('fa-pencil')->href(URIBASE . "konto/credentials/$id/tan-mode")->title('TAN Modus auswählen');
+                        }
+                        return $tanString;
+                    },
+                    static function($id) { // action
+                        if(FintsConnectionHandler::hasActiveSession($id)){
+                            return
+                                "<a href='" . URIBASE . "konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> " .
+                                "<a href='" . URIBASE . "konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>" .
+                                "<a href='" . URIBASE . "konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
+                        }
+                        return "<a href='" . URIBASE . "konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a>";
+                    }
+                ]
+            );
+        } else {
+            $this->renderAlert('Hinweis', 'Keine Zugangsdaten angelegt', BT::TYPE_INFO);
+        }
+        echo HtmlForm::make()
+            ->urlTarget( URIBASE . "rest/clear-session")
+            ->body(
+                HtmlButton::make()
+                    ->style('warning')
+                    ->icon('refresh')
+                    ->body('Setze FINTS zurück')
+                ,false);
+    }
+
+    protected function actionNewCredentials()
+    {
+        $post = $this->request->request;
+        if(ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])){
+            DBConnector::getInstance()->dbInsert('konto_credentials', [
+                    'name' => $post->getAlpha('name'),
+                    'bank_id' => $post->getInt('bank-id'),
+                    'bank_username' => $post->getAlnum('bank-username'),
+                    'owner_id' => DBConnector::getInstance()->getUser()['id']
+                ]
+            );
+            HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+        }
+        $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
+        $this->renderHeadline('Lege neue Zugangsdaten an');
+        $this->renderAlert('Hinweis',
+            'Die hier geforderten Daten werden (bis zur manuellen Löschung) gespeichert. Das Online-Banking Passwort wird immer nur zur Laufzeit verwendet und nicht permanent gespeichert', 'info');
+        $liveSearch = count($banks) > 5;
+
+        echo HtmlForm::make('POST', false)
+            ->urlTarget('')
+            ->addHtmlEntity(HtmlInput::make('text')->label('Name des Zugangs')->name('name'))
+            ->addHtmlEntity(HtmlDropdown::make()
+                ->label('Bank')
+                ->liveSearch($liveSearch)
+                ->name('bank-id')
+                ->setItems(array_combine(array_column($banks, 'id'), array_map(static function($el){
+                    return [$el['name'], "BLZ: {$el['blz']}"];
+                }, $banks)))
+            )
+            ->addHtmlEntity(HtmlInput::make('text')->label('Bank Username')->name('bank-username'))
+            ->addSubmitButton();
+    }
+
+    protected function actionPickTanMode(): void
+    {
+        if(isset($_POST['tan-mode-id'])){
+            $tanModeId = (int) $_POST['tan-mode-id'];
+            try {
+                $success = $this->fintsHandler->setTanMode($tanModeId);
+                if($success){
+                    HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Modus gespeichert');
+                    HTMLPageRenderer::redirect(URIBASE . "konto/credentials");
+                }else{
+                    HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN Modus nicht gespeichert');
+                }
+            }catch (InvalidArgumentException $e){
+                HTMLPageRenderer::addFlash(BT::TYPE_INFO, $e->getMessage());
+                HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/tan-mode/$tanModeId/medium");
+            }
+        }
+        $tanModes = $this->fintsHandler->getUserTanModes();
+        $form = HtmlForm::make('POST', false)->urlTarget('');
         echo $form->begin();
         $this->renderHeadline("Bitte TAN-Modus auswählen");
-        $this->renderHiddenInput('credential-id', $this->credentialId);
         $this->renderRadioButtons($tanModes, 'tan-mode-id');
         $this->renderNonce();
         echo HtmlButton::make('submit')
@@ -114,106 +226,103 @@ class FintsController extends Renderer
         echo $form->end();
     }
 
-    private function renderTanMediumPicker(): void
+    protected function actionPickTanMedium(): void
     {
+        $post = $this->request->request;
         $tanModeInt = (int) $this->routeInfo['tan-mode-id'];
-
-        $tanMedien = $this->fintsConnection->getTanMedia($tanModeInt);
-
-        if (empty($tanMedien)) {
-            HTMLPageRenderer::redirect(URIBASE . "konto/credentials/");
-            return;
-        }
-        $tanMediumNames = [];
-        foreach ($tanMedien as $tanMedium){
-            /** @var TanMedium $tanMedium */
-            $name = $tanMedium->getName();
-            $phone = $tanMedium->getPhoneNumber() ?? "keine Telefon-Nr. hinterlegt";
-            $tanMediumNames[$name] = "[$name] $phone";
+        if($post->has('tan-medium-name')){
+            $success = $this->fintsHandler->setTanMode($tanModeInt, $post->get('tan-medium-name'));
+            if($success){
+                HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Medium gespeichert');
+                HTMLPageRenderer::redirect(URIBASE . "konto/credentials");
+            }else{
+                HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN Modus nicht gespeichert');
+            }
         }
 
-        echo "<form method='post' action=" . URIBASE . "rest/konto/tan-mode/save class='ajax-form'>";
+
+        $tanMedien = $this->fintsHandler->getTanMedias($tanModeInt);
+
+        echo "<form method='post' action=''>";
         $this->renderHeadline("Bitte TAN-Medium auswählen");
-        $this->renderHiddenInput('tan-mode-id', $tanModeInt);
-        $this->renderHiddenInput('credential-id', $this->credentialId);
         $this->renderNonce();
-        $this->renderRadioButtons($tanMediumNames, 'tan-medium-name');
+        $this->renderRadioButtons($tanMedien, 'tan-medium-name');
         echo "<button class='btn btn-primary' type='submit'>Speichern</button>";
         echo "</form>";
     }
 
-    private function renderNewCredentials(): void
-    {
-        $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
-        $this->renderHeadline('Lege neue Zugangsdaten an');
-        $this->renderAlert('Hinweis', [
-            'Datenschutz, PW usw Hinweise hier'
-        ], 'info');
-        $searchAttr = count($banks) > 5 ? "data-live-search='true'" : "";
-        ?>
-        <form action="<?= URIBASE ?>rest/konto/credentials/save" method="POST" role="form" class="ajax-form">
-
-            <div class="form-group">
-                <label for="name">Name des Zugangs</label>
-                <input id="name" name="name" type="text" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label for="bank-id">Bank</label>
-                <select id="bank-id" name='bank-id' class="selectpicker form-control" <?= $searchAttr ?>>
-                    <?php foreach ($banks as $bank){
-                        echo "<option data-subtext='BLZ: {$bank['blz']}' value='{$bank['id']}'>{$bank['name']}</option>";
-                    } ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="bank-username">Bank Username</label>
-                <input id="bank-username" name="bank-username" type="text" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="bank-password">Bank Passwort</label>
-                <input id="bank-password" name="bank-password" type="password" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="password-custom">Eigenes Passwort</label>
-                <input id="password-custom" name="password-custom" type="password" class="form-control">
-            </div>
-            <?php $this->renderNonce() ?>
-            <button type="submit"
-                    class="btn btn-primary  <?= AuthHandler::getInstance()->hasGroup(
-                        "ref-finanzen-kv"
-                    ) ? "" : "user-is-not-kv" ?>"
-                <?= AuthHandler::getInstance()->hasGroup("ref-finanzen-kv") ? "" : "disabled" ?>>
-                Speichern
-            </button>
-        </form>
-        <?php
-    }
-
-
-
     /**
      * @throws NeedsTanException
      */
-    private function renderSepaAccountsList(): void
+    protected function actionLogin() : void
     {
-        $allIbans = $this->fintsConnection->getIbans();
+        $credentialId = $this->credentialId;
+
+        $credentials = DBConnector::getInstance()->dbFetchAll(
+            tables: 'konto_credentials',
+            where: [
+                'owner_id' => (int) DBConnector::getInstance()->getUser()['id'],
+                'id' => $credentialId
+            ],
+        )[0];
+        $post = $this->request->request;
+        if($post->has('bank-password')){
+            // a PW was sent
+            $pw = $post->getAlnum('bank-password');
+            FintsConnectionHandler::setLoginPassword($credentialId, $pw);
+            $this->fintsHandler = FintsConnectionHandler::load($credentialId);
+        }
+        if(FintsConnectionHandler::hasPassword($credentialId)){
+            // pw set
+            $success = $this->fintsHandler->login();  // throws if Tan needed
+            if($success){
+                HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+            }
+        }
+        // if no pw or wrong one
+        if(!FintsConnectionHandler::hasPassword($credentialId)){
+            $form = HtmlForm::make('POST', false)
+                ->urlTarget('')
+                ->addHtmlEntity(
+                    HtmlInput::make(HtmlInput::TYPE_PASSWORD)
+                        ->name('bank-password')
+                        ->label('Onlinebanking Passwort')
+                )
+                ->hiddenInput('credential-id', $credentialId)
+                ->addSubmitButton();
+            // PW unknown
+            echo HtmlCard::make()
+                ->cardHeadline("Login Zugang - " . $credentials['name'])
+                ->appendBody(
+                    HtmlInput::make('text')
+                        ->label('Username')
+                        ->value($credentials['bank_username'])
+                        ->disable(),
+                    false
+                )
+                ->appendBody($form, false);
+        }
+    }
+
+    protected function actionViewSepa()
+    {
+        $accounts = $this->fintsHandler->getSepaAccounts();
+        $ibans = $this->fintsHandler->getIbans();
 
         $dbAccounts = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
             ['iban', '*'],
-            ['iban' => ['in', $allIbans]]
+            ['iban' => ['in', $ibans]]
         );
         $tableRows = [];
-        foreach ($allIbans as $iban){
+        foreach ($accounts as $account){
             $tableRow = [
-                'iban' => $iban,
-                'bic' => $_SESSION['fints'][$this->credentialId]['bic'], // TODO: fetch from db
+                'iban' => $account->getIban(),
+                'bic' => $account->getBic(),
             ];
-            if(isset($dbAccounts[$iban])){
-                $matchingDbRow = $dbAccounts[$iban];
+            if(isset($dbAccounts[$account->getIban()])){
+                $matchingDbRow = $dbAccounts[$account->getIban()];
                 if(is_null($matchingDbRow['sync_until'])){
                     $syncActive = true;
                 }else{
@@ -230,6 +339,7 @@ class FintsController extends Renderer
             $tableRows[] = $tableRow;
         }
         $credId = $this->credentialId;
+        $this->renderHeadline('Kontoauswahl');
         $this->renderTable(
             ['IBAN', 'BIC', 'Info', 'Action'],
             [$tableRows],
@@ -240,14 +350,12 @@ class FintsController extends Renderer
                 null,
                 function ($actionName, $iban) use ($credId) : string
                 {
-                    $shortIban = substr($iban,0,4) . substr($iban, -4,4);
-                    switch ($actionName){
-                        case 'update':
-                            return "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>";
-                        case 'import':
-                            return "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>";
-                    }
-                    return "error";
+                    $shortIban =  FintsConnectionHandler::shortenIban($iban);
+                    return match ($actionName) {
+                        'update' => "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>",
+                        'import' => "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>",
+                        default => "error",
+                    };
                 }
             ]
         );
@@ -259,228 +367,220 @@ class FintsController extends Renderer
             ->asLink(URIBASE . 'konto/credentials');
     }
 
-
-    /**
-     * @throws NeedsTanException
-     */
-    private function actionImportNewSepaStatements(): void
+    protected function actionNewSepaKonto() : void
     {
-        [$success, $msg] = $this->fintsConnection->saveNewSepaStatements($this->shortIBAN);
-
-        echo HtmlButton::make()
-            ->style('primary')
-            ->body('zurück')
-            ->icon('chevron-left')
-            ->asLink(URIBASE . 'konto/credentials/' . $this->credentialId);
-
-        if($success){
-            $this->renderAlert('Erfolg', $msg);
-        } else {
-            $this->renderAlert('Fehler', $msg, 'danger');
+        if($this->request->request->count() > 0){
+            $post = $this->request->request;
+            $syncFrom = date_create($post->get('sync_from'))->format('Y-m-d');
+            $kontoIban = $post->getAlnum('iban');
+            [, $iban] = (new NewValidator())->validate($kontoIban, 'iban');
+            $kontoName = substr(htmlspecialchars(strip_tags(trim($post->getAlpha('konto-name')))),0,32);
+            $kontoShort = strtoupper(substr($post->getAlpha('konto-short'),0,2));
+            $ret = DBConnector::getInstance()->dbInsert('konto_type', [
+                'name' => $kontoName,
+                'short' => $kontoShort,
+                'sync_from' => $syncFrom,
+                'iban' => $iban,
+            ]);
+            // TODO: use $ret
+            HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, "Erfolgreich gespeichert");
+            HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/sepa");
         }
-    }
 
-    private function renderCredentialPick(): void
-    {
-        $myCredentials = DBConnector::getInstance()->dbFetchAll(
-            'konto_credentials',
-            [DBConnector::FETCH_ASSOC],
-            [
-                'konto_credentials.id',
-                'konto_credentials.name',
-                'bank_name' => 'konto_bank.name',
-                'default_tan_mode',
-                'default_tan_mode_name'
-            ],
-            ['owner_id' => DBConnector::getInstance()->getUser()['id']],
-            [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
-        );
-        echo HtmlButton::make()
-            ->asLink(URIBASE.'konto/credentials/new')
-            ->style('primary')
-            ->icon('plus')
-            ->body('Neue Zugangsdaten anlegen');
-        $obj = $this;
-        if(count($myCredentials) > 0) {
-            $this->renderTable(
-                ['ID', 'Name', 'Bank', 'Tanmodus', 'Action'],
-                [$myCredentials],
-                ['id', 'name', 'bank_name','default_tan_mode','default_tan_mode_name', 'id','id'],
-                [
-                    null,
-                    null,
-                    null,
-                    static function($tanMode, $tanModeName, $id) use ($obj) {
-                        $tanString = $obj->defaultEscapeFunction('[' . $tanMode . '] ' . $tanModeName);
-                        return $tanString . " <a href='" . URIBASE . "konto/credentials/$id/tan-mode'><span class='fa fa-fw fa-pencil' title='Tan Modus auswählen'></span></a>";
-                    },
-                    static function($id){ // action
-                        if(isset($_SESSION['fints'][$id]['key-password'])){
-                            return
-                                "<a href='" . URIBASE . "konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> " .
-                                "<a href='" . URIBASE . "konto/credentials/$id/change-password'><span class='fa fa-fw fa-key' title='Passwort ändern'></span></a> " .
-                                "<a href='" . URIBASE . "konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>";
-                        }
-                        return "<a href='" . URIBASE . "konto/credentials/$id/'><span class='fa fa-fw fa-unlock-alt' title='Entsperren'></span></a>";
-                    }
-                ]
-            );
-        }
-        echo HtmlForm::make()
-            ->urlTarget( URIBASE . "rest/clear-session")
-            ->body(
-                HtmlButton::make()
-                    ->style('warning')
-                    ->icon('refresh')
-                    ->body('Setze FINTS zurück')
-            ,false);
-    }
-
-    private function saveNewSepaKontoImport() : bool
-    {
-        DBConnector::getInstance()->dbInsert(
-            'konto_type',
-            [
-                ""
-            ]
-        );
-        return false;
-    }
-
-    /**
-     * @throws NeedsTanException
-     */
-    private function renderNewSepaKontoImport(): void
-    {
-        $iban = $this->fintsConnection->getIbanFromShort($this->shortIBAN);
+        $shortIban = $this->routeInfo['short-iban'];
+        $iban = $this->fintsHandler->lengthenIban($shortIban);
 
         $this->renderHeadline('Neues Konto Importieren');
-        $auth = AuthHandler::getInstance();
-        ?>
-        <form action="<?= URIBASE ?>rest/konto/credentials/import-konto" method="POST" role="form" class="ajax-form">
+        echo HtmlForm::make('POST', false)
+            ->urlTarget('')
+            ->addHtmlEntity(HtmlInput::make()->name('iban')->label('IBAN')->value($iban)->readOnly())
+            ->addHtmlEntity(HtmlInput::make()->name('konto-name')->label('Bezeichnung Konto'))
+            ->addHtmlEntity(HtmlInput::make()->name('konto-short')->label('Eindeutiges Buchstabenkürzel für das Konto (intern)'))
+            ->addHtmlEntity(HtmlInput::make('date')->name('sync-from')->label('Startdatum der Synchronisation'))
+            ->addSubmitButton('Speichern')
+        ;
 
-            <div class="form-group">
-                <label for="konto-iban">IBAN</label>
-                <input id="konto-iban" name="konto-iban" type="text" class="form-control" value="<?= $iban ?>" disabled>
-            </div>
-            <div class="form-group">
-                <label for="konto-name">Konto Name (intern)</label>
-                <input id="konto-name" name="konto-name" type="text" maxlength="32" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="sync-from">Startdatum der Synchronisation</label>
-                <input id="sync-from" name="sync-from" type="date" class="form-control">
-            </div>
+    }
 
-            <div class="form-group">
-                <label for="konto-short">Eindeutiges Buchstabenkürzel für das Konto (intern)</label>
-                <input id="konto-short" name="konto-short" type="text" maxlength="2" class="form-control">
-            </div>
-            <?php $this->renderNonce() ?>
-            <?php $this->renderHiddenInput('credential-id', $this->credentialId) ?>
-            <button type="submit"
-                    class="btn btn-primary  <?= $auth->hasGroup(
-                        "ref-finanzen-kv"
-                    ) ? "" : "user-is-not-kv" ?>"
-                <?= $auth->hasGroup("ref-finanzen-kv") ? "" : "disabled" ?>>
-                Speichern
-            </button>
-        </form>
-        <?php
+    protected function actionImportNewSepaStatements()
+    {
+        $shortIban = $this->routeInfo['short-iban'];
+        $iban = $this->fintsHandler->lengthenIban($shortIban);
+
+        $dbKonto = DBConnector::getInstance()->dbFetchAll(
+            'konto_type',
+            [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
+            ['iban', '*']
+        )[$iban];
+
+        [$startDate, $syncUntil] = DateHelper::fromUntilLast($dbKonto['sync_from'], $dbKonto['sync_until'], $dbKonto['last_sync']);
+
+        $statements = $this->fintsHandler->getStatements($iban, $startDate, $syncUntil);
+
+        [$success, $msg] = $this->saveStatements($statements, $dbKonto['id']);
+
+        HTMLPageRenderer::addFlash($success? BT::TYPE_SUCCESS : BT::TYPE_WARNING, $msg);
+        HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/sepa" );
     }
 
     /**
-     * @param $action BaseAction
-     * @return void
+     * @param StatementOfAccount $statements
+     * @param int $kontoId
+     * @return array
      */
-    private function renderTanInput(BaseAction $action): void
+    protected function saveStatements(StatementOfAccount $statements, int $kontoId) : array
     {
-        $tanRequest = $action->getTanRequest();
-        if(is_null($tanRequest)){
-            ErrorHandler::handleError(500,'Tan Request kann nicht ausgelesen werden', var_export([$action, $_SESSION['fints']],true));
+        $db = DBConnector::getInstance();
+
+        $lastKontoRow = $db->dbFetchAll(
+            tables: 'konto',
+            where: ['konto_id' => $kontoId],
+            sort: ['id' => false],
+            limit: 1
+        );
+        $lastKontoId = 0;
+        $oldSaldoCent = null;
+        $tryRewind = false;
+        $rewindDiff = 0;
+        $skipped = false;
+
+        $kontoRow = $db->dbFetchAll(tables: 'konto_type', where: ['id' => $kontoId])[0];
+        $syncUntil = DateHelper::fromDb($kontoRow['sync_until']);
+
+        if (!empty($lastKontoRow)) {
+            $lastKontoRow = $lastKontoRow[0];
+            $lastKontoId = $lastKontoRow['id'];
+            $lastKontoSaldo = $lastKontoRow['saldo'];
+            $oldSaldoCent = $this->convertToCent($lastKontoSaldo);
+            $tryRewind = true;
         }
-        $mediumName = $tanRequest->getTanMediumName();
-        $challengeText = $tanRequest->getChallenge();
 
-        echo Html::headline(1)->body('TAN benötigt');
+        $db->dbBegin();
+        $transactionData = [];
 
-        echo Html::headline(3)->body($mediumName);
-        echo Html::p()->body($challengeText, false);
-        $challengeBinary = $tanRequest->getChallengeHhdUc();
-        if (!is_null($challengeBinary)) {
-            if(strlen($challengeBinary->getData()) < 40){
-                $flicker = new TanRequestChallengeFlicker($challengeBinary);
-            }else{
-                $challengeImage = new TanRequestChallengeImage($challengeBinary);
-                $challengePhotoBinBase64 = base64_encode($challengeImage->getData());
-                echo HtmlImage::make('TAN Challenge Bild')->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
+        $dateString = date_create()->format(DBConnector::SQL_DATE_FORMAT);
+
+        foreach ($statements->getStatements() as $statement) {
+            $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
+            $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
+            if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
+                $db->dbRollBack();
+                return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }
+            //echo "Statement $dateString Saldo: $saldoCent";
+            foreach ($statement->getTransactions() as $transaction) {
+                $valCent = $this->convertToCent($transaction->getAmount(), $transaction->getCreditDebit());
+                $saldoCent += $valCent;
+
+                if ($tryRewind === true) {
+                    //do rewind if necessary
+                    $rewindRow = $db->dbFetchAll(
+                        tables: 'konto',
+                        showColumns: ['id'],
+                        where: [
+                            'konto_id' => $kontoId,
+                            'value' => $this->convertCentForDB($valCent),
+                            'saldo' => $this->convertCentForDB($saldoCent),
+                            'date' => $transaction->getBookingDate()?->format('Y-m-d'),
+                            'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
+                            'customer_ref' => $transaction->getEndToEndID(),
+                        ],
+                        sort: ['id' => false],
+                        limit: 1
+                    );
+                    if(count($rewindRow) === 1){
+                        $rewindId = $rewindRow[0]['id'];
+                        $rewindDiff = $lastKontoId - $rewindId + 1;
+                        $tryRewind = false;
+                    }
+                }
+
+                if($rewindDiff > 0){
+                    $rewindDiff--;
+                    $skipped = $skipped === false ? 1 :  $skipped + 1;
+                    continue; // skip this entry, it was in the db before
+                }
+
+                // are we exceeding sync_until?
+                if($syncUntil && $transaction->getValutaDate()?->diff($syncUntil)->invert === 1){
+                    break 2;
+                }
+
+                $transactionData[] = [
+                    'id' => ++$lastKontoId,
+                    'konto_id' => $kontoId,
+                    'date' => $transaction->getBookingDate()?->format('Y-m-d'),
+                    'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
+                    'type' => $transaction->getBookingText(),
+                    'empf_iban' => $transaction->getAccountNumber(),
+                    'empf_bic' => $transaction->getBankCode(),
+                    'empf_name' => $transaction->getName(),
+                    'primanota' => $transaction->getPN(),
+                    'value' => $this->convertCentForDB($valCent),
+                    'saldo' => $this->convertCentForDB($saldoCent),
+                    'zweck' => $transaction->getMainDescription(),
+                    'comment' => $transaction->getTextKeyAddition(),
+                    'gvcode' => $transaction->getBookingCode(),
+                    'customer_ref' => $transaction->getEndToEndID(),
+                ];
+            }
+            $oldSaldoCent = $saldoCent;
         }
-        HtmlForm::make()
-            ->urlTarget(URIBASE . 'rest/konto/credentials/submit-tan')
-            ->hiddenInput('credential-id', $this->credentialId)
-            ->addHtmlEntity(
-                HtmlInput::make('text')
-            )
-        ?>
-        <form method="post" action="<?= URIBASE ?>rest/konto/credentials/submit-tan" class="ajax-form">
-            <?php $this->renderHiddenInput('credential-id', $this->credentialId) ?>
-            <?php $this->renderNonce() ?>
-            <div class="form-group">
-                <label for="tan-input">TAN</label>
-                <input id="tan-input" name="tan" type="text" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-success">Absenden</button>
-        </form>
-        <?php
-        echo HtmlForm::make()
-            ->urlTarget(URIBASE . 'rest/konto/credentials/abort-tan')
-            ->hiddenInput('credential-id', $this->credentialId)
-            ->addHtmlEntity(
-                HtmlButton::make()
-                    ->style('secondary')
-                    ->body('TAN Verfahren abbrechen')
-            );
-        //session_write_close();
+
+        if(count($transactionData) > 0){
+            $db->dbInsertMultiple('konto', array_keys($transactionData[0]), ...$transactionData);
+            $db->dbUpdate('konto_type', ['id' => $kontoId], ['last_sync' => $dateString]);
+        }
+        $ret = $db->dbCommitRollbackOnFailure();
+
+        if ($ret === true) {
+            $msg = count($transactionData) . " Einträge importiert.";
+        } else {
+            $msg = "Ein Fehler ist aufgetreten - DBRollback - Import von " .
+                count($transactionData) . " Einträgen ausstehend.";
+        }
+        if(DEV && $skipped !== false){
+            $msg .= " $skipped Einträge waren bereits bekannt";
+        }
+
+        return [$ret, $msg];
     }
 
-    private function renderPasswordForm(int $credentialId): void
+    protected function actionLogout() : void
     {
-        $this->renderHeadline('Bitte internes Passwort eingeben');
-        HtmlForm::make()
-            ->urlTarget(URIBASE . 'rest/konto/credentials/unlock')
-            ->addHtmlEntity(
-                HtmlInput::make('password')
-                        ->name('credential-key')
-            )->addHtmlEntity(
-                HtmlButton::make()
-            );
-        ?>
-        <form method="post" action="<?= URIBASE?>rest/konto/credentials/unlock" class="ajax-form">
-            <div class="form-group">
-                <label for="credential-key">Passwort für Zugang Nr <?= $credentialId ?>:</label>
-                <input name="credential-key" id="credential-key" type="password" class="form-control">
-            </div>
-            <?php $this->renderHiddenInput('credential-id', $credentialId);
-            $this->renderNonce();
-            ?>
-            <button class="btn btn-primary" type="submit">Absenden</button>
-        </form>
-        <?php
-
+        if(isset($this->fintsHandler)){
+            $this->fintsHandler->logout();
+        }else{
+            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
+        }
+        HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
     }
 
-    private function renderChangePassword(): void
+    /**
+     * @param float|string $amount
+     * @param string|null $creditDebit either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
+     *                    assumed by sign of $amount
+     * @return float|int
+     */
+    private function convertToCent(string|float $amount, string $creditDebit = null): float|int
     {
-        $this->renderHeadline('Internes Passwort wechseln');
-        echo HtmlForm::make()
-            ->urlTarget(URIBASE . 'rest/konto/credentials/change-password')
-            ->addHtmlEntity(
-                HtmlInput::make('password')->name('new-password')->label('Neues Passwort')
-            )->addHtmlEntity(
-                HtmlInput::make('password')->name('new-password-repeat')->label('Passwort wiederholen')
-            )->addHtmlEntity(
-                HtmlButton::make()->body('Test')->style('primary')
-            );
+        $float = (float) $amount;
+        $cents = (int) round($float * 100);
+
+        if(is_null($creditDebit)){
+            $sign = ($float > 0) - ($float < 0);
+            return $sign * $cents;
+        }
+        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * $cents;
+    }
+
+    /**
+     * @param int $amount
+     * @return string
+     */
+    private function convertCentForDB(int $amount): string
+    {
+        // rounds implicit
+        return number_format($amount / 100.0, 2, '.', '');
     }
 }

@@ -4,6 +4,7 @@ namespace framework\render;
 
 use Exception;
 use framework\render\html\SmartyFactory;
+use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
 
 class ErrorHandler extends Renderer{
@@ -34,6 +35,11 @@ class ErrorHandler extends Renderer{
         'headline' => 'Seite nicht gefunden',
         'msg' => 'Da ist wohl etwas schief gegangen. Die angeforderte Seite konnte nicht gefunden werden.',
     ];
+    public const E405_WRONG_METHOD = [
+        'code' => 405,
+        'headline' => 'Seite so nicht erreichbar',
+        'msg' => 'So kann diese Seite nicht aufgerufen werden',
+    ];
 
     public const E415_UNSUPORTED_MEDIATYPE = [
         'code' => 415,
@@ -55,7 +61,13 @@ class ErrorHandler extends Renderer{
 
     private $errorInformation;
 
-
+    /**
+     * @param Exception $e
+     * @param string $additionalInformation
+     * @param string $debugInfo
+     * @param int $htmlCode
+     */
+    #[NoReturn]
     public static function handleException(Exception $e, string $additionalInformation = '', $debugInfo = '', int $htmlCode = 500) : void
     {
         $stackTrace = $e->getTrace();
@@ -64,11 +76,18 @@ class ErrorHandler extends Renderer{
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
+    /**
+     * @param int $htmlCode
+     * @param string $message
+     * @param string $debugInfo
+     */
+    #[NoReturn]
     public static function handleError(int $htmlCode = 500, string $message = '', $debugInfo = '') : void{
         $eh = new self(self::getDefaultErrorInfo($htmlCode), debug_backtrace(), $message, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
+    #[NoReturn]
     public static function handleErrorRoute(array $routeInfo) : void{
         if ($routeInfo['controller'] === 'error'){
             $htmlCode = (int) $routeInfo['action'];

@@ -90,7 +90,7 @@ class Router{
         $allowedMethods = array_map('strtoupper', $allowedMethods);
         //check request method ------------------
         if ($routeInfo['controller'] !== 'error'
-            && in_array(strtoupper($_SERVER['REQUEST_METHOD']), $allowedMethods)){
+            && !in_array(strtoupper($_SERVER['REQUEST_METHOD']), $allowedMethods, true)){
             $routeInfo = [
                 'method' => $_SERVER['REQUEST_METHOD'],
                 'path' => $routeInfo['path'],

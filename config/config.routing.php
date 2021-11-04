@@ -41,8 +41,9 @@ $pathConfig =  [
                     'path' => 'credentials',
                     'type' => 'path',
                     'controller' => 'fints',
-                    'action' => 'pick-my-credentials',
+                    'action' => 'view-credentials',
                     'groups' => 'ref-finanzen-kv',
+                    'method' => ['GET', 'POST'],
                     'children' => [
                         [
                             'path' => 'new',
@@ -53,7 +54,7 @@ $pathConfig =  [
                             'path' => '\d+',
                             'type' => 'pattern',
                             'param' => 'credential-id',
-                            'action' => 'pick-sepa-konto',
+                            'action' => 'view-sepa',
                             'children' => [
                                 [
                                     'path' => 'tan-mode',
@@ -64,11 +65,13 @@ $pathConfig =  [
                                             'path' => '\d+',
                                             'type' => 'pattern',
                                             'param' => 'tan-mode-id',
+                                            'method' => '',
                                             'children' => [
                                                 [
                                                     'path' => 'medium',
                                                     'type' => 'path',
                                                     'action' => 'pick-tan-medium',
+                                                    'method' => ['GET', 'POST'],
                                                 ],
                                             ],
                                         ],
@@ -77,7 +80,18 @@ $pathConfig =  [
                                 [
                                     'path' => 'sepa',
                                     'type' => 'path',
-                                    'action' => 'pick-sepa-konto',
+                                    'action' => 'view-sepa',
+                                ],
+                                [
+                                    'path' => 'login',
+                                    'type' => 'path',
+                                    'action' => 'login',
+                                    'method' => ['POST', 'GET']
+                                ],
+                                [
+                                    'path' => 'logout',
+                                    'type' => 'path',
+                                    'action' => 'logout',
                                 ],
                                 [
                                     'path' => '([A-Z]{2}[0-9]{6})',
@@ -88,7 +102,8 @@ $pathConfig =  [
                                         [
                                             'path' => 'import',
                                             'type' => 'path',
-                                            'action' => 'new-sepa-konto-import',
+                                            'action' => 'new-sepa-konto',
+                                            'method' => ['GET', 'POST']
                                         ],
                                     ],
                                 ],
@@ -461,62 +476,6 @@ $pathConfig =  [
                     'controller' => 'rest',
                     'groups' => 'ref-finanzen-kv',
                     'action' => 'update-konto',
-                ],
-                [
-                    'path' => 'konto',
-                    'type' => 'path',
-                    'controller' => 'rest',
-                    'groups' => 'ref-finanzen-kv',
-                    'children' => [
-                        [
-                            'path' => 'credentials',
-                            'type' => 'path',
-                            'children' => [
-                                [
-                                    'path' => 'save',
-                                    'type' => 'path',
-                                    'action' => 'save-new-konto-credentials'
-                                ],
-                                [
-                                    'path' => 'import-konto',
-                                    'type' => 'path',
-                                    'action' => 'import-konto'
-                                ],
-                                [
-                                    'path' => 'unlock',
-                                    'type' => 'path',
-                                    'action' => 'unlock-credentials',
-                                ],
-                                [
-                                    'path' => 'lock',
-                                    'type' => 'path',
-                                    'action' => 'lock-credentials',
-                                ],
-                                [
-                                    'path' => 'submit-tan',
-                                    'type' => 'path',
-                                    'action' => 'submit-tan'
-                                ],
-                                [
-                                    'path' => 'abort-tan',
-                                    'type' => 'path',
-                                    'action' => 'abort-tan'
-                                ]
-                            ]
-                        ],
-                        [
-                            'path' => 'tan-mode',
-                            'type' => 'path',
-                            'children' => [
-                                [
-                                    'path' => 'save',
-                                    'type' => 'path',
-                                    'action' => 'save-default-tan-mode'
-                                ]
-                            ]
-                        ],
-
-                    ]
                 ],
                 [
                     'path' => 'booking',

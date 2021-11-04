@@ -8,23 +8,31 @@ use framework\ArrayHelper;
 
 abstract class AbstractHtmlTag
 {
-    protected $tag;
-    protected $id;
+    protected string $tag;
+    protected string $id;
 
-    protected $attributes;
-    protected $dataAttributes;
-    protected $classes;
-    protected $unaryAttributes;
+    protected array $attributes;
+    protected array $dataAttributes;
+    protected array $classes;
+    protected array $unaryAttributes;
 
-    private $bodyPrefix;
+    protected $bodyPrefix;
     protected $body;
-    private $bodySuffix;
+    protected $bodySuffix;
 
     /**
      * @var AbstractHtmlTag[] $wrapStack
      */
-    protected $wrapStack;
+    protected array $wrapStack;
 
+    /**
+     * AbstractHtmlTag constructor.
+     * @param string $tag
+     * @param array $attributes
+     * @param array $classes
+     * @param array $dataAttributes
+     * @param array $wrapStack
+     */
     protected function __construct(string $tag, array $attributes = [], array $classes = [], array $dataAttributes = [], array $wrapStack = [])
     {
         $this->tag = $tag;
@@ -39,9 +47,9 @@ abstract class AbstractHtmlTag
     }
 
     /**
-     * @param $content string|object object has to be stringable
+     * @param $content object|string object has to be stringable
      */
-    public function body($content, bool $escape = true): self
+    public function body(object|string $content, bool $escape = true): self
     {
         if(is_object($content)){
             /** @var $content Html */
@@ -55,14 +63,13 @@ abstract class AbstractHtmlTag
         return $this;
     }
 
-    public function appendBody($content, bool $escape = true) : self
+    public function appendBody(AbstractHtmlTag|string $content, bool $escape = true) : self
     {
-        if(is_object($content)){
-            /** @var $content Html */
+        if($content instanceof self){
             $content = $content->__toString();
         }
         if($escape){
-            $this->body = htmlentities($content);
+            $this->body .= htmlentities($content);
         }else{
             $this->body .= $content;
         }
@@ -115,7 +122,7 @@ abstract class AbstractHtmlTag
 
     public function begin() : string
     {
-        return "<$this->tag " . $this->implodeAttrClassesData() . ">";
+        return $this->beginWrap() . "<$this->tag " . $this->implodeAttrClassesData() . ">";
     }
 
     protected function beginWrap() : string
@@ -127,7 +134,7 @@ abstract class AbstractHtmlTag
         return $wrap;
     }
 
-    private function implodeAttrClassesData() : string
+    protected function implodeAttrClassesData() : string
     {
         $ret = [array_reduce($this->classes, static function ($val1, $val2){
                 return $val1 . ' ' . $val2;
@@ -156,6 +163,13 @@ abstract class AbstractHtmlTag
             $wrap = $wrapper->end() . $wrap;
         }
         return $wrap;
+    }
+
+    public function readOnly() : self
+    {
+        $this->unaryAttributes[] = 'readonly';
+        $this->attr('onclick', "='return false;'");
+        return $this;
     }
 
     public function disable(bool $disable = true) : self {
@@ -187,6 +201,11 @@ abstract class AbstractHtmlTag
         return $this;
     }
 
+    /**
+     * @param string $prefix
+     * @param bool $escape
+     * @return $this
+     */
     protected function bodyPrefix(string $prefix, bool $escape = false) : self
     {
         if($escape){
@@ -219,7 +238,7 @@ abstract class AbstractHtmlTag
         $pre = $this->bodyPrefix ?? '';
         $text = $this->body ?? '';
         $suf = $this->bodySuffix ?? '';
-        return $this->beginWrap() . $this->begin() . $pre . $text . $suf . $this->end() . $this->wrapEnd();
+        return  $this->begin() . $pre . $text . $suf . $this->end();
     }
 
 }

@@ -4,13 +4,22 @@
 namespace booking\konto;
 
 use Fhp\BaseAction;
+use Fhp\Model\TanRequest;
+use JetBrains\PhpStorm\Pure;
 use Throwable;
 
 class NeedsTanException extends \RuntimeException
 {
-    private $fintsAction;
+    private BaseAction $fintsAction;
 
-    public function __construct(string $message, BaseAction $baseAction, Throwable $previous = null)
+    /**
+     * NeedsTanException constructor.
+     * @param string $message
+     * @param BaseAction $baseAction
+     * @param Throwable|null $previous
+     */
+    #[Pure]
+    public function __construct(BaseAction $baseAction, string $message = 'TAN wird benötigt', Throwable $previous = null)
     {
         parent::__construct($message, 0, $previous);
         $this->fintsAction = $baseAction;
@@ -19,6 +28,14 @@ class NeedsTanException extends \RuntimeException
     public function getAction() : BaseAction
     {
         return $this->fintsAction;
+    }
+
+    /**
+     * @return TanRequest
+     */
+    public function getTanRequest() : TanRequest
+    {
+        return $this->fintsAction->getTanRequest();
     }
 
 }

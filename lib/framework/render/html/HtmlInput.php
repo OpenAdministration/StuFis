@@ -4,6 +4,8 @@
 namespace framework\render\html;
 
 
+use JetBrains\PhpStorm\Pure;
+
 class HtmlInput extends AbstractHtmlTag
 {
     const TYPE_STRING = 'string';
@@ -40,7 +42,7 @@ class HtmlInput extends AbstractHtmlTag
         return $this;
     }
 
-    public static function make(string $type) : self
+    public static function make(string $type = 'text') : self
     {
         $class = [];
         $wrapStack = [];
@@ -48,17 +50,29 @@ class HtmlInput extends AbstractHtmlTag
             $class = ['form-control'];
             $wrapStack[] = Html::tag('div')->addClasses(['form-group']);
         }
-        return new self(['type' => $type], $class, [], $wrapStack);
+        return new self(
+            attributes: ['type' => $type],
+            classes: $class,
+            wrapStack:  $wrapStack
+        );
     }
 
-    protected function __construct(array $attributes = [], array $classes = [], array $dataAttributes = [], array $wrapStack = [])
+    #[Pure]
+    protected function __construct(string $tag = 'input', array $attributes = [], array $classes = [], array $dataAttributes = [], array $wrapStack = [])
     {
         $this->label = '';
-        parent::__construct('input', $attributes, $classes, $dataAttributes, $wrapStack);
+        parent::__construct($tag, $attributes, $classes, $dataAttributes, $wrapStack);
     }
 
-    public function __toString() : string
+    public function begin(): string
     {
-        return $this->beginWrap() . $this->label . $this->begin() . $this->wrapEnd();
+        return $this->beginWrap() . $this->label . "<$this->tag " . $this->implodeAttrClassesData() . ">";
     }
+
+    public function end(): string
+    {
+        // no closing tag
+        return  $this->wrapEnd();
+    }
+
 }

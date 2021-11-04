@@ -9,17 +9,22 @@ include __DIR__ . '/vendor/autoload.php';
 $version = \Composer\InstalledVersions::getRootPackage()['version'];
 $app = new Ahc\Cli\Application('FinanzAntrag Command Line - FA', $version);
 
-const CLI_DIR = __DIR__ . '/lib/framework/cli';
-const CLI_NS = '\\framework\\cli\\';
+// add command paths
+$config = [
+    ['/lib/framework/cli', '\\framework\\cli\\'],
+];
 
-$files = scandir(CLI_DIR);
-$files = array_filter($files, static fn($val) => str_ends_with($val, '.php'));
-$classes = array_map(static fn($val) => substr($val,0,-4),$files);
+foreach ($config as [$path, $namespace]){
+    $files = scandir(__DIR__ . $path);
+    $files = array_filter($files, static fn($val) => str_ends_with($val, '.php'));
+    $classes = array_map(static fn($val) => substr($val,0,-4),$files);
 
-foreach ($classes as $class){
-    $c = CLI_NS . $class;
-    $app->add(new $c($app));
+    foreach ($classes as $class){
+        $c = $namespace . $class;
+        $app->add(new $c($app));
+    }
 }
+
 
 if(!empty($_SERVER['argv'])){
     try {

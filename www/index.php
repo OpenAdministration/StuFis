@@ -17,6 +17,8 @@ define('SYSBASE', dirname(__DIR__));
 require_once SYSBASE . '/vendor/autoload.php';
 require_once SYSBASE . '/lib/inc.all.php';
 
+
+
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
