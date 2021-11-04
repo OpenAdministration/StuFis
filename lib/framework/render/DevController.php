@@ -4,7 +4,7 @@
 namespace framework\render;
 
 
-use booking\konto\tan\FlickerParser;
+use booking\konto\tan\FlickerGenerator;
 use framework\auth\AuthHandler;
 
 class DevController extends Renderer
@@ -36,7 +36,7 @@ class DevController extends Renderer
         //$challenge = "0388A01239230520422DE87795625140006626408"; // <- works
         //$challenge = "038 8A 01 2392307899 22 DE87795625140006626408"; // <- works
         $challenge = "038 8A 01 2392302069 22 DE87795625140006626408"; // <- works
-        $p = new FlickerParser($challenge);
+        $p = new FlickerGenerator($challenge);
         //var_dump($p);
         //var_dump(str_replace(' ', '', $hexSol));
         echo "</pre>";

@@ -4,7 +4,7 @@
 namespace booking\konto;
 
 
-use booking\konto\tan\FlickerParser;
+use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
 use Fhp\Model\TanRequest;
@@ -67,7 +67,7 @@ class FintsController extends Renderer
         $challengeBinary = $tanRequest->getChallengeHhdUc();
         if (!is_null($challengeBinary)){
             try {
-                $p = new FlickerParser($challengeBinary->getData());
+                $p = new FlickerGenerator($challengeBinary->getData());
                 echo $p->getSVG(10, 300);
             }catch (InvalidArgumentException $e1){
                 try {

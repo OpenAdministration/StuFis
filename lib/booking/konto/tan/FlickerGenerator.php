@@ -4,7 +4,7 @@ namespace booking\konto\tan;
 
 use SVG\SVG;
 
-class FlickerParser
+class FlickerGenerator
 {
     private string $challenge;
 
