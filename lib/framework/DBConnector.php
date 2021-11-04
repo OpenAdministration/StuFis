@@ -436,27 +436,6 @@ class DBConnector extends Singleton
             ],
         ];
 
-        $scheme['konto_action_log'] = [
-            'id' => "INT NOT NULL",
-            'konto_id' => "INT NULL",
-            'konto_credential_id' => "INT NOT NULL",
-            'action_class' => "VARCHAR(127) NOT NULL",
-            'state' => "VARCHAR(15) NOT NULL",
-            'action_serialized' => "VARCHAR(1023)",
-            'last_fints_persist' => "VARCHAR(63)",
-            'timestamp' => "DATETIME NOT NULL",
-            'tanmode' => "INT DEFAULT NULL",
-            'tanmedium' => "VARCHAR(128) DEFAULT NULL",
-            'given_tan' => "VARCHAR(15) NOT NULL DEFAULT ''"
-        ];
-        $keys['konto_action_log'] = [
-            "primary" => ["id"],
-            "foreign" => [
-                "konto_credential_id" => ["konto_credentials", "id"],
-                //"konto_id" => ["konto_type", "id"],
-            ],
-        ];
-
         // ---------------- //
 
         $scheme["log"] = [
