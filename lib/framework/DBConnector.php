@@ -523,7 +523,11 @@ class DBConnector extends Singleton
                 $sql = "CREATE TABLE " . $this->dbPrefix  . "$tablename (" . PHP_EOL .
                     $this->buildColDef($cols);
                 $sql .= ")ENGINE = InnoDB DEFAULT CHARSET=utf8mb4;";
-                $this->pdo->query($sql) or throw new RuntimeException(print_r(['error' => $this->pdo->errorInfo(), 'sql' => $sql], true));
+                try {
+                    $this->pdo->exec($sql);
+                }catch (PDOException $exception){
+                    throw new RuntimeException(print_r(['error' => $exception->getMessage(), 'sql' => $sql], true));
+                }
                 $buildedTables[] = $tablename;
                 //add primary and unique constraints
                 $sql = "ALTER TABLE " . $this->dbPrefix  . $tablename . " ";
@@ -596,7 +600,7 @@ class DBConnector extends Singleton
 
                     }
                     try {
-                        $this->pdo->query($sqlFK);
+                        $this->pdo->exec($sqlFK);
                     }catch (PDOException $e){
                         $this->dbDropTables(array_keys($constrainsNeeded));
                         $eInfo = $this->pdo->errorInfo();
