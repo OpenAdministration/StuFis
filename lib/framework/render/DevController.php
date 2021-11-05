@@ -33,9 +33,9 @@ class DevController extends Renderer
         echo "<pre>";
         //var_dump($hexSol);
         // $challenge = "024 8A 01 2043801998 08 12345678";
-        //$challenge = "0388A01239230520422DE87795625140006626408"; // <- works
-        //$challenge = "038 8A 01 2392307899 22 DE87795625140006626408"; // <- works
-        $challenge = "038 8A 01 2392302069 22 DE87795625140006626408"; // <- works
+        //$challenge = "0388A01239230520422DE12500105170648489890"; // <- works
+        //$challenge = "038 8A 01 2392307899 22 DE12500105170648489890"; // <- works
+        $challenge = "038 8A 01 2392302069 22 DE12500105170648489890"; // <- works
         $p = new FlickerGenerator($challenge);
         //var_dump($p);
         //var_dump(str_replace(' ', '', $hexSol));

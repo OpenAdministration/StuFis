@@ -17,7 +17,6 @@ namespace forms;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
-use booking\konto\FintsConnectionHandler;
 use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
 use forms\chat\ChatHandler;
