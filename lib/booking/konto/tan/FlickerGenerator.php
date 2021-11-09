@@ -27,7 +27,7 @@ class FlickerGenerator
         $lc = (int) substr($reducedChallenge, 0, 3);
         $reducedChallenge = substr($reducedChallenge, 3);
         if(strlen($reducedChallenge) !== $lc){
-            throw new \InvalidArgumentException("Wrong length of TAN Challenge");
+            throw new \InvalidArgumentException("Wrong length of TAN Challenge - only Version 1.4 supported");
         }
 
         [$reducedChallenge, $this->startCode] = StartCode::parseNextBlock($reducedChallenge);
@@ -87,6 +87,7 @@ class FlickerGenerator
         $xor = $this->calcXorChecksum();
 
         $hexCode = $payload . $luhn . $xor;
+        echo $hexCode;
         return new FlickerSVG($hexCode, $freq, $width, $width/2 );
     }
 

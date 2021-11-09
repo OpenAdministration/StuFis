@@ -170,7 +170,7 @@ class FintsController extends Renderer
             DBConnector::getInstance()->dbInsert('konto_credentials', [
                     'name' => $post->getAlpha('name'),
                     'bank_id' => $post->getInt('bank-id'),
-                    'bank_username' => $post->getAlnum('bank-username'),
+                    'bank_username' => trim(strip_tags($post->get('bank-username'))),
                     'owner_id' => DBConnector::getInstance()->getUser()['id']
                 ]
             );

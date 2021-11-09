@@ -34,6 +34,8 @@ class FintsConnectionHandler
 
     private ?BaseAction $activeAction;
 
+    private Logger $logger;
+
     /**
      * FintsConnectionHandler2 constructor.
      * @param int $credentialId
@@ -57,11 +59,14 @@ class FintsConnectionHandler
             $this->finTs->selectTanMode($tanModeInt, $tanMediumName);
         }
 
-        $logger = new Logger('fints', [
-            new RotatingFileHandler(SYSBASE . 'runtime/logs/fints.log')
+        $this->logger = new Logger('fints', [
+            new RotatingFileHandler(SYSBASE . '/runtime/logs/fints.log')
         ]);
+        $this->logger->info("FINTS created", ['credentialId' => $this->credentialId]);
 
-        $this->finTs->setLogger($logger);
+        if(DEV){
+            $this->finTs->setLogger($this->logger);
+        }
     }
 
     public static function saveCredentials(mixed $bankId, mixed $bankuser, mixed $name) : int
@@ -94,6 +99,7 @@ class FintsConnectionHandler
         }
         // regular execution
         try {
+            $this->logger->info("Start login", ['credId' => $this->credentialId]);
             if($this->finTs->getSelectedTanMode() === null){
                 HTMLPageRenderer::addFlash(BT::TYPE_INFO, 'Vor dem ersten Login muss der TAN Modus gesetzt werden');
                 HTMLPageRenderer::redirect(URIBASE . 'konto/credentials/' . $this->credentialId . '/tan-mode');
@@ -101,6 +107,7 @@ class FintsConnectionHandler
             $loginAction = $this->finTs->login();
             $this->save($loginAction);
             if($loginAction->needsTan()){
+                $this->logger->info("Login needs TAN", ['credId' => $this->credentialId]);
                 throw new NeedsTanException(
                     $loginAction,
                     'Tan wird zum Login benötigt'
@@ -123,6 +130,7 @@ class FintsConnectionHandler
     public function logout(): bool
     {
         try {
+            $this->logger->info("Logout", ['credId' => $this->credentialId]);
             $this->finTs->close(); // logout @ server
         } catch (ServerException $e){
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
@@ -141,6 +149,7 @@ class FintsConnectionHandler
             return $this->getCache('TanModes');
         }
         try {
+            $this->logger->info("Fetch TAN Modes", ['credId' => $this->credentialId]);
             $tanModes = $this->finTs->getTanModes();
         } catch (CurlException | ServerException $e) {
             ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbringung zur Bank gestört');
@@ -162,6 +171,7 @@ class FintsConnectionHandler
     public function getTanMedias(int $tanModeId): array
     {
         try {
+            $this->logger->info("Fetch TAN Medias", ['credId' => $this->credentialId]);
             $tanMedia =  $this->finTs->getTanMedia($tanModeId);
             $tanMediumNames = [];
             foreach ($tanMedia as $tanMedium){
@@ -206,6 +216,7 @@ class FintsConnectionHandler
                 throw new NeedsTanException($action);
             }
         }else{
+            $this->logger->info("Fetch SEPA Accounts", ['credId' => $this->credentialId]);
             $action = GetSEPAAccounts::create();
             $this->execute($action);
         }
@@ -260,6 +271,7 @@ class FintsConnectionHandler
         $this->activeAction = $action;
         if($action?->needsTan() && !$action?->isDone()){
             // chache it if tan is missing
+            $this->logger->info("Save Action", ['credId' => $this->credentialId, 'action' => $action::class]);
             $this->setCache('action', $action);
         }else{
             // delete it from cache otherwise
@@ -386,6 +398,7 @@ class FintsConnectionHandler
      */
     public function submitTan(string $tan) : bool
     {
+        $this->logger->info("Submit TAN", ['credId' => $this->credentialId]);
         $action = $this->getCache('action');
         try {
             $this->finTs->submitTan($action, $tan);
@@ -413,6 +426,7 @@ class FintsConnectionHandler
                 throw new InvalidArgumentException('Tan Medium wird benötigt');
             }
             $this->save();
+            $this->logger->info("Set TAN Mode", ['credId' => $this->credentialId, 'tanMode' => $tanModeId, 'tanMedium' => $tanMediumName]);
         }catch (CurlException | ServerException  $e){
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
         }
@@ -438,7 +452,7 @@ class FintsConnectionHandler
             }
             throw new NeedsTanException($action);
         }
-
+        $this->logger->info("Start Get SEPA Statements", ['credId' => $this->credentialId, $iban]);
         $account = $this->getSepaAccount($iban);
         $account = clone $account; // weird fix, without the clone the session var is changed to DateTime object
         // might be a bug in fints TODO: see if minimal example with the same bug can be found

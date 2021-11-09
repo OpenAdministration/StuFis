@@ -2,7 +2,8 @@
 
 namespace booking\konto\tan;
 
-use phpDocumentor\Reflection\DocBlock\Tags\Return_;
+
+use InvalidArgumentException;
 
 class DataElement
 {
@@ -22,7 +23,7 @@ class DataElement
         $length = (int) substr($challenge, 0,2);
         $data = substr($challenge, 2, $length);
         if(strlen($data) !== $length){
-            throw new \InvalidArgumentException("Parsing went wromg");
+            throw new InvalidArgumentException("Parsing went wromg");
         }
         $rest = substr($challenge, 2 + $length);
         return [$rest, new self($data)];
