@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\cli;
-
 
 use Ahc\Cli\Application as App;
 use Ahc\Cli\Output\Writer;
@@ -15,13 +13,13 @@ class DbBuildCommand extends \Ahc\Cli\Input\Command
         parent::__construct('db:build', 'Builds non existent Database tables', false, $app);
     }
 
-    public function execute() : void
+    public function execute(): void
     {
         $ret = DBConnector::getInstance()->buildDB();
         $cli = new Writer();
-        if($ret){
+        if ($ret) {
             $cli->ok('[ok] built db', true);
-        }else{
+        } else {
             $cli->error('failed to build db', true);
         }
     }

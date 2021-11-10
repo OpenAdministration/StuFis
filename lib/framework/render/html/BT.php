@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 use framework\baseclass\Enum;
 

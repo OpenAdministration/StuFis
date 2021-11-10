@@ -589,7 +589,6 @@ class ChatHandler{
     private function textToFile(string $file, string $text, $permission = '0400'): void
     {
     	$text = base64_encode($text);
-    	
     	//create file content
     	$key_file_content = "<?php //* -------------------------------------------------------- *\n";
     	$key_file_content .= "// Must include code to stop this file being accessed directly\n";

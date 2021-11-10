@@ -1,6 +1,5 @@
 <?php
 
-
 namespace booking\konto;
 
 use Fhp\Syntax\Bin;
@@ -11,7 +10,7 @@ class TanRequestChallengeFlicker
 
     public function __construct(Bin $bin)
     {
-        $data =  $bin->getData();
+        $data = $bin->getData();
 
         $lengthAfter = ord($data[0]);
 
@@ -21,6 +20,4 @@ class TanRequestChallengeFlicker
             'length' => $lengthAfter,
         ]);
     }
-
-
 }

@@ -7,10 +7,8 @@ use framework\Singleton;
 
 /**
  * Class AuthHandler
- * @package framework\auth
  * @static requireAuth()
  * @static hasGroup()
- *
  */
 abstract class AuthHandler extends Singleton
 {
@@ -39,7 +37,6 @@ abstract class AuthHandler extends Singleton
 
     /**
      * return current user attributes
-     * @return array
      */
     abstract public function getAttributes(): array;
 
@@ -49,7 +46,7 @@ abstract class AuthHandler extends Singleton
      * @param string $delimiter Delimiter of the groups in $group
      * @return bool  true if the user has one or more groups from $group
      */
-    public function hasGroup(array|string $groups, string $delimiter = ","): bool
+    public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
         $this->requireAuth();
 
@@ -86,7 +83,6 @@ abstract class AuthHandler extends Singleton
 
     /**
      * return log out url
-     * @return string
      */
     abstract public function getLogoutURL(): string;
 
@@ -98,19 +94,16 @@ abstract class AuthHandler extends Singleton
     /**
      * return username or user mail address
      * if not set return null
-     * @return string|NULL
      */
     abstract public function getUsername(): ?string;
 
     /**
      * return user displayname
-     * @return string
      */
     abstract public function getUserFullName(): string;
 
     /**
      * return user mail address
-     * @return string
      */
     abstract public function getUserMail(): string;
 
@@ -124,7 +117,7 @@ abstract class AuthHandler extends Singleton
             return true;
         }
         $attrGremien = $this->getUserGremien();
-        if(is_string($gremien)){
+        if (is_string($gremien)) {
             $gremien = explode($delimiter, $gremien);
         }
         $hasGremien = array_intersect($gremien, $attrGremien);

@@ -2,15 +2,13 @@
 
 namespace booking\konto\tan;
 
-use JetBrains\PhpStorm\ArrayShape;
-
 class StartCode extends DataElement
 {
     private array $controlBytes;
 
     public static function parseNextBlock($challenge): array
     {
-        $header = substr($challenge, 0,2);
+        $header = substr($challenge, 0, 2);
         $rest = substr($challenge, 2);
         $byte = self::hexToByte($header);
         /* LS encoded base 16 idx:
@@ -27,7 +25,7 @@ class StartCode extends DataElement
 
     public function __construct(array $ctrlBytes, string $data)
     {
-        if($ctrlBytes !== ['01']){
+        if ($ctrlBytes !== ['01']) {
             throw new \InvalidArgumentException('Other versions then 1.4 are not supported');
         }
         parent::__construct($data);
@@ -37,18 +35,18 @@ class StartCode extends DataElement
 
     public function toHex(): string
     {
-        return $this->getHeaderHex() . implode('',$this->controlBytes) . $this->getDataHex();
+        return $this->getHeaderHex() . implode('', $this->controlBytes) . $this->getDataHex();
     }
 
-    private static function parseControlBytes($challenge, $hasControl) : array
+    private static function parseControlBytes($challenge, $hasControl): array
     {
         $controlBytes = [];
         $rest = $challenge;
-        while($hasControl){
-            $ctrl = substr($challenge, 0,2);
+        while ($hasControl) {
+            $ctrl = substr($challenge, 0, 2);
             $controlBytes[] = $ctrl;
             $rest = substr($challenge, 2);
-            $hasControl = self::hexToByte($ctrl)[0] === "1";
+            $hasControl = self::hexToByte($ctrl)[0] === '1';
         }
         return [$controlBytes, $rest];
     }
@@ -56,15 +54,14 @@ class StartCode extends DataElement
     public function getLuhnChecksum(): int
     {
         $luhn = 0;
-        foreach ($this->controlBytes as $ctrl){
+        foreach ($this->controlBytes as $ctrl) {
             $luhn = $this->calcLuhn($ctrl);
         }
         $luhn += parent::getLuhnChecksum(); // Luhn from Startcode data
         return $luhn;
     }
 
-
-    public function __debugInfo() :  ?array
+    public function __debugInfo(): ?array
     {
         return [
             'header' => $this->getHeaderHex(),
@@ -74,6 +71,4 @@ class StartCode extends DataElement
             'luhn' => $this->getLuhnChecksum(),
         ];
     }
-
-
 }

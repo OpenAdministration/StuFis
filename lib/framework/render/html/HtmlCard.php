@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 class HtmlCard extends AbstractHtmlTag
 {
@@ -17,7 +15,7 @@ class HtmlCard extends AbstractHtmlTag
         $this->bodyDiv = Html::div()->addClasses(['panel-body']);
     }
 
-    public static function make(string $type = 'default') : static
+    public static function make(string $type = 'default'): static
     {
         $card = new self([], ['panel', "panel-$type"]);
         return $card;
@@ -35,20 +33,17 @@ class HtmlCard extends AbstractHtmlTag
         return $this;
     }
 
-    public function cardHeadline(object|string $content, bool $escape = true) : static
+    public function cardHeadline(object|string $content, bool $escape = true): static
     {
         $this->headerDiv->body($content, $escape);
         return $this;
     }
 
-
-    public function __toString() : string
+    public function __toString(): string
     {
         $header = (string) $this->headerDiv;
         $body = (string) $this->bodyDiv;
 
         return $this->beginWrap() . $this->begin() . $header . $body . $this->end() . $this->wrapEnd();
     }
-
-
 }

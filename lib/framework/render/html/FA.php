@@ -8,9 +8,9 @@ class FA extends Html
      * @param string $faName can but has not to start with 'fa-'
      * @return FA
      */
-    public static function make(string $faName) : self
+    public static function make(string $faName): self
     {
-        if(!str_starts_with($faName, 'fa-')){
+        if (!str_starts_with($faName, 'fa-')) {
             $faName = 'fa-' . $faName;
         }
         return new self(['aria-hidden' => true], ['fa', $faName], []);
@@ -21,7 +21,8 @@ class FA extends Html
         parent::__construct('i', $attributes, $classes, $dataAttributes);
     }
 
-    public function href(string $link){
+    public function href(string $link)
+    {
         $this->wrapStack[] = Html::a($link);
         return $this;
     }
@@ -30,7 +31,7 @@ class FA extends Html
      * @param int $degree 90, 180 or 270  are valid
      * @return $this
      */
-    public function rotate(int $degree) : self
+    public function rotate(int $degree): self
     {
         return $this->addClasses(['fa-rotate-' . $degree]);
     }
@@ -39,14 +40,14 @@ class FA extends Html
      * @param int $size between 2 and 5
      * @return $this
      */
-    public function size(int $size) : self
+    public function size(int $size): self
     {
         return $this->addClasses(['fa-' . $size . 'x']);
     }
 
-    public function spin() : self {
+    public function spin(): self
+    {
         $this->addClasses(['icon-spin']);
         return $this;
     }
-
 }

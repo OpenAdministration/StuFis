@@ -1,22 +1,16 @@
 <?php
 
-
 namespace framework\cli;
-
 
 use Ahc\Cli\Application as App;
 use Ahc\Cli\IO\Interactor;
-use Ahc\Cli\Output\Color;
 use Ahc\Cli\Output\Writer;
-use Composer\InstalledVersions;
 use CzProject\GitPhp\GitRepository;
 use InvalidArgumentException;
-use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Process;
 
 /**
  * Class UpdateCommand
- * @package framework\cli
  * @property $remote
  */
 class UpdateCommand extends \Ahc\Cli\Input\Command
@@ -34,39 +28,39 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
     }
 
     // This method is auto called before `self::execute()` and receives `Interactor $io` instance
-    public function interact(Interactor $io) : void
+    public function interact(Interactor $io): void
     {
-        $out = new Writer;
+        $out = new Writer();
         $currentBranch = $this->repo->getCurrentBranchName();
-        $out->comment("Current branch: " . $currentBranch, true);
+        $out->comment('Current branch: ' . $currentBranch, true);
         if ($this->remote === null) {
             $availableBranches = array_filter(
                 $this->repo->getRemoteBranches(),
-                static fn($remoteBranch) => str_ends_with($remoteBranch, $currentBranch)
+                static fn ($remoteBranch) => str_ends_with($remoteBranch, $currentBranch)
             );
             $availableBranches = array_values($availableBranches);
-            if(count($availableBranches) === 1){
+            if (count($availableBranches) === 1) {
                 $this->remoteBranch = $availableBranches[0];
                 $out->info("Selected remote branch $this->remoteBranch", true);
                 return;
             }
             $tbl = [];
-            foreach ($availableBranches as $key => $branch){
+            foreach ($availableBranches as $key => $branch) {
                 $tbl[] = ['id' => $key + 1, 'pull-target' => $branch];
             }
             $out->table($tbl);
-            $pick = $io->prompt('Pick one target to pull', 1, function (int $val) use ($availableBranches){
-                if($val <= 0 || $val > count($availableBranches)){
+            $pick = $io->prompt('Pick one target to pull', 1, function (int $val) use ($availableBranches) {
+                if ($val <= 0 || $val > count($availableBranches)) {
                     throw new InvalidArgumentException('Invalid pick');
                 }
             });
-            $this->remoteBranch = $availableBranches[$pick-1];
-        }else{
+            $this->remoteBranch = $availableBranches[$pick - 1];
+        } else {
             $remoteBranch = $this->remote . '/' . $currentBranch;
-            if(in_array($remoteBranch, $this->repo->getRemoteBranches(), true)){
+            if (in_array($remoteBranch, $this->repo->getRemoteBranches(), true)) {
                 $this->remoteBranch = $remoteBranch;
-            }else{
-                $out->error($remoteBranch . " does not exist", true);
+            } else {
+                $out->error($remoteBranch . ' does not exist', true);
                 $this->unset('remote');
                 $this->interact($io);
                 return;
@@ -74,8 +68,7 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
         }
     }
 
-
-    public function execute($dev = null) : void
+    public function execute($dev = null): void
     {
         $dev = isset($dev);
         $out = new Writer();
@@ -85,7 +78,7 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
 
         $phpPath = $_SERVER['_']; // @see https://stackoverflow.com/a/3889557/4609612
 
-        if(!file_exists(SYSBASE . '/composer.phar')){
+        if (!file_exists(SYSBASE . '/composer.phar')) {
             $this->installComposer();
         }
         $out->info('Update composer...');
@@ -93,7 +86,7 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
         $composerSelfUpdate->run();
 
         $composerParams = [$phpPath, SYSBASE . '/composer.phar', 'install'];
-        if($dev !== true){
+        if ($dev !== true) {
             $composerParams[] = '--no-dev';
         }
         $composer = new Process($composerParams);
@@ -106,7 +99,7 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
         (new DbBuildCommand())->execute();
     }
 
-    public function installComposer() : void
+    public function installComposer(): void
     {
         $phpPath = $_SERVER['_']; // @see https://stackoverflow.com/a/3889557/4609612
         $out = new Writer();
@@ -117,8 +110,4 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
         echo $composerSetup->getOutput();
         unlink(SYSBASE . '/composer-setup.php');
     }
-
 }
-
-
-

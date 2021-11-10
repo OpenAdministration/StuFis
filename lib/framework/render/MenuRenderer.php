@@ -8,67 +8,67 @@
 
 namespace framework\render;
 
-use framework\auth\AuthHandler;
-use framework\CryptoHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
+use framework\auth\AuthHandler;
+use framework\CryptoHandler;
 use framework\DBConnector;
 
 class MenuRenderer extends Renderer
 {
-    public const DEFAULT = "mygremium";
+    public const DEFAULT = 'mygremium';
 
     private $pathinfo;
 
     public function __construct($pathinfo = [])
     {
-        if (!isset($pathinfo["action"]) || empty($pathinfo)) {
-            $pathinfo["action"] = self::DEFAULT;
+        if (!isset($pathinfo['action']) || empty($pathinfo)) {
+            $pathinfo['action'] = self::DEFAULT;
         }
         $this->pathinfo = $pathinfo;
     }
 
-    public function render() : void
+    public function render(): void
     {
-        switch ($this->pathinfo["action"]) {
-            case "logout":
+        switch ($this->pathinfo['action']) {
+            case 'logout':
                 AuthHandler::getInstance()->logout();
                 HTMLPageRenderer::redirect(AuthHandler::getInstance()->getLogoutURL());
                 break;
-            case "mygremium":
-            case "allgremium":
-                HTMLPageRenderer::registerProfilingBreakpoint("start-rendering");
-                $this->renderProjekte($this->pathinfo["action"]);
+            case 'mygremium':
+            case 'allgremium':
+                HTMLPageRenderer::registerProfilingBreakpoint('start-rendering');
+                $this->renderProjekte($this->pathinfo['action']);
                 break;
-            case "search":
-                $this->setOverviewTabs($this->pathinfo["action"]);
+            case 'search':
+                $this->setOverviewTabs($this->pathinfo['action']);
                 $this->renderSearch();
                 break;
-            case "mystuff":
-                $this->setOverviewTabs($this->pathinfo["action"]);
-                $this->renderAlert("Hinweis", "Dieser Bereich befindet sich noch im Aufbau", "info");
+            case 'mystuff':
+                $this->setOverviewTabs($this->pathinfo['action']);
+                $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info');
                 break;
-            case "extern":
-                $this->setOverviewTabs($this->pathinfo["action"]);
+            case 'extern':
+                $this->setOverviewTabs($this->pathinfo['action']);
                 $this->renderExtern();
                 break;
-            case "mykonto":
+            case 'mykonto':
                 $this->renderMyProfile();
                 break;
-            case "stura":
+            case 'stura':
                 $this->renderStuRaView();
                 break;
-            case "hv":
+            case 'hv':
                 $this->renderHVView();
                 break;
-            case "kv":
+            case 'kv':
                 $this->renderKVView();
                 break;
-            case "exportBank":
+            case 'exportBank':
                 $this->renderExportBank();
                 break;
             default:
-                ErrorHandler::handleError(400,"{$this->pathinfo['action']} kann nicht interpretiert werden");
+                ErrorHandler::handleError(400, "{$this->pathinfo['action']} kann nicht interpretiert werden");
                 break;
         }
     }
@@ -77,8 +77,8 @@ class MenuRenderer extends Renderer
     {
         [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE . "menu/$active/");
         echo "<div class='clearfix'></div>";
-        $hhp_von = $hhps[$hhp_id]["von"];
-        $hhp_bis = $hhps[$hhp_id]["bis"];
+        $hhp_von = $hhps[$hhp_id]['von'];
+        $hhp_bis = $hhps[$hhp_id]['bis'];
         $userGremien = AuthHandler::getInstance()->getUserGremien();
         /*
         $userGremien = array_filter(
@@ -95,62 +95,62 @@ class MenuRenderer extends Renderer
         */
         rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
-            case "allgremium":
-                if (is_null($hhp_bis)){
+            case 'allgremium':
+                if (is_null($hhp_bis)) {
                     $where = [
-                        ["createdat" => [">=", $hhp_von]]
+                        ['createdat' => ['>=', $hhp_von]],
                     ];
-                }else{
+                } else {
                     $where = [
-                        ["createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                        ['createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                     ];
                 }
                 break;
-            case "mygremium":
+            case 'mygremium':
                 if (empty($userGremien)) {
                     $this->renderAlert(
-                        "Schade!",
+                        'Schade!',
                         $this->makeClickableMails(
-                            "Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de"
+                            'Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de'
                         ),
-                        "warning"
+                        'warning'
                     );
                     return;
                 }
-                if (is_null($hhp_bis)){
+                if (is_null($hhp_bis)) {
                     $where = [
-                        ["org" => ["in", $userGremien], "createdat" => [">=", $hhp_von]],
-                        ["org" => ["is", null], "createdat" => [">=", $hhp_von]],
-                        ["org" => "", "createdat" => [">=", $hhp_von]]
+                        ['org' => ['in', $userGremien], 'createdat' => ['>=', $hhp_von]],
+                        ['org' => ['is', null], 'createdat' => ['>=', $hhp_von]],
+                        ['org' => '', 'createdat' => ['>=', $hhp_von]],
                     ];
-                }else{
+                } else {
                     $where = [
-                        ["org" => ["in", $userGremien], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
-                        ["org" => ["is", null], "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]],
-                        ["org" => "", "createdat" => ["BETWEEN", [$hhp_von, $hhp_bis]]]
+                        ['org' => ['in', $userGremien], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
+                        ['org' => ['is', null], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
+                        ['org' => '', 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                     ];
                 }
                 break;
             default:
-                ErrorHandler::handleError(400,"Not known active Tab: " . $active);
+                ErrorHandler::handleError(400, 'Not known active Tab: ' . $active);
                 break;
         }
 
         $projekte = DBConnector::getInstance()->dbFetchAll(
-            "projekte",
+            'projekte',
             [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
             [
-                "org",
-                "projekte.*",
-                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
+                'org',
+                'projekte.*',
+                'ausgaben' => ['projektposten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
+                'einnahmen' => ['projektposten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
             ],
             $where,
             [
-                ["table" => "projektposten", "type" => "left", "on" => ["projektposten.projekt_id", "projekte.id"]],
+                ['table' => 'projektposten', 'type' => 'left', 'on' => ['projektposten.projekt_id', 'projekte.id']],
             ],
-            ["org" => true, "projekte.id" => false],
-            ["projekte.id"]
+            ['org' => true, 'projekte.id' => false],
+            ['projekte.id']
         );
         $pids = [];
         array_walk(
@@ -159,56 +159,54 @@ class MenuRenderer extends Renderer
                 array_walk(
                     $array,
                     static function ($res, $key) use (&$pids) {
-                        $pids[] = $res["id"];
+                        $pids[] = $res['id'];
                     }
                 );
             }
         );
         if (!empty($pids)) {
             $auslagen = DBConnector::getInstance()->dbFetchAll(
-                "auslagen",
+                'auslagen',
                 [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
                 [
-                    "projekt_id",  // group idx
-                    "projekt_id",
-                    "auslagen.id",
-                    "name_suffix", //auslagen Link
-                    "zahlung-name", // Empf. Name
-                    "einnahmen" => ["einnahmen", DBConnector::GROUP_SUM_ROUND2],
-                    "ausgaben" => ["ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                    "state"
+                    'projekt_id',  // group idx
+                    'projekt_id',
+                    'auslagen.id',
+                    'name_suffix', //auslagen Link
+                    'zahlung-name', // Empf. Name
+                    'einnahmen' => ['einnahmen', DBConnector::GROUP_SUM_ROUND2],
+                    'ausgaben' => ['ausgaben', DBConnector::GROUP_SUM_ROUND2],
+                    'state',
                 ],
-                ["projekt_id" => ["IN", $pids]],
+                ['projekt_id' => ['IN', $pids]],
                 [
-                    ["table" => "belege", "type" => "LEFT", "on" => ["belege.auslagen_id", "auslagen.id"]],
-                    ["table" => "beleg_posten", "type" => "LEFT", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                    ['table' => 'belege', 'type' => 'LEFT', 'on' => ['belege.auslagen_id', 'auslagen.id']],
+                    ['table' => 'beleg_posten', 'type' => 'LEFT', 'on' => ['beleg_posten.beleg_id', 'belege.id']],
                 ],
-                ["auslagen.id" => true],
-                ["auslagen_id"]
+                ['auslagen.id' => true],
+                ['auslagen_id']
             );
         }
 
         //var_dump(end(end($projekte)));
-        $this->setOverviewTabs($active);
-        ?>
+        $this->setOverviewTabs($active); ?>
 
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-            if (isset($projekte) && !empty($projekte) && $projekte) {
-                foreach ($projekte as $gremium => $inhalt) {
-                    if (count($inhalt) === 0) {
-                        continue;
-                    } ?>
+        if (isset($projekte) && !empty($projekte) && $projekte) {
+            foreach ($projekte as $gremium => $inhalt) {
+                if (count($inhalt) === 0) {
+                    continue;
+                } ?>
                     <div class="panel panel-default">
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
                                 <?php
-                                $titel = empty($gremium) ? "Nicht zugeordnete Projekte" :
+                                $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
                                     // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
-                                    $gremium;
-                                ?>
-                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?= $titel ?>
+                                    $gremium; ?>
+                                <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?php echo $titel; ?>
                             </h4>
                         </div>
                         <div id="collapse<?php echo $i; ?>" class="panel-collapse collapse">
@@ -216,32 +214,31 @@ class MenuRenderer extends Renderer
                                 <?php $j = 0; ?>
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
                                     <?php foreach ($inhalt as $projekt) {
-                                        $id = $projekt["id"];
-                                        $year = date("y", strtotime($projekt["createdat"])); ?>
+                                        $id = $projekt['id'];
+                                        $year = date('y', strtotime($projekt['createdat'])); ?>
                                         <div class="panel panel-default">
-                                            <div class="panel-link"><?= generateLinkFromID(
+                                            <div class="panel-link"><?php echo generateLinkFromID(
                                                     "IP-$year-$id",
-                                                    "projekt/" . $id
-                                                ) ?>
+                                                    'projekt/' . $id
+                                                ); ?>
                                             </div>
-                                            <div class="panel-heading collapsed <?= (!isset($auslagen[$id]) || count(
+                                            <div class="panel-heading collapsed <?php echo (!isset($auslagen[$id]) || count(
                                                     $auslagen[$id]
-                                                ) === 0) ? "empty" : "" ?>"
-                                                 data-toggle="collapse" data-parent="#accordion<?php echo $i ?>"
-                                                 href="#collapse<?php echo $i . "-" . $j; ?>">
+                                                ) === 0) ? 'empty' : ''; ?>"
+                                                 data-toggle="collapse" data-parent="#accordion<?php echo $i; ?>"
+                                                 href="#collapse<?php echo $i . '-' . $j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
-                                                            class="panel-projekt-name"><?= $projekt["name"] ?></span>
+                                                            class="panel-projekt-name"><?php echo $projekt['name']; ?></span>
                                                     <span class="panel-projekt-money text-muted hidden-xs ">
-                                                        <?= number_format($projekt["ausgaben"], 2, ",", ".") ?>
+                                                        <?php echo number_format($projekt['ausgaben'], 2, ',', '.'); ?>
                                                     </span>
-                                                    <span class="label label-info project-state-label"><?=
-                                                        ProjektHandler::getStateStringFromName($projekt["state"]) ?>
+                                                    <span class="label label-info project-state-label"><?php echo ProjektHandler::getStateStringFromName($projekt['state']); ?>
                                                     </span>
                                                 </h4>
                                             </div>
                                             <?php if (isset($auslagen[$id]) && count($auslagen[$id]) > 0) { ?>
-                                                <div id="collapse<?php echo $i . "-" . $j; ?>"
+                                                <div id="collapse<?php echo $i . '-' . $j; ?>"
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <?php
@@ -262,21 +259,21 @@ class MenuRenderer extends Renderer
 
                                                         $this->renderTable(
                                                             [
-                                                                "Name",
-                                                                "Zahlungsempfänger",
-                                                                "Einnahmen",
-                                                                "Ausgaben",
-                                                                "Status"
+                                                                'Name',
+                                                                'Zahlungsempfänger',
+                                                                'Einnahmen',
+                                                                'Ausgaben',
+                                                                'Status',
                                                             ],
                                                             [$auslagen[$id]],
                                                             [],
                                                             [
-                                                                [$this, "auslagenLinkEscapeFunction"],
+                                                                [$this, 'auslagenLinkEscapeFunction'],
                                                                 // 3 Parameter
                                                                 null,
                                                                 // 1 parameter
-                                                                [$this, "moneyEscapeFunction"],
-                                                                [$this, "moneyEscapeFunction"],
+                                                                [$this, 'moneyEscapeFunction'],
+                                                                [$this, 'moneyEscapeFunction'],
                                                                 function ($stateString) {
                                                                     $text = AuslagenHandler2::getStateStringFromName(
                                                                         AuslagenHandler2::state2stateInfo(
@@ -284,8 +281,7 @@ class MenuRenderer extends Renderer
                                                                         )['state']
                                                                     );
                                                                     return "<div class='label label-info'>$text</div>";
-                                                                }
-
+                                                                },
                                                             ],
                                                             [
                                                                 [
@@ -319,7 +315,7 @@ class MenuRenderer extends Renderer
                                                                         $sum_a_out - $sum_a_in,
                                                                         2
                                                                     ) . '&nbsp€',
-                                                                ]
+                                                                ],
                                                             ]
                                                         ); ?>
                                                     </div>
@@ -327,22 +323,22 @@ class MenuRenderer extends Renderer
                                             <?php } ?>
                                         </div>
 
-                                        <?php $j++;
+                                        <?php ++$j;
                                     } ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <?php
-                    $i++;
-                }
-            } else {
-                $this->renderAlert(
-                    "Warnung",
+                    ++$i;
+            }
+        } else {
+            $this->renderAlert(
+                    'Warnung',
                     "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
-                    "warning"
+                    'warning'
                 );
-            } ?>
+        } ?>
         </div>
         <?php
     }
@@ -350,54 +346,54 @@ class MenuRenderer extends Renderer
     public function renderExtern(): void
     {
         $extern_meta = DBConnector::getInstance()->dbFetchAll(
-            "extern_meta",
+            'extern_meta',
             [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
-            ["org_name", "*"],
+            ['org_name', '*'],
             [],
             [],
-            ["org_name" => true, "id" => false]
+            ['org_name' => true, 'id' => false]
         );
         if (!is_array($extern_meta) || empty($extern_meta)) {
-            $this->renderAlert("Schade", "Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!", "info");
+            $this->renderAlert('Schade', 'Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!', 'info');
             return;
         }
         $idToKeys = [];
         foreach ($extern_meta as $org_name => $items) {
             foreach ($items as $nr => $item) {
-                $idToKeys[$item["id"]] = [$org_name, $nr];
+                $idToKeys[$item['id']] = [$org_name, $nr];
             }
         }
         $extern_data = DBConnector::getInstance()->dbFetchAll(
-            "extern_data",
+            'extern_data',
             [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
             [
-                "extern_id",
-                "extern_id",
-                "extern_data.*",
-                "hhp_id" => "haushaltsgruppen.hhp_id",
-                "titel_name" => "haushaltstitel.titel_name",
-                "titel_nr" => "haushaltstitel.titel_nr",
+                'extern_id',
+                'extern_id',
+                'extern_data.*',
+                'hhp_id' => 'haushaltsgruppen.hhp_id',
+                'titel_name' => 'haushaltstitel.titel_name',
+                'titel_nr' => 'haushaltstitel.titel_nr',
             ],
-            ["extern_id" => ["IN", array_keys($idToKeys)]],
+            ['extern_id' => ['IN', array_keys($idToKeys)]],
             [
-                ["table" => "haushaltstitel", "type" => "LEFT", "on" => ["extern_data.titel_id", "haushaltstitel.id"],],
-                ["table" => "haushaltsgruppen", "type" => "LEFT", "on" => ["haushaltstitel.hhpgruppen_id", "haushaltsgruppen.id"],],
+                ['table' => 'haushaltstitel', 'type' => 'LEFT', 'on' => ['extern_data.titel_id', 'haushaltstitel.id']],
+                ['table' => 'haushaltsgruppen', 'type' => 'LEFT', 'on' => ['haushaltstitel.hhpgruppen_id', 'haushaltsgruppen.id']],
             ],
-            ["extern_id" => true]
+            ['extern_id' => true]
         );
         foreach ($extern_data as $extern_id => $data) {
-            $extern_meta[$idToKeys[$extern_id][0]][$idToKeys[$extern_id][1]]["subcontent"] = $data;
+            $extern_meta[$idToKeys[$extern_id][0]][$idToKeys[$extern_id][1]]['subcontent'] = $data;
         }
 
         $groupHeaderFun = function ($key) {
             return $key;
         };
         $innerHeaderHeadlineFun = function ($content) {
-            $date = date_create($content["projekt_von"])->format("y");
-            return "<a href=''>EP-" . $date . "-" . $content["id"] . "</a>";
+            $date = date_create($content['projekt_von'])->format('y');
+            return "<a href=''>EP-" . $date . '-' . $content['id'] . '</a>';
         };
         $innerHeaderFun = function ($content) {
-            return $content["projekt_name"];
+            return $content['projekt_name'];
         };
         $obj = $this;
         $innerContentFun = function ($subContent) use ($obj) {
@@ -428,12 +424,12 @@ class MenuRenderer extends Renderer
               'widerspruch_text' => NULL,
               'etag' => 'bG90jIFqngQX5Lob5eISW7Y9Ikncm0Ao',*/
             $header = [
-                "No",
-                "Typ",
-                "HHP-Titel",
-                "Wert",
-                "Zahlung",
-                "Wiederspruch"
+                'No',
+                'Typ',
+                'HHP-Titel',
+                'Wert',
+                'Zahlung',
+                'Wiederspruch',
             ];
 
             $sum_value = 0;
@@ -444,18 +440,18 @@ class MenuRenderer extends Renderer
                         "<i class='fa fa-fw fa-print'></i></a>";
                 },
                 function ($vorkasse, $bewilligung, $preuf, $rueck, $mahn) {
-                    if ($vorkasse === "1") {
-                        $str = "Vorkasse";
-                    } elseif ($bewilligung === "1") {
-                        $str = "Bewilligungsbescheid";
-                    } elseif ($preuf === "1") {
-                        $str = "Prüfbescheid";
-                    } elseif ($rueck === "1") {
-                        $str = "Rückforderungsbescheid";
-                    } elseif ($mahn === "1") {
-                        $str = "Mahnung";
+                    if ($vorkasse === '1') {
+                        $str = 'Vorkasse';
+                    } elseif ($bewilligung === '1') {
+                        $str = 'Bewilligungsbescheid';
+                    } elseif ($preuf === '1') {
+                        $str = 'Prüfbescheid';
+                    } elseif ($rueck === '1') {
+                        $str = 'Rückforderungsbescheid';
+                    } elseif ($mahn === '1') {
+                        $str = 'Mahnung';
                     } else {
-                        $str = "";
+                        $str = '';
                     }
                     return $str;
                 },
@@ -467,48 +463,48 @@ class MenuRenderer extends Renderer
                     return $obj->moneyEscapeFunction($value);
                 },
                 function ($value, $pruef, $rueck, $vorkasse) use ($obj, &$sum_value) {
-                    if ($pruef === "1") {
+                    if ($pruef === '1') {
                         $out_val = $value - $sum_value;
                         $sum_value = $value - $sum_value;
-                    } elseif ($rueck === "1") {
+                    } elseif ($rueck === '1') {
                         $out_val = -$sum_value - $value;
                         $sum_value -= $value;
-                    } elseif ($vorkasse === "1") {
+                    } elseif ($vorkasse === '1') {
                         $out_val = $value - $sum_value;
                         $sum_value = $value;
                     }
                     return $obj->moneyEscapeFunction($out_val);
                 },
                 function ($wiederspruch) {
-                    return $wiederspruch === "1" ? "Ja" : "Nein";
-                }
+                    return $wiederspruch === '1' ? 'Ja' : 'Nein';
+                },
             ];
             $keys = [
-                "id",
-                "vorgang_id",
+                'id',
+                'vorgang_id',
 
-                "flag_vorkasse",
+                'flag_vorkasse',
                 'flag_bewilligungsbescheid',
                 'flag_pruefbescheid',
                 'flag_rueckforderung',
                 'flag_mahnung',
 
-                "hhp_id",
-                "titel_id",
-                "titel_name",
-                "titel_nr",
+                'hhp_id',
+                'titel_id',
+                'titel_name',
+                'titel_nr',
 
-                "value",
+                'value',
 
-                "value",
+                'value',
                 'flag_pruefbescheid',
                 'flag_rueckforderung',
-                "flag_vorkasse",
+                'flag_vorkasse',
 
-                'flag_widersprochen'
+                'flag_widersprochen',
             ];
 
-            $obj->renderAlert("Warnung", "Die zweite Spalte könnte noch Rechenfehler beinhalten", "warning");
+            $obj->renderAlert('Warnung', 'Die zweite Spalte könnte noch Rechenfehler beinhalten', 'warning');
             $obj->renderTable($header, [$subContent], $keys, $escFun);
             // return ??
         };
@@ -516,18 +512,17 @@ class MenuRenderer extends Renderer
         //$this->renderAccordionPanels($test, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
         $this->renderAccordionPanels($extern_meta, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
         //$this->renderTable($header,[$extern],array_keys($header));
-
     }
 
     public function setOverviewTabs($active): void
     {
-        $linkbase = URIBASE . "menu/";
+        $linkbase = URIBASE . 'menu/';
         $tabs = [
-            "mygremium" => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
-            "allgremium" => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
+            'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
+            'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
             //"mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
         ];
-        if (AuthHandler::getInstance()->hasGroup("ref-finanzen")) {
+        if (AuthHandler::getInstance()->hasGroup('ref-finanzen')) {
             //$tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
         }
         //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
@@ -536,8 +531,7 @@ class MenuRenderer extends Renderer
 
     private function renderSearch(): void
     {
-        $this->renderAlert("Hinweis", "Dieser Bereich befindet sich noch im Aufbau", "info");
-        ?>
+        $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info'); ?>
         <div class="input-group">
             <div class="input-group-addon"><i class="fa fa-fw fa-search"></i></div>
             <input class="form-control" placeholder="Suche ...">
@@ -547,14 +541,12 @@ class MenuRenderer extends Renderer
 
     public function renderMyProfile(): void
     {
-
         $user = DBConnector::getInstance()->getUser();
-        $iban = $user["iban"] ?? "";
-        ?>
+        $iban = $user['iban'] ?? ''; ?>
 
-        <form id="editantrag" role="form" action="<?= $_SERVER["PHP_SELF"] ?>" method="POST"
+        <form id="editantrag" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST"
               enctype="multipart/form-data" class="ajax">
-            <?php $this->renderAlert("Hinweis", "Dieses Formular funktioniert noch nicht :(", "info") ?>
+            <?php $this->renderAlert('Hinweis', 'Dieses Formular funktioniert noch nicht :(', 'info'); ?>
             <div class="panel panel-default">
                 <div class="panel-heading">Meine Daten aktualisieren</div>
                 <div class="panel-body">
@@ -584,51 +576,49 @@ class MenuRenderer extends Renderer
 
     private function renderStuRaView(): void
     {
-        $header = ["Projekte", "Organisation", "Projektbeginn", /*"Einnahmen", "Ausgaben"*/];
+        $header = ['Projekte', 'Organisation', 'Projektbeginn'/*"Einnahmen", "Ausgaben"*/];
 
         //TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
-        [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState("need-stura");
-        [, $internContentHV,] = $this->fetchProjectsWithState("ok-by-hv");
+        [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState('need-stura');
+        [, $internContentHV,] = $this->fetchProjectsWithState('ok-by-hv');
         $groups = [
-            "Vom StuRa abzustimmen" => $internContent,
-            "zur Verkündung (genehmigt von HV)" => $internContentHV,
+            'Vom StuRa abzustimmen' => $internContent,
+            'zur Verkündung (genehmigt von HV)' => $internContentHV,
         ];
-        $this->renderHeadline("Projekte für die nächste StuRa Sitzung");
+        $this->renderHeadline('Projekte für die nächste StuRa Sitzung');
         $this->renderTable($header, $groups, [], $escapeFunctions);
     }
 
     /**
-     * @param string $statestring
-     *
      * @return array [$header, $dbres, $escapeFunctions]
      */
     private function fetchProjectsWithState(string $statestring): array
     {
-        $header = ["Projekt", "Organisation", "Einnahmen", "Ausgaben", "Projektbeginn"];
+        $header = ['Projekt', 'Organisation', 'Einnahmen', 'Ausgaben', 'Projektbeginn'];
         $dbres = DBConnector::getInstance()->dbFetchAll(
-            "projekte",
+            'projekte',
             [DBConnector::FETCH_NUMERIC],
             [
-                "projekte.id",
-                "createdat",
-                "projekte.name",
-                "org",
-                "einnahmen" => ["projektposten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
-                "ausgaben" => ["projektposten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "createdat",
+                'projekte.id',
+                'createdat',
+                'projekte.name',
+                'org',
+                'einnahmen' => ['projektposten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
+                'ausgaben' => ['projektposten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
+                'createdat',
             ],
-            ["state" => $statestring],
-            [["type" => "inner", "table" => "projektposten", "on" => ["projektposten.projekt_id", "projekte.id"]]],
-            ["date-start" => true],
-            ["projekte.id"]
+            ['state' => $statestring],
+            [['type' => 'inner', 'table' => 'projektposten', 'on' => ['projektposten.projekt_id', 'projekte.id']]],
+            ['date-start' => true],
+            ['projekte.id']
         );
         $escapeFunctionsIntern = [
-            [$this, "projektLinkEscapeFunction"],
+            [$this, 'projektLinkEscapeFunction'],
             null,
-            [$this, "moneyEscapeFunction"],
-            [$this, "moneyEscapeFunction"],
-            [$this, "date2relstrEscapeFunction"],
+            [$this, 'moneyEscapeFunction'],
+            [$this, 'moneyEscapeFunction'],
+            [$this, 'date2relstrEscapeFunction'],
         ];
         return [$header, $dbres, $escapeFunctionsIntern];
     }
@@ -636,66 +626,65 @@ class MenuRenderer extends Renderer
     private function renderHVView(): void
     {
         //Projekte -------------------------------------------------------------------------------------------------
-        [$headerIntern, $internWIP, $escapeFunctionsIntern] = $this->fetchProjectsWithState("wip");
-        $groupsIntern["zu prüfende Projekte"] = $internWIP;
+        [$headerIntern, $internWIP, $escapeFunctionsIntern] = $this->fetchProjectsWithState('wip');
+        $groupsIntern['zu prüfende Projekte'] = $internWIP;
 
         //Auslagenerstattungen -------------------------------------------------------------------------------------
-        [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState("wip", "hv");
-        $groupsAuslagen["Auslagenerstattungen HV fehlt"] = $auslagenWIP;
-        [, $auslagenWIP,] = $this->fetchAuslagenWithState("wip", "belege");
-        $groupsAuslagen["Auslagenerstattungen Belege fehlen"] = $auslagenWIP;
+        [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'hv');
+        $groupsAuslagen['Auslagenerstattungen HV fehlt'] = $auslagenWIP;
+        [, $auslagenWIP,] = $this->fetchAuslagenWithState('wip', 'belege');
+        $groupsAuslagen['Auslagenerstattungen Belege fehlen'] = $auslagenWIP;
 
         //TODO: Implementierung vom rest
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
-        $this->renderHeadline("Von den Haushaltsverantwortlichen zu erledigen");
+        $this->renderHeadline('Von den Haushaltsverantwortlichen zu erledigen');
         $this->renderTable($headerIntern, $groupsIntern, [], $escapeFunctionsIntern);
         $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
     }
 
     /**
-     * @param string $stateString
      * @param string $missingColumn  can be: hv, kv, belege
      *
      * @return array [$header, $auslagen, $escapeFunctionAuslagen]
      */
     private function fetchAuslagenWithState(string $stateString, string $missingColumn): array
     {
-        $headerAuslagen = ["Projekt", "Auslage", "Organisation", "Einnahmen", "Ausgaben", "zuletzt geändert"];
+        $headerAuslagen = ['Projekt', 'Auslage', 'Organisation', 'Einnahmen', 'Ausgaben', 'zuletzt geändert'];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
-            "auslagen",
+            'auslagen',
             [DBConnector::FETCH_NUMERIC],
             [
-                "projekte.id",
-                "createdat",
-                "name", //Projekte Link
-                "projekte.id",
-                "auslagen.id",
-                "auslagen.name_suffix", // Auslagen Link
-                "projekte.org", // Org
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2],
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "last_change"  // letzte änderung
+                'projekte.id',
+                'createdat',
+                'name', //Projekte Link
+                'projekte.id',
+                'auslagen.id',
+                'auslagen.name_suffix', // Auslagen Link
+                'projekte.org', // Org
+                'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
+                'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
+                'last_change',  // letzte änderung
             ],
             [
-                "auslagen.state" => ["LIKE", "$stateString%"],
-                "auslagen.ok-$missingColumn" => "",
+                'auslagen.state' => ['LIKE', "$stateString%"],
+                "auslagen.ok-$missingColumn" => '',
             ],
             [
-                ["table" => "projekte", "type" => "inner", "on" => ["projekte.id", "auslagen.projekt_id"]],
-                ["table" => "belege", "type" => "inner", "on" => ["belege.auslagen_id", "auslagen.id"]],
-                ["table" => "beleg_posten", "type" => "inner", "on" => ["belege.id", "beleg_posten.beleg_id"]],
+                ['table' => 'projekte', 'type' => 'inner', 'on' => ['projekte.id', 'auslagen.projekt_id']],
+                ['table' => 'belege', 'type' => 'inner', 'on' => ['belege.auslagen_id', 'auslagen.id']],
+                ['table' => 'beleg_posten', 'type' => 'inner', 'on' => ['belege.id', 'beleg_posten.beleg_id']],
             ],
-            ["last_change" => true],
-            ["auslagen.id"]
+            ['last_change' => true],
+            ['auslagen.id']
         );
         $escapeFunctionsAuslagen = [
-            [$this, "projektLinkEscapeFunction"],
-            [$this, "auslagenLinkEscapeFunction"],
+            [$this, 'projektLinkEscapeFunction'],
+            [$this, 'auslagenLinkEscapeFunction'],
             null,
-            [$this, "moneyEscapeFunction"],
-            [$this, "moneyEscapeFunction"],
-            [$this, "date2relstrEscapeFunction"],
+            [$this, 'moneyEscapeFunction'],
+            [$this, 'moneyEscapeFunction'],
+            [$this, 'date2relstrEscapeFunction'],
         ];
         return [$headerAuslagen, $auslagen, $escapeFunctionsAuslagen];
     }
@@ -705,15 +694,15 @@ class MenuRenderer extends Renderer
         //Auslagenerstattungen
         //$headerAuslagen = ["Projekt", "Auslage", "Organisation", "zuletzt geändert"];
 
-        [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState("wip", "kv");
-        $groupsAuslagen["Auslagenerstattungen KV fehlt"] = $auslagenWIP;
-        [/**/, $auslagenWIP,/**/] = $this->fetchAuslagenWithState("wip", "belege");
-        $groupsAuslagen["Auslagenerstattungen Belege fehlen"] = $auslagenWIP;
+        [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'kv');
+        $groupsAuslagen['Auslagenerstattungen KV fehlt'] = $auslagenWIP;
+        [, $auslagenWIP, ] = $this->fetchAuslagenWithState('wip', 'belege');
+        $groupsAuslagen['Auslagenerstattungen Belege fehlen'] = $auslagenWIP;
 
         //TODO: Implementierung vom rest
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
-        $this->renderHeadline("Von den Kassenverantwortlichen zu erledigen");
+        $this->renderHeadline('Von den Kassenverantwortlichen zu erledigen');
         $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
 
         $this->renderExportBankButton();
@@ -722,18 +711,17 @@ class MenuRenderer extends Renderer
     private function renderExportBankButton(): void
     {
         $auslagen = DBConnector::getInstance()->dbFetchAll(
-            "auslagen",
+            'auslagen',
             [DBConnector::FETCH_ASSOC],
-            ["count" => ["id", DBConnector::GROUP_COUNT]],
-            ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
+            ['count' => ['id', DBConnector::GROUP_COUNT]],
+            ['auslagen.state' => ['LIKE', 'ok%'], 'auslagen.payed' => ''],
             [],
             [],
-            ["auslagen.id"]
+            ['auslagen.id']
         );
-        $disabled = count($auslagen) === 0 || ((int) $auslagen[0]['count']) === 0;
-        ?>
-        <form action="<?= URIBASE ?>menu/kv/exportBank">
-            <button class="btn btn-primary" <?= $disabled ? "disabled" : "" ?>>
+        $disabled = count($auslagen) === 0 || ((int) $auslagen[0]['count']) === 0; ?>
+        <form action="<?php echo URIBASE; ?>menu/kv/exportBank">
+            <button class="btn btn-primary" <?php echo $disabled ? 'disabled' : ''; ?>>
                 <i class="fa fa-fw fa-money"></i>&nbsp;Exportiere Überweisungen
             </button>
         </form>
@@ -743,37 +731,37 @@ class MenuRenderer extends Renderer
 
     private function renderExportBank(): void
     {
-        $header = ["Auslage", "Empfänger", "IBAN", "Verwendungszweck", "Auszuzahlen"];
+        $header = ['Auslage', 'Empfänger', 'IBAN', 'Verwendungszweck', 'Auszuzahlen'];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
-            "auslagen",
+            'auslagen',
             [DBConnector::FETCH_NUMERIC],
             [
-                "projekte.id",
-                "auslagen.id",
-                "auslagen.name_suffix", // Auslagenlink
-                "auslagen.zahlung-name",
-                "auslagen.zahlung-iban",
-                "projekte.id",
-                "projekte.createdat",
-                "auslagen.id",
-                "auslagen.zahlung-vwzk",
-                "auslagen.name_suffix",
-                "projekte.name", //verwendungszweck
-                "ausgaben" => ["beleg_posten.ausgaben", DBConnector::GROUP_SUM_ROUND2],
-                "einnahmen" => ["beleg_posten.einnahmen", DBConnector::GROUP_SUM_ROUND2]
+                'projekte.id',
+                'auslagen.id',
+                'auslagen.name_suffix', // Auslagenlink
+                'auslagen.zahlung-name',
+                'auslagen.zahlung-iban',
+                'projekte.id',
+                'projekte.createdat',
+                'auslagen.id',
+                'auslagen.zahlung-vwzk',
+                'auslagen.name_suffix',
+                'projekte.name', //verwendungszweck
+                'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
+                'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
             ],
-            ["auslagen.state" => ["LIKE", "ok%"], "auslagen.payed" => ""],
+            ['auslagen.state' => ['LIKE', 'ok%'], 'auslagen.payed' => ''],
             [
-                ["type" => "inner", "table" => "projekte", "on" => ["projekte.id", "auslagen.projekt_id"]],
-                ["type" => "inner", "table" => "belege", "on" => ["belege.auslagen_id", "auslagen.id"]],
-                ["type" => "inner", "table" => "beleg_posten", "on" => ["beleg_posten.beleg_id", "belege.id"]],
+                ['type' => 'inner', 'table' => 'projekte', 'on' => ['projekte.id', 'auslagen.projekt_id']],
+                ['type' => 'inner', 'table' => 'belege', 'on' => ['belege.auslagen_id', 'auslagen.id']],
+                ['type' => 'inner', 'table' => 'beleg_posten', 'on' => ['beleg_posten.beleg_id', 'belege.id']],
             ],
             [],
-            ["auslagen.id"]
+            ['auslagen.id']
         );
         $obj = $this;
         $escapeFunctions = [
-            [$this, "auslagenLinkEscapeFunction"],                      // 3 Parameter
+            [$this, 'auslagenLinkEscapeFunction'],                      // 3 Parameter
             null,                                                       // 1 Parameter
             function ($str) {
                 $p = $str;
@@ -785,7 +773,7 @@ class MenuRenderer extends Renderer
                 return $p;
             },                                                       // 1 Parameter
             function ($pId, $pCreate, $aId, $vwdzweck, $aName, $pName) {  // 6 Parameter - Verwendungszweck
-                $year = date("y", strtotime($pCreate));
+                $year = date('y', strtotime($pCreate));
                 $ret = ["IP-$year-$pId-A$aId", $vwdzweck, $aName, $pName];
                 $ret = array_filter(
                     $ret,
@@ -793,21 +781,20 @@ class MenuRenderer extends Renderer
                         return !empty(trim($val));
                     }
                 );
-                $ret = implode(" - ", $ret);
+                $ret = implode(' - ', $ret);
                 if (strlen($ret) > 140) {
                     $ret = substr($ret, 0, 140);
                 }
                 return $ret;
             },
             function ($ausgaben, $einnahmen) use ($obj) {                 // 2 Parameter
-                return $obj->moneyEscapeFunction((float)$ausgaben - (float)$einnahmen);
-            }
+                return $obj->moneyEscapeFunction((float) $ausgaben - (float) $einnahmen);
+            },
         ];
         if (count($auslagen) > 0) {
             $this->renderTable($header, [$auslagen], [], $escapeFunctions);
         } else {
-            $this->renderHeadline("Aktuell liegen keine Überweisungen vor.", 2);
+            $this->renderHeadline('Aktuell liegen keine Überweisungen vor.', 2);
         }
     }
 }
-

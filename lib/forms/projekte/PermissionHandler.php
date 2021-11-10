@@ -2,26 +2,26 @@
 
 namespace forms\projekte;
 
-use forms\projekte\StateHandler;
 use framework\auth\AuthHandler;
 
-class PermissionHandler{
+class PermissionHandler
+{
     /**
-     * @var $dataFields array
+     * @var array
      */
     protected $dataFields;
     /**
-     * @var $stateHandler StateHandler
+     * @var StateHandler
      */
     protected $stateHandler;
     /**
-     * @var $writePermissionAll array ["stateName" => ["groups => [...], "persons" => [...], "gremium" => [...]],...]
+     * @var array ["stateName" => ["groups => [...], "persons" => [...], "gremium" => [...]],...]
      *                                Any match with group, gremium or person will grant write Permission!
      */
     protected $writePermissionAll;
-    
+
     /**
-     * @var $writePermissionField array [ "stateName1" =>
+     * @var array [ "stateName1" =>
      *                                      [ "fieldName1" =>
      *                                          [ "groups => [...], "persons" => [...], "gremien" => [...], ]
      *                                      ,...]
@@ -31,60 +31,54 @@ class PermissionHandler{
      *                                  state
      */
     protected $writePermissionField;
-    
+
     /**
-     * @var $visibleField array [ "fieldname1" => [ "state1", "state2", ...],... ]
+     * @var array [ "fieldname1" => [ "state1", "state2", ...],... ]
      *                          Any Match with any State will grant visibility
      */
     protected $visibleFields;
     protected $editMode;
-    
+
     /**
      * PermissionHandler constructor.
-     *
-     * @param array        $dataFields
-     * @param StateHandler $stateHandler
-     * @param array        $writePermissionAll
-     * @param array        $writePermissionField
-     * @param array        $visibleFields
-     * @param bool         $editMode
      */
-    public function __construct(array $dataFields, StateHandler $stateHandler, array $writePermissionAll, array $writePermissionField, array $visibleFields, bool $editMode = false){
+    public function __construct(array $dataFields, StateHandler $stateHandler, array $writePermissionAll, array $writePermissionField, array $visibleFields, bool $editMode = false)
+    {
         $states = $stateHandler->getStates();
-        foreach ($states as $stateName => $desc){
-            if (!isset($writePermissionAll[$stateName])){
-                die("Status $stateName is not defined in \$writePermissionAll");
+        foreach ($states as $stateName => $desc) {
+            if (!isset($writePermissionAll[$stateName])) {
+                exit("Status $stateName is not defined in \$writePermissionAll");
             }
 
-            if ($writePermissionAll[$stateName] !== true){ //could be explicit true or false
-                if (!isset($writePermissionAll[$stateName]["groups"])){
-                    $writePermissionAll[$stateName]["groups"] = [];
+            if ($writePermissionAll[$stateName] !== true) { //could be explicit true or false
+                if (!isset($writePermissionAll[$stateName]['groups'])) {
+                    $writePermissionAll[$stateName]['groups'] = [];
                 }
-                if (!isset($writePermissionAll[$stateName]["persons"])){
-                    $writePermissionAll[$stateName]["persons"] = [];
+                if (!isset($writePermissionAll[$stateName]['persons'])) {
+                    $writePermissionAll[$stateName]['persons'] = [];
                 }
-                if (!isset($writePermissionAll[$stateName]["gremien"])){
-                    $writePermissionAll[$stateName]["gremien"] = [];
+                if (!isset($writePermissionAll[$stateName]['gremien'])) {
+                    $writePermissionAll[$stateName]['gremien'] = [];
                 }
             }
-            foreach ($dataFields as $dataFieldName => $content){
-                if (!isset($writePermissionField[$stateName][$dataFieldName]["groups"])){
-                    $writePermissionField[$stateName][$dataFieldName]["groups"] = [];
+            foreach ($dataFields as $dataFieldName => $content) {
+                if (!isset($writePermissionField[$stateName][$dataFieldName]['groups'])) {
+                    $writePermissionField[$stateName][$dataFieldName]['groups'] = [];
                 }
-                if (!isset($writePermissionField[$stateName][$dataFieldName]["persons"])){
-                    $writePermissionField[$stateName][$dataFieldName]["persons"] = [];
+                if (!isset($writePermissionField[$stateName][$dataFieldName]['persons'])) {
+                    $writePermissionField[$stateName][$dataFieldName]['persons'] = [];
                 }
-                if (!isset($writePermissionField[$stateName][$dataFieldName]["gremien"])){
-                    $writePermissionField[$stateName][$dataFieldName]["gremien"] = [];
+                if (!isset($writePermissionField[$stateName][$dataFieldName]['gremien'])) {
+                    $writePermissionField[$stateName][$dataFieldName]['gremien'] = [];
                 }
             }
         }
-        foreach ($dataFields as $dataFieldName => $content){
-            if (!isset($visibleFields[$dataFieldName])){
+        foreach ($dataFields as $dataFieldName => $content) {
+            if (!isset($visibleFields[$dataFieldName])) {
                 $visibleFields[$dataFieldName] = true;
             }
         }
-        
+
         $this->dataFields = $dataFields;
         $this->stateHandler = $stateHandler;
         $this->writePermissionAll = $writePermissionAll;
@@ -92,20 +86,21 @@ class PermissionHandler{
         $this->visibleFields = $visibleFields;
         $this->editMode = $editMode;
     }
-    
+
     public function isVisibleField($fieldname): bool
     {
         $fieldname = $this->cleanFieldNameFromArrayTags($fieldname);
-        if ($this->visibleFields[$fieldname] === true){
+        if ($this->visibleFields[$fieldname] === true) {
             return true;
         }
         return in_array($this->stateHandler->getActualState(), $this->visibleFields[$fieldname], true);
     }
-    
-    private function cleanFieldNameFromArrayTags($fieldname){
-        return explode("[", $fieldname)[0];
+
+    private function cleanFieldNameFromArrayTags($fieldname)
+    {
+        return explode('[', $fieldname)[0];
     }
-    
+
     public function isAnyDataEditable($couldBe = false): bool
     {
         $oldEditMode = $this->editMode;
@@ -114,7 +109,7 @@ class PermissionHandler{
         }
         $ret = false;
         $ret = $ret || $this->checkWritePermission();
-        foreach ($this->dataFields as $dataFieldName => $content){
+        foreach ($this->dataFields as $dataFieldName => $content) {
             $ret = $ret || $this->checkWritePermissionField($dataFieldName);
         }
         if ($couldBe === true) {
@@ -123,7 +118,7 @@ class PermissionHandler{
         //var_dump(["edit" =>$ret]);
         return $ret;
     }
-    
+
     public function checkWritePermission(): bool
     {
         if ($this->editMode === false) {
@@ -133,26 +128,28 @@ class PermissionHandler{
         $state = $this->stateHandler->getActualState();
         return $this->checkPermissionArray($this->writePermissionAll[$state]);
     }
-    
+
     private function checkPermissionArray($permArray): bool
     {
         //var_dump($permArray);
-        if (is_bool($permArray)){
+        if (is_bool($permArray)) {
             return $permArray;
         }
         $ret = AuthHandler::getInstance()->isAdmin();
-        if (isset($permArray["groups"]))
-            $ret |= AuthHandler::getInstance()->hasGroup(implode(",", $permArray["groups"]));
-        if (isset($permArray["gremien"]))
-            $ret |= AuthHandler::getInstance()->hasGremium($permArray["gremien"]);
-        if (isset($permArray["persons"])){
-            $ret |= in_array(AuthHandler::getInstance()->getUsername(), $permArray["persons"], true);
-            $ret |= in_array(AuthHandler::getInstance()->getUserFullName(), $permArray["persons"], true);
+        if (isset($permArray['groups'])) {
+            $ret |= AuthHandler::getInstance()->hasGroup(implode(',', $permArray['groups']));
+        }
+        if (isset($permArray['gremien'])) {
+            $ret |= AuthHandler::getInstance()->hasGremium($permArray['gremien']);
+        }
+        if (isset($permArray['persons'])) {
+            $ret |= in_array(AuthHandler::getInstance()->getUsername(), $permArray['persons'], true);
+            $ret |= in_array(AuthHandler::getInstance()->getUserFullName(), $permArray['persons'], true);
         }
         //var_dump($ret);
-        return (bool)$ret;
+        return (bool) $ret;
     }
-    
+
     public function checkWritePermissionField($fieldname): bool
     {
         if ($this->editMode === false) {
@@ -169,31 +166,34 @@ class PermissionHandler{
         //echo '<pre>'; var_dump($this->writePermissionField); echo '</pre>';
         return $this->checkPermissionArray($this->writePermissionField[$state][$fieldname]);
     }
-    
-    public function isEditable($names, $conjunctureWith = ""){
+
+    public function isEditable($names, $conjunctureWith = '')
+    {
         $ret = [];
-        if (is_array($names)){
+        if (is_array($names)) {
             $ret_or = false;
             $ret_and = true;
-            foreach ($names as $name){
+            foreach ($names as $name) {
                 $tmp = $this->isEditable($name);
                 $ret[] = $tmp;
                 $ret_or |= $tmp;
                 $ret_and &= $tmp;
             }
-            if ($conjunctureWith === "")
+            if ($conjunctureWith === '') {
                 return $ret;
-            if (strtolower($conjunctureWith) === "or")
+            }
+            if (strtolower($conjunctureWith) === 'or') {
                 return $ret_or;
-            if (strtolower($conjunctureWith) === "and")
+            }
+            if (strtolower($conjunctureWith) === 'and') {
                 return $ret_and;
+            }
             return null;
         }
 
-        if ($this->checkWritePermission() === true){
+        if ($this->checkWritePermission() === true) {
             return true;
         }
         return $this->checkWritePermissionField($names);
     }
-    
 }

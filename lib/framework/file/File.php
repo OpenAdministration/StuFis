@@ -1,4 +1,5 @@
 <?php
+
 namespace framework\file;
 
 use DateTime;
@@ -7,7 +8,6 @@ use DateTime;
  * FRAMEWORK LIB Protocol
  * implement file class
  *
- * @package         Stura - Referat IT - ProtocolHelper
  * @category        model
  * @author 			michael gnehr
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
@@ -27,71 +27,61 @@ use DateTime;
  */
 class File
 {
-	/**
-	 * 
-	 * @var int
-	 */
-	public $id;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $link;
-	
-	/**
-	 *
-	 * @var datetime
-	 */
-	public $added_on;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $hashname;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $filename;
-	
-	/**
-	 *
-	 * @var int
-	 */
-	public $size;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $fileextension;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $mime;
-	
-	/**
-	 *
-	 * @var string
-	 */
-	public $encoding;
-	
-	/**
-	 *
-	 * @var int
-	 */
-	public $data;
-	
-	public function getAddedOnDate()
+    /**
+     * @var int
+     */
+    public $id;
+
+    /**
+     * @var string
+     */
+    public $link;
+
+    /**
+     * @var datetime
+     */
+    public $added_on;
+
+    /**
+     * @var string
+     */
+    public $hashname;
+
+    /**
+     * @var string
+     */
+    public $filename;
+
+    /**
+     * @var int
+     */
+    public $size;
+
+    /**
+     * @var string
+     */
+    public $fileextension;
+
+    /**
+     * @var string
+     */
+    public $mime;
+
+    /**
+     * @var string
+     */
+    public $encoding;
+
+    /**
+     * @var int
+     */
+    public $data;
+
+    public function getAddedOnDate()
     {
-		if ($this->added_on){
-			return date_create($this->added_on);
-		}
+        if ($this->added_on) {
+            return date_create($this->added_on);
+        }
 
         return null;
     }

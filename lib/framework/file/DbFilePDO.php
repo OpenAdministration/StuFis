@@ -5,7 +5,6 @@
  * database connection
  * implements framework database functions
  *
- * @package           Stura - Referat IT - ProtocolHelper
  * @category          framework
  * @author            michael g
  * @author            Stura - Referat IT <ref-it@tu-ilmenau.de>
@@ -23,19 +22,18 @@ use framework\render\ErrorHandler;
 use PDO;
 
 /**
- *
  * @author  Michael Gnehr <michael@gnehr.de>
  * @since   01.03.2017
- * @package SILMPH_framework
  */
-class DbFilePDO{
+class DbFilePDO
+{
     /**
      * database member
      *
      * @var PDO
      */
     public $db;
-    
+
     /**
      * database connector
      *
@@ -43,51 +41,49 @@ class DbFilePDO{
      * @see DBConnector.php
      */
     public $dbconnector;
-    
+
     private $TABLE_PREFIX;
-    
+
     /**
      * db error state: last request was error or not
      *
      * @var bool
      */
     private $_isError = false;
-    
+
     /**
      * last error message
      *
-     * @var $string
+     * @var
      */
     private $msgError = '';
-    
+
     /**
      * db state: db was closed or not
      *
      * @var bool
      */
     private $_isClose = false;
-    
+
     /**
      * Contains affected rows after update, delete and insert requests
      * set by memberfunction: protectedInsert
      *
-     * @var integer
+     * @var int
      */
     private $affectedRows = 0;
 
-    
     // ======================== HELPER FUNCTIONS ======================================================
-    
+
     /**
      * class constructor
-     *
-     * @param DBConnector $dbconnector
      */
-    public function __construct(DBConnector $dbconnector){
+    public function __construct(DBConnector $dbconnector)
+    {
         $this->db = $dbconnector->getPdo();
         $this->dbconnector = $dbconnector;
         $this->TABLE_PREFIX = $dbconnector->getDbPrefix();
-        if (!$this->db){
+        if (!$this->db) {
             $this->_isError = true;
             $this->msgError = "Connect failed: No PDO object\n";
             ErrorHandler::handleError(500, $this->msgError);
@@ -97,16 +93,11 @@ class DbFilePDO{
 
     /**
      * generate reference array of array
-     *
-     * @param array $arr
-     *
-     * @return array
      */
     public function refValues(array $arr): array
     {
-        if (strnatcmp(PHP_VERSION, '5.3') >= 0) //Reference is required for PHP 5.3+
-        {
-            $refs = array();
+        if (strnatcmp(PHP_VERSION, '5.3') >= 0) { //Reference is required for PHP 5.3+
+            $refs = [];
             foreach ($arr as $key => $value) {
                 $refs[$key] = &$value;
             }
@@ -116,9 +107,9 @@ class DbFilePDO{
     }
 
     // ======================== BASE FUNCTIONS ========================================================
-    
+
     // ====================================================
-    
+
     /**
      * db: return affected rows
      *
@@ -128,7 +119,7 @@ class DbFilePDO{
     {
         return $this->affectedRows;
     }
-    
+
     /**
      * @return bool $this->_isClose
      */
@@ -136,7 +127,7 @@ class DbFilePDO{
     {
         return $this->_isClose;
     }
-    
+
     /**
      * @retun string last error message
      */
@@ -144,7 +135,7 @@ class DbFilePDO{
     {
         return $this->msgError;
     }
-    
+
     /**
      * only delete reference to pdo object
      * you need to remove all other references on your own
@@ -152,9 +143,9 @@ class DbFilePDO{
      */
     public function close(): void
     {
-        if (!$this->_isClose){
+        if (!$this->_isClose) {
             $this->_isClose = true;
-            if ($this->db){
+            if ($this->db) {
                 $this->db = null;
                 $this->dbconnector = null;
             }
@@ -164,18 +155,18 @@ class DbFilePDO{
     /**
      * create filedata entry, set datablob null, set diskpath to file
      *
-     * @param string $filepath
      * @return false|int new inserted id or false
      */
-    public function createFileDataPath(string $filepath){
+    public function createFileDataPath(string $filepath)
+    {
         if ($filepath === '') {
             return false;
         }
-        try{
+        try {
             $this->dbconnector->dbInsert('filedata', ['diskpath' => $filepath]);
             $this->_isError = false;
             return $this->lastInsertId();
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -183,9 +174,9 @@ class DbFilePDO{
             return false;
         }
     }
-    
+
     // database file related functions ========================================================
-    
+
     /**
      * db: return las inserted id
      *
@@ -195,16 +186,15 @@ class DbFilePDO{
     {
         return $this->db->lastInsertId();
     }
-    
+
     /**
      * create fileentry on table fileinfo
      *
-     * @param File $f
-     *
      * @return false|int new inserted id or false
      */
-    public function createFile(File $f){
-        try{
+    public function createFile(File $f)
+    {
+        try {
             $this->dbconnector->dbInsert('fileinfo', [
                 'link' => $f->link,
                 'hashname' => $f->hashname,
@@ -214,11 +204,11 @@ class DbFilePDO{
                 'mime' => $f->mime,
                 'encoding' => $f->encoding,
                 'data' => $f->data,
-                'added_on' => ($f->added_on) ?: date_create()->format('Y-m-d H:i:s')
+                'added_on' => ($f->added_on) ?: date_create()->format('Y-m-d H:i:s'),
             ]);
             $this->_isError = false;
             return $this->lastInsertId();
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -226,17 +216,15 @@ class DbFilePDO{
             return false;
         }
     }
-    
+
     /**
      * update file column 'data' of fileinfo entry
      *
-     * @param File $f
-     *
-     * @return boolean success
+     * @return bool success
      */
     public function updateFile_DataId(File $f): bool
     {
-        try{
+        try {
             $this->_isError = false;
             $this->dbconnector->dbUpdate(
                 'fileinfo',
@@ -244,7 +232,7 @@ class DbFilePDO{
                 ['data' => $f->data]
             );
             return true;
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -257,22 +245,19 @@ class DbFilePDO{
      * prevent duplicate files for one link/directory
      *
      * @param string $linkId link or directory name - hier beleg name/id
-     * @param string $filename
-     * @param string $extension
-     * @return bool
      */
     public function checkFileExists(string $linkId, string $filename, string $extension): bool
     {
         $res = null;
-        try{
+        try {
             $this->_isError = false;
             $res = $this->dbconnector->dbFetchAll(
-                "fileinfo",
+                'fileinfo',
                 [DBConnector::FETCH_ASSOC],
                 [],
-                ["fileinfo.link" => $linkId, "fileinfo.filename" => $filename, "fileinfo.fileextension" => $extension]);
+                ['fileinfo.link' => $linkId, 'fileinfo.filename' => $filename, 'fileinfo.fileextension' => $extension]);
             return count($res) >= 1;
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -280,21 +265,19 @@ class DbFilePDO{
             return false;
         }
     }
-    
+
     /**
      * return list of all existing links
-     *
-     * @return array
      */
     public function getAllFileLinkIds(): array
     {
         $result = [];
-        try{
+        try {
             $this->_isError = false;
-            $stmt = $this->db->query("SELECT DISTINCT F.link FROM `" . $this->TABLE_PREFIX . "fileinfo` F");
+            $stmt = $this->db->query('SELECT DISTINCT F.link FROM `' . $this->TABLE_PREFIX . 'fileinfo` F');
             $this->affectedRows = $stmt->rowCount();
             $result = $stmt->fetchAll();
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -302,7 +285,7 @@ class DbFilePDO{
             $result = [];
         }
         $return = [];
-        foreach ($result as $line){
+        foreach ($result as $line) {
             $return[] = $line['link'];
         }
         return $return;
@@ -310,43 +293,40 @@ class DbFilePDO{
 
     /**
      * returns fileinfo by id
-     *
-     * @param int $id
-     * @return File|NULL
      */
     public function getFileInfoById(int $id): ?File
     {
-        try{
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbFetchAll(
-                "fileinfo",
+                'fileinfo',
                 [DBConnector::FETCH_ASSOC],
                 [],
-                ["fileinfo.id" => $id]);
-        }catch (Exception $e){
+                ['fileinfo.id' => $id]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
             $this->affectedRows = -1;
             return null;
         }
-        if(count($result) === 0){
+        if (count($result) === 0) {
             return null;
         }
         $line = $result[0];
         return $this->generateFileFromDbLine($line);
     }
 
-    private function generateFilesFromDbResult(array $dbRes) : array
+    private function generateFilesFromDbResult(array $dbRes): array
     {
         $res = [];
-        foreach ($dbRes as $line){
+        foreach ($dbRes as $line) {
             $res[] = $this->generateFileFromDbLine($line);
         }
         return $res;
     }
 
-    private function generateFileFromDbLine(array $line) : ?File
+    private function generateFileFromDbLine(array $line): ?File
     {
         $f = new File();
         $f->id = $line['id'];
@@ -361,7 +341,7 @@ class DbFilePDO{
         $f->filename = $line['filename'];
         return $f;
     }
-    
+
     /**
      * returns fileinfo by id
      *
@@ -370,14 +350,14 @@ class DbFilePDO{
     public function getFilesByLinkId($id): array
     {
         $result = [];
-        try{
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbFetchAll(
-                "fileinfo",
+                'fileinfo',
                 [DBConnector::FETCH_ASSOC],
                 [],
-                ["fileinfo.link" => $id]);
-        }catch (Exception $e){
+                ['fileinfo.link' => $id]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -391,46 +371,46 @@ class DbFilePDO{
      * returns fileinfo by filehash
      *
      * @param $hash
-     * @return File|NULL
      */
     public function getFileInfoByHash($hash): ?File
     {
         $result = [];
-        try{
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbFetchAll(
-                "fileinfo",
+                'fileinfo',
                 [DBConnector::FETCH_ASSOC],
                 [],
-                ["hashname" => $hash]);
-        }catch (Exception $e){
+                ['hashname' => $hash]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
             $this->affectedRows = -1;
             return null;
         }
-        if(count($result) === 0){
+        if (count($result) === 0) {
             return null;
         }
         $line = $result[0];
         return $this->generateFileFromDbLine($line);
     }
-    
+
     /**
      * delete filedata by id
      *
-     * @param integer $id
+     * @param int $id
      *
-     * @return integer affected rows
+     * @return int affected rows
      */
-    public function deleteFiledataById($id){
-        try{
+    public function deleteFiledataById($id)
+    {
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbDelete(
-                "filedata",
-                ["filedata.id" => $id]);
-        }catch (Exception $e){
+                'filedata',
+                ['filedata.id' => $id]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -439,28 +419,28 @@ class DbFilePDO{
         }
         return $result;
     }
-    
+
     /**
      * @return int $this->_isError
      */
-    public function isError(){
+    public function isError()
+    {
         return $this->_isError;
     }
 
     /**
      * delete filedata by link id
      *
-     * @param int $linkId
      * @return bool affected rows
      */
     public function deleteFiledataByLinkId(int $linkId): bool
     {
-        $sql = "DELETE FROM `" . $this->TABLE_PREFIX . "filedata` WHERE `id` IN ( SELECT F.data FROM `" . $this->TABLE_PREFIX . "fileinfo` F WHERE F.link = ? );";
-        try{
+        $sql = 'DELETE FROM `' . $this->TABLE_PREFIX . 'filedata` WHERE `id` IN ( SELECT F.data FROM `' . $this->TABLE_PREFIX . 'fileinfo` F WHERE F.link = ? );';
+        try {
             $this->_isError = false;
             $stmt = $this->db->prepare($sql);
-            $response = $stmt->execute(array($linkId));
-        }catch (Exception $e){
+            $response = $stmt->execute([$linkId]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '" ==>   SQL: ' . $sql);
@@ -469,21 +449,22 @@ class DbFilePDO{
         }
         return !$this->isError();
     }
-    
+
     /**
      * delete fileinfo by id
      *
-     * @param integer $id
+     * @param int $id
      *
-     * @return integer affected rows
+     * @return int affected rows
      */
-    public function deleteFileinfoById($id){
-        try{
+    public function deleteFileinfoById($id)
+    {
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbDelete(
-                "fileinfo",
-                ["fileinfo.id" => $id]);
-        }catch (Exception $e){
+                'fileinfo',
+                ['fileinfo.id' => $id]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -496,17 +477,16 @@ class DbFilePDO{
     /**
      * delete fileinfo by link id
      *
-     * @param int $linkId
      * @return bool affected rows
      */
     public function deleteFileinfoByLinkId(int $linkId): bool
     {
-        try{
+        try {
             $this->_isError = false;
             $result = $this->dbconnector->dbDelete(
-                "fileinfo",
-                ["link" => $linkId]);
-        }catch (Exception $e){
+                'fileinfo',
+                ['link' => $linkId]);
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
             error_log('DB Error: "' . $this->msgError . '"');
@@ -515,18 +495,19 @@ class DbFilePDO{
         }
         return !$this->isError();
     }
-    
+
     // =======================================================
-    
+
     /**
      * writes file from filesystem to database
      *
      * @param string  $filename path to existing file
-     * @param integer $filesize in bytes
+     * @param int $filesize in bytes
      *
      * @return false|int error -> false, last inserted id or
      */
-    public function storeFile2Filedata($filename, $filesize = null){
+    public function storeFile2Filedata($filename, $filesize = null)
+    {
         return $this->_storeFile2Filedata($filename, $filesize, 'filedata', 'data');
     }
 
@@ -542,20 +523,20 @@ class DbFilePDO{
      */
     protected function _storeFile2Filedata(string $filename, $filesize = null, string $tablename = 'filedata', string $datacolname = 'data', $id = false)
     {
-        if ($id){
-            $sql = "INSERT INTO `" . $this->TABLE_PREFIX . "$tablename` (id, $datacolname) VALUES(?, ?)";
-        }else{
-            $sql = "INSERT INTO `" . $this->TABLE_PREFIX . "$tablename` ($datacolname) VALUES(?)";
+        if ($id) {
+            $sql = 'INSERT INTO `' . $this->TABLE_PREFIX . "$tablename` (id, $datacolname) VALUES(?, ?)";
+        } else {
+            $sql = 'INSERT INTO `' . $this->TABLE_PREFIX . "$tablename` ($datacolname) VALUES(?)";
         }
         $stmt = $this->db->prepare($sql);
         $fp = fopen($filename, 'rb');
-        if ($id){
+        if ($id) {
             $stmt->bindParam(1, $insert_id);
             $stmt->bindParam(2, $fp, PDO::PARAM_LOB);
-        }else{
+        } else {
             $stmt->bindParam(1, $fp, PDO::PARAM_LOB);
         }
-        try{
+        try {
             $last_id = 0;
             $this->db->beginTransaction();
             $stmt->execute();
@@ -563,50 +544,51 @@ class DbFilePDO{
             $this->db->commit();
             fclose($fp);
             return $last_id;
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
-            error_log('DB Error: "' . $this->msgError . '"' . " ==> SQL: " . $sql);
+            error_log('DB Error: "' . $this->msgError . '"' . ' ==> SQL: ' . $sql);
             $this->affectedRows = -1;
             return false;
         }
     }
-    
+
     /**
      * return binary data from database
      *
-     * @param integer $id filedata id
+     * @param int $id filedata id
      *
      * @return bool|string error -> false, binary data
      */
-    public function getFiledataBinary(int $id){
+    public function getFiledataBinary(int $id)
+    {
         return $this->_getFiledataBinary($id);
     }
-    
+
     /**
      * return binary data from database
      *
-     * @param integer $id          filedata id
+     * @param int $id          filedata id
      * @param string  $tablename   database table name
      * @param string  $datacolname database data table column name
      *
      * @return bool|string error -> false, binary data
      */
-    protected function _getFiledataBinary(int $id, $tablename = 'filedata', $datacolname = 'data'){
+    protected function _getFiledataBinary(int $id, $tablename = 'filedata', $datacolname = 'data')
+    {
         $sql = "SELECT FD.$datacolname FROM `" . $this->TABLE_PREFIX . "$tablename` FD WHERE id=:dataid";
         $stmt = $this->db->prepare($sql);
-        try{
-            $stmt->execute(array(':dataid' => $id));
+        try {
+            $stmt->execute([':dataid' => $id]);
             $this->affectedRows = $stmt->rowCount();
             $stmt->bindColumn(1, $file, PDO::PARAM_LOB);
             $stmt->fetch();
             $this->_isError = false;
             return $file;
-            
-        }catch (Exception $e){
+        } catch (Exception $e) {
             $this->_isError = true;
             $this->msgError = $e->getMessage();
-            error_log('DB Error: "' . $this->msgError . '"' . " ==> SQL: " . $sql);
+            error_log('DB Error: "' . $this->msgError . '"' . ' ==> SQL: ' . $sql);
             $this->affectedRows = -1;
             return false;
         }

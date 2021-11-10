@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 class HtmlDropdown extends HtmlInput
 {
@@ -12,7 +10,7 @@ class HtmlDropdown extends HtmlInput
      * @param string $type has to be there bc of inheritance, otherwise it would not be there
      * @return static
      */
-    public static function make(string $type = 'select') : self
+    public static function make(string $type = 'select'): self
     {
         $wrapStack[] = Html::tag('div')->addClasses(['form-group']);
         return new self(
@@ -26,10 +24,10 @@ class HtmlDropdown extends HtmlInput
      * @param array $items value => [text =>, subtext =>, titel =>, disabled =>] (with or without keys possible)
      * @return $this
      */
-    public function setItems(array $items) : self
+    public function setItems(array $items): self
     {
         $itemString = '';
-        foreach ($items as $value => $conf){
+        foreach ($items as $value => $conf) {
             $text = $conf[0] ?? $conf['text'] ?? '';
             $subtext = $conf[1] ?? $conf['subtext'] ?? '';
             $titel = $conf[2] ?? $conf['titel'] ?? $text;
@@ -45,13 +43,13 @@ class HtmlDropdown extends HtmlInput
         return $this;
     }
 
-    public function style(string $btType = BT::TYPE_PRIMARY) : self
+    public function style(string $btType = BT::TYPE_PRIMARY): self
     {
         $this->dataAttr('style', "btn-$btType");
         return $this;
     }
 
-    public function liveSearch(bool $active = true) : self
+    public function liveSearch(bool $active = true): self
     {
         $this->dataAttr('live-search', $active);
         return $this;
@@ -61,23 +59,23 @@ class HtmlDropdown extends HtmlInput
      * @param int $max 0 equals infinite
      * @return $this
      */
-    public function multiSelect(int $max = 0) : self
+    public function multiSelect(int $max = 0): self
     {
-        if($max > 0){
+        if ($max > 0) {
             $this->dataAttr('max-options', $max);
         }
         $this->unaryAttributes[] = 'multiple';
         return $this;
     }
 
-    public function showTick() : self
+    public function showTick(): self
     {
         $this->unaryAttributes[] = 'show-tick';
         return $this;
     }
 
-    public function end() : string {
+    public function end(): string
+    {
         return "</{$this->tag}>" . $this->wrapEnd();
     }
-
 }

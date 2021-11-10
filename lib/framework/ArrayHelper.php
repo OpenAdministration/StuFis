@@ -1,30 +1,25 @@
 <?php
 
-
 namespace framework;
 
-
-use booking\konto\NeedsTanException;
 use framework\render\html\Html;
 
 class ArrayHelper
 {
     /**
-     * @param array $a1
-     * @param array $a2
      * @return array a1 without a2
      */
     public static function diff_recursive(array $a1, array $a2): array
     {
         $result = [];
-        foreach ($a1 as $k => $v){
-            if(!isset($a2[$k])){
+        foreach ($a1 as $k => $v) {
+            if (!isset($a2[$k])) {
                 $result[$k] = $v;
             }
-            if(isset($a2[$k]) && $a2[$k] !== $v){
+            if (isset($a2[$k]) && $a2[$k] !== $v) {
                 // if entries differ add
                 $diff = self::diff_recursive($v, $a2[$k]);
-                if(count($diff) !== 0){
+                if (count($diff) !== 0) {
                     $result[$k] = $diff;
                 }
             } // else dont add it
@@ -37,30 +32,30 @@ class ArrayHelper
      * @param string $delimiter default ':'
      * @return array returns array of depth 1 with convoluted keys, only tree-leaves maintain in this array values
      */
-    public static function convolve_keys(array $a, string $delimiter = ":") : array
+    public static function convolve_keys(array $a, string $delimiter = ':'): array
     {
         $out = [];
-        foreach ($a as $k => $v){
-            if(is_array($v)){
-                foreach ($v as $k2 => $v2){
-                    if(is_array($v2)){
-                        foreach (self::convolve_keys($v2) as $k3 => $v3){
+        foreach ($a as $k => $v) {
+            if (is_array($v)) {
+                foreach ($v as $k2 => $v2) {
+                    if (is_array($v2)) {
+                        foreach (self::convolve_keys($v2) as $k3 => $v3) {
                             $out[$k . $delimiter . $k2 . $delimiter . $k3] = $v3;
                         }
-                    }else{
+                    } else {
                         $out[$k . ':' . $k2] = $v2;
                     }
                 }
-            }else{
+            } else {
                 $out[$k] = $v;
             }
         }
         return $out;
     }
 
-    public static function remove(array &$array, int|string $key) : mixed
+    public static function remove(array &$array, int|string $key): mixed
     {
-        if(!isset($array[$key])){
+        if (!isset($array[$key])) {
             throw new \InvalidArgumentException('Key not found');
         }
         $el = $array[$key];
@@ -68,12 +63,12 @@ class ArrayHelper
         return $el;
     }
 
-    public static function allIn(array $haystack, array $needles) : bool
+    public static function allIn(array $haystack, array $needles): bool
     {
         return count(array_diff(array_values($needles), array_values($haystack))) === 0;
     }
 
-    public static function dump(array $array) : string
+    public static function dump(array $array): string
     {
         return Html::tag('pre')->body(var_export($array, true), false);
     }

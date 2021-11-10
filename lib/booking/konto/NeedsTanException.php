@@ -1,6 +1,5 @@
 <?php
 
-
 namespace booking\konto;
 
 use Fhp\BaseAction;
@@ -25,17 +24,13 @@ class NeedsTanException extends \RuntimeException
         $this->fintsAction = $baseAction;
     }
 
-    public function getAction() : BaseAction
+    public function getAction(): BaseAction
     {
         return $this->fintsAction;
     }
 
-    /**
-     * @return TanRequest
-     */
-    public function getTanRequest() : TanRequest
+    public function getTanRequest(): TanRequest
     {
         return $this->fintsAction->getTanRequest();
     }
-
 }

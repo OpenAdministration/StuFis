@@ -1,6 +1,5 @@
 <?php
 
-
 namespace framework\auth;
 
 use Monolog\Handler\RotatingFileHandler;
@@ -9,50 +8,49 @@ use phpCAS;
 
 class AuthCasHandler extends AuthHandler
 {
-
     private static array $attributes;
 
     protected function __construct()
     {
-        if($_ENV['AUTH_DEBUG']){
+        if ($_ENV['AUTH_DEBUG']) {
             $logger = new Logger('phpCAS');
             $logger->pushHandler(new RotatingFileHandler(SYSBASE . '/runtime/logs/cas.log'));
             phpCAS::setLogger($logger);
-            if(DEV){
+            if (DEV) {
                 phpCAS::setVerbose(true);
             }
         }
         phpCAS::client($_ENV['CAS_VERSION'], $_ENV['CAS_HOST'], (int) $_ENV['CAS_PORT'], $_ENV['CAS_PATH']);
         phpCAS::setFixedServiceURL(FULL_APP_PATH);
-        if(empty($_ENV['CAS_CERTFILE'])){
+        if (empty($_ENV['CAS_CERTFILE'])) {
             phpCAS::setNoCasServerValidation();
-        }else{
+        } else {
             phpCAS::setCasServerCACert($_ENV['CAS_CERTFILE']);
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function requireAuth(): void
     {
-        if(!phpCAS::isAuthenticated() && !phpCAS::forceAuthentication()) {
+        if (!phpCAS::isAuthenticated() && !phpCAS::forceAuthentication()) {
             $this->reportPermissionDenied('Zugriff verweigert', 'forceAuth');
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function requireGroup(array|string $groups): void
     {
         if (!$this->hasGroup($groups)) {
-            $this->reportPermissionDenied("Fehlende Gruppenberechtigung", $groups);
+            $this->reportPermissionDenied('Fehlende Gruppenberechtigung', $groups);
         }
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getLogoutURL(): string
     {
@@ -60,7 +58,7 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function logout(): void
     {
@@ -68,12 +66,12 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getAttributes(): array
     {
         $this->requireAuth();
-        if(!isset(self::$attributes)){
+        if (!isset(self::$attributes)) {
             self::$attributes = phpCAS::getAttributes();
             self::$attributes['groups'] ??= [];
             self::$attributes['groups'] = (array) self::$attributes['groups'];
@@ -86,7 +84,7 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getUsername(): ?string
     {
@@ -95,7 +93,7 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getUserFullName(): string
     {
@@ -103,7 +101,7 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getUserMail(): string
     {
@@ -111,7 +109,7 @@ class AuthCasHandler extends AuthHandler
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function isAdmin(): bool
     {
@@ -120,7 +118,6 @@ class AuthCasHandler extends AuthHandler
 
     /**
      * DEBUG PURPOSE ONLY!!
-     * @return array
      */
     public function getUserGremien(): array
     {
@@ -130,7 +127,6 @@ class AuthCasHandler extends AuthHandler
 
     /**
      * DEBUG PURPOSE ONLY!!
-     * @return array
      */
     public function getUserGroups(): array
     {

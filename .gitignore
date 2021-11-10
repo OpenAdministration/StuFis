@@ -15,3 +15,4 @@ secret.php
 /.env
 /composer-setup.php
 /composer.phar
+/.php-cs-fixer.cache

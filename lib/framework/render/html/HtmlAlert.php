@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 class HtmlAlert extends AbstractHtmlTag
 {
@@ -11,10 +9,10 @@ class HtmlAlert extends AbstractHtmlTag
         return new self('div', [], ['alert', "alert-$btType"]);
     }
 
-    public function strongMsg(string $msg) : self
+    public function strongMsg(string $msg): self
     {
         $strong = Html::tag('strong')->body($msg);
-        $this->bodyPrefix($strong. " ", false);
+        $this->bodyPrefix($strong. ' ', false);
         return $this;
     }
 }

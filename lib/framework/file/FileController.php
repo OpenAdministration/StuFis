@@ -2,7 +2,6 @@
 /**
  * CONTROLLER FileHandler
  *
- * @package         Stura - Referat IT - ProtocolHelper
  * @category        framework
  * @author 			michael g
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
@@ -17,50 +16,50 @@ namespace framework\file;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 
-class FileController {
-
-	/**
-	 * 
-	 * @var DBConnector
-	 */
-	private $db;
+class FileController
+{
+    /**
+     * @var DBConnector
+     */
+    private $db;
 
     /**
      * constructor
      */
-	public function __construct(){
-		$this->db = DBConnector::getInstance();
-	}
-	
-	public function handle($routeInfo): void
+    public function __construct()
     {
-		if ($routeInfo['action'] === 'get'){
-			if (!isset($routeInfo['fdl'])){
-				$routeInfo['fdl'] = 0;
-			}
-			$this->get($routeInfo);
-		}
-	}
+        $this->db = DBConnector::getInstance();
+    }
 
-	/**
-	 * ACTION get
-	 * handle file delivery
-	 */
-	private function get($routeInfo): void
+    public function handle($routeInfo): void
     {
-		$fh = new FileHandler($this->db);
-		//get file
-		$file = $fh->checkFileHash($routeInfo['key']);
-		if (!$file){
+        if ($routeInfo['action'] === 'get') {
+            if (!isset($routeInfo['fdl'])) {
+                $routeInfo['fdl'] = 0;
+            }
+            $this->get($routeInfo);
+        }
+    }
+
+    /**
+     * ACTION get
+     * handle file delivery
+     */
+    private function get($routeInfo): void
+    {
+        $fh = new FileHandler($this->db);
+        //get file
+        $file = $fh->checkFileHash($routeInfo['key']);
+        if (!$file) {
             ErrorHandler::handleError(404);
-			return;
-		}
-		//TODO FIXME ACL - user has permission to download/view this file?
-		if (false){//!checkUserPermission($top['gname'])) {
+            return;
+        }
+        //TODO FIXME ACL - user has permission to download/view this file?
+        if (false) {//!checkUserPermission($top['gname'])) {
             ErrorHandler::handleError(403);
-			die();
-		}
-		$fh->deliverFileData($file, $routeInfo['fdl']);
-		return;
-	}
+            exit();
+        }
+        $fh->deliverFileData($file, $routeInfo['fdl']);
+        return;
+    }
 }

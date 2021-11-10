@@ -1,16 +1,13 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 class HtmlButton extends AbstractHtmlTag
 {
     /**
      * @param string $type button|submit|reset are valid
-     * @return self
      */
-    public static function make(string $type = 'submit') : self
+    public static function make(string $type = 'submit'): self
     {
         return new self(['type' => $type], ['btn']);
     }
@@ -23,12 +20,12 @@ class HtmlButton extends AbstractHtmlTag
     /**
      * @param string $styleName default|primary|success|info|warning|danger|link
      */
-    public function style(string $styleName) : self
+    public function style(string $styleName): self
     {
         return $this->addClasses(["btn-$styleName"]);
     }
 
-    public function asLink($href) : self
+    public function asLink($href): self
     {
         $this->tag = 'a';
         $this->attr('type', 'button');
@@ -40,13 +37,12 @@ class HtmlButton extends AbstractHtmlTag
      * @param $fa string|FA faName in @see FA::make or an FA object
      * @return HtmlButton
      */
-    public function icon($fa) : self
+    public function icon($fa): self
     {
-        if(!($fa instanceof FA)){
+        if (!($fa instanceof FA)) {
             $fa = FA::make($fa);
         }
         $this->bodyPrefix($fa . ' ');
         return $this;
     }
-
 }

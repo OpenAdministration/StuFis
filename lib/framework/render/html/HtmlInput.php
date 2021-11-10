@@ -1,39 +1,37 @@
 <?php
 
-
 namespace framework\render\html;
-
 
 use JetBrains\PhpStorm\Pure;
 
 class HtmlInput extends AbstractHtmlTag
 {
-    const TYPE_STRING = 'string';
-    const TYPE_PASSWORD = 'password';
-    const TYPE_HIDDEN = 'hidden';
+    public const TYPE_STRING = 'string';
+    public const TYPE_PASSWORD = 'password';
+    public const TYPE_HIDDEN = 'hidden';
 
     /** @var Html */
     protected $label;
 
-    public function value($value) : self
+    public function value($value): self
     {
         $this->attributes['value'] = $value;
         return $this;
     }
 
-    public function name($name) : self
+    public function name($name): self
     {
         $this->attributes['name'] = $name;
         return $this;
     }
 
-    public function placeholder($value) : self
+    public function placeholder($value): self
     {
         $this->attributes['placeholder'] = $value;
         return $this;
     }
 
-    public function label($value) : self
+    public function label($value): self
     {
         $id = $this->generateId();
         $this->label = Html::tag('label')
@@ -42,18 +40,18 @@ class HtmlInput extends AbstractHtmlTag
         return $this;
     }
 
-    public static function make(string $type = 'text') : self
+    public static function make(string $type = 'text'): self
     {
         $class = [];
         $wrapStack = [];
-        if($type !== 'hidden'){
+        if ($type !== 'hidden') {
             $class = ['form-control'];
             $wrapStack[] = Html::tag('div')->addClasses(['form-group']);
         }
         return new self(
             attributes: ['type' => $type],
             classes: $class,
-            wrapStack:  $wrapStack
+            wrapStack: $wrapStack
         );
     }
 
@@ -66,13 +64,12 @@ class HtmlInput extends AbstractHtmlTag
 
     public function begin(): string
     {
-        return $this->beginWrap() . $this->label . "<$this->tag " . $this->implodeAttrClassesData() . ">";
+        return $this->beginWrap() . $this->label . "<$this->tag " . $this->implodeAttrClassesData() . '>';
     }
 
     public function end(): string
     {
         // no closing tag
-        return  $this->wrapEnd();
+        return $this->wrapEnd();
     }
-
 }

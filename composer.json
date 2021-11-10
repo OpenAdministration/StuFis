@@ -38,11 +38,22 @@
 
     "require-dev": {
         "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^9"
+        "phpunit/phpunit": "^9",
+        "friendsofphp/php-cs-fixer": "^3.2"
     },
 
     "autoload": {
         "psr-4": { "": "lib/" },
         "files": []
+    },
+
+    "scripts": {
+        "check": [
+            "@cs"
+        ],
+        "cs": "php-cs-fixer fix -v --diff --dry-run",
+        "cs-fix": "php-cs-fixer fix -v --diff",
+        "cs-risky": "php-cs-fixer fix -v --diff --dry-run --allow-risky yes",
+        "cs-fix-risky": "php-cs-fixer fix -v --diff --allow-risky yes"
     }
 }

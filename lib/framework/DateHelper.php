@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework;
-
 
 use DateTime;
 
@@ -37,9 +35,9 @@ class DateHelper
         return [$startDate, $syncUntil];
     }
 
-    public static function fromDb(?string $sqlDateString) : DateTime
+    public static function fromDb(?string $sqlDateString): DateTime
     {
-        if(is_null($sqlDateString)){
+        if (is_null($sqlDateString)) {
             return date_create();
         }
         return DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $sqlDateString);

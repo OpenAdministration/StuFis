@@ -1,10 +1,6 @@
 <?php
 
-
 namespace framework\render\html;
-
-
-use framework\ArrayHelper;
 
 abstract class AbstractHtmlTag
 {
@@ -21,17 +17,12 @@ abstract class AbstractHtmlTag
     protected $bodySuffix;
 
     /**
-     * @var AbstractHtmlTag[] $wrapStack
+     * @var AbstractHtmlTag[]
      */
     protected array $wrapStack;
 
     /**
      * AbstractHtmlTag constructor.
-     * @param string $tag
-     * @param array $attributes
-     * @param array $classes
-     * @param array $dataAttributes
-     * @param array $wrapStack
      */
     protected function __construct(string $tag, array $attributes = [], array $classes = [], array $dataAttributes = [], array $wrapStack = [])
     {
@@ -51,100 +42,100 @@ abstract class AbstractHtmlTag
      */
     public function body(object|string $content, bool $escape = true): self
     {
-        if(is_object($content)){
+        if (is_object($content)) {
             /** @var $content Html */
             $content = (string) $content;
         }
-        if($escape){
+        if ($escape) {
             $this->body = htmlentities($content);
-        }else{
+        } else {
             $this->body = $content;
         }
         return $this;
     }
 
-    public function appendBody(AbstractHtmlTag|string $content, bool $escape = true) : self
+    public function appendBody(AbstractHtmlTag|string $content, bool $escape = true): self
     {
-        if($content instanceof self){
+        if ($content instanceof self) {
             $content = $content->__toString();
         }
-        if($escape){
+        if ($escape) {
             $this->body .= htmlentities($content);
-        }else{
+        } else {
             $this->body .= $content;
         }
         return $this;
     }
 
-    protected function generateId() : string
+    protected function generateId(): string
     {
-        if(isset($this->id)){
+        if (isset($this->id)) {
             return $this->id;
         }
-        if(isset($this->attributes['name'])){
+        if (isset($this->attributes['name'])) {
             $uniqueId = $this->attributes['name'] . '-' . uniqid('', true);
-        }else{
+        } else {
             $uniqueId = uniqid('', true);
         }
         $this->id($uniqueId);
         return $this->id;
     }
 
-    public function id(string $id) : self
+    public function id(string $id): self
     {
         $this->id = $id;
         return $this->attr('id', $id);
     }
 
-    public function setClasses(array $classes) : self
+    public function setClasses(array $classes): self
     {
         $this->classes = $classes;
         return $this;
     }
 
-    public function addClasses(array $classes) : self
+    public function addClasses(array $classes): self
     {
         $this->classes = array_merge($this->classes, $classes);
         return $this;
     }
 
-    public function attr(string $name,string $val) : self
+    public function attr(string $name, string $val): self
     {
         $this->attributes[$name] = $val;
         return $this;
     }
 
-    public function dataAttr(string $name,string $val) : self
+    public function dataAttr(string $name, string $val): self
     {
         $this->dataAttributes[$name] = $val;
         return $this;
     }
 
-    public function begin() : string
+    public function begin(): string
     {
-        return $this->beginWrap() . "<$this->tag " . $this->implodeAttrClassesData() . ">";
+        return $this->beginWrap() . "<$this->tag " . $this->implodeAttrClassesData() . '>';
     }
 
-    protected function beginWrap() : string
+    protected function beginWrap(): string
     {
         $wrap = '';
-        foreach ($this->wrapStack as $wrapper){
+        foreach ($this->wrapStack as $wrapper) {
             $wrap .= $wrapper->begin();
         }
         return $wrap;
     }
 
-    protected function implodeAttrClassesData() : string
+    protected function implodeAttrClassesData(): string
     {
-        $ret = [array_reduce($this->classes, static function ($val1, $val2){
-                return $val1 . ' ' . $val2;
-            }, "class='") . "'"];
-        foreach ($this->attributes as $name => $value){
+        $ret = [array_reduce($this->classes, static function ($val1, $val2) {
+            return $val1 . ' ' . $val2;
+        }, "class='") . "'"];
+        foreach ($this->attributes as $name => $value) {
             $name = htmlentities($name);
             $value = htmlentities($value);
             $ret[] = "$name='$value'";
         }
-        foreach ($this->dataAttributes as $name => $value){
+        foreach ($this->dataAttributes as $name => $value) {
             $name = htmlentities($name);
             $value = htmlentities($value);
             $ret[] = "data-$name='$value'";
@@ -153,48 +144,52 @@ abstract class AbstractHtmlTag
         return implode(' ', $ret);
     }
 
-    public function end() : string {
+    public function end(): string
+    {
         return "</{$this->tag}>" . $this->wrapEnd();
     }
 
-    protected function wrapEnd() : string {
+    protected function wrapEnd(): string
+    {
         $wrap = '';
-        foreach ($this->wrapStack as $wrapper){
+        foreach ($this->wrapStack as $wrapper) {
             $wrap = $wrapper->end() . $wrap;
         }
         return $wrap;
     }
 
-    public function readOnly() : self
+    public function readOnly(): self
     {
         $this->unaryAttributes[] = 'readonly';
         $this->attr('onclick', "='return false;'");
         return $this;
     }
 
-    public function disable(bool $disable = true) : self {
-        if($disable){
+    public function disable(bool $disable = true): self
+    {
+        if ($disable) {
             $this->unaryAttributes[] = 'disabled';
-        }else{
+        } else {
             $this->unaryAttributes = array_diff($this->unaryAttributes, ['disabled']);
         }
         return $this;
     }
 
-    public function required() : self {
+    public function required(): self
+    {
         $this->unaryAttributes[] = 'require';
         return $this;
     }
 
-    public function title(string $title) : self
+    public function title(string $title): self
     {
         $this->attributes['title'] = $title;
         return $this;
     }
 
-    protected function appendBodyPrefix(string $prefix, bool $escape = false) : self
+    protected function appendBodyPrefix(string $prefix, bool $escape = false): self
     {
-        if($escape){
+        if ($escape) {
             $prefix = htmlentities($prefix);
         }
         $this->bodyPrefix .= $prefix;
@@ -202,43 +197,40 @@ abstract class AbstractHtmlTag
     }
 
     /**
-     * @param string $prefix
-     * @param bool $escape
      * @return $this
      */
-    protected function bodyPrefix(string $prefix, bool $escape = false) : self
+    protected function bodyPrefix(string $prefix, bool $escape = false): self
     {
-        if($escape){
+        if ($escape) {
             $prefix = htmlentities($prefix);
         }
         $this->bodyPrefix = $prefix;
         return $this;
     }
 
-    protected function bodySuffix(string $suffix, bool $escape = false) : self
+    protected function bodySuffix(string $suffix, bool $escape = false): self
     {
-        if($escape){
+        if ($escape) {
             $suffix = htmlentities($suffix);
         }
         $this->bodySuffix = $suffix;
         return $this;
     }
 
-    protected function appendBodySuffix(string $suffix, bool $escape = false) : self
+    protected function appendBodySuffix(string $suffix, bool $escape = false): self
     {
-        if($escape){
+        if ($escape) {
             $suffix = htmlentities($suffix);
         }
         $this->bodySuffix .= $suffix;
         return $this;
     }
 
-    public function __toString() : string
+    public function __toString(): string
     {
         $pre = $this->bodyPrefix ?? '';
         $text = $this->body ?? '';
         $suf = $this->bodySuffix ?? '';
-        return  $this->begin() . $pre . $text . $suf . $this->end();
+        return $this->begin() . $pre . $text . $suf . $this->end();
     }
-
 }

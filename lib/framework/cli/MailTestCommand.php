@@ -1,8 +1,6 @@
 <?php
 
-
 namespace framework\cli;
-
 
 use Ahc\Cli\Application as App;
 use Ahc\Cli\Output\Color;
@@ -11,12 +9,10 @@ use framework\NewMailHandler;
 
 /**
  * Class MailTestCommand
- * @package framework\cli
  * @property $recipient
  */
 class MailTestCommand extends \Ahc\Cli\Input\Command
 {
-
     public function __construct(App $app = null)
     {
         parent::__construct('mail:test', 'Test Mail Configuration', false, $app);
@@ -26,15 +22,16 @@ class MailTestCommand extends \Ahc\Cli\Input\Command
         $dotenv->load();
     }
 
-    public function execute(){
-        $cli = new Color;
+    public function execute()
+    {
+        $cli = new Color();
         [$success, $msg] = NewMailHandler::getInstance()
             ->addTo($this->recipient)
-            ->setSubject("TEST MAIL")
+            ->setSubject('TEST MAIL')
             ->sendText('Dies ist eine Testmail <script>alert(xss)</script>');
-        if($success){
-            echo $cli->ok("[ok] Mail wurde versendet") . PHP_EOL;
-        }else{
+        if ($success) {
+            echo $cli->ok('[ok] Mail wurde versendet') . PHP_EOL;
+        } else {
             echo $cli->error($msg) . PHP_EOL;
         }
     }
