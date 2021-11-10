@@ -17,8 +17,6 @@ define('SYSBASE', dirname(__DIR__));
 require_once SYSBASE . '/vendor/autoload.php';
 require_once SYSBASE . '/lib/inc.all.php';
 
-
-
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
@@ -28,42 +26,42 @@ $routeInfo = $router->route();
 //print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 $controllerName = $routeInfo['controller'];
-switch ($controllerName){
-    case "menu":
+switch ($controllerName) {
+    case 'menu':
         $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
         $htmlRenderer->render();
         break;
-    case "projekt":
+    case 'projekt':
         $projektRenderer = new ProjektHandler($routeInfo);
         $htmlRenderer->appendRendererContent($projektRenderer);
         $htmlRenderer->render();
         break;
-    case "auslagen":
+    case 'auslagen':
         $auslagenHandler = new AuslagenHandler2($routeInfo);
         $htmlRenderer->appendRendererContent($auslagenHandler);
         $htmlRenderer->render();
         break;
-    case "hhp":
+    case 'hhp':
         $hhpHandler = new HHPHandler($routeInfo);
         $htmlRenderer->appendRendererContent($hhpHandler);
         $htmlRenderer->render();
         break;
-	case "booking":
-		$bHandler = new BookingHandler($routeInfo);
-		$htmlRenderer->appendRendererContent($bHandler);
-		$htmlRenderer->render();
-	break;
-    case "fints":
+    case 'booking':
+        $bHandler = new BookingHandler($routeInfo);
+        $htmlRenderer->appendRendererContent($bHandler);
+        $htmlRenderer->render();
+    break;
+    case 'fints':
         $fintsHandler = new FintsController($routeInfo);
         $htmlRenderer->appendRendererContent($fintsHandler);
         $htmlRenderer->render();
         break;
-    case "rest":
+    case 'rest':
         $restHandler = new RestHandler();
         $restHandler->handlePost($routeInfo);
         break;
-    case "files":
+    case 'files':
         $fileController = new FileController();
         $fileController->handle($routeInfo);
         break;
@@ -71,10 +69,10 @@ switch ($controllerName){
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
     default:
-        $className = "\\framework\\render\\" . ucfirst($controllerName) . "Controller";
-        if(class_exists($className)){
+        $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';
+        if (class_exists($className)) {
             $controller = new $className($routeInfo);
-            if($controller instanceof Renderer){
+            if ($controller instanceof Renderer) {
                 $htmlRenderer->appendRendererContent($controller);
                 $htmlRenderer->render();
                 break;

@@ -38,7 +38,7 @@ abstract class AuthHandler extends Singleton
     /**
      * return current user attributes
      */
-    abstract public function getAttributes(): array;
+    abstract protected function getAttributes(): array;
 
     /**
      * check group permission - return result of check as boolean

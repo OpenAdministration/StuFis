@@ -4,8 +4,7 @@
 
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__ . '/lib')
-    ->in(__DIR__ . '/config')
-    ->notContains('secret.*\.php');
+    ->in(__DIR__ . '/config');
 
 return (new PhpCsFixer\Config())
     ->setRules([

@@ -2,6 +2,9 @@
 
 namespace framework\file;
 
+/**
+ * TODO: unit testing - seems not to work so far :/
+ */
 class EnvWriter
 {
     /**

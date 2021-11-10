@@ -68,7 +68,7 @@ class AuthCasHandler extends AuthHandler
     /**
      * {@inheritDoc}
      */
-    public function getAttributes(): array
+    protected function getAttributes(): array
     {
         $this->requireAuth();
         if (!isset(self::$attributes)) {
