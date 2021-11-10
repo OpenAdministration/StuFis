@@ -5,6 +5,7 @@ namespace forms\chat;
 use Exception;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
+use framework\file\EnvWriter;
 use framework\render\ErrorHandler;
 use framework\Validator;
 
@@ -563,8 +564,7 @@ class ChatHandler{
      */
     private function createKeys(): void
     {
-    	//check files exists
-    	if (!file_exists(__DIR__.'/secret_private.php')||filesize(__DIR__.'/secret_private.php') == 0){
+    	if (!isset($_ENV['CHAT_PUBLIC_KEY'], $_ENV['CHAT_PRIVATE_KEY'])){
 	    	$config = array(
 	    		"digest_alg" => "sha512",
 	    		"private_key_bits" => 4096,
@@ -572,35 +572,16 @@ class ChatHandler{
 	    	);
 	    	$res = openssl_pkey_new($config);
 	    	openssl_pkey_export($res, $privKey);
-	    	$this->textToFile(__DIR__.'/secret_private.php', $privKey);
 	    	$pubKey = openssl_pkey_get_details($res);
 	    	$pubKey = $pubKey["key"];
-	    	$this->textToFile(__DIR__.'/secret_public.php', $pubKey);
+
+            $writer = new EnvWriter();
+            $writer->addVarBlock('Chat Keys', [
+                'CHAT_PUBLIC_KEY' => $pubKey,
+                'CHAT_PRIVATE_KEY' => $privKey,
+            ]);
+            $writer->save();
     	}
-    }
-    
-    /**
-     * create file with text
-     * mace shure you can write on given location
-     * @param string $file
-     * @param string $text
-     * @param string $permission
-     */
-    private function textToFile(string $file, string $text, $permission = '0400'): void
-    {
-    	$text = base64_encode($text);
-    	//create file content
-    	$key_file_content = "<?php //* -------------------------------------------------------- *\n";
-    	$key_file_content .= "// Must include code to stop this file being accessed directly\n";
-    	$key_file_content .= "if(!defined('FINANRANTRAGUI_FW_SI')) die(); \n";
-    	$key_file_content .= "//* -------------------------------------------------------- *\n";
-    	$key_file_content .= '$key = \''.$text."';\n ?>";
-    	
-    	//create file
-    	$handle = fopen ($file, 'wb');
-    	fwrite ($handle, $key_file_content);
-    	fclose ($handle);
-    	chmod($file, 0400);
     }
     
     /**
@@ -610,17 +591,11 @@ class ChatHandler{
      */
     private function getKey($type = 'public'): string
     {
-    	switch ($type){
-    		case 'public': {
-    			return $this->_getKey(__DIR__.'/secret_public.php');
-    		} break;
-    		case 'private': {
-    			return $this->_getKey(__DIR__.'/secret_private.php');
-    		} break;
-    		default: {
-    			return '';
-    		}
-    	}
+        return match ($type){
+            'public' => $_ENV['CHAT_PUBLIC_KEY'],
+            'private' => $_ENV['CHAT_PRIVATE_KEY'],
+            default => ''
+        };
     }
     
     /**
@@ -649,19 +624,6 @@ class ChatHandler{
         }
     	$this->createKeys();
     	return $this->_decryptMessage($text, $this->getKey('private'));
-    }
-    
-    /**
-     * get text/key from file
-     * @param string $filename
-     * @return string
-     */
-    private function _getKey(string $filename): string
-    {
-        /** @var $key string import from file*/
-    	require $filename;
-
-    	return base64_decode($key);
     }
     
     /**
