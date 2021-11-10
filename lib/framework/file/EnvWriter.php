@@ -2,8 +2,6 @@
 
 namespace framework\file;
 
-use Dotenv\Dotenv;
-
 class EnvWriter
 {
     /**

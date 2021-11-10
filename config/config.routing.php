@@ -2,7 +2,7 @@
 
 use framework\LoadGroups;
 
-$pathConfig =  [
+$pathConfig = [
     'path' => '',
     'type' => 'path',
     'controller' => 'menu',
@@ -34,7 +34,7 @@ $pathConfig =  [
                             'path' => '(bank|kasse|sparbuch)',
                             'type' => 'pattern',
                             'param' => 'action',
-                        ]
+                        ],
                     ],
                 ],
                 [
@@ -86,7 +86,7 @@ $pathConfig =  [
                                     'path' => 'login',
                                     'type' => 'path',
                                     'action' => 'login',
-                                    'method' => ['POST', 'GET']
+                                    'method' => ['POST', 'GET'],
                                 ],
                                 [
                                     'path' => 'logout',
@@ -103,7 +103,7 @@ $pathConfig =  [
                                             'path' => 'import',
                                             'type' => 'path',
                                             'action' => 'new-sepa-konto',
-                                            'method' => ['GET', 'POST']
+                                            'method' => ['GET', 'POST'],
                                         ],
                                     ],
                                 ],
@@ -162,11 +162,11 @@ $pathConfig =  [
                                 LoadGroups::BOOKING,
                                 LoadGroups::MODALS,
                                 LoadGroups::SELECTPICKER,
-                            ]
+                            ],
                         ],
-                    ]
+                    ],
                 ],
-            ]
+            ],
         ], // booking
         [
             'path' => 'menu',
@@ -204,8 +204,7 @@ $pathConfig =  [
                     'type' => 'path',
                     'action' => 'extern',
                     'navigation' => 'overview',
-                    'groups' => "ref-finanzen",
-
+                    'groups' => 'ref-finanzen',
                 ],
                 [
                     'path' => 'hv',
@@ -223,8 +222,8 @@ $pathConfig =  [
                             'path' => 'exportBank',
                             'type' => 'path',
                             'action' => 'exportBank',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 [
                     'path' => 'stura',
@@ -351,17 +350,17 @@ $pathConfig =  [
                             'param' => 'action',
                             'load' => [
                                 LoadGroups::DATEPICKER,
-                                LoadGroups::SELECTPICKER
+                                LoadGroups::SELECTPICKER,
                             ],
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
                 [
                     'path' => 'create',
                     'type' => 'path',
                     'action' => 'create',
-                ]
-            ]
+                ],
+            ],
         ], // projekt
         [
             'path' => 'rest',
@@ -396,7 +395,7 @@ $pathConfig =  [
                             'match' => 1,
                             'controller' => 'rest',
                             'action' => 'projekt',
-                            'is_suffix' => true
+                            'is_suffix' => true,
                         ],
                         [
                             'path' => 'auslagen',
@@ -417,7 +416,7 @@ $pathConfig =  [
                                     'groups' => 'ref-finanzen',
                                     'match' => 0,
                                 ],
-                            ]
+                            ],
                         ],
                         [
                             'path' => 'extern',
@@ -443,11 +442,11 @@ $pathConfig =  [
                                                     'param' => 'mfunction',
                                                     'match' => 0,
                                                 ],
-                                            ]
-                                        ]
-                                    ]
+                                            ],
+                                        ],
+                                    ],
                                 ],
-                            ]
+                            ],
                         ],
                         [
                             'path' => 'hhp',
@@ -459,10 +458,10 @@ $pathConfig =  [
                                     'type' => 'path',
                                     'action' => 'save-hhp-import',
                                     'groups' => 'ref-finanzen-hv',
-                                ]
+                                ],
                             ],
                         ],
-                    ]
+                    ],
                 ],
                 [
                     'path' => 'chat',
@@ -499,7 +498,7 @@ $pathConfig =  [
                                             'controller' => 'rest',
                                             'action' => 'delete-booking-instruct',
                                             'groups' => 'ref-finanzen-hv,ref-finanzen-kv',
-                                        ]
+                                        ],
                                     ],
                                 ],
                                 [
@@ -525,9 +524,9 @@ $pathConfig =  [
                             'action' => 'cancel-booking',
                             'groups' => [
                                 'ref-finanzen-kv',
-                                'ref-finanzen-hv'
+                                'ref-finanzen-hv',
                             ],
-                        ]
+                        ],
                     ],
                 ],
                 [
@@ -540,11 +539,10 @@ $pathConfig =  [
                             'path' => 'new',
                             'type' => 'path',
                             'action' => 'save-new-kasse-entry',
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
-
-            ]
+            ],
         ], // rest
         [
             'path' => 'files',
@@ -576,11 +574,11 @@ $pathConfig =  [
                                     'controller' => 'files',
                                     'action' => 'get',
                                 ],
-                            ]
+                            ],
                         ],
-                    ]
-                ]
-            ]
+                    ],
+                ],
+            ],
         ], // files
         [
             'path' => 'export',
@@ -638,7 +636,7 @@ $pathConfig =  [
     ],
 ];
 
-if (DEV){
+if (DEV) {
     $pathConfig['children'][] = [
         'path' => 'dev',
         'type' => 'path',
@@ -649,11 +647,8 @@ if (DEV){
                 'type' => 'pattern',
                 'param' => 'action',
             ],
-        ]
+        ],
     ];
 }
 
 return $pathConfig;
-
-
-

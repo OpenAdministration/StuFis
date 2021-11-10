@@ -8,7 +8,7 @@ use framework\MailHandler;
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<title><?= URIBASE ?> - Mail Test</title>
+		<title><?php echo URIBASE; ?> - Mail Test</title>
 		<style type="text/css">
 			html, body {
 				height: 100%;
@@ -41,13 +41,13 @@ use framework\MailHandler;
 				margin-top: 1px;
 			}
 		</style>
-		<link rel="stylesheet" type="text/css" href="<?= URIBASE . 'css/logging.css' ?>" media="screen,projection">
+		<link rel="stylesheet" type="text/css" href="<?php echo URIBASE . 'css/logging.css'; ?>" media="screen,projection">
 	</head>
 	<body>
 <?php
 // install - secret key
-if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') === 0){
-	CryptoHandler::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
+if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') === 0) {
+    CryptoHandler::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
 }
 
 // show encrypted password =============================================
@@ -59,37 +59,40 @@ echo "\n</div>\n";
 // test connection  ===============================================
 echo '<h3>SMTP Debugging</h3>';
 
-function htmlLogLine($text, $extra_empty = false, $bold = false, $extra_tab_space = 0){
-	if ($bold){ // add tab space before text
-		$text = '<strong>'.$text.'</strong>';
-	}
-	if ($extra_tab_space > 0){ // add tab space before text
-		$text = str_repeat('<span class="tab"></span>', $extra_tab_space).$text;
-	}
-	echo '<p class="logline"><i>'.$text.'</i></p>';
-	if ($extra_empty) echo '<p class="logline"><i></i></p>';
+function htmlLogLine($text, $extra_empty = false, $bold = false, $extra_tab_space = 0)
+{
+    if ($bold) { // add tab space before text
+        $text = '<strong>'.$text.'</strong>';
+    }
+    if ($extra_tab_space > 0) { // add tab space before text
+        $text = str_repeat('<span class="tab"></span>', $extra_tab_space).$text;
+    }
+    echo '<p class="logline"><i>'.$text.'</i></p>';
+    if ($extra_empty) {
+        echo '<p class="logline"><i></i></p>';
+    }
 }
 
 $mh = MailHandler::getInstance();
-	echo '<div class="box wrap">'."\n";
-		echo '<div class="logging">'."\n";
-	//run smtp test ----------------------------------
-	MailHandler::smtpdebug(function($t, $e = false, $b = false, $s = 0){
-		htmlLogLine($t, $e, $b, $s);
-	});
-		echo "</div>\n";
-	echo "</div>\n";
+    echo '<div class="box wrap">'."\n";
+        echo '<div class="logging">'."\n";
+    //run smtp test ----------------------------------
+    MailHandler::smtpdebug(function ($t, $e = false, $b = false, $s = 0) {
+        htmlLogLine($t, $e, $b, $s);
+    });
+        echo "</div>\n";
+    echo "</div>\n";
 
 // test email ===============================================
 $auth = (AUTH_HANDLER);
 /* @var $auth AuthHandler */
 $auth = $auth::getInstance();
-if ($auth->getUserMail() !== '' ) {
+if ($auth->getUserMail() !== '') {
     $mail_address = $auth->getUserMail();
 } else {
     $mail_address = 'ref-if@tu-ilmenau.de';
 }
-	
+
 $tMail = [];
 $tMail['to'][] = $mail_address;
 $tMail['param']['msg'][] = 'Dies ist eine Testmail<br>Link zum %Finanztool%';
@@ -101,9 +104,9 @@ $tMail['template'] = 'projekt_default';
 echo '<div class="box monospace wrap">'."\n";
 echo '<strong>Send Testmail to "'.$mail_address.'" ...:</strong><br>';
 $mail_result = $mh->easyMail($tMail);
-echo "\n<br><span class='red'>".($mail_result?'OK':'ERROR')."</span>\n";
+echo "\n<br><span class='red'>".($mail_result ? 'OK' : 'ERROR')."</span>\n";
 echo "</div>\n";
 ?>
 	</body>
 </html>
-<?php die(); ?>
+<?php exit(); ?>

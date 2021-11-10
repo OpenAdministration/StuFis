@@ -49,31 +49,31 @@ return [
             ],
         ],
         'rechtsgrundlagen' => [
-            "stura" => [
+            'stura' => [
                 'label' => 'StuRa-Beschluss',
                 'label-additional' => 'Beschluss-Nr',
                 'placeholder' => '',
                 'hint-text' => '',
             ],
-            "vorstand" => [
+            'vorstand' => [
                 'label' => 'Vorstandsbeschluss',
                 'label-additional' => 'Beschluss-Nr',
                 'placeholder' => '',
                 'hint-text' => '',
             ],
-            "fo-5a" => [
+            'fo-5a' => [
                 'label' => 'FO5a (Referate)',
                 'hint-text' => 'Interne Genehmigung durch Finanzreferenten',
             ],
-            "fo-93a" => [
+            'fo-93a' => [
                 'label' => 'FO93b (FSRs durch Finanzreferat)',
                 'hint-text' => 'Externe Genehmigung durch Finanzreferat bis 250€',
             ],
-            "fo-93b" => [
+            'fo-93b' => [
                 'label' => 'FO93b (Kleidung)',
                 'hint-text' => 'Externe Genehmigung durch Finanzreferat von Öffentlichkeitswirksamer Kleidung bis 510 bei max. 30 € pro Person',
             ],
-            "fo-93c" => [
+            'fo-93c' => [
                 'label' => 'FO93b (Teambuilding)',
                 'hint-text' => 'Externe Genehmigung durch Finanzreferat von bis zu 75% der Kosten und max. 15€ pro Person',
             ],
@@ -119,7 +119,7 @@ return [
             ],
         ],
         'rechtsgrundlagen' => [
-            "stura" => [
+            'stura' => [
                 'label' => 'StuRa-Beschluss',
                 'label-additional' => 'Beschluss-Nr',
                 'placeholder' => '',
