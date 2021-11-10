@@ -17,11 +17,6 @@ abstract class AuthHandler extends Singleton
         return self::initSingleton(AUTH_HANDLER);
     }
 
-    public function __call(string $name, array $arguments)
-    {
-        self::initSingleton(AUTH_HANDLER)->$name(...$arguments);
-    }
-
     /**
      * check group permission - die on error
      * return void if successful

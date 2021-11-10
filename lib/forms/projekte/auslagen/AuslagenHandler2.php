@@ -1729,13 +1729,13 @@ class AuslagenHandler2 extends FormHandlerInterface
         if ($this->error) {
             ErrorHandler::handleError(404, $this->error);
         }
-        $this->renderAuslagenerstattung('Abrechnung');
+        $this->renderAuslagenerstattung();
     }
 
     /**
      * render auslagenerstattung html page
      */
-    private function renderAuslagenerstattung(string $titel): void
+    private function renderAuslagenerstattung(): void
     {
         $auth = (AUTH_HANDLER);
         /* @var $auth AuthHandler */
@@ -1758,10 +1758,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             <div class="col-xs-12 col-xs-12 col-md-4 form-group">
                 <label class="control-label" for="belege-ok__5b3d1833c1532">Status</label>
                 <div><?php
-                    if ($this->stateInfo['state'] === 'instructed' && strpos(
-                            $this->stateInfo['substate'],
-                            'payed'
-                        ) !== false) {
+                    if ($this->stateInfo['state'] === 'instructed' && str_contains($this->stateInfo['substate'], 'payed')) {
                         echo 'Bezahlt';
                     } elseif ($this->stateInfo['state'] === 'revocation') {
                         echo ($this->auslagen_data['rejected']) ? 'Abgelehnt' : 'Zurückgezogen';
@@ -1906,6 +1903,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
                 $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
                     || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
+                    || empty($this->auslagen_data['address'])
                 ) ? $this->auslagen_data['address'] ?? null : 'Versteckt'; ?>
                 <?php echo $this->templater->getTextareaForm(
                     'address',

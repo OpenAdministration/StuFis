@@ -18,9 +18,9 @@ class DevController extends Renderer
         echo '<pre>' . var_export($_SESSION, true) . '</pre>';
     }
 
-    public function actionAttributes(): void
+    public function actionGroups(): void
     {
-        echo '<pre>' . var_export(AuthHandler::getInstance()->getAttributes(), true) . '</pre>';
+        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGroups(), true) . '</pre>';
     }
 
     public function actionLogout()

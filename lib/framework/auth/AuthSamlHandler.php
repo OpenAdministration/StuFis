@@ -44,7 +44,7 @@ class AuthSamlHandler extends AuthHandler
         }
     }
 
-    public function getAttributes(): array
+    protected function getAttributes(): array
     {
         $attributes = $this->saml->getAttributes();
         //var_dump($attributes['groups']);

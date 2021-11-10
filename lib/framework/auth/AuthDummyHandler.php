@@ -18,16 +18,8 @@ namespace framework\auth;
 
 use framework\render\ErrorHandler;
 
-class AuthDummyHandler implements AuthHandler
+class AuthDummyHandler extends AuthHandler
 {
-    /**
-     * reference to own instance
-     * singleton instance of this class
-     *
-     * @var AuthDummyHandler
-     */
-    private static $instance; //singleton instance of this class
-
     /**
      * current user data
      *  keys
@@ -48,15 +40,6 @@ class AuthDummyHandler implements AuthHandler
     {
         //create session
         $this->attributes = DEV_ATTRIBUTES;
-    }
-
-    /** {@inheritDoc} */
-    public static function getInstance(): AuthHandler
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = new AuthDummyHandler();
-        }
-        return self::$instance;
     }
 
     /** {@inheritDoc} */
@@ -88,7 +71,7 @@ class AuthDummyHandler implements AuthHandler
     }
 
     /** {@inheritDoc} */
-    public function getAttributes(): array
+    protected function getAttributes(): array
     {
         return $this->attributes;
     }
