@@ -3,30 +3,26 @@
 namespace framework;
 
 use framework\render\html\SmartyFactory;
-use Swift_Mailer;
-use Swift_Message;
-use Swift_SendmailTransport;
-use Swift_SmtpTransport;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 
 class NewMailHandler extends Singleton
 {
-    private Swift_Mailer $mailer;
-    private Swift_Message $msg;
+    private Mailer $mailer;
+    private Email $mail;
 
     public function __construct()
     {
-        $transport = match (strtolower(trim($_ENV['MAIL_METHOD']))) {
-            'sendmail' => new Swift_SendmailTransport(),
-            'smtp' => (new Swift_SmtpTransport(
-                $_ENV['MAIL_SMTP_HOST'],
-                (int) $_ENV['MAIL_SMTP_PORT'],
-                $_ENV['MAIL_SMPT_ENCRYPT'])
-            )->setUsername($_ENV['MAIL_SMTP_USER'])
-            ->setPassword($_ENV['MAIL_SMTP_PASSWORD']),
+        $dns = match (strtolower(trim($_ENV['MAIL_METHOD']))) {
+            'sendmail' => 'sendmail://default',
+            'smtp' => // smtp://user:pass@smtp.example.com:25
+                "smtp://{$_ENV['MAIL_SMTP_USER']}:{$_ENV['MAIL_SMTP_PASSWORD']}@{$_ENV['MAIL_SMTP_HOST']}:{$_ENV['MAIL_SMTP_PORT']}",
         };
         $this->initMsg();
-
-        $this->mailer = new Swift_Mailer($transport);
+        $transport = Transport::fromDsn($dns);
+        $this->mailer = new Mailer($transport);
     }
 
     /**
@@ -36,6 +32,7 @@ class NewMailHandler extends Singleton
      */
     public function send(string $mailTemplateName, array $parameters = []): array
     {
+        // TODO: IT HAS TWIG INTEGRATION!
         $smarty = SmartyFactory::make();
         foreach ($parameters as $name => $value) {
             $smarty->assign($name, $value);
@@ -52,33 +49,31 @@ class NewMailHandler extends Singleton
         }
 
         $body = $bodyTxt ?? strip_tags($bodyHtml) ?? $mailTemplateName;
-        $this->msg->setBody($body, 'text/plain');
+        $this->mail->text($body);
         if (isset($bodyHtml)) {
-            $this->msg->addPart($bodyHtml, 'text/html');
+            $this->mail->html($bodyHtml);
         }
-        $failedDelivery = [];
-        $this->mailer->send($this->msg, $failedDelivery);
+        $this->mailer->send($this->mail);
         $this->initMsg(); // reset msg
 
-        return [count($failedDelivery) === 0, count($failedDelivery) > 0 ? implode(', ' . $failedDelivery) .' not delivered' : 'Success'];
+        return [true, 'Mail wurde versandt'];
     }
 
     public function sendText(string $text): array
     {
         $text = strip_tags($text);
-        $this->msg->setBody($text, 'text/plain');
-        $failedDelivery = [];
-        $this->mailer->send($this->msg, $failedDelivery);
+        $this->mail->text($text);
+        $this->mailer->send($this->mail);
         $this->initMsg(); // reset msg
-        return [count($failedDelivery) === 0, count($failedDelivery) > 0 ? implode(', ' . $failedDelivery) .' not delivered' : 'Success'];
+        return [true, 'Mail wurde versandt'];
     }
 
     public function initMsg(): self
     {
-        $msg = new Swift_Message();
-        $msg->setFrom([$_ENV['MAIL_FROM_EMAIL'] => $_ENV['MAIL_FROM_NAME']]);
-        $msg->setReturnPath($_ENV['MAIL_BOUNCE_EMAIL']);
-        $this->msg = $msg;
+        $msg = new Email();
+        $msg->from(new Address((string) [$_ENV['MAIL_FROM_EMAIL'], $_ENV['MAIL_FROM_NAME']]));
+        $msg->returnPath($_ENV['MAIL_BOUNCE_EMAIL']);
+        $this->mail = $msg;
         return $this;
     }
 
@@ -91,7 +86,7 @@ class NewMailHandler extends Singleton
             $to = [$to => $to];
         }
         foreach ($to as $address => $alias) {
-            $this->msg->addTo($address, $alias);
+            $this->mail->addTo(new Address($address, $alias));
         }
         return $this;
     }
@@ -105,7 +100,7 @@ class NewMailHandler extends Singleton
             $cc = [$cc => $cc];
         }
         foreach ($cc as $address => $alias) {
-            $this->msg->addCc($address, $alias);
+            $this->mail->addCc(new Address($address, $alias));
         }
         return $this;
     }
@@ -119,7 +114,7 @@ class NewMailHandler extends Singleton
             $bcc = [$bcc => $bcc];
         }
         foreach ($bcc as $address => $alias) {
-            $this->msg->addBcc($address, $alias);
+            $this->mail->addBcc(new Address($address, $alias));
         }
         return $this;
     }
@@ -133,7 +128,7 @@ class NewMailHandler extends Singleton
             $replyTo = [$replyTo => $replyTo];
         }
         foreach ($replyTo as $address => $alias) {
-            $this->msg->addReplyTo($address, $alias);
+            $this->mail->addReplyTo(new Address($address, $alias));
         }
         return $this;
     }
@@ -143,12 +138,7 @@ class NewMailHandler extends Singleton
      */
     public function setSubject(string $subject): self
     {
-        $this->msg->setSubject($subject);
+        $this->mail->subject($subject);
         return $this;
-    }
-
-    public function getTo(): array
-    {
-        return $this->msg->getTo();
     }
 }
