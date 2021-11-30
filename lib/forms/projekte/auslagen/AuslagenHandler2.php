@@ -14,6 +14,7 @@ use framework\DBConnector;
 use framework\file\File;
 use framework\file\FileHandler;
 use framework\Helper;
+use framework\LatexGenerator;
 use framework\render\ErrorHandler;
 use framework\render\JsonController;
 use framework\svg\SvgDiagram;
@@ -960,7 +961,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     $new_belege[$kb] = $b;
                 } elseif (!isset($this->auslagen_data['belege'][$kb])) {
                     $changed_belege_flag = true;
-                    //ignore this invalid elements
+                //ignore this invalid elements
                 } else {
                     $ob = $this->auslagen_data['belege'][$kb];
                     $changed_belege[$kb] = $ob;
@@ -976,7 +977,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                             $new_posten[$kp] = ['posten' => $p, 'beleg_id' => $kb];
                         } elseif (!isset($this->auslagen_data['belege'][$kb]['posten'][$kp])) {
                             $changed_posten_flag = true;
-                            //ignore invalid elements
+                        //ignore invalid elements
                         } else {
                             $op = $this->auslagen_data['belege'][$kb]['posten'][$kp];
                             $changed_posten[$kp] = $op;
@@ -1468,111 +1469,66 @@ class AuslagenHandler2 extends FormHandlerInterface
 
     private function post_belegpdf(): void
     {
-        // get auslagen info
         $info = self::state2stateInfo('draft;' . $this->auslagen_data['created']);
-        $out = [
-            'APIKEY' => FUI2PDF_APIKEY,
-            'action' => 'belegpdf',
-            'projekt' => [
-                'id' => $this->projekt_data['id'],
-                'name' => $this->projekt_data['name'],
-                'created' => $this->projekt_data['createdat'],
-                'org' => $this->projekt_data['org'],
-            ],
-            'auslage' => [
-                'id' => $this->auslagen_data['id'],
-                'name' => $this->auslagen_data['name_suffix'],
-                'created' => $info['date'],
-                'created_by' => $info['realname'],
-                'address' => $this->auslagen_data['address'],
-                'zahlung' => [
-                    'name' => $this->auslagen_data['zahlung-name'],
-                ],
-            ],
-            'belege' => [],
-        ];
-        //put files to info
+        // generate belege table
+        $belegeTableRows = [];
+        $belegeFiles = [];
+        $files = [];
         $fh = new FileHandler($this->db);
-        foreach ($this->auslagen_data['belege'] as $beleg) {
+        foreach ($this->auslagen_data['belege'] as $key => $beleg) {
             $file = ($beleg['file']) ? $fh->checkFileHash($beleg['file']['hashname']) : null;
-            $out['belege'][] = [
-                'id' => $beleg['id'],
-                'short' => $beleg['short'],
+            $name = 'A' . $this->auslagen_id . '-B' . $beleg['short'];
+            $belegeTableRows[] = [
+                'id' => $name,
                 'date' => $beleg['datum'],
                 'desc' => $beleg['beschreibung'],
-                'file_id' => $beleg['file_id'],
-                'file' => ($file) ? $fh->fileToBase64($file) : '',
             ];
+            $belegeFiles[] = [
+                'filePath' => $key . '.pdf',
+                'name' => $name,
+                'fullPage' => false,
+            ];
+            $files[$key . '.pdf'] = ($file) ? $fh->getFiledataBinary($file, false) : '';
         }
-
-        $result = Helper::do_post_request2(FUI2PDF_URL . '/pdfbuilder', $out, FUI2PDF_AUTH);
-
-        // return result to
-        if (($result['success'] && !isset($this->routeInfo['validated']['d'])) || $this->routeInfo['validated']['d'] == 0) {
-            if (isset($result['data']['success']) && $result['data']['success']) {
-                $this->json_result = [
-                    'success' => true,
-                    'type' => 'modal',
-                    'subtype' => 'file',
-                    'container' => 'object',
-                    'headline' =>
-                    //direct link
-                        '<form method="POST" action="' . URIBASE . 'index.php' . $this->routeInfo['path'] . '"><a ' .
-                        '" href="#" class="modal-form-fallback-submit text-white">' .
-                        'Belegvorlage_P' .
-                        str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
-                        '-A' .
-                        str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
-                        '.pdf' .
-                        '</a>' .
-                        '<input type="hidden" name="auslagen-id" value="' . $this->auslagen_id . '">' .
-                        '<input type="hidden" name="projekt-id" value="' . $this->projekt_id . '">' .
-                        '<input type="hidden" name="d" value="1">' . '</form>',
-                    'attr' => [
-                        'type' => 'application/pdf',
-                        'download' => 'Belegvorlage_P' .
-                            str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
-                            '-A' .
-                            str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
-                            '.pdf',
-                    ],
-                    'fallback' => '<form method="POST" action="' . URIBASE . 'index.php' . $this->routeInfo['path'] . '">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a ' .
-                        '" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.' .
-                        '<input type="hidden" name="auslagen-id" value="' . $this->auslagen_id . '">' .
-                        '<input type="hidden" name="projekt-id" value="' . $this->projekt_id . '">' .
-                        '<input type="hidden" name="d" value="1">' .
-                        '</form>',
-                    'datapre' => 'data:application/pdf;base64,',
-                    'data' => $result['data']['data'],
-                ];
-            } else {
-                $this->json_result = [
-                    'success' => false,
-                    'type' => 'modal',
-                    'subtype' => 'server-error',
-                    'status' => '200',
-                    'msg' => '<div style="white-space: pre-wrap;">' . print_r(
-                            $result['data']['error'] ?? $result['data'],
-                            true
-                        ) . '</div>',
-                ];
-            }
-        } elseif ($result['success'] && isset($this->routeInfo['validated']['d']) && $this->routeInfo['validated']['d'] == 1) {
-            header('Content-Type: application/pdf');
-            header(
-                'Content-Disposition: attachment; filename="' . 'Belegvorlage_P' .
-                str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
-                '-A' .
-                str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
-                '.pdf'
-                . '"'
-            );
-            echo base64_decode($result['data']['data']);
-            exit();
-        } else {
-            ErrorHandler::handleError(500, '[' . get_class($this) . '][PDF-Creation] failed', print_r($result, true));
-            $this->error = 'Error during PDF creation.';
-        }
+        $tex = new LatexGenerator();
+        $pdf = $tex->renderPdf('belege-pdf', [
+            'footer' => 'IP-'. $this->projekt_id . ' A' . $this->auslagen_id,
+            'projektMeta' => [
+                'ID' => $this->projekt_id,
+                'Name' => $this->projekt_data['name'],
+                'Träger' => $this->projekt_data['org'],
+                'Erstellt am' => $this->projekt_data['createdat'],
+            ],
+            'auslagenMeta' => [
+                'ID' => 'A' . $this->auslagen_id,
+                'Sub-Name' => $this->auslagen_data['name_suffix'],
+                'Erstellt am' => $info['date'],
+                'Eingereicht von' => $info['realname'],
+                'Adresse' => str_replace(PHP_EOL, ' / ', $this->auslagen_data['address']),
+                'Zahlung an' => $this->auslagen_data['zahlung-name'],
+            ],
+            'owner' => $this->auslagen_data['zahlung-name'],
+            'belegeTable' => [
+                'header' => [
+                    'id' => 'Beleg No',
+                    'date' => 'Datum',
+                    'desc' => 'Beschreibung',
+                ],
+                'rows' => $belegeTableRows,
+            ],
+            'belegeFiles' => $belegeFiles,
+        ], $files);
+        header('Content-Type: application/pdf');
+        header(
+            'Content-Disposition: attachment; filename="' . 'Belegmappe_IP' .
+            str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
+            '-A' .
+            str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
+            '.pdf'
+            . '"'
+        );
+        echo $pdf;
+        exit(0);
     }
 
     private function post_zahlungsanweisungpdf(): void
@@ -1871,15 +1827,15 @@ class AuslagenHandler2 extends FormHandlerInterface
 
                 <?php // iban only show trimmed if not hv/kv important!
                 $iban_text = $this->auslagen_data['zahlung-iban'] ?? null;
-                if ($iban_text) {
-                    $iban_text = self::decryptedStr($iban_text);
-                }
-                if (!$auth->hasGroup('ref-finanzen-belege')) {
-                    $iban_text = self::trimIban($iban_text);
-                } elseif ($iban_text !== '') {
-                    $iban_text = chunk_split($iban_text, 4, ' ');
-                }
-                echo $this->templater->getTextForm(
+        if ($iban_text) {
+            $iban_text = self::decryptedStr($iban_text);
+        }
+        if (!$auth->hasGroup('ref-finanzen-belege')) {
+            $iban_text = self::trimIban($iban_text);
+        } elseif ($iban_text !== '') {
+            $iban_text = chunk_split($iban_text, 4, ' ');
+        }
+        echo $this->templater->getTextForm(
                     'zahlung-iban',
                     $iban_text,
                     [12, 12, 6],
@@ -1901,7 +1857,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 $tmplabel = ($this->routeInfo['action'] === 'edit' || $this->routeInfo['action'] === 'create') ?
                     'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
                     'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
-                $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
+        $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
                     || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
                     || empty($this->auslagen_data['address'])
                 ) ? $this->auslagen_data['address'] ?? null : 'Versteckt'; ?>
@@ -1920,12 +1876,12 @@ class AuslagenHandler2 extends FormHandlerInterface
 
             $belege = $this->auslagen_data['belege'] ?? [];
 
-            $this->render_beleg_sums($belege, 'Gesamt');
+        $this->render_beleg_sums($belege, 'Gesamt');
 
-            $this->render_beleg_container($belege, $editable, 'Belege');
+        $this->render_beleg_container($belege, $editable, 'Belege');
 
-            $beleg_nr = 0;
-            $tablePartialEditable = true; //$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");?>
+        $beleg_nr = 0;
+        $tablePartialEditable = true; //$this->permissionHandler->isEditable(["posten-name", "posten-bemerkung", "posten-einnahmen", "posten-ausgaben"], "and");?>
         </form>
         <label for="projekt-well">Projekt Information</label>
         <div id='projekt-well' class="well">
@@ -2272,11 +2228,11 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <datalist class="datalist-projekt">
                     <option value="0" data-alias="Bitte Wählen">
                         <?php foreach ($this->projekt_data['posten'] as $p) {
-                        ?>
+            ?>
                     <option value="<?php echo $p['id']; ?>"
                             data-alias="<?php echo(($p['einnahmen']) ? '[Einnahme] ' : '') . (($p['ausgaben']) ? '[Ausgabe] ' : '') . $p['name']; ?>">
                         <?php
-                        } ?>
+        } ?>
                 </datalist>
             </div>
             <div class="row row-striped">
@@ -2293,13 +2249,13 @@ class AuslagenHandler2 extends FormHandlerInterface
                 </div>
             <?php }
 
-            foreach ($belege as $b) {
-                echo $this->render_beleg_row($b, $editable);
-            }
+        foreach ($belege as $b) {
+            echo $this->render_beleg_row($b, $editable);
+        }
 
-            //render hidden beleg for js copy
-            if ($editable) {
-                echo $this->render_beleg_row(
+        //render hidden beleg for js copy
+        if ($editable) {
+            echo $this->render_beleg_row(
                     [
                         'id' => '',
                         'short' => '',
@@ -2313,8 +2269,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                     $editable,
                     true
                 );
-            }
-            if ($editable) { ?>
+        }
+        if ($editable) { ?>
                 <div class="row row-striped add-button-row" style="margin: 10px 0;">
                     <div class="add-belege" style="padding:5px;">
                         <div class="text-center">
@@ -2652,7 +2608,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
             <?php } ?>
             <?php if ($this->stateInfo['editable']) {
-                foreach ($this->formSubmitButtons as $formId) { ?>
+            foreach ($this->formSubmitButtons as $formId) { ?>
                     <div class="col-xs-12 form-group">
                         <strong>
                             <button data-for="<?php echo $formId; ?>" type="button"
@@ -2662,23 +2618,15 @@ class AuslagenHandler2 extends FormHandlerInterface
                         </strong>
                     </div>
                 <?php }
-                if (isset($this->auslagen_data['id'])) { ?>
+            if (isset($this->auslagen_data['id'])) { ?>
                     <div class="col-xs-12 form-group">
                         <strong><a href="<?php echo URIBASE . "projekt/$this->projekt_id/auslagen/{$this->auslagen_data['id']}"; ?>"
                                    class="btn btn-danger" style="font-weight: bold;"><i class="fa fa-fw fa-times"> </i>Abbrechen</a></strong>
                     </div>
                 <?php } ?>
                 <?php
-            } ?>
+        } ?>
             <?php if (isset($this->auslagen_data['id'], $this->auslagen_data['belege']) && $this->routeInfo['action'] !== 'edit' && count($this->auslagen_data['belege']) > 0) { ?>
-                <div class="col-xs-12 form-group">
-
-                    <button data-afor="<?php echo $this->auslagen_data['id']; ?>" data-pfor="<?php echo $this->projekt_id; ?>"
-                            data-action="<?php echo URIBASE; ?>rest/forms/auslagen/belegpdf" type="button"
-                            class="btn btn-primary auslagen-belege-pdf"><i class="fa fa-fw fa-print"> </i>Belege PDF
-                    </button>
-                </div>
-                <div class="clearfix"></div>
                 <div class="col-xs-12 form-group">
                     <form method="POST" action="<?php echo URIBASE; ?>rest/forms/auslagen/belegpdf">
                         <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>Belege PDF
@@ -2691,7 +2639,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 </div>
                 <div class="clearfix"></div>
             <?php }
-            if ($this->routeInfo['action'] !== 'edit'
+        if ($this->routeInfo['action'] !== 'edit'
                 && isset($this->auslagen_data['id'])
                 && in_array($this->stateInfo['state'], ['ok', 'instructed', 'booked'])
                 && AuthHandler::getInstance()->hasGroup('ref-finanzen')
@@ -2717,8 +2665,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
                 <?php
             }
-            //FIXME if(false) ???
-            if (false && $this->routeInfo['action'] !== 'edit') { ?>
+        //FIXME if(false) ???
+        if (false && $this->routeInfo['action'] !== 'edit') { ?>
                 <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
                 <input type="hidden" name="auslagen-id"
                        value="<?php echo ($this->routeInfo['action'] === 'create') ? 'NEW' : $this->auslagen_id; ?>">
@@ -2726,13 +2674,13 @@ class AuslagenHandler2 extends FormHandlerInterface
                        value="<?php echo ($this->routeInfo['action'] === 'create') ? '0' : $this->auslagen_data['etag']; ?>">
                 <input type="hidden" name="action" value="<?php echo URIBASE; ?>rest/forms/auslagen/state">
                 <?php if ($this->auslagen_id) {
-                    foreach (self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null) {
-                        if ($k === 'revocation') {
-                            continue;
-                        }
-                        if (!$this->state_change_possible($k)) {
-                            continue;
-                        } ?>
+            foreach (self::$stateChanges[$this->stateInfo['state']] as $k => $dev_null) {
+                if ($k === 'revocation') {
+                    continue;
+                }
+                if (!$this->state_change_possible($k)) {
+                    continue;
+                } ?>
                         <div class="col-xs-12 form-group">
                             <button type="button" class="btn btn-default state-changes-now"
                                     title="<?php echo self::$states[$k][0]; ?>"
@@ -2740,19 +2688,19 @@ class AuslagenHandler2 extends FormHandlerInterface
                         </div>
                         <div class="clearfix"></div>
                         <?php
-                    }
-                    foreach (self::$subStates as $k => $info) {
-                        if ($this->state_change_possible($k)) {
-                            ?>
+            }
+            foreach (self::$subStates as $k => $info) {
+                if ($this->state_change_possible($k)) {
+                    ?>
                             <div class="col-xs-12 form-group">
                                 <button type="button" class="btn btn-default state-changes-now" title="<?php echo $info[3]; ?>"
                                         data-newstate="<?php echo $k; ?>"><?php echo $info[2]; ?></button>
                             </div>
                             <div class="clearfix"></div>
                             <?php
-                        }
-                    }
                 }
+            }
+        }
             } ?>
 
         </div>
@@ -2773,25 +2721,25 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div id="collapse_diag_1" class="panel-collapse collapse">
                     <div class="panel-body"><?php
                         $out = $this->get_auslagen_beleg_sums();
-                        if (isset($out['error'])) {
-                            foreach ($out['error'] as $err_msg) {
-                                echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">' . $err_msg . '</strong>';
-                            }
-                        }
-                        echo '<div class="row">';
-                        foreach ($out as $key => $value) {
-                            if ($key === 'error') {
-                                continue;
-                            }
-                            echo '<div class="form-group">';
-                            echo '<div class="col-sm-' . (12) . '"><strong>' . $value['headline'] . '</strong></div>';
-                            echo '</div>';
-                            echo '<div class="form-group">';
-                            echo '<div class="col-sm-' . (5) . ' project-svg">' . $value['image_pie'] . '</div>';
-                            echo '<div class="col-sm-' . (7) . ' project-svg">' . $value['image_adding_beam'] . '</div>';
-                            echo '</div>';
-                        }
-                        echo '</div>'; ?></div>
+        if (isset($out['error'])) {
+            foreach ($out['error'] as $err_msg) {
+                echo '<strong class="text-danger" style="padding: 5px; margin-bottom: 5px; border: 2px solid #dd2222; border-radius: 5px; display: inline-block;">' . $err_msg . '</strong>';
+            }
+        }
+        echo '<div class="row">';
+        foreach ($out as $key => $value) {
+            if ($key === 'error') {
+                continue;
+            }
+            echo '<div class="form-group">';
+            echo '<div class="col-sm-' . (12) . '"><strong>' . $value['headline'] . '</strong></div>';
+            echo '</div>';
+            echo '<div class="form-group">';
+            echo '<div class="col-sm-' . (5) . ' project-svg">' . $value['image_pie'] . '</div>';
+            echo '<div class="col-sm-' . (7) . ' project-svg">' . $value['image_adding_beam'] . '</div>';
+            echo '</div>';
+        }
+        echo '</div>'; ?></div>
                 </div>
             </div>
         </div>

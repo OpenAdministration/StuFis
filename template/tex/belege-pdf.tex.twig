@@ -1,0 +1,22 @@
+(% extends "article.tex.twig" %)
+(% import "helper.tex.twig" as helper %)
+
+(% block title %)Belege einreichen(% endblock %)
+(% block author %)Open Administration(% endblock %)
+(% block footer %)(( footer ))(% endblock %)
+(% block main %)
+    (( helper.hintbox('Die Belege für diese Auslagenerstattung müssen an dieses Dokument angehangen, alles zusammen getackert, und im Stura Büro bei Referat Finanzen eingereicht werden. Dazu legt man das Dokument in das Postfach des Referats Finanzen.') ))
+    (( helper.listing(projektMeta, 'Projekt Informationen') ))
+    (( helper.listing(auslagenMeta, 'Auslagen Informationen', true) ))
+    (( helper.headline('Versicherung') ))
+    (( helper.smalltext('Ich versichere, dass alle Angaben von mir, zum jetzigen Zeitpunkt, korrekt eingereicht wurden.
+Weiterhin habe und werde ich die Belege bei keiner anderen Stelle angeben bzw. abrechnen.
+Außerdem habe ich alle Belege im Original angehangen, sofern diese nicht digital eingegangen sind. Digitale Belege,
+die nicht in der verkleinerten Fassung lesbar sind habe ich zusätzlich auch nocheinmal in groß angehangen.') ))
+    (( helper.signatures([{'label': '', 'name': owner}]) ))
+    (( helper.table(belegeTable) ))
+    \newpage
+    (% for b in belegeFiles %)
+        (( helper.belegPage(b.name, b.filePath, not b.fullPage) ))
+    (% endfor %)
+(% endblock %)

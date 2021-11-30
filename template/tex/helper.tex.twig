@@ -1,0 +1,126 @@
+(% macro headline(text) %)
+    (% if text is defined and text is not empty %)
+        \vspace*{-0.5cm}
+        \mysection{(( text ))}
+    (% endif %)
+(% endmacro %)
+
+(% macro listing(items, headlineText, resume) %)
+    (( _self.headline(headlineText) ))
+    (% if items is defined %)
+        \begin{enumerate}[label=\Roman*(% if resume is defined and resume %),resume(% endif %)]
+            \itemsep-2mm
+            (% for key, value in items %)
+                \item \textbf{(( key ))}\hfill (( value ))
+            (% endfor %)
+        \end{enumerate}
+    (% endif %)%items end
+    \vspace{5mm}
+(% endmacro %)
+
+(% macro smalltext(text) %)
+    {\footnotesize
+    (( text|nl2tex ))
+    }
+(% endmacro %)
+
+(% macro signatures(signatures) %)
+    (% if signatures is defined %)
+        \vspace{5mm}
+        \hspace{15pt}
+        (% for signature in signatures %)
+            \parbox[b]{(% if loop.length <= 2 %)190(% else %)120(% endif %)pt}{% size of the first signature box
+                \strut
+                (% if signature.label is defined and signature.label is not empty %)
+                    \textbf{(( signature.label))}\\
+                (% endif %)
+                \vspace{1cm}
+                \hrule
+                \vspace{0.25cm}
+                (( signature.name ))
+            }
+            (% if not loop.last %)
+                \hspace{30pt}
+            (% endif %)
+        (% endfor %)% end signature loop
+        \newline
+        \vspace{5mm}
+    (% endif %)%end signatures
+(% endmacro %)
+
+(% macro hintbox(text) %)
+\vspace*{-0.5cm}
+{\setlength{\parindent}{0cm}{\footnotesize
+\textit{\textbf{Hinweis: }(( text ))}
+}}
+\vspace*{-0.3cm}
+\\\linia\\
+\vspace{-0.3cm}
+\begin{figure}[h]
+    \centering
+    \parbox[b]{0.6\linewidth}{% size of the first signature box
+        \strut
+        \textbf{Eingegangen am} \hrule~\\\vspace*{-10mm}
+        \textit{\tiny\\\hspace*{4.7cm}Auszufüllen durch Referat Finanzen}
+    }
+\end{figure}
+(% endmacro %)
+
+(% macro table(content, filters, columOrientations) %)
+    \begin{center}
+        (% if columOrientation is not defined %)
+            (% set columOrientation = content.header|reduce((carry,el) => carry ~ 'c') %)
+        (% endif %)
+        \begin{tabular}{(( columOrientation ))}
+            (% for tblHead in content.header %)(( tblHead ))(% if not loop.last %)&(% endif %)(% endfor %)\\
+            \toprule
+            (% for row in content.rows %)
+                (% for key in content.header|keys %)(( row[key] ))(% if not loop.last %)&(% endif %)(% endfor %)
+                \\(% if not loop.last %)\midrule(% endif %)
+            (% endfor %)
+            \bottomrule
+        \end{tabular}
+    \end{center}
+(% endmacro %)
+
+(% macro belegPage(name, pdfFileName, showIntro) %)
+        (% set pdfFilePath = _tex.files[pdfFileName] %)
+        %setfont
+        \tikzset{font={\fontsize{29pt}{12}\selectfont}}
+        %read in pdf beleg (for counting pages)
+        (% for i in 0..pdfFilePath|pages %)
+            (% set positionTop = cycle([true, false], loop.index0) %)
+            (% if  loop.first %)
+                (% if showIntro is defined and showIntro %)
+                    \begin{tikzpicture}[remember picture,overlay]
+                        %rechteck
+                        \draw [draw=black,line width=5mm,opacity=0.3] (17.25cm,-10cm) rectangle (-5mm,-1.25cm);
+                        %belegnummer
+                        \node [opacity=1,anchor=north east, xshift=\linewidth, yshift=1.5cm] {(( name ))};
+                        %text im Rechteck
+                        \node [opacity=0.3,anchor=north west, yshift=-2.0cm] {Den hier unten abgebildeten };
+                        \node [opacity=0.3,anchor=north west, yshift=-3.6cm] {Beleg};
+                        \node [opacity=0.6,anchor=north west, xshift=3.0cm, yshift=-3.6cm] {(( name ))};
+                        \node [opacity=0.3,anchor=north west, yshift=-5.0cm] {antackern (Original).};
+                        \node [opacity=0.3,anchor=north west, yshift=-6.1cm] {Falls dieser Beleg ein A4 Beleg };
+                        \node [opacity=0.3,anchor=north west, yshift=-7.2cm] {ist, hefte das Original vor};
+                        \node [opacity=0.3,anchor=north west, yshift=-8.3cm] {dieser Seite ab.};
+                    \end{tikzpicture}
+                (% endif %)%end intro
+            (% else %)%not first loop entry
+                (% if positionTop %)%top picture
+                \begin{tikzpicture}[remember picture,overlay]
+                    \node [anchor =north east, inner sep=0pt,outer sep=0pt,xshift=-10mm, yshift=-15mm] at (current page.north east) {\fbox{\includegraphics[page=(( i )),angle=90,width=18cm,height=12.73cm]{(( pdfFilePath ))}}};
+                    \node [rotate=90, opacity=0.75,anchor=north west,xshift=-12cm,yshift=20mm]{(( name )) - Seite (( i ))};
+                \end{tikzpicture}
+                (% else %)%bottom picture
+                \begin{tikzpicture}[remember picture,overlay]
+                    \node [anchor =north east, inner sep=0pt,outer sep=0pt,yshift=-14.55cm, xshift=-10mm] at (current page.north east) {\fbox{\includegraphics[page=(( i )),angle=90,width=18cm,height=12.73cm]{(( pdfFilePath ))}}};
+                    \node [rotate=90, opacity=0.75,anchor=north west,xshift=-25cm,yshift=20mm]{(( name )) - Seite (( i ))};
+                \end{tikzpicture}
+                \newpage
+                (% endif %)
+            (% endif %)
+        (% endfor %)
+            \newpage
+(% endmacro %)
