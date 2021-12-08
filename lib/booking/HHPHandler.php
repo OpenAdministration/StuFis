@@ -170,8 +170,7 @@ class HHPHandler extends Renderer
             'Als Vorlage sollte der Download des HHP von letztem Jahr dienen (Encoding beachten!)',
             'Zeitpunkt der Gültigkeit des HHP eintragen. Der vorherige HHP wird dann zum Vortag beendet',
             'Fehler können nur durch Administratoren in der Datenbank selbst behoben werden',
-        ], 'info');
-        ?>
+        ], 'info'); ?>
 	    <form action="<?php echo URIBASE; ?>hhp/import/preview" method="POST" role="form">
             <div class="input-group form-group input-daterange" data-provide="datepicker" data-date-format="yyyy-mm-dd" data-date-calendar-weeks="true" data-date-language="de">
                 <div class="input-group-addon" style="background-color: transparent; border: none;">von
@@ -317,7 +316,7 @@ class HHPHandler extends Renderer
                 <thead>
                 <tr>
                     <th class="bg-info"
-                        colspan="6"><?php echo ($type + 1) . '.' . $group_nr++ . ' ' . array_values(
+                        colspan="6"><?php echo($type + 1) . '.' . $group_nr++ . ' ' . array_values(
                             $group
                         )[0]['gruppen_name']; ?></th>
                 </tr>

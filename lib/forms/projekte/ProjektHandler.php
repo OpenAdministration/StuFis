@@ -716,7 +716,7 @@ class ProjektHandler extends FormHandlerInterface
                     ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
                     'and'
                 ); ?>
-                <table class="table table-striped summing-table <?php echo ($tablePartialEditable ? 'dynamic-table' : 'dynamic-table-readonly'); ?>">
+                <table class="table table-striped summing-table <?php echo $tablePartialEditable ? 'dynamic-table' : 'dynamic-table-readonly'; ?>">
                     <thead>
                     <tr>
                         <th></th><!-- Nr.       -->

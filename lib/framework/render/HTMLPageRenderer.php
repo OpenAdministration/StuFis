@@ -506,7 +506,7 @@ class HTMLPageRenderer
              aria-labelledby='<?php echo $id; ?>-label'>
             <div class='modal-dialog' <?php echo ($danger === 'danger') ? 'style="min-width: 75%;"' : ''; ?> role='document'>
                 <div class='modal-content'>
-                    <div class='modal-header<?php echo (($danger) ? " btn-$danger' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : ''); ?>'>
+                    <div class='modal-header<?php echo ($danger) ? " btn-$danger' style='border-top-left-radius: 5px; border-top-right-radius: 5px;" : ''; ?>'>
                         <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span
                                     aria-hidden='true'>&times;</span>
                         </button>
