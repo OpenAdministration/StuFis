@@ -1,9 +1,7 @@
 {
     "name": "lukas-staab/finanzantragui",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "3.0.2",
-    "minimum-stability": "stable",
-    "prefer-stable": true,
+    "version": "3.0.3",
     "require": {
         "php": "^8.0",
         "composer-runtime-api": "^2.0",
@@ -35,13 +33,16 @@
         "meyfa/php-svg": "^0.11.2",
         "open-administration/php-latex-renderer": "dev-main",
         "symfony/mailer": "^5.3",
-        "symfony/twig-bridge": "^5.3"
+        "symfony/twig-bridge": "^5.3",
+        "symfony/orm-pack": "^2.1",
+        "symfony/console": "*"
     },
 
     "require-dev": {
         "roave/security-advisories": "dev-latest",
         "phpunit/phpunit": "^9",
-        "friendsofphp/php-cs-fixer": "^3.2"
+        "friendsofphp/php-cs-fixer": "^3.2",
+        "symfony/maker-bundle": "^1.36"
     },
 
     "autoload": {
