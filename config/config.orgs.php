@@ -47,6 +47,9 @@ return [
             'Katholisch-Theologische Fakultät' => [
                 'FSR Kath. Theologie',
             ],
+            'Hochschulgruppen' => [
+                'Hochschulgruppe',
+            ],
         ],
         'rechtsgrundlagen' => [
             'stura' => [
