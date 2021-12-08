@@ -7,6 +7,7 @@ use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
 use Fhp\Model\TanRequest;
 use Fhp\Model\TanRequestChallengeImage;
+use forms\projekte\auslagen\AuslagenHandler2;
 use framework\ArrayHelper;
 use framework\DateHelper;
 use framework\DBConnector;
@@ -76,15 +77,6 @@ class FintsController extends Renderer
                 } catch (InvalidArgumentException $e2) {
                     ErrorHandler::handleError(500, 'TAN Format unbekannt', $e1->getMessage() . ' ' . $e2->getMessage());
                 }
-            }
-            if (strlen($challengeBinary->getData()) < 50) {
-                // TODO: implement flicker code
-                echo $challengeBinary->getData();
-            } else {
-                $challengeImage = new TanRequestChallengeImage($challengeBinary);
-                $challengePhotoBinBase64 = base64_encode($challengeImage->getData());
-                echo HtmlImage::make('TAN Challenge Bild')
-                    ->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
             }
         }
         echo HtmlForm::make('POST', false)
@@ -512,6 +504,7 @@ class FintsController extends Renderer
                     'gvcode' => $transaction->getBookingCode(),
                     'customer_ref' => $transaction->getEndToEndID(),
                 ];
+                AuslagenHandler2::hookZahlung($transaction->getMainDescription());
             }
             $oldSaldoCent = $saldoCent;
         }

@@ -745,6 +745,28 @@ class AuslagenHandler2 extends FormHandlerInterface
         return false;
     }
 
+    /**
+     * @param string $verwendungszweck will be searched through with regex for fetching project / auslagen id
+     */
+    public static function hookZahlung(string $verwendungszweck): void
+    {
+        // pattern which has wide matching for verwendungszweck (?<x>...) is a named capture group with name x
+        $ipRegex = '/I?P(?<hhp>-?[0-9]{2}-)?(?<project>[0-9]+)-A(?<auslage>[0-9]+)/';
+        $found = preg_match($ipRegex, $verwendungszweck, $matches);
+        if ($found !== 1) {
+            return;
+        }
+        $hhpYear = $matches['hhp']; // could be year or maybe id in the future -> bad to use
+        $projectId = $matches['project'];
+        $auslagenId = $matches['auslage'];
+        $wholeMatch = $matches[0];
+        $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
+        $stateChanged = $ah->state_change('payed', $ah->getAuslagenEtag());
+        if (!$stateChanged) {
+            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status gebucht überführt werden. Bitte prüfe diesen Eintrag manuell.");
+        }
+    }
+
     public function getStateString(): string
     {
         $subStateName = $this->stateInfo['substate'];
@@ -1336,10 +1358,8 @@ class AuslagenHandler2 extends FormHandlerInterface
      * check state
      * check substate
      * check permission
-     *
-     * @param bool $is_sub
      */
-    public function state_change_possible(string $newState, $is_sub = false): bool
+    public function state_change_possible(string $newState, bool $is_sub = false): bool
     {
         //current state
         $c = $this->stateInfo['state'];
@@ -1358,7 +1378,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             }
             if (!$is_sub) {
                 foreach ($required_sub as $required) {
-                    if (strpos($this->stateInfo['substate'], $required) === false) {
+                    if (!str_contains($this->stateInfo['substate'], $required)) {
                         return false;
                     }
                 }
@@ -1442,24 +1462,16 @@ class AuslagenHandler2 extends FormHandlerInterface
                 }
             }
             if (isset(self::$subStates[$newState])) {
-                switch ($newState) {
-                    case 'ok-belege':
-                    case 'ok-hv':
-                    case 'ok-kv':
-                    case 'payed':
-                    case 'rejected':
-                        $set[$newState] = "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}";
-                        break;
-                }
+                $set[$newState] = match ($newState) {
+                    'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
+                };
             }
             $this->db->dbUpdate('auslagen', $where, $set);
             //automagic -> all ok -> set state ok -> auto genehmigt
             if ($newState === 'ok-belege' || $newState === 'ok-hv' || $newState === 'ok-kv') {
                 $tmp_auslage = $this->db->dbFetchAll(
-                    'auslagen',
-                    [DBConnector::FETCH_ASSOC],
-                    [],
-                    ['id' => $this->auslagen_data['id']]
+                    tables: 'auslagen',
+                    where: ['id' => $this->auslagen_data['id']]
                 );
                 if (
                     $tmp_auslage
@@ -1469,7 +1481,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     && $tmp_auslage[0]['ok-hv']
                     && isset($tmp_auslage[0]['ok-kv'])
                     && $tmp_auslage[0]['ok-kv']
-                    && strpos($tmp_auslage[0]['state'], 'wip') === 0
+                    && str_starts_with($tmp_auslage[0]['state'], 'wip')
                 ) {
                     $this->db->dbUpdate(
                         'auslagen',

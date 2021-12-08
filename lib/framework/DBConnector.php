@@ -738,8 +738,6 @@ class DBConnector extends Singleton
      * @param string|array $tables table which should be used in FROM statement
      *                                      if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
      *
-     * @param array $fetchStyles
-     *
      * @param array $showColumns if empty array there will be all coulums (*) shown
      *                                      if keys are not numeric, key will be used as alias
      *                                      don't use same alias twice (ofc)
@@ -781,12 +779,13 @@ class DBConnector extends Singleton
      * @param array $sort Order by key (field) with val===true ? asc : desc
      *
      * @param array $groupBy Array with columns which will be grouped by
-     * @param bool $debug
+     * @param int $limit limits the output of the query
+     * @param bool $debug gives more debug logging/output
      * @return array|bool
      */
     public function dbFetchAll(
-        string|array $tables, $fetchStyles = [self::FETCH_ASSOC], $showColumns = [], $where = [], $joins = [], $sort = [],
-        $groupBy = [], int $limit = 0, $debug = false
+        string|array $tables, array $fetchStyles = [self::FETCH_ASSOC], array $showColumns = [], array $where = [],
+        array $joins = [], array $sort = [], array $groupBy = [], int $limit = 0, bool $debug = false
     ) {
         //check if all tables are known
         if (!is_array($tables)) {

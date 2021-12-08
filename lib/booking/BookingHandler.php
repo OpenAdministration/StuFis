@@ -806,21 +806,12 @@ class BookingHandler extends Renderer
                     $title = 'VALUTA: ' . $alZahlung[$idxZahlung]['valuta'] . PHP_EOL . 'IBAN: ' . $alZahlung[$idxZahlung]['empf_iban'] . PHP_EOL . 'BIC: ' . $alZahlung[$idxZahlung]['empf_bic'];
                     $caption = $konto_types[$alZahlung[$idxZahlung]['konto_id']]['short'];
                     $caption .= $alZahlung[$idxZahlung]['id'] . ' - ';
-                    switch ($alZahlung[$idxZahlung]['type']) {
-                            case 'FOLGELASTSCHRIFT':
-                                $caption .= 'LASTSCHRIFT an ';
-                            break;
-                            case 'ONLINE-UEBERWEISUNG':
-                                $caption .= 'ÜBERWEISUNG an ';
-                            break;
-                            case 'UEBERWEISUNGSGUTSCHRIFT':
-                            case 'GUTSCHRIFT':
-                                $caption .= 'GUTSCHRIFT von ';
-                            break;
-                            default: //Buchung, Entgeldabschluss,KARTENZAHLUNG...
-                                $caption .= $alZahlung[$idxZahlung]['type'] . ' an ';
-                            break;
-                        }
+                    $caption .= match ($alZahlung[$idxZahlung]['type']) {
+                        'FOLGELASTSCHRIFT' => 'LASTSCHRIFT an ',
+                        'ONLINE-UEBERWEISUNG' => 'ÜBERWEISUNG an ',
+                        'UEBERWEISUNGSGUTSCHRIFT', 'GUTSCHRIFT' => 'GUTSCHRIFT von ',
+                        default => $alZahlung[$idxZahlung]['type'] . ' an ',
+                    };
                     $caption .= $alZahlung[$idxZahlung]['empf_name'] . ' - ' .
                             explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
                 }
@@ -838,8 +829,7 @@ class BookingHandler extends Renderer
             while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]['value'] === $value) {
                 switch ($alGrund[$idxGrund]['type']) {
                         case 'auslage':
-                            echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage'
-data-id='{$alGrund[$idxGrund]['id']}'>";
+                            echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage' data-id='{$alGrund[$idxGrund]['id']}'>";
                             $caption = 'A' . $alGrund[$idxGrund]['id'] . ' - ' . $alGrund[$idxGrund]['name'] . ' - ' . $alGrund[$idxGrund]['name_suffix'];
                             $url = str_replace(
                                 '//',

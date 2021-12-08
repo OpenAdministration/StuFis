@@ -572,6 +572,7 @@ class HTMLPageRenderer
         </html>
         <?php
     }
+
     /**
      * @param string $TYPE const of BT::
      */
