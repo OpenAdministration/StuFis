@@ -572,7 +572,9 @@ class HTMLPageRenderer
         </html>
         <?php
     }
-
+    /**
+     * @param string $TYPE const of BT::
+     */
     public static function addFlash(string $TYPE, string $string, mixed $debugInfo = ''): void
     {
         $alert = HtmlAlert::make($TYPE)->body($string);

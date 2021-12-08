@@ -44,6 +44,7 @@ class EnvSetter
                 $this->logger->debug('Key found', [$key]);
                 $varName = $varsToSet[$key];
                 $this->envLines[$lineNumber] = $this->lineGeneration($varName, $config[$varName]);
+                $_ENV[$varName] = $config[$varName];
                 unset($varsToSet[$key]); // remove from array keys
             }
         }
@@ -53,6 +54,7 @@ class EnvSetter
             $this->envLines[] = '### Appended by EnvSetter at ' . date_create()->format(DATE_ATOM);
             foreach ($varsToSet as $varName) {
                 $this->envLines[] = $this->lineGeneration($varName, $config[$varName]);
+                $_ENV[$varName] = $config[$varName];
             }
         }
         $this->save();

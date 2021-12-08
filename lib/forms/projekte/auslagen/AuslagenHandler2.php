@@ -2,6 +2,8 @@
 
 namespace forms\projekte\auslagen;
 
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
+use Defuse\Crypto\Key;
 use Exception;
 use forms\chat\ChatHandler;
 use forms\FormHandlerInterface;
@@ -14,8 +16,11 @@ use framework\DBConnector;
 use framework\file\File;
 use framework\file\FileHandler;
 use framework\Helper;
+use framework\helper\EnvSetter;
 use framework\LatexGenerator;
 use framework\render\ErrorHandler;
+use framework\render\html\BT;
+use framework\render\HTMLPageRenderer;
 use framework\render\JsonController;
 use framework\svg\SvgDiagram;
 use framework\svg\SvgDiagramAddingBeam;
@@ -1230,7 +1235,19 @@ class AuslagenHandler2 extends FormHandlerInterface
             return '';
         }
         $p = CryptoHandler::pad_string($p);
-        return CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
+        return CryptoHandler::encrypt_by_key($p, self::getKey());
+    }
+
+    private static function getKey(): string
+    {
+        if (isset($_ENV['IBAN_SECRET_KEY'])) {
+            return $_ENV['IBAN_SECRET_KEY'];
+        }
+
+        $env = new EnvSetter(SYSBASE . '/.env');
+        $key = Key::createNewRandomKey()->saveToAsciiSafeString();
+        $env->setEnvVar('IBAN_SECRET_KEY', $key);
+        return $key;
     }
 
     private function post_filedelete(): void
@@ -1670,7 +1687,13 @@ class AuslagenHandler2 extends FormHandlerInterface
         if (!$p) {
             return '';
         }
-        $p = CryptoHandler::decrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
+        try {
+            $p = CryptoHandler::decrypt_by_key($p, self::getKey());
+        } catch (WrongKeyOrModifiedCiphertextException $e) {
+            HTMLPageRenderer::addFlash(BT::TYPE_WARNING,
+                'Beim entschlüsseln der IBAN ist ein Fehler aufgetreten. Bitte kontaktiere den Administrator'
+            );
+        }
         $p = CryptoHandler::unpad_string($p);
         return $p;
     }
