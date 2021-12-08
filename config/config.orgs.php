@@ -48,7 +48,7 @@ return [
                 'FSR Kath. Theologie',
             ],
             'Hochschulgruppen' => [
-                'Hochschulgruppe',
+                'Hochschulgruppe (divers)',
             ],
         ],
         'rechtsgrundlagen' => [
