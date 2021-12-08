@@ -36,10 +36,6 @@ class FintsConnectionHandler
     /**
      * FintsConnectionHandler2 constructor.
      * @param int $credentialId
-     * @param FinTsOptions $options
-     * @param Credentials $credentials
-     * @param int|null $tanModeInt
-     * @param string|null $tanMediumName
      */
     public function __construct(
         private int $credentialId,

@@ -5,7 +5,7 @@ namespace forms\chat;
 use Exception;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
-use framework\file\EnvWriter;
+use framework\helper\EnvSetter;
 use framework\render\ErrorHandler;
 use framework\Validator;
 
@@ -327,7 +327,7 @@ class ChatHandler
                 ++$count;
                 unset($this->comments[$k]);
             } else {
-                if ($this->comments[$k]['type'] == -1) {
+                if (((int) $this->comments[$k]['type']) === -1 || str_starts_with($this->comments[$k]['text'], '$enc$')) {
                     $this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
                 }
                 ++$count;
@@ -374,6 +374,7 @@ class ChatHandler
 
     /**
      * create chat entry
+     * @param int $type 1: state change, -1: deprecated private msg, 2: admin, 3: ref-finanzen
      */
     public function _createComment(string $group, int $group_id, string $timestamp,
                                    string $creator, string $creator_alias, string $text, int $type): void
@@ -385,7 +386,7 @@ class ChatHandler
                 'timestamp' => mb_substr($timestamp, 0, 20),
                 'creator' => mb_substr($creator, 0, 127),
                 'creator_alias' => mb_substr($creator_alias, 0, 255),
-                'text' => ($type === -1) ? ($this->encryptMessage(mb_substr($text, 0, 45000))) : (mb_substr($text, 0, 60000)),
+                'text' => $this->encryptMessage(mb_substr($text, 0, 45000)),
                 'type' => $type,
             ]);
         } catch (Exception $e) {
@@ -497,7 +498,7 @@ class ChatHandler
 
     /**
      * please note this function DOES NOT contain an ACL
-     * use this function as reference how to anser chat calls
+     * use this function as reference how to answer chat calls
      * check
      * 		target
      * 		target_id
@@ -561,20 +562,18 @@ class ChatHandler
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey['key'];
 
-            $writer = new EnvWriter();
-            $writer->addVarBlock('Chat Keys', [
+            $writer = new EnvSetter(SYSBASE . '/.env');
+            $writer->setEnvVars([
                 'CHAT_PUBLIC_KEY' => $pubKey,
                 'CHAT_PRIVATE_KEY' => $privKey,
             ]);
-            $writer->save();
         }
     }
 
     /**
      * get text/key by key
-     * @param string $type
      */
-    private function getKey($type = 'public'): string
+    private function getKey(string $type = 'public'): string
     {
         return match ($type) {
             'public' => $_ENV['CHAT_PUBLIC_KEY'],
@@ -592,7 +591,7 @@ class ChatHandler
             return '';
         }
         $this->createKeys();
-        return $this->_encryptMessage($text, $this->getKey('public'));
+        return '$enc$' . $this->_encryptMessage($text, $this->getKey('public'));
     }
 
     /**
@@ -604,6 +603,9 @@ class ChatHandler
             return '';
         }
         $this->createKeys();
+        if (str_starts_with($text, '$enc$')) {
+            $text = substr($text, 5);
+        }
         return $this->_decryptMessage($text, $this->getKey('private'));
     }
 
