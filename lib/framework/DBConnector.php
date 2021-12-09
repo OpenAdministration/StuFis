@@ -738,6 +738,8 @@ class DBConnector extends Singleton
      * @param string|array $tables table which should be used in FROM statement
      *                                      if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
      *
+     * @param array $fetchStyles
+     *
      * @param array $showColumns if empty array there will be all coulums (*) shown
      *                                      if keys are not numeric, key will be used as alias
      *                                      don't use same alias twice (ofc)

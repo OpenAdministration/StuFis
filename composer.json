@@ -34,8 +34,7 @@
         "open-administration/php-latex-renderer": "dev-main",
         "symfony/mailer": "^5.3",
         "symfony/twig-bridge": "^5.3",
-        "symfony/orm-pack": "^2.1",
-        "symfony/console": "*"
+        "symfony/orm-pack": "^2.1"
     },
 
     "require-dev": {
