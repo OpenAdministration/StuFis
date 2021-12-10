@@ -325,13 +325,13 @@ class HHPHandler extends Renderer
                     <th>Titelnr</th>
                     <th>Titelname</th>
                     <th class="money">
-                        <?php echo 'soll-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben'); ?>
+                        <?php echo 'soll-' . (array_values($group)[0]['type'] === '0' ? 'Einnahmen' : 'Ausgaben'); ?>
                     </th>
                     <th class="money">
-                        <?php echo 'ist-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben') . ' (gebucht)'; ?>
+                        <?php echo 'ist-' . (array_values($group)[0]['type'] === '0' ? 'Einnahmen' : 'Ausgaben') . ' (gebucht)'; ?>
                     </th>
                     <th class="money">
-                        <?php echo 'ist-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben') . ' (beschlossen)'; ?>
+                        <?php echo 'ist-' . (array_values($group)[0]['type'] === '0' ? 'Einnahmen' : 'Ausgaben') . ' (beschlossen)'; ?>
                     </th>
                 </tr>
                 </thead>
