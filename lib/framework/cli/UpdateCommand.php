@@ -82,18 +82,20 @@ class UpdateCommand extends \Ahc\Cli\Input\Command
             $this->installComposer();
         }
         $out->info('Update composer...');
-        $composerSelfUpdate = new Process([$phpPath, 'composer', 'self-update']);
+        $composerSelfUpdate = new Process([$phpPath, SYSBASE . '/composer.phar', 'self-update'], SYSBASE);
         $composerSelfUpdate->run();
+        $this->io()->info($composerSelfUpdate->getOutput(), true);
+        $this->io()->error($composerSelfUpdate->getErrorOutput(), true);
 
         $composerParams = [$phpPath, SYSBASE . '/composer.phar', 'install'];
         if ($dev !== true) {
             $composerParams[] = '--no-dev';
         }
-        $composer = new Process($composerParams);
+        $composer = new Process($composerParams, SYSBASE);
         $out->info('Install dependencies...', true);
         $composer->run();
-        echo $composer->getOutput();
-        echo $composer->getErrorOutput();
+        $this->io()->info($composer->getOutput(), true);
+        $this->io()->error($composer->getErrorOutput(), true);
 
         $out->info('Installing database', true);
         (new DbBuildCommand())->execute();
