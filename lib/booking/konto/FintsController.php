@@ -412,7 +412,7 @@ class FintsController extends Renderer
     protected function saveStatements(StatementOfAccount $statements, int $kontoId): array
     {
         $db = DBConnector::getInstance();
-
+        $logger = $this->fintsHandler->getLogger();
         $lastKontoRow = $db->dbFetchAll(
             tables: 'konto',
             where: ['konto_id' => $kontoId],
@@ -434,6 +434,7 @@ class FintsController extends Renderer
             $lastKontoSaldo = $lastKontoRow['saldo'];
             $oldSaldoCent = $this->convertToCent($lastKontoSaldo);
             $tryRewind = true;
+            $logger->debug('Found last entry', $lastKontoRow);
         }
 
         $db->dbBegin();
@@ -444,6 +445,7 @@ class FintsController extends Renderer
         foreach ($statements->getStatements() as $statement) {
             $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
+            $logger->debug('Statement', ['date' => $dateString, 'saldo' => $saldoCent]);
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
                 $this->
                 $db->dbRollBack();
@@ -453,7 +455,7 @@ class FintsController extends Renderer
             foreach ($statement->getTransactions() as $transaction) {
                 $valCent = $this->convertToCent($transaction->getAmount(), $transaction->getCreditDebit());
                 $saldoCent += $valCent;
-
+                $logger->debug('Transaktion', ['value' => $valCent, 'saldo-calc' => $saldoCent]);
                 if ($tryRewind === true) {
                     //do rewind if necessary
                     $rewindRow = $db->dbFetchAll(
@@ -480,6 +482,7 @@ class FintsController extends Renderer
                 if ($rewindDiff > 0) {
                     --$rewindDiff;
                     $skipped = $skipped === false ? 1 : $skipped + 1;
+                    $logger->debug('SKIP TRANSACTION - found in DB');
                     continue; // skip this entry, it was in the db before
                 }
 
@@ -525,7 +528,7 @@ class FintsController extends Renderer
         if (DEV && $skipped !== false) {
             $msg .= " $skipped Einträge waren bereits bekannt";
         }
-
+        $logger->debug($msg, ['success' => $ret]);
         return [$ret, $msg];
     }
 

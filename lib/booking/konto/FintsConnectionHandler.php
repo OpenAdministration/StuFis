@@ -24,6 +24,7 @@ use framework\render\HTMLPageRenderer;
 use InvalidArgumentException;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 class FintsConnectionHandler
 {
@@ -36,10 +37,6 @@ class FintsConnectionHandler
     /**
      * FintsConnectionHandler2 constructor.
      * @param int $credentialId
-     * @param FinTsOptions $options
-     * @param Credentials $credentials
-     * @param int|null $tanModeInt
-     * @param string|null $tanMediumName
      */
     public function __construct(
         private int $credentialId,
@@ -447,7 +444,11 @@ class FintsConnectionHandler
         // might be a bug in fints TODO: see if minimal example with the same bug can be found
         $action = GetStatementOfAccount::create($account, $start, $end);
         $this->execute($action);
-        $this->finTs->getLogger()->debug('Statements received', $action->getStatement()->getStatements());
         return $action->getStatement();
+    }
+
+    public function getLogger(): LoggerInterface
+    {
+        return $this->finTs->getLogger();
     }
 }
