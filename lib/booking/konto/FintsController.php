@@ -447,8 +447,8 @@ class FintsController extends Renderer
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
             $logger->debug('Statement', ['date' => $dateString, 'saldo' => $saldoCent]);
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
-                $this->
                 $db->dbRollBack();
+                $logger->debug("$oldSaldoCent !== $saldoCent at statement from $dateString");
                 return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }
             //echo "Statement $dateString Saldo: $saldoCent";
