@@ -14,7 +14,7 @@ class AuthCasHandler extends AuthHandler
     {
         if ($_ENV['AUTH_DEBUG']) {
             $logger = new Logger('phpCAS');
-            $logger->pushHandler(new RotatingFileHandler(SYSBASE . '/runtime/logs/cas.log'));
+            $logger->pushHandler(new RotatingFileHandler(SYSBASE . '/runtime/logs/cas.log', 5));
             phpCAS::setLogger($logger);
             if (DEV) {
                 phpCAS::setVerbose(true);
