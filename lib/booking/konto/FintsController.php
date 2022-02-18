@@ -445,6 +445,7 @@ class FintsController extends Renderer
             $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
+                $this->
                 $db->dbRollBack();
                 return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }

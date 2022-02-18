@@ -36,6 +36,10 @@ class FintsConnectionHandler
     /**
      * FintsConnectionHandler2 constructor.
      * @param int $credentialId
+     * @param FinTsOptions $options
+     * @param Credentials $credentials
+     * @param int|null $tanModeInt
+     * @param string|null $tanMediumName
      */
     public function __construct(
         private int $credentialId,
@@ -259,7 +263,7 @@ class FintsConnectionHandler
         $this->activeAction = $action;
         if ($action?->needsTan() && !$action?->isDone()) {
             // chache it if tan is missing
-            $this->logger->info('Save Action', ['credId' => $this->credentialId, 'action' => $action::class]);
+            $this->logger->info('Save Action - TAN needed', ['credId' => $this->credentialId, 'action' => $action::class]);
             $this->setCache('action', $action);
         } else {
             // delete it from cache otherwise
@@ -443,7 +447,7 @@ class FintsConnectionHandler
         // might be a bug in fints TODO: see if minimal example with the same bug can be found
         $action = GetStatementOfAccount::create($account, $start, $end);
         $this->execute($action);
-
+        $this->finTs->getLogger()->debug('Statements received', $action->getStatement()->getStatements());
         return $action->getStatement();
     }
 }

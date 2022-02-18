@@ -23,6 +23,11 @@ class DevController extends Renderer
         echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGroups(), true) . '</pre>';
     }
 
+    public function actionGremien() : void
+    {
+        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGroups(), true) . '</pre>';
+    }
+
     public function actionLogout()
     {
         AuthHandler::getInstance()->logout();
