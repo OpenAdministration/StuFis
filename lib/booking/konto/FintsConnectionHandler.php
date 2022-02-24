@@ -433,6 +433,7 @@ class FintsConnectionHandler
         $action = $this->resumableAction();
         if ($action instanceof GetStatementOfAccount) {
             if ($action->isDone()) {
+                $this->finTs->getLogger()->debug(var_export($action, true));
                 $this->save();
                 return $action->getStatement();
             }
