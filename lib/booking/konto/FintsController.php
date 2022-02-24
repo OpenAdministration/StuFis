@@ -441,21 +441,24 @@ class FintsController extends Renderer
         $transactionData = [];
 
         $dateString = date_create()->format(DBConnector::SQL_DATE_FORMAT);
-
         foreach ($statements->getStatements() as $statement) {
             $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
             $logger->debug('Statement', ['date' => $dateString, 'saldo' => $saldoCent]);
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
                 $db->dbRollBack();
-                $logger->debug("$oldSaldoCent !== $saldoCent at statement from $dateString");
+                $logger->debug("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString", [var_export($statements, true)]);
                 return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }
             //echo "Statement $dateString Saldo: $saldoCent";
             foreach ($statement->getTransactions() as $transaction) {
                 $valCent = $this->convertToCent($transaction->getAmount(), $transaction->getCreditDebit());
                 $saldoCent += $valCent;
-                $logger->debug('Transaktion', ['value' => $valCent, 'saldo-calc' => $saldoCent]);
+                $logger->debug('Transaktion', [
+                    'value' => $valCent,
+                    'saldo-calc' => $saldoCent,
+                    'date' => $transaction->getBookingDate()?->format('Y-m-d'),
+                ]);
                 if ($tryRewind === true) {
                     //do rewind if necessary
                     $rewindRow = $db->dbFetchAll(
