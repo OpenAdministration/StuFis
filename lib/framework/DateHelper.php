@@ -6,32 +6,27 @@ use DateTime;
 
 class DateHelper
 {
-    public static function fromUntilLast(?string $from, ?string $until, ?string $last)
+    /**
+     * @return array [DateTime, DateTime]
+     */
+    public static function fromUntilLast(?string $from, ?string $until, ?string $last): array
     {
         $syncFrom = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $from);
         $lastSync = DateTime::createFromFormat(DBConnector::SQL_DATETIME_FORMAT, $last);
         $syncUntil = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $until);
 
-        // set default for lastsync
+        // set default for lastsync if unset
         if ($lastSync === false) {
             $lastSync = clone $syncFrom;
         }
 
-        if ($syncUntil === false) {
+        // if unset or in the future, cut it down to now - some banks do not like dates in the future
+        if ($syncUntil === false || $syncUntil > date_create()) {
             $syncUntil = date_create();
         }
 
-        if ($syncUntil->diff(date_create())->invert === -1) { // if in the future
-            $syncUntil = date_create();
-        }
-
-        //find earliest
-        if ($syncFrom->diff($lastSync)->invert === 0) { //if last sync is older
-            $startDate = $lastSync;
-        } else {
-            $startDate = $syncFrom;
-        }
-
+        // find older date
+        $startDate = max($lastSync, $syncFrom);
         return [$startDate, $syncUntil];
     }
 
