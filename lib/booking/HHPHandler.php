@@ -316,7 +316,7 @@ class HHPHandler extends Renderer
                 <thead>
                 <tr>
                     <th class="bg-info"
-                        colspan="6"><?php echo($type + 1) . '.' . $group_nr++ . ' ' . array_values(
+                        colspan="6"><?php echo($type === '0' ? 'E' : 'A') . '.' . $group_nr++ . ' ' . array_values(
                             $group
                         )[0]['gruppen_name']; ?></th>
                 </tr>
