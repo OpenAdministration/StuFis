@@ -98,7 +98,7 @@ class CSVBuilder
             switch ($this->lang) {
                 case self::LANG_DE:
                     $cell = strtolower($cell);
-                    $cell = str_replace(['if', 'sum', 'sumif', 'count', 'countif'], ['wenn', 'summe', 'summewenn', 'zählen', 'zählenwenn'], $cell);
+                    $cell = str_replace(['if(', 'sum(', 'sumif(', 'count(', 'countif('], ['wenn(', 'summe(', 'summewenn(', 'zählen(', 'zählenwenn('], $cell);
                 break;
                 case self::LANG_EN:
                 default:
