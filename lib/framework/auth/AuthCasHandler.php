@@ -119,15 +119,6 @@ class AuthCasHandler extends AuthHandler
     /**
      * DEBUG PURPOSE ONLY!!
      */
-    public function getUserGremien(): array
-    {
-        $gremien = array_values(ORG_DATA['gremien']);
-        return array_merge(...$gremien);
-    }
-
-    /**
-     * DEBUG PURPOSE ONLY!!
-     */
     public function getUserGroups(): array
     {
         return array_merge([REALM . '-sgis'], parent::getUserGroups());
