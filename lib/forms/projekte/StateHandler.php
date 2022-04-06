@@ -32,19 +32,24 @@ class StateHandler
     private $states;
 
     private $parentTableName;
+    /**
+     * @var string[][] keys: gremien, mail
+     */
+    private array $owners;
 
     /**
      * StateHandler constructor.
      *
      * @param        $parentTableName
-     * @param array  $allStates
-     * @param array  $transitions
-     * @param array  $validations
-     * @param array  $postTransitionHooks
-     * @param string $start if empty or null, draft will be picked if available, otherwise first entry in states
+     * @param array $allStates
+     * @param array $transitions
+     * @param array $validations
+     * @param array $postTransitionHooks
+     * @param null $start if empty or null, draft will be picked if available, otherwise first entry in states
      */
-    public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null)
+    public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null, array $owners)
     {
+        $this->owners = $owners;
         $this->parentTableName = $parentTableName;
         if (!is_array($allStates) || !is_array($transitions)) {
             throw new InvalidArgumentException('Keine Arrays in States / Transitions übergeben!');
@@ -132,7 +137,7 @@ class StateHandler
     public function isTransitionableTo($newState): bool
     {
         if ($this->isExitingState($newState)) {
-            //var_dump(["$newState" => $this->transitions[$this->actualState][$newState]]);
+            // var_dump(["$newState" => $this->transitions[$this->actualState][$newState]]);
 
             if ($this->transitions[$newState]) {
                 return $this->validations[$this->actualState]($newState);
@@ -152,8 +157,8 @@ class StateHandler
 
     private function checkPermissionArray($permArray): bool
     {
-        //TODO: use same function as in PermissionHandler
-        //var_dump($permArray);
+        // TODO: use same function as in PermissionHandler
+        // var_dump($permArray);
         if ($permArray === true) {
             return true;
         }
@@ -168,7 +173,11 @@ class StateHandler
             $ret = $ret || in_array(AuthHandler::getInstance()->getUsername(), $permArray['persons'], true);
             $ret = $ret || in_array(AuthHandler::getInstance()->getUserFullName(), $permArray['persons'], true);
         }
-        //var_dump($ret);
+        if (isset($permArray['owner'])) {
+            $ret = $ret || AuthHandler::getInstance()->hasGremium($this->owners['gremien']);
+            $ret = $ret || AuthHandler::getInstance()->getUserMail() === $this->owners['mail'];
+        }
+        // var_dump($ret);
         return $ret;
     }
 

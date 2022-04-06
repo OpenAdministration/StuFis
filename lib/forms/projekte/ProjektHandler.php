@@ -80,7 +80,11 @@ class ProjektHandler extends FormHandlerInterface
         }
 
         $editMode = $this->action === 'create' || $this->action === 'edit';
-        $this->stateHandler = new StateHandler('projekte', self::$states, self::$stateChanges, [], [], $stateNow);
+        $owners = [
+            'gremien' => $this->data['org'],
+            'mail' => $this->data['responsible'] . '@' .ORG_DATA['mail-domain'],
+        ];
+        $this->stateHandler = new StateHandler('projekte', self::$states, self::$stateChanges, [], [], $stateNow, $owners);
         $this->permissionHandler = new PermissionHandler(
             self::$emptyData,
             $this->stateHandler,
@@ -113,14 +117,14 @@ class ProjektHandler extends FormHandlerInterface
         ];
         self::$stateChanges = [
             'draft' => [
-                'wip' => ['groups' => ['sgis']],
+                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'wip' => [
-                'draft' => true,
+                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
                 'need-stura' => ['groups' => ['ref-finanzen-hv']],
                 'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
                 'done-other' => ['groups' => ['ref-finanzen-hv']],
-                'revoked' => ['groups' => ['sgis']],
+                'revoked' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'ok-by-hv' => [
                 'done-hv' => ['groups' => ['ref-finanzen-hv']],
@@ -132,21 +136,21 @@ class ProjektHandler extends FormHandlerInterface
                 'revoked' => ['groups' => ['ref-finanzen-hv']],
             ],
             'done-hv' => [
-                'terminated' => true,
+                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'done-other' => [
-                'terminated' => true,
+                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'ok-by-stura' => [
-                'terminated' => true,
+                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'revoked' => [
-                'wip' => ['groups' => ['sgis']],
+                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'terminated' => [
-                'done-hv' => ['groups' => ['ref-finanzen-hv']],
-                'done-other' => ['groups' => ['ref-finanzen-hv']],
-                'ok-by-stura' => ['groups' => ['ref-finanzen-hv']],
+                'done-hv' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'done-other' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'ok-by-stura' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
         ];
         self::$printModes = [
