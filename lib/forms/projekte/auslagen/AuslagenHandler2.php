@@ -406,7 +406,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                 self::$stateChanges,
                 [],
                 [],
-                $this->stateInfo['state']
+                $this->stateInfo['state'],
+                []
             );
             $this->permissionHandler = new PermissionHandler(
                 self::$validFieldKeys,
