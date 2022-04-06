@@ -577,7 +577,7 @@ class BookingHandler extends Renderer
 
     private function renderFintsButton(): void
     {
-        $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen-kv');
+        $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
         echo HtmlButton::make()
             ->asLink(URIBASE . 'konto/credentials')
             ->style('primary')

@@ -42,7 +42,7 @@ $pathConfig = [
                     'type' => 'path',
                     'controller' => 'fints',
                     'action' => 'view-credentials',
-                    'groups' => 'ref-finanzen-kv',
+                    'groups' => 'ref-finanzen',
                     'method' => ['GET', 'POST'],
                     'children' => [
                         [
