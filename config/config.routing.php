@@ -634,10 +634,22 @@ $pathConfig = [
             ],
         ], // export
         [
-            'path' => 'saml-meta',
+            'path' => 'auth',
             'type' => 'path',
             'controller' => 'saml',
-        ], // saml
+            'children' => [
+                [
+                    'path' => 'metadata',
+                    'type' => 'path',
+                    'action' => 'metadata',
+                ],
+                [
+                    'path' => 'logout',
+                    'type' => 'path',
+                    'action' => 'logout',
+                ],
+            ],
+        ], // auth
     ],
 ];
 

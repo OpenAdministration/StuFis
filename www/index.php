@@ -1,5 +1,5 @@
 <?php
-//auth ----------------------------------
+// auth ----------------------------------
 use booking\BookingHandler;
 use booking\HHPHandler;
 use booking\konto\FintsController;
@@ -23,8 +23,8 @@ $router = new Router();
 $routeInfo = $router->route();
 
 // handle route -------------------------
-//print_r($routeInfo);
-//print_r($_POST);
+// print_r($routeInfo);
+// print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 $controllerName = $routeInfo['controller'];
 switch ($controllerName) {
@@ -69,10 +69,17 @@ switch ($controllerName) {
     case 'error':
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
-    case 'saml':
-        header('Content-Type: text/xml');
-        echo AuthSamlHandler::getInstance()->getSpMetaDataXML();
-        break;
+    case 'auth':
+        switch ($routeInfo['action']) {
+            case 'login':
+                AuthSamlHandler::getInstance()->logout();
+                break 2;
+            case 'metadata':
+                header('Content-Type: text/xml');
+                echo AuthSamlHandler::getInstance()->getSpMetaDataXML();
+                break 2;
+        }
+        // no break
     default:
         $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';
         if (class_exists($className)) {
