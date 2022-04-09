@@ -637,6 +637,7 @@ $pathConfig = [
             'path' => 'auth',
             'type' => 'path',
             'controller' => 'saml',
+            'method' => ['GET', 'POST'],
             'children' => [
                 [
                     'path' => 'metadata',
@@ -645,6 +646,11 @@ $pathConfig = [
                 ],
                 [
                     'path' => 'logout',
+                    'type' => 'path',
+                    'action' => 'logout',
+                ],
+                [
+                    'path' => 'login',
                     'type' => 'path',
                     'action' => 'logout',
                 ],

@@ -71,8 +71,11 @@ switch ($controllerName) {
         break;
     case 'auth':
         switch ($routeInfo['action']) {
-            case 'login':
+            case 'logout':
                 AuthSamlHandler::getInstance()->logout();
+                break 2;
+            case 'login':
+                AuthSamlHandler::getInstance()->login();
                 break 2;
             case 'metadata':
                 header('Content-Type: text/xml');
