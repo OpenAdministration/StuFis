@@ -35,7 +35,7 @@ class AuthSamlHandler extends AuthHandler
                 // returned to the requester, in this case our SP.
                 'assertionConsumerService' => [
                     // URL Location where the <Response> from the IdP will be returned
-                    'url' => $_ENV['SAML_SP_ENTITY_ID'],
+                    'url' => FULL_APP_PATH . 'auth/login',
                     // SAML protocol binding to be used when returning the <Response>
                     // message. OneLogin Toolkit supports this endpoint for the
                     // HTTP-POST binding only.
