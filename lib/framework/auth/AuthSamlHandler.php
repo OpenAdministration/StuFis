@@ -3,8 +3,8 @@
 namespace framework\auth;
 
 use framework\render\ErrorHandler;
+use JetBrains\PhpStorm\NoReturn;
 use OneLogin\Saml2\Auth;
-use OneLogin\Saml2\Metadata;
 
 class AuthSamlHandler extends AuthHandler
 {
@@ -240,6 +240,19 @@ class AuthSamlHandler extends AuthHandler
         exit();
     }
 
+    public function getSpMetaDataXML(): string
+    {
+        $settings = $this->saml->getSettings();
+        $metadata = $settings->getSPMetadata();
+        $errors = $settings->validateMetadata($metadata);
+        if (empty($errors)) {
+            // header('Content-Type: text/xml');
+            return $metadata;
+        }
+        ErrorHandler::handleError(500, 'SAML not correct configured', $errors);
+    }
+
+    #[NoReturn]
     public function reportPermissionDenied(string $errorMsg, string $debug = null): void
     {
         if (isset($debug)) {

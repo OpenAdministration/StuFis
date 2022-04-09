@@ -6,6 +6,7 @@ use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use forms\RestHandler;
+use framework\auth\AuthSamlHandler;
 use framework\file\FileController;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
@@ -67,6 +68,10 @@ switch ($controllerName) {
         break;
     case 'error':
         ErrorHandler::handleErrorRoute($routeInfo);
+        break;
+    case 'saml':
+        header('Content-Type: text/xml');
+        echo AuthSamlHandler::getInstance()->getSpMetaDataXML();
         break;
     default:
         $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';

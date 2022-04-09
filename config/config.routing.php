@@ -633,6 +633,11 @@ $pathConfig = [
                 ],
             ],
         ], // export
+        [
+            'path' => 'saml-meta',
+            'type' => 'path',
+            'controller' => 'saml',
+        ], // saml
     ],
 ];
 
