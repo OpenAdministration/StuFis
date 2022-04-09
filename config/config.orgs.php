@@ -1,6 +1,18 @@
 <?php
 
 return [
+    'tui' => [
+        'gremien' => [],
+        'mailinglists' => [],
+        'impressum-url' => '',
+        'datenschutz-url' => '',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'tu-ilmenau.de',
+        'finanzen-mail' => 'lukas.staab@tu-ilmenau.de',
+        'projekt-form' => [
+        ],
+    ],
     'ue' => [
         'gremien' => [
             'Zentral' => [

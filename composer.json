@@ -34,7 +34,7 @@
         "open-administration/php-latex-renderer": "dev-main",
         "symfony/mailer": "^5.3",
         "symfony/twig-bridge": "^5.3",
-        "symfony/orm-pack": "^2.1"
+        "onelogin/php-saml": "^4.0"
     },
 
     "require-dev": {
@@ -54,8 +54,8 @@
             "@cs"
         ],
         "cs": "php-cs-fixer fix -v --diff --dry-run",
-        "cs-fix": "php-cs-fixer fix -v --diff",
         "cs-risky": "php-cs-fixer fix -v --diff --dry-run --allow-risky yes",
+        "cs-fix": "php-cs-fixer fix -v --diff",
         "cs-fix-risky": "php-cs-fixer fix -v --diff --allow-risky yes"
     }
 }

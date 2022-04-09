@@ -4,6 +4,7 @@ use Dotenv\Dotenv;
 use Dotenv\Exception\ValidationException;
 use Dotenv\Repository\RepositoryBuilder;
 use framework\auth\AuthCasHandler;
+use framework\auth\AuthSamlHandler;
 
 const FINANRANTRAGUI_FW_SI = true; // secret.php check
 
@@ -14,7 +15,7 @@ $conf = [];
 
 try {
     $repository = RepositoryBuilder::createWithDefaultAdapters()
-        //->allowList(['FOO', 'BAR'])
+        // ->allowList(['FOO', 'BAR'])
         ->make();
 
     $dotenv = Dotenv::create($repository, SYSBASE);
@@ -45,6 +46,16 @@ try {
             $dotenv->required('CAS_PORT')->isInteger();
             break;
         case 'saml':
+            define('AUTH_HANDLER', AuthSamlHandler::class);
+            $dotenv->required([
+                'SAML_SP_ENTITY_ID',
+                'SAML_SP_X509CERT',
+                'SAML_SP_PRIVATE_KEY',
+                'SAML_IDP_ENTITY_ID',
+                'SAML_IDP_SSO',
+                'SAML_IDP_SLO',
+                'SAML_IDP_PUBCERT',
+            ]);
             break;
     }
 
@@ -86,12 +97,12 @@ ini_set('error_log', SYSBASE . 'runtime/logs/php-error.log');
 // - no need for interpreter (PHP) to load file into ram
 const UPLOAD_TARGET_DATABASE = true; // true|false store into
 const UPLOAD_USE_DISK_CACHE = false;  // if DATABASE storage enabled , use filesystem as cache
-const UPLOAD_MULTIFILE_BREAOK_ON_ERROR = true; //if there are multiple files on Upload and an error occures: FALSE -> upload files with no errors, TRUE upload no file
+const UPLOAD_MULTIFILE_BREAOK_ON_ERROR = true; // if there are multiple files on Upload and an error occures: FALSE -> upload files with no errors, TRUE upload no file
 const UPLOAD_MAX_MULTIPLE_FILES = 1; // how many files can be uploaded at once
 const UPLOAD_DISK_PATH = SYSBASE . '/public/files/get/filestorage'; // path to DATABASE filecache or FILESYSTEM storage - no '/' at the ends
-const UPLOAD_MAX_SIZE = 41943215; //in bytes - also check DB BLOB max size and php upload size limit in php.ini
+const UPLOAD_MAX_SIZE = 41943215; // in bytes - also check DB BLOB max size and php upload size limit in php.ini
 const UPLOAD_PROHIBITED_EXTENSIONS = 'ph.*?,cgi,pl,pm,exe,com,bat,pif,cmd,src,asp,aspx,js,lnk,html,htm,forbidden';
-const UPLOAD_MOD_XSENDFILE = 1; //0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
+const UPLOAD_MOD_XSENDFILE = 1; // 0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
 
 require_once SYSBASE . '/lib/inc.nonce.php';
 require_once SYSBASE . '/lib/inc.helper.php';

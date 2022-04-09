@@ -69,7 +69,10 @@ abstract class AuthHandler extends Singleton
     /**
      * @return bool if user has Admin Privileges
      */
-    abstract public function isAdmin(): bool;
+    public function isAdmin(): bool
+    {
+        return $this->hasGroup($_ENV['AUTH_ADMIN_GROUP']);
+    }
 
     public function getUserGroups(): array
     {
