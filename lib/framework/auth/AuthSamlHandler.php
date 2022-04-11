@@ -5,6 +5,7 @@ namespace framework\auth;
 use framework\render\ErrorHandler;
 use JetBrains\PhpStorm\NoReturn;
 use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\Utils;
 
 class AuthSamlHandler extends AuthHandler
 {
@@ -231,7 +232,33 @@ class AuthSamlHandler extends AuthHandler
 
     public function getLogoutURL(): string
     {
-        return '';
+        return FULL_APP_PATH . 'auth/logout';
+    }
+
+    public function login(): void
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD']) === 'POST') {
+            // POST -> SAML Response Message
+            $auth = $this->saml;
+            $auth->processResponse();
+            $errors = $auth->getErrors();
+
+            if (!$this->saml->isAuthenticated()) {
+                ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
+            }
+
+            $_SESSION['samlUserdata'] = $auth->getAttributes();
+            $_SESSION['IdPSessionIndex'] = $auth->getSessionIndex();
+            if (isset($_POST['RelayState']) && Utils::getSelfURL() !== $_POST['RelayState']) {
+                // To avoid 'Open Redirect' attacks, before execute the
+                // redirection confirm the value of $_POST['RelayState'] is a // trusted URL.
+                $auth->redirectTo($_POST['RelayState']);
+            }
+            var_dump($_SESSION);
+        } else {
+            // GET
+            $this->saml->login(stay: true);
+        }
     }
 
     public function logout(): void
