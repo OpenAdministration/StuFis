@@ -25,7 +25,7 @@ class DevController extends Renderer
 
     public function actionGremien() : void
     {
-        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGroups(), true) . '</pre>';
+        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGremien(), true) . '</pre>';
     }
 
     public function actionLogout()

@@ -62,7 +62,7 @@ class AuthSamlHandler extends AuthHandler
                 // returned to the requester, in this case our SP.
                 'singleLogoutService' => [
                     // URL Location where the <Response> from the IdP will be returned
-                    'url' => $_ENV['SAML_SP_ENTITY_ID'] . substr($_ENV['URIBASE'], 1) . 'auth/logout',
+                    'url' => FULL_APP_PATH . 'auth/logout',
                     // SAML protocol binding to be used when returning the <Response>
                     // message. OneLogin Toolkit supports the HTTP-Redirect binding
                     // only for this endpoint.
@@ -143,6 +143,9 @@ class AuthSamlHandler extends AuthHandler
                 // Indicates whether the <samlp:AuthnRequest> messages sent by this SP
                 // will be signed.  [Metadata of the SP will offer this info]
                 'authnRequestsSigned' => true,
+                // Indicates whether the <samlp:logoutRequest> messages sent by this SP
+                // will be signed.
+                'logoutRequestSigned' => true,
             ],
         ];
         $this->saml = new Auth($settings);
@@ -156,9 +159,9 @@ class AuthSamlHandler extends AuthHandler
 
     public function requireAuth(): void
     {
-	if(isset($_SESSION['samlUserdata'])){
-	   return;
-	}
+        if (isset($_SESSION['samlUserdata'])) {
+            return;
+        }
         if (!$this->saml->isAuthenticated()) {
             // TODO: return url = current url
             $this->saml->login(forceAuthn: true);
@@ -173,7 +176,7 @@ class AuthSamlHandler extends AuthHandler
     protected function getAttributes(): array
     {
         return $_SESSION['samlUserdata'];
-	//$attributes = $this->saml->getAttributes();
+        // $attributes = $this->saml->getAttributes();
         // var_dump($attributes['groups']);
         return $attributes;
     }
@@ -204,7 +207,7 @@ class AuthSamlHandler extends AuthHandler
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
         $attributes = $this->getAttributes();
-	return true;
+        return true;
         if (!isset($attributes['groups'])) {
             return false;
         }
@@ -247,19 +250,17 @@ class AuthSamlHandler extends AuthHandler
             $auth = $this->saml;
             $auth->processResponse();
             $errors = $auth->getErrors();
-	    if (!empty($errors)) {
- 		   echo '<p>', htmlentities(implode(', ', $errors)), '</p>';
-		   exit();
-	    }
+            if (!empty($errors)) {
+                echo '<p>', htmlentities(implode(', ', $errors)), '</p>';
+                exit();
+            }
 
-	    
             if (!$this->saml->isAuthenticated()) {
                 ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
             }
 
             $_SESSION['samlUserdata'] = $auth->getAttributesWithFriendlyName();
             $_SESSION['IdPSessionIndex'] = $auth->getSessionIndex();
-	    var_dump($auth->getAttributes());
             if (isset($_POST['RelayState']) && Utils::getSelfURL() !== $_POST['RelayState']) {
                 // To avoid 'Open Redirect' attacks, before execute the
                 // redirection confirm the value of $_POST['RelayState'] is a // trusted URL.
@@ -267,13 +268,13 @@ class AuthSamlHandler extends AuthHandler
             }
         } else {
             // GET
-            $this->saml->login(stay: true);
+            $this->saml->login();
         }
     }
 
     public function logout(): void
     {
-        $this->saml->logout();
+        $this->saml->logout(returnTo: FULL_APP_PATH, sessionIndex: $_SESSION['IdPSessionIndex']);
         exit();
     }
 

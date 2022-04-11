@@ -74,7 +74,7 @@ class Router
 
     public function route($validateAuthGroup = true): array
     {
-        //route request
+        // route request
         $routeInfo = $this->_route($this->requested_path, [$this->routes]);
 
         if (isset($routeInfo['groups']) && !AuthHandler::getInstance()->hasGroup($routeInfo['groups'])) {
@@ -83,7 +83,7 @@ class Router
         }
         $allowedMethods = (array) $routeInfo['method'];
         $allowedMethods = array_map('strtoupper', $allowedMethods);
-        //check request method ------------------
+        // check request method ------------------
         if ($routeInfo['controller'] !== 'error'
             && !in_array(strtoupper($_SERVER['REQUEST_METHOD']), $allowedMethods, true)) {
             $routeInfo = [
@@ -114,12 +114,12 @@ class Router
             $next = false;
         }
 
-        //remember current default route
+        // remember current default route
         $old_not_found = $this->not_found_route;
         $ret = ['path' => $current];
-        //handle current
+        // handle current
         $found = false;
-        //handle all matches on current level
+        // handle all matches on current level
         foreach ($routes as $route) {
             // throw error if path or type not set
             if (!isset($route['path'])) {
@@ -136,7 +136,7 @@ class Router
                 echo '</pre>';
                 throw new Exception("Router: Error on configuration. Parameter 'type' is missing.");
             }
-            //check if current path matches route path
+            // check if current path matches route path
             if ((($route['type'] === 'path' && $route['path'] === $current)
                     || ($route['type'] === 'pattern' && preg_match('/^' . $route['path'] . '$/', $current)))
                 && !isset($route['is_suffix'])) {
@@ -159,7 +159,7 @@ class Router
                         $ret[$k] = $v;
                     }
                 }
-                //is pattern match
+                // is pattern match
                 $matches = null;
                 if ($route['type'] === 'pattern' && preg_match('/^' . $route['path'] . '$/', $current, $matches)) {
                     $ret[$route['param']] = $matches[$route['match'] ?? 0];
@@ -194,11 +194,11 @@ class Router
                 $ret[$route['param']] = $route['value'];
             }
 
-            //may handle children, if $routes contains children && path is not false or empty
+            // may handle children, if $routes contains children && path is not false or empty
             if ($found && !isset($route['is_suffix']) && isset($route['children']) && $next != false) {
-                //handle children
+                // handle children
                 $tmpRet = $this->_route($next, $route['children']);
-                //merge children if not null or false or not found flag set
+                // merge children if not null or false or not found flag set
                 if ($tmpRet && !isset($tmpRet['not_found'])) {
                     $ret['path'] .= '/' . $tmpRet['path'];
                     foreach ($tmpRet as $k => $v) {
@@ -218,9 +218,9 @@ class Router
                 }
             }
 
-            //reset not found variable
+            // reset not found variable
             $this->not_found_route = $old_not_found;
-            //break if route matches
+            // break if route matches
             if ($found === true) {
                 break;
             }

@@ -33,8 +33,7 @@
         "meyfa/php-svg": "^0.11.2",
         "open-administration/php-latex-renderer": "dev-main",
         "symfony/mailer": "^5.3",
-        "symfony/twig-bridge": "^5.3",
-        "onelogin/php-saml": "^4.0"
+        "symfony/twig-bridge": "^5.3"
     },
 
     "require-dev": {
