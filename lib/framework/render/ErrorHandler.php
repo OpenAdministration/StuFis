@@ -101,10 +101,10 @@ class ErrorHandler extends Renderer
 
     /**
      * ErrorHandler constructor.
-     * @param string|array $debugInfo
      */
-    public function __construct(array $errorInformation, array $stackTrace = null, string $additionalInfo = '', $debugInfo = '')
+    public function __construct(array $errorInformation, array $stackTrace = null, string $additionalInfo = '', array|string $debugInfo = '')
     {
+        parent::__construct();
         if (is_array($debugInfo)) {
             $debugInfo = var_export($debugInfo, true);
         }
@@ -126,7 +126,7 @@ class ErrorHandler extends Renderer
         if (count($filteredConstants) === 1) {
             return array_values($filteredConstants)[0];
         }
-        //throw another Error ^^'
+        // throw another Error ^^'
         return self::UNKOWN_ERROR_CODE;
     }
 

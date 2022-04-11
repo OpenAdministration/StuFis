@@ -274,8 +274,18 @@ class AuthSamlHandler extends AuthHandler
 
     public function logout(): void
     {
-        $this->saml->logout(returnTo: FULL_APP_PATH, sessionIndex: $_SESSION['IdPSessionIndex']);
-        exit();
+        if (isset($_GET['SAMLResponse'])) {
+            // process logout saml msg
+            $this->saml->processSLO();
+            $errors = $this->saml->getErrors();
+            if (!empty($errors)) {
+                ErrorHandler::handleError(500, 'SAML Logout gescheitert', $errors);
+            }
+        } else {
+            // initiate logout
+            $this->saml->logout(returnTo: FULL_APP_PATH . 'auth/logout', sessionIndex: $_SESSION['IdPSessionIndex']);
+            exit();
+        }
     }
 
     public function getSpMetaDataXML(): string
