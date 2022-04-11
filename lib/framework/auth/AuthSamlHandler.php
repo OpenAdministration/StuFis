@@ -81,7 +81,7 @@ class AuthSamlHandler extends AuthHandler
             // Identity Provider Data that we want connected with our SP.
             'idp' => [
                 // Identifier of the IdP entity  (must be a URI)
-                'entityId' => $_ENV['SAML_SP_ENTITY_ID'],
+                'entityId' => $_ENV['SAML_IDP_ENTITY_ID'],
                 // SSO endpoint info of the IdP. (Authentication Request protocol)
                 'singleSignOnService' => [
                     // URL Target of the IdP where the Authentication Request Message
@@ -156,6 +156,9 @@ class AuthSamlHandler extends AuthHandler
 
     public function requireAuth(): void
     {
+	if(isset($_SESSION['samlUserdata'])){
+	   return;
+	}
         if (!$this->saml->isAuthenticated()) {
             // TODO: return url = current url
             $this->saml->login(forceAuthn: true);
@@ -169,7 +172,8 @@ class AuthSamlHandler extends AuthHandler
 
     protected function getAttributes(): array
     {
-        $attributes = $this->saml->getAttributes();
+        return $_SESSION['samlUserdata'];
+	//$attributes = $this->saml->getAttributes();
         // var_dump($attributes['groups']);
         return $attributes;
     }
@@ -200,6 +204,7 @@ class AuthSamlHandler extends AuthHandler
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
         $attributes = $this->getAttributes();
+	return true;
         if (!isset($attributes['groups'])) {
             return false;
         }
@@ -237,24 +242,29 @@ class AuthSamlHandler extends AuthHandler
 
     public function login(): void
     {
-        if (strtoupper($_SERVER['REQUEST_METHOD']) === 'POST') {
+        if (strtoupper($_SERVER['REQUEST_METHOD']) === 'POST' && isset($_POST['SAMLResponse'])) {
             // POST -> SAML Response Message
             $auth = $this->saml;
             $auth->processResponse();
             $errors = $auth->getErrors();
+	    if (!empty($errors)) {
+ 		   echo '<p>', htmlentities(implode(', ', $errors)), '</p>';
+		   exit();
+	    }
 
+	    
             if (!$this->saml->isAuthenticated()) {
                 ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
             }
 
-            $_SESSION['samlUserdata'] = $auth->getAttributes();
+            $_SESSION['samlUserdata'] = $auth->getAttributesWithFriendlyName();
             $_SESSION['IdPSessionIndex'] = $auth->getSessionIndex();
+	    var_dump($auth->getAttributes());
             if (isset($_POST['RelayState']) && Utils::getSelfURL() !== $_POST['RelayState']) {
                 // To avoid 'Open Redirect' attacks, before execute the
                 // redirection confirm the value of $_POST['RelayState'] is a // trusted URL.
                 $auth->redirectTo($_POST['RelayState']);
             }
-            var_dump($_SESSION);
         } else {
             // GET
             $this->saml->login(stay: true);

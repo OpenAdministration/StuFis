@@ -652,7 +652,7 @@ $pathConfig = [
                 [
                     'path' => 'login',
                     'type' => 'path',
-                    'action' => 'logout',
+                    'action' => 'login',
                 ],
             ],
         ], // auth

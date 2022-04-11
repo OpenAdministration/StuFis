@@ -21,7 +21,6 @@ require_once SYSBASE . '/lib/inc.all.php';
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
-
 // handle route -------------------------
 // print_r($routeInfo);
 // print_r($_POST);
@@ -69,20 +68,20 @@ switch ($controllerName) {
     case 'error':
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
-    case 'auth':
-        switch ($routeInfo['action']) {
+    case 'saml':
+	switch ($routeInfo['action']) {
             case 'logout':
                 AuthSamlHandler::getInstance()->logout();
-                break 2;
+                break;
             case 'login':
                 AuthSamlHandler::getInstance()->login();
-                break 2;
+                break;
             case 'metadata':
                 header('Content-Type: text/xml');
                 echo AuthSamlHandler::getInstance()->getSpMetaDataXML();
-                break 2;
+                break;
         }
-        // no break
+        break;
     default:
         $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';
         if (class_exists($className)) {
