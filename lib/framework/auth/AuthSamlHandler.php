@@ -175,10 +175,8 @@ class AuthSamlHandler extends AuthHandler
 
     protected function getAttributes(): array
     {
+        $this->requireAuth();
         return $_SESSION['samlUserdata'];
-        // $attributes = $this->saml->getAttributes();
-        // var_dump($attributes['groups']);
-        return $attributes;
     }
 
     public function getUserMail(): string
