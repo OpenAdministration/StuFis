@@ -129,7 +129,7 @@ class HHPHandler extends Renderer
                 'decided-value' => '',
             ];
             $rowsBefore = count($data) + 2;
-            foreach ($group as /*$titel_id =>*/ $row) {
+            foreach ($group as /* $titel_id => */ $row) {
                 if (!isset($row['_booked'])) {
                     $row['_booked'] = 0;
                 }
@@ -156,7 +156,7 @@ class HHPHandler extends Renderer
             ];
         }
 
-        $csvBuilder = new CSVBuilder($data, $header);
+        $csvBuilder = new CSVBuilder($data, $header, cellEscape: '');
         $von = date_create($hhp['von'])->format('Y-m');
         $bis = date_create($hhp['bis'])->format('Y-m');
         $csvBuilder->echoCSV(date_create()->format('Y-m-d') . '-HHA-' . $von . '-bis-' . $bis);
@@ -267,7 +267,7 @@ class HHPHandler extends Renderer
         $titel = [];
         foreach ($rows as $row) {
             $cells = explode(';', str_replace('"', '', $row));
-            //new group
+            // new group
             if (!empty($cells[0])) {
                 $groupString = $cells[0];
                 [$activeGroupId, $groupName] = explode(' ', $groupString, 2);
@@ -298,7 +298,7 @@ class HHPHandler extends Renderer
         $hhp_id = $this->routeInfo['hhp-id'];
         $hhp = $this->hhps[$hhp_id];
         $groups = DBConnector::getInstance()->dbgetHHP($hhp_id);
-        //var_dump($groups);
+        // var_dump($groups);
         $this->renderHeadline('Haushaltsplan seit ' . $this->formatDateToMonthYear($hhp['von'])); ?>
         <table class="table table-striped">
 			<?php
@@ -439,7 +439,7 @@ class HHPHandler extends Renderer
                 'auslagen.id',
                 'auslagen.name_suffix',
                 'booking.beleg_id',
-                //"booking.beleg_type",
+                // "booking.beleg_type",
                 'booking.value',
             ],
             ['titel_id' => $titel_id, 'booking.canceled' => 0],
@@ -463,7 +463,7 @@ class HHPHandler extends Renderer
 
         [$closedMoney, $openMoney] = DBConnector::getInstance()->getMoneyByTitle($hhp_id, false, $titel_id);
         $this->renderHeadline('Aus nicht beendeten Projekten', 4);
-        //var_dump($openMoney);
+        // var_dump($openMoney);
         $this->renderTable(
             ['Projekt', 'Posten', 'Betrag'],
             [$openMoney],
@@ -475,7 +475,7 @@ class HHPHandler extends Renderer
             ]
         );
         $this->renderHeadline('Aus beendeten Projekten', 4);
-        //var_dump($closedMoney[0]);
+        // var_dump($closedMoney[0]);
         $this->renderTable(
             ['Projekt', 'Auslage', 'Betrag'],
             [$closedMoney],

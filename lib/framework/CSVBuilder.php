@@ -19,15 +19,11 @@ class CSVBuilder
     /**
      * CSVBuilder constructor.
      *
-     * @param array  $header        if header is empty data will be printed without checking
-     * @param string $cellSeparator default is ","
-     * @param bool   $escapeFormulars
-     * @param string $cellEscape
-     * @param int    $lang
+     * @param array  $header        if header is empty() data will be printed without checking
      */
     public function __construct(
-        array $data, array $header, $cellSeparator = ';', $escapeFormulars = false,
-        $cellEscape = '"', $lang = self::LANG_DE
+        array $data, array $header, string $cellSeparator = ';', bool $escapeFormulars = false,
+        string $cellEscape = '"', int $lang = self::LANG_DE
     ) {
         $this->data = $data;
         $this->header = $header;
@@ -94,7 +90,7 @@ class CSVBuilder
         if (is_numeric($cell) && $this->lang === self::LANG_DE) {
             return $this->cellEscape . str_replace('.', ',', strip_tags($cell)) . $this->cellEscape;
         }
-        if (is_string($cell) && $cell[0] === '=') {
+        if (!empty($cell) && $cell[0] === '=') {
             switch ($this->lang) {
                 case self::LANG_DE:
                     $cell = strtolower($cell);
