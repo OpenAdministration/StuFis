@@ -86,6 +86,7 @@ return [
                 'label' => 'Andere Rechtsgrundlage',
                 'label-additional' => 'Andere Rechtsgrundlage angeben',
                 'hint-text' => '',
+                'placeholder' => '',
             ],
         ],
         'projekt-form' => [

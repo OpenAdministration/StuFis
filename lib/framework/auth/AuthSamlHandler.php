@@ -9,7 +9,7 @@ use OneLogin\Saml2\Utils;
 
 class AuthSamlHandler extends AuthHandler
 {
-    private $saml;
+    private Auth $saml;
 
     protected function __construct()
     {
