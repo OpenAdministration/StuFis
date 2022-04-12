@@ -257,7 +257,7 @@ class AuthSamlHandler extends AuthHandler
                 ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
             }
 
-            $_SESSION['samlUserdata'] = $auth->getAttributesWithFriendlyName();
+            $_SESSION['samlUserdata'] = $auth->getAttributes();
             $_SESSION['IdPSessionIndex'] = $auth->getSessionIndex();
             if (isset($_POST['RelayState']) && Utils::getSelfURL() !== $_POST['RelayState']) {
                 // To avoid 'Open Redirect' attacks, before execute the

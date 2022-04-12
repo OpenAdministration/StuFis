@@ -17,7 +17,7 @@ class DevController extends Renderer
     {
         session_destroy();
         session_unset();
-        session_start();
+        exit('Session Killed');
     }
 
     public function actionSession(): void
