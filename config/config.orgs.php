@@ -2,7 +2,47 @@
 
 return [
     'tui' => [
-        'gremien' => [],
+        'gremien' => [
+            'Zentral' => [
+                'Studierendenrat (StuRa)',
+                'Wahlkommission Studierendenschaft',
+                'Senat',
+                'Studienausschuss',
+                'Forschungsausschuss',
+                'Gleichstellungsrat',
+                'Konferenz Thüringer Studierendenschaften (KTS)',
+                'Promovierendenvertretung',
+            ],
+            'Referate' => [
+                'Referat Datenschutz',
+                'Referat Ehrenamt',
+                'Referat Erstiwoche',
+                'Referat Finanzen',
+                'Referat Hochschulpolitik (HoPo)',
+                'Referat Internationales',
+                'Referat IT',
+                'Referat Kultur',
+                'Referat Politische Bildung',
+                'Referat Public Relations',
+                'Referat Soziales',
+                'Referat Sport Umwelt und Gesundheit',
+                'Referat Stadt',
+            ],
+            'Fachschaftsräte' => [
+                'Fachschaftsrat EI',
+                'Fachschaftsrat IA',
+                'Fachschaftsrat MB',
+                'Fachschaftsrat MN',
+                'Fachschaftsrat WM',
+            ],
+            'Arbeitsgemeinschaften' => [
+                'AG Diversity',
+                'AG Mensaausschuss',
+                'AG Ordnungen',
+                'AG Umbau',
+                'AG Promovierende',
+            ],
+        ],
         'mailinglists' => [],
         'impressum-url' => '',
         'datenschutz-url' => '',
@@ -10,6 +50,44 @@ return [
         'help-url' => 'mailto:service@open-administration.de',
         'mail-domain' => 'tu-ilmenau.de',
         'finanzen-mail' => 'lukas.staab@tu-ilmenau.de',
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.',
+            ],
+            'fsr-ref' => [
+                'label' => 'Beschluss FSR/Referat/AG bis zu 350 EUR',
+                'label-additional' => 'Beschluss-Nr (Verkündung)',
+                'hint-text' => 'Interne Förderrichtlinie §6: für ein internes Projekt bis zu (inkl.) 250 EUR Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden.',
+            ],
+            'kleidung' => [
+                'label' => 'Gremienkleidung',
+                'hint-text' => ' Interne Förderrichtlinie §5: bis zu 30€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.',
+            ],
+            'fahrt' => [
+                'label' => 'Fahrtkosten',
+                'hint-text' => 'Interne Förderrichtlinie §4a: Fahrtkosten',
+            ],
+            'buero' => [
+                'label' => 'Büromaterial',
+                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+            ],
+            'verbrauch' => [
+                'label' => 'Verbrauchsmaterial',
+                'hint-text' => 'Interne Förderrichtlinie §2: bis zu 150 EUR',
+            ],
+            'bahn-card' => [
+                'label' => 'Bahncard',
+                'hint-text' => ' Interne Förderrichtlinie §4c: Privat gekaufte Bahn-Cards können nachträglich gefördert werden, falls für den StuRa die Anschaffung der Bahncard nachweislich günstiger war. Antrag ist bis zu einem Semester nach Exma möglich.',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+            ],
+        ],
         'projekt-form' => [
         ],
     ],

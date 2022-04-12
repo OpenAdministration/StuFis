@@ -47,7 +47,7 @@ class StateHandler
      * @param array $postTransitionHooks
      * @param null $start if empty or null, draft will be picked if available, otherwise first entry in states
      */
-    public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null, array $owners)
+    public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null, array $owners = [])
     {
         $this->owners = $owners;
         $this->parentTableName = $parentTableName;
