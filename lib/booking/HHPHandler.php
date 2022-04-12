@@ -278,10 +278,10 @@ class HHPHandler extends Renderer
                     'type' => $groupType,
                 ];
             } else {
-                $titelnr = $cells[1];
-                if (empty($titelnr)) {
+                if (empty($cells[1])) {
                     continue;
                 } // group sum here, trash this info
+                $titelnr = $cells[1];
                 $titel[$activeGroupId][] = [
                     // hhpgruppen_id not available here, set later
                     'titel_nr' => $titelnr,
