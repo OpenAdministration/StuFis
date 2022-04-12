@@ -209,7 +209,12 @@ class AuthSamlHandler extends AuthHandler
         if ($this->isAdmin()) {
             return true;
         }
-        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map('strtolower', $authGroups))) === 0) {
+        if (is_array($groups)) {
+            $groups = array_map('strtolower', $groups);
+        } else {
+            $groups = strtolower($groups);
+        }
+        if (count(array_intersect(explode($delimiter, $groups), array_map('strtolower', $authGroups))) === 0) {
             return false;
         }
         return true;
