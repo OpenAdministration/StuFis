@@ -366,7 +366,7 @@ class HTMLPageRenderer
                     <?php } elseif ($auth->hasGroup('ref-finanzen')) { ?>
                             Referat Finanzen
                     <?php } else { ?>
-                            Nutzer:in
+                            Nutzer*in
                     <?php } ?>
                     </div>
                 </div>
