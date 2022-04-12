@@ -153,8 +153,7 @@ class AuthSamlHandler extends AuthHandler
 
     public function getUserFullName(): string
     {
-        $this->requireAuth();
-        return $this->getAttributes()['displayName'][0];
+        return $this->getAttributes()['urn:oid:2.16.840.1.113730.3.1.241'][0];
     }
 
     public function requireAuth(): void
@@ -181,50 +180,36 @@ class AuthSamlHandler extends AuthHandler
 
     public function getUserMail(): string
     {
-        $this->requireAuth();
-        return $this->getAttributes()['mail'][0];
+        return $this->getAttributes()['urn:oid:0.9.2342.19200300.100.1.3'][0];
     }
 
     public function requireGroup(array|string $groups): void
     {
-        $this->requireAuth();
-        if ($this->isAdmin()) {
-            return;
-        }
         if (!$this->hasGroup($groups)) {
             $this->reportPermissionDenied('Eine der Gruppen ' . $groups . ' wird benötigt');
         }
     }
 
     /**
-     * @param array|string $groups    String of groups
-     * @param string $delimiter Delimiter of the groups in $group
-     *
-     * @return bool  true if the user has one or more groups from $group
+     * {@inheritDoc}
+     */
+    public function isAdmin(): bool
+    {
+        // no realm prefixing here
+        // cannot use hasGroup here -> infinite recursion otherwise
+        return in_array($_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
-        $attributes = $this->getAttributes();
-        return true;
-        if (!isset($attributes['groups'])) {
-            return false;
-        }
+        $authGroups = $this->getUserGroups();
         if ($this->isAdmin()) {
             return true;
         }
-        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map('strtolower', $attributes['groups']))) === 0) {
-            return false;
-        }
-        return true;
-    }
-
-    public function hasGremium($gremien, $delimiter = ','): bool
-    {
-        $attributes = $this->getAttributes();
-        if (!isset($attributes['gremien'])) {
-            return false;
-        }
-        if (count(array_intersect(explode($delimiter, strtolower($gremien)), array_map('strtolower', $attributes['gremien']))) === 0) {
+        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map('strtolower', $authGroups))) === 0) {
             return false;
         }
         return true;
@@ -233,7 +218,7 @@ class AuthSamlHandler extends AuthHandler
     public function getUsername(): ?string
     {
         $attributes = $this->getAttributes();
-        return $attributes['eduPersonPrincipalName'][0] ?? $attributes['mail'][0] ?? null;
+        return $attributes['urn:oid:1.3.6.1.4.1.5923.1.1.1.6'][0] ?? $this->getUserMail() ?? null;
     }
 
     public function getLogoutURL(): string
@@ -248,12 +233,8 @@ class AuthSamlHandler extends AuthHandler
             $auth = $this->saml;
             $auth->processResponse();
             $errors = $auth->getErrors();
-            if (!empty($errors)) {
-                echo '<p>', htmlentities(implode(', ', $errors)), '</p>';
-                exit();
-            }
 
-            if (!$this->saml->isAuthenticated()) {
+            if (!$this->saml->isAuthenticated() || !empty($errors)) {
                 ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
             }
 

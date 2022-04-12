@@ -69,9 +69,10 @@ switch ($controllerName) {
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
     case 'saml':
-	switch ($routeInfo['action']) {
+    switch ($routeInfo['action']) {
             case 'logout':
                 AuthSamlHandler::getInstance()->logout();
+                HTMLPageRenderer::redirect(FULL_APP_PATH);
                 break;
             case 'login':
                 AuthSamlHandler::getInstance()->login();

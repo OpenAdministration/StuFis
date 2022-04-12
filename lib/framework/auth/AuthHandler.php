@@ -71,7 +71,8 @@ abstract class AuthHandler extends Singleton
      */
     public function isAdmin(): bool
     {
-        return $this->hasGroup($_ENV['AUTH_ADMIN_GROUP']);
+        // cannot use hasGroup here -> infinite recursion otherwise
+        return in_array(REALM . '-' . $_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
     }
 
     public function getUserGroups(): array
