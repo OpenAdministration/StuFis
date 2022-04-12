@@ -213,8 +213,9 @@ class AuthSamlHandler extends AuthHandler
             $groups = array_map('strtolower', $groups);
         } else {
             $groups = strtolower($groups);
+            $groups = explode($delimiter, $groups);
         }
-        if (count(array_intersect(explode($delimiter, $groups), array_map('strtolower', $authGroups))) === 0) {
+        if (count(array_intersect($groups, array_map('strtolower', $authGroups))) === 0) {
             return false;
         }
         return true;
