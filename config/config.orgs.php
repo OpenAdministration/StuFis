@@ -58,7 +58,7 @@ return [
                 'hint-text' => 'Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.',
             ],
             'fsr-ref' => [
-                'label' => 'Beschluss FSR/Referat/AG bis zu 350 EUR',
+                'label' => 'Beschluss FSR/Referat/AG bis zu 250 EUR',
                 'label-additional' => 'Beschluss-Nr (Verkündung)',
                 'hint-text' => 'Interne Förderrichtlinie §6: für ein internes Projekt bis zu (inkl.) 250 EUR Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden.',
             ],
