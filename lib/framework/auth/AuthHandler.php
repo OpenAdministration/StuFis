@@ -23,7 +23,12 @@ abstract class AuthHandler extends Singleton
      * @param array|string $groups String of groups
      * @return void die() if group is not there
      */
-    abstract public function requireGroup(array|string $groups): void;
+    public function requireGroup(array|string $groups): void
+    {
+        if (!$this->hasGroup($groups)) {
+            ErrorHandler::handleError(403, 'Fehlende Zugangsberechtigung', $groups);
+        }
+    }
 
     public function getUserMailinglists(): array
     {
@@ -124,6 +129,10 @@ abstract class AuthHandler extends Singleton
         return count($hasGremien) > 0;
     }
 
+    /**
+     * Returns the Gremien of the User
+     * @return array
+     */
     public function getUserGremien(): array
     {
         return $this->getAttributes()['gremien'] ?? [];

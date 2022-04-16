@@ -4,6 +4,7 @@ use Dotenv\Dotenv;
 use Dotenv\Exception\ValidationException;
 use Dotenv\Repository\RepositoryBuilder;
 use framework\auth\AuthCasHandler;
+use framework\auth\AuthDummyHandler;
 use framework\auth\AuthSamlHandler;
 
 const FINANRANTRAGUI_FW_SI = true; // secret.php check
@@ -37,7 +38,7 @@ try {
         'AUTH_DEBUG',
     ])->isBoolean();
 
-    $dotenv->required('AUTH_METHOD')->allowedRegexValues('/(saml|cas)/i');
+    $dotenv->required('AUTH_METHOD')->allowedRegexValues('/(saml|cas|dummy)/i');
     switch (strtolower($_ENV['AUTH_METHOD'])) {
         case 'cas':
             define('AUTH_HANDLER', AuthCasHandler::class);
@@ -56,6 +57,10 @@ try {
                 'SAML_IDP_SLO',
                 'SAML_IDP_PUBCERT',
             ]);
+            break;
+        case 'dummy':
+            define('AUTH_HANDLER', AuthDummyHandler::class);
+            $dotenv->required('AUTH_DUMMY_ATTRIBUTES');
             break;
     }
 

@@ -78,10 +78,10 @@ class ErrorHandler extends Renderer
     /**
      * @param int $htmlCode
      * @param string $message
-     * @param string $debugInfo
+     * @param string|array $debugInfo
      */
     #[NoReturn]
-    public static function handleError(int $htmlCode = 500, string $message = '', $debugInfo = ''): void
+    public static function handleError(int $htmlCode = 500, string $message = '', string|array $debugInfo = ''): void
     {
         $eh = new self(self::getDefaultErrorInfo($htmlCode), debug_backtrace(), $message, $debugInfo);
         HTMLPageRenderer::showErrorAndDie($eh);

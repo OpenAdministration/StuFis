@@ -1,0 +1,20 @@
+(% extends "article.tex.twig" %)
+(% import "helper.tex.twig" as helper %)
+
+(% block title %)Zahlungs-/Buchungsanweisung(% endblock %)
+(% block author %)Open Administration(% endblock %)
+(% block footer %)(( footer ))(% endblock %)
+(% block main %)
+    \vspace{1em}
+    (( helper.listing(auslagenMeta, 'Allgemeine Angaben') ))
+    (( helper.listing(zahlungsMeta, 'Zahlungsdaten', true) ))
+
+    (( helper.signatures(signatures) ))
+    (( helper.headline('Buchungsdaten') ))
+    \vspace{1em}
+    (( helper.table(bookingTable) ))
+    (% set fillDate = "____.____.________" %)
+    \vspace{2em}
+    \textbf{Angewiesen am: } (( fillDate )) \hfill
+    \textbf{Gebucht am: } (( fillDate ))
+(% endblock %)

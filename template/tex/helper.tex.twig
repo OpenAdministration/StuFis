@@ -66,20 +66,26 @@
 \end{figure}
 (% endmacro %)
 
-(% macro table(content, filters, columOrientations) %)
+(% macro table(content) %)
     \begin{center}
-        (% if columOrientation is not defined %)
-            (% set columOrientation = content.header|reduce((carry,el) => carry ~ 'c') %)
+        (% if content.orientation is defined %)
+            (% set orientation = content.orientation %)
+        (% else %)
+            (% set orientation = content.header|reduce((carry,el) => carry ~ 'c') %)
         (% endif %)
-        \begin{tabular}{(( columOrientation ))}
-            (% for tblHead in content.header %)(( tblHead ))(% if not loop.last %)&(% endif %)(% endfor %)\\
-            \toprule
-            (% for row in content.rows %)
-                (% for key in content.header|keys %)(( row[key] ))(% if not loop.last %)&(% endif %)(% endfor %)
-                \\(% if not loop.last %)\midrule(% endif %)
-            (% endfor %)
-            \bottomrule
-        \end{tabular}
+        (% if content is not empty and content.header is defined and content.header is not empty  %)
+            \begin{tabular}{(( orientation ))}
+                (% for tblHead in content.header %)(( tblHead ))(% if not loop.last %)&(% endif %)(% endfor %)\\
+                \toprule
+                (% for row in content.rows %)
+                    (% for key in content.header|keys %)(( row[key] ))(% if not loop.last %)&(% endif %)(% endfor %)
+                    \\(% if not loop.last %)\midrule(% endif %)
+                (% endfor %)
+                \bottomrule
+            \end{tabular}
+        (% else %)
+            Es sind keine Daten vorhanden.
+        (% endif %)
     \end{center}
 (% endmacro %)
 

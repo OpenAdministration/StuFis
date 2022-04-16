@@ -31,9 +31,10 @@
         "symfony/process": "^5.3",
         "symfony/http-foundation": "^5.3",
         "meyfa/php-svg": "^0.11.2",
-        "open-administration/php-latex-renderer": "dev-main",
+        "open-administration/php-latex-renderer": "^1.1",
         "symfony/mailer": "^5.3",
-        "symfony/twig-bridge": "^5.3"
+        "symfony/twig-bridge": "^5.3",
+        "onelogin/php-saml" : "^4.0"
     },
 
     "require-dev": {

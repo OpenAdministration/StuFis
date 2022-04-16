@@ -217,8 +217,8 @@ class RestHandler extends EscFunc
         }
 
         try {
-            //$logId = DBConnector::getInstance()->logThisAction($_POST);
-            //DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
+            // $logId = DBConnector::getInstance()->logThisAction($_POST);
+            // DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
 
             if (!isset($_POST['action'])) {
                 throw new ActionNotSetException('Es wurde keine Aktion übertragen');
@@ -318,7 +318,7 @@ class RestHandler extends EscFunc
             }
         }
 
-        //validate
+        // validate
         $vali = new Validator();
         $validator_map = [];
         switch ($routeInfo['mfunction']) {
@@ -422,14 +422,14 @@ class RestHandler extends EscFunc
                                                 'step' => '0.01',
                                                 'format' => '2',
                                                 'min' => '0',
-                                                //'error' => 'Posten - Einnahmen: Ungültiger Wert'
+                                                // 'error' => 'Posten - Einnahmen: Ungültiger Wert'
                                             ],
                                             'out' => [
                                                 'float',
                                                 'step' => '0.01',
                                                 'format' => '2',
                                                 'min' => '0',
-                                                //'error' => 'Posten - Ausgaben: Ungültiger Wert'
+                                                // 'error' => 'Posten - Ausgaben: Ungültiger Wert'
                                             ],
                                         ],
                                     ],
@@ -514,7 +514,7 @@ class RestHandler extends EscFunc
             break;
         }
         $vali->validateMap($_POST, $validator_map);
-        //return error if validation failed
+        // return error if validation failed
         if ($vali->getIsError()) {
             JsonController::print_json(
                 [
@@ -530,7 +530,7 @@ class RestHandler extends EscFunc
         $validated = $vali->getFiltered();
 
         if ($routeInfo['mfunction'] === 'updatecreate') {
-            //may add nonexisting arrays
+            // may add nonexisting arrays
             if (!isset($validated['belege'])) {
                 $validated['belege'] = [];
             }
@@ -539,7 +539,7 @@ class RestHandler extends EscFunc
                     $validated['belege'][$k]['posten'] = [];
                 }
             }
-            //check all values empty?
+            // check all values empty?
             $empty = (strtolower($validated['auslagen-id'] === 'new'));
             $auslagen_test_empty = [
                 'auslagen-name',
@@ -579,7 +579,7 @@ class RestHandler extends EscFunc
                         }
                     }
 
-                    //check file non empty
+                    // check file non empty
                     $fileIdx = 'beleg_' . $kb;
                     if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0) {
                         $empty = false;
@@ -587,7 +587,7 @@ class RestHandler extends EscFunc
                     }
                 }
             }
-            //error reply
+            // error reply
             if ($empty) {
                 JsonController::print_json(
                     [
@@ -606,11 +606,11 @@ class RestHandler extends EscFunc
         }
         $routeInfo['validated'] = $validated;
         $routeInfo['action'] = 'post';
-        //call auslagen handler
+        // call auslagen handler
         $handler = new AuslagenHandler2($routeInfo);
         $handler->handlePost();
 
-        //error reply
+        // error reply
         if ($empty) {
             JsonController::print_json(
                 [
@@ -633,7 +633,7 @@ class RestHandler extends EscFunc
         /* @var $auth AuthHandler */
         $auth = $auth::getInstance();
         if ($valid) {
-            //access permission control
+            // access permission control
             switch ($valid['target']) {
                 case 'projekt':
                         try {
@@ -656,7 +656,7 @@ class RestHandler extends EscFunc
                         $pdate = date_create(substr($r[0]['createdat'], 0, 4) . '-01-01 00:00:00');
                         $pdate->modify('+1 year');
                         $now = date_create();
-                        //info mail
+                        // info mail
                         $mail = [];
                         // ACL --------------------------------
                         // action
@@ -676,11 +676,11 @@ class RestHandler extends EscFunc
                                 $chat->setKeep($map);
                             break;
                             case 'newcomment':
-                                //allow chat only 90 days into next year
+                                // allow chat only 90 days into next year
                                 if ($now->getTimestamp() - $pdate->getTimestamp() > 86400 * 90) {
                                     break 2;
                                 }
-                                //new message - info mail
+                                // new message - info mail
                                 $tMail = [];
                                 if (!preg_match(
                                     '/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/',
@@ -688,7 +688,7 @@ class RestHandler extends EscFunc
                                 )) {
                                     break 2;
                                 }
-                                //switch type
+                                // switch type
                                 switch ($valid['type']) {
                                     case '-1':
                                         if (!$auth->hasGroup('ref-finanzen')
@@ -737,9 +737,9 @@ class RestHandler extends EscFunc
                         // all ok -> handle all
                         $chat->answerAll($_POST);
                         if (count($mail) > 0) {
-                            //$mh = MailHandler::getInstance();
+                            // $mh = MailHandler::getInstance();
                             foreach ($mail as $m) {
-                                //create and send email
+                                // create and send email
                             //	$mail_result = $mh->easyMail($m);
                             }
                         }
@@ -766,7 +766,7 @@ class RestHandler extends EscFunc
                         $pdate = date_create(substr($r[0]['created'], 0, 4) . '-01-01 00:00:00');
                         $pdate->modify('+1 year');
                         $now = date_create();
-                        //info mail
+                        // info mail
                         $mail = [];
                         // ACL --------------------------------
                         // action
@@ -783,13 +783,13 @@ class RestHandler extends EscFunc
                                 $chat->setKeep($map);
                             break;
                             case 'newcomment':
-                                //allow chat only 90 days into next year
+                                // allow chat only 90 days into next year
                                 if ($now->getTimestamp() - $pdate->getTimestamp() > 86400 * 90) {
                                     break 2;
                                 }
-                                //new message - info mail
+                                // new message - info mail
                                 $tMail = [];
-                                //switch type
+                                // switch type
                                 switch ($valid['type']) {
                                     case '-1':
                                         if (!$auth->hasGroup('ref-finanzen') &&
@@ -838,10 +838,10 @@ class RestHandler extends EscFunc
                         // all ok -> handle all
                         $chat->answerAll($_POST);
                         if (count($mail) > 0) {
-                            //$mh = MailHandler::getInstance();
+                            // $mh = MailHandler::getInstance();
                             foreach ($mail as $m) {
-                                //create and send email
-                                //$mail_result = $mh->easyMail($m);
+                                // create and send email
+                                // $mail_result = $mh->easyMail($m);
                             }
                         }
                         exit();
@@ -909,7 +909,7 @@ class RestHandler extends EscFunc
             $fields['zweck'] = $zahlung['zweck'];
             $fields['comment'] = $zahlung['kommentar'];
             $fields['customer_ref'] = $zahlung['customer_ref'];
-            //$msgs[]= print_r($zahlung,true);
+            // $msgs[]= print_r($zahlung,true);
             DBConnector::getInstance()->dbInsert('konto', $fields);
             if (isset($inserted[$zahlung['konto_id']])) {
                 ++$inserted[$zahlung['konto_id']];
@@ -1057,7 +1057,7 @@ class RestHandler extends EscFunc
             $where[] = ['canceled' => 0, 'extern_data.id' => ['IN', $externDataId]];
         }
 
-        //check if allready booked
+        // check if allready booked
         $bookingDBbelege = DBConnector::getInstance()->dbFetchAll(
             'booking',
             [DBConnector::FETCH_ASSOC],
@@ -1181,7 +1181,7 @@ class RestHandler extends EscFunc
 
     private function saveConfirmedBookingInstruction(): void
     {
-        //var_dump($_POST);
+        // var_dump($_POST);
         $confirmedInstructions = array_keys($_REQUEST['activeInstruction']);
         $text = $_REQUEST['text'];
 
@@ -1193,7 +1193,7 @@ class RestHandler extends EscFunc
                     'msg' => 'Es wurde kein Vorgang ausgewählt.',
                     'type' => 'modal',
                     'subtype' => 'server-warning',
-                    //'reload' => 2000,
+                    // 'reload' => 2000,
                     'headline' => 'Fehlerhafte Eingabe',
                 ]
             );
@@ -1205,9 +1205,9 @@ class RestHandler extends EscFunc
         $zahlungenDB = $btm->getZahlungDB();
         $belegeDB = $btm->getBelegeDB();
 
-        //start write action
+        // start write action
         DBConnector::getInstance()->dbBegin();
-        //check if transferable to new States (payed => booked)
+        // check if transferable to new States (payed => booked)
         $stateChangeNotOk = [];
         $doneAuslage = [];
         foreach ($confirmedInstructions as $instruction) {
@@ -1260,7 +1260,7 @@ class RestHandler extends EscFunc
                     ),
                     'type' => 'modal',
                     'subtype' => 'server-error',
-                    //'reload' => 2000,
+                    // 'reload' => 2000,
                     'headline' => 'Konnte nicht gespeichert werden',
                 ]
             );
@@ -1305,7 +1305,7 @@ class RestHandler extends EscFunc
         }
 
         foreach ($confirmedInstructions as $instruction) {
-            //check if algorithm  was correct :'D
+            // check if algorithm  was correct :'D
             $diff = abs($zahlung_sum[$instruction] - $belege_sum[$instruction]);
             if ($diff >= 0.01) {
                 DBConnector::getInstance()->dbRollBack();
@@ -1316,7 +1316,7 @@ class RestHandler extends EscFunc
                         'msg' => "Falsche Daten wurden übertragen: Differenz der Posten = $diff",
                         'type' => 'modal',
                         'subtype' => 'server-error',
-                        //'reload' => 2000,
+                        // 'reload' => 2000,
                         'headline' => 'Konnte nicht gespeichert werden',
                     ]
                 );
@@ -1330,7 +1330,7 @@ class RestHandler extends EscFunc
         );
         $maxBookingId = array_keys($maxBookingId)[0];
 
-        //save in booking-list
+        // save in booking-list
         $table = $btm->getTable(true);
 
         foreach ($confirmedInstructions as $instruction) {
@@ -1355,7 +1355,7 @@ class RestHandler extends EscFunc
             }
         }
 
-        //delete from instruction list
+        // delete from instruction list
         DBConnector::getInstance()->dbUpdate('booking_instruction', ['id' => ['IN', $confirmedInstructions]], ['done' => 1]);
         DBConnector::getInstance()->dbCommit();
         JsonController::print_json(
@@ -1401,7 +1401,7 @@ class RestHandler extends EscFunc
                         'zahlung_id' => $ret['zahlung_id'],
                         'kostenstelle' => $ret['kostenstelle'],
                         'user_id' => $user_id,
-                        'value' => -$ret['value'], //negative old Value
+                        'value' => -$ret['value'], // negative old Value
                         'canceled' => $booking_id,
                     ]
                 );
@@ -1419,7 +1419,7 @@ class RestHandler extends EscFunc
                             'msg' => 'Ein Server fehler ist aufgetreten',
                             'type' => 'modal',
                             'subtype' => 'server-error',
-                            //'reload' => 2000,
+                            // 'reload' => 2000,
                             'headline' => 'Konnte nicht gespeichert werden',
                         ]
                     );

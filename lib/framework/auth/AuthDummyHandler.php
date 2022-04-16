@@ -20,17 +20,7 @@ use framework\render\ErrorHandler;
 
 class AuthDummyHandler extends AuthHandler
 {
-    /**
-     * current user data
-     *  keys
-     *    eduPersonPrincipalName
-     *    mail
-     *    displayName
-     *    groups
-     *
-     * @var array
-     */
-    private $attributes;
+    private array $attributes;
 
     /**
      * class constructor
@@ -38,92 +28,62 @@ class AuthDummyHandler extends AuthHandler
      */
     protected function __construct()
     {
-        //create session
-        $this->attributes = DEV_ATTRIBUTES;
+        $this->attributes = ['groups' => explode(',', $_ENV['AUTH_DUMMY_ATTRIBUTES'])];
     }
 
-    /** {@inheritDoc} */
-    public function requireGroup(array|string $groups): void
-    {
-        $this->requireAuth();
-        if (!$this->hasGroup($groups)) {
-            $this->reportPermissionDenied('Eine der Gruppen ' . $groups . ' wird benötigt');
-        }
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function requireAuth(): void
     {
     }
 
-    /** {@inheritDoc} */
-    public function hasGroup(array|string $groups, string $delimiter = ','): bool
-    {
-        $this->requireAuth();
-        $attributes = $this->getAttributes();
-        if ($this->isAdmin()) {
-            return true;
-        }
-        if (count(array_intersect(explode($delimiter, strtolower($groups)), array_map('strtolower', $attributes['groups']))) === 0) {
-            return false;
-        }
-        return true;
-    }
-
-    /** {@inheritDoc} */
-    protected function getAttributes(): array
-    {
-        return $this->attributes;
-    }
-
-    /** {@inheritDoc} */
-    public function logout(): void
-    {
-        header('Location: ' . $this->getLogoutURL());
-        exit();
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function getLogoutURL(): string
     {
         return URIBASE;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function getUsername(): ?string
     {
-        $attributes = $this->getAttributes();
-        return $attributes['eduPersonPrincipalName'][0] ?? $attributes['mail'] ?? null;
+        return 'dummy';
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function getUserFullName(): string
     {
-        $this->requireAuth();
-        return $this->getAttributes()['displayName'][0];
+        return 'Dummy Nutzer';
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     public function getUserMail(): string
     {
-        $this->requireAuth();
-        return $this->getAttributes()['mail'];
+        return 'dummy@example.org';
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
+    public function getUserGremien(): array
+    {
+        return array_merge(...array_values(ORG_DATA['gremien']));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isAdmin(): bool
     {
         return in_array('admin', $this->attributes['groups'], true);
-    }
-
-    /** {@inheritDoc} */
-    public function hasGremium($gremien, string $delimiter = ','): bool
-    {
-        $attributes = $this->getAttributes();
-        if (!isset($attributes['gremien'])) {
-            return false;
-        }
-        return count(array_intersect(explode($delimiter, strtolower($gremien)), array_map('strtolower', $attributes['gremien']))) !== 0;
     }
 
     public function reportPermissionDenied(string $errorMsg, string $debug = null): void
@@ -132,5 +92,14 @@ class AuthDummyHandler extends AuthHandler
             $debug = var_export($this->attributes, true);
         }
         ErrorHandler::handleError(403, $errorMsg, $debug);
+    }
+
+    protected function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
+    public function logout(): void
+    {
     }
 }
