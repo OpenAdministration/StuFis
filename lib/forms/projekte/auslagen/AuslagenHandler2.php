@@ -1598,8 +1598,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         $hv = explode(';', $this->auslagen_data['ok-hv']);
         $kv = explode(';', $this->auslagen_data['ok-kv']);
         // datetime;username;fullname
-        $hvString = $hv[2] . " ($hv[0])";
-        $kvString = $kv[2] . " ($kv[0])";
+        $hvString = $hv[2]; // . ' ('. date_create($hv[0])->format('d.m.y') .')';
+        $kvString = $kv[2]; // . ' ('. date_create($kv[0])->format('d.m.y') .')';
 
         $tex = new LatexGenerator();
         $pdf = $tex->renderPdf('zahlungsanweisung', [
