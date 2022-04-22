@@ -47,6 +47,7 @@ return [
                 'Hochschulfilmclub e.V.',
                 'Hochschulfunk e.V.',
                 'Ilmenauer Studentenclub e.V.',
+                'ISWI e.V.',
                 'Kulturelle Koordinierung e.V.',
                 'Weitere Vereine und Organisationen',
             ],
