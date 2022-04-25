@@ -768,7 +768,7 @@ class MenuRenderer extends Renderer
                 if (!$p) {
                     return '';
                 }
-                $p = CryptoHandler::decrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE . '/secret.php'), URIBASE);
+                $p = CryptoHandler::decrypt_by_key($p, $_ENV['IBAN_SECRET_KEY']);
                 $p = CryptoHandler::unpad_string($p);
                 return $p;
             },                                                       // 1 Parameter
