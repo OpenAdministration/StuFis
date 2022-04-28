@@ -12,7 +12,7 @@ class DateHelper
     public static function fromUntilLast(?string $from, ?string $until, ?string $last): array
     {
         $syncFrom = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $from);
-        $lastSync = DateTime::createFromFormat(DBConnector::SQL_DATETIME_FORMAT, $last);
+        $lastSync = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $last);
         $syncUntil = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $until);
 
         // set default for lastsync if unset
