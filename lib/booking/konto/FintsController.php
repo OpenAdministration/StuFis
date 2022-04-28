@@ -12,7 +12,6 @@ use framework\ArrayHelper;
 use framework\DateHelper;
 use framework\DBConnector;
 use framework\NewValidator;
-use framework\render\ErrorHandler;
 use framework\render\html\BT;
 use framework\render\html\FA;
 use framework\render\html\Html;
@@ -75,7 +74,10 @@ class FintsController extends Renderer
                     echo HtmlImage::make('TAN Challenge Bild')
                         ->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
                 } catch (InvalidArgumentException $e2) {
-                    ErrorHandler::handleError(500, 'TAN Format unbekannt', $e1->getMessage() . ' ' . $e2->getMessage());
+                    echo 'Tan Format unbekannt' . PHP_EOL;
+                    if (DEV) {
+                        echo 'Challenge Binary: ' . $challengeBinary . PHP_EOL;
+                    }
                 }
             }
         }
@@ -450,7 +452,7 @@ class FintsController extends Renderer
                 $logger->debug("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString", [var_export($statements, true)]);
                 return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }
-            //echo "Statement $dateString Saldo: $saldoCent";
+            // echo "Statement $dateString Saldo: $saldoCent";
             foreach ($statement->getTransactions() as $transaction) {
                 $valCent = $this->convertToCent($transaction->getAmount(), $transaction->getCreditDebit());
                 $saldoCent += $valCent;
@@ -460,7 +462,7 @@ class FintsController extends Renderer
                     'date' => $transaction->getBookingDate()?->format('Y-m-d'),
                 ]);
                 if ($tryRewind === true) {
-                    //do rewind if necessary
+                    // do rewind if necessary
                     $rewindRow = $db->dbFetchAll(
                         tables: 'konto',
                         showColumns: ['id'],
