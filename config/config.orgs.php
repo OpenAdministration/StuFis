@@ -1,6 +1,70 @@
 <?php
 
 return [
+    'demo' => [
+        'gremien' => [
+            'Zentral' => [
+                'Studierendenrat (StuRa)',
+                'Wahlkommission Studierendenschaft',
+                'Senat',
+                'Konferenz Thüringer Studierendenschaften (KTS)',
+                'Promovierendenvertretung',
+            ],
+            'Referate' => [
+                'Referat Finanzen',
+                'Referat Hochschulpolitik (HoPo)',
+                'Referat IT',
+                'Referat Kultur',
+                'Referat Politische Bildung',
+                'Referat Public Relations',
+                'Referat Soziales',
+                'Referat Sport Umwelt und Gesundheit',
+            ],
+            'Fachschaftsräte' => [
+                'Fachschaftsrat EI',
+                'Fachschaftsrat IA',
+                'Fachschaftsrat MB',
+                'Fachschaftsrat MN',
+                'Fachschaftsrat WM',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => '',
+        'datenschutz-url' => '',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'open-administration.de',
+        'finanzen-mail' => 'lukas.staab@open-administration.de',
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.',
+            ],
+            'fsr-ref' => [
+                'label' => 'Beschluss FSR/Referat/AG bis zu 250 EUR',
+                'label-additional' => 'Beschluss-Nr (Verkündung)',
+                'hint-text' => 'Interne Förderrichtlinie §6: für ein internes Projekt bis zu (inkl.) 250 EUR Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden.',
+            ],
+            'fahrt' => [
+                'label' => 'Fahrtkosten',
+                'hint-text' => 'Interne Förderrichtlinie §4a: Fahrtkosten',
+            ],
+            'buero' => [
+                'label' => 'Büromaterial',
+                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+                'placeholder' => '',
+            ],
+        ],
+        'projekt-form' => [
+        ],
+    ],
     'tui' => [
         'gremien' => [
             'Zentral' => [
