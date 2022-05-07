@@ -117,14 +117,14 @@ class ProjektHandler extends FormHandlerInterface
         ];
         self::$stateChanges = [
             'draft' => [
-                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
             ],
             'wip' => [
-                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
                 'need-stura' => ['groups' => ['ref-finanzen-hv']],
                 'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
                 'done-other' => ['groups' => ['ref-finanzen-hv']],
-                'revoked' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'revoked' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
             ],
             'ok-by-hv' => [
                 'done-hv' => ['groups' => ['ref-finanzen-hv']],
@@ -145,7 +145,8 @@ class ProjektHandler extends FormHandlerInterface
                 'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
             ],
             'revoked' => [
-                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
+                'wip' => ['groups' => ['ref-finanzen-belege']],
+                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
             ],
             'terminated' => [
                 'done-hv' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
