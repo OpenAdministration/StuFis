@@ -1540,6 +1540,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             ],
             'owner' => $this->auslagen_data['zahlung-name'],
             'belegeTable' => [
+                'orientation' => 'rlX',
                 'header' => [
                     'id' => 'Beleg No',
                     'date' => 'Datum',
