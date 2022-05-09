@@ -15,7 +15,7 @@ $pathConfig = [
         [
             'path' => 'konto',
             'type' => 'path',
-            'action' => 'bank',
+            'action' => 'konto',
             'navigation' => 'konto',
             'controller' => 'booking',
             'groups' => 'ref-finanzen',
@@ -31,9 +31,9 @@ $pathConfig = [
                     'param' => 'hhp-id',
                     'children' => [
                         [
-                            'path' => '(bank|kasse|sparbuch)',
+                            'path' => '-?\d+',
                             'type' => 'pattern',
-                            'param' => 'action',
+                            'param' => 'konto-id',
                         ],
                     ],
                 ],
@@ -437,7 +437,7 @@ $pathConfig = [
                                             'children' => [
                                                 [
                                                     'path' => '(zahlungsanweisung)',
-                                                    //updatecreate|filedelete|stat|belegpdf|
+                                                    // updatecreate|filedelete|stat|belegpdf|
                                                     'type' => 'pattern',
                                                     'param' => 'mfunction',
                                                     'match' => 0,

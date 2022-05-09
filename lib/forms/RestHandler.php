@@ -144,9 +144,21 @@ class RestHandler extends EscFunc
 
     public function saveNewKasseEntry(): void
     {
+        if (((int) $_REQUEST['konto-id']) > 0) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => 'Konto ist keine Kasse',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Fehler bei der Verarbeitung',
+                ]
+            );
+        }
         $fields = [];
         $fields['id'] = strip_tags($_REQUEST['new-nr']);
-        $fields['konto_id'] = 0;
+        $fields['konto_id'] = strip_tags($_REQUEST['konto-id']);
         $fields['date'] = strip_tags($_REQUEST['new-date']);
         $fields['valuta'] = strip_tags($_REQUEST['new-date']);
         $fields['zweck'] = strip_tags($_REQUEST['new-desc']);
@@ -184,7 +196,7 @@ class RestHandler extends EscFunc
                     [
                         'success' => false,
                         'status' => '200',
-                        'msg' => 'Alter Saldo und neuer Saldo passen nicht zusammen',
+                        'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
                         'type' => 'modal',
                         'subtype' => 'server-error',
                         'headline' => 'Fehler bei der Verarbeitung',

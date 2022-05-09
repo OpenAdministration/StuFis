@@ -47,9 +47,9 @@ class HTMLPageRenderer
     /**
      * @param $tabs      array keys are tabnames, values are htmlcode inside tab header
      * @param $linkbase  string linkbase - where clicked link will go - followed by tabnames
-     * @param $activeTab string
+     * @param string|int $activeTab string
      */
-    public static function setTabs(array $tabs, string $linkbase, string $activeTab): void
+    public static function setTabs(array $tabs, string $linkbase, string|int $activeTab): void
     {
         self::$tabsConfig = ['tabs' => $tabs, 'linkbase' => $linkbase, 'active' => $activeTab];
     }
@@ -404,6 +404,7 @@ class HTMLPageRenderer
 
     private function renderPanelTabs($tabs, $linkbase, $activeTab): void
     {
+
         ?>
         <div class="panel panel-default">
             <div class="panel-heading panel-heading-with-tabs">

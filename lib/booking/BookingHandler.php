@@ -31,10 +31,9 @@ class BookingHandler extends Renderer
                 $this->setBookingTabs('text', $this->routeInfo['hhp-id']);
                 $this->renderBookingText();
             break;
-            case 'kasse':
-            case 'bank':
-            case 'sparbuch':
-                $this->renderKonto($this->routeInfo['action']);
+            case 'konto':
+                $kontoId = $this->routeInfo['konto-id'] ?? 0;
+                $this->renderKonto($kontoId);
             break;
             case 'history':
                 $this->renderBookingHistory('history');
@@ -277,7 +276,7 @@ class BookingHandler extends Renderer
         [$kontoTypes, $ret] = $this->fetchBookingHistoryDataFromDB($hhp_id);
 
         if (!empty($ret)) {
-            //var_dump(reset($ret));?>
+            // var_dump(reset($ret));?>
             <table class="table" align="right">
                 <thead>
                 <tr>
@@ -298,7 +297,7 @@ class BookingHandler extends Renderer
                     <tr class=" <?php echo (int) $row['canceled'] !== 0 ? 'booking__canceled-row' : ''; ?>">
 
                         <td class="no-wrap">
-                            <a class="link-anchor" name="<?php echo $row['id']; ?>"></a><?php echo $row['id']; /*$lfdNr + 1*/ ?>
+                            <a class="link-anchor" name="<?php echo $row['id']; ?>"></a><?php echo $row['id']; /* $lfdNr + 1 */ ?>
                         </td>
                         <td class="money no-wrap <?php echo TextStyle::BOLD; ?>">
 							<?php echo DBConnector::getInstance()->convertDBValueToUserValue($row['value'], 'money'); ?>
@@ -401,27 +400,25 @@ class BookingHandler extends Renderer
         }
     }
 
-    private function setKontoTabs($active, $selected_hhp_id): void
+    private function setKontoTabs(int $active, int $selected_hhp_id, array $kontos): void
     {
+        // TODO: filter kontos?
+        $kontos = array_map(fn ($item) => $item['name'], $kontos);
         $linkbase = URIBASE . "konto/$selected_hhp_id/";
-        $tabs = [
-            'kasse' => "<i class='fa fa-fw fa-money'></i> Kasse",
-            'bank' => "<i class='fa fa-fw fa-credit-card'></i> Bank",
-            'sparbuch' => "<i class='fa fa-fw fa-bank'></i> Sparbuch",
-        ];
+        $tabs = [];
+        foreach ($kontos as $id => $kontoName) {
+            $icon = $id > 0 ? 'fa-credit-card' : 'fa-money';
+            $tabs[$id] = "<i class='fa fa-fw $icon'></i> $kontoName";
+        }
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
-    private function renderKonto($activeTab): void
+    private function renderKonto(int $kontoId = 0): void
     {
-        [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . 'konto/', '/' . $activeTab);
+        [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . 'konto/', '/' . $kontoId);
         $startDate = $hhps[$selected_id]['von'];
         $endDate = $hhps[$selected_id]['bis'];
-        $where = match ($activeTab) {
-            'kasse' => ['konto_id' => 0],
-            'sparbuch' => ['konto_id' => 2],
-            default => ['konto_id' => ['NOT IN', [0, 2]]],
-        };
+        $where = ['konto_id' => $kontoId];
         if (empty($endDate)) {
             $where = array_merge($where, ['date' => ['>=', $startDate]]);
         } else {
@@ -436,127 +433,126 @@ class BookingHandler extends Renderer
             [],
             ['id' => false]
         );
-        $konto_type = DBConnector::getInstance()->dbFetchAll(
+        $kontos = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
         );
+        $this->setKontoTabs($kontoId, $selected_id, $kontos);
 
-        $this->setKontoTabs($activeTab, $selected_id);
-
-        switch ($activeTab) {
-            case 'sparbuch':
-            case 'bank':
-                $this->renderFintsButton(); ?>
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Datum</th>
-                        <th>Empfänger</th>
-                        <th class="visible-md visible-lg">Verwendungszweck</th>
-                        <th class="visible-md visible-lg">IBAN</th>
-                        <th class="money">Betrag</th>
-                        <th class="money">Saldo</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-					<?php foreach ($alZahlung as $zahlung) {
-                    $prefix = $konto_type[$zahlung['konto_id']]['short'];
-                    $vzweck = explode('DATUM', $zahlung['zweck'])[0];
-                    if (empty($vzweck)) {
-                        $vzweck = $zahlung['type'];
-                    } ?>
-                        <tr title="<?php echo htmlspecialchars(
-                            $zahlung['type'] . ' - IBAN: ' . $zahlung['empf_iban'] . ' - BIC: ' . $zahlung['empf_bic'] . PHP_EOL . $zahlung['zweck']
-                        ); ?>">
-                            <td><?php echo htmlspecialchars($prefix . $zahlung['id']); ?></td>
-                            <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
-                            <td><?php echo htmlspecialchars($zahlung['valuta']); ?></td>
-                            <td><?php echo htmlspecialchars($zahlung['empf_name']); ?></td>
-                            <td class="visible-md visible-lg"><?php echo $this->makeProjektsClickable($vzweck); ?></td>
-                            <td class="visible-md visible-lg"><?php echo htmlspecialchars($zahlung['empf_iban']); ?></td>
-                            <td class="money">
-                                <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['value'], 'money'); ?>
-                            </td>
-                            <td class="money">
-                                <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['saldo'], 'money'); ?>
-                            </td>
-                        </tr>
-					<?php
-                } ?>
-                    </tbody>
-                </table>
-				<?php
-            break;
-            case 'kasse':
-                $lastId = DBConnector::getInstance()->dbFetchAll(
-                    'konto',
-                    [DBConnector::FETCH_ASSOC],
-                    ['max-id' => ['id', DBConnector::GROUP_MAX]],
-                    ['konto_id' => 0]
-                )[0]['max-id'];
-                ?>
-                <form action="<?php echo URIBASE; ?>rest/kasse/new" method="POST" class="ajax-form">
-					<?php $this->renderNonce(); ?>
-
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th class="col-xs-2">Lfd</th>
-                            <th>Datum</th>
-                            <th class="col-xs-3">Beschreibung</th>
-                            <th class="col-xs-2">Betrag</th>
-                            <th class="col-xs-2">neues Saldo</th>
-                            <th class="col-xs-2">Erstattung / Aktion</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td><input type="number" class="form-control" name="new-nr"
-                                       value="<?php echo isset($lastId) ? $lastId + 1 : 1; ?>" min="1">
-                            </td>
-                            <td><input type="date" class="form-control" name="new-date"
-                                       value="<?php echo date('Y-m-d'); ?>"></td>
-                            <td><input type="text" class="form-control" name="new-desc"
-                                       placeholder="Text aus Kassenbuch">
-                            </td>
-                            <td><input type="number" class="form-control" name="new-money" value="0" step="0.01">
-                            </td>
-                            <td><input type="number" class="form-control" name="new-saldo" value="0" step="0.01">
-                            </td>
-                            <td>
-                                <button type="submit" class="btn btn-success">Speichern</button>
-                            </td>
-                        </tr>
-						<?php
-                        foreach ($alZahlung as $row) {
-                            $prefix = $konto_type[$row['konto_id']]['short'];
-                            echo '<tr>';
-                            echo "<td>{$prefix}{$row['id']}</td>";
-                            echo '<td>' . date_create($row['date'])->format('d.m.Y') . '</td>';
-                            echo "<td>{$row['type']} - {$row['zweck']}</td>";
-                            echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
-                                    $row['value'],
-                                    'money'
-                                ) . '</td>';
-                            echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
-                                    $row['saldo'],
-                                    'money'
-                                ) . '</td>';
-                            echo '<td>FIXME</td>';
-                            echo '</tr>';
-                        } ?>
-                        </tbody>
-                    </table>
-                </form>
-				<?php
-            break;
-            default:
-                ErrorHandler::handleError(400,
-                    "{$this->routeInfo['action']} kann nicht interpretiert werden - something went horrible wrong!"
-                );
-            break;
+        if ($kontoId > 0) {
+            $this->renderFintsButton();
+            $this->renderKontoBank($alZahlung, $kontos);
+        } else {
+            $this->renderKontoKasse($kontoId, $alZahlung, $kontos);
         }
+    }
+
+    private function renderKontoKasse(int $kontoId, array $alZahlung, array $kontos)
+    {
+        $lastId = DBConnector::getInstance()->dbFetchAll(
+            'konto',
+            [DBConnector::FETCH_ASSOC],
+            ['max-id' => ['id', DBConnector::GROUP_MAX]],
+            ['konto_id' => $kontoId]
+        )[0]['max-id']; ?>
+        <form action="<?php echo URIBASE; ?>rest/kasse/new" method="POST" class="ajax-form">
+            <?php $this->renderNonce(); ?>
+            <input type="hidden" name="konto-id" value="<?= $kontoId ?>">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th class="col-xs-2">Lfd</th>
+                    <th>Datum</th>
+                    <th class="col-xs-3">Beschreibung</th>
+                    <th class="col-xs-2">Betrag</th>
+                    <th class="col-xs-2">neues Saldo</th>
+                    <th class="col-xs-2">Erstattung / Aktion</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="number" class="form-control" name="new-nr"
+                               value="<?php echo isset($lastId) ? $lastId + 1 : 1; ?>" min="1">
+                    </td>
+                    <td><input type="date" class="form-control" name="new-date"
+                               value="<?php echo date('Y-m-d'); ?>"></td>
+                    <td><input type="text" class="form-control" name="new-desc"
+                               placeholder="Text aus Kassenbuch">
+                    </td>
+                    <td><input type="number" class="form-control" name="new-money" value="0" step="0.01">
+                    </td>
+                    <td><input type="number" class="form-control" name="new-saldo" value="0" step="0.01">
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-success">Speichern</button>
+                    </td>
+                </tr>
+                <?php
+                foreach ($alZahlung as $row) {
+                    $prefix = $kontos[$row['konto_id']]['short'];
+                    echo '<tr>';
+                    echo "<td>{$prefix}{$row['id']}</td>";
+                    echo '<td>' . date_create($row['date'])->format('d.m.Y') . '</td>';
+                    echo "<td>{$row['type']} - {$row['zweck']}</td>";
+                    echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
+                            $row['value'],
+                            'money'
+                        ) . '</td>';
+                    echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
+                            $row['saldo'],
+                            'money'
+                        ) . '</td>';
+                    echo '<td>FIXME</td>';
+                    echo '</tr>';
+                } ?>
+                </tbody>
+            </table>
+        </form>
+        <?php
+    }
+
+    private function renderKontoBank(array $alZahlung, array $kontos)
+    { ?>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Datum</th>
+                <th>Empfänger</th>
+                <th class="visible-md visible-lg">Verwendungszweck</th>
+                <th class="visible-md visible-lg">IBAN</th>
+                <th class="money">Betrag</th>
+                <th class="money">Saldo</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($alZahlung as $zahlung) {
+        $prefix = $kontos[$zahlung['konto_id']]['short'];
+        $vzweck = explode('DATUM', $zahlung['zweck'])[0];
+        if (empty($vzweck)) {
+            $vzweck = $zahlung['type'];
+        } ?>
+                <tr title="<?php echo htmlspecialchars(
+                    $zahlung['type'] . ' - IBAN: ' . $zahlung['empf_iban'] . ' - BIC: ' . $zahlung['empf_bic'] . PHP_EOL . $zahlung['zweck']
+                ); ?>">
+                    <td><?php echo htmlspecialchars($prefix . $zahlung['id']); ?></td>
+                    <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
+                    <td><?php echo htmlspecialchars($zahlung['valuta']); ?></td>
+                    <td><?php echo htmlspecialchars($zahlung['empf_name']); ?></td>
+                    <td class="visible-md visible-lg"><?php echo $this->makeProjektsClickable($vzweck); ?></td>
+                    <td class="visible-md visible-lg"><?php echo htmlspecialchars($zahlung['empf_iban']); ?></td>
+                    <td class="money">
+                        <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['value'], 'money'); ?>
+                    </td>
+                    <td class="money">
+                        <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['saldo'], 'money'); ?>
+                    </td>
+                </tr>
+                <?php
+    } ?>
+            </tbody>
+        </table>
+        <?php
     }
 
     private function renderHibiscusButton(): void
@@ -703,7 +699,7 @@ class BookingHandler extends Renderer
         );
 
         if (empty($instructedExtern)) {
-            $instructedExtern = [-1]; //-1 cannot exist as id, but will not sql error with NOT IN (-1)
+            $instructedExtern = [-1]; // -1 cannot exist as id, but will not sql error with NOT IN (-1)
         }
 
         $extern = DBConnector::getInstance()->dbFetchAll(
@@ -760,7 +756,7 @@ class BookingHandler extends Renderer
             $extern[$k]['type'] = 'extern';
         }
         $alGrund = array_merge($auslagen, $extern);
-        //sort with reverse order
+        // sort with reverse order
         usort(
             $alGrund,
             static function ($e1, $e2) {
@@ -787,7 +783,7 @@ class BookingHandler extends Renderer
                             [(float) $alZahlung[$idxZahlung]['value'], $alGrund[$idxGrund]['value']]
                         );
                 } else {
-                    //var_dump($alZahlung[$idxZahlung]);
+                    // var_dump($alZahlung[$idxZahlung]);
                     $value = (float) $alZahlung[$idxZahlung]['value'];
                 }
             } else {
@@ -798,7 +794,7 @@ class BookingHandler extends Renderer
             while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
                 echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
 
-                //print_r($alZahlung[$idxZahlung]);
+                // print_r($alZahlung[$idxZahlung]);
                 if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
                     $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
                     $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]['date']}";
@@ -896,7 +892,7 @@ class BookingHandler extends Renderer
                 </button>
             </div>
         </form>
-		
+
 		<?php
     }
 }
