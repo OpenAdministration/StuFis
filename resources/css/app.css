@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.sidebar:hover {
+    width: 16rem;
+}

@@ -2,60 +2,69 @@
     "name": "lukas-staab/finanzantragui",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
     "version": "3.0.3",
+    "license": "AGPL",
     "require": {
-        "php": "^8.0",
-        "composer-runtime-api": "^2.0",
+        "php": "^8.0.2",
+        "aacotroneo/laravel-saml2": "^2.1",
         "defuse/php-encryption": "^2.3",
-        "nemiah/php-fints" : "dev-master",
-        "phpmailer/phpmailer" : "^6",
-        "smarty/smarty": "~3.1",
-        "pear/xml_rpc2" : "^1",
-        "jasig/phpcas": "^1.4.0",
-        "monolog/monolog": "^2.3",
-        "vlucas/phpdotenv": "^5.3",
-        "adhocore/cli": "^0.9.0",
-        "ext-json": "*",
-        "ext-bcmath": "*",
-        "ext-pdo": "*",
-        "ext-ctype": "*",
-        "ext-mbstring": "*",
-        "ext-simplexml": "*",
-        "ext-openssl": "*",
-        "ext-curl": "*",
-        "ext-zip": "*",
-        "ext-intl": "*",
-        "ext-fileinfo": "*",
-        "ext-zlib": "*",
-        "ext-mysqlnd": "*",
-        "czproject/git-php": "^4.0",
-        "symfony/process": "^5.3",
-        "symfony/http-foundation": "^5.3",
-        "meyfa/php-svg": "^0.11.2",
+        "guzzlehttp/guzzle": "^7.2",
+        "laravel/framework": "^9.11",
+        "laravel/sanctum": "^2.14.1",
+        "laravel/tinker": "^2.7",
+        "livewire/livewire": "^2.10",
+        "meyfa/php-svg": "^0.11.3",
+        "nemiah/php-fints": "dev-master",
         "open-administration/php-latex-renderer": "^1.1",
-        "symfony/mailer": "^5.3",
-        "symfony/twig-bridge": "^5.3",
-        "onelogin/php-saml" : "^4.0"
+        "owenvoke/blade-fontawesome": "^2.0"
     },
-
     "require-dev": {
+        "fakerphp/faker": "^1.9.1",
+        "krlove/eloquent-model-generator": "^2.0",
+        "laravel/sail": "^1.0.1",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^6.1",
+        "phpunit/phpunit": "^9.5.10",
         "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^9",
-        "friendsofphp/php-cs-fixer": "^3.2",
-        "symfony/maker-bundle": "^1.36"
+        "spatie/laravel-ignition": "^1.0"
     },
-
     "autoload": {
-        "psr-4": { "": "lib/" },
-        "files": []
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/",
+            "" : "legacy/lib"
+        }
     },
-
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "scripts": {
-        "check": [
-            "@cs"
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
         ],
-        "cs": "php-cs-fixer fix -v --diff --dry-run",
-        "cs-risky": "php-cs-fixer fix -v --diff --dry-run --allow-risky yes",
-        "cs-fix": "php-cs-fixer fix -v --diff",
-        "cs-fix-risky": "php-cs-fixer fix -v --diff --allow-risky yes"
-    }
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

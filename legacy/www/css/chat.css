@@ -1,0 +1,96 @@
+/* ---------------- CHAT --------------- */
+.chat {
+    text-align: center;
+}
+.chat-textarea {
+    margin-bottom: 10px;
+    max-width: 100%;
+    min-width: 100%;
+    min-height: 7em;
+}
+.chat-container {
+    border-radius: 5px;
+    padding: 5px 10px 1px;
+    margin: 10px 0;
+    text-align: left;
+    width: 80%;
+	position: relative;
+	box-sizing: border-box;
+}
+.chat-container p {
+	white-space: pre-wrap;
+}
+.chat-right {
+    float: right;
+    border: 1px solid #DDDDDD;
+    background-color: #F5F5F5;
+	text-align: right;
+}
+.chat-left {
+    float: left;
+    border: 1px solid #DDDDDD;
+    background-color: #E0E0E0;
+}
+.chat-count {
+	margin-right: 5px;
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 50%;
+	display: inline-block;
+	min-width: 17px;
+	text-align: center;
+	line-height: 15px;
+	vertical-align: middle;
+	font-size: 7px;
+	height: 17px;
+	box-sizing: border-box;
+}
+.chat-right .chat-count {
+	float: right;
+	margin-left: 5px;
+	margin-right:0;
+}
+.chat-middle {
+    display: inline-block;
+    padding: 3px 10px;
+    margin: 0 auto 5px;
+    font-size: 90%;
+    text-align: center;
+    border-radius: 5px;
+    vertical-align: middle;
+}
+.chat-private {
+	box-sizing: border-box;
+    outline: 4px dashed #f0ad4e;
+	outline-offset: 0px;
+	margin-top: 18px;
+}
+.chat .chat-loading {
+	font-weight: bold;
+}
+.chat .chat-section {
+	max-height: 400px;
+	overflow: auto;
+	padding: 5px;
+	border-top: 1px solid #bbb;
+}
+.chat .chat-section .chat-container ~ .chat-loading {
+	display: none;
+}
+.chat .chat-section .chat-container ~ .chat-loading + .chat-no-comments {
+	display: none;
+} 
+.chat-time {
+	position: absolute;
+	left: 0;
+	top: -12px;
+	font-size: 0.6em;
+    color: #333;
+}
+.chat-right .chat-time {
+	left: inherit;
+	right: 0;
+}
+.chat-private .chat-time{
+	top: -14px;
+}
