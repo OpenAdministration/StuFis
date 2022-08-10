@@ -764,7 +764,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
         $stateChanged = $ah->state_change('payed', $ah->getAuslagenEtag());
         if (!$stateChanged) {
-            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status gebucht überführt werden. Bitte prüfe diesen Eintrag manuell.");
+            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status 'gezahlt' überführt werden. Bitte prüfe diesen Eintrag manuell.");
         }
     }
 
