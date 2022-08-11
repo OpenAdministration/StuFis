@@ -492,15 +492,6 @@ class ProjektHandler extends FormHandlerInterface
         }
 
         $user_id = DBConnector::getInstance()->getUser()['id'];
-        $logID = DBConnector::getInstance()->logThisAction(
-            [
-                'user_id' => $user_id,
-                'newState' => $stateName,
-                'id' => $this->id,
-                'version_before' => $this->data['version'],
-            ],
-            'changeState'
-        );
         DBConnector::getInstance()->dbUpdate(
             'projekte',
             ['id' => $this->id, 'version' => $this->data['version']],

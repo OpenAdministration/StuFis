@@ -3,7 +3,6 @@
 namespace framework\render;
 
 use Exception;
-use framework\render\html\SmartyFactory;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
 
@@ -132,6 +131,12 @@ class ErrorHandler extends Renderer
 
     public function render(): void
     {
+        echo "<pre>";
+        var_dump($this->errorInformation['code']);
+        var_dump($this->errorInformation['msg']);
+        var_dump($this->errorInformation['debug']);
+        echo "</pre>";
+        /*
         $smarty = SmartyFactory::make();
         $smarty->assign('code', $this->errorInformation['code'] ?? 500);
         $smarty->assign('headline', $this->errorInformation['headline'] ?? '');
@@ -147,6 +152,7 @@ class ErrorHandler extends Renderer
         }
 
         $smarty->display('error.tpl');
+        */
     }
 
     public function renderJson(): void

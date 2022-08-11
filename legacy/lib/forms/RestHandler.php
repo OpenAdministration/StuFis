@@ -41,12 +41,13 @@ class RestHandler extends EscFunc
 
     public function handlePost(array $routeInfo = null): void
     {
+        /*
         global $nonce;
         if (!isset($_POST['nonce']) || $_POST['nonce'] !== $nonce || isset($_POST['nononce'])) {
             ErrorHandler::handleError(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
         } else {
             unset($_POST['nonce']);
-        }
+        }*/
 
         switch ($routeInfo['action']) {
             case 'projekt':

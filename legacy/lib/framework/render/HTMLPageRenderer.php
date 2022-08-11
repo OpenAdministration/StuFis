@@ -78,9 +78,9 @@ class HTMLPageRenderer
     public function render(): void
     {
         $this->renderHtmlHeader();
-        $this->renderNavbar();
-        $this->renderSiteNavigation();
-        echo "<div class='container main col-xs-12 col-lg-10'>";
+        //$this->renderNavbar();
+        //$this->renderSiteNavigation();
+        echo "<div class='container col-xs-12 col-lg-10'>";
         if ($this->hasError()) {
             $this->renderError();
         } else {
@@ -96,10 +96,10 @@ class HTMLPageRenderer
         echo '</div>';
         if (!$this->hasError()) {
             $this->renderModals();
-            $this->renderCookieAlert();
+            //$this->renderCookieAlert();
         }
         if (DEV) {
-            $this->renderProfiling();
+            //$this->renderProfiling();
         }
         $this->renderFooter();
     }
@@ -122,11 +122,7 @@ class HTMLPageRenderer
             <title><?php echo $this->titel; ?></title>
             <?php echo $this->includeCSS(); ?>
             <?php echo $this->includeJS(); ?>
-            <meta http-equiv="X-UA-Compatible" content="IE=edge">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <meta name="description" content="">
-            <meta name="author" content="Open-Administration">
-            <link rel="icon" type="image/png" sizes="86x86" href="<?php echo URIBASE; ?>favicon86.png">
+            <base target="_parent">
             <meta charset="utf-8">
         </head>
         <body>
@@ -154,11 +150,11 @@ class HTMLPageRenderer
         // by micha-dev
         // https://people.mozilla.com/~bsterne/content-security-policy/details.html
         // https://wiki.mozilla.org/Security/CSP/Specification
-        header("X-Content-Security-Policy: allow 'self'; options inline-script eval-script");
-        header('X-Frame-Options: DENY');
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Cache-Control: post-check=0, pre-check=0', false);
-        header('Pragma: no-cache');
+        # header("X-Content-Security-Policy: allow 'self'; options inline-script eval-script");
+        # header('X-Frame-Options: DENY');
+        # header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        # header('Cache-Control: post-check=0, pre-check=0', false);
+        # header('Pragma: no-cache');
     }
 
     private function includeCSS(): string
@@ -209,9 +205,9 @@ class HTMLPageRenderer
         }
         //var_dump($this->routeInfo["load"]);
         foreach ($jsFiles as $jsFile) {
-            $out .= "<script src='" . URIBASE . "js/$jsFile.js'></script>" . PHP_EOL;
+            $out .= "<script src='" . asset("js/$jsFile.js") . "'></script>" . PHP_EOL;
         }
-        $out .= "<script src='" . URIBASE . "js/main.js'></script>" . PHP_EOL;
+        $out .= "<script src='" . asset("js/main.js") . "'></script>" . PHP_EOL;
         return $out;
     }
 

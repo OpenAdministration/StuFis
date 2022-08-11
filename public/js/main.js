@@ -1454,23 +1454,23 @@ function defaultPostModalHandler(values) {
     if (values.hasOwnProperty('reload') && (typeof(values.reload) == 'integer' || typeof(values.reload) == 'number') && values.reload >= 0) {
         if (values.hasOwnProperty('redirect')) {
             setTimeout(function () {
-                window.location.replace(values.redirect);
+                window.top.location.replace(values.redirect);
             }, values.reload);
         } else if (values.hasOwnProperty('target')) {
             setTimeout(function () {
-                window.location.replace(values.target);
+                window.top.location.replace(values.target);
             }, values.reload);
         } else {
             setTimeout(function () {
-                window.location.replace(window.location);
+                window.top.location.replace(window.top.location);
             }, values.reload);
         }
     } else if (values.hasOwnProperty('reload') || values.hasOwnProperty('redirect')) {
-        var closetarget = (values.hasOwnProperty('redirect'))? values.redirect : window.location;
+        var closetarget = (values.hasOwnProperty('redirect'))? values.redirect : window.top.location;
         closereload = true;
         closefunc = function ($target) {
             $target.on('main_hide', function() {
-                window.location.replace(closetarget);
+                window.top.location.replace(closetarget);
             });
         }
     }
@@ -1602,11 +1602,11 @@ function xpAjaxErrorHandler(jqXHR, textStatus, errorThrown) {
         //auto page reload
         if (typeof(data.reload) == 'number') {
             setTimeout(function () {
-                window.location.replace(window.location);
+                window.top.location.replace(window.top.location);
             }, data.reload);
         } else if ((typeof (data.reload) == 'boolean' && data.reload) || (typeof (data.reload) != 'boolean' && typeof (data.reload) != 'number')) {
             setTimeout(function () {
-                window.location.replace(window.location);
+                window.top.location.replace(window.top.location);
             }, 3000);
         }
         return;

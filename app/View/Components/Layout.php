@@ -6,8 +6,8 @@ use Illuminate\View\Component;
 
 class Layout extends Component
 {
-    public $darkMode = true;
-    public string $title = "Finanen";
+    public string $title = "Finanzen";
+    public bool $legacySupport = false;
     /**
      * Create a new component instance.
      *

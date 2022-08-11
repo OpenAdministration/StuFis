@@ -1,6 +1,6 @@
 @media not print {
     body {
-        padding-top: 80px;
+        padding-top: 20px;
     }
 }
 
@@ -387,9 +387,6 @@ a.disabled-option span {
     content: "\f107";
 }
 
-.container.main {
-    padding-left: 20%;
-}
 
 /* Profile sidebar */
 .profile-sidebar {
