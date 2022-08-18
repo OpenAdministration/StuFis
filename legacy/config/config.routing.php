@@ -213,6 +213,11 @@ $pathConfig = [
                     'navigation' => 'hv',
                 ],
                 [
+                    'path' => 'belege',
+                    'type' => 'path',
+                    'action' => 'belege',
+                ],
+                [
                     'path' => 'kv',
                     'type' => 'path',
                     'action' => 'kv',
@@ -222,6 +227,7 @@ $pathConfig = [
                             'path' => 'exportBank',
                             'type' => 'path',
                             'action' => 'exportBank',
+                            'groups' => 'ref-finanzen-kv'
                         ],
                     ],
                 ],

@@ -58,6 +58,9 @@ class MenuRenderer extends Renderer
             case 'stura':
                 $this->renderStuRaView();
                 break;
+            case 'belege':
+                $this->renderMissingBelege();
+                break;
             case 'hv':
                 $this->renderHVView();
                 break;
@@ -529,6 +532,21 @@ class MenuRenderer extends Renderer
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
+    public function setTodoTabs($active): void
+    {
+        $linkbase = URIBASE . 'menu/';
+        $tabs = [
+            'belege' => "<i class='fa fa-fw fa-folder-open-o'></i> Belege fehlen",
+            'hv' => "<i class='fa fa-fw fa-legal'></i> Haushaltsverantwortliche*r",
+            'kv' => "<i class='fa fa-fw fa-calculator'></i> Kassenverantwortliche*r",
+        ];
+        if(AuthHandler::getInstance()->hasGroup('ref-finanzen-kv')){
+            $tabs['kv/exportBank'] = "<i class='fa fa-fw fa-money'></i> Überweisungen";
+        }
+        //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
+        HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
+    }
+
     private function renderSearch(): void
     {
         $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info'); ?>
@@ -631,14 +649,12 @@ class MenuRenderer extends Renderer
 
         //Auslagenerstattungen -------------------------------------------------------------------------------------
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'hv');
-        $groupsAuslagen['Auslagenerstattungen HV fehlt'] = $auslagenWIP;
-        [, $auslagenWIP,] = $this->fetchAuslagenWithState('wip', 'belege');
-        $groupsAuslagen['Auslagenerstattungen Belege fehlen'] = $auslagenWIP;
+        $groupsAuslagen['Sachliche Richtigkeit der Auslagen prüfen'] = $auslagenWIP;
 
         //TODO: Implementierung vom rest
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
-        $this->renderHeadline('Von den Haushaltsverantwortlichen zu erledigen');
+        $this->setTodoTabs('hv');
         $this->renderTable($headerIntern, $groupsIntern, [], $escapeFunctionsIntern);
         $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
     }
@@ -695,42 +711,27 @@ class MenuRenderer extends Renderer
         //$headerAuslagen = ["Projekt", "Auslage", "Organisation", "zuletzt geändert"];
 
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'kv');
-        $groupsAuslagen['Auslagenerstattungen KV fehlt'] = $auslagenWIP;
-        [, $auslagenWIP, ] = $this->fetchAuslagenWithState('wip', 'belege');
-        $groupsAuslagen['Auslagenerstattungen Belege fehlen'] = $auslagenWIP;
 
         //TODO: Implementierung vom rest
         //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
-        $this->renderHeadline('Von den Kassenverantwortlichen zu erledigen');
-        $this->renderTable($headerAuslagen, $groupsAuslagen, [], $escapeFunctionsAuslagen);
+        $this->setTodoTabs('kv');
+        $this->renderTable($headerAuslagen, ['Rechnerische Richtigkeit der Auslagen prüfen' => $auslagenWIP], [], $escapeFunctionsAuslagen);
 
-        $this->renderExportBankButton();
     }
 
-    private function renderExportBankButton(): void
+    private function renderMissingBelege() : void
     {
-        $auslagen = DBConnector::getInstance()->dbFetchAll(
-            'auslagen',
-            [DBConnector::FETCH_ASSOC],
-            ['count' => ['id', DBConnector::GROUP_COUNT]],
-            ['auslagen.state' => ['LIKE', 'ok%'], 'auslagen.payed' => ''],
-            [],
-            [],
-            ['auslagen.id']
-        );
-        $disabled = count($auslagen) === 0 || ((int) $auslagen[0]['count']) === 0; ?>
-        <form action="<?php echo URIBASE; ?>menu/kv/exportBank">
-            <button class="btn btn-primary" <?php echo $disabled ? 'disabled' : ''; ?>>
-                <i class="fa fa-fw fa-money"></i>&nbsp;Exportiere Überweisungen
-            </button>
-        </form>
+        $this->setTodoTabs('belege');
+        [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'belege');
 
-        <?php
+        $this->renderTable($headerAuslagen, ['Belege fehlen' => $auslagenWIP], [], $escapeFunctionsAuslagen);
+
     }
 
     private function renderExportBank(): void
     {
+        $this->setTodoTabs('kv/exportBank');
         $header = ['Auslage', 'Empfänger', 'IBAN', 'Verwendungszweck', 'Auszuzahlen'];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             'auslagen',
@@ -792,7 +793,7 @@ class MenuRenderer extends Renderer
             },
         ];
         if (count($auslagen) > 0) {
-            $this->renderTable($header, [$auslagen], [], $escapeFunctions);
+            $this->renderTable($header, ['zu überweisen' => $auslagen], [], $escapeFunctions);
         } else {
             $this->renderHeadline('Aktuell liegen keine Überweisungen vor.', 2);
         }

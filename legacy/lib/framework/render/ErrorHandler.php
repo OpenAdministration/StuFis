@@ -2,6 +2,7 @@
 
 namespace framework\render;
 
+use App\Exceptions\LegacyDieException;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
@@ -131,11 +132,11 @@ class ErrorHandler extends Renderer
 
     public function render(): void
     {
-        echo "<pre>";
-        var_dump($this->errorInformation['code']);
-        var_dump($this->errorInformation['msg']);
-        var_dump($this->errorInformation['debug']);
-        echo "</pre>";
+        $code = $this->errorInformation['code'];
+        $msg = $this->errorInformation['msg'];
+        $debug = $this->errorInformation['debug'];
+
+        throw new LegacyDieException($msg, $code, $debug);
         /*
         $smarty = SmartyFactory::make();
         $smarty->assign('code', $this->errorInformation['code'] ?? 500);

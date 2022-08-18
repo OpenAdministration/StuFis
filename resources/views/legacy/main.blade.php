@@ -1,1 +1,1 @@
-<x-layout :legacySupport="True" :legacy="$legacy"/>
+<x-layout :legacy-content="$content"/>
