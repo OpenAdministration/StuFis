@@ -211,8 +211,9 @@ return [
             'Katholisch-Theologische Fakultät' => [
                 'FSR Kath. Theologie',
             ],
-            'Hochschulgruppen' => [
+            'Sonstiges' => [
                 'Hochschulgruppe (divers)',
+                'sonst. Studentische Initiativen',
             ],
         ],
         'rechtsgrundlagen' => [
