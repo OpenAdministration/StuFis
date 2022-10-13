@@ -83,6 +83,7 @@ return [
                 'Referat Erstiwoche',
                 'Referat Finanzen',
                 'Referat Hochschulpolitik (HoPo)',
+                'Referat Interclub',
                 'Referat Internationales',
                 'Referat IT',
                 'Referat Kultur',
