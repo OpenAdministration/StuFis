@@ -1464,7 +1464,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             }
             if (isset(self::$subStates[$newState])) {
                 $set[$newState] = match ($newState) {
-                    'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
+                    'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'revocation' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
                 };
             }
             $this->db->dbUpdate('auslagen', $where, $set);
