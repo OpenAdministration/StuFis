@@ -171,8 +171,8 @@ return [
             'Zentral' => [
                 'StuRa Vorstand',
                 'Antidiskriminierungsstelle',
-                'Fachschaftsratsbeauftragter',
-                'Hochschulgruppenbeauftragter',
+                'Fachschaftsratsbeauftragte*r',
+                'Hochschulgruppenbeauftragte*r',
             ],
             'Referate' => [
                 'Referat Finanzen',
