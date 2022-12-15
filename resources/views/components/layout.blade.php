@@ -16,7 +16,7 @@
     <div class="hidden w-28 bg-indigo-700 overflow-y-auto md:block">
         <div class="w-full py-6 flex flex-col items-center">
             <div class="flex-shrink-0 flex items-center">
-                <x-logo class="text-white h-8 w-auto"/>
+                <x-logo class="h-16 w-auto"/>
             </div>
             <div class="flex-1 mt-6 w-full px-2 space-y-1">
                 @foreach($navigationSkeleton as $item)
@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="flex-shrink-0 px-4 flex items-center">
-                    <x-logo class="h-8 w-auto text-white"/>
+                    <x-logo class="h-18 w-auto"/>
                 </div>
                 <div class="mt-5 flex-1 h-0 px-2 overflow-y-auto">
                     <nav class="h-full flex flex-col">
