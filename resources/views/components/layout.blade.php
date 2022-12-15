@@ -69,7 +69,8 @@
                 </div>
 
                 <div class="flex-shrink-0 px-4 flex items-center">
-                    <x-logo class="h-18 w-auto"/>
+                    <!-- Mobile -->
+                    <x-logo class="h-16 w-auto"/>
                 </div>
                 <div class="mt-5 flex-1 h-0 px-2 overflow-y-auto">
                     <nav class="h-full flex flex-col">

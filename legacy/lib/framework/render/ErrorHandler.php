@@ -75,18 +75,6 @@ class ErrorHandler extends Renderer
         HTMLPageRenderer::showErrorAndDie($eh);
     }
 
-    /**
-     * @param int $htmlCode
-     * @param string $message
-     * @param string|array $debugInfo
-     * @throws LegacyDieException
-     */
-    #[NoReturn]
-    public static function handleError(int $htmlCode = 500, string $message = '', string|array $debugInfo = ''): void
-    {
-        throw new LegacyDieException($message, $htmlCode, $debugInfo);
-    }
-
     #[NoReturn]
     public static function handleErrorRoute(array $routeInfo): void
     {
