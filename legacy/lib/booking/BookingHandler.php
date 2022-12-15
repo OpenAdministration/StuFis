@@ -2,11 +2,11 @@
 
 namespace booking;
 
+use App\Exceptions\LegacyDieException;
 use framework\auth\AuthHandler;
 use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
 use framework\DBConnector;
-use framework\render\ErrorHandler;
 use framework\render\html\HtmlButton;
 use framework\render\HTMLPageRenderer;
 use framework\render\Renderer;
@@ -45,7 +45,7 @@ class BookingHandler extends Renderer
                 $this->renderFullBookingZip();
             break;
             default:
-                ErrorHandler::handleError(400, "Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
+                throw new LegacyDieException(400, "Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
             break;
         }
     }
@@ -64,7 +64,7 @@ class BookingHandler extends Renderer
     private function renderCSV(): void
     {
         if (!isset($this->routeInfo['hhp-id'])) {
-            ErrorHandler::handleError(400, 'hhp-id nicht gesetzt');
+            throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
         }
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB($this->routeInfo['hhp-id']);
         $csvData = [];
@@ -91,7 +91,7 @@ class BookingHandler extends Renderer
                     $belegStr = "E{$row['extern_id']} - V" . $row['vorgang_id'];
                 break;
                 default:
-                    ErrorHandler::handleError(400, 'Unknown beleg_type: ' . $row['beleg_type']);
+                    throw new LegacyDieException(400, 'Unknown beleg_type: ' . $row['beleg_type']);
                 break;
             }
 
@@ -118,7 +118,7 @@ class BookingHandler extends Renderer
     private function renderFullBookingZip(): void
     {
         if (!isset($this->routeInfo['hhp-id'])) {
-            ErrorHandler::handleError(400, 'hhp-id nicht gesetzt');
+            throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
         }
 
         $zip = new ZipArchive();
@@ -126,7 +126,7 @@ class BookingHandler extends Renderer
         $zipFilePath = tempnam(sys_get_temp_dir(), 'HHA');
 
         if (($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true) {
-            ErrorHandler::handleError(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: ' . $ret);
+            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: ' . $ret);
         }
 
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB(
@@ -167,7 +167,7 @@ class BookingHandler extends Renderer
                         $items[$key]['beleg_type'] = 'Extern';
                     break;
                     default:
-                        ErrorHandler::handleError(400, $row['beleg_type'] . 'kann nicht interpretiert werden');
+                        throw new LegacyDieException(400, $row['beleg_type'] . 'kann nicht interpretiert werden');
                     break;
                 }
             }
@@ -338,7 +338,7 @@ class BookingHandler extends Renderer
 								<?php
                             break;
                             default:
-                                ErrorHandler::handleError(400, 'Unknown beleg_type: ' . $row['beleg_type']);
+                                throw new LegacyDieException(400, 'Unknown beleg_type: ' . $row['beleg_type']);
                         } ?>
                         <td class="no-wrap">
 							<?php echo date('d.m.Y', strtotime($row['timestamp'])); ?>
@@ -844,7 +844,7 @@ class BookingHandler extends Renderer
                             );
                         break;
                         default:
-                            ErrorHandler::handleError(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
+                            throw new LegacyDieException(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
                         break;
                     }
 

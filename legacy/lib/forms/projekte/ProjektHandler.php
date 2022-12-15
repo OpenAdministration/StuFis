@@ -40,7 +40,7 @@ class ProjektHandler extends FormHandlerInterface
         //print_r($pathInfo);
         self::initStaticVars();
         if (!isset($pathInfo['action'])) {
-            ErrorHandler::handleError(400, 'Aktion nicht gesetzt');
+            throw new LegacyDieException(400, 'Aktion nicht gesetzt');
         }
         $this->action = $pathInfo['action'];
         if ($this->action === 'create' || !isset($pathInfo['pid'])) {
@@ -327,7 +327,7 @@ class ProjektHandler extends FormHandlerInterface
     public function updateSavedData($data): bool
     {
         $data = array_intersect_key($data, self::$emptyData);
-        $version = $data['version'];
+        $version = (int) $data['version'];
 
         //check if version is the same
         if ($version !== $this->data['version']) {
@@ -398,7 +398,7 @@ class ProjektHandler extends FormHandlerInterface
                     $fields[$name] = null;
                 }
             } else {
-                ErrorHandler::handleError(403, "Du hast keine Berechtigung '$name' zu schreiben.");
+                throw new LegacyDieException(403, "Du hast keine Berechtigung '$name' zu schreiben.");
             }
         }
         $retMetaUpdate = DBConnector::getInstance()->dbUpdate(
@@ -542,7 +542,7 @@ class ProjektHandler extends FormHandlerInterface
                 $this->renderAuslagenList();
                 break;
             default:
-                ErrorHandler::handleError(404, "Aktion: $this->action bei Projekt $this->id nicht bekannt.");
+                throw new LegacyDieException(404, "Aktion: $this->action bei Projekt $this->id nicht bekannt.");
                 break;
         }
     }
@@ -584,7 +584,7 @@ class ProjektHandler extends FormHandlerInterface
             ]
         );
         if (empty($hhpId)) {
-            ErrorHandler::handleError(400, 'HHP-id kann nicht ermittelt werden. Bitte benachrichtigen sie den Administrator');
+            throw new LegacyDieException(400, 'HHP-id kann nicht ermittelt werden. Bitte benachrichtigen sie den Administrator');
         }
         $hhpId = $hhpId[0]['id'];
         $selectable_titel = FormTemplater::generateTitelSelectable($hhpId); ?>
@@ -593,7 +593,7 @@ class ProjektHandler extends FormHandlerInterface
             <form role="form" action="<?php echo URIBASE . 'rest/forms/projekt'; ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?php echo $this->templater->getHiddenActionInput(isset($this->id) ? 'update' : 'create'); ?>
-                <input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+                <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
                 <input type="hidden" name="version" value="<?php echo $this->data['version']; ?>">
                 <?php if (isset($this->id)) { ?>
                     <input type="hidden" name="id" value="<?php echo $this->id; ?>">
@@ -920,7 +920,7 @@ class ProjektHandler extends FormHandlerInterface
                         </div>
                         <div class="modal-body">
                             <input type="hidden" name="action" value="changeState">
-                            <input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+                            <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
                             <input type="hidden" name="version" value="<?php echo $this->data['version']; ?>">
                             <input type="hidden" name="id" value="<?php echo $this->getID(); ?>">
                             <div class="form-group">

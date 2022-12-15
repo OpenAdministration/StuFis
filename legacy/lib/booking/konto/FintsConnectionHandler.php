@@ -2,6 +2,7 @@
 
 namespace booking\konto;
 
+use App\Exceptions\LegacyDieException;
 use Composer\InstalledVersions;
 use DateTime;
 use Fhp\Action\GetSEPAAccounts;
@@ -305,11 +306,11 @@ class FintsConnectionHandler
         if (count($res) === 1) {
             $res = $res[0];
         } else {
-            ErrorHandler::handleError(500, 'found multiple DB entries');
+            throw new LegacyDieException(500, 'found multiple DB entries');
         }
 
         if (!self::hasPassword($credentialId)) {
-            ErrorHandler::handleError(400, "Bank Passwort für Credentials $credentialId benötigt");
+            throw new LegacyDieException(400, "Bank Passwort für Credentials $credentialId benötigt");
         }
         $username = $res['bank_username'];
 

@@ -2,6 +2,7 @@
 
 namespace framework\auth;
 
+use App\Exceptions\LegacyDieException;
 use framework\render\ErrorHandler;
 use framework\Singleton;
 
@@ -26,7 +27,7 @@ abstract class AuthHandler extends Singleton
     public function requireGroup(array|string $groups): void
     {
         if (!$this->hasGroup($groups)) {
-            ErrorHandler::handleError(403, 'Fehlende Zugangsberechtigung', $groups);
+            throw new LegacyDieException(403, 'Fehlende Zugangsberechtigung', $groups);
         }
     }
 
@@ -140,6 +141,6 @@ abstract class AuthHandler extends Singleton
 
     public function reportPermissionDenied(string $errorMsg, string $debug): void
     {
-        ErrorHandler::handleError(403, $errorMsg, $debug);
+        throw new LegacyDieException(403, $errorMsg, $debug);
     }
 }

@@ -79,12 +79,12 @@ class ErrorHandler extends Renderer
      * @param int $htmlCode
      * @param string $message
      * @param string|array $debugInfo
+     * @throws LegacyDieException
      */
     #[NoReturn]
     public static function handleError(int $htmlCode = 500, string $message = '', string|array $debugInfo = ''): void
     {
-        $eh = new self(self::getDefaultErrorInfo($htmlCode), debug_backtrace(), $message, $debugInfo);
-        HTMLPageRenderer::showErrorAndDie($eh);
+        throw new LegacyDieException($message, $htmlCode, $debugInfo);
     }
 
     #[NoReturn]
@@ -121,7 +121,7 @@ class ErrorHandler extends Renderer
         $reflectClass = new ReflectionClass(__CLASS__);
         $constantArray = $reflectClass->getConstants();
         $filteredConstants = array_filter($constantArray, static function ($val, $key) use ($htmlCode) {
-            return strpos($key, 'E' . $htmlCode) === 0;
+            return str_starts_with($key, 'E' . $htmlCode);
         }, ARRAY_FILTER_USE_BOTH);
         if (count($filteredConstants) === 1) {
             return array_values($filteredConstants)[0];
@@ -137,23 +137,7 @@ class ErrorHandler extends Renderer
         $debug = $this->errorInformation['debug'];
 
         throw new LegacyDieException($msg, $code, $debug);
-        /*
-        $smarty = SmartyFactory::make();
-        $smarty->assign('code', $this->errorInformation['code'] ?? 500);
-        $smarty->assign('headline', $this->errorInformation['headline'] ?? '');
-        $smarty->assign('msg', $this->errorInformation['msg'] ?? '');
-        $smarty->assign('additional', $this->errorInformation['additional'] ?? '');
-        $smarty->assign('trace', $this->errorInformation['trace'] ?? '');
-        $smarty->assign('debug', $this->errorInformation['debug'] ?? '');
-        if (defined('TG_ISSUE_LINK')) {
-            $smarty->assign('telegramIssueLink', TG_ISSUE_LINK);
-        }
-        if (defined('GIT_ISSUE_LINK')) {
-            $smarty->assign('githubIssueLink', GIT_ISSUE_LINK);
-        }
 
-        $smarty->display('error.tpl');
-        */
     }
 
     public function renderJson(): void

@@ -14,6 +14,7 @@
 
 namespace framework;
 
+use App\Exceptions\LegacyDieException;
 use framework\render\ErrorHandler;
 
 class Validator
@@ -156,7 +157,7 @@ class Validator
         }
 
         $this->setError(true, 403, 'Access Denied', "POST unknown validator: $validatorName");
-        ErrorHandler::handleError(500, "Validator: Unknown Validator: $validatorName", 'Validator: validate');
+        throw new LegacyDieException(500, "Validator: Unknown Validator: $validatorName", 'Validator: validate');
         return !$this->isError;
     }
 

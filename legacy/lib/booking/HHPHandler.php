@@ -2,10 +2,10 @@
 
 namespace booking;
 
+use App\Exceptions\LegacyDieException;
 use framework\auth\AuthHandler;
 use framework\CSVBuilder;
 use framework\DBConnector;
-use framework\render\ErrorHandler;
 use framework\render\Renderer;
 
 class HHPHandler extends Renderer
@@ -16,6 +16,7 @@ class HHPHandler extends Renderer
 
     public function __construct($routeInfo)
     {
+
         $this->routeInfo = $routeInfo;
         $this->stateStrings = [
             'draft' => 'Entwurf',
@@ -36,7 +37,7 @@ class HHPHandler extends Renderer
         if (isset($this->routeInfo['hhp-id'])) {
             $hhp_id = $this->routeInfo['hhp-id'];
             if (!isset($this->hhps[$hhp_id])) {
-                ErrorHandler::handleError(500, "Haushaltsplan HP-$hhp_id ist nicht bekannt.");
+                throw new LegacyDieException(500, "Haushaltsplan HP-$hhp_id ist nicht bekannt.");
                 return;
             }
         }
@@ -63,7 +64,7 @@ class HHPHandler extends Renderer
                 $this->saveNewHHP();
                 break;
             default:
-                ErrorHandler::handleError(500, "Action in HHP '{$this->routeInfo['action']}' not known");
+                throw new LegacyDieException(500, "Action in HHP '{$this->routeInfo['action']}' not known");
             break;
         }
     }
@@ -75,7 +76,7 @@ class HHPHandler extends Renderer
         $this->renderTable(
             ['Id', 'von', 'bis', 'Status'],
             [array_reverse($this->hhps, true)],
-            [],
+            ['id', 'von', 'bis', 'state'],
             [
                 function ($id) {
                     return "<a href='hhp/$id'><i class='fa fa-fw fa-chain'></i>&nbsp;HP-$id</a>";
@@ -88,7 +89,8 @@ class HHPHandler extends Renderer
                         ) . '</div>';
                 },
             ]
-        ); ?>
+        );
+        ?>
             <a href="<?php echo URIBASE; ?>hhp/import" class="btn btn-primary" <?php echo AuthHandler::getInstance()->hasGroup('ref-finanzen-hv') ? '' : 'disabled'; ?>>
                 <span class="fa fa-fw fa-plus"></span>Neu Importieren
             </a>
@@ -367,7 +369,7 @@ class HHPHandler extends Renderer
 							<?php echo DBConnector::getInstance()->convertDBValueToUserValue($row['_saved'], 'money'); ?>
                         </td>
                     </tr>
-	
+
 					<?php
             } ?>
                 <tr class="table-sum-footer">
@@ -419,7 +421,7 @@ class HHPHandler extends Renderer
             ['id' => $titel_id]
         );
         if (count($titel) === 0) {
-            ErrorHandler::handleError(404, "Titel $titel_id kann nicht gefunden werden");
+            throw new LegacyDieException(404, "Titel $titel_id kann nicht gefunden werden");
         } else {
             $titel = $titel[0];
         }

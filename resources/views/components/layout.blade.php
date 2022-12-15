@@ -63,7 +63,7 @@
                      x-transition:leave-end="opacity-0"
                      class="absolute top-1 right-0 -mr-14 p-1">
                     <button @click="mobileMenu=false" type="button" class="h-12 w-12 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white">
-                        <x-heroicon-o-x class="h-6 w-6 text-white"></x-heroicon-o-x>
+                        <x-heroicon-o-x-mark class="h-6 w-6 text-white"/>
                         <span class="sr-only">Close sidebar</span>
                     </button>
                 </div>
@@ -110,7 +110,7 @@
                             <label for="search-field" class="sr-only">Search all files</label>
                             <div class="relative w-full text-gray-400 focus-within:text-gray-600">
                                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center">
-                                    <x-heroicon-s-search class="flex-shrink-0 h-5 w-5"/>
+                                    <x-heroicon-s-magnifying-glass class="flex-shrink-0 h-5 w-5"/>
                                 </div>
                                 <input name="search-field" id="search-field" class="h-full w-full border-transparent py-2 pl-8 pr-3 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-400" placeholder="Search" type="search">
 
@@ -137,19 +137,18 @@
 
                                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu"
                                  aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                                <!-- Active: "bg-gray-100", Not Active: "" -->
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-0">
-                                    Mein Profil
-                                </a>
-
-                                <a href="#" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-1">
-                                    Logout
-                                </a>
+                                    <a class="block px-4 py-2 text-black">{{ Auth::user()->name }}</a>
+                                @foreach($profileSkeleton as $idx => $item)
+                                    <!-- Active: "bg-gray-100", Not Active: "" -->
+                                    <a href="{{ $item['link'] ?? route(...$item['route']) }}" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-{{ $idx }}">
+                                        {{ $item['text'] }}
+                                    </a>
+                                @endforeach
                             </div>
                         </div>
 
                         <a href="{{ route('new-project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <x-heroicon-o-plus-sm class="h-6 w-6"/>
+                            <x-heroicon-o-plus-small class="h-6 w-6"/>
                             <span class="sr-only">Neues Projekt</span>
                         </a>
                     </div>

@@ -2,11 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\BudgetPlan;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Foundation\Testing\WithFaker;
 
 class DatabaseSeeder extends Seeder
 {
+    use WithFaker;
+
     /**
      * Seed the application's database.
      *
@@ -15,5 +19,8 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
+        BudgetPlan::factory(5)->populate()->create();
+
+        $this->call(LegacySeeder::class);
     }
 }

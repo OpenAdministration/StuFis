@@ -2,7 +2,7 @@
 
 namespace framework\auth;
 
-use framework\render\ErrorHandler;
+use App\Exceptions\LegacyDieException;
 use JetBrains\PhpStorm\NoReturn;
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Utils;
@@ -241,7 +241,7 @@ class AuthSamlHandler extends AuthHandler
             $errors = $auth->getErrors();
 
             if (!$this->saml->isAuthenticated() || !empty($errors)) {
-                ErrorHandler::handleError(500, 'SAML Auth failed', $errors);
+                throw new LegacyDieException(500, 'SAML Auth failed', $errors);
             }
 
             $_SESSION['samlUserdata'] = $auth->getAttributes();
@@ -264,7 +264,7 @@ class AuthSamlHandler extends AuthHandler
             $this->saml->processSLO();
             $errors = $this->saml->getErrors();
             if (!empty($errors)) {
-                ErrorHandler::handleError(500, 'SAML Logout gescheitert', $errors);
+                throw new LegacyDieException(500, 'SAML Logout gescheitert', $errors);
             }
         } else {
             // initiate logout
@@ -282,7 +282,7 @@ class AuthSamlHandler extends AuthHandler
             // header('Content-Type: text/xml');
             return $metadata;
         }
-        ErrorHandler::handleError(500, 'SAML not correct configured', $errors);
+        throw new LegacyDieException(500, 'SAML not correct configured', $errors);
     }
 
     #[NoReturn]
@@ -291,6 +291,6 @@ class AuthSamlHandler extends AuthHandler
         if (isset($debug)) {
             $debug = var_export($this->getAttributes(), true);
         }
-        ErrorHandler::handleError(403, $errorMsg, $debug);
+        throw new LegacyDieException(403, $errorMsg, $debug);
     }
 }

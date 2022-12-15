@@ -16,6 +16,7 @@
 
 namespace framework\file;
 
+use App\Exceptions\LegacyDieException;
 use Exception;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
@@ -86,7 +87,7 @@ class DbFilePDO
         if (!$this->db) {
             $this->_isError = true;
             $this->msgError = "Connect failed: No PDO object\n";
-            ErrorHandler::handleError(500, $this->msgError);
+            throw new LegacyDieException(500, $this->msgError);
             exit();
         }
     }

@@ -13,6 +13,7 @@
 
 namespace framework\file;
 
+use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 
@@ -51,12 +52,12 @@ class FileController
         //get file
         $file = $fh->checkFileHash($routeInfo['key']);
         if (!$file) {
-            ErrorHandler::handleError(404);
+            throw new LegacyDieException(404);
             return;
         }
         //TODO FIXME ACL - user has permission to download/view this file?
         if (false) {//!checkUserPermission($top['gname'])) {
-            ErrorHandler::handleError(403);
+            throw new LegacyDieException(403);
             exit();
         }
         $fh->deliverFileData($file, $routeInfo['fdl']);

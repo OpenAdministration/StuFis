@@ -5,7 +5,7 @@ use Ahc\Cli\Output\Color;
 
 const SYSBASE = __DIR__;
 const DEV = true;
-include SYSBASE . '/vendor/autoload.php';
+include base_path() . '/vendor/autoload.php';
 $version = \Composer\InstalledVersions::getRootPackage()['version'];
 $app = new Ahc\Cli\Application('FinanzAntrag Command Line - FA', $version);
 

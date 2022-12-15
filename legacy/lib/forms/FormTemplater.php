@@ -58,80 +58,6 @@ class FormTemplater
         return $selectable;
     }
 
-    public static function generateProjektpostenSelectable($projekt_id): array
-    {
-        $res = DBConnector::getInstance()->dbFetchAll('projektposten', [DBConnector::FETCH_ASSOC], [], ['projekt_id' => $projekt_id], [], ['einnahmen' => true, 'id' => true]);
-        /*
-        $idx = $row["id"];
-        $this->data["posten-name"][$idx] = $row["name"];
-        $this->data["posten-bemerkung"][$idx] = $row["bemerkung"];
-        $this->data["posten-einnahmen"][$idx] = $row["einnahmen"];
-        $this->data["posten-ausgaben"][$idx] = $row["ausgaben"];
-        $this->data["posten-titel"][$idx] = $row["titel_id"];
-        */
-        $selectable = [];
-        $options_ein = [];
-        $options_aus = [];
-        $options[] = ['label' => 'keine Auswahl', 'value' => ''];
-        foreach ($res as $row) {
-            if ($row['einnahmen'] == 0) {
-                $money = number_format($row['ausgaben'], 2, ',', ' ') . ' €';
-                $options_aus[] = [
-                    'label' => $row['name'],
-                    'subtext' => $money . $row['titel_id'],
-                    'value' => $row['id'],
-                ];
-            }
-            if ($row['ausgaben'] == 0) {
-                $money = number_format($row['ausgaben'], 2, '.', ' ') . ' €';
-                $options_ein[] = [
-                    'label' => $row['name'],
-                    'subtext' => $money . ' ' . $row['titel_id'],
-                    'value' => $row['id'],
-                ];
-            }
-        }
-        $selectable['groups'][0]['options'] = $options_ein;
-        $selectable['groups'][0]['label'] = 'Einnahmeposten';
-        $selectable['groups'][1]['options'] = $options_aus;
-        $selectable['groups'][1]['label'] = 'Ausgabeposten';
-        return $selectable;
-    }
-
-    public static function generateUserSelectable($onlywithIBAN = false): array
-    {
-        if ($onlywithIBAN === false) {
-            $userdata = DBConnector::getInstance()->dbFetchAll('user', [DBConnector::FETCH_ASSOC], [], [], [], ['fullname' => true]);
-        } else {
-            $userdata = DBConnector::getInstance()->dbFetchAll('user', [DBConnector::FETCH_ASSOC], [], ['iban' => ['<>', 'null']], [], ['fullname' => true]);
-        }
-        $selectable = [];
-        $options = [];
-        $options[] = ['label' => 'keine Auswahl', 'value' => ''];
-        foreach ($userdata as $row) {
-            if (empty($row['iban'])) {
-                $iban = 'keine IBAN angegeben';
-            } else {
-                $tmp = explode(' ', $row['iban']);
-                $start = array_shift($tmp);
-                $end = array_pop($tmp);
-                array_walk($tmp, function (&$item) {
-                    $item = preg_replace('/[0-9]+/', 'XXXX', $item);
-                });
-                $iban = $start . ' ' . implode(' ', $tmp) . ' ' . $end;
-            }
-            $options[] = [
-                'label' => $row['fullname'],
-                'subtext' => $iban,
-                'value' => $row['id'],
-            ];
-        }
-        //only 1 group
-        $selectable['groups'][0]['options'] = $options;
-
-        return $selectable;
-    }
-
     public static function generateGremienSelectable(): array
     {
         $userGremien = AuthHandler::getInstance()->getUserGremien();
@@ -319,7 +245,7 @@ class FormTemplater
             $ret[] = 'data-minlength=' . $validatorArray['min-length'];
         }
         if (isset($validatorArray['email'])) {
-            $ret[] = "data-remote='" . URIBASE . "validate.php?ajax=1&action=validate.email&nonce={$GLOBALS['nonce']}'";
+            $ret[] = "data-remote='" . URIBASE . "validate.php?ajax=1&action=validate.email&nonce=" . csrf_token() . "'";
         }
         if (isset($validatorArray['iban'])) {
             $ret[] = "data-validateiban='1'";
@@ -426,51 +352,6 @@ class FormTemplater
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
-    public function getStateChooser(StateHandler $stateHandler): string
-    {
-        $out = '';
-        $optionsNext = $stateHandler->getNextStates();
-        //$optionsBack = $stateHandler->getStatesBefore();
-
-        $out .= '<div>';
-        //foreach ($optionsBack as $oldState){
-        //    $out .= "<button class='btn btn-warning'>{$stateHandler->getFullStateNameFrom($oldState)}</button>";
-        //}
-        //echo "</div>";
-        $out .= "<button class='btn btn-primary'>{$stateHandler->getFullStateName()}</button>";
-        //echo "<div>";
-        foreach ($optionsNext as $nextState) {
-            $out .= "<button class='btn btn-success'>{$stateHandler->getFullStateNameFrom($nextState)}</button>";
-        }
-        $out .= '</div>';
-        return $out;
-    }
-
-    public function getCheckboxForms($name, $value = false, $width = 12, $label_text = '', $validator = []): string
-    {
-        $unique_id = htmlspecialchars($this->getUniqueIdFromName($name));
-        $editable = $this->checkWritePermission($name);
-        $out = '';
-        if ($editable) {
-            $additonal_array = $this->constructValidatorStrings($validator);
-            if ($value !== false) {
-                $additonal_array[] = 'checked';
-            }
-            $additonal_str = implode(' ', $additonal_array);
-            $out .= "<div class='checkbox'>";
-            $out .= "<label><input id='$unique_id' name='$name' type='checkbox' value='" . ($value !== false) . "' $additonal_str>$label_text</label>";
-            $out .= '</div>';
-        } else {
-            if ($value !== false) {
-                $iconName = 'fa-check-square';
-            } else {
-                $iconName = 'fa-square-o';
-            }
-            $out .= "<i class='fa fa-fw $iconName'></i>&nbsp;$label_text";
-        }
-        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, '', $validator);
-    }
-
     public function getFileForm($name, $value = '', $width = 12, $placeholder = '', $label_text = '', $validator = []): string
     {
         $unique_id = htmlspecialchars($this->getUniqueIdFromName($name));
@@ -540,11 +421,6 @@ class FormTemplater
             $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . '</div>';
         }
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
-    }
-
-    public function getHyperLink($text, $type, $id): string
-    {
-        return "<a href='" . $GLOBALS['URIBASE'] . $type . '/' . $id . "'><i class='fa fa-fw fa-chain'></i>&nbsp;" . htmlspecialchars($text) . '</a>';
     }
 
     public function getMoneyForm($name, $value = 0, $width = 12, $placeholder = '0.00', $label_text = '', $validator = [], $sum_id = ''): string

@@ -20,8 +20,7 @@ class HtmlForm extends AbstractHtmlTag
 
     private function nonce(): void
     {
-        $this->hiddenInput('nonce', $GLOBALS['nonce']);
-        $this->hiddenInput('nononce', $GLOBALS['nonce']);
+        $this->hiddenInput('nonce', csrf_token());
     }
 
     public function urlTarget(string $url): self

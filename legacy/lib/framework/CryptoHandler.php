@@ -54,31 +54,6 @@ class CryptoHandler
         return bin2hex(random_bytes($length));
     }
 
-    /**
-     * write key asci save string to file
-     * @param bool $overwrite
-     */
-    private static function key_to_file(string $filename, string $text, $overwrite = false): void
-    {
-        if ($overwrite && file_exists($filename) && is_file($filename) && fileperms($filename) !== 777) {
-            chmod($filename, 0777);
-        }
-
-        //create file content
-        $key_file_content = "<?php //* -------------------------------------------------------- *\n";
-        $key_file_content .= "// Must include code to stop this file being accessed directly\n";
-        $key_file_content .= "if(!defined('INTBF')) die(); \n";
-        $key_file_content .= "//* -------------------------------------------------------- *\n";
-        $key_file_content .= '$KEY_SECRET = \''.$text."';\n ?>";
-
-        //create file
-        $handle = fopen($filename, 'wb');
-        fwrite($handle, $key_file_content);
-        fclose($handle);
-        chmod($filename, 0400);
-        unset($text);
-    }
-
     // string padding =========================================================
 
     /**
@@ -189,33 +164,6 @@ class CryptoHandler
         }
     }
 
-    // key file helper ==================================================
-
-    /**
-     * generate secret key and store it to file - defuse
-     * @param string $filename path to file
-     */
-    public static function new_key_to_file($filename)
-    {
-        $key = Key::createNewRandomKey();
-        $pass_key = $key->saveToAsciiSafeString();
-
-        //create file
-        self::key_to_file($filename, $key->saveToAsciiSafeString(), false);
-    }
-
-    /**
-     * generate secret key and store it to file
-     * @param string $filename path to file
-     * @param string $password
-     */
-    public static function new_protected_key_to_file($filename, $password): void
-    {
-        $key = KeyProtectedByPassword::createRandomPasswordProtectedKey($password);
-
-        //create file
-        self::key_to_file($filename, $key->saveToAsciiSafeString(), false);
-    }
 
     /**
      * read key secret from file
@@ -232,55 +180,6 @@ class CryptoHandler
         return $out;
     }
 
-    // SSL ENCRYPTION ===================================================
-
-    /**
-     * encrypt data by public openssl key - openssl
-     * could be decrypted with private key
-     */
-    public static function encrypt_public_openssl(string $data, string $keyAscii): string
-    {
-        $keyAscii = base64_decode($keyAscii);
-        openssl_public_encrypt($data, $encrypted, $keyAscii);
-        return base64_encode($encrypted);
-    }
-
-    /**
-     * decrypt data by private openssl key - openssl
-     * @return string
-     */
-    public static function decrypt_private_openssl(string $ciphertext, string $keyAscii): ?string
-    {
-        $keyAscii = base64_decode($keyAscii);
-        $success = openssl_private_decrypt(base64_decode($ciphertext), $decrypted, $keyAscii);
-        if ($success === false) {
-            return null;
-        }
-        return $decrypted;
-    }
-
-    /**
-     * encrypt data by private openssl key - openssl
-     * could be decrypted with public key
-     * may used for signing
-     */
-    public static function encrypt_private_openssl(string $data, string $keyAscii): string
-    {
-        $keyAscii = base64_decode($keyAscii);
-        openssl_private_encrypt($data, $encrypted, $keyAscii);
-        return base64_encode($encrypted);
-    }
-
-    /**
-     * decrypt data by public openssl key - openssl
-     * @return string
-     */
-    public static function decrypt_public_openssl(string $ciphertext, string $keyAscii): ?string
-    {
-        $keyAscii = base64_decode($keyAscii);
-        openssl_public_decrypt(base64_decode($ciphertext), $decrypted, $keyAscii);
-        return $decrypted;
-    }
 
     // HASHING (passwords, etc) =========================================
 
@@ -315,11 +214,4 @@ class CryptoHandler
         return password_hash($password, PASSWORD_BCRYPT, $options);
     }
 
-    /**
-     * check if provided password matches given hash value
-     */
-    public static function verifyPassword(string $password, string $hash): bool
-    {
-        return password_verify($password, $hash);
-    }
 }

@@ -96,10 +96,6 @@ class HTMLPageRenderer
         echo '</div>';
         if (!$this->hasError()) {
             $this->renderModals();
-            //$this->renderCookieAlert();
-        }
-        if (DEV) {
-            //$this->renderProfiling();
         }
         $this->renderFooter();
     }
@@ -129,22 +125,6 @@ class HTMLPageRenderer
         <?php
     }
 
-    private function renderCookieAlert(): void
-    {
-        ?>
-        <!-- START Bootstrap-Cookie-Alert -->
-        <div class="alert text-center cookiealert" role="alert">
-            <b>Das Finanztool mag &#x1F36A;!</b>
-            Hier hast du einen &#x1F36A;. Den brauchst du, damit das Finanztool für dich arbeitet.
-            <a href="https://cookiesandyou.com/" target="_blank">Mehr Informationen</a>
-            <button type="button" class="btn btn-primary btn-sm acceptcookies" aria-label="Close">
-                Ich werde ihn nicht selbst essen, versprochen &#x1F612;
-            </button>
-        </div>
-        <!-- END Bootstrap-Cookie-Alert -->
-        <?php
-    }
-
     private function setPhpHeader(): void
     {
         // by micha-dev
@@ -160,7 +140,7 @@ class HTMLPageRenderer
     private function includeCSS(): string
     {
         $out = '';
-        $defaultCssFiles = ['bootstrap.min', 'font-awesome.min', 'cookiealert'];
+        $defaultCssFiles = ['bootstrap.min', 'font-awesome.min'];
         $cssFiles = $defaultCssFiles;
         if (isset($this->routeInfo['load'])) {
             $cssFiles = array_merge($cssFiles, ...array_column($this->routeInfo['load'], 'css'));
@@ -181,7 +161,6 @@ class HTMLPageRenderer
             'validator',
             'numeral.min',
             'numeral-locales.min',
-            'cookiealert',
         ];
         /*
         jquery-3.1.1.min.js

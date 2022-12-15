@@ -2,25 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * @property integer $id
- * @property integer $hhpgruppen_id
- * @property string $titel_name
- * @property string $titel_nr
- * @property float $value
- * @property Booking[] $bookings
- * @property Haushaltsgruppen $haushaltsgruppen
- */
+
 class BudgetItem extends Model
 {
+    use HasFactory;
+
+    public $timestamps = false;
+
     /**
      * The table associated with the model.
-     * 
+     *
      * @var string
      */
-    protected $table = 'haushaltstitel';
+    protected $table = 'budget_item';
 
     /**
      * @var array
@@ -38,8 +35,8 @@ class BudgetItem extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function haushaltsgruppen()
+    public function budgetPlan()
     {
-        return $this->belongsTo('App\Models\Haushaltsgruppen', 'hhpgruppen_id');
+        return $this->belongsTo(\App\Models\BudgetPlan::class, 'budget_plan_id');
     }
 }

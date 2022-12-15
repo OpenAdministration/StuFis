@@ -195,11 +195,11 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        /**
+        /*
          * custom by me
          */
         Krlove\EloquentModelGenerator\Provider\GeneratorServiceProvider::class,
-
+        \SocialiteProviders\Manager\ServiceProvider::class,
     ],
 
     /*

@@ -2,6 +2,7 @@
 
 namespace framework\render;
 
+use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
 use ReflectionException;
 use ReflectionFunction;
@@ -32,7 +33,7 @@ abstract class Renderer extends EscFunc
         if (method_exists($this, $methodName)) {
             echo $this->$methodName();
         } else {
-            ErrorHandler::handleError(404, "Methode $methodName not found in " . __CLASS__);
+            throw new LegacyDieException(404, "Methode $methodName not found in " . __CLASS__);
         }
     }
 
@@ -57,58 +58,55 @@ abstract class Renderer extends EscFunc
         $isReflectionMethods = [];
         $paramSum = 0;
 
-        try {
-            foreach ($escapeFunctions as $idx => $escapeFunction) {
-                if (is_array($escapeFunction)) {
-                    $rf = new ReflectionMethod($escapeFunction[0], $escapeFunction[1]);
-                    $isReflectionMethods[] = true;
-                } else {
-                    $rf = new ReflectionFunction($escapeFunction);
-                    $isReflectionMethods[] = false;
-                }
-                //let some space in the idx
-                $reflectionsOfFunctions[$idx] = $rf;
-                $paramSum += $rf->getNumberOfParameters();
+        foreach ($escapeFunctions as $idx => $escapeFunction) {
+            if (is_array($escapeFunction)) {
+                $rf = new ReflectionMethod($escapeFunction[0], $escapeFunction[1]);
+                $isReflectionMethods[] = true;
+            } else {
+                $rf = new ReflectionFunction($escapeFunction);
+                $isReflectionMethods[] = false;
             }
-            //if there are to less parameters - add some default functions.
-            $diff = count($header) - count($escapeFunctions);
-            if ($diff > 0) {
-                $paramSum += $diff;
-                $escapeFunctions = array_merge(
-                    $escapeFunctions,
-                    array_fill(0, $diff, $defaultFunction)
-                );
-                $isReflectionMethods = array_merge($isReflectionMethods, array_fill(0, $diff, true));
-                $reflectionsOfFunctions = array_merge(
-                    $reflectionsOfFunctions,
-                    array_fill(
-                        0,
-                        $diff,
-                        new ReflectionMethod(
-                            $defaultFunction[0], $defaultFunction[1]
-                        )
-                    )
-                );
-            }
-            foreach ($groupedContent as $groupName => $content) {
-                if (empty($content)) {
-                    continue;
-                }
-                if (count(reset($content)) !== $paramSum && count($keys) !== $paramSum) {
-                    ErrorHandler::handleError(500,
-                        "In Gruppe '$groupName' passt Spaltenzahl (" . count(
-                            reset($content)
-                        ) . ') bzw. Key Anzahl (' . count(
-                            $keys
-                        ) . ") nicht zur benötigten Parameterzahl $paramSum \n es wurden " . count(
-                            $escapeFunctions
-                        ) . ' Funktionen übergeben ' . $diff . ' wurde(n) hinzugefügt.'
-                    );
-                }
-            }
-        } catch (ReflectionException $reflectionException) {
-            ErrorHandler::handleException($reflectionException);
+            //let some space in the idx
+            $reflectionsOfFunctions[$idx] = $rf;
+            $paramSum += $rf->getNumberOfParameters();
         }
+        //if there are to fewer parameters - add some default functions.
+        $diff = count($header) - count($escapeFunctions);
+        if ($diff > 0) {
+            $paramSum += $diff;
+            $escapeFunctions = array_merge(
+                $escapeFunctions,
+                array_fill(0, $diff, $defaultFunction)
+            );
+            $isReflectionMethods = array_merge($isReflectionMethods, array_fill(0, $diff, true));
+            $reflectionsOfFunctions = array_merge(
+                $reflectionsOfFunctions,
+                array_fill(
+                    0,
+                    $diff,
+                    new ReflectionMethod(
+                        $defaultFunction[0], $defaultFunction[1]
+                    )
+                )
+            );
+        }
+        foreach ($groupedContent as $groupName => $content) {
+            if (empty($content)) {
+                continue;
+            }
+            if (count(reset($content)) !== $paramSum && count($keys) !== $paramSum) {
+                throw new LegacyDieException(500,
+                    "In Gruppe '$groupName' passt Spaltenzahl (" . count(
+                        reset($content)
+                    ) . ') bzw. Key Anzahl (' . count(
+                        $keys
+                    ) . ") nicht zur benötigten Parameterzahl $paramSum \n es wurden " . count(
+                        $escapeFunctions
+                    ) . ' Funktionen übergeben ' . $diff . ' wurde(n) hinzugefügt.'
+                );
+            }
+        }
+
 
         if (count($keys) === 0) {
             $keys = range(0, $paramSum);
@@ -143,32 +141,32 @@ abstract class Renderer extends EscFunc
                             $row = array_values($row);
                         }
 
-                    $shiftIdx = 0;
-                    foreach ($reflectionsOfFunctions as $idx => $reflectionOfFunction) {
-                        //var_export($keys);
-                        $arg_keys = array_slice(
+                        $shiftIdx = 0;
+                        foreach ($reflectionsOfFunctions as $idx => $reflectionOfFunction) {
+                            //var_export($keys);
+                            $arg_keys = array_slice(
                                 $keys,
                                 $shiftIdx,
                                 $reflectionOfFunction->getNumberOfParameters()
                             );
-                        $args = [];
-                        foreach ($arg_keys as $arg_key) {
-                            $args[] = $row[$arg_key];
-                        }
-                        //var_export($args);
-                        //var_export($row);
-                        //var_export($reflectionOfFunction->getNumberOfParameters());
-                        $shiftIdx += $reflectionOfFunction->getNumberOfParameters();
-                        if ($isReflectionMethods[$idx]) {
-                            echo '<td>' . call_user_func_array($escapeFunctions[$idx], $args) . '</td>';
-                        } else {
-                            echo '<td>' . $reflectionOfFunction->invokeArgs($args) . '</td>';
-                        }
-                    } ?>
+                            $args = [];
+                            foreach ($arg_keys as $arg_key) {
+                                $args[] = $row[$arg_key];
+                            }
+                            //var_export($args);
+                            //var_export($row);
+                            //var_export($reflectionOfFunction->getNumberOfParameters());
+                            $shiftIdx += $reflectionOfFunction->getNumberOfParameters();
+                            if ($isReflectionMethods[$idx]) {
+                                echo '<td>' . call_user_func_array($escapeFunctions[$idx], $args) . '</td>';
+                            } else {
+                                echo '<td>' . $reflectionOfFunction->invokeArgs($args) . '</td>';
+                            }
+                        } ?>
                     </tr>
-                <?php
+                    <?php
                 } ?>
-            <?php
+                <?php
             } ?>
             </tbody>
             <?php if ($footer && is_array($footer) && count($footer) > 0) { ?>
@@ -187,7 +185,7 @@ abstract class Renderer extends EscFunc
                 </tfoot>
             <?php } ?>
         </table>
-    <?php
+        <?php
     }
 
     protected function renderClearFix(): void
@@ -287,8 +285,7 @@ abstract class Renderer extends EscFunc
 
     protected function renderNonce(): void
     {
-        $this->renderHiddenInput('nonce', $GLOBALS['nonce']);
-        $this->renderHiddenInput('nononce', $GLOBALS['nonce']);
+        $this->renderHiddenInput('nonce', csrf_token());
     }
 
     /**
@@ -299,7 +296,7 @@ abstract class Renderer extends EscFunc
     protected function renderAlert($strongMsg, $msg, string $type = self::ALERT_SUCCESS): void
     {
         if (!in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER])) {
-            ErrorHandler::handleError(500, 'Falscher Datentyp in renderAlert()');
+            throw new LegacyDieException(500, 'Falscher Datentyp in renderAlert()');
         }
         if (is_array($msg)) {
             $msg = $this->arrayToListEscapeFunction($msg);
@@ -373,7 +370,7 @@ abstract class Renderer extends EscFunc
             ['von' => false]
         );
         if (!isset($hhps) || empty($hhps)) {
-            ErrorHandler::handleError(500, 'Konnte keine Haushaltspläne finden');
+            throw new LegacyDieException(500, 'Konnte keine Haushaltspläne finden');
         }
         if (!isset($routeInfo['hhp-id'])) {
             foreach (array_reverse($hhps, true) as $id => $hhp) {
@@ -393,7 +390,7 @@ abstract class Renderer extends EscFunc
                         <option value="<?php echo $id; ?>" <?php echo $id == $routeInfo['hhp-id'] ? 'selected' : ''; ?>
                                 data-subtext="<?php echo $hhp['state']; ?>"><?php echo $name; ?>
                         </option>
-                    <?php
+                        <?php
                     } ?>
                 </select>
                 <div class="input-group-btn">

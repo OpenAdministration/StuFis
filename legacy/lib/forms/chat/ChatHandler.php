@@ -2,6 +2,7 @@
 
 namespace forms\chat;
 
+use App\Exceptions\LegacyDieException;
 use Exception;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
@@ -186,8 +187,7 @@ class ChatHandler
             return;
         } ?>
 			<div class="panel panel-default chat-panel">
-				<input type="hidden" name="nononce" value="<?php echo strrev($GLOBALS['nonce']); ?>">
-	        	<input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+	        	<input type="hidden" name="nonce" value="<?= csrf_token() ?>">
 				<div class="panel-heading">Kommentare/Nachrichten</div>
 				<div class="panel-body chat">
 					<div class="new-chat-comment"
@@ -538,7 +538,7 @@ class ChatHandler
                 ]);
              break;
             default:
-                ErrorHandler::handleError(400, 'Chat: Error: Unhandles Action passed Validation: '.$post['action']);
+                throw new LegacyDieException(400, 'Chat: Error: Unhandles Action passed Validation: '.$post['action']);
              break;
         }
     }

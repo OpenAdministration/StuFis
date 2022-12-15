@@ -13,6 +13,7 @@
 
 namespace forms;
 
+use App\Exceptions\LegacyDieException;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
@@ -41,13 +42,11 @@ class RestHandler extends EscFunc
 
     public function handlePost(array $routeInfo = null): void
     {
-        /*
-        global $nonce;
-        if (!isset($_POST['nonce']) || $_POST['nonce'] !== $nonce || isset($_POST['nononce'])) {
-            ErrorHandler::handleError(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
+        if (!isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
+            throw new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
         } else {
             unset($_POST['nonce']);
-        }*/
+        }
 
         switch ($routeInfo['action']) {
             case 'projekt':
@@ -118,7 +117,7 @@ class RestHandler extends EscFunc
                 break;
             case 'nononce':
             default:
-            ErrorHandler::handleError(400, 'Unknown Action: ' . $routeInfo['action']);
+            throw new LegacyDieException(400, 'Unknown Action: ' . $routeInfo['action']);
             break;
         }
     }
@@ -230,8 +229,6 @@ class RestHandler extends EscFunc
         }
 
         try {
-            // $logId = DBConnector::getInstance()->logThisAction($_POST);
-            // DBConnector::getInstance()->logAppend($logId, "username", $auth->getUsername());
 
             if (!isset($_POST['action'])) {
                 throw new ActionNotSetException('Es wurde keine Aktion übertragen');
@@ -286,17 +283,7 @@ class RestHandler extends EscFunc
                 $msgs[] = 'Daten erfolgreich gespeichert!';
                 $target = URIBASE . 'projekt/' . $projektHandler->getID();
             }
-            /*
-            if (isset($logId)){
-                DBConnector::getInstance()->logAppend($logId, "result", $ret);
-                DBConnector::getInstance()->logAppend($logId, "msgs", $msgs);
-                if (isset($projektHandler)) {
-                    DBConnector::getInstance()->logAppend($logId, "projekt_id", $projektHandler->getID());
-                }
-            }else{
-                $msgs[] = "Logging nicht möglich :(";
-            }
-            */
+
         }
 
         $json = [
@@ -327,7 +314,7 @@ class RestHandler extends EscFunc
             if (isset($_POST['action'])) {
                 $routeInfo['mfunction'] = $_POST['action'];
             } else {
-                ErrorHandler::handleError(400, 'No Action and mfunction.');
+                throw new LegacyDieException(400, 'No Action and mfunction.');
             }
         }
 
@@ -523,7 +510,7 @@ class RestHandler extends EscFunc
                 ];
             break;
             default:
-                ErrorHandler::handleError(400, 'Unknown Action.');
+                throw new LegacyDieException(400, 'Unknown Action.');
             break;
         }
         $vali->validateMap($_POST, $validator_map);
@@ -878,7 +865,7 @@ class RestHandler extends EscFunc
 
         $ret = true;
         if (!DBConnector::getInstance()->dbBegin()) {
-            ErrorHandler::handleError(500,
+            throw new LegacyDieException(500,
                 'Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!'
             );
         }

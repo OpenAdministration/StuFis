@@ -23,7 +23,7 @@ class Layout extends Component
             ],
         ],
         [
-            'icon' => 'heroicon-o-clipboard-check',
+            'icon' => 'heroicon-o-clipboard-document-check',
             'text' => 'TODO',
             'route' => [
                 'name' => 'menu',
@@ -45,7 +45,7 @@ class Layout extends Component
             ],
         ],
         [
-            'icon' => 'heroicon-o-scale',
+            'icon' => 'heroicon-o-user-group',
             'text' => 'Sitzung',
             'route' => [
                 'name' => 'menu',
@@ -53,7 +53,7 @@ class Layout extends Component
             ],
         ],
         [
-            'icon' => 'heroicon-o-table',
+            'icon' => 'heroicon-o-table-cells',
             'text' => 'Haushalt',
             'route' => [
                 'name' => 'hhp',
@@ -63,7 +63,14 @@ class Layout extends Component
     ];
 
     public array $profileSkeleton = [
-
+        [
+            'text' => 'Mein Profil',
+            'link' => ''
+        ],
+        [
+            'text' => 'Logout',
+            'route' => ['name' => 'logout'],
+        ],
     ];
 
     /**

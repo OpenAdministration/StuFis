@@ -2,6 +2,7 @@
 
 namespace forms\projekte\auslagen;
 
+use App\Exceptions\LegacyDieException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
 use Exception;
@@ -317,11 +318,11 @@ class AuslagenHandler2 extends FormHandlerInterface
         // errors ----------------------------
         if (!isset($routeInfo['pid'])) {
             $this->error = true;
-            ErrorHandler::handleError(400, 'missing parameter: pid - project id');
+            throw new LegacyDieException(400, 'missing parameter: pid - project id');
         }
         if (!isset($routeInfo['action'])) {
             $this->error = true;
-            ErrorHandler::handleError(400, 'missing parameter: action');
+            throw new LegacyDieException(400, 'missing parameter: action');
         }
         // init variables ---------------------
         $this->routeInfo = $routeInfo;
@@ -1645,7 +1646,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             exit();
         }
 
-        ErrorHandler::handleError(500, 'PDF Zahlungsanweisung konnte nicht generiert werden');
+        throw new LegacyDieException(500, 'PDF Zahlungsanweisung konnte nicht generiert werden');
     }
 
     /**
@@ -1676,7 +1677,7 @@ class AuslagenHandler2 extends FormHandlerInterface
     public function render(): void
     {
         if ($this->error) {
-            ErrorHandler::handleError(404, $this->error);
+            throw new LegacyDieException(404, $this->error);
         }
         $this->renderAuslagenerstattung();
     }
@@ -1776,8 +1777,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             <div class="clearfix"></div>
         </div>
     <?php } ?>
-        <input type="hidden" name="nononce" value="<?php echo strrev($GLOBALS['nonce']); ?>">
-        <input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+        <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
         <form id="<?php $current_form_id = 'auslagen-form-' . count($this->formSubmitButtons);
         $this->formSubmitButtons[] = $current_form_id;
         echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data"
@@ -2624,7 +2624,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     <form method="POST" action="<?php echo URIBASE; ?>rest/forms/auslagen/belegpdf">
                         <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>Belege PDF
                         </button>
-                        <input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+                        <input type="hidden" name="nonce" value="<?php echo csrf_token() ?>">
                         <input type="hidden" name="auslagen-id" value="<?php echo $this->auslagen_id; ?>">
                         <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
                         <input type="hidden" name="d" value="1">
@@ -2642,7 +2642,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                         <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>
                             Zahlungsanweisung PDF
                         </button>
-                        <input type="hidden" name="nonce" value="<?php echo $GLOBALS['nonce']; ?>">
+                        <input type="hidden" name="nonce" value="<?php echo csrf_token(); ?>">
                         <input type="hidden" name="auslagen-id" value="<?php echo $this->auslagen_id; ?>">
                         <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
                         <input type="hidden" name="d" value="1">

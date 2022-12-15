@@ -16,6 +16,7 @@
 
 namespace framework\auth;
 
+use App\Exceptions\LegacyDieException;
 use framework\render\ErrorHandler;
 
 class AuthDummyHandler extends AuthHandler
@@ -91,7 +92,7 @@ class AuthDummyHandler extends AuthHandler
         if (isset($debug)) {
             $debug = var_export($this->attributes, true);
         }
-        ErrorHandler::handleError(403, $errorMsg, $debug);
+        throw new LegacyDieException(403, $errorMsg, $debug);
     }
 
     protected function getAttributes(): array

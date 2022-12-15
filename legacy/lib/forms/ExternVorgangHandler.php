@@ -2,10 +2,12 @@
 
 namespace forms;
 
+use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
 use framework\Helper;
 use framework\render\ErrorHandler;
 use framework\render\JsonController;
+use Illuminate\Support\Str;
 
 class ExternVorgangHandler extends FormHandlerInterface
 {
@@ -22,7 +24,7 @@ class ExternVorgangHandler extends FormHandlerInterface
                 $eId = $routeInfoOrId['eid'];
                 $where = ['vorgang_id' => $vId, 'extern_id' => $eId];
             } else {
-                ErrorHandler::handleError(400, 'non valid array. vid or eid is not set');
+                throw new LegacyDieException(400, 'non valid array. vid or eid is not set');
             }
             $this->routeInfo = $routeInfoOrId;
         } else {
@@ -38,7 +40,7 @@ class ExternVorgangHandler extends FormHandlerInterface
             ]
         );
         if (!is_array($this->data) || count($this->data) !== 1) {
-            ErrorHandler::handleError(400, 'Datensatz konnte nicht gefunden werden');
+            throw new LegacyDieException(400, 'Datensatz konnte nicht gefunden werden');
         }
         $this->data = $this->data[0];
         $this->meta_data = DBConnector::getInstance()->dbFetchAll(
@@ -50,7 +52,7 @@ class ExternVorgangHandler extends FormHandlerInterface
             ]
         );
         if (!is_array($this->meta_data) || count($this->meta_data) !== 1) {
-            ErrorHandler::handleError(400, 'Datensatz konnte nicht gefunden werden');
+            throw new LegacyDieException(400, 'Datensatz konnte nicht gefunden werden');
         }
         $this->meta_data = $this->meta_data[0];
     }
@@ -80,10 +82,10 @@ class ExternVorgangHandler extends FormHandlerInterface
                 $colName = "state_$stateName";
             break;
             default:
-                ErrorHandler::handleError(400, "Wrong State $stateName in External");
+                throw new LegacyDieException(400, "Wrong State $stateName in External");
             break;
         }
-        $newEtag = randomstring();
+        $newEtag  = Str::random(32);
         //TODO: also Version number tracking?
         DBConnector::getInstance()->dbUpdate(
             'extern_data',
@@ -135,7 +137,7 @@ class ExternVorgangHandler extends FormHandlerInterface
                     $this->post_pdf_zahlungsanweisung($_POST['d'] === '0');
                 break;
                 default:
-                    ErrorHandler::handleError(400, 'mfunction ' . $this->routeInfo['mfunction'] . ' not known');
+                    throw new LegacyDieException(400, 'mfunction ' . $this->routeInfo['mfunction'] . ' not known');
                 break;
             }
         }
@@ -261,7 +263,7 @@ class ExternVorgangHandler extends FormHandlerInterface
             echo base64_decode($result['data']['data']);
             exit();
         } else {
-            ErrorHandler::handleError(400, print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
+            throw new LegacyDieException(400, print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
             $this->error = 'Error during PDF creation.';
         }
     }

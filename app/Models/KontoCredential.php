@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $tan_mode
  * @property string $tan_medium_name
  * @property string $tan_mode_name
- * @property KontoBank $kontoBank
+ * @property Bank $kontoBank
  * @property User $user
  */
 class KontoCredential extends Model
@@ -28,7 +28,7 @@ class KontoCredential extends Model
      */
     public function kontoBank()
     {
-        return $this->belongsTo('App\Models\KontoBank', 'bank_id');
+        return $this->belongsTo('App\Models\Bank', 'bank_id');
     }
 
     /**

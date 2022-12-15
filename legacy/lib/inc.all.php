@@ -50,5 +50,4 @@ const UPLOAD_MAX_SIZE = 41943215; // in bytes - also check DB BLOB max size and 
 const UPLOAD_PROHIBITED_EXTENSIONS = 'ph.*?,cgi,pl,pm,exe,com,bat,pif,cmd,src,asp,aspx,js,lnk,html,htm,forbidden';
 const UPLOAD_MOD_XSENDFILE = 1; // 0 - dont use it, 1 - auto detect on apache modules, 2 force usage - if detection fails
 
-require_once SYSBASE . '/lib/inc.nonce.php';
 require_once SYSBASE . '/lib/inc.helper.php';

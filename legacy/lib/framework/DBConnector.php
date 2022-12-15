@@ -2,6 +2,7 @@
 
 namespace framework;
 
+use App\Exceptions\LegacyDieException;
 use framework\auth\AuthHandler;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
@@ -28,7 +29,7 @@ class DBConnector extends Singleton
     public const SQL_DATE_FORMAT = 'Y-m-d';
     public const SQL_DATETIME_FORMAT = 'Y-m-d H:i:s';
 
-    private $pdo;
+    private PDO $pdo;
     private array $scheme;
     private array $schemeKeys;
     private array $validFields;
@@ -545,34 +546,18 @@ class DBConnector extends Singleton
         return $this->dbPrefix;
     }
 
+    /**
+     * @deprecated use Auth::user() instead
+     * @return array
+     */
     public function getUser(): array
     {
         if (isset($this->user)) {
             return $this->user;
         }
 
-        $user = $this->dbFetchAll(
-            'user',
-            [self::FETCH_ASSOC],
-            [],
-            ['username' => AuthHandler::getInstance()->getUsername()]
-        );
-        if (count($user) === 1) {
-            $user = $user[0];
-        } elseif (count($user) === 0) {
-            $fields = [
-                'fullname' => AuthHandler::getInstance()->getUserFullName(),
-                'username' => AuthHandler::getInstance()->getUsername(),
-                'email' => AuthHandler::getInstance()->getUserMail(),
-            ];
-            //print_r($fields);
-            $id = $this->dbInsert('user', $fields);
-            $fields['id'] = $id;
-            $user = $fields;
-        } else {
-            throw new PDOException('User ist mehr als einmal angelegt!');
-        }
-        //print_r($user);
+        $user = \Auth::user()?->toArray();
+        $user['fullname'] = $user['name'];
         $this->user = $user;
         return $user;
     }
@@ -639,7 +624,7 @@ class DBConnector extends Singleton
 
         foreach ($tables as $table) {
             if (!isset($this->scheme[$table])) {
-                ErrorHandler::handleError(500, "Unkown table $table");
+                throw new LegacyDieException(500, "Unkown table $table");
             }
         }
 
@@ -683,30 +668,30 @@ class DBConnector extends Singleton
         $validJoinOnOperators = ['=', '<', '>', '<>', '<=', '>='];
         foreach (array_keys($joins) as $nr) {
             if (!isset($joins[$nr]['table'])) {
-                ErrorHandler::handleError(500, "no Jointable set in '" . $nr . "' use !");
+                throw new LegacyDieException(500, "no Jointable set in '" . $nr . "' use !");
             } elseif (!array_key_exists($joins[$nr]['table'], $this->scheme)) {
-                ErrorHandler::handleError(500, 'Unknown Table ' . $joins[$nr]['table']);
+                throw new LegacyDieException(500, 'Unknown Table ' . $joins[$nr]['table']);
             } elseif (isset($joins[$nr]['type']) && !in_array(
                     strtolower($joins[$nr]['type']),
                     ['inner', 'left', 'natural', 'right']
                 )) {
-                ErrorHandler::handleError(500, 'Unknown Join type ' . $joins[$nr]['type']);
+                throw new LegacyDieException(500, 'Unknown Join type ' . $joins[$nr]['type']);
             }
             if (!isset($joins[$nr]['on'])) {
                 $joins[$nr]['on'] = [];
             }
             if (!is_array($joins[$nr]['on'])) {
-                ErrorHandler::handleError(500, "on '{$joins[$nr]['on']}' has to be an array!");
+                throw new LegacyDieException(500, "on '{$joins[$nr]['on']}' has to be an array!");
             }
             if (count($joins[$nr]['on']) === 2 && !is_array($joins[$nr]['on'][0])) {
                 $joins[$nr]['on'] = [$joins[$nr]['on']]; //if only 1 "on" set bring it into an array-form
             }
             foreach ($joins[$nr]['on'] as $pair) {
                 if (!is_array($pair)) {
-                    ErrorHandler::handleError(500, "Join on '$pair' is not an array");
+                    throw new LegacyDieException(500, "Join on '$pair' is not an array");
                 }
                 if (count($pair) !== 2) {
-                    ErrorHandler::handleError(500, 'unvalid joinon pair:' . implode(', ', $pair));
+                    throw new LegacyDieException(500, 'unvalid joinon pair:' . implode(', ', $pair));
                 }
             }
             if (isset($joins[$nr]['operator'])) {
@@ -715,14 +700,14 @@ class DBConnector extends Singleton
                 }
                 foreach ($joins[$nr]['operator'] as $op) {
                     if (!in_array($op, $validJoinOnOperators, true)) {
-                        ErrorHandler::handleError(500, "unallowed join operator '$op' in {$nr}th join");
+                        throw new LegacyDieException(500, "unallowed join operator '$op' in {$nr}th join");
                     }
                 }
             } else {
                 $joins[$nr]['operator'] = array_fill(0, count($joins[$nr]['on']), '=');
             }
             if (count($joins[$nr]['on']) !== count($joins[$nr]['operator'])) {
-                ErrorHandler::handleError(500,
+                throw new LegacyDieException(500,
                     'not same amount of on-pairs(' . count($joins[$nr]['on']) . ') and operators (' . count(
                         $joins[$nr]['operator']
                     ) . ')!'
@@ -732,13 +717,13 @@ class DBConnector extends Singleton
 
         foreach ($sort as $field => $value) {
             if (!in_array($field, $this->validFields, true)) {
-                ErrorHandler::handleError(500, "Unkown column $field in ORDER");
+                throw new LegacyDieException(500, "Unkown column $field in ORDER");
             }
         }
 
         foreach ($groupBy as $field) {
             if (!in_array($field, $this->validFields, true)) {
-                ErrorHandler::handleError(500, "Unkown column $field in GROUP");
+                throw new LegacyDieException(500, "Unkown column $field in GROUP");
             }
         }
 
@@ -755,7 +740,7 @@ class DBConnector extends Singleton
                     $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
                 }
             } else {
-                ErrorHandler::handleError(500, "Unkown column $col in fetchAll");
+                throw new LegacyDieException(500, "Unkown column $col in fetchAll");
             }
         }
 
@@ -814,7 +799,7 @@ class DBConnector extends Singleton
                     $g[] = $this->quoteIdent($item);
                 }
             } else {
-                ErrorHandler::handleError(500, "$item ist für sql nicht bekannt.");
+                throw new LegacyDieException(500, "$item ist für sql nicht bekannt.");
             }
         }
         $vals = array_merge($joinVals, $whereVals);
@@ -858,7 +843,7 @@ class DBConnector extends Singleton
                 $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
                 $errormsg['stacktrace'] = $trace;
             }
-            ErrorHandler::handleError(500, print_r($errormsg, true));
+            throw new LegacyDieException(500, print_r($errormsg, true));
         }
         HTMLPageRenderer::registerProfilingBreakpoint('sql-done');
         if ($ret === false) {
@@ -899,7 +884,7 @@ class DBConnector extends Singleton
         foreach ($where as $whereGroup) {
             foreach ($whereGroup as $field => $value) {
                 if (!in_array($field, $this->validFields, true)) {
-                    ErrorHandler::handleError(500, "Unkown column $field in WHERE");
+                    throw new LegacyDieException(500, "Unkown column $field in WHERE");
                 }
             }
         }
@@ -930,7 +915,7 @@ class DBConnector extends Singleton
                 }
                 if (is_array($v)) {
                     if (!in_array(strtolower($v[0]), $validWhereOperators)) {
-                        ErrorHandler::handleError(500, "Unknown where operator $v[0]");
+                        throw new LegacyDieException(500, "Unknown where operator $v[0]");
                     }
                     if (is_array($v[1])) {
                         switch (strtolower($v[0])) {
@@ -942,11 +927,11 @@ class DBConnector extends Singleton
                             case 'between':
                                 $wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
                                 if (count($v[1]) !== 2) {
-                                    ErrorHandler::handleError(500, 'To many values for ' . $v[0]);
+                                    throw new LegacyDieException(500, 'To many values for ' . $v[0]);
                                 }
                                 break;
                             default:
-                                ErrorHandler::handleError(500, 'unknown identifier ' . $v[0]);
+                                throw new LegacyDieException(500, 'unknown identifier ' . $v[0]);
                         }
                         $vals = array_merge($vals, $v[1]);
                     } elseif ((strtolower($v[0]) === 'is' || strtolower($v[0]) === 'is not')
@@ -1024,7 +1009,7 @@ class DBConnector extends Singleton
     public function dbInsert(string $table, array $fields): string
     {
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::handleError(500, "Unkown table $table");
+            throw new LegacyDieException(500, "Unkown table $table");
         }
         //if (isset($fields["id"])) unset($fields["id"]);
 
@@ -1045,7 +1030,7 @@ class DBConnector extends Singleton
             if (DEV) {
                 $info += ['sql' => $sql, 'values' => $fields];
             }
-            ErrorHandler::handleError(500, print_r($info, true));
+            throw new LegacyDieException(500, print_r($info, true));
         }
         return $this->pdo->lastInsertId();
     }
@@ -1058,7 +1043,7 @@ class DBConnector extends Singleton
     public function dbInsertMultiple(string $table, array $fieldSchema, array ...$multiFields): string
     {
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::handleError(500, "Unknown table $table");
+            throw new LegacyDieException(500, "Unknown table $table");
         }
         $fieldSchema = array_flip(array_intersect_key(array_flip($fieldSchema), $this->scheme[$table]));
 
@@ -1070,7 +1055,7 @@ class DBConnector extends Singleton
         foreach ($multiFields as $fields) {
             $fields = array_intersect_key($fields, array_flip($fieldSchema));
             if (count($fields) !== count($fieldSchema)) {
-                ErrorHandler::handleError(500, 'Ein Datenfehler ist aufgetreten - Falsche Dimension', [
+                throw new LegacyDieException(500, 'Ein Datenfehler ist aufgetreten - Falsche Dimension', [
                     'ist' => $fields,
                     'soll' => $fieldSchema,
                 ]);
@@ -1092,7 +1077,7 @@ class DBConnector extends Singleton
             if (DEV === true) {
                 $info += ['sql' => $sql, 'values' => $values, 'multiInput' => $multiFields];
             }
-            ErrorHandler::handleError(500, 'Ein Datenbank Fehler ist aufgetreten', $info);
+            throw new LegacyDieException(500, 'Ein Datenbank Fehler ist aufgetreten', $info);
         }
         return $this->pdo->lastInsertId();
     }
@@ -1105,42 +1090,43 @@ class DBConnector extends Singleton
         if (is_array($value)) {
             $value = print_r($value, true);
         }
-        $query->execute([$logId, $key, $value]) or ErrorHandler::handleError(500, print_r($query->errorInfo(), true));
+        $query->execute([$logId, $key, $value]) or throw new LegacyDieException(500, print_r($query->errorInfo(), true));
     }
 
     public function dbBegin(): bool
     {
-        if (!$this->transactionCount++) {
-            return $this->pdo->beginTransaction();
-        }
-        $ret = $this->pdo->query('SAVEPOINT trans' . $this->transactionCount);
-        return $ret && $this->transactionCount >= 0;
+        DB::beginTransaction();
+        return true;
     }
 
     public function dbCommitRollbackOnFailure(): bool
     {
-        if (!$this->dbCommit()) {
-            $this->dbRollBack();
-            return false;
+        try {
+            DB::commit();
+            $success = true;
+        }catch (\Throwable $exception){
+            $success = false;
+            DB::rollBack();
         }
-        return true;
+
+        return $success;
     }
 
     public function dbCommit(): bool
     {
-        if (!--$this->transactionCount) {
-            return $this->pdo->commit();
+        try {
+            DB::commit();
+            $success = true;
+        }catch (\Throwable $exception){
+            $success = false;
         }
-        return $this->transactionCount >= 0;
+        return $success;
     }
 
     public function dbRollBack(): bool
     {
-        if (--$this->transactionCount) {
-            $this->pdo->exec('ROLLBACK TO trans' . ($this->transactionCount + 1));
-            return true;
-        }
-        return $this->pdo->rollback();
+        DB::rollBack();
+        return true;
     }
 
     /**
@@ -1152,7 +1138,7 @@ class DBConnector extends Singleton
     public function dbUpdate(string $table, array $filter, array $fields): int
     {
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::handleError(500, "Unkown table $table");
+            throw new LegacyDieException(500, "Unkown table $table");
         }
 
         $filter = array_intersect_key(
@@ -1163,10 +1149,10 @@ class DBConnector extends Singleton
         //$fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
         $fields = array_intersect_key($fields, array_flip($this->validFields));
         if (count($filter) === 0) {
-            ErrorHandler::handleError(500, 'No filter fields given.');
+            throw new LegacyDieException(500, 'No filter fields given.');
         }
         if (count($fields) === 0) {
-            ErrorHandler::handleError(500, 'No fields given.');
+            throw new LegacyDieException(500, 'No fields given.');
         }
         $u = [];
         foreach ($fields as $k => $v) {
@@ -1182,7 +1168,7 @@ class DBConnector extends Singleton
 
         $ret = $query->execute($values);
         if ($ret === false) {
-            ErrorHandler::handleError(500, "DB Update in $table failed", $query->errorInfo());
+            throw new LegacyDieException(500, "DB Update in $table failed", $query->errorInfo());
         }
         return $query->rowCount();
     }
@@ -1195,7 +1181,7 @@ class DBConnector extends Singleton
     public function dbDelete(string $table, array $filter): int
     {
         if (!isset($this->scheme[$table])) {
-            ErrorHandler::handleError(
+            throw new LegacyDieException(
                 500,
                 'Ein Datenbankfehler ist aufgetreten',
                 "Deletion of table entries from $table not possible, table name unknown"
@@ -1208,7 +1194,7 @@ class DBConnector extends Singleton
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($values);
         if ($ret === false) {
-            ErrorHandler::handleError(
+            throw new LegacyDieException(
                 500,
                 'Ein Datenbank Fehler ist aufgetreten',
                 "Deletion of table $table not possible:" . PHP_EOL . print_r($query->errorInfo(), true) . PHP_EOL . $sql . print_r($values, true)
@@ -1230,7 +1216,7 @@ class DBConnector extends Singleton
             WHERE `hhp_id` = ?
             ORDER BY `type` ASC,`g`.`id` ASC,`titel_nr` ASC';
         $query = $this->pdo->prepare($sql);
-        $query->execute([$id]) or ErrorHandler::handleError(500, print_r($query->errorInfo(), true));
+        $query->execute([$id]) or throw new LegacyDieException(500, print_r($query->errorInfo(), true));
         $groups = [];
         $titelIdsToGroupId = [];
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -1247,7 +1233,7 @@ class DBConnector extends Singleton
             FROM ' . $this->dbPrefix  . 'booking AS b
             WHERE b.titel_id IN (' . implode(',', array_fill(0, count($titelIdsToGroupId), '?')) . ')';
         $query = $this->pdo->prepare($sql);
-        $query->execute(array_keys($titelIdsToGroupId)) or ErrorHandler::handleError(500, print_r($query->errorInfo(), true));
+        $query->execute(array_keys($titelIdsToGroupId)) or throw new LegacyDieException(500, print_r($query->errorInfo(), true));
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
             $tId = array_shift($row);
             $val = $row['value'];

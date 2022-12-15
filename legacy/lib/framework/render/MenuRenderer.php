@@ -8,6 +8,7 @@
 
 namespace framework\render;
 
+use App\Exceptions\LegacyDieException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
@@ -71,7 +72,7 @@ class MenuRenderer extends Renderer
                 $this->renderExportBank();
                 break;
             default:
-                ErrorHandler::handleError(400, "{$this->pathinfo['action']} kann nicht interpretiert werden");
+                throw new LegacyDieException(400, "{$this->pathinfo['action']} kann nicht interpretiert werden");
                 break;
         }
     }
@@ -135,7 +136,7 @@ class MenuRenderer extends Renderer
                 }
                 break;
             default:
-                ErrorHandler::handleError(400, 'Not known active Tab: ' . $active);
+                throw new LegacyDieException(400, 'Not known active Tab: ' . $active);
                 break;
         }
 

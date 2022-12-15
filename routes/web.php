@@ -12,7 +12,19 @@
 */
 
 
+use Illuminate\Support\Facades\Route;
 
 
+Route::get('login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
+Route::get('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+Route::get('callback', [\App\Http\Controllers\AuthController::class, 'callback']);
 
+Route::middleware(['auth'])->group(function(){
+    Route::get('plan', [\App\Http\Controllers\BudgetPlanController::class, 'index'])->name('budget-plan.index');
+    Route::get('plan/{id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
+});
+
+if (App::isLocal()){
+    Route::get('dev/groups', [\App\Http\Controllers\Dev::class, 'groups']);
+}
 

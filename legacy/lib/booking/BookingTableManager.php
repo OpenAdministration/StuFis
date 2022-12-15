@@ -2,9 +2,9 @@
 
 namespace booking;
 
+use App\Exceptions\LegacyDieException;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
-use framework\render\ErrorHandler;
 use framework\render\Renderer;
 
 class BookingTableManager extends Renderer
@@ -88,7 +88,7 @@ class BookingTableManager extends Renderer
                         $extern_ids[] = $row['beleg'];
                     break;
                     default:
-                        ErrorHandler::handleError(400, 'Beleg' . $row['beleg_type']);
+                        throw new LegacyDieException(400, 'Beleg' . $row['beleg_type']);
                     break;
                 }
             }
@@ -402,7 +402,7 @@ class BookingTableManager extends Renderer
                 $newBelegName = 'E' . $b['extern_id'];
                 break;
             default:
-                ErrorHandler::handleError(500, 'Unbekannter Typ: ' . $b['type'], var_export($b, true));
+                throw new LegacyDieException(500, 'Unbekannter Typ: ' . $b['type'], var_export($b, true));
                 return;
         }
 
@@ -488,7 +488,7 @@ class BookingTableManager extends Renderer
         if (isset($this->kontoTypes[$zahlungIdType])) {
             $prefix = $this->kontoTypes[$zahlungIdType]['short'];
         } else {
-            ErrorHandler::handleError(500, "Konto Type $zahlungIdType nicht bekannt.");
+            throw new LegacyDieException(500, "Konto Type $zahlungIdType nicht bekannt.");
         }
         $newValue = $prefix . $zahlungId;
         if ($this->zahlung_lastValue === $newValue) {
