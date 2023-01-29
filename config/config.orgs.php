@@ -335,8 +335,8 @@ return [
                 'Fachschaftsrat WI',
             ],
             'Weitere' => [
-                'Mitarbeiter',
-                'Professoren',
+                'Mitarbeiter*innen',
+                'Professor*innen',
                 'Studierende',
                 'Externe Dritte',
             ],
