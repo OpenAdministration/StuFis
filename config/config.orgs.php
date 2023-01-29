@@ -306,4 +306,74 @@ return [
             'hide-protokoll',
         ],
     ],
+    'eah' => [
+        'gremien' => [
+            'Zentral' => [
+                'Studierendenrat (StuRa)',
+                'Konferenz Thüringer Studierendenschaften (KTS)',
+                'Senat',
+            ],
+            'Referate' => [
+                'Referat Finanzen',
+                'Referat Hochschulpolitik',
+                'Referat Hochschulsport',
+                'Referat Internationale Kultur',
+                'Referat Koordination studentischer Gremien',
+                'Referat Kultur',
+                'Referat Öffentlichkeitsarbeit',
+                'Referat Soziales',
+                'Referat Technik',
+                'Referat Umwelt',
+            ],
+            'Fachschaftsräte' => [
+                'Fachschaftsrat BW',
+                'Fachschaftsrat ET/IT',
+                'Fachschaftsrat GP',
+                'Fachschaftsrat MB',
+                'Fachschaftsrat MT und BT',
+                'Fachschaftsrat SW',
+                'Fachschaftsrat WI',
+            ],
+            'Weitere' => [
+                'Mitarbeiter',
+                'Professoren',
+                'Studierende',
+                'Externe Dritte',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => '',
+        'datenschutz-url' => '',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'open-administration.de',
+        'finanzen-mail' => 'lukas.staab@open-administration.de',
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Datum und TOP',
+                'placeholder' => '',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'stura-vorstand' => [
+                'label' => 'StuRa Vorstandsbeschluss',
+                'label-additional' => 'Datum und TOP',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'fsr' => [
+                'label' => 'FSR Beschluss',
+                'label-additional' => 'Datum und TOP',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'mittel' => [
+                'label' => 'Antrag auf Mittelfreigabe',
+                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+            ],
+            'vertrag' => [
+                'label' => 'Verträge',
+                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+            ],
+        ],
+        'projekt-form' => [
+        ],
 ];
