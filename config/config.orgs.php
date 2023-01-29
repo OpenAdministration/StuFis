@@ -346,8 +346,8 @@ return [
         'datenschutz-url' => '',
         'issues-url' => '',
         'help-url' => 'mailto:service@open-administration.de',
-        'mail-domain' => 'open-administration.de',
-        'finanzen-mail' => 'lukas.staab@open-administration.de',
+        'mail-domain' => 'eah-jena.de',
+        'finanzen-mail' => 'stura@eah-jena.de',
         'rechtsgrundlagen' => [
             'stura' => [
                 'label' => 'StuRa-Beschluss',
