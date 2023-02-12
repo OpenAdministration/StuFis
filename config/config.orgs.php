@@ -376,4 +376,5 @@ return [
         ],
         'projekt-form' => [
         ],
+    ],
 ];
