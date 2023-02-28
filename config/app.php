@@ -198,7 +198,6 @@ return [
         /*
          * custom by me
          */
-        Krlove\EloquentModelGenerator\Provider\GeneratorServiceProvider::class,
         \SocialiteProviders\Manager\ServiceProvider::class,
     ],
 

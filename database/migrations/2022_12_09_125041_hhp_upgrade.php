@@ -29,14 +29,22 @@ return new class extends Migration {
             $table->integer('value');
             $table->integer('budget_type');
             $table->text('description');
+            $table->unsignedBigInteger('parent_id')->nullable();
+
             $table->unique(['budget_plan_id', 'short_name']);
+            $table->foreign('budget_plan_id')->references('id')->on('budget_plan');
+            $table->foreign('parent_id')->references('id')->on('budget_item');
             //$table->text('diff_description');
         });
     }
 
     public function down()
     {
-
+        Schema::table('budget_item', static function (Blueprint $table) {
+            $table->dropForeign(['budget_plan_id']);
+        });
+        Schema::dropIfExists('budget_plan');
+        Schema::dropIfExists('budget_item');
     }
 
 };
