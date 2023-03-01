@@ -11,7 +11,7 @@ Route::middleware(['auth'])->group(function(){
     Route::get('hhp', LegacyController::class)->name('hhp');
     Route::get('projekt/create', LegacyController::class)->name('new-project');
 
-    Route::get('rest', LegacyController::class)->name('rest');
+    Route::post('rest', LegacyController::class)->name('rest');
 
     Route::any('{path}', LegacyController::class)->where('path', '.*');
 });

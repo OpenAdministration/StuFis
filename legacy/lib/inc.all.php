@@ -24,7 +24,7 @@ const GREMIEN = ORG_DATA['gremien'] ?? [];
 const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
 define('DEV', env('APP_DEBUG'));
 define('URIBASE', env('URIBASE'));
-define('BASE_URL', 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://'. $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT']);
+define('BASE_URL', env('APP_ENV'));
 const FULL_APP_PATH = BASE_URL . URIBASE;
 define('FINTS_REGNR', $_ENV['FINTS_REG_NR'] ?? '');
 

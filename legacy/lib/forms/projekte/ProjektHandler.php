@@ -51,7 +51,7 @@ class ProjektHandler extends FormHandlerInterface
             $res = DBConnector::getInstance()->dbFetchAll(
                 'projekte',
                 [DBConnector::FETCH_ASSOC],
-                [],
+                ['projekte.*'],
                 ['projekte.id' => $this->id],
                 [
                     ['type' => 'left', 'table' => 'user', 'on' => [['user.id', 'projekte.creator_id']]],
@@ -368,7 +368,6 @@ class ProjektHandler extends FormHandlerInterface
         $extractFields = ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben', 'posten-titel'];
         $extractFields = array_intersect_key($data, array_flip($extractFields));
         $data = array_diff_key($data, $generatedFields, $extractFields);
-
         $recht_unset = false;
         if (isset($data['recht-additional'])) {
             if (!isset($data['recht']) && isset($this->data['recht'])) {
@@ -418,7 +417,7 @@ class ProjektHandler extends FormHandlerInterface
             $retUpdate = true;
             for ($i = 0; $i < $minRows - 1 && $i < $oldRows; ++$i) {
                 //would throw exception if not working
-                $retUpdate = $retUpdate && DBConnector::getInstance()->dbUpdate(
+                $rowsUpdated = DBConnector::getInstance()->dbUpdate(
                     'projektposten',
                     [
                         'id' => $i + 1,
@@ -436,8 +435,10 @@ class ProjektHandler extends FormHandlerInterface
                         ),
                         'name' => $extractFields['posten-name'][$i],
                         'bemerkung' => $extractFields['posten-bemerkung'][$i],
-                    ]
+                    ],
                 );
+                // could return row count = 0 (if no changes happened)
+                $retUpdate = $retUpdate && ($rowsUpdated <= 1);
             }
 
             // add new posten
@@ -474,7 +475,6 @@ class ProjektHandler extends FormHandlerInterface
                 );
                 $retDelete = $retDelete > 0;
             }
-            //var_dump($retMetaUpdate, $retDelete, $retInsert, $retUpdate);
             return $retMetaUpdate && $retDelete && $retInsert && $retUpdate;
         }
         return $retMetaUpdate;
@@ -618,7 +618,7 @@ class ProjektHandler extends FormHandlerInterface
                                 <?php foreach (ORG_DATA['rechtsgrundlagen'] as $shortName => $def) { ?>
                                         <div id="<?php echo $shortName; ?>" class="form-group" style="display: none;">
                                             <?php if (isset($def['placeholder'], $def['label-additional'])) {
-                                    echo $this->templater->getTextForm(
+                                                echo $this->templater->getTextForm(
                                                     "recht-additional[$shortName]",
                                                     $this->data['recht-additional'],
                                                     4,
@@ -626,7 +626,7 @@ class ProjektHandler extends FormHandlerInterface
                                                     $def['label-additional'] ?? 'Zusatzinformationen',
                                                     []
                                                 );
-                                } ?>
+                                            } ?>
                                             <span class="col-xs-12"><?php echo $def['hint-text'] ?? ''; ?></span>
                                         </div>
                                         <?php

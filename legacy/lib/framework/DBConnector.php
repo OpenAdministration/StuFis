@@ -111,7 +111,8 @@ class DBConnector extends Singleton
 
         $scheme['user'] = [
             'id' => 'INT NOT NULL',
-            'fullname' => 'varchar(255) NOT NULL',
+            //'fullname' => 'varchar(255) NOT NULL',
+            'name' => 'varchar(255) NOT NULL', // virtual alias for fullname
             'username' => 'varchar(32) NOT NULL',
             'email' => 'varchar(128) NOT NULL',
             'iban' => "varchar(32) NOT NULL DEFAULT ''",
@@ -1135,7 +1136,7 @@ class DBConnector extends Singleton
      * @param $fields array new values
      * @return int amount of changed rows
      */
-    public function dbUpdate(string $table, array $filter, array $fields): int
+    public function dbUpdate(string $table, array $filter, array $fields, bool $debugDump = false): int
     {
         if (!isset($this->scheme[$table])) {
             throw new LegacyDieException(500, "Unkown table $table");
@@ -1167,6 +1168,9 @@ class DBConnector extends Singleton
         $values = array_merge(array_values($fields), $val);
 
         $ret = $query->execute($values);
+        if($debugDump){
+            dump($sql, $values);
+        }
         if ($ret === false) {
             throw new LegacyDieException(500, "DB Update in $table failed", $query->errorInfo());
         }

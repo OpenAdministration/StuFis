@@ -156,7 +156,7 @@ class HTMLPageRenderer
     {
         $out = '';
         $defaultJsFiles = [
-            'jquery.min',
+            'jquery-3.6.3.min',
             'bootstrap.min',
             'validator',
             'numeral.min',

@@ -221,7 +221,7 @@ class BookingHandler extends Renderer
                 'projekt_id',
                 'timestamp',
                 'username',
-                'fullname',
+                'fullname' => 'user.name',
                 'kostenstelle',
                 'booking.comment',
                 'vorgang_id',

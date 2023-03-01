@@ -64,7 +64,7 @@ class BookingTableManager extends Renderer
         $this->instructions = DBConnector::getInstance()->dbFetchAll(
             'booking_instruction',
             [DBConnector::FETCH_GROUPED],
-            ['booking_instruction.id', 'zahlung', 'beleg', 'beleg_type', 'user.id', 'user.fullname', 'zahlung_type'],
+            ['booking_instruction.id', 'zahlung', 'beleg', 'beleg_type', 'user.id', 'fullname' => 'user.name', 'zahlung_type'],
             $where,
             [
                 ['table' => 'user', 'type' => 'left', 'on' => ['booking_instruction.by_user', 'user.id']],

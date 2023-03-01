@@ -454,7 +454,7 @@ class FormTemplater
             if (is_array($selectable['values'])) {
                 $values = $selectable['values'];
             } else {
-                $values = explode(',', $selectable['values']);
+                $values = explode(';', $selectable['values']);
             }
         }
         //var_dump($selectable);
@@ -475,7 +475,8 @@ class FormTemplater
                     }
                     $val = $option['value'] ?? $option['label'];
                     $sub = $option['subtext'] ?? '';
-                    $out .= "<option data-subtext='$sub' value='$val' " . (in_array($val, $values, true) ? 'selected' : '') . ">{$option['label']}</option>";
+                    // do not add strict parameter to in_array
+                    $out .= "<option data-subtext='$sub' value='$val' " . (in_array($val, $values) ? 'selected' : '') . ">{$option['label']}</option>";
                 }
                 $out .= '</optgroup>';
             }
@@ -483,10 +484,11 @@ class FormTemplater
             $out .= '</div>';
         } else {
             //re-substitute ids => names
-            $tmp_vals = [];
+            $tmp_vals = []; // value => [label, subtext]
             foreach ($selectable['groups'] as $group) {
                 foreach ($group['options'] as $option) {
-                    if (isset($option['value']) && in_array($option['value'], $values, true)) {
+                    // do not add the strict option to in_array here!
+                    if (isset($option['value']) && in_array($option['value'], $values)) {
                         $subtext = $option['subtext'] ?? '';
                         $tmp_vals[$option['value']] = ['label' => $option['label'], 'subtext' => $subtext];
                     }
@@ -503,7 +505,8 @@ class FormTemplater
                     $res[] = $this->getReadOnlyValue($value);
                 }
             }
-            $out .= "<div data-value='" . json_encode(array_keys($tmp_vals)) . "' data-name='$name' id='$unique_id'>";
+
+            $out .= "<div data-value='" . implode(";", array_keys($tmp_vals)) . "' data-name='$name' id='$unique_id'>";
             $out .= implode(',', $res);
             $out .= '</div>';
         }
