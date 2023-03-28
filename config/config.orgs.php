@@ -340,7 +340,7 @@ return [
                 'Campusradio',
                 'Mitarbeiter',
                 'Professor',
-                'Studierende',
+                'Studenten',
                 'Externe Dritte',
             ],
         ],
