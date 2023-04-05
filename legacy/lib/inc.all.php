@@ -41,7 +41,7 @@ setlocale(LC_TIME, 'de_DE.UTF8', 'de_DE.UTF-8');
 // - easily run separate processes that catalog document metadata, perform virus scanning, perform keyword indexing
 // - use storages wich uses compression, encryption, etc
 // - no need for interpreter (PHP) to load file into ram
-const UPLOAD_TARGET_DATABASE = true; // true|false store into
+const UPLOAD_TARGET_DATABASE = false; // true|false store into
 const UPLOAD_USE_DISK_CACHE = false;  // if DATABASE storage enabled , use filesystem as cache
 const UPLOAD_MULTIFILE_BREAOK_ON_ERROR = true; // if there are multiple files on Upload and an error occures: FALSE -> upload files with no errors, TRUE upload no file
 const UPLOAD_MAX_MULTIPLE_FILES = 1; // how many files can be uploaded at once

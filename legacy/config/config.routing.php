@@ -565,7 +565,7 @@ $pathConfig = [
                     'action' => '404',
                     'children' => [
                         [
-                            'path' => '([0-9a-f]{64})',
+                            'path' => '([0-9A-Za-z]{40}|[0-9a-f]{64})',
                             'type' => 'pattern',
                             'param' => 'key',
                             'match' => 0,

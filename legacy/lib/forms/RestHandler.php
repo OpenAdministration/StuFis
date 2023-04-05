@@ -1620,7 +1620,6 @@ class RestHandler extends EscFunc
     private function clearSession(): void
     {
         $ret = session_destroy();
-
         if ($ret === true) {
             JsonController::print_json(
                 [

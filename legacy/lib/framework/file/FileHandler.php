@@ -13,9 +13,11 @@
 
 namespace framework\file;
 
+use App\Exceptions\LegacyDieException;
 use finfo;
 use framework\DBConnector;
 use framework\Validator;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * UPLOAD_MOD_XSENDFILE and UPLOAD_DISK_PATH has to be defined globally
@@ -978,44 +980,6 @@ class FileHandler
     }
 
     /**
-     * delete file by hash
-     * @param string $hash
-     */
-    public function deleteFileByHash($hash)
-    {
-        $file = $this->db->getFileInfoByHash($hash);
-        //delete from db
-        if ($file) {
-            $this->db->deleteFiledataById($file->data);
-            $this->db->deleteFileinfoById($file->id);
-            //delete from harddisk
-            $path = self::getDiskpathOfFile($file);
-            if (file_exists($path) && !is_dir($path)) {
-                unlink($path);
-            }
-        }
-    }
-
-    /**
-     * delete file by file id
-     * @param int $id
-     */
-    public function deleteFileById($id)
-    {
-        $file = $this->db->getFileinfoById($id);
-        //delete from db
-        if ($file) {
-            $this->db->deleteFiledataById($file->data);
-            $this->db->deleteFileinfoById($file->id);
-            //delete from harddisk
-            $path = self::getDiskpathOfFile($file);
-            if (file_exists($path) && !is_dir($path)) {
-                unlink($path);
-            }
-        }
-    }
-
-    /**
      * delete all files by link id
      * @param int $link
      */
@@ -1029,8 +993,8 @@ class FileHandler
         if (is_array($files)) {
             foreach ($files as $file) {
                 $path = self::getDiskpathOfFile($file);
-                if (file_exists($path) && !is_dir($path)) {
-                    unlink($path);
+                if (Storage::exists($path)) {
+                    Storage::delete($path);
                 }
             }
         }
@@ -1066,15 +1030,6 @@ class FileHandler
     }
 
     /**
-     * load file to php and encode base64
-     * @return string base64 encoded data
-     */
-    public function fileToBase64(File $file): string
-    {
-        return base64_encode($this->getFiledataBinary($file, $this->UPLOAD_USE_DISK_CACHE));
-    }
-
-    /**
      * deliver file to user
      *   raw flag for display/download
      *   key hash value
@@ -1082,8 +1037,11 @@ class FileHandler
      */
     public function deliverFileData(File $file, $noinline = false): void
     {
+
+
         if (!$this->UPLOAD_TARGET_DATABASE) { // disk FILESYSTEM storage ------------
-            if (!file_exists(self::getDiskpathOfFile($file))) {
+            // if  saved in Laravel
+            if (!Storage::exists(self::getDiskpathOfFile($file))) {
                 error_log("FILE Error: File not found on disk. File Id: {$file->id} File Path: ". self::getDiskpathOfFile($file));
             } else {
                 header('Last-Modified: '.$file->getAddedOnDate()->format('D, d M Y H:i:s').' GMT', true);
@@ -1097,59 +1055,38 @@ class FileHandler
                 }
                 // apache deliver
                 if (self::hasModXSendfile()) {
-                    header('X-Sendfile: '.self::getDiskpathOfFile($file));
-                    return;
-                } else {
-                    header('Content-Disposition: '.(!$noinline ? 'inline' : 'attachment').'; filename="'.$file->filename.(($file->fileextension) ? '.'.$file->fileextension : '').'"');
-                    echo file_get_contents(self::getDiskpathOfFile($file));
+                    header('X-Sendfile: '.  self::getDiskpathOfFile($file));
                     return;
                 }
-            }
-        } else { // DATABASE storage ----------------
-            if ($this->UPLOAD_USE_DISK_CACHE && file_exists(self::getDiskpathOfFile($file))) {
-                header('Last-Modified: '.$file->getAddedOnDate()->format('D, d M Y H:i:s').' GMT', true);
-                if ($file->size) {
-                    header('Content-Length: ' . $file->size);
-                }
-                if ($file->mime) {
-                    header("Content-Type: {$file->mime}");
-                } else {
-                    header('Content-Type: application/octet-stream');
-                }
-                // apache deliver
-                if (self::hasModXSendfile()) {
-                    header('X-Sendfile: '.self::getDiskpathOfFile($file));
-                    return;
-                } else {
-                    header('Content-Disposition: '.(!$noinline ? 'inline' : 'attachment').'; filename="'.$file->filename.(($file->fileextension) ? '.'.$file->fileextension : '').'"');
-                    echo file_get_contents(self::getDiskpathOfFile($file));
-                    return;
-                }
-            } else {
-                $data = $this->db->getFiledataBinary($file->data);
-                header('Last-Modified: '.$file->getAddedOnDate()->format('D, d M Y H:i:s').' GMT', true);
-                if ($file->size) {
-                    header('Content-Length: ' . $file->size);
-                }
-                if ($file->mime) {
-                    header("Content-Type: {$file->mime}");
-                } else {
-                    header('Content-Type: application/octet-stream');
-                }
-                if ($this->UPLOAD_USE_DISK_CACHE) {
-                    self::checkCreateDirectory(self::getDirpathOfFile($file));
-                    file_put_contents(self::getDiskpathOfFile($file), $data);
-                    // apache deliver
-                    if (self::hasModXSendfile()) {
-                        // apache deliver
-                        header('X-Sendfile: '.self::getDiskpathOfFile($file));
-                        return;
-                    }
-                }
+
                 header('Content-Disposition: '.(!$noinline ? 'inline' : 'attachment').'; filename="'.$file->filename.(($file->fileextension) ? '.'.$file->fileextension : '').'"');
-                echo $data;
+                echo Storage::get(self::getDiskpathOfFile($file));
                 return;
             }
+        } else { // DATABASE storage ----------------
+            $data = $this->db->getFiledataBinary($file->data);
+            header('Last-Modified: '.$file->getAddedOnDate()->format('D, d M Y H:i:s').' GMT', true);
+            if ($file->size) {
+                header('Content-Length: ' . $file->size);
+            }
+            if ($file->mime) {
+                header("Content-Type: {$file->mime}");
+            } else {
+                header('Content-Type: application/octet-stream');
+            }
+            if ($this->UPLOAD_USE_DISK_CACHE) {
+                self::checkCreateDirectory(self::getDirpathOfFile($file));
+                file_put_contents(self::getDiskpathOfFile($file), $data);
+                // apache deliver
+                if (self::hasModXSendfile()) {
+                    // apache deliver
+                    header('X-Sendfile: '.self::getDiskpathOfFile($file));
+                    return;
+                }
+            }
+            header('Content-Disposition: '.(!$noinline ? 'inline' : 'attachment').'; filename="'.$file->filename.(($file->fileextension) ? '.'.$file->fileextension : '').'"');
+            echo $data;
+            return;
         }
     }
 
@@ -1187,7 +1124,7 @@ class FileHandler
      */
     public static function getBaseDirPath(): string
     {
-        return UPLOAD_DISK_PATH;
+        return 'auslagen';
     }
 
     /**
@@ -1203,7 +1140,8 @@ class FileHandler
      */
     public static function getDiskpathOfFile(File $file): string
     {
-        return self::getDirpathOfFile($file).'/'. $file->hashname;
+
+        return self::getDirpathOfFile($file).'/'. $file->hashname . ".pdf";
     }
 
     /**
@@ -1215,7 +1153,7 @@ class FileHandler
     public function checkFileHash(string $hash): ?File
     {
         //check hash only contains hey letters, length 64
-        $re = '/^[0-9a-f]{64}$/m';
+        $re = '/^([0-9a-f]{64}|[0-9a-zA-Z]{40})$/m';
         if (!preg_match($re, $hash)) {
             return null;
         }
@@ -1256,7 +1194,6 @@ class FileHandler
             isset($_FILES[$base_key]['name']) &&
             is_array($_FILES[$base_key]['error']) &&
             count($_FILES[$base_key]['name']) > 0) {
-            $tmp_attach = null;
             $files = [];
             $forbidden_file_types = preg_replace('/\s*[,;\|#]\s*/', '|', $this->UPLOAD_PROHIBITED_EXTENSIONS);
             $file_whitelist = preg_replace('/\s*[,;\|#]\s*/', '|', isset($this->UPLOAD_WHITELIST) ? $this->UPLOAD_WHITELIST : '.*');
@@ -1328,8 +1265,8 @@ class FileHandler
                         continue;
                     }
 
-                    // hashname
-                    $file->hashname = strtolower(generateRandomString(32));
+                    // hashname (replaced by laravel later)
+                    //$file->hashname = strtolower(generateRandomString(32));
 
                     // link
                     if (is_int($link)) {
@@ -1406,7 +1343,7 @@ class FileHandler
                     }
 
                     // add file to upload list
-                    $files[$tmp_name] = $file;
+                    $files[$id] = $file;
                 }
             }
             if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0) {
@@ -1414,11 +1351,10 @@ class FileHandler
             } else {
                 // check db for existing files
                 /** @var File $file */
-                foreach ($files as $tmp_name => $file) {
+                foreach ($files as  $id => $file)
                     if ($this->db->checkFileExists($file->link, $file->filename, $file->fileextension)) {
                         $result['error'][] = "The File '$file->filename' already exists on this path.";
-                        unset($files[$tmp_name]);
-                    }
+                        unset($files[$id]);
                 }
                 if (($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR && count($result['error']) > 0) || $this->db->isError()) {
                     $result['error'][] = 'Upload aborted due to an error.';
@@ -1428,63 +1364,37 @@ class FileHandler
                 }
             }
         }
+
+
+
         // UPLOAD FILES ===============================================
         if (count($result['fileinfo']) == 0) {
             return $result;
         } else {
             // FILESYSTEM storage ---------------
             if (!$this->UPLOAD_TARGET_DATABASE) {
-                foreach ($result['fileinfo'] as $tmp_name => $file) {
-                    $dir = self::getDirpathOfFile($file);
+                foreach ($result['fileinfo'] as $id => $file) {
+                    //$dir = self::getDirpathOfFile($file);
                     // create directory if not extists
-                    self::checkCreateDirectory($dir);
+                    //self::checkCreateDirectory($dir);
                     // upload file
-                    $uploadfile = self::getDiskpathOfFile($file);
-                    // move file to directory
-                    if (move_uploaded_file($tmp_name, $uploadfile)) {
-                        $dberror = false;
-                        //create file entry
-                        $file->id = $this->db->createFile($file);
-                        $dberror = $this->db->isError();
-                        //create data entry
-                        if (!$dberror) {
-                            $fdid = $this->db->createFileDataPath($uploadfile);
-                            $dberror = $this->db->isError();
-                            $file->data = $fdid;
-                        }
-                        //update link data
-                        if (!$dberror) {
-                            $dberror = !$this->db->updateFile_DataId($file);
-                        }
-                        //check for error
-                        if ($dberror) {
-                            unlink($uploadfile);
-                            unset($result['fileinfo'][$tmp_name]);
-                            $result['error'][] = 'DB Error -> remove file';
-                            if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR) {
-                                $result['success'] = false;
-                                break;
-                            }
-                        }
-                    } else {
-                        unset($result['fileinfo'][$tmp_name]);
-                        $result['error'][] = "Couldn't move file";
-                        if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR) {
-                            $result['success'] = false;
-                            break;
-                        }
-                    }
-                }
-            } else { // DATABASE storage -------------
-                foreach ($result['fileinfo'] as $tmp_name => $file) {
-                    $uploadfile = $tmp_name;
-                    $dberror = false;
+                    //$uploadfile = self::getDiskpathOfFile($file);
+
+                    // UPLOAD FILES Laravel Style
+                    request()->validate([
+                        $base_key => 'required',
+                        $base_key.'.'  . $id => 'required|file|mimes:pdf',
+                    ]);
+                    $lara_file = request()->file($base_key)[$id];
+                    $lara_path = $lara_file->store('auslagen/' . $file->link);
+                    // get everything between last / and file  extension
+                    $file->hashname = explode('.pdf', explode('/', $lara_path)[2])[0];
                     //create file entry
                     $file->id = $this->db->createFile($file);
                     $dberror = $this->db->isError();
                     //create data entry
                     if (!$dberror) {
-                        $fdid = $this->db->storeFile2Filedata($uploadfile, $file->size);
+                        $fdid = $this->db->createFileDataPath($lara_path);
                         $dberror = $this->db->isError();
                         $file->data = $fdid;
                     }
@@ -1494,14 +1404,17 @@ class FileHandler
                     }
                     //check for error
                     if ($dberror) {
-                        unset($result['fileinfo'][$tmp_name]);
-                        $result['error'][] = 'DB Error';
+                        Storage::delete($lara_path);
+                        unset($result['fileinfo'][$id]);
+                        $result['error'][] = 'DB Error -> remove file';
                         if ($this->UPLOAD_MULTIFILE_BREAOK_ON_ERROR) {
                             $result['success'] = false;
                             break;
                         }
                     }
                 }
+            } else { // DATABASE storage -------------
+                throw new LegacyDieException('Deprecated Database storage');
             }
             return $result;
         }

@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\View\Components\InlineFile;
+use App\View\Components\Layout;
+use framework\DBConnector;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LegacyController extends Controller
 {
-    public function __invoke()
+    public function render()
     {
         try {
             ob_start();
@@ -18,5 +22,18 @@ class LegacyController extends Controller
             ob_get_clean();
             throw $exception;
         }
+    }
+
+    public function renderFile($auslagen_id, $hash){
+        $db = DBConnector::getInstance()->dbFetchAll('fileinfo', where: ['hashname' => $hash, 'link' => $auslagen_id]);
+        $name = $db[0]['filename'] ?? 'error';
+        $path = "/auslagen/$auslagen_id/$hash/$name.pdf";
+        return view('components.inlineFile', ['src' => $path]);
+    }
+
+    public function deliverFile($auslagen_id, $fileHash, $fileName) : StreamedResponse
+    {
+        $path = "auslagen/$auslagen_id/$fileHash.pdf";
+        return \Storage::response($path, $fileName);
     }
 }

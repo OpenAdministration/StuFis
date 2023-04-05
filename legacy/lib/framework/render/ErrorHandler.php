@@ -124,7 +124,7 @@ class ErrorHandler extends Renderer
         $msg = $this->errorInformation['msg'];
         $debug = $this->errorInformation['debug'];
 
-        throw new LegacyDieException($msg, $code, $debug);
+        throw new LegacyDieException($code, $msg, $debug);
 
     }
 

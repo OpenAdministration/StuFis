@@ -148,7 +148,7 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('new-project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ route('new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <x-heroicon-o-plus-small class="h-6 w-6"/>
                             <span class="sr-only">Neues Projekt</span>
                         </a>
@@ -157,19 +157,26 @@
             </div>
         </header>
 
-        <!-- Main content -->
-        <div class="flex-1 flex items-stretch overflow-hidden">
-            <main class="flex-1 overflow-y-auto">
-                <!-- Primary column -->
-                <section aria-labelledby="primary-heading" class="min-w-0 flex-1 h-full flex flex-col lg:order-last">
-                    <!-- Your content -->
-                    @if(empty($legacyContent))
-                        {{ $slot }}
-                    @else
-                        <iframe height="1000" id="legacy-iframe" srcdoc="{!! str_replace('"', "'", $legacyContent) !!}"></iframe>
-                    @endif
-                </section>
+        <div class="relative z-0 flex flex-1 overflow-hidden">
+            <main class="relative z-0 flex-1 overflow-y-auto focus:outline-none">
+                <!-- Start main area-->
+                @if(empty($legacyContent))
+                    {{ $slot }}
+                @else
+                    <iframe srcdoc="{!! htmlspecialchars($legacyContent) !!}" width="100%" height="100%" id="legacy-iframe">
+                    </iframe>
+                @endif
+                <!-- End main area -->
             </main>
+            @isset($sideColumn)
+            <aside class="relative hidden w-1/3 flex-shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
+                <!-- Start secondary column (hidden on smaller screens) -->
+                <div class="absolute inset-0 py-6 px-4 sm:px-6 lg:px-8">
+                    <div class="h-full rounded-lg border-2 border-dashed border-gray-200"></div>
+                </div>
+                <!-- End secondary column -->
+            </aside>
+            @endisset
         </div>
     </div>
 </div>

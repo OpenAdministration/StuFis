@@ -16,6 +16,7 @@ namespace framework\file;
 use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
+use Illuminate\Support\Facades\Storage;
 
 class FileController
 {
@@ -60,7 +61,12 @@ class FileController
             throw new LegacyDieException(403);
             exit();
         }
-        $fh->deliverFileData($file, $routeInfo['fdl']);
+        //old:
+        //$fh->deliverFileData($file, $routeInfo['fdl']);
+        if(Storage::exists(FileHandler::getDiskpathOfFile($file))){
+            echo "data:application/pdf;base64,";
+            echo base64_encode(Storage::get(FileHandler::getDiskpathOfFile($file)));
+        }
         return;
     }
 }

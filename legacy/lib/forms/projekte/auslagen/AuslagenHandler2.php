@@ -1316,6 +1316,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'etag' => CryptoHandler::generateRandomString(16),
             ]
         );
+        // remove from laravell storage
         $this->json_result = [
             'success' => true,
             'msg' => "Die Datei '{$found_file_id['file']['filename']}.{$found_file_id['file']['fileextension']}' wurde erfolgreich entfernt.",
@@ -2303,7 +2304,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         if (!$hidden) {
             if ($beleg['file_id']) {
                 $file_form = '<div class="beleg-file btn-default" style=" border: 1px solid #ddd; border-radius: 5px; padding: 5px 10px; position: relative;" data-id="' . $beleg['file_id'] . '">' .
-                    '<a href="' . URIBASE . 'files/get/' . $beleg['file']['hashname'] . '">' . $beleg['file']['filename'] . '.' . $beleg['file']['fileextension'] . '</a>' .
+                    '<a href="' . URIBASE . 'files/get/'. $this->auslagen_id . '/' . $beleg['file']['hashname'] . '">' . $beleg['file']['filename'] . '.' . $beleg['file']['fileextension'] . '</a>' .
                     (($this->stateInfo['editable']) ? ('<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>') : '') .
                     '<div><small><span style="min-width: 50px; display: inline-block; font-weight: bold;">Size: </span>' .
                     '<span>' . FileHandler::formatFilesize($beleg['file']['size']) . '</span></small>' .

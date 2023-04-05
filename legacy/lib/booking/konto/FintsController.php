@@ -174,7 +174,7 @@ class FintsController extends Renderer
         $liveSearch = count($banks) > 5;
 
         echo HtmlForm::make('POST', false)
-            ->urlTarget('')
+            ->urlTarget(URIBASE . 'konto/credentials/new')
             ->addHtmlEntity(HtmlInput::make('text')->label('Name des Zugangs')->name('name'))
             ->addHtmlEntity(HtmlDropdown::make()
                 ->label('Bank')
@@ -272,7 +272,7 @@ class FintsController extends Renderer
         // if no pw or wrong one
         if (!FintsConnectionHandler::hasPassword($credentialId)) {
             $form = HtmlForm::make('POST', false)
-                ->urlTarget('')
+                ->urlTarget(URIBASE . 'konto/credentials/' . $credentialId . '/login')
                 ->addHtmlEntity(
                     HtmlInput::make(HtmlInput::TYPE_PASSWORD)
                         ->name('bank-password')

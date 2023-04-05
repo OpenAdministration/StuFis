@@ -92,42 +92,9 @@ class DbFilePDO
         }
     }
 
-    /**
-     * generate reference array of array
-     */
-    public function refValues(array $arr): array
-    {
-        if (strnatcmp(PHP_VERSION, '5.3') >= 0) { //Reference is required for PHP 5.3+
-            $refs = [];
-            foreach ($arr as $key => $value) {
-                $refs[$key] = &$value;
-            }
-            return $refs;
-        }
-        return $arr;
-    }
-
     // ======================== BASE FUNCTIONS ========================================================
 
     // ====================================================
-
-    /**
-     * db: return affected rows
-     *
-     * @return int affected rows
-     */
-    public function affectedRows(): int
-    {
-        return $this->affectedRows;
-    }
-
-    /**
-     * @return bool $this->_isClose
-     */
-    public function isClose(): bool
-    {
-        return $this->_isClose;
-    }
 
     /**
      * @retun string last error message
@@ -160,6 +127,7 @@ class DbFilePDO
      */
     public function createFileDataPath(string $filepath)
     {
+
         if ($filepath === '') {
             return false;
         }
@@ -290,32 +258,6 @@ class DbFilePDO
             $return[] = $line['link'];
         }
         return $return;
-    }
-
-    /**
-     * returns fileinfo by id
-     */
-    public function getFileInfoById(int $id): ?File
-    {
-        try {
-            $this->_isError = false;
-            $result = $this->dbconnector->dbFetchAll(
-                'fileinfo',
-                [DBConnector::FETCH_ASSOC],
-                [],
-                ['fileinfo.id' => $id]);
-        } catch (Exception $e) {
-            $this->_isError = true;
-            $this->msgError = $e->getMessage();
-            error_log('DB Error: "' . $this->msgError . '"');
-            $this->affectedRows = -1;
-            return null;
-        }
-        if (count($result) === 0) {
-            return null;
-        }
-        $line = $result[0];
-        return $this->generateFileFromDbLine($line);
     }
 
     private function generateFilesFromDbResult(array $dbRes): array
@@ -522,7 +464,7 @@ class DbFilePDO
      * @param bool $id
      * @return string|false error -> false, last inserted id or
      */
-    protected function _storeFile2Filedata(string $filename, $filesize = null, string $tablename = 'filedata', string $datacolname = 'data', $id = false)
+    protected function _storeFile2Filedata(string $filename, int $filesize, string $tablename = 'filedata', string $datacolname = 'data', $id = false)
     {
         if ($id) {
             $sql = 'INSERT INTO `' . $this->TABLE_PREFIX . "$tablename` (id, $datacolname) VALUES(?, ?)";
@@ -531,11 +473,13 @@ class DbFilePDO
         }
         $stmt = $this->db->prepare($sql);
         $fp = fopen($filename, 'rb');
+        //$data = fread ($fp, $filesize);
+        $data = $fp;
         if ($id) {
             $stmt->bindParam(1, $insert_id);
-            $stmt->bindParam(2, $fp, PDO::PARAM_LOB);
+            $stmt->bindParam(2, $data, PDO::PARAM_LOB);
         } else {
-            $stmt->bindParam(1, $fp, PDO::PARAM_LOB);
+            $stmt->bindParam(1, $data, PDO::PARAM_LOB);
         }
         try {
             $last_id = 0;
@@ -543,7 +487,8 @@ class DbFilePDO
             $stmt->execute();
             $last_id = $this->db->lastInsertId();
             $this->db->commit();
-            fclose($fp);
+            //dump($fp);
+            //fclose($fp);
             return $last_id;
         } catch (Exception $e) {
             $this->_isError = true;
