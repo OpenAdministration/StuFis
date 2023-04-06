@@ -2,6 +2,8 @@
 
 namespace framework\render;
 
+use Carbon\Carbon;
+
 abstract class EscFunc
 {
     protected function projektLinkEscapeFunction($id, $createdate, $name): string
@@ -51,21 +53,22 @@ abstract class EscFunc
         if ($time === '') {
             return $this->defaultEscapeFunction('');
         }
-        if (!ctype_digit($time)) {
-            $time = strtotime($time);
+
+        $now = Carbon::now();
+        $time = new Carbon($time);
+
+        $diff = $now->diff($time);
+        if ($diff->days > 1) {
+            return ($diff->invert ? 'vor ' : 'in ') . $diff->d . ' Tagen';
         }
-
-        $diff = strtotime(date('Y-m-d')) - $time;
-
-        $past = $diff > 0;
-        $diff = abs($diff);
-        $anzahlTage = floor($diff / (60 * 60 * 24));
-        if ($anzahlTage > 1) {
-            return ($past ? 'vor ' : 'in ') . $anzahlTage . ' Tagen';
-        } elseif ($anzahlTage === 0) {
-            return 'heute';
-        } else {
-            return $past ? 'gestern' : 'morgen';
+        if ($diff->h > 0) {
+            return ($diff->invert ? 'vor ' : 'in ') . $diff->h . ' Stunden';
+        }
+        if ($diff->m > 0) {
+            return ($diff->invert ? 'vor ' : 'in ') . $diff->m . ' Stunden';
+        }
+        if ($diff->s > 0) {
+            return ($diff->invert ? 'vor ' : 'in ') . $diff->s . ' Sekunden';
         }
     }
 
