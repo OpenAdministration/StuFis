@@ -549,7 +549,7 @@ class BookingTableManager extends Renderer
 
     public function pushNewPostenIst($postenIstValue, $titel_type, $prefilledText = ''): void
     {
-        if ($titel_type === '1') {
+        if ($titel_type === 1) {
             $postenIstValue = -$postenIstValue;
         }
         $this->table_tmp[$this->col_rest]['posten-ist'] = [

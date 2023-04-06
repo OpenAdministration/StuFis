@@ -1210,6 +1210,7 @@ class RestHandler extends EscFunc
         // check if transferable to new States (payed => booked)
         $stateChangeNotOk = [];
         $doneAuslage = [];
+        // hydrate belege
         foreach ($confirmedInstructions as $instruction) {
             foreach ($belegeDB[$instruction] as $beleg) {
                 switch ($beleg['type']) {
@@ -1276,11 +1277,11 @@ class RestHandler extends EscFunc
                 if (isset($row['titel']['type'])) {
                     $lastTitel = $row['titel']['type'];
                 }
-                if ($lastTitel === '1') {
-                    $belege_sum[$instruction] -= (float) $row['posten-ist']['val-raw'];
-                }
-                if ($lastTitel === '0') {
+                if ($lastTitel === 0) { // income title
                     $belege_sum[$instruction] += (float) $row['posten-ist']['val-raw'];
+                }
+                if ($lastTitel === 1) { // expenses title
+                    $belege_sum[$instruction] -= (float) $row['posten-ist']['val-raw'];
                 }
                 if (isset($row['zahlung-value'])) {
                     $zahlung_sum[$instruction] += (float) $row['zahlung-value']['val-raw'];
