@@ -438,7 +438,7 @@ class BookingHandler extends Renderer
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
         );
         $this->setKontoTabs($kontoId, $selected_id, $kontos);
-
+        $this->renderFintsButton();
         if ($kontoId > 0) {
             $this->renderFintsButton();
             $this->renderKontoBank($alZahlung, $kontos);
