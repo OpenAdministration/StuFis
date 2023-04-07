@@ -35,7 +35,7 @@ class AuthController
                 'address' => implode(' ', $userByProvider->user['address']),
             ]);
             Auth::login($user);
-            return view('components.dump', ['dump' => $userByProvider]);
+            //return view('components.dump', ['dump' => $userByProvider]);
         }
         return redirect('/');
 
