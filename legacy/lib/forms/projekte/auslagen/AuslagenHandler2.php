@@ -442,7 +442,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             $this->projekt_data = $res[0];
             $this->projekt_data['auslagen'] = [];
         } else {
-            $this->error = 'Das Projekt mit der ID: ' . $this->projekt_id . ' existiert nicht. :(<br>';
+            $this->error = 'Das Projekt mit der ID: ' . $this->projekt_id . ' existiert nicht. :(';
             return false;
         }
         // get auslagen liste
