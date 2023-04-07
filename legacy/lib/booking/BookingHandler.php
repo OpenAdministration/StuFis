@@ -440,7 +440,6 @@ class BookingHandler extends Renderer
         $this->setKontoTabs($kontoId, $selected_id, $kontos);
         $this->renderFintsButton();
         if ($kontoId > 0) {
-            $this->renderFintsButton();
             $this->renderKontoBank($alZahlung, $kontos);
         } else {
             $this->renderKontoKasse($kontoId, $alZahlung, $kontos);

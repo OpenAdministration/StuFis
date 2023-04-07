@@ -2,6 +2,7 @@
 
 namespace booking\konto;
 
+use App\Exceptions\LegacyRedirectException;
 use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
@@ -82,7 +83,7 @@ class FintsController extends Renderer
             }
         }
         echo HtmlForm::make('POST', false)
-            ->urlTarget('')
+            ->urlTarget(request()?->url())
             ->addHtmlEntity(HtmlInput::make('text')->label('TAN')->name('tan'))
             ->addSubmitButton();
     }
@@ -103,7 +104,7 @@ class FintsController extends Renderer
                 'tan_mode_name',
                 'tan_medium_name',
             ],
-            ['owner_id' => DBConnector::getInstance()->getUser()['id']],
+            ['owner_id' => \Auth::user()->id],
             [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
         );
         echo HtmlButton::make()
@@ -151,7 +152,8 @@ class FintsController extends Renderer
                 HtmlButton::make()
                     ->style('warning')
                     ->icon('refresh')
-                    ->body('Setze FINTS zurück'), false);
+                    ->body('Setze FINTS zurück'),
+                false);
     }
 
     protected function actionNewCredentials()
@@ -206,7 +208,7 @@ class FintsController extends Renderer
             }
         }
         $tanModes = $this->fintsHandler->getUserTanModes();
-        $form = HtmlForm::make('POST', false)->urlTarget('');
+        $form = HtmlForm::make('POST', false)->urlTarget(URIBASE . "konto/credentials/$this->credentialId/tan-mode");
         echo $form->begin();
         $this->renderHeadline('Bitte TAN-Modus auswählen');
         $this->renderRadioButtons($tanModes, 'tan-mode-id');
@@ -266,7 +268,7 @@ class FintsController extends Renderer
             // pw set
             $success = $this->fintsHandler->login();  // throws if Tan needed
             if ($success) {
-                HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+                throw new LegacyRedirectException(redirect()->route('konto.credentials'));
             }
         }
         // if no pw or wrong one
@@ -360,7 +362,7 @@ class FintsController extends Renderer
     {
         if ($this->request->request->count() > 0) {
             $post = $this->request->request;
-            $syncFrom = date_create($post->get('sync_from'))->format('Y-m-d');
+            $syncFrom = date_create($post->get('sync-from'))->format('Y-m-d');
             $kontoIban = $post->getAlnum('iban');
             [, $iban] = (new NewValidator())->validate($kontoIban, 'iban');
             $kontoName = substr(htmlspecialchars(strip_tags(trim($post->getAlpha('konto-name')))), 0, 32);
@@ -381,7 +383,7 @@ class FintsController extends Renderer
 
         $this->renderHeadline('Neues Konto Importieren');
         echo HtmlForm::make('POST', false)
-            ->urlTarget('')
+            ->urlTarget(URIBASE . "konto/credentials/$this->credentialId/$shortIban/import")
             ->addHtmlEntity(HtmlInput::make()->name('iban')->label('IBAN')->value($iban)->readOnly())
             ->addHtmlEntity(HtmlInput::make()->name('konto-name')->label('Bezeichnung Konto'))
             ->addHtmlEntity(HtmlInput::make()->name('konto-short')->label('Eindeutiges Buchstabenkürzel für das Konto (intern)'))
@@ -541,6 +543,7 @@ class FintsController extends Renderer
     {
         if (isset($this->fintsHandler)) {
             $this->fintsHandler->logout();
+
         } else {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
         }

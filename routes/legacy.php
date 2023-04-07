@@ -13,6 +13,7 @@ Route::middleware(['auth'])->group(function(){
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
     Route::post('rest', [LegacyController::class, 'render'])->name('rest');
     Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
+    Route::any('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
     // catch all
     Route::any('{path}', [LegacyController::class, 'render'])->where('path', '.*');
 });

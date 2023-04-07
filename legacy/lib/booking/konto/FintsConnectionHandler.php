@@ -76,7 +76,7 @@ class FintsConnectionHandler
 
     /**
      * try to login. If wrong credentials, delete saved pw and add Flash to PageRenderer
-     * @return bool $success login
+     * @return bool $success returns if password is correct
      * @throws NeedsTanException
      */
     public function login(): bool
@@ -88,7 +88,7 @@ class FintsConnectionHandler
                 throw new NeedsTanException($resumableAction, 'Tan wird zum Login benötigt');
             }
             $this->setCache('logged-in', true);
-            $this->save();
+            $this->saveAction();
             return true;
         }
         // regular execution
@@ -99,7 +99,7 @@ class FintsConnectionHandler
                 HTMLPageRenderer::redirect(URIBASE . 'konto/credentials/' . $this->credentialId . '/tan-mode');
             }
             $loginAction = $this->finTs->login();
-            $this->save($loginAction);
+            $this->saveAction($loginAction);
             if ($loginAction->needsTan()) {
                 $this->logger->info('Login needs TAN', ['credId' => $this->credentialId]);
                 throw new NeedsTanException(
@@ -125,11 +125,12 @@ class FintsConnectionHandler
         try {
             $this->logger->info('Logout', ['credId' => $this->credentialId]);
             $this->finTs->close(); // logout @ server
+            $this->forgetCachedCredentials($this->credentialId);
+            HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich ausgeloggt');
         } catch (ServerException $e) {
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
             return false;
         }
-        unset($_SESSION['fints'][$this->credentialId]); // delete cache for this credential
         return true;
     }
 
@@ -255,7 +256,7 @@ class FintsConnectionHandler
         return substr($fullIban, 0, 4) . substr($fullIban, -4);
     }
 
-    private function save(BaseAction $action = null): void
+    private function saveAction(BaseAction $action = null): void
     {
         // remember action if any
         $this->activeAction = $action;
@@ -273,22 +274,27 @@ class FintsConnectionHandler
 
     private function isCached(string|int $key): bool
     {
-        return isset($_SESSION['fints'][$this->credentialId][$key]);
+        return request()?->session()->exists("fints.$this->credentialId.$key");
     }
 
     private function setCache(string|int $key, mixed $value): void
     {
-        $_SESSION['fints'][$this->credentialId][$key] = $value;
+        request()?->session()->put("fints.$this->credentialId.$key", $value);
     }
 
     private function getCache(string|int $key)
     {
-        return $_SESSION['fints'][$this->credentialId][$key] ?? null;
+        return request()?->session()->get("fints.$this->credentialId.$key");
+    }
+
+    private function forgetCachedCredentials(int $credential_id) : void{
+        request()?->session()->forget("fints.$this->credentialId");
     }
 
     /**
      * creates FINTS Connection Instance. Password needs to be set already
      * @return static
+     * @throws LegacyDieException
      */
     public static function load(int $credentialId): self
     {
@@ -342,7 +348,7 @@ class FintsConnectionHandler
     {
         try {
             $this->finTs->execute($action);
-            $this->save($action);
+            $this->saveAction($action);
             if ($action->needsTan()) {
                 // TODO decoupled tan stuff here
                 throw new NeedsTanException($action);
@@ -357,27 +363,27 @@ class FintsConnectionHandler
      */
     public static function hasActiveSession(int $credentialId): bool
     {
-        return isset($_SESSION['fints'][$credentialId]['persist'], $_SESSION['fints'][$credentialId]['logged-in']) && self::hasPassword($credentialId);
+        return request()?->session()->exists(["fints.$credentialId.persist", "fints.$credentialId.logged-in"]) && self::hasPassword($credentialId);
     }
 
     public static function setLoginPassword(int $credentialId, string $pw): void
     {
-        $_SESSION['fints'][$credentialId]['password'] = $pw;
+        request()?->session()->put("fints.$credentialId.password", $pw);
     }
 
     public static function deleteLoginPassword(int $credentialId): void
     {
-        unset($_SESSION['fints'][$credentialId]['password']);
+        request()?->session()->forget("fints.$credentialId.password");
     }
 
     public static function hasPassword(int $credentialId): bool
     {
-        return isset($_SESSION['fints'][$credentialId]['password']);
+        return request()?->session()->exists("fints.$credentialId.password");
     }
 
     private static function getPassword(int $credentialId): string
     {
-        return $_SESSION['fints'][$credentialId]['password'];
+        return request()?->session()->get("fints.$credentialId.password");
     }
 
     /**
@@ -389,7 +395,7 @@ class FintsConnectionHandler
         $action = $this->getCache('action');
         try {
             $this->finTs->submitTan($action, $tan);
-            $this->save($action);
+            $this->saveAction($action);
         } catch (CurlException $e) {
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
             return false;
@@ -412,7 +418,7 @@ class FintsConnectionHandler
             if ($tanMediumName === null && $tanMode->needsTanMedium()) {
                 throw new InvalidArgumentException('Tan Medium wird benötigt');
             }
-            $this->save();
+            $this->saveAction();
             $this->logger->info('Set TAN Mode', ['credId' => $this->credentialId, 'tanMode' => $tanModeId, 'tanMedium' => $tanMediumName]);
         } catch (CurlException|ServerException  $e) {
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
@@ -435,7 +441,7 @@ class FintsConnectionHandler
         if ($action instanceof GetStatementOfAccount) {
             if ($action->isDone()) {
                 $this->finTs->getLogger()->debug(var_export($action, true));
-                $this->save();
+                $this->saveAction();
                 return $action->getStatement();
             }
             throw new NeedsTanException($action);

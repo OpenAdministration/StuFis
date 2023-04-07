@@ -113,7 +113,7 @@ class RestHandler extends EscFunc
                 $this->mirrorInput();
                 break;
             case 'clear-session':
-                $this->clearSession();
+                $this->clearFintsSession();
                 break;
             case 'nononce':
             default:
@@ -1618,33 +1618,20 @@ class RestHandler extends EscFunc
         }
     }
 
-    private function clearSession(): void
+    private function clearFintsSession(): void
     {
-        $ret = session_destroy();
-        if ($ret === true) {
-            JsonController::print_json(
-                [
-                    'success' => true,
-                    'status' => '200',
-                    'msg' => 'Session zurückgesetzt',
-                    'type' => 'modal',
-                    'subtype' => 'server-success',
-                    'reload' => 1000,
-                    'headline' => 'Erfolgreich',
-                ]
-            );
-        } else {
-            JsonController::print_json(
-                [
-                    'success' => false,
-                    'status' => '500',
-                    'msg' => 'Session wurde nicht zurückgesetzt',
-                    'type' => 'modal',
-                    'subtype' => 'server-error',
-                    'headline' => 'Ein Fehler ist aufgetreten',
-                ]
-            );
-        }
+        session()->forget('fints');
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => 'Session zurückgesetzt',
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'reload' => 1000,
+                'headline' => 'Erfolgreich',
+            ]
+        );
     }
 
     private function lockCredentials(array $routeInfo): void
