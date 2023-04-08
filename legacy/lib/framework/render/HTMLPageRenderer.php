@@ -2,6 +2,7 @@
 
 namespace framework\render;
 
+use App\Exceptions\LegacyRedirectException;
 use Composer\InstalledVersions;
 use DateTime;
 use framework\auth\AuthHandler;
@@ -593,10 +594,8 @@ class HTMLPageRenderer
         $this->bodyContent .= $htmlContent;
     }
 
-    #[NoReturn]
     public static function redirect($url): void
     {
-        header('Location: ' . $url);
-        exit();
+        throw new LegacyRedirectException(redirect($url));
     }
 }

@@ -1826,7 +1826,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         }
         if (!$auth->hasGroup('ref-finanzen-belege')) {
             $iban_text = self::trimIban($iban_text);
-        } elseif ($iban_text !== '') {
+        } elseif ($iban_text !== '' && !is_null($iban_text)) {
             $iban_text = chunk_split($iban_text, 4, ' ');
         }
         echo $this->templater->getTextForm(
