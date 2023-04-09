@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
+use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Project;
 
 /**
  * @property integer $id
@@ -29,6 +29,8 @@ use App\Models\Project;
  */
 class Expenses extends Model
 {
+    use HasComments;
+
     /**
      * The table associated with the model.
      *

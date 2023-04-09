@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,6 +36,6 @@ class FileInfo extends Model
      */
     public function fileData()
     {
-        return $this->belongsTo('App\Models\FileData', 'data');
+        return $this->belongsTo('App\Models\Legacy\FileData', 'data');
     }
 }

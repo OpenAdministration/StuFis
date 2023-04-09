@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\BudgetItem;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property integer $id
@@ -18,17 +19,17 @@ use App\Models\BudgetItem;
  * @property string $comment
  * @property float $value
  * @property integer $canceled
- * @property BudgetItem $budgetItem
+ * @property BudgetItem $haushaltstitel
  * @property User $user
  */
-class BookingInstruction extends Model
+class Booking extends Model
 {
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'booking_instruction';
+    protected $table = 'booking';
 
     /**
      * @var array

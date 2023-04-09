@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -33,6 +33,6 @@ class Konto extends Model
      */
     public function kontoTransactions()
     {
-        return $this->hasMany('App\Models\KontoTransaction', 'konto_id');
+        return $this->hasMany('App\Models\Legacy\KontoTransaction', 'konto_id');
     }
 }

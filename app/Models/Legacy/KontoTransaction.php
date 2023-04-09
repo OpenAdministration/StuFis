@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Konto;
 
 /**
  * @property integer $id

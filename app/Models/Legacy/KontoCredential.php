@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -28,7 +29,7 @@ class KontoCredential extends Model
      */
     public function kontoBank()
     {
-        return $this->belongsTo('App\Models\Bank', 'bank_id');
+        return $this->belongsTo('App\Models\Legacy\Bank', 'bank_id');
     }
 
     /**

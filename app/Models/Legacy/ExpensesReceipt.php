@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
+use App\Models\BelegPosten;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Expenses;
 
 /**
  * @property integer $id

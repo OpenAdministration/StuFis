@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Legacy;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\ProjectPost;
 
 /**
  * @property integer $id
@@ -23,9 +23,9 @@ use App\Models\ProjectPost;
  * @property string $date-start
  * @property string $date-end
  * @property string $beschreibung
- * @property Auslagen[] $auslagens
+ * @property Expenses[] $expenses
  * @property User $user
- * @property Projektposten[] $projektpostens
+ * @property ProjectPost[] $posts
  */
 class Project extends Model
 {
@@ -46,7 +46,7 @@ class Project extends Model
      */
     public function expenses()
     {
-        return $this->hasMany('App\Models\Expenses', 'projekt_id');
+        return $this->hasMany('App\Models\Legacy\Expenses', 'projekt_id');
     }
 
     /**
