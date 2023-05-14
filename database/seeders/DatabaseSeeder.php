@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\BudgetPlan;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Foundation\Testing\WithFaker;
 

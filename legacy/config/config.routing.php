@@ -129,6 +129,7 @@ $pathConfig = [
             'navigation' => 'booking',
             'action' => 'instruct',
             'controller' => 'booking',
+            'groups' => 'ref-finanzen',
             'load' => [
                 LoadGroups::SELECTPICKER,
                 LoadGroups::MODALS,

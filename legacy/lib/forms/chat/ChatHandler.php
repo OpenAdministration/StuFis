@@ -265,7 +265,7 @@ class ChatHandler
     {
         $map = [];
         foreach ($this->colors as $k => $styleInfo) {
-            $map[$k.''] = [
+            $map[$k] = [
                 'user' => [],
                 'color-position' => 0,
                 'color-count' => count($this->colors[$k]),
@@ -275,7 +275,7 @@ class ChatHandler
             //position
             if ($user === $c['creator']) {
                 $this->comments[$k]['pos'] = 'right';
-            } elseif ($c['type'] === '1') {
+            } elseif ($c['type'] === 1) {
                 $this->comments[$k]['pos'] = 'middle';
             } else {
                 $this->comments[$k]['pos'] = 'left';
@@ -323,7 +323,7 @@ class ChatHandler
         $this->max_comment_id = 0;
         $count = 0;
         foreach ($this->comments as $k => $c) {
-            if (!in_array($c['type'], $kp, true)) {
+            if (!in_array((string) $c['type'], $kp, true)) {
                 ++$count;
                 unset($this->comments[$k]);
             } else {

@@ -1703,7 +1703,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         <?php // --------------------------------------------------------------------
         ?>
         <?php if ($show_genemigung_state) { ?>
-        <label for="genehmigung">Abrechnungs Status</label>
+        <label for="genehmigung">Abrechnungsstatus</label>
         <div id='projekt-well' class="well">
             <label for="genehmigung">Status</label><br>
             <div class="col-xs-12 col-xs-12 col-md-4 form-group">

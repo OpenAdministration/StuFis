@@ -287,7 +287,7 @@ class BookingHandler extends Renderer
                     <th>Buchungs-Datum</th>
                     <th>Zahlung</th>
                     <th>Stornieren</th>
-                    <th>Kommentar</th>
+                    <th>Buchungstext</th>
                 </tr>
                 </thead>
                 <tbody>
