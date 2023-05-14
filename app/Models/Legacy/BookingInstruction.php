@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\BookingInstruction
+ *
  * @property integer $id
  * @property integer $titel_id
  * @property integer $user_id
@@ -21,6 +23,21 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $canceled
  * @property BudgetItem $budgetItem
  * @property User $user
+ * @property int $zahlung
+ * @property int $beleg
+ * @property int $by_user
+ * @property int $done
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction query()
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereBeleg($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereBelegType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereByUser($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereDone($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlung($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlungType($value)
+ * @mixin \Eloquent
  */
 class BookingInstruction extends Model
 {

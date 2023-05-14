@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\Booking
+ *
  * @property integer $id
  * @property integer $titel_id
  * @property integer $user_id
@@ -21,6 +23,23 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $canceled
  * @property BudgetItem $haushaltstitel
  * @property User $user
+ * @property-read BudgetItem $budgetItem
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBelegId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBelegType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCanceled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereComment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereKostenstelle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereTimestamp($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereTitelId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungType($value)
+ * @mixin \Eloquent
  */
 class Booking extends Model
 {
