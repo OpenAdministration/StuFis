@@ -200,6 +200,7 @@ return [
                 'FSR FSI',
                 'FSR Kunst',
                 'FSR Lehramt',
+                'FSR Master Lehramt',
                 'FSR Musik',
                 'FSR PEB',
                 'FSR Psychologie',
