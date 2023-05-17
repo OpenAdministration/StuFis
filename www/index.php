@@ -6,6 +6,7 @@ use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use forms\RestHandler;
+use framework\auth\AuthHandler;
 use framework\auth\AuthSamlHandler;
 use framework\file\FileController;
 use framework\render\ErrorHandler;
@@ -18,6 +19,8 @@ define('SYSBASE', dirname(__DIR__));
 require_once SYSBASE . '/vendor/autoload.php';
 require_once SYSBASE . '/lib/inc.all.php';
 
+// lock out everyone with wrong permissions
+AuthHandler::getInstance()->requireGroup($_ENV['AUTH_REALM'].'-all');
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();

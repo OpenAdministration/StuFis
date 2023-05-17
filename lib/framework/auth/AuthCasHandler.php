@@ -37,9 +37,6 @@ class AuthCasHandler extends AuthHandler
         if (!phpCAS::isAuthenticated() && !phpCAS::forceAuthentication()) {
             $this->reportPermissionDenied('Zugriff verweigert', 'forceAuth');
         }
-        if (!$this->hasGroup($_ENV['auth_realm'] . '-all')){
-            $this->reportPermissionDenied('Du bist nicht dem richtigen Realm zugeordnet', 'realm-missmatch');
-        }
     }
 
     /**
