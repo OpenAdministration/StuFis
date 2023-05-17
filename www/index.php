@@ -20,7 +20,7 @@ require_once SYSBASE . '/vendor/autoload.php';
 require_once SYSBASE . '/lib/inc.all.php';
 
 // lock out everyone with wrong permissions
-AuthHandler::getInstance()->requireGroup($_ENV['AUTH_REALM'].'-all');
+AuthHandler::getInstance()->requireGroup('all');
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
