@@ -205,6 +205,9 @@ class AuthSamlHandler extends AuthHandler
      */
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
+        if ($groups === 'all'){
+            return $this->hasGroup('sgis');
+        }
         $authGroups = $this->getUserGroups();
         if ($this->isAdmin()) {
             return true;
