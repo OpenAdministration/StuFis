@@ -667,7 +667,7 @@ class MenuRenderer extends Renderer
      */
     private function fetchAuslagenWithState(string $stateString, string $missingColumn): array
     {
-        $headerAuslagen = ['Projekt', 'Auslage', 'Organisation', 'Einnahmen', 'Ausgaben', 'zuletzt geändert'];
+        $headerAuslagen = ['Projekt', 'Abrechnung', 'Organisation', 'Einnahmen', 'Ausgaben', 'zuletzt geändert'];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             'auslagen',
             [DBConnector::FETCH_NUMERIC],
@@ -709,7 +709,7 @@ class MenuRenderer extends Renderer
     public function renderKVView(): void
     {
         //Auslagenerstattungen
-        //$headerAuslagen = ["Projekt", "Auslage", "Organisation", "zuletzt geändert"];
+        //$headerAuslagen = ["Projekt", "Erstattung", "Organisation", "zuletzt geändert"];
 
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'kv');
 
@@ -733,7 +733,7 @@ class MenuRenderer extends Renderer
     private function renderExportBank(): void
     {
         $this->setTodoTabs('kv/exportBank');
-        $header = ['Auslage', 'Empfänger', 'IBAN', 'Verwendungszweck', 'Auszuzahlen'];
+        $header = ['Abrechnung', 'Empfänger', 'IBAN', 'Verwendungszweck', 'Auszuzahlen'];
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             'auslagen',
             [DBConnector::FETCH_NUMERIC],

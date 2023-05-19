@@ -342,14 +342,14 @@ class RestHandler extends EscFunc
                     'auslagen-id' => [
                         'regex',
                         'pattern' => '/^(NEW|[1-9]\d*)$/',
-                        'error' => 'Ungültige Auslagen ID.',
+                        'error' => 'Ungültige Erstattungs ID.',
                     ],
                     'auslagen-name' => [
                         'regex',
                         'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'maxlength' => '255',
                         'minlength' => '2',
-                        'error' => 'Ungültiger oder leerer Auslagen name.',
+                        'error' => 'Ungültiger oder leerer Abrechnungsname.',
                     ],
                     'zahlung-name' => [
                         'regex',
@@ -454,7 +454,7 @@ class RestHandler extends EscFunc
                     'auslagen-id' => [
                         'integer',
                         'min' => '1',
-                        'error' => 'Ungültige Auslagen ID.',
+                        'error' => 'Ungültige Abrechnungs ID.',
                     ],
                     'fid' => [
                         'integer',
@@ -478,7 +478,7 @@ class RestHandler extends EscFunc
                     'auslagen-id' => [
                         'integer',
                         'min' => '1',
-                        'error' => 'Ungültige Auslagen ID.',
+                        'error' => 'Ungültige Abrechnungs ID.',
                     ],
                     'state' => [
                         'regex',
@@ -498,7 +498,7 @@ class RestHandler extends EscFunc
                     'auslagen-id' => [
                         'integer',
                         'min' => '1',
-                        'error' => 'Ungültige Auslagen ID.',
+                        'error' => 'Ungültige Abrechnungs ID.',
                     ],
                     'd' => [
                         'integer',
@@ -593,7 +593,7 @@ class RestHandler extends EscFunc
                     [
                         'success' => false,
                         'status' => '200',
-                        'msg' => 'Leere Auslagenerstattungen können nicht gespeichert werden.',
+                        'msg' => 'Leere Erstattungen können nicht gespeichert werden.',
                         'type' => 'modal',
                         'subtype' => 'server-error',
                     ]
