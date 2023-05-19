@@ -16,7 +16,7 @@ Route::middleware(['auth'])->group(function(){
     Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
 
     Route::get('auslagen/{auslage_id}', static function ($auslage_id){
-        $auslage = \App\Models\Expenses::find($auslage_id);
+        $auslage = \App\Models\Legacy\Expenses::find($auslage_id);
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     });
     // catch all
