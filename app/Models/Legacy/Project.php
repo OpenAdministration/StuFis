@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\Project
+ *
  * @property integer $id
  * @property integer $creator_id
  * @property string $createdat
@@ -26,6 +28,31 @@ use Illuminate\Database\Eloquent\Model;
  * @property Expenses[] $expenses
  * @property User $user
  * @property ProjectPost[] $posts
+ * @property-read User $creator
+ * @property-read int|null $expenses_count
+ * @property-read int|null $posts_count
+ * @property-read User $stateCreator
+ * @method static \Illuminate\Database\Eloquent\Builder|Project newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Project newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Project query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereBeschreibung($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereCreatedat($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereCreatorId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereDateEnd($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereDateStart($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereLastupdated($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereOrg($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereOrgMail($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereProtokoll($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereRecht($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereRechtAdditional($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereResponsible($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereStateCreatorId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Project whereVersion($value)
+ * @mixin \Eloquent
  */
 class Project extends Model
 {

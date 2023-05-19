@@ -5,6 +5,8 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\Konto
+ *
  * @property integer $id
  * @property string $name
  * @property string $short
@@ -13,6 +15,19 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $iban
  * @property string $last_sync
  * @property KontoTransaction[] $kontos
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\KontoTransaction> $kontoTransactions
+ * @property-read int|null $konto_transactions_count
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereIban($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereLastSync($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereShort($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereSyncFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Konto whereSyncUntil($value)
+ * @mixin \Eloquent
  */
 class Konto extends Model
 {

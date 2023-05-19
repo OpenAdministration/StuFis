@@ -21,6 +21,7 @@
         "ext-pdo": "*"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^2.13",
         "fakerphp/faker": "^1.9.1",
         "kitloong/laravel-migrations-generator": "^6.6",
         "laravel/browser-kit-testing": "^6.4",

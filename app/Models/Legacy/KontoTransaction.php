@@ -5,6 +5,8 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\KontoTransaction
+ *
  * @property integer $id
  * @property integer $konto_id
  * @property string $date
@@ -21,6 +23,26 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $gvcode
  * @property string $customer_ref
  * @property Konto $finanzformularKontoType
+ * @property-read \App\Models\Legacy\Konto $konto
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereComment($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereCustomerRef($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereEmpfBic($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereEmpfIban($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereEmpfName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereGvcode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereKontoId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction wherePrimanota($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereSaldo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereValuta($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoTransaction whereZweck($value)
+ * @mixin \Eloquent
  */
 class KontoTransaction extends Model
 {

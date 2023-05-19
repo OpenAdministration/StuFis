@@ -30,7 +30,7 @@ class LegacySeeder extends Seeder
 
         \DB::table('haushaltstitel')->insert([
             [
-                'titel_name' => 'Einname 1',
+                'titel_name' => 'Einnahme 1',
                 'hhpgruppen_id' => 1,
                 'titel_nr' => "1",
                 'value' => 1000,

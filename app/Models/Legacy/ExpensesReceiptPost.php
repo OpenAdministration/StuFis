@@ -5,6 +5,8 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\ExpensesReceiptPost
+ *
  * @property integer $beleg_id
  * @property integer $short
  * @property integer $id
@@ -12,6 +14,16 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $ausgaben
  * @property float $einnahmen
  * @property ExpensesReceipt $expensesReceipt
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost query()
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereAusgaben($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereBelegId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereEinnahmen($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereProjektPostenId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereShort($value)
+ * @mixin \Eloquent
  */
 class ExpensesReceiptPost extends Model
 {

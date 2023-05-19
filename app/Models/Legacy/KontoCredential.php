@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\KontoCredential
+ *
  * @property integer $id
  * @property integer $bank_id
  * @property integer $owner_id
@@ -16,6 +18,18 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $tan_mode_name
  * @property Bank $kontoBank
  * @property User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential query()
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereBankId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereBankUsername($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereOwnerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereTanMediumName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereTanMode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|KontoCredential whereTanModeName($value)
+ * @mixin \Eloquent
  */
 class KontoCredential extends Model
 {

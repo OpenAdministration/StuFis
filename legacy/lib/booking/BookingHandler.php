@@ -554,22 +554,6 @@ class BookingHandler extends Renderer
         <?php
     }
 
-    private function renderHibiscusButton(): void
-    { ?>
-        <form action="<?php echo URIBASE; ?>rest/hibiscus" method="POST" role="form"
-              class="ajax-form">
-            <a type="submit" class="btn btn-primary"
-				<?php echo !AuthHandler::getInstance()->hasGroup('ref-finanzen-kv') ?
-                    "disabled title='Nur KVs können den Kontoauszug abrufen!'" : ''; ?>
-            >
-                <i class="fa fa-fw fa-refresh"></i> neue Kontoauszüge abrufen (Hibiscus)
-            </a>
-            <input type="hidden" name="action" value="hibiscus">
-			<?php $this->renderNonce(); ?>
-        </form>
-		<?php
-    }
-
     private function renderFintsButton(): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
@@ -763,35 +747,36 @@ class BookingHandler extends Renderer
             }
         );
         $this->renderFintsButton(); ?>
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Zahlungen</th>
-                <th class="col-md-1">Beträge</th>
-                <th>Belege</th>
-            </tr>
-            </thead>
-			<?php
-            $idxZahlung = 0;
-        $idxGrund = 0;
-        while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)) {
-            echo '<tr>';
-            if (isset($alZahlung[$idxZahlung])) {
-                if (isset($alGrund[$idxGrund])) {
-                    $value = min(
-                            [(float) $alZahlung[$idxZahlung]['value'], $alGrund[$idxGrund]['value']]
-                        );
+        <div class="col-md-10 col-xs-12">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Zahlungen</th>
+                    <th class="col-md-1">Beträge</th>
+                    <th>Belege</th>
+                </tr>
+                </thead>
+                <?php
+                $idxZahlung = 0;
+            $idxGrund = 0;
+            while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)) {
+                echo '<tr>';
+                if (isset($alZahlung[$idxZahlung])) {
+                    if (isset($alGrund[$idxGrund])) {
+                        $value = min(
+                                [(float) $alZahlung[$idxZahlung]['value'], $alGrund[$idxGrund]['value']]
+                            );
+                    } else {
+                        // var_dump($alZahlung[$idxZahlung]);
+                        $value = (float) $alZahlung[$idxZahlung]['value'];
+                    }
                 } else {
-                    // var_dump($alZahlung[$idxZahlung]);
-                    $value = (float) $alZahlung[$idxZahlung]['value'];
+                    $value = $alGrund[$idxGrund]['value'];
                 }
-            } else {
-                $value = $alGrund[$idxGrund]['value'];
-            }
-            echo '<td>';
+                echo '<td>';
 
-            while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
-                echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
+                while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
+                    echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
 
                     // print_r($alZahlung[$idxZahlung]);
                     if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
@@ -813,54 +798,55 @@ class BookingHandler extends Renderer
                                 explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
                     }
 
-                $url = str_replace('//', '/', URIBASE . '/zahlung/' . $alZahlung[$idxZahlung]['id']);
-                echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars(
-                            $title
-                        ) . "'>" . htmlspecialchars($caption) . '</a>';
-                ++$idxZahlung;
-                echo '<br>';
-            }
-            echo "</td><td class='money'>";
-            echo DBConnector::getInstance()->convertDBValueToUserValue($value, 'money');
-            echo '</td><td>';
-            while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]['value'] === $value) {
-                switch ($alGrund[$idxGrund]['type']) {
-                        case 'auslage':
-                            echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage' data-id='{$alGrund[$idxGrund]['id']}'>";
-                            $caption = 'A' . $alGrund[$idxGrund]['id'] . ' - ' . $alGrund[$idxGrund]['name'] . ' - ' . $alGrund[$idxGrund]['name_suffix'];
-                            $url = str_replace(
-                                '//',
-                                '/',
-                                URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]['id']
-                            );
-                        break;
-                        case 'extern':
-                            echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='$value' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
-                            $caption = 'E' . $alGrund[$idxGrund]['extern_id'] . '-V' . $alGrund[$idxGrund]['vorgang_id'] .
-                                ' - ' . $alGrund[$idxGrund]['projekt_name'] . ' - ' . $alGrund[$idxGrund]['org_name'];
-                            $url = str_replace(
-                                '//',
-                                '/',
-                                URIBASE . '/extern/' . $alGrund[$idxGrund]['extern_id']
-                            );
-                        break;
-                        default:
-                            throw new LegacyDieException(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
-                        break;
-                    }
+                    $url = str_replace('//', '/', URIBASE . '/zahlung/' . $alZahlung[$idxZahlung]['id']);
+                    echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars(
+                                $title
+                            ) . "'>" . htmlspecialchars($caption) . '</a>';
+                    ++$idxZahlung;
+                    echo '<br>';
+                }
+                echo "</td><td class='money'>";
+                echo DBConnector::getInstance()->convertDBValueToUserValue($value, 'money');
+                echo '</td><td>';
+                while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]['value'] === $value) {
+                    switch ($alGrund[$idxGrund]['type']) {
+                            case 'auslage':
+                                echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage' data-id='{$alGrund[$idxGrund]['id']}'>";
+                                $caption = 'A' . $alGrund[$idxGrund]['id'] . ' - ' . $alGrund[$idxGrund]['name'] . ' - ' . $alGrund[$idxGrund]['name_suffix'];
+                                $url = str_replace(
+                                    '//',
+                                    '/',
+                                    URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]['id']
+                                );
+                            break;
+                            case 'extern':
+                                echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='$value' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
+                                $caption = 'E' . $alGrund[$idxGrund]['extern_id'] . '-V' . $alGrund[$idxGrund]['vorgang_id'] .
+                                    ' - ' . $alGrund[$idxGrund]['projekt_name'] . ' - ' . $alGrund[$idxGrund]['org_name'];
+                                $url = str_replace(
+                                    '//',
+                                    '/',
+                                    URIBASE . '/extern/' . $alGrund[$idxGrund]['extern_id']
+                                );
+                            break;
+                            default:
+                                throw new LegacyDieException(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
+                            break;
+                        }
 
-                echo "<a href='" . htmlspecialchars($url) . "'>" . $caption . '</a>';
-                ++$idxGrund;
-                echo '<br>';
-            }
-            echo '</td>';
-            echo '</tr>';
-        } ?>
-        </table>
+                    echo "<a href='" . htmlspecialchars($url) . "'>" . $caption . '</a>';
+                    ++$idxGrund;
+                    echo '<br>';
+                }
+                echo '</td>';
+                echo '</tr>';
+            } ?>
+            </table>
+        </div>
         <!--<form id="instruct-booking" role="form" action="<?php echo URIBASE; ?>rest/booking/cancel" method="POST"
                                   enctype="multipart/form-data" class="ajax">-->
         <form action="<?php echo URIBASE; ?>rest/booking/instruct/new" method="POST" role="form" class="ajax-form">
-            <div class="booking__panel-form col-xs-2">
+            <div class="booking__panel-form col-md-2 col-xs-12">
                 <h4>ausgewählte Zahlungen</h4>
                 <div class="booking__zahlung">
                     <div id="booking__zahlung-not-selected">

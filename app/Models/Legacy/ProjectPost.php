@@ -5,6 +5,8 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\Legacy\ProjectPost
+ *
  * @property integer $id
  * @property integer $projekt_id
  * @property integer $titel_id
@@ -13,6 +15,18 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property string $bemerkung
  * @property Project $projekte
+ * @property-read \App\Models\Legacy\Project $project
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost query()
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereAusgaben($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereBemerkung($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereEinnahmen($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereProjektId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereTitelId($value)
+ * @mixin \Eloquent
  */
 class ProjectPost extends Model
 {
