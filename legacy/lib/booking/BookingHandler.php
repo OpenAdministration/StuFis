@@ -793,23 +793,25 @@ class BookingHandler extends Renderer
             while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
                 echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
 
-                // print_r($alZahlung[$idxZahlung]);
-                if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
-                    $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
-                    $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]['date']}";
-                } else {
-                    $title = 'VALUTA: ' . $alZahlung[$idxZahlung]['valuta'] . PHP_EOL . 'IBAN: ' . $alZahlung[$idxZahlung]['empf_iban'] . PHP_EOL . 'BIC: ' . $alZahlung[$idxZahlung]['empf_bic'];
-                    $caption = $konto_types[$alZahlung[$idxZahlung]['konto_id']]['short'];
-                    $caption .= $alZahlung[$idxZahlung]['id'] . ' - ';
-                    $caption .= match ($alZahlung[$idxZahlung]['type']) {
-                        'FOLGELASTSCHRIFT' => 'LASTSCHRIFT an ',
-                        'ONLINE-UEBERWEISUNG' => 'ÜBERWEISUNG an ',
-                        'UEBERWEISUNGSGUTSCHRIFT', 'GUTSCHRIFT' => 'GUTSCHRIFT von ',
-                        default => $alZahlung[$idxZahlung]['type'] . ' an ',
-                    };
-                    $caption .= $alZahlung[$idxZahlung]['empf_name'] . ' - ' .
-                            explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
-                }
+                    // print_r($alZahlung[$idxZahlung]);
+                    if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
+                        $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
+                        $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]['date']}";
+                    } else {
+                        $title = 'VALUTA: ' . $alZahlung[$idxZahlung]['valuta'] . PHP_EOL . 'IBAN: ' . $alZahlung[$idxZahlung]['empf_iban'] . PHP_EOL . 'BIC: ' . $alZahlung[$idxZahlung]['empf_bic'];
+                        $caption = $konto_types[$alZahlung[$idxZahlung]['konto_id']]['short'];
+                        $caption .= $alZahlung[$idxZahlung]['id'] . ' - ';
+                        // shorten and simplify some types
+                        $caption .= match ($alZahlung[$idxZahlung]['type']) {
+                            'FOLGELASTSCHRIFT' => 'LASTSCHRIFT',
+                            'ONLINE-UEBERWEISUNG' => 'ÜBERWEISUNG',
+                            'UEBERWEISUNGSGUTSCHRIFT' => 'GUTSCHRIFT',
+                            default => $alZahlung[$idxZahlung]['type'],
+                        };
+                        $caption .= $value < 0 ? ' an ' : ' von ';
+                        $caption .= $alZahlung[$idxZahlung]['empf_name'] . ' - ' .
+                                explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
+                    }
 
                 $url = str_replace('//', '/', URIBASE . '/zahlung/' . $alZahlung[$idxZahlung]['id']);
                 echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars(
