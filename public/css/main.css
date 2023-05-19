@@ -281,7 +281,6 @@ a.disabled-option span {
 }
 
 .navbar-fixed-right {
-    position: fixed;
     right: 30px;
     top: 30%;
     float: right;
@@ -669,7 +668,6 @@ button.btn.btn-arrow-left {
     position: fixed;
     right: 0;
     width: 17%;
-    top: 200px;
 }
 
 .auslagen-links .btn {
@@ -677,25 +675,7 @@ button.btn.btn-arrow-left {
     max-width: 200px;
 }
 
-@media (max-width: 991px) {
-    .auslagen-links {
-        right: inherit;
-        left: 0;
-        top: 500px;
-    }
-}
-
-@media (max-width: 700px) {
-    .auslagen-links {
-        right: inherit;
-        left: inherit;
-        top: inherit;
-        position: relative;
-        width: 100%;
-    }
-}
-
-@media (max-width: 700px), (max-height: 580px) {
+@media (max-width: 1200px) {
     .auslagen-links {
         right: inherit;
         left: inherit;
@@ -884,10 +864,6 @@ button.btn.btn-arrow-left {
 
 /* ----- booking --------- */
 .booking__panel-form {
-    position: fixed;
-    top: 120px;
-    right: 10px;
-    z-index: 1000;
 }
 
 .booking__panel-form > div {

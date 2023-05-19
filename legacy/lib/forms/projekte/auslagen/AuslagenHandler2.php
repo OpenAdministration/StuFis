@@ -1691,7 +1691,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         $auth = (AUTH_HANDLER);
         /* @var $auth AuthHandler */
         $auth = $auth::getInstance();
-        $editable = $this->stateInfo['editable']; ?>
+        $editable = $this->stateInfo['editable'];
+        $this->render_auslagen_links();?>
         <h3><?php echo 'Abrechnung' . (($this->title) ?: ''); ?></h3>
         <?php // --------------------------------------------------------------------
         ?>
@@ -1890,7 +1891,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             }
         } ?>
         <?php
-        $this->render_auslagen_links();
+
         return;
     }
 

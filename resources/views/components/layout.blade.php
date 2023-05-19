@@ -160,12 +160,7 @@
         <div class="relative z-0 flex flex-1 overflow-hidden">
             <main class="relative z-0 flex-1 overflow-y-auto focus:outline-none">
                 <!-- Start main area-->
-                @if(empty($legacyContent))
-                    {{ $slot }}
-                @else
-                    <iframe srcdoc="{!! htmlspecialchars($legacyContent) !!}" width="100%" height="100%" id="legacy-iframe">
-                    </iframe>
-                @endif
+                {{ $slot }}
                 <!-- End main area -->
             </main>
             @isset($sideColumn)
