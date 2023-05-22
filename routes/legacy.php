@@ -15,6 +15,11 @@ Route::middleware(['auth'])->group(function(){
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
     Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
 
+    Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/belege-pdf/{file_name?}',
+        [LegacyController::class, 'belegePdf'])->name('belege-pdf');
+    Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
+        [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
+
     Route::get('auslagen/{auslage_id}', static function ($auslage_id){
         $auslage = \App\Models\Legacy\Expenses::find($auslage_id);
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");

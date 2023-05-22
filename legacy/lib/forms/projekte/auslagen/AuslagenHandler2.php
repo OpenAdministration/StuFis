@@ -17,7 +17,6 @@ use framework\DBConnector;
 use framework\file\FileHandler;
 use framework\helper\EnvSetter;
 use framework\LatexGenerator;
-use framework\render\ErrorHandler;
 use framework\render\html\BT;
 use framework\render\HTMLPageRenderer;
 use framework\render\JsonController;
@@ -26,6 +25,7 @@ use framework\svg\SvgDiagramAddingBeam;
 use framework\svg\SvgDiagramPie;
 use framework\svg\SvgDiagramRaw;
 use framework\svg\SvgDiagramState;
+use Illuminate\Support\Facades\File;
 
 /**
  * implement auslagen handler
@@ -347,6 +347,11 @@ class AuslagenHandler2 extends FormHandlerInterface
             // current state
             $this->stateInfo = self::state2stateInfo('draft');
         }
+
+        if($routeInfo['action'] === 'belege-pdf' || $routeInfo['action'] === 'zahlungsanweisung-pdf'){
+            return;
+        }
+
         // is editable ------------------------------
         $this->stateInfo['editable'] = false;
         if (isset(self::$groups['editable'][$this->stateInfo['state']])
@@ -1497,8 +1502,17 @@ class AuslagenHandler2 extends FormHandlerInterface
         return false;
     }
 
-    private function post_belegpdf(): void
+    public function generate_belege_pdf(): void
     {
+        $filePath = "/auslagen/{$this->auslagen_id}/belege-pdf-v{$this->auslagen_data['version']}.pdf";
+        // nothing to do if this version of the file already exists
+        if(\Storage::exists($filePath)){
+            return;
+        }
+        // clean up old versions of the summary to make sure there are no leftovers from deleted files
+        File::delete(File::glob(storage_path("app/auslagen/{$this->auslagen_id}/belege-pdf-v*.pdf")));
+
+        // generate new pdf
         $info = self::state2stateInfo('draft;' . $this->auslagen_data['created']);
         // generate belege table
         $belegeTableRows = [];
@@ -1506,7 +1520,6 @@ class AuslagenHandler2 extends FormHandlerInterface
         $files = [];
         $fh = new FileHandler($this->db);
         foreach ($this->auslagen_data['belege'] as $key => $beleg) {
-            $file = ($beleg['file']) ? $fh->checkFileHash($beleg['file']['hashname']) : null;
             $name = 'A' . $this->auslagen_id . '-B' . $beleg['short'];
             $belegeTableRows[] = [
                 'id' => $name,
@@ -1518,7 +1531,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'name' => $name,
                 'fullPage' => false,
             ];
-            $files[$key . '.pdf'] = ($file) ? $fh->getFiledataBinary($file, false) : '';
+            $files[$key . '.pdf'] = \Storage::get("auslagen/{$this->auslagen_id}/{$beleg['file']['hashname']}.pdf");
         }
         $tex = new LatexGenerator();
         $pdf = $tex->renderPdf('belege-pdf', [
@@ -1542,7 +1555,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             'belegeTable' => [
                 'orientation' => 'rlX',
                 'header' => [
-                    'id' => 'Beleg No',
+                    'id' => 'Beleg Nr',
                     'date' => 'Datum',
                     'desc' => 'Beschreibung',
                 ],
@@ -1550,21 +1563,24 @@ class AuslagenHandler2 extends FormHandlerInterface
             ],
             'belegeFiles' => $belegeFiles,
         ], $files);
-        header('Content-Type: application/pdf');
-        header(
-            'Content-Disposition: attachment; filename="' . 'Belegmappe_IP' .
-            str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
-            '-A' .
-            str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
-            '.pdf'
-            . '"'
-        );
-        echo $pdf;
-        exit(0);
+        if($pdf !== null){
+            \Storage::put($filePath, $pdf);
+            return;
+        }
+        throw new LegacyDieException('Belege PDF kann nicht generiert werden');
+
     }
 
-    private function post_zahlungsanweisungpdf(): void
+    public function generate_zahlungsanweisung_pdf(): void
     {
+        $fileName = "/auslagen/{$this->auslagen_id}/zahlungsanweisung-v{$this->auslagen_data['version']}.pdf";
+        if(\Storage::exists($fileName)){
+            return;
+        }
+
+        // clean up old versions of the summary to make sure there are no leftovers from deleted files
+        File::delete(File::glob(storage_path("app/auslagen/{$this->auslagen_id}/zahlungsanweisung-pdf-v*.pdf")));
+
         $summed_value = 0;
         $details = [];
         // var_dump($this->auslagen_data["belege"]);
@@ -1634,17 +1650,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         ]);
 
         if ($pdf !== null) {
-            header('Content-Type: application/pdf');
-            header(
-                'Content-Disposition: attachment; filename="' . 'Belegvorlage_P' .
-                str_pad($this->projekt_id, 3, '0', STR_PAD_LEFT) .
-                '-A' .
-                str_pad($this->auslagen_id, 3, '0', STR_PAD_LEFT) .
-                '.pdf'
-                . '"'
-            );
-            echo $pdf;
-            exit();
+            \Storage::put($fileName, $pdf);
         }
 
         throw new LegacyDieException(500, 'PDF Zahlungsanweisung konnte nicht generiert werden');
@@ -1692,6 +1698,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         /* @var $auth AuthHandler */
         $auth = $auth::getInstance();
         $editable = $this->stateInfo['editable'];
+        $current_form_id = 'auslagen-form-' . count($this->formSubmitButtons);
+        $this->formSubmitButtons[] = $current_form_id;
         $this->render_auslagen_links();?>
         <h3><?php echo 'Abrechnung' . (($this->title) ?: ''); ?></h3>
         <?php // --------------------------------------------------------------------
@@ -1780,9 +1788,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         </div>
     <?php } ?>
         <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
-        <form id="<?php $current_form_id = 'auslagen-form-' . count($this->formSubmitButtons);
-        $this->formSubmitButtons[] = $current_form_id;
-        echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data"
+        <form id="<?php echo $current_form_id; ?>" class="ajax" method="POST" enctype="multipart/form-data"
               action="<?php echo URIBASE; ?>rest/forms/auslagen/updatecreate">
             <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
             <input type="hidden" name="auslagen-id"
@@ -1792,8 +1798,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             <input type="hidden" name="etag"
                    value="<?php echo ($this->routeInfo['action'] === 'create') ? '0' : $this->auslagen_data['etag']; ?>">
             <?php echo $this->templater->getHiddenActionInput(''); ?>
-            <?php // --------------------------------------------------------------------
-            ?>
+            <?php // -------------------------------------------------------------------- ?>
             <label for="projekt-well">Abrechnung</label>
             <div id='projekt-well' class="well">
                 <label>Name der Abrechnung</label>
@@ -2623,14 +2628,14 @@ class AuslagenHandler2 extends FormHandlerInterface
         } ?>
             <?php if (isset($this->auslagen_data['id'], $this->auslagen_data['belege']) && $this->routeInfo['action'] !== 'edit' && count($this->auslagen_data['belege']) > 0) { ?>
                 <div class="col-xs-12 form-group">
-                    <form method="POST" action="<?php echo URIBASE; ?>rest/forms/auslagen/belegpdf">
-                        <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>Belege PDF
-                        </button>
-                        <input type="hidden" name="nonce" value="<?php echo csrf_token() ?>">
-                        <input type="hidden" name="auslagen-id" value="<?php echo $this->auslagen_id; ?>">
-                        <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
-                        <input type="hidden" name="d" value="1">
-                    </form>
+                    <a href="<?= route('belege-pdf', [
+                        'project_id' => $this->projekt_id,
+                        'auslagen_id' => $this->auslagen_id,
+                        'version' => $this->auslagen_data['version']
+                       ]) ?>"
+                       type="submit" class="btn btn-primary">
+                        <i class="fa fa-fw fa-download"> </i>Belege PDF
+                    </a>
                 </div>
                 <div class="clearfix"></div>
             <?php }
@@ -2640,15 +2645,14 @@ class AuslagenHandler2 extends FormHandlerInterface
                 && AuthHandler::getInstance()->hasGroup('ref-finanzen')
             ) { ?>
                 <div class="col-xs-12 form-group">
-                    <form method="POST" action="<?php echo URIBASE; ?>rest/forms/auslagen/zahlungsanweisung">
-                        <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa-download"> </i>
-                            Zahlungsanweisung PDF
-                        </button>
-                        <input type="hidden" name="nonce" value="<?php echo csrf_token(); ?>">
-                        <input type="hidden" name="auslagen-id" value="<?php echo $this->auslagen_id; ?>">
-                        <input type="hidden" name="projekt-id" value="<?php echo $this->projekt_id; ?>">
-                        <input type="hidden" name="d" value="1">
-                    </form>
+                    <a href="<?= route('zahlungsanweisung-pdf', [
+                        'project_id' => $this->projekt_id,
+                        'auslagen_id' => $this->auslagen_id,
+                        'version' => $this->auslagen_data['version']
+                    ]) ?>"
+                       class="btn btn-primary">
+                        <i class="fa fa-fw fa-download"> </i>Zahlungsanweisung PDF
+                    </a>
                 </div>
                 <div class="clearfix"></div>
                 <?php
