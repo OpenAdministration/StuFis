@@ -379,6 +379,7 @@ return [
             ],
         ],
         'projekt-form' => [
+            'hide-protokoll',
         ],
     ],
 ];
