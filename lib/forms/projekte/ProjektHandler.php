@@ -692,7 +692,7 @@ class ProjektHandler extends FormHandlerInterface
                             $this->data['protokoll'],
                             12,
                             '...',
-                            'Beschluss (Wiki-Direktlink)',
+                            'Beschluss / Protokoll-Link',
                             ['required'],
                             ORG_DATA['projekt-form']['protokoll-prefix']
                         );
