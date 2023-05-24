@@ -164,6 +164,7 @@ return [
             ],
         ],
         'projekt-form' => [
+            'protokoll-prefix' => 'https://wiki.stura.tu-ilmenau.de/protokoll/',
         ],
     ],
     'ue' => [
@@ -379,7 +380,6 @@ return [
             ],
         ],
         'projekt-form' => [
-            'hide-protokoll',
         ],
     ],
 ];

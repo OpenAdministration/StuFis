@@ -694,7 +694,7 @@ class ProjektHandler extends FormHandlerInterface
                             '...',
                             'Beschluss (Wiki-Direktlink)',
                             ['required'],
-                            'https://wiki.stura.tu-ilmenau.de/protokoll/'
+                            ORG_DATA['projekt-form']['protokoll-prefix']
                         );
                     } ?>
                     <?php echo $this->templater->getDatePickerForm(
