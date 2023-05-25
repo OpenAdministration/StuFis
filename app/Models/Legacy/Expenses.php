@@ -2,7 +2,6 @@
 
 namespace App\Models\Legacy;
 
-use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -12,14 +11,14 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $projekt_id
  * @property string $name_suffix
  * @property string $state
- * @property string $ok-belege
- * @property string $ok-hv
- * @property string $ok-kv
+ * @property string $ok_belege
+ * @property string $ok_hv
+ * @property string $ok_kv
  * @property string $payed
  * @property string $rejected
- * @property string $zahlung-iban
- * @property string $zahlung-name
- * @property string $zahlung-vwzk
+ * @property string $zahlung_iban
+ * @property string $zahlung_name
+ * @property string $zahlung_vwzk
  * @property string $address
  * @property string $last_change
  * @property string $last_change_by
@@ -57,7 +56,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Expenses extends Model
 {
-    use HasComments;
 
     /**
      * The table associated with the model.
