@@ -19,8 +19,7 @@ define('SYSBASE', dirname(__DIR__));
 require_once SYSBASE . '/vendor/autoload.php';
 require_once SYSBASE . '/lib/inc.all.php';
 
-// lock out everyone with wrong permissions
-AuthHandler::getInstance()->requireGroup('all');
+
 // routing ------------------------------
 $router = new Router();
 $routeInfo = $router->route();
@@ -29,6 +28,11 @@ $routeInfo = $router->route();
 // print_r($_POST);
 $htmlRenderer = new HTMLPageRenderer($routeInfo);
 $controllerName = $routeInfo['controller'];
+
+if($controllerName !== 'saml'){
+    // lock out everyone with wrong permissions, if not during the auth process
+    AuthHandler::getInstance()->requireGroup('all');
+}
 switch ($controllerName) {
     case 'menu':
         $menuRenderer = new MenuRenderer($routeInfo);
