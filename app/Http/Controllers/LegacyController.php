@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Exceptions\LegacyRedirectException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use framework\DBConnector;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
 
@@ -93,7 +95,10 @@ class LegacyController extends Controller
 
     public function deliverFile($auslagen_id, $fileHash, $fileName) : StreamedResponse
     {
-        $path = "auslagen/$auslagen_id/$fileHash.pdf";
-        return \Storage::response($path, $fileName);
+        $path = "/auslagen/$auslagen_id/$fileHash.pdf";
+        if (\Storage::exists($path)){
+            return \Storage::response($path, $fileName);
+        }
+        throw new FileNotFoundException("Datei $path konnte nicht gefunden werden");
     }
 }

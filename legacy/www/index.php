@@ -13,11 +13,6 @@ use framework\render\HTMLPageRenderer;
 use framework\render\MenuRenderer;
 use framework\render\Renderer;
 use framework\Router;
-if (!defined('SYSBASE')) {
-    define('SYSBASE', dirname(__DIR__));
-}
-//require_once SYSBASE . '/vendor/autoload.php';
-require_once SYSBASE . '/lib/inc.all.php';
 
 // routing ------------------------------
 $router = new Router();
