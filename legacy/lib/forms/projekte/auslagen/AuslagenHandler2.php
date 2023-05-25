@@ -881,7 +881,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     if ($this->stateInfo['editable']) {
                         $this->post_filedelete();
                     } else {
-                        $this->error = 'Die Abrechnung kann nicht verändert werden. Datei nicht gelöcht.';
+                        $this->error = 'Die Abrechnung kann nicht verändert werden. Datei wurde nicht gelöscht.';
                     }
 
                     break;
@@ -896,6 +896,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
                     break;
                 case 'belegpdf':
+                    // deprecated but error handling not fully migrated yet
                     if (!isset($this->auslagen_data['id'])) {
                         $this->error = 'Die Abrechnung wurde nicht gefunden';
                     } elseif (!isset($this->auslagen_data['belege']) || count($this->auslagen_data['belege']) <= 0) {
@@ -915,6 +916,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
                     break;
                 case 'zahlungsanweisung':
+                    // deprecated
                     if (!isset($this->auslagen_data['id'])) {
                         $this->error = 'Die Abrechnung wurde nicht gefunden';
                     } elseif (in_array($this->stateInfo['state'], ['ok', 'instructed', 'booked'])) {
@@ -1004,7 +1006,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 }
                 if (isset($b['posten'])) {
                     foreach ($b['posten'] as $kp => $p) {
-                        if (strpos($kp, 'new_') !== false) {
+                        if (str_contains($kp, 'new_')) {
                             $changed_posten_flag = true;
                             $new_posten[$kp] = ['posten' => $p, 'beleg_id' => $kb];
                         } elseif (!isset($this->auslagen_data['belege'][$kb]['posten'][$kp])) {
@@ -1185,7 +1187,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         foreach ($beleg_file_map as $fileInfo) {
             $file_id = 0;
             // handle file upload
-            $res = $fh->upload((int) $fileInfo['link'], $fileInfo['file']);
+            $res = $fh->upload((int) $fileInfo['link'], $fileInfo['file'], $this->auslagen_id);
             if (count($res['error']) > 0) {
                 $emsg = '';
                 foreach ($res['error'] as $e) {
@@ -1621,21 +1623,21 @@ class AuslagenHandler2 extends FormHandlerInterface
         $tex = new LatexGenerator();
         $pdf = $tex->renderPdf('zahlungsanweisung', [
             'auslagenMeta' => [
-                'Projekt ID' => 'P-' .
+                'Projekt-ID' => 'P-' .
                     date_create($this->projekt_data['createdat'])->format('y') . '-' .
                     $this->projekt_id,
-                'Projekt Name' => $this->projekt_data['name'],
-                'Projekt Träger' => $this->projekt_data['org'],
+                'Projektname' => $this->projekt_data['name'],
+                'Projektträger' => $this->projekt_data['org'],
                 'Rechtsgrundlage' => $recht,
-                'Abrechnungs ID' => 'A' . $this->auslagen_id,
-                'Abrechnungs Name' => $this->auslagen_data['name_suffix'],
+                'Abrechnungs-ID' => 'A' . $this->auslagen_id,
+                'Abrechnungsname' => $this->auslagen_data['name_suffix'],
             ],
             'zahlungsMeta' => [
                 'Name' => $this->auslagen_data['zahlung-name'],
                 'Adresse' => $this->auslagen_data['address'],
-                'IBAN' => self::decryptedStr($this->auslagen_data['zahlung-iban']),
+                'IBAN' => chunk_split(self::decryptedStr($this->auslagen_data['zahlung-iban']), 4, ' '),
                 'Betrag' => number_format($summed_value, 2, ',', '') . ' EUR',
-                'Datum Zahlung' => '___.___.______',
+                'Datum der Zahlung' => '___.___.______',
             ],
             'signatures' => [
                 ['label' => 'Sachliche Richtigkeit', 'name' => $hvString],
@@ -2227,10 +2229,9 @@ class AuslagenHandler2 extends FormHandlerInterface
             <div class="hidden datalists">
                 <datalist class="datalist-projekt">
                     <option value="0" data-alias="Bitte Wählen">
-                        <?php foreach ($this->projekt_data['posten'] as $p) {
-            ?>
+                        <?php foreach ($this->projekt_data['posten'] as $p) { ?>
                     <option value="<?php echo $p['id']; ?>"
-                            data-alias="<?php echo(($p['einnahmen']) ? '[Einnahme] ' : '') . (($p['ausgaben']) ? '[Ausgabe] ' : '') . $p['name']; ?>">
+                            data-alias="<?php echo(($p['einnahmen']) === '0.00' ? '[Einnahme] ' : '') . (($p['ausgaben']) === '0.00' ? '[Ausgabe] ' : '') . $p['name']; ?>">
                         <?php
         } ?>
                 </datalist>

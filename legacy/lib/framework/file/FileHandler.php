@@ -1169,7 +1169,7 @@ class FileHandler
      * @return array keys: success:bool, errors:array of string, filecounter:int, fileinfo:array
      * @throws \Exception
      */
-    public function upload(int $link, string $base_key = 'file'): array
+    public function upload(int $link, string $base_key = 'file', int $auslagen_id): array
     {
         $result = [
             'success' => true,
@@ -1383,10 +1383,10 @@ class FileHandler
                     // UPLOAD FILES Laravel Style
                     request()->validate([
                         $base_key => 'required',
-                        $base_key.'.'  . $id => 'required|file|mimes:pdf',
+                        $base_key. '.' . $id => 'required|file|mimes:pdf',
                     ]);
                     $lara_file = request()->file($base_key)[$id];
-                    $lara_path = $lara_file->store('auslagen/' . $file->link);
+                    $lara_path = $lara_file->store('auslagen/' . $auslagen_id . '/');
                     // get everything between last / and file  extension
                     $file->hashname = explode('.pdf', explode('/', $lara_path)[2])[0];
                     //create file entry
