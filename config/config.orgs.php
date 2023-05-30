@@ -372,11 +372,15 @@ return [
             ],
             'mittel' => [
                 'label' => 'Antrag auf Mittelfreigabe',
-                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+                'hint-text' => 'Interne Förderrichtlinie §41, Abs (7) und (8): StuRa bis zu 100 EUR & FSRe bis zu 50 €',
             ],
             'vertrag' => [
                 'label' => 'Verträge',
-                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'ordnung' => [
+                'label' => 'Ordnungen oder Satzung',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
             ],
         ],
         'projekt-form' => [
