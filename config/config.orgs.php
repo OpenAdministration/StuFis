@@ -386,4 +386,63 @@ return [
         'projekt-form' => [
         ],
     ],
+    'rh' => [
+        'gremien' => [
+            'Zentral' => [
+                'Allgemeiner Studierendenausschuss (AStA)',
+                'Wahlkommission Studierendenschaft',
+                'Senat',
+                'Konferenz Thüringer Studierendenschaften (KTS)',
+                'Promovierendenvertretung',
+            ],
+            'Referate' => [
+                'Referat Finanzen',
+                'Referat Hochschulpolitik (HoPo)',
+                'Referat IT',
+                'Referat Kultur',
+                'Referat Politische Bildung',
+                'Referat Public Relations',
+                'Referat Soziales',
+                'Referat Sport Umwelt und Gesundheit',
+            ],
+            'Fachschaftsräte' => [
+                'Fachschaftsrat EI',
+                'Fachschaftsrat IA',
+                'Fachschaftsrat MB',
+                'Fachschaftsrat MN',
+                'Fachschaftsrat WM',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => 'https://open-administration.de/index.php/kontakt-und-impressum/',
+        'datenschutz-url' => 'https://open-administration.de/index.php/datenschutz/',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'open-administration.de',
+        'finanzen-mail' => 'lukas.staab@open-administration.de',
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'fahrt' => [
+                'label' => 'Fahrtkosten',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'buero' => [
+                'label' => 'Büromaterial',
+                'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+                'placeholder' => '',
+            ],
+        ],
+        'projekt-form' => [
+        ],
+    ],
 ];
