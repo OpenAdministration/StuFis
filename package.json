@@ -16,7 +16,9 @@
         "tailwindcss": "^3.0.24"
     },
     "dependencies": {
+        "@tailwindcss/aspect-ratio": "^0.4.2",
         "@tailwindcss/forms": "^0.5.3",
+        "@tailwindcss/typography": "^0.5.9",
         "alpinejs": "^3.10.3"
     }
 }

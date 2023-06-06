@@ -109,7 +109,7 @@ class ProjektHandler extends FormHandlerInterface
             'need-stura' => ['Warte auf StuRa-Beschluss'],
             'ok-by-stura' => ['Genehmigt durch StuRa-Beschluss'],
             'done-hv' => ['verkündet durch HV'],
-            'done-other' => ['Genehmigt (Verkündung nicht nötig)'],
+            'done-other' => ['Genehmigt'],
             'revoked' => [
                 'Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)',
                 'zurückziehen / ablehnen',
@@ -886,7 +886,7 @@ class ProjektHandler extends FormHandlerInterface
                                     class="fa fa-fw fa-refresh"></i></a></li>
                 <?php } ?>
                 <?php if (in_array($this->stateHandler->getActualState(), ['ok-by-stura', 'done-hv', 'done-other'])) { ?>
-                    <li><a href="<?php echo $url; ?>auslagen" title="Neue Abrechnung/Rechnung">neue Abrechnung/Rechnung&nbsp;<i
+                    <li><a href="<?php echo $url; ?>auslagen" title="Neue Abrechnung/Rechnung">neue Abrechnung&nbsp;<i
                                     class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
                 <?php } ?>
                 <?php if ($this->permissionHandler->isAnyDataEditable(true) !== false) { ?>
