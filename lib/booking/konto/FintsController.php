@@ -49,6 +49,7 @@ class FintsController extends Renderer
         try {
             parent::render();
         } catch (NeedsTanException $e) {
+            $this->fintsHandler->logger->info('Tan needed', ['exception' => $e]);
             $this->renderTanInput($e->getMessage(), $e->getTanRequest());
         }
     }
