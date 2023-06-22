@@ -17,7 +17,12 @@ class AuthController
 
     public function callback(){
         if (Auth::guest()) {
-            $userByProvider = Socialite::driver('keycloak')->stateless()->user();
+            $driver = Socialite::driver('keycloak');
+            if (\App::isLocal()){
+                $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+            }
+            $userByProvider = $driver->stateless()->user();
+
             $tokenResponse = $userByProvider->accessTokenResponseBody;
             $user = User::updateOrCreate([
                 'provider_sub' => $userByProvider->user['sub'],

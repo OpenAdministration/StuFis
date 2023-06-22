@@ -19,13 +19,18 @@ class LegacyController extends Controller
         require_once SYSBASE . '/lib/inc.all.php';
     }
 
-    public function render()
+    public function render(Request $request)
     {
         try {
             ob_start();
             $this->bootstrap();
             require dirname(__FILE__, 4) . '/legacy/www/index.php';
             $output = ob_get_clean();
+            if($request->input('testing')){
+                // if wanted by the unit test the content is delivered without the layout
+                return $output;
+            }
+            // otherwise with
             return view('legacy.main', ['content' => $output]);
         } catch (LegacyRedirectException $e){
             return $e->redirect;

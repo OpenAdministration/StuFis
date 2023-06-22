@@ -35,7 +35,7 @@ class Router
      */
     public function __construct($not_found_route = null)
     {
-        $this->requested_path = $_SERVER['PATH_INFO'] ?? '/';
+        $this->requested_path = '/' . (request()?->path() ?? '');
         if (is_string($not_found_route)) {
             $this->not_found_route = $not_found_route;
         } else {

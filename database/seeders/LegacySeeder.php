@@ -41,5 +41,24 @@ class LegacySeeder extends Seeder
                 'value' => 10000,
             ],
         ]);
+
+        \DB::table('user')->insert([
+            [
+                'id' => 1,
+                'name' => 'Normal User',
+                'username' => 'user',
+                'email' => 'user@example.org',
+            ],[
+                'id' => 2,
+                'name' => 'Budget Manager',
+                'username' => 'hv',
+                'email' => 'hv@example.org',
+            ],[
+                'id' => 3,
+                'name' => 'Cash Manager',
+                'username' => 'kv',
+                'email' => 'kv@example.org',
+            ]
+        ]);
     }
 }
