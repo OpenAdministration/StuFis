@@ -87,7 +87,7 @@ class Router
         if ($routeInfo['controller'] !== 'error'
             && !in_array(strtoupper(request()?->method()), $allowedMethods, true)) {
             $routeInfo = [
-                'method' => $_SERVER['REQUEST_METHOD'],
+                'method' => request()->method(),
                 'path' => $routeInfo['path'],
                 'controller' => 'error',
                 'action' => '405',

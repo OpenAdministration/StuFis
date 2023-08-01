@@ -108,7 +108,12 @@ class User extends Authenticatable
         switch ($this->provider){
             case 'keycloak':
                 if ($this->provider_token_expiration < now()){
-                    $user = Socialite::driver('keycloak')->stateless()->userFromToken($this->provider_token);
+
+                    $driver = Socialite::driver('keycloak');
+                    if (\App::isLocal()){
+                        $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+                    }
+                    $user = $driver->userFromToken($this->provider_token);
                     return $user['groups'];
                 }
                 return "Token too old - refreshing token not yet implemented :/";

@@ -9,8 +9,8 @@ class LegacySeeder extends Seeder
     public function run()
     {
         \DB::table('haushaltsplan')->insert([
-            'von' => now()->dayOfYear(1)->format('d-m-y'),
-            'bis' => now()->dayOfYear(now()->dayOfYear)->format('d-m-y'),
+            'von' => now()->dayOfYear(1)->format('Y-m-d'),
+            'bis' => now()->lastOfYear()->format('Y-m-d'),
             'state' => 'final',
         ]);
 

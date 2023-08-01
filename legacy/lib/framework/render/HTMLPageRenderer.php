@@ -58,7 +58,7 @@ class HTMLPageRenderer
     public static function showErrorAndDie(ErrorHandler $errorHandler): void
     {
         self::$errorHandler = $errorHandler;
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (request()->method() === 'POST') {
             self::$errorHandler->renderJson();
             exit();
         }

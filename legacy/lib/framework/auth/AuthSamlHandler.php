@@ -234,7 +234,7 @@ class AuthSamlHandler extends AuthHandler
 
     public function login(): void
     {
-        if (strtoupper($_SERVER['REQUEST_METHOD']) === 'POST' && isset($_POST['SAMLResponse'])) {
+        if (strtoupper(request()->method()) === 'POST' && isset($_POST['SAMLResponse'])) {
             // POST -> SAML Response Message
             $auth = $this->saml;
             $auth->processResponse();
