@@ -13,6 +13,8 @@
 
 namespace framework\render;
 
+use App\Exceptions\LegacyJsonException;
+
 class JsonController
 {
     /**
@@ -78,10 +80,8 @@ class JsonController
      */
     public static function print_json(array $json, $jsonHeader = true): void
     {
-        if ($jsonHeader) {
-            header('Content-Type: application/json');
-        }
-        echo json_encode($json, JSON_HEX_QUOT | JSON_HEX_TAG);
-        exit();
+        #$json = json_encode($json, JSON_HEX_QUOT | JSON_HEX_TAG);
+        throw new LegacyJsonException($json);
+
     }
 }

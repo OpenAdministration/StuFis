@@ -42,11 +42,12 @@ class RestHandler extends EscFunc
 
     public function handlePost(array $routeInfo = null): void
     {
-        if (!isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
-            throw new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
-        } else {
-            unset($_POST['nonce']);
+        if(!\App::runningUnitTests()){
+            if (!isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
+                throw new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
+            }
         }
+        unset($_POST['nonce']);
 
         switch ($routeInfo['action']) {
             case 'projekt':

@@ -33,9 +33,19 @@ class NewProjectTest extends TestCase
         $response
             ->seeText('neues Projekt anlegen')
             ->seeElement('input', ['type' => 'text', 'name' => 'name'])
-            ->type('Project Name', 'name')
-            // add more stuff from the form @ /legacy/lib/forms/projekte/ProjektHandler.php -> render()
+            ->type('Testing Project Name', 'name')// add more stuff from the form @ /legacy/lib/forms/projekte/ProjektHandler.php -> render()
         ;
+    }
+
+    public function test_project_is_saveable(): void
+    {
+        $this->loginAsUser();
+        $response = $this->visitRoute('new-project', ['testing' => 1]);
+        $response->type('Testing Project Name', 'name');
+        $response->press('state-draft');
+        $response->seeStatusCode(200);
+        $response->seePageIs('/rest/forms/projekt');
+        $response->seeJsonEquals([]);
     }
 
 }

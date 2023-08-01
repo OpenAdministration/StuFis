@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use framework\DBConnector;
@@ -26,14 +27,17 @@ class LegacyController extends Controller
             $this->bootstrap();
             require dirname(__FILE__, 4) . '/legacy/www/index.php';
             $output = ob_get_clean();
-            if($request->input('testing')){
+            if ($request->input('testing')) {
                 // if wanted by the unit test the content is delivered without the layout
                 return $output;
             }
             // otherwise with
             return view('legacy.main', ['content' => $output]);
-        } catch (LegacyRedirectException $e){
+        } catch (LegacyRedirectException $e) {
             return $e->redirect;
+        }catch (LegacyJsonException $e){
+            ob_get_clean();
+            return response()->json($e->content);
         } catch (\Exception $exception){
             // get rid of the already printed html
             ob_get_clean();

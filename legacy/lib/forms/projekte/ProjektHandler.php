@@ -847,11 +847,11 @@ class ProjektHandler extends FormHandlerInterface
                     //$state = "draft";
 
                     ?>
-                    <a href="javascript:true;"
+                    <button type="submit"
                        class='btn btn-success submit-form <?php echo !$validateMe ? 'no-validate' : 'validate'; ?>'
                        data-name="state" data-value="<?php echo htmlspecialchars($this->stateHandler->getActualState()); ?>"
                        id="state-<?php echo htmlspecialchars($this->stateHandler->getActualState()); ?>">Speichern
-                        als <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?></a>
+                        als <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?></button>
                 </div>
             </form>
         <?php } ?>
