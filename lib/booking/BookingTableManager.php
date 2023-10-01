@@ -153,7 +153,7 @@ class BookingTableManager extends Renderer
                             'on' => ['haushaltstitel.hhpgruppen_id', 'haushaltsgruppen.id'],
                         ],
                     ]
-                , debug: true);
+                );
                 foreach ($auslagen as $id => $row) {
                     $auslagen[$id]['value'] = (float) $row['einnahmen'] - (float) $row['ausgaben'];
                     $auslagen[$id]['type'] = 'belegposten';
