@@ -218,7 +218,7 @@ class ProjektHandler extends FormHandlerInterface
             ],
         ];
         self::$writePermissionAll = [
-            'draft' => ['groups' => ['sgis']],
+            'draft' => ['groups' => ['all']],
             'wip' => ['groups' => ['ref-finanzen-hv']],
             'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
             'need-stura' => ['groups' => ['ref-finanzen-hv']],
@@ -329,7 +329,7 @@ class ProjektHandler extends FormHandlerInterface
         $version = $data['version'];
 
         //check if version is the same
-        if ($version !== $this->data['version']) {
+        if (((int) $version) !== ((int) $this->data['version'])) {
             throw new WrongVersionException('Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!');
         }
         //check if row count is everywhere the same
@@ -597,7 +597,8 @@ class ProjektHandler extends FormHandlerInterface
         $hhpId = $hhpId[0]['id'];
         $selectable_titel = FormTemplater::generateTitelSelectable($hhpId); ?>
         <div class='col-xs-12 col-md-10'>
-            <?php if ($editable) { ?>
+            <?php
+            if ($editable) { ?>
             <form role="form" action="<?php echo URIBASE . 'rest/forms/projekt'; ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?php echo $this->templater->getHiddenActionInput(isset($this->id) ? 'update' : 'create'); ?>

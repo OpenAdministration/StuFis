@@ -83,7 +83,7 @@ class AuthDummyHandler extends AuthHandler
      */
     public function isAdmin(): bool
     {
-        return in_array('admin', $this->attributes['groups'], true);
+        return in_array($_ENV['AUTH_ADMIN_GROUP'], $this->attributes['groups'], true);
     }
 
     public function reportPermissionDenied(string $errorMsg, string $debug = null): void

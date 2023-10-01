@@ -73,7 +73,9 @@ class BookingTableManager extends Renderer
         );
 
         //$this->instructions = array_intersect_key($this->instructions, array_flip([11, 6]));  // FIXME DELETEME
-
+        //echo "<pre>";
+        //var_dump($this->instructions[60]);
+        //echo "</pre>";
         foreach ($this->instructions as $instruct_id => $instruction) {
             $zahlungen = [];
             $extern_ids = [];
@@ -151,7 +153,7 @@ class BookingTableManager extends Renderer
                             'on' => ['haushaltstitel.hhpgruppen_id', 'haushaltsgruppen.id'],
                         ],
                     ]
-                );
+                , debug: true);
                 foreach ($auslagen as $id => $row) {
                     $auslagen[$id]['value'] = (float) $row['einnahmen'] - (float) $row['ausgaben'];
                     $auslagen[$id]['type'] = 'belegposten';
@@ -208,7 +210,9 @@ class BookingTableManager extends Renderer
             }
             //var_dump($auslagen_ids);
             $belegeDB[$instruct_id] = array_merge($auslagen, $extern);
+            //echo "<pre>";
             //var_dump($belegeDB[$instruct_id]);
+            //echo "</pre>";
             usort(
                 $belegeDB[$instruct_id],
                 static function ($a, $b) {
