@@ -47,7 +47,6 @@ class RestHandler extends EscFunc
         } else {
             unset($_POST['nonce']);
         }
-
         switch ($routeInfo['action']) {
             case 'projekt':
                 $this->handleProjekt($routeInfo);

@@ -1,9 +1,10 @@
 $(document).ready(function () {
 
-    const frm = $("form.ajax-form");
+    const frms = $("form.ajax-form");
 
-    frm.each(function () {
-        $(this).on('submit', function (e) {
+    frms.each(function () {
+        const frm = $(this);
+        frm.on('submit', function (e) {
             var data = {};
             $(this).find('input[name],textarea[name],select[name]').each(function (i, el) {
                 if (el.name === 'nononce')
@@ -34,21 +35,10 @@ $(document).ready(function () {
                     }
                 }
             });
-            const submittingButton = $(e.originalEvent.explicitOriginalTarget).closest("input[type=button],input[type=sumbit],button");
+
             let action;
-            if(submittingButton.length > 0 && submittingButton.attr("formaction") !== undefined){
-                console.log(submittingButton.attr("formaction"));
-                action = submittingButton.attr("formaction");
-                const buttonData = submittingButton.data();
-                for(const key in buttonData){
-                    // skip loop if the property is from prototype
-                    if (!buttonData.hasOwnProperty(key)) continue;
-                    // add
-                    data["data-" + key] = buttonData[key];
-                }
-            }else{
-                action = $(this).attr('action');
-            }
+            action = frm.attr('action');
+
             $.ajax({
                 type: $(this).attr('method'),
                 url: action,
@@ -57,6 +47,14 @@ $(document).ready(function () {
                 error: xpAjaxErrorHandler
             });
             e.preventDefault();
+        });
+
+        frm.find('button[formaction]').each(function (){
+            const btn = $(this);
+            btn.on('click', function (){
+                frm.attr('action', btn.attr('formaction'))
+                frm.submit();
+            })
         });
     });
 });
