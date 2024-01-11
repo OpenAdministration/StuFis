@@ -18,7 +18,7 @@ return [
                 'Referat Politische Bildung',
                 'Referat Public Relations',
                 'Referat Soziales',
-                'Referat Sport Umwelt und Gesundheit',
+                'Referat Sport Umwelt und Gesundheit (SUG)',
             ],
             'Fachschaftsräte' => [
                 'Fachschaftsrat EI',
@@ -164,7 +164,7 @@ return [
             ],
         ],
         'projekt-form' => [
-            'protokoll-prefix' => 'https://wiki.stura.tu-ilmenau.de/protokoll/',
+            'protokoll-prefix' => 'https://wiki.stura-ilmenau.de/protokoll/',
         ],
     ],
     'ue' => [
