@@ -7,7 +7,6 @@ use App\Exceptions\LegacyRedirectException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use framework\DBConnector;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
 
