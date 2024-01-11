@@ -47,5 +47,4 @@ class NewProjectTest extends TestCase
         $response->seePageIs('/rest/forms/projekt');
         $response->seeJsonEquals([]);
     }
-
 }
