@@ -30,7 +30,6 @@ try {
         'DB_PREFIX',
         'FINTS_REG_NR',
         'AUTH_REALM',
-        'AUTH_ADMIN_GROUP',
         'URIBASE',
     ]);
 

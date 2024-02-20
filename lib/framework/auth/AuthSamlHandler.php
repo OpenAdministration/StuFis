@@ -140,6 +140,8 @@ class AuthSamlHandler extends AuthHandler
                 // ),
             ],
             'security' => [
+
+
                 // Indicates whether the <samlp:AuthnRequest> messages sent by this SP
                 // will be signed.  [Metadata of the SP will offer this info]
                 'authnRequestsSigned' => true,
@@ -153,7 +155,7 @@ class AuthSamlHandler extends AuthHandler
 
     public function getUserFullName(): string
     {
-        return $this->getAttributes()['urn:oid:2.16.840.1.113730.3.1.241'][0];
+        return $this->getAttributes()['cn'][0];
     }
 
     public function requireAuth(): void
@@ -178,11 +180,6 @@ class AuthSamlHandler extends AuthHandler
         return $_SESSION['samlUserdata'];
     }
 
-    public function getUserMail(): string
-    {
-        return $this->getAttributes()['urn:oid:0.9.2342.19200300.100.1.3'][0];
-    }
-
     public function requireGroup(array|string $groups): void
     {
         if (!$this->hasGroup($groups)) {
@@ -193,21 +190,8 @@ class AuthSamlHandler extends AuthHandler
     /**
      * {@inheritDoc}
      */
-    public function isAdmin(): bool
-    {
-        // no realm prefixing here
-        // cannot use hasGroup here -> infinite recursion otherwise
-        return in_array($_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
-        if ($groups === 'all'){
-            return $this->hasGroup('sgis');
-        }
         $authGroups = $this->getUserGroups();
         if ($this->isAdmin()) {
             return true;
@@ -222,12 +206,6 @@ class AuthSamlHandler extends AuthHandler
             return false;
         }
         return true;
-    }
-
-    public function getUsername(): ?string
-    {
-        $attributes = $this->getAttributes();
-        return $attributes['urn:oid:1.3.6.1.4.1.5923.1.1.1.6'][0] ?? $this->getUserMail() ?? null;
     }
 
     public function getLogoutURL(): string
@@ -250,8 +228,8 @@ class AuthSamlHandler extends AuthHandler
             $_SESSION['samlUserdata'] = $auth->getAttributes();
             $_SESSION['IdPSessionIndex'] = $auth->getSessionIndex();
             if (isset($_POST['RelayState']) && Utils::getSelfURL() !== $_POST['RelayState']) {
-                // To avoid 'Open Redirect' attacks, before execute the
-                // redirection confirm the value of $_POST['RelayState'] is a // trusted URL.
+                // TODO: to avoid 'Open Redirect' attacks, before execute the
+                // redirection confirm the value of $_POST['RelayState'] is a trusted URL.
                 $auth->redirectTo($_POST['RelayState']);
             }
         } else {
@@ -286,14 +264,5 @@ class AuthSamlHandler extends AuthHandler
             return $metadata;
         }
         ErrorHandler::handleError(500, 'SAML not correct configured', $errors);
-    }
-
-    #[NoReturn]
-    public function reportPermissionDenied(string $errorMsg, string $debug = null): void
-    {
-        if (isset($debug)) {
-            $debug = var_export($this->getAttributes(), true);
-        }
-        ErrorHandler::handleError(403, $errorMsg, $debug);
     }
 }
