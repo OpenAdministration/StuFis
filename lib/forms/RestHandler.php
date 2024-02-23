@@ -1125,13 +1125,13 @@ class RestHandler extends EscFunc
             );
         }
         DBConnector::getInstance()->dbBegin();
-        $nextId = DBConnector::getInstance()->dbFetchAll(
+        $lastEntry = DBConnector::getInstance()->dbFetchAll(
             'booking_instruction',
             [DBConnector::FETCH_NUMERIC],
             [['id', DBConnector::GROUP_MAX]]
         );
-        if (is_array($nextId) && !empty($nextId)) {
-            $nextId = $nextId[0][0] + 1;
+        if (is_array($lastEntry) && !empty($lastEntry)) {
+            $nextId = $lastEntry[0][0] + 1;
         } else {
             $nextId = 1;
         }

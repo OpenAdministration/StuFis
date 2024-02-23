@@ -31,7 +31,7 @@ $controllerName = $routeInfo['controller'];
 
 if($controllerName !== 'saml'){
     // lock out everyone with wrong permissions, if not during the auth process
-    AuthHandler::getInstance()->requireGroup('all');
+    AuthHandler::getInstance()->requireGroup('login');
 }
 switch ($controllerName) {
     case 'menu':
