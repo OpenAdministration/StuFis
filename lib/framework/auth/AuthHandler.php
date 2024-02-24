@@ -103,46 +103,26 @@ abstract class AuthHandler extends Singleton
 
     protected function remapUserGroups(array $groups) : array
     {
-        $mappedGroups = [];
-        $defaultGroups = [];
+        // array with either the env set groups to check or the default ones
+        // corresponding permission is key, group is value
+        $permissionMap = [
+            'login' => $_ENV['GROUP_MAPPING_LOGIN'] ?: 'login',
+            'ref-finanzen' => $_ENV['GROUP_MAPPING_REF_FINANZEN'] ?: 'ref-finanzen',
+            'ref-finanzen-hv' => $_ENV['GROUP_MAPPING_HHV'] ?: 'ref-finanzen-hv',
+            'ref-finanzen-kv' => $_ENV['GROUP_MAPPING_KV'] ?: 'ref-finanzen-kv',
+            'ref-finanzen-belege' => $_ENV['GROUP_MAPPING_INVOICES'] ?: 'ref-finanzen-belege',
+            'admin' => $_ENV['GROUP_MAPPING_ADMIN'] ?: 'admin',
+        ];
+        // remove all entries which are not present in the groups array
+        $activePermissions = array_intersect($permissionMap, $groups);
 
-        if(!empty($_ENV['GROUP_MAPPING_LOGIN'])){
-            if(in_array($_ENV['GROUP_MAPPING_LOGIN'], $groups, true)) {
-                $mappedGroups[] = 'login';
-            }
-            if($_ENV['GROUP_MAPPING_LOGIN'] === 'true'){
-                $mappedGroups[] = 'login';
-            }
-        }else{
-            $defaultGroups[] = 'login';
+        // add the login permission again if it was set to all are allowed to login
+        if($_ENV['GROUP_MAPPING_LOGIN'] === 'true'){
+            $activePermissions['login'] = 'login';
         }
-        if(!empty($_ENV['GROUP_MAPPING_REF_FINANZEN']) && in_array($_ENV['GROUP_MAPPING_REF_FINANZEN'], $groups, true)) {
-            $mappedGroups[] = 'ref-finanzen';
-        }else{
-            $defaultGroups[] = 'ref-finanzen';
-        }
-        if(!empty($_ENV['GROUP_MAPPING_HHV']) && in_array($_ENV['GROUP_MAPPING_HHV'], $groups, true)) {
-            $mappedGroups[] = 'ref-finanzen-hv';
-        }else{
-            $defaultGroups[] = 'ref-finanzen-hv';
-        }
-        if(!empty($_ENV['GROUP_MAPPING_KV']) && in_array($_ENV['GROUP_MAPPING_KV'], $groups, true)) {
-            $mappedGroups[] = 'ref-finanzen-kv';
-        }else{
-            $defaultGroups[] = 'ref-finanzen-kv';
-        }
-        if(!empty($_ENV['GROUP_MAPPING_INVOICES']) && in_array($_ENV['GROUP_MAPPING_INVOICES'], $groups, true)) {
-            $mappedGroups[] = 'ref-finanzen-belege';
-        }else{
-            $defaultGroups[] = 'ref-finanzen-belege';
-        }
-        if(!empty($_ENV['GROUP_MAPPING_ADMIN']) && in_array($_ENV['GROUP_MAPPING_ADMIN'], $groups, true)) {
-            $mappedGroups[] = 'admin';
-        }else{
-            $defaultGroups[] = 'admin';
-        }
-        $defaultGroups = array_intersect($defaultGroups, $groups); // find the unmapped groups and deliver them
-        return array_merge($defaultGroups, $mappedGroups); // deliver default and remapped groups
+
+        // return the active permissions (keys in the mapping)
+        return array_keys($activePermissions);
     }
 
     /**
