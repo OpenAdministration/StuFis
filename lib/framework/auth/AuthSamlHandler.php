@@ -153,11 +153,6 @@ class AuthSamlHandler extends AuthHandler
         $this->saml = new Auth($settings);
     }
 
-    public function getUserFullName(): string
-    {
-        return $this->getAttributes()['cn'][0];
-    }
-
     public function requireAuth(): void
     {
         if (isset($_SESSION['samlUserdata'])) {
