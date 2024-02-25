@@ -49,7 +49,7 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     private static $groups = [
         'editable' => [
-            'draft' => ['groups' => ['sgis']],
+            'draft' => ['groups' => ['login']],
             'wip' => ['groups' => ['ref-finanzen-belege']],
             'ok' => ['groups' => ['ref-finanzen-belege']],
         ],
@@ -202,13 +202,13 @@ class AuslagenHandler2 extends FormHandlerInterface
     ];
     private static $writePermissionFields = [
         'draft' => [
-            'auslagen-name' => ['groups' => ['sgis']],
-            'zahlung-name' => ['groups' => ['sgis']],
-            'zahlung-iban' => ['groups' => ['sgis']],
-            'zahlung-vwzk' => ['groups' => ['sgis']],
-            'address' => ['groups' => ['sgis']],
-            'belege' => ['groups' => ['sgis']],
-            'files' => ['groups' => ['sgis']],
+            'auslagen-name' => ['groups' => ['login']],
+            'zahlung-name' => ['groups' => ['login']],
+            'zahlung-iban' => ['groups' => ['login']],
+            'zahlung-vwzk' => ['groups' => ['login']],
+            'address' => ['groups' => ['login']],
+            'belege' => ['groups' => ['login']],
+            'files' => ['groups' => ['login']],
         ],
         'wip' => [
             'auslagen-name' => ['groups' => ['ref-finanzen-belege']],
