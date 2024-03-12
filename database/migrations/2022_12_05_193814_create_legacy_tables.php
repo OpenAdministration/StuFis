@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('zahlung-name', 127);
             $table->string('zahlung-vwzk', 127);
             $table->string('address', 1023)->default('');
-            $table->dateTime('last_change')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('last_change')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('last_change_by')->default('');
             $table->string('etag');
             $table->integer('version')->default(1);
@@ -41,7 +41,7 @@ return new class extends Migration
             $table->integer('id', true);
             $table->integer('auslagen_id')->index('auslagen_id');
             $table->string('short', 45)->nullable();
-            $table->dateTime('created_on')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('created_on')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->dateTime('datum')->nullable();
             $table->string('beschreibung', 65535);
             $table->integer('file_id')->nullable();
