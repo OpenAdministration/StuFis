@@ -69,7 +69,7 @@ return new class extends Migration
             $table->integer('beleg_id');
             $table->string('beleg_type', 16);
             $table->unsignedBigInteger('user_id', );
-            $table->dateTime('timestamp')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('timestamp')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('comment', 2048);
             $table->float('value', 10, 0);
             $table->integer('canceled')->default(0);
@@ -93,7 +93,7 @@ return new class extends Migration
             $table->integer('id', true);
             $table->integer('target_id');
             $table->string('target', 64)->nullable();
-            $table->dateTime('timestamp')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('timestamp')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('creator', 128);
             $table->string('creator_alias', 256);
             $table->string('text', 65535);
@@ -163,7 +163,7 @@ return new class extends Migration
             $table->comment('');
             $table->integer('id', true);
             $table->string('link', 127);
-            $table->dateTime('added_on')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('added_on')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('hashname');
             $table->string('filename');
             $table->integer('size')->default(0);
