@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('zahlung-name', 127);
             $table->string('zahlung-vwzk', 127);
             $table->string('address', 1023)->default('');
-            $table->string('last_change', 0)->default('CURRENT_TIMESTAMP');
+            $table->dateTime('last_change')->default('CURRENT_TIMESTAMP');
             $table->string('last_change_by')->default('');
             $table->string('etag');
             $table->integer('version')->default(1);
@@ -41,8 +41,8 @@ return new class extends Migration
             $table->integer('id', true);
             $table->integer('auslagen_id')->index('auslagen_id');
             $table->string('short', 45)->nullable();
-            $table->string('created_on', 0)->default('CURRENT_TIMESTAMP');
-            $table->string('datum', 0)->nullable();
+            $table->dateTime('created_on')->default('CURRENT_TIMESTAMP');
+            $table->dateTime('datum')->nullable();
             $table->string('beschreibung', 65535);
             $table->integer('file_id')->nullable();
         });
@@ -53,8 +53,8 @@ return new class extends Migration
             $table->integer('beleg_id')->index('beleg_id');
             $table->integer('short');
             $table->integer('projekt_posten_id');
-            $table->float('ausgaben', 10)->default(0);
-            $table->float('einnahmen', 10)->default(0);
+            $table->decimal('ausgaben', 10, 2)->default(0);
+            $table->decimal('einnahmen', 10, 2)->default(0);
 
             $table->unique(['short', 'beleg_id'], 'short');
         });
@@ -69,7 +69,7 @@ return new class extends Migration
             $table->integer('beleg_id');
             $table->string('beleg_type', 16);
             $table->unsignedBigInteger('user_id', );
-            $table->string('timestamp', 0)->default('CURRENT_TIMESTAMP');
+            $table->dateTime('timestamp')->default('CURRENT_TIMESTAMP');
             $table->string('comment', 2048);
             $table->float('value', 10, 0);
             $table->integer('canceled')->default(0);
@@ -93,7 +93,7 @@ return new class extends Migration
             $table->integer('id', true);
             $table->integer('target_id');
             $table->string('target', 64)->nullable();
-            $table->string('timestamp', 0)->default('CURRENT_TIMESTAMP');
+            $table->dateTime('timestamp')->default('CURRENT_TIMESTAMP');
             $table->string('creator', 128);
             $table->string('creator_alias', 256);
             $table->string('text', 65535);
@@ -106,13 +106,13 @@ return new class extends Migration
             $table->integer('vorgang_id');
             $table->integer('extern_id')->index('extern_id');
             $table->integer('titel_id');
-            $table->string('date', 0)->nullable();
+            $table->dateTime('date')->nullable();
             $table->integer('by_user')->nullable();
-            $table->float('value', 10)->nullable();
+            $table->decimal('value', 10, 2)->nullable();
             $table->string('description', 65535)->nullable();
             $table->string('ok-hv', 63)->nullable();
             $table->string('ok-kv', 63)->nullable();
-            $table->string('frist', 0)->nullable();
+            $table->dateTime('frist')->nullable();
             $table->boolean('flag_vorkasse')->nullable()->default(false);
             $table->boolean('flag_bewilligungsbescheid')->nullable()->default(false);
             $table->boolean('flag_pruefbescheid')->nullable()->default(false);
@@ -124,7 +124,7 @@ return new class extends Migration
             $table->string('state_booked', 63)->nullable();
             $table->integer('ref_file_id')->nullable();
             $table->boolean('flag_widersprochen')->nullable()->default(false);
-            $table->string('widerspruch_date', 0)->nullable();
+            $table->dateTime('widerspruch_date')->nullable();
             $table->integer('widerspruch_file_id')->nullable();
             $table->string('widerspruch_text', 65535)->nullable();
             $table->string('etag');
@@ -136,8 +136,8 @@ return new class extends Migration
             $table->comment('');
             $table->integer('id', true);
             $table->string('projekt_name', 511);
-            $table->string('projekt_von', 0)->nullable();
-            $table->string('projekt_bis', 0)->nullable();
+            $table->date('projekt_von')->nullable();
+            $table->date('projekt_bis')->nullable();
             $table->string('contact_mail', 127)->nullable();
             $table->string('contact_name', 128)->nullable();
             $table->string('contact_phone', 32)->nullable();
@@ -147,9 +147,9 @@ return new class extends Migration
             $table->string('zahlung_empf', 127)->nullable();
             $table->string('zahlung_iban', 45)->nullable();
             $table->string('beschluss_nr', 15);
-            $table->string('beschluss_datum', 0);
-            $table->float('beschluss_summe');
-            $table->float('beschluss_vorkasse');
+            $table->date('beschluss_datum');
+            $table->decimal('beschluss_summe', 8, 2);
+            $table->decimal('beschluss_vorkasse', 8, 2);
         });
 
         Schema::create('filedata', static function (Blueprint $table) {
@@ -163,7 +163,7 @@ return new class extends Migration
             $table->comment('');
             $table->integer('id', true);
             $table->string('link', 127);
-            $table->string('added_on', 0)->default('CURRENT_TIMESTAMP');
+            $table->dateTime('added_on')->default('CURRENT_TIMESTAMP');
             $table->string('hashname');
             $table->string('filename');
             $table->integer('size')->default(0);
@@ -184,8 +184,8 @@ return new class extends Migration
         Schema::create('haushaltsplan', static function (Blueprint $table) {
             $table->comment('');
             $table->integer('id', true);
-            $table->string('von', 0)->nullable();
-            $table->string('bis', 0)->nullable();
+            $table->date('von')->nullable();
+            $table->date('bis')->nullable();
             $table->string('state', 64);
         });
 
@@ -202,15 +202,15 @@ return new class extends Migration
             $table->comment('');
             $table->integer('id');
             $table->integer('konto_id')->index('konto_id');
-            $table->string('date', 0);
-            $table->string('valuta', 0);
+            $table->date('date');
+            $table->date('valuta');
             $table->string('type', 128);
             $table->string('empf_iban', 40)->default('');
             $table->string('empf_bic', 11)->nullable()->default('');
             $table->string('empf_name', 128)->default('');
             $table->float('primanota', 10, 0)->default(0);
-            $table->float('value', 10);
-            $table->float('saldo', 10);
+            $table->decimal('value', 10, 2);
+            $table->decimal('saldo', 10, 2);
             $table->string('zweck', 512);
             $table->string('comment', 128)->default('');
             $table->integer('gvcode')->default(0);
@@ -244,8 +244,8 @@ return new class extends Migration
             $table->integer('id', true);
             $table->string('name', 32);
             $table->string('short', 2);
-            $table->string('sync_from', 0)->nullable();
-            $table->string('sync_until', 0)->nullable();
+            $table->date('sync_from')->nullable();
+            $table->date('sync_until')->nullable();
             $table->string('iban', 32)->nullable();
             $table->string('last_sync', 0)->nullable();
         });
@@ -254,8 +254,8 @@ return new class extends Migration
             $table->comment('');
             $table->integer('id', true);
             $table->unsignedBigInteger('creator_id')->index('creator_id');
-            $table->string('createdat', 0);
-            $table->string('lastupdated', 0);
+            $table->dateTime('createdat');
+            $table->dateTime('lastupdated');
             $table->integer('version')->default(1);
             $table->string('state', 32);
             $table->unsignedBigInteger('stateCreator_id')->index('stateCreator_id');
@@ -266,8 +266,8 @@ return new class extends Migration
             $table->string('protokoll', 256)->nullable();
             $table->string('recht', 64)->nullable();
             $table->string('recht-additional', 128)->nullable();
-            $table->string('date-start', 0)->nullable();
-            $table->string('date-end', 0)->nullable();
+            $table->date('date-start')->nullable();
+            $table->date('date-end')->nullable();
             $table->string('beschreibung', 65535)->nullable();
         });
 
