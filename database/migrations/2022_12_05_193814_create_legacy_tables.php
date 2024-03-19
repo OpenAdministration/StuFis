@@ -71,7 +71,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id', );
             $table->dateTime('timestamp')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->string('comment', 2048);
-            $table->float('value', 10, 0);
+            $table->decimal('value', 10, 2);
             $table->integer('canceled')->default(0);
 
             $table->index(['zahlung_id', 'zahlung_type'], 'zahlung_id');
@@ -195,7 +195,7 @@ return new class extends Migration
             $table->integer('hhpgruppen_id')->index('hhpgruppen_id');
             $table->string('titel_name', 128);
             $table->string('titel_nr', 10);
-            $table->float('value', 10, 0);
+            $table->decimal('value', 10, 2);
         });
 
         Schema::create('konto', static function (Blueprint $table) {
@@ -208,7 +208,7 @@ return new class extends Migration
             $table->string('empf_iban', 40)->default('');
             $table->string('empf_bic', 11)->nullable()->default('');
             $table->string('empf_name', 128)->default('');
-            $table->float('primanota', 10, 0)->default(0);
+            $table->int('primanota', 10, 0)->default(0);
             $table->decimal('value', 10, 2);
             $table->decimal('saldo', 10, 2);
             $table->string('zweck', 512);
@@ -276,8 +276,8 @@ return new class extends Migration
             $table->integer('id');
             $table->integer('projekt_id')->index('projekt_id');
             $table->integer('titel_id')->nullable();
-            $table->float('einnahmen', 10, 0);
-            $table->float('ausgaben', 10, 0);
+            $table->decimal('einnahmen', 10, 2);
+            $table->decimal('ausgaben', 10, 2);
             $table->string('name', 128);
             $table->string('bemerkung', 256);
 
