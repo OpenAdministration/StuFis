@@ -104,7 +104,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    function getGroups(){
+    public function getGroups(){
         switch ($this->provider){
             case 'keycloak':
                 if ($this->provider_token_expiration < now()){
@@ -117,9 +117,23 @@ class User extends Authenticatable
                     return $user['groups'];
                 }
                 return "Token too old - refreshing token not yet implemented :/";
+            case 'laravelpassport':
+                return [
+                    'login',
+                    #'ref-finanzen',
+                    #'ref-finanzen-kv',
+                    #'ref-finanzen-belege',
+                    #'ref-finanzen-hv',
+                    'admin'
+                ];
             default:
                 throw new InvalidConfig('Provider groups not yet implemented');
         }
 
+    }
+
+    public function getCommittees()
+    {
+        return ['Studierendenrat (StuRa)',];
     }
 }

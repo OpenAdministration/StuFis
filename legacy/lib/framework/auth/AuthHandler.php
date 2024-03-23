@@ -3,6 +3,7 @@
 namespace framework\auth;
 
 use App\Exceptions\LegacyDieException;
+use Auth;
 use framework\render\ErrorHandler;
 use framework\Singleton;
 
@@ -11,7 +12,7 @@ use framework\Singleton;
  * @static requireAuth()
  * @static hasGroup()
  */
-abstract class AuthHandler extends Singleton
+class AuthHandler extends Singleton
 {
     public static function getInstance(): static
     {
@@ -39,7 +40,11 @@ abstract class AuthHandler extends Singleton
     /**
      * return current user attributes
      */
-    abstract protected function getAttributes(): array;
+    protected function getAttributes(): array {
+        return [
+            'groups' => '',
+        ];
+    }
 
     /**
      * check group permission - return result of check as boolean
@@ -58,10 +63,6 @@ abstract class AuthHandler extends Singleton
         if (is_string($groups)) {
             $groups = explode($delimiter, $groups);
         }
-        $realm = $_ENV['AUTH_REALM'];
-        array_walk($groups, static function (&$val) use ($realm) {
-            $val = $realm . '-' . $val;
-        });
         $hasGroups = array_intersect($groups, $attrGroups);
 
         return count($hasGroups) > 0;
@@ -70,7 +71,9 @@ abstract class AuthHandler extends Singleton
     /**
      * handle session and user login
      */
-    abstract public function requireAuth(): void;
+    public function requireAuth(){
+        // laravel does this, just do nothing
+    }
 
     /**
      * @return bool if user has Admin Privileges
@@ -78,39 +81,49 @@ abstract class AuthHandler extends Singleton
     public function isAdmin(): bool
     {
         // cannot use hasGroup here -> infinite recursion otherwise
-        return in_array(REALM . '-' . $_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
+        return in_array($_ENV['AUTH_ADMIN_GROUP'], $this->getUserGroups(), true);
     }
 
     public function getUserGroups(): array
     {
-        return $this->getAttributes()['groups'] ?? [];
+        return request()?->user()->getGroups();
     }
 
     /**
      * return log out url
      */
-    abstract public function getLogoutURL(): string;
+    public function getLogoutURL(): string {
+        return "not my job anymore";
+    }
 
     /**
      * send html header to redirect to logout url
      */
-    abstract public function logout(): void;
+    public function logout(): void{
+
+    }
 
     /**
      * return username or user mail address
      * if not set return null
      */
-    abstract public function getUsername(): ?string;
+    public function getUsername(): string {
+        return Auth::user()->username;
+    }
 
     /**
      * return user displayname
      */
-    abstract public function getUserFullName(): string;
+    public function getUserFullName(): string {
+        return Auth::user()->name;
+    }
 
     /**
      * return user mail address
      */
-    abstract public function getUserMail(): string;
+    public function getUserMail(): string {
+        return Auth::user()->email;
+    }
 
     /**
      * @param $gremien   array|string with $delimiter concat sting
@@ -136,7 +149,7 @@ abstract class AuthHandler extends Singleton
      */
     public function getUserGremien(): array
     {
-        return $this->getAttributes()['gremien'] ?? [];
+        return Auth::user()->getCommittees();
     }
 
     public function reportPermissionDenied(string $errorMsg, string $debug): void

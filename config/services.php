@@ -39,5 +39,14 @@ return [
         'realms' => env('KEYCLOAK_REALM')         // Specify your keycloak realm
     ],
 
+    'laravelpassport' => [
+        'client_id' => env('LARAVELPASSPORT_CLIENT_ID'),
+        'client_secret' => env('LARAVELPASSPORT_CLIENT_SECRET'),
+        'redirect' => env('LARAVELPASSPORT_REDIRECT_URI'),
+        'host' => env('LARAVELPASSPORT_HOST'),
+        'logout_path' => env('LARAVELPASSPORT_LOGOUT_PATH', 'logout')
+    ],
+
+
 
 ];

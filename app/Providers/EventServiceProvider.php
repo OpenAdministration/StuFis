@@ -20,6 +20,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         \SocialiteProviders\Manager\SocialiteWasCalled::class => [
             \SocialiteProviders\Keycloak\KeycloakExtendSocialite::class.'@handle',
+            \SocialiteProviders\LaravelPassport\LaravelPassportExtendSocialite::class.'@handle',
         ],
     ];
 

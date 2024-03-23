@@ -108,4 +108,9 @@ return [
 
     'password_timeout' => 10800,
 
+    /*
+     * Custom: Set which Socialite Client should be taken by default
+     */
+    'socialite' => env('AUTH_PROVIDER', 'laravelpassport'),
+
 ];

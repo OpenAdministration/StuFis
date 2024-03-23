@@ -1,10 +1,11 @@
 {
-    "name": "lukas-staab/finanzantragui",
+    "name": "openadministration/stufis",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "3.0.3",
+    "version": "4.0.0",
     "license": "AGPL",
     "require": {
         "php": "^8.2",
+        "ext-pdo": "*",
         "blade-ui-kit/blade-heroicons": "^2.0",
         "defuse/php-encryption": "^2.3",
         "guzzlehttp/guzzle": "^7.2",
@@ -16,7 +17,7 @@
         "open-administration/php-latex-renderer": "^1.1",
         "owenvoke/blade-fontawesome": "^2.0",
         "socialiteproviders/keycloak": "^5.2",
-        "ext-pdo": "*"
+        "socialiteproviders/laravelpassport": "^4.3"
     },
     "require-dev": {
         "laravel/tinker": "^2.7",
