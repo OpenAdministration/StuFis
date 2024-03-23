@@ -81,7 +81,7 @@ class HTMLPageRenderer
         $this->renderHtmlHeader();
         //$this->renderNavbar();
         //$this->renderSiteNavigation();
-        echo "<div class='container col-xs-12 col-lg-10'>";
+        echo "<div class='container col-xs-12 col-lg-offset-2 col-lg-8'>";
         if ($this->hasError()) {
             $this->renderError();
         } else {

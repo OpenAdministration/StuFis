@@ -1169,7 +1169,7 @@ class FileHandler
      * @return array keys: success:bool, errors:array of string, filecounter:int, fileinfo:array
      * @throws \Exception
      */
-    public function upload(int $link, string $base_key = 'file', int $auslagen_id): array
+    public function upload(int $link, string $base_key = 'file', ?int $auslagen_id): array
     {
         $result = [
             'success' => true,
@@ -1386,9 +1386,9 @@ class FileHandler
                         $base_key. '.' . $id => 'required|file|mimes:pdf',
                     ]);
                     $lara_file = request()->file($base_key)[$id];
-                    $lara_path = $lara_file->store('auslagen/' . $auslagen_id . '/');
-                    // get everything between last / and file  extension
-                    $file->hashname = explode('.pdf', explode('/', $lara_path)[2])[0];
+                    $lara_path = $lara_file->store('auslagen/' . $auslagen_id);
+                    // get everything between last / and .pdf file extension
+                    $file->hashname = substr($lara_path, strrpos($lara_path, "/") + 1, -4);
                     //create file entry
                     $file->id = $this->db->createFile($file);
                     $dberror = $this->db->isError();
