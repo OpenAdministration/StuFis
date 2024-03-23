@@ -211,17 +211,20 @@ $pathConfig = [
                     'path' => 'hv',
                     'type' => 'path',
                     'action' => 'hv',
+                    'groups' => 'ref-finanzen',
                     'navigation' => 'hv',
                 ],
                 [
                     'path' => 'belege',
                     'type' => 'path',
+                    'groups' => 'ref-finanzen',
                     'action' => 'belege',
                 ],
                 [
                     'path' => 'kv',
                     'type' => 'path',
                     'action' => 'kv',
+                    'groups' => 'ref-finanzen',
                     'navigation' => 'kv',
                     'children' => [
                         [

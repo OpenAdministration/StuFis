@@ -219,7 +219,7 @@ class ProjektHandler extends FormHandlerInterface
             ],
         ];
         self::$writePermissionAll = [
-            'draft' => ['groups' => ['sgis']],
+            'draft' => ['groups' => ['login']],
             'wip' => ['groups' => ['ref-finanzen-hv']],
             'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
             'need-stura' => ['groups' => ['ref-finanzen-hv']],

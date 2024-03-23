@@ -176,7 +176,4 @@
     </div>
 </div>
 </body>
-@if(!empty($legacyContent))
-    <script type="text/javascript" src="{{ asset('/js/legacy.js') }}"></script>
-@endif
 </html>

@@ -115,7 +115,7 @@ class MenuRenderer extends Renderer
                     $this->renderAlert(
                         'Schade!',
                         $this->makeClickableMails(
-                            'Leider scheinst du noch kein Gremium zu haben. Solltest du dich ungerecht behandelt fühlen, schreib am besten eine Mail an konsul@tu-ilmenau.de oder an ref-it@tu-ilmenau.de'
+                            'Leider scheinst du noch kein Gremium zu haben.'
                         ),
                         'warning'
                     );

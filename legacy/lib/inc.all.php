@@ -3,20 +3,13 @@
 use Dotenv\Exception\ValidationException;
 use framework\auth\AuthCasHandler;
 use framework\auth\AuthDummyHandler;
+use framework\auth\AuthHandler;
 use framework\auth\AuthSamlHandler;
 
 $conf = [];
 
-try {
-    define('AUTH_HANDLER', match (strtolower(env('AUTH_METHOD'))){
-        'cas' => AuthCasHandler::class,
-        'saml' => AuthSamlHandler::class,
-        'dummy' => AuthDummyHandler::class,
-    });
+const AUTH_HANDLER = AuthHandler::class;
 
-} catch (ValidationException $exception) {
-    exit($exception->getMessage());
-}
 
 define('REALM', env('AUTH_REALM'));
 define('ORG_DATA', (include SYSBASE . '/config/config.orgs.php')[REALM] ?? []);
