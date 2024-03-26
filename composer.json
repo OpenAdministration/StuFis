@@ -20,13 +20,13 @@
         "socialiteproviders/laravelpassport": "^4.3"
     },
     "require-dev": {
-        "laravel/tinker": "^2.7",
+        "barryvdh/laravel-debugbar": "^3.12",
         "barryvdh/laravel-ide-helper": "^2.13",
         "fakerphp/faker": "^1.9.1",
-        "kitloong/laravel-migrations-generator": "^6.6",
         "laravel/browser-kit-testing": "^6.4",
         "laravel/dusk": "^7.9",
         "laravel/sail": "^1.0.1",
+        "laravel/tinker": "^2.7",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",
         "phpunit/phpunit": "^9.5.10",
