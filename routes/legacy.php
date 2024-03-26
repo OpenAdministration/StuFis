@@ -4,8 +4,7 @@
 use App\Http\Controllers\LegacyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function(){
-
+Route::middleware(['auth', 'legacy:login'])->group(function(){
     Route::get('menu/{sub}/', [LegacyController::class, 'render'])->name('menu');
     Route::get('konto/{hhp?}/{konto?}', [LegacyController::class, 'render'])->name('konto');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');

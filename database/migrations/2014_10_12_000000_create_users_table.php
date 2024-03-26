@@ -19,11 +19,7 @@ return new class extends Migration
             $table->string('username');
             $table->string('email');
             $table->string('provider');
-            $table->string('provider_sub');
-            $table->text('provider_token');
-            $table->timestamp('provider_token_expiration');
-            $table->text('provider_refresh_token');
-            $table->timestamp('provider_refresh_token_expiration');
+            $table->string('provider_uid');
             $table->string('picture_url');
             $table->string('iban');
             $table->string('address');

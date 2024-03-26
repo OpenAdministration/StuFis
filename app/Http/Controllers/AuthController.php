@@ -3,73 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Providers\RouteServiceProvider;
+use App\Services\Auth\AuthService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController
 {
-    private string $driverName;
 
-    public function __construct()
-    {
-        $this->driverName = config('auth.socialite');
-    }
+    public function __construct(private readonly AuthService $authService){}
 
     public function login(){
-        $driver = Socialite::driver($this->driverName);
-        match ($this->driverName){
-            'keycloak' => $driver->scopes(['openid', 'profile', 'phone', 'address', 'roles', 'groups'])->stateless(),
-            'laravelpassport' => $driver,
-        };
-        return $driver->redirect();
+        return $this->authService->prepareLogin();
     }
 
-    public function callback(){
+    public function callback(Request $request): RedirectResponse
+    {
         if (Auth::guest()) {
-            $driver = Socialite::driver($this->driverName);
-            // if we have a local dev instance of stumv there is no need to verify ssl certs
-            if (\App::isLocal()){
-                $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
-            }
-            $userByProvider = match ($this->driverName){
-                'keycloak' => $driver->stateless()->user(),
-                'laravelpassport' => $driver->user(),
-            };
-            [$uniqueIds, $attributes] = match ($this->driverName){
-                'keycloak' => $this->remap_keycloak($userByProvider),
-                'laravelpassport' => $this->remap_laravelpassport($userByProvider),
-            };
+            [$identifiers, $userAttributes] = $this->authService->userFromCallback($request);
 
-            $user = User::updateOrCreate($uniqueIds, $attributes);
+            $user = User::updateOrCreate($identifiers, $userAttributes);
 
             Auth::login($user);
-            //return view('components.dump', ['dump' => $userByProvider]);
         }
-        return redirect('/');
+        return redirect()->intended(RouteServiceProvider::HOME);
 
-    }
-
-    private function remap_laravelpassport($user)
-    {
-        $attributes = $user->getRaw();
-        $tokenResponse = $user->accessTokenResponseBody;
-        $uniqueAttributes = [
-            'provider_sub' => $attributes['id'],
-            'provider' => $this->driverName,
-        ];
-        $updateableAttributes = [
-            'name' => $attributes['name'],
-            'username' => $attributes['nickname'],
-            'email' => $attributes['email'],
-            'provider_token' => $user->token,
-            'provider_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
-            'provider_refresh_token' => $user->refreshToken,
-            'provider_refresh_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
-            'picture_url' => $attributes['avatar'] ?? '',
-            'iban' => $attributes['iban'] ?? '',
-            'address' => $attributes['address'] ?? '',
-        ];
-        return [$uniqueAttributes, $updateableAttributes];
     }
 
     private function remap_keycloak($user) : array
@@ -96,12 +56,8 @@ class AuthController
     }
 
     public function logout() {
-        $redirect_url = match ($this->driverName){
-            'keycloak' => Socialite::driver($this->driverName)->getLogoutUrl(),
-            'laravelpassport' => config('services.laravelpassport.host') . config('services.laravelpassport.logout_path')
-        };
         Auth::logout();
-        // Logout of the laravel app and fwd to keycloak logout
-        return redirect(to: $redirect_url);
+        // call after logout routine
+        return $this->authService->afterLogout();
     }
 }

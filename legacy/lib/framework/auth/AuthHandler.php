@@ -34,16 +34,7 @@ class AuthHandler extends Singleton
 
     public function getUserMailinglists(): array
     {
-        return $this->getAttributes()['mailinglists'] ?? [];
-    }
-
-    /**
-     * return current user attributes
-     */
-    protected function getAttributes(): array {
-        return [
-            'groups' => '',
-        ];
+        return [];
     }
 
     /**
@@ -72,7 +63,7 @@ class AuthHandler extends Singleton
      * handle session and user login
      */
     public function requireAuth(){
-        // laravel does this, just do nothing
+        Auth::user()->getGroups()->has('login');
     }
 
     /**
@@ -86,21 +77,7 @@ class AuthHandler extends Singleton
 
     public function getUserGroups(): array
     {
-        return request()?->user()->getGroups();
-    }
-
-    /**
-     * return log out url
-     */
-    public function getLogoutURL(): string {
-        return "not my job anymore";
-    }
-
-    /**
-     * send html header to redirect to logout url
-     */
-    public function logout(): void{
-
+        return request()?->user()->getGroups()->toArray();
     }
 
     /**
@@ -149,11 +126,7 @@ class AuthHandler extends Singleton
      */
     public function getUserGremien(): array
     {
-        return Auth::user()->getCommittees();
+        return Auth::user()->getCommittees()->toArray();
     }
 
-    public function reportPermissionDenied(string $errorMsg, string $debug): void
-    {
-        throw new LegacyDieException(403, $errorMsg, $debug);
-    }
 }

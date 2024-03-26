@@ -17,6 +17,19 @@ class AuthServiceProvider extends ServiceProvider
     ];
 
     /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->app->singleton(AuthService::class, function (Application $application){
+            return match (config('auth.service')){
+                'stumv' => new StumvAuthService(),
+                'local' => new LocalAuthService(),
+            };
+        });
+    }
+
+    /**
      * Register any authentication / authorization services.
      *
      * @return void

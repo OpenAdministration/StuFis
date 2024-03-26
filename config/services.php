@@ -40,11 +40,19 @@ return [
     ],
 
     'laravelpassport' => [
-        'client_id' => env('LARAVELPASSPORT_CLIENT_ID'),
-        'client_secret' => env('LARAVELPASSPORT_CLIENT_SECRET'),
-        'redirect' => env('LARAVELPASSPORT_REDIRECT_URI'),
-        'host' => env('LARAVELPASSPORT_HOST'),
-        'logout_path' => env('LARAVELPASSPORT_LOGOUT_PATH', 'logout')
+        'client_id' => env('STUMV_CLIENT_ID'),
+        'client_secret' => env('STUMV_CLIENT_SECRET'),
+        'redirect' => env('STUMV_REDIRECT_URI'),
+        'host' => env('STUMV_HOST'),
+        'logout_path' => env('STUMV_LOGOUT_PATH', 'logout'),
+        'mapping' => [
+            'login' => env('STUMV_GROUP_LOGIN', 'login'),
+            'ref-finanzen' => env('STUMV_GROUP_REVISION'),
+            'ref-finanzen-belege' => env('STUMV_GROUP_INVOICE'),
+            'ref-finanzen-kv' => env('STUMV_GROUP_KV'),
+            'ref-finanzen-hv' => env('STUMV_GROUP_HV'),
+            'admin' => env('STUMV_GROUP_ADMIN'),
+        ],
     ],
 
 

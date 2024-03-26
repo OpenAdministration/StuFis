@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\Auth\AuthService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider;
@@ -77,9 +79,7 @@ class User extends Authenticatable
         'email',
         'password',
         'provider',
-        'provider_sub',
-        'provider_token',
-        'provider_refresh_token',
+        'provider_uid',
         'picture_url',
         'iban',
         'address',
@@ -104,36 +104,13 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function getGroups(){
-        switch ($this->provider){
-            case 'keycloak':
-                if ($this->provider_token_expiration < now()){
-
-                    $driver = Socialite::driver('keycloak');
-                    if (\App::isLocal()){
-                        $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
-                    }
-                    $user = $driver->userFromToken($this->provider_token);
-                    return $user['groups'];
-                }
-                return "Token too old - refreshing token not yet implemented :/";
-            case 'laravelpassport':
-                return [
-                    'login',
-                    #'ref-finanzen',
-                    #'ref-finanzen-kv',
-                    #'ref-finanzen-belege',
-                    #'ref-finanzen-hv',
-                    'admin'
-                ];
-            default:
-                throw new InvalidConfig('Provider groups not yet implemented');
-        }
-
+    public function getGroups() : Collection
+    {
+        return app(AuthService::class)->userGroups();
     }
 
-    public function getCommittees()
+    public function getCommittees() : Collection
     {
-        return ['Studierendenrat (StuRa)',];
+        return app(AuthService::class)->userCommittees();
     }
 }
