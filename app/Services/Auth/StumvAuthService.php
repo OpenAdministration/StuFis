@@ -7,7 +7,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -35,8 +34,8 @@ class StumvAuthService extends AuthService
             $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
         }
         $user = $driver->user();
-        /**
-         * Array:
+
+        /** Array:
          *  token_type => Bearer,
          *  expires_in => (int),
          *  access_token => (string),
@@ -66,21 +65,25 @@ class StumvAuthService extends AuthService
 
     public function userCommittees(): Collection
     {
-        return $this->api()->get('/api/committees')->collect();
+        return $this->api()->get('/api/my/committees')->collect();
     }
 
     public function userGroupsRaw(): Collection
     {
-        return $this->api()->get('/api/groups')->collect();
+        return $this->api()->get('/api/my/groups')->collect();
     }
 
     public function userGroups() : Collection
     {
         $rawGroups = $this->userGroupsRaw();
-        $mapping = collect(config('services.laravelpassport.mapping'));
+        $mapping = collect(config('services.laravelpassport.mapping', []));
+        if($mapping->isEmpty()){
+            return $this->userGroupsRaw();
+        }
         // permissions to obtain are the keys of the $mapping
         return $mapping->filter(function ($value) use ($rawGroups){
             // filter permissions, that are not given by provider
+            // prevent permission escalation by ignoring empty mappings
             return $rawGroups->contains($value) && !empty($value);
         })->keys();
     }
@@ -95,6 +98,7 @@ class StumvAuthService extends AuthService
 
     public function allCommittees(): Collection
     {
-        // TODO: Implement allCommittees() method.
+        $community_uid = config('stufis.community_uid');
+        return $this->api()->get("/api/committees/$community_uid")->collect();
     }
 }

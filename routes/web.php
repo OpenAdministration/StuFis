@@ -18,7 +18,7 @@ Route::redirect('/', 'menu/mygremium')->name('home');
 
 Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
-Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback']);
+Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
 
 Route::middleware(['auth'])->group(function(){
 

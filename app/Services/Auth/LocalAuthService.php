@@ -14,17 +14,20 @@ class LocalAuthService extends AuthService
     private string $username;
     public function __construct()
     {
-        $this->username = config('services.local.user');
+        $this->username = config('local.auth.username');
     }
 
     public function prepareLogin(): Response|RedirectResponse
     {
-        return redirect()->route('auth.callback');
+        return redirect()->route('login.callback');
     }
 
     public function userFromCallback(Request $request): array
     {
-        return ['username' => $this->username, []];
+        return [
+            ['username' => $this->username],
+            []
+        ];
     }
 
     public function userCommittees(): Collection
