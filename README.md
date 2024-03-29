@@ -13,7 +13,7 @@ Login Information: https://open-administration.de/index.php/finanzverwaltungssof
 * php8.2
 * MariaDB / Mysql
 * a registration Number from [Deutsche Kreditwirtschaft](https://www.hbci-zka.de/register/hersteller.htm)
-* SAML or OAuth Identity Provider (IdP) (this might change in the future), which has the following `groups` attributes (for matching rights), `ref-finanzen`, `ref-finanzen-hv`, `ref-finanzen-kv`, `ref-finanzen-belege` they can be prefixed by a realm and also free picked in future commits. 
+* OAuth2 Identity Provider (IdP), SAML in the future 
 
 ## Installation Dev
 
@@ -26,13 +26,13 @@ npm run dev
 cp .env.example .env
 php artisan key:generate
 ```
-And fill in your Environment File!
+And fill in your Environment File! 
 
 ```bash
 php artisan migrate
 php artisan serve
 ```
-## Installation Production
+
 # Feature Request 
 Please write an issue in this github repository 
 
