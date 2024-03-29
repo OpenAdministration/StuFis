@@ -15,6 +15,7 @@
 
    ]) }}
 >
+    @isset($icon)
     <x-dynamic-component :component="$icon"
         @class([
             'w-6 h-6',
@@ -23,6 +24,7 @@
             'text-white' => $active
         ])
     />
+    @endisset
     <span @class([ 'mt-2' => !$mobile ])>
         {{ $slot }}
     </span>

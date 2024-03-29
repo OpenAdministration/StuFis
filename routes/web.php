@@ -28,6 +28,19 @@ Route::middleware(['auth'])->group(function(){
     //Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
 });
 
+// guest routes
+Route::get('about', function (){
+    return redirect(config('app.about_url'));
+})->name('about');
+
+Route::get('privacy', function (){
+    return redirect(config('app.privacy_url'));
+})->name('privacy');
+
+Route::get('terms', function (){
+    return redirect(config('app.terms_url'));
+})->name('terms');
+
 
 if (App::isLocal()){
     Route::get('dev/groups', [\App\Http\Controllers\Dev::class, 'groups']);

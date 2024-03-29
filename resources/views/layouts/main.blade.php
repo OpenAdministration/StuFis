@@ -14,35 +14,35 @@
 <div x-data="{ mobileMenu : false }" class="h-full flex">
     <!-- Narrow sidebar -->
     <div class="hidden w-28 bg-indigo-700 overflow-y-auto md:block">
-        <div class="w-full py-6 flex flex-col items-center">
-            <div class="flex-shrink-0 flex items-center">
-                <x-logo class="h-16 w-auto"/>
-            </div>
-            <div class="flex-1 mt-6 w-full px-2 space-y-1">
+        <div class="w-full py-6 flex flex-col items-center justify-between">
+            <x-logo class="h-16 w-auto"/>
+            <div class="mt-6 w-full px-2 space-y-1">
                 <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
                             :active="Route::is('legacy.dashboard')"
                             icon="heroicon-o-home"
                 >
                     Übersicht
                 </x-nav-item>
-                <x-nav-item :href="route('legacy.todo.belege')"
-                            :active="Route::is('legacy.todo.*')"
-                            icon="heroicon-o-clipboard-document-check"
-                >
-                    TODO
-                </x-nav-item>
-                <x-nav-item :href="route('legacy.booking')"
-                            :active="Route::is('legacy.booking*')"
-                            icon="heroicon-o-book-open"
-                >
-                    Buchungen
-                </x-nav-item>
-                <x-nav-item :href="route('legacy.konto')"
-                            :active="Route::is('legacy.konto')"
-                            icon="heroicon-o-credit-card"
-                >
-                    Konto
-                </x-nav-item>
+                @can('finance', Auth::user())
+                    <x-nav-item :href="route('legacy.todo.belege')"
+                                :active="Route::is('legacy.todo.*')"
+                                icon="heroicon-o-clipboard-document-check"
+                    >
+                        TODO
+                    </x-nav-item>
+                    <x-nav-item :href="route('legacy.booking')"
+                                :active="Route::is('legacy.booking*')"
+                                icon="heroicon-o-book-open"
+                    >
+                        Buchungen
+                    </x-nav-item>
+                    <x-nav-item :href="route('legacy.konto')"
+                                :active="Route::is('legacy.konto')"
+                                icon="heroicon-o-credit-card"
+                    >
+                        Konto
+                    </x-nav-item>
+                @endcan
                 <x-nav-item :href="route('legacy.sitzung')"
                             :active="Route::is('legacy.sitzung')"
                             icon="heroicon-o-user-group"
@@ -56,7 +56,13 @@
                     Haushalt
                 </x-nav-item>
             </div>
+            <div class="flex flex-col items-center space-y-0.5 text-indigo-400 text-sm mt-6">
+                <a href="{{ route('terms') }}">ToS</a>
+                <a href="{{ route('about') }}">Impressum</a>
+                <a href="{{ route('privacy') }}">Datenschutz</a>
+            </div>
         </div>
+
     </div>
     <!--
       Mobile menu
@@ -104,7 +110,48 @@
                 <div class="mt-5 flex-1 h-0 px-2 overflow-y-auto">
                     <nav class="h-full flex flex-col">
                         <div class="space-y-1">
-                            FIXME
+                            <x-nav-item mobile :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
+                                        :active="Route::is('legacy.dashboard')"
+                                        icon="heroicon-o-home"
+                            >
+                                Übersicht
+                            </x-nav-item>
+                            @can('finance', Auth::user())
+                                <x-nav-item mobile :href="route('legacy.todo.belege')"
+                                            :active="Route::is('legacy.todo.*')"
+                                            icon="heroicon-o-clipboard-document-check"
+                                >
+                                    TODO
+                                </x-nav-item>
+                                <x-nav-item mobile :href="route('legacy.booking')"
+                                            :active="Route::is('legacy.booking*')"
+                                            icon="heroicon-o-book-open"
+                                >
+                                    Buchungen
+                                </x-nav-item>
+                                <x-nav-item mobile :href="route('legacy.konto')"
+                                            :active="Route::is('legacy.konto')"
+                                            icon="heroicon-o-credit-card"
+                                >
+                                    Konto
+                                </x-nav-item>
+                            @endcan
+                            <x-nav-item mobile :href="route('legacy.sitzung')"
+                                        :active="Route::is('legacy.sitzung')"
+                                        icon="heroicon-o-user-group"
+                            >
+                                Sitzung
+                            </x-nav-item>
+                            <x-nav-item mobile :href="route('legacy.hhp')"
+                                        :active="Route::is('legacy.hhp')"
+                                        icon="heroicon-o-table-cells"
+                            >
+                                Haushalt
+                            </x-nav-item>
+                            <div class="h-4"></div>
+                            <x-nav-item mobile :href="route('terms')">TOS</x-nav-item>
+                            <x-nav-item mobile :href="route('about')">Impressum</x-nav-item>
+                            <x-nav-item mobile :href="route('privacy')">Datenschutz</x-nav-item>
                         </div>
                     </nav>
                 </div>

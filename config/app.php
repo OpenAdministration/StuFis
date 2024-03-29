@@ -185,6 +185,7 @@ return [
         /*
          * Package Service Providers...
          */
+        \SocialiteProviders\Manager\ServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -198,7 +199,7 @@ return [
         /*
          * custom by me
          */
-        \SocialiteProviders\Manager\ServiceProvider::class,
+
     ],
 
     /*
@@ -213,7 +214,14 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
-        // 'ExampleClass' => App\Example\ExampleClass::class,
+        'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
     ])->toArray(),
+
+
+    // app specific custom config
+    'about_url' => env('ABOUT_URL', 'https://open-administration.de/index.php/kontakt-und-impressum/'),
+    'privacy_url' => env('PRIVACY_URL', 'https://open-administration.de/index.php/datenschutz/'),
+    'terms_url' => env('TERMS_URL', 'https://open-administration.de/index.php/nutzungsbedingungen/'),
+    'help_contact_mail' => env('HELP_CONTACT_MAIL', 'stufis@open-administration.de'),
 
 ];
