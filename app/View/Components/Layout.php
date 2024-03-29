@@ -13,55 +13,6 @@ class Layout extends Component
      */
     public string $legacyContent = '';
 
-    public array $navigationSkeleton = [
-        [
-            'icon' => 'heroicon-o-home',
-            'text' => 'Übersicht',
-            'route' => [
-                'name' => 'menu',
-                'parameters' => ['sub' => 'mygremium'],
-            ],
-        ],
-        [
-            'icon' => 'heroicon-o-clipboard-document-check',
-            'text' => 'TODO',
-            'route' => [
-                'name' => 'menu',
-                'parameters' => ['sub' => 'belege'],
-            ],
-        ],
-        [
-            'icon' => 'heroicon-o-book-open',
-            'text' => 'Buchungen',
-            'route' => [
-                'name' => 'booking',
-            ],
-        ],
-        [
-            'icon' => 'heroicon-o-credit-card',
-            'text' => 'Konto',
-            'route' => [
-                'name' => 'konto',
-            ],
-        ],
-        [
-            'icon' => 'heroicon-o-user-group',
-            'text' => 'Sitzung',
-            'route' => [
-                'name' => 'menu',
-                'parameters' => ['sub' => 'stura'],
-            ],
-        ],
-        [
-            'icon' => 'heroicon-o-table-cells',
-            'text' => 'Haushalt',
-            'route' => [
-                'name' => 'hhp',
-            ],
-        ],
-
-    ];
-
     public array $profileSkeleton = [
         [
             'text' => 'Mein Profil',
@@ -90,6 +41,6 @@ class Layout extends Component
      */
     public function render()
     {
-        return view('components.layout');
+        return view('layouts.main');
     }
 }

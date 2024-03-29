@@ -19,13 +19,42 @@
                 <x-logo class="h-16 w-auto"/>
             </div>
             <div class="flex-1 mt-6 w-full px-2 space-y-1">
-                @foreach($navigationSkeleton as $item)
-                    <!-- Current: "bg-indigo-800 text-white", Default: "text-indigo-100 hover:bg-indigo-800 hover:text-white" -->
-                    <a href="{{ route(...$item['route']) }}" class="text-indigo-100 hover:bg-indigo-800 hover:text-white group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium">
-                        <x-dynamic-component :component="$item['icon']" class="text-indigo-300 group-hover:text-white w-6 h-6"></x-dynamic-component>
-                        <span class="mt-2">{{ $item['text'] }}</span>
-                    </a>
-                @endforeach
+                <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
+                            :active="Route::is('legacy.dashboard')"
+                            icon="heroicon-o-home"
+                >
+                    Übersicht
+                </x-nav-item>
+                <x-nav-item :href="route('legacy.todo.belege')"
+                            :active="Route::is('legacy.todo.*')"
+                            icon="heroicon-o-clipboard-document-check"
+                >
+                    TODO
+                </x-nav-item>
+                <x-nav-item :href="route('legacy.booking')"
+                            :active="Route::is('legacy.booking*')"
+                            icon="heroicon-o-book-open"
+                >
+                    Buchungen
+                </x-nav-item>
+                <x-nav-item :href="route('legacy.konto')"
+                            :active="Route::is('legacy.konto')"
+                            icon="heroicon-o-credit-card"
+                >
+                    Konto
+                </x-nav-item>
+                <x-nav-item :href="route('legacy.sitzung')"
+                            :active="Route::is('legacy.sitzung')"
+                            icon="heroicon-o-user-group"
+                >
+                    Sitzung
+                </x-nav-item>
+                <x-nav-item :href="route('legacy.hhp')"
+                            :active="Route::is('legacy.hhp')"
+                            icon="heroicon-o-table-cells"
+                >
+                    Haushalt
+                </x-nav-item>
             </div>
         </div>
     </div>
@@ -75,13 +104,7 @@
                 <div class="mt-5 flex-1 h-0 px-2 overflow-y-auto">
                     <nav class="h-full flex flex-col">
                         <div class="space-y-1">
-                            @foreach($navigationSkeleton as $item)
-                                <!-- Current: "bg-indigo-800 text-white", Default: "text-indigo-100 hover:bg-indigo-800 hover:text-white" -->
-                                <a href="{{ route(...$item['route']) }}" class="text-indigo-100 hover:bg-indigo-800 hover:text-white group py-2 px-3 rounded-md flex items-center text-sm font-medium">
-                                    <x-dynamic-component :component="$item['icon']" class="text-indigo-300 group-hover:text-white mr-3 h-6 w-6"></x-dynamic-component>
-                                    <span>{{ $item['text'] }}</span>
-                                </a>
-                            @endforeach
+                            FIXME
                         </div>
                     </nav>
                 </div>
@@ -148,7 +171,7 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <x-heroicon-o-plus-small class="h-6 w-6"/>
                             <span class="sr-only">Neues Projekt</span>
                         </a>

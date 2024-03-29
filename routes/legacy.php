@@ -4,11 +4,18 @@
 use App\Http\Controllers\LegacyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'legacy:login'])->group(function(){
-    Route::get('menu/{sub}/', [LegacyController::class, 'render'])->name('menu');
+Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
+    Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
+    Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');
+    Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');
+    Route::get('menu/stura', [LegacyController::class, 'render'])->name('sitzung');
+    Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
     Route::get('konto/{hhp?}/{konto?}', [LegacyController::class, 'render'])->name('konto');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');
-    Route::get('hhp', [LegacyController::class, 'render'])->name('hhp');
+    Route::get('booking/{hhp_id}/instruct', [LegacyController::class, 'render'])->name('booking.instruct');
+    Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');
+    Route::get('booking/{hhp_id}/history', [LegacyController::class, 'render'])->name('booking.history');
+    Route::get('hhp/{id?}', [LegacyController::class, 'render'])->name('hhp');
     Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-project');
 
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
