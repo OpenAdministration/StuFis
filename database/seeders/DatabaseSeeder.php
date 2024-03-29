@@ -21,5 +21,9 @@ class DatabaseSeeder extends Seeder
         BudgetPlan::factory(5)->populate()->create();
 
         $this->call(LegacySeeder::class);
+
+        if(\App::isLocal()){
+            $this->call(LocalSeeder::class);
+        }
     }
 }

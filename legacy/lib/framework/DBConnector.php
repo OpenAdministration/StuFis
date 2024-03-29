@@ -42,7 +42,7 @@ class DBConnector extends Singleton
         HTMLPageRenderer::registerProfilingBreakpoint('init-db-connection');
         $this->initScheme();
         $this->pdo = DB::getPdo();
-        $this->dbPrefix = env('DB_TABLE_PREFIX');
+        $this->dbPrefix = config('database.connections.mysql.prefix');
     }
 
     private function initScheme(): void

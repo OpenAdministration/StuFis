@@ -32,33 +32,23 @@ class LegacySeeder extends Seeder
             [
                 'titel_name' => 'Einnahme 1',
                 'hhpgruppen_id' => 1,
-                'titel_nr' => "1",
+                'titel_nr' => "E1",
                 'value' => 1000,
             ], [
                 'titel_name' => 'Ausgabe 1',
                 'hhpgruppen_id' => 2,
-                'titel_nr' => "1",
+                'titel_nr' => "A1",
                 'value' => 10000,
             ],
         ]);
 
-        \DB::table('user')->insert([
-            [
-                'id' => 1,
-                'name' => 'Normal User',
-                'username' => 'user',
-                'email' => 'user@example.org',
-            ],[
-                'id' => 2,
-                'name' => 'Budget Manager',
-                'username' => 'hv',
-                'email' => 'hv@example.org',
-            ],[
-                'id' => 3,
-                'name' => 'Cash Manager',
-                'username' => 'kv',
-                'email' => 'kv@example.org',
-            ]
+        \DB::table('konto_type')->insert([
+            'name' => 'Cash',
+            'short' => 'C',
+        ]);
+        // insert does not take 0 as id
+        \DB::table('konto_type')->where('short', '=', 'C')->update([
+            'id' => 0,
         ]);
     }
 }
