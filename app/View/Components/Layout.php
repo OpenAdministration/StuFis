@@ -6,7 +6,7 @@ use Illuminate\View\Component;
 
 class Layout extends Component
 {
-    public string $title = "Finanzen";
+    public string $title = "StuFiS - Finanzen";
 
     /**
      * @var string if not empty, the legacy iframe will be shown with this content, instead of the slot
