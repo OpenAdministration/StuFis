@@ -389,7 +389,13 @@ class HHPHandler extends Renderer
         } ?>
         </table>
         <a class="btn btn-primary" target="_blank" href="<?php echo URIBASE; ?>export/hhp/<?php echo $hhp_id; ?>/csv">
-            <i class="fa fa-fw fa-download"></i> HHA als CSV (WINDOWS-1252 encoded)
+            <i class="fa fa-fw fa-download"></i> als CSV (WIN-1252 encoded)
+        </a>
+        <a class="btn btn-primary" target="_blank" href="<?php echo URIBASE; ?>download/hhp/<?php echo $hhp_id; ?>/xlsx">
+            <i class="fa fa-fw fa-download"></i> als XLSX
+        </a>
+        <a class="btn btn-primary" target="_blank" href="<?php echo URIBASE; ?>download/hhp/<?php echo $hhp_id; ?>/ods">
+            <i class="fa fa-fw fa-download"></i> als ODS
         </a>
 		<?php
     }
