@@ -5,7 +5,7 @@
     'active' => false,
 ])
 
-<a href="{{ $href }}"
+<a href="{{ $href }}" wire:navigate
    {{ $attributes->class([
         "group rounded-md flex rounded-md flex items-center font-medium",
         "text-indigo-100 hover:bg-indigo-800 hover:text-white" => !$active,
