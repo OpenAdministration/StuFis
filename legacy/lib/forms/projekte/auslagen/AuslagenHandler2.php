@@ -2667,21 +2667,46 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
                 <?php
             } ?>
-            <div class="col-xs-12 form-group">
-                <a href="#" data-toggle="modal" data-target="#expenses-delete-dlg" class="btn btn-danger">
-                    <i class="fa fa-fw fa-trash"></i>&nbsp;Erstattung löschen
-                </a>
-            </div> <?php
+            <?php if($this->routeInfo['action'] !== 'edit' && $this->routeInfo['action'] !== 'create'){ ?>
+                <div class="col-xs-12 form-group">
+                    <a href="#" data-toggle="modal" data-target="#expenses-delete-dlg" class="btn btn-danger">
+                        <i class="fa fa-fw fa-trash"></i>&nbsp;Erstattung löschen
+                    </a>
+                </div>
+                <div class="clearfix"></div>
+            <?php } ?>
+        </div> <?php
+        if ($this->routeInfo['action'] !== 'edit' && $this->routeInfo['action'] !== 'create') {
             $projectOwner = (new ProjektHandler(['id' => $this->projekt_id, 'action' => 'none']))->isOwner();
             $hasPermission = $this->isOwner() || $projectOwner || AuthHandler::getInstance()->hasGroup('ref-finanzen-hv');
             $deletableState = !in_array($this->stateInfo['state'], ['instructed','booked'], true);
             $permissionIcon = $hasPermission ? "fa-check" : "fa-ban";
             $abrechnungIcon = $deletableState ? "fa-check" : "fa-ban";
             ?>
-
-            <div class="clearfix"></div>
-        </div>
-        <?php
+        <form action="<?= route('legacy.expenses.delete', ['expenses_id' => $this->auslagen_id]) ?>" method="POST">
+            <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
+            <?php
+            HTMLPageRenderer::injectModal(
+                'expenses-delete',
+                "<div class='js-head'>Wirklich Löschen?</div>",
+                "Diese Abrechnung kann endgültig gelöscht werden wenn,
+                    <ul>
+                        <li>du Projektersteller*in, Abrechnungsersteller*in oder Haushaltsverantwortliche*r bist <i class='fa $permissionIcon'></i></li>
+                        <li>die Abrechnung noch nicht im Status 'Angewiesen' ist <i class='fa $abrechnungIcon'></i></li>
+                    </ul>
+                    Wenn die Abrechnung gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.
+                    ",
+                "Abbrechen",
+                "Unwiderruflich Löschen",
+                'danger',
+                canConfirm: function () use ($hasPermission, $deletableState){
+                    return $hasPermission && $deletableState;
+                },
+                actionButtonType: "submit"
+            );
+            ?>
+        </form>
+        <?php }
     }
 
     public function render_auslagen_beleg_diagrams($label = ''): void
@@ -2720,30 +2745,6 @@ class AuslagenHandler2 extends FormHandlerInterface
                 </div>
             </div>
         </div>
-
-        <form action="<?= route('legacy.expenses.delete', ['expenses_id' => $this->auslagen_id]) ?>" method="POST">
-            <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
-            <?php
-            HTMLPageRenderer::injectModal(
-                'expenses-delete',
-                "<div class='js-head'>Wirklich Löschen?</div>",
-                "Diese Abrechnung kann endgültig gelöscht werden wenn,
-                    <ul>
-                        <li>du Projektersteller*in, Abrechnungsersteller*in oder Haushaltsverantwortliche*r bist <i class='fa $permissionIcon'></i></li>
-                        <li>die Abrechnung noch nicht im Status 'Angewiesen' ist <i class='fa $abrechnungIcon'></i></li>
-                    </ul>
-                    Wenn die Abrechnung gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.
-                    ",
-                "Abbrechen",
-                "Unwiderruflich Löschen",
-                'danger',
-                canConfirm: function () use ($hasPermission, $deletableState){
-                    return $hasPermission && $deletableState;
-                },
-                actionButtonType: "submit"
-            );
-            ?>
-        </form>
         <?php
     }
 

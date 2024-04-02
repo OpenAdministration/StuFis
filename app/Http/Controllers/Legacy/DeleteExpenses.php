@@ -25,9 +25,9 @@ class DeleteExpenses extends Controller
             || explode(";", $expense->created)[1] === \Auth::user()->username
         ;
         // authorize state
-        $dataPerm = true;
+        $deletableState = !in_array(explode(";", $expense->state)[0], ['instructed','booked'], true);
 
-        if($userPerm === false || $dataPerm === false){
+        if($userPerm === false || $deletableState === false){
             abort(403);
         }
         // to make sure to delete everything and not only parts
