@@ -1187,7 +1187,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         foreach ($beleg_file_map as $fileInfo) {
             $file_id = 0;
             // handle file upload
-            $res = $fh->upload((int) $fileInfo['link'], $fileInfo['file'], $this->auslagen_id);
+            $res = $fh->upload((int) $fileInfo['link'], $fileInfo['file'], $this->auslagen_data['id']);
             if (count($res['error']) > 0) {
                 $emsg = '';
                 foreach ($res['error'] as $e) {
@@ -2629,7 +2629,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         } ?>
             <?php if (isset($this->auslagen_data['id'], $this->auslagen_data['belege']) && $this->routeInfo['action'] !== 'edit' && count($this->auslagen_data['belege']) > 0) { ?>
                 <div class="col-xs-12 form-group">
-                    <a href="<?= route('belege-pdf', [
+                    <a href="<?= route('legacy.belege-pdf', [
                         'project_id' => $this->projekt_id,
                         'auslagen_id' => $this->auslagen_id,
                         'version' => $this->auslagen_data['version']
