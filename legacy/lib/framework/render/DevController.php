@@ -30,12 +30,27 @@ class DevController extends Renderer
 
     public function actionGroups(): void
     {
-        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGroups(), true) . '</pre>';
+        echo '<pre>';
+        echo "\n---RAW GROUPS---\n";
+        echo var_export(AuthHandler::getInstance()->getRawUserGroups(), true);
+        echo "\n---MAPPED GROUPS---\n";
+        echo var_export(AuthHandler::getInstance()->getUserGroups(), true);
+        echo "\n---PERMISSIONS---\n";
+        foreach (['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-kv', 'ref-finanzen-belege'] as $group){
+            echo "$group: " . var_export(AuthHandler::getInstance()->hasGroup($group), true) . "\n";
+        }
+        echo "admin: " . var_export(AuthHandler::getInstance()->isAdmin(), true) . "\n";
+        echo '</pre>';
     }
 
     public function actionGremien(): void
     {
         echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGremien(), true) . '</pre>';
+    }
+
+    public function actionAttributes(): void
+    {
+        echo '<pre>' . var_export(AuthHandler::getInstance()->debugInfo(), true) . '</pre>';
     }
 
     public function actionLogout()

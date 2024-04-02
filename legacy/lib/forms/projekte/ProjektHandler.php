@@ -332,7 +332,7 @@ class ProjektHandler extends FormHandlerInterface
         $version = (int) $data['version'];
 
         //check if version is the same
-        if ($version !== $this->data['version']) {
+        if (((int) $version) !== ((int) $this->data['version'])) {
             throw new WrongVersionException('Projekt wurde zwischenzeitlich schon von jemand anderem bearbeitet!');
         }
         //check if row count is everywhere the same
@@ -591,7 +591,8 @@ class ProjektHandler extends FormHandlerInterface
         $hhpId = $hhpId[0]['id'];
         $selectable_titel = FormTemplater::generateTitelSelectable($hhpId); ?>
         <div class='col-xs-12 col-md-10'>
-            <?php if ($editable) { ?>
+            <?php
+            if ($editable) { ?>
             <form role="form" action="<?php echo URIBASE . 'rest/forms/projekt'; ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?php echo $this->templater->getHiddenActionInput(isset($this->id) ? 'update' : 'create'); ?>
@@ -686,9 +687,9 @@ class ProjektHandler extends FormHandlerInterface
                             $this->data['protokoll'],
                             12,
                             '...',
-                            'Beschluss (Wiki-Direktlink)',
+                            'Beschluss / Protokoll-Link',
                             ['required'],
-                            'https://wiki.stura.tu-ilmenau.de/protokoll/'
+                            ORG_DATA['projekt-form']['protokoll-prefix']
                         );
                     } ?>
                     <?php echo $this->templater->getDatePickerForm(

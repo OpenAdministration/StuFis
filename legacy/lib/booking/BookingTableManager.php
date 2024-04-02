@@ -73,7 +73,9 @@ class BookingTableManager extends Renderer
         );
 
         //$this->instructions = array_intersect_key($this->instructions, array_flip([11, 6]));  // FIXME DELETEME
-
+        //echo "<pre>";
+        //var_dump($this->instructions[60]);
+        //echo "</pre>";
         foreach ($this->instructions as $instruct_id => $instruction) {
             $zahlungen = [];
             $extern_ids = [];
@@ -208,7 +210,9 @@ class BookingTableManager extends Renderer
             }
             //var_dump($auslagen_ids);
             $belegeDB[$instruct_id] = array_merge($auslagen, $extern);
+            //echo "<pre>";
             //var_dump($belegeDB[$instruct_id]);
+            //echo "</pre>";
             usort(
                 $belegeDB[$instruct_id],
                 static function ($a, $b) {
@@ -283,7 +287,7 @@ class BookingTableManager extends Renderer
                     <form id="#form-delete-instruction-<?php echo $instruct_id; ?>" method="POST" class="ajax-form"
                           action="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
                         <?php $this->renderNonce(); ?>
-                        <button type="submit" formaction="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
+                        <button type="button" formaction="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
                             <i class="fa fa-fw fa-trash"></i>
                         </button>
                     </form>

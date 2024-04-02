@@ -33,7 +33,7 @@ class FintsConnectionHandler
 
     private ?BaseAction $activeAction;
 
-    private Logger $logger;
+    public Logger $logger;
 
     /**
      * FintsConnectionHandler2 constructor.
@@ -59,6 +59,7 @@ class FintsConnectionHandler
         $this->logger->info('FINTS created', ['credentialId' => $this->credentialId]);
 
         if (DEV) {
+            // log also more internal stuff
             $this->finTs->setLogger($this->logger);
         }
     }
@@ -111,10 +112,12 @@ class FintsConnectionHandler
             $this->setCache('logged-in', true);
             return true;
         } catch (CurlException  $e) {
+            $this->logger->error('Login: Connection failed', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen');
         } catch (ServerException|UnexpectedResponseException $e) {
             $this->setCache('logged-in', null);
             static::deleteLoginPassword($this->credentialId);
+            $this->logger->error('Login failed', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Login nicht erfolgreich, bitte überprüfe die Login Daten', $e->getMessage());
             return false;
         }
@@ -128,6 +131,7 @@ class FintsConnectionHandler
             $this->forgetCachedCredentials($this->credentialId);
             HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich ausgeloggt');
         } catch (ServerException $e) {
+            $this->logger->error('Logout failed', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
             return false;
         }
@@ -146,6 +150,7 @@ class FintsConnectionHandler
             $this->logger->info('Fetch TAN Modes', ['credId' => $this->credentialId]);
             $tanModes = $this->finTs->getTanModes();
         } catch (CurlException|ServerException $e) {
+            $this->logger->info('Fetch TAN Modes failed', ['exception' => $e]);
             ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbringung zur Bank gestört');
         }
         if (empty($tanModes)) {
@@ -174,6 +179,7 @@ class FintsConnectionHandler
 
             return $tanMediumNames;
         } catch (CurlException|ServerException $e) {
+            $this->logger->error('Tan kann nicht empfangen werden - Verbindung zur Bank gestört', ['exception' => $e]);
             ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbindung zur Bank gestört');
         }
     }
@@ -354,6 +360,7 @@ class FintsConnectionHandler
                 throw new NeedsTanException($action);
             }
         } catch (CurlException|ServerException $e) {
+            $this->logger->error('Aktion nicht ausgeführt', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt', );
         }
     }
@@ -397,9 +404,11 @@ class FintsConnectionHandler
             $this->finTs->submitTan($action, $tan);
             $this->saveAction($action);
         } catch (CurlException $e) {
+            $this->logger->error('Submit Tan: no Connection', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
             return false;
         } catch (ServerException $e) {
+            $this->logger->error('Wrong Tan', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN nicht akzeptiert', $e->getMessage());
             return false;
         }
@@ -421,6 +430,7 @@ class FintsConnectionHandler
             $this->saveAction();
             $this->logger->info('Set TAN Mode', ['credId' => $this->credentialId, 'tanMode' => $tanModeId, 'tanMedium' => $tanMediumName]);
         } catch (CurlException|ServerException  $e) {
+            $this->logger->error('BPB fetch failed', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
         }
         $db = DBConnector::getInstance();
