@@ -1,7 +1,7 @@
 <?php
 
 
-use App\Http\Controllers\LegacyController;
+use App\Http\Controllers\Legacy\LegacyController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
@@ -31,7 +31,10 @@ Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     });
 
+    // "new" stuff
     Route::get('download/hhp/{hhp_id}/{filetype}', [\App\Http\Controllers\Legacy\ExportController::class, 'budgetPlan']);
+    Route::post('project/{project_id}/delete', \App\Http\Controllers\Legacy\DeleteProject::class)->name('project.delete');
+
     // catch all
     Route::any('{path}', [LegacyController::class, 'render'])->where('path', '.*');
 });
