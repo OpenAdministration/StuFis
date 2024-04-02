@@ -75,10 +75,10 @@ class KontoController extends Controller
             $mapping = KontoTransaction::getLabels();
 
             // labels anzeigen inkl translation syntax
-
+                // -> blade view rendern
 
             // manuelle zuordnung zu $data keys (aka csv header) vornehmen lassen
-
+                // -> von blade view zu controllerfunktion directen
 
             // mapping values mit data keys überschreiben (sodass jetzt die csv header werte im mapping value stehen)
 
