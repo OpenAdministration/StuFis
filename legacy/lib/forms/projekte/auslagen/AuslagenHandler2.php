@@ -2678,29 +2678,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             $permissionIcon = $hasPermission ? "fa-check" : "fa-ban";
             $abrechnungIcon = $deletableState ? "fa-check" : "fa-ban";
             ?>
-            <form action="<?= route('legacy.expenses.delete', ['expenses_id' => $this->auslagen_id]) ?>" method="POST">
-                <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
-                <?php
-                HTMLPageRenderer::injectModal(
-                    'expenses-delete',
-                    "<div class='js-head'>Wirklich Löschen?</div>",
-                    "Diese Abrechnung kann endgültig gelöscht werden wenn,
-                    <ul>
-                        <li>du Projektersteller*in, Abrechnungsersteller*in oder Haushaltsverantwortliche*r bist <i class='fa $permissionIcon'></i></li>
-                        <li>die Abrechnung noch nicht im Status 'Angewiesen' ist <i class='fa $abrechnungIcon'></i></li>
-                    </ul>
-                    Wenn die Abrechnung gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.
-                    ",
-                    "Abbrechen",
-                    "Unwiderruflich Löschen",
-                    'danger',
-                    canConfirm: function () use ($hasPermission, $deletableState){
-                        return $hasPermission && $deletableState;
-                    },
-                    actionButtonType: "submit"
-                );
-                ?>
-            </form>
+
             <div class="clearfix"></div>
         </div>
         <?php
@@ -2742,6 +2720,30 @@ class AuslagenHandler2 extends FormHandlerInterface
                 </div>
             </div>
         </div>
+
+        <form action="<?= route('legacy.expenses.delete', ['expenses_id' => $this->auslagen_id]) ?>" method="POST">
+            <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
+            <?php
+            HTMLPageRenderer::injectModal(
+                'expenses-delete',
+                "<div class='js-head'>Wirklich Löschen?</div>",
+                "Diese Abrechnung kann endgültig gelöscht werden wenn,
+                    <ul>
+                        <li>du Projektersteller*in, Abrechnungsersteller*in oder Haushaltsverantwortliche*r bist <i class='fa $permissionIcon'></i></li>
+                        <li>die Abrechnung noch nicht im Status 'Angewiesen' ist <i class='fa $abrechnungIcon'></i></li>
+                    </ul>
+                    Wenn die Abrechnung gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.
+                    ",
+                "Abbrechen",
+                "Unwiderruflich Löschen",
+                'danger',
+                canConfirm: function () use ($hasPermission, $deletableState){
+                    return $hasPermission && $deletableState;
+                },
+                actionButtonType: "submit"
+            );
+            ?>
+        </form>
         <?php
     }
 
