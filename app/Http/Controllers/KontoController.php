@@ -71,25 +71,43 @@ class KontoController extends Controller
 
             }
 */
-
+            // hole dbmodel keys und zugeörige translation slugs (aka labels)
             $mapping = KontoTransaction::getLabels();
 
+            // labels anzeigen inkl translation syntax
+
+
+            // manuelle zuordnung zu $data keys (aka csv header) vornehmen lassen
+
+
+            // mapping values mit data keys überschreiben (sodass jetzt die csv header werte im mapping value stehen)
+
+
+            // neues Objekt erstellen mit den Werten aus $data, welche zum header gehören, der in $mapping zugeordnet ist
+            $db_entry = array();
+            foreach ($mapping as $key => $value)
+            {
+                $db_entry[$key] = $data[$mapping[$key]];
+            }
+            KontoTransaction::create($db_entry);
+
+/*
             KontoTransaction::create([
-                'id' => $data[0],
-                'date' => $data[0],
-                'valuta' => $data[0],
-                'type' => $data[0],
-                'empf_iban' => $data[0],
-                'empf_bic' => $data[0],
-                'empf_name' => $data[0],
-                'primanota' => $data[0],
-                'value' => $data[0],
-                'saldo' => $data[0],
-                'zweck' => $data[0],
-                'comment' => $data[0],
-                'gvcode' => $data[0],
-                'customer_ref' => $data[0]
+                'date' => $data[$mapping['date']],
+                'valuta' => $data[$mapping['valuta']],
+                'type' => $data[$mapping['type']],
+                'empf_iban' => $data[$mapping['empf_iban']],
+                'empf_bic' => $data[$mapping['empf_bic']],
+                'empf_name' => $data[$mapping['empf_name']],
+                'primanota' => $data[$mapping['primanota']],
+                'value' => $data[$mapping['value']],
+                'saldo' => $data[$mapping['saldo']],
+                'zweck' => $data[$mapping['zweck']],
+                'comment' => $data[$mapping['comment']],
+                'gvcode' => $data[$mapping['gvcode']],
+                'customer_ref' => $data[$mapping['customer_ref']]
             ]);
+*/
         }
 
         //write the logic here to store csv data in database, header mapping als yaml o.ä. speichern?
