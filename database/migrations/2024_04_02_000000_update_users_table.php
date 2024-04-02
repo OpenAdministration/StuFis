@@ -13,16 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('username');
-            $table->string('email');
+        Schema::table('user', function (Blueprint $table) {
+            // redefined columns
+            $table->renameColumn('fullname', 'name');
+            $table->string('username')->change();
+            $table->string('email')->change();
+            // new columns
             $table->string('provider');
             $table->string('provider_uid');
-            $table->string('picture_url');
-            $table->string('iban');
-            $table->string('address');
+            $table->string('picture_url')->nullable();
+            $table->string('iban')->nullable()->change();
+            $table->string('address')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
