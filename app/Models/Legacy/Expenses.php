@@ -82,6 +82,6 @@ class Expenses extends Model
      */
     public function receipts()
     {
-        return $this->hasMany(\App\Models\Legacy\ExpensesReceipt::class);
+        return $this->hasMany(\App\Models\Legacy\ExpensesReceipt::class, 'auslagen_id');
     }
 }

@@ -60,7 +60,7 @@ class LegacyController extends Controller
                 $file_name
             );
         }
-        // generate file and iframe to diplay it
+        // generate file and iframe to display it
         $this->bootstrap();
         $ah = new AuslagenHandler2([
             'pid' => $project_id,
@@ -68,7 +68,7 @@ class LegacyController extends Controller
             'action' => 'belege-pdf',
         ]);
         $ah->generate_belege_pdf();
-        $path = route('belege-pdf', [
+        $path = route('legacy.belege-pdf', [
             'project_id' => $project_id,
             'auslagen_id' => $auslagen_id,
             'version' => $version,
@@ -93,7 +93,7 @@ class LegacyController extends Controller
             'action' => 'zahlungsanweisung-pdf',
         ]);
         $ah->generate_zahlungsanweisung_pdf();
-        $path = route('zahlungsanweisung-pdf', [
+        $path = route('legacy.zahlungsanweisung-pdf', [
             'project_id' => $project_id,
             'auslagen_id' => $auslagen_id,
             'version' => $version,
