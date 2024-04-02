@@ -65,4 +65,17 @@ class KontoTransaction extends Model
     {
         return $this->belongsTo(Konto::class, 'konto_id');
     }
+
+    public static function getLabels()
+    {
+        $labels = [];
+        $attributes = self::getFillable();
+
+        foreach($attributes as $attribute)
+        {
+            $labels[$attribute] = 'label.konto.transaction.'.$attribute;
+        }
+
+        return $labels;
+    }
 }
