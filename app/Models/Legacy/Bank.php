@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $url
  * @property integer $blz
  * @property string $name
- * @property KontoCredential[] $finanzformularKontoCredentials
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\KontoCredential> $kontoCredentials
+ * @property BankAccountCredential[] $finanzformularKontoCredentials
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankAccountCredential> $kontoCredentials
  * @property-read int|null $konto_credentials_count
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newQuery()
@@ -42,6 +42,6 @@ class Bank extends Model
      */
     public function kontoCredentials()
     {
-        return $this->hasMany(KontoCredential::class, 'bank_id');
+        return $this->hasMany(BankAccountCredential::class, 'bank_id');
     }
 }
