@@ -38,6 +38,7 @@ class LocalAuthService extends AuthService
             'kv' => collect(['Financial Department']),
             'revision' => collect(),
             'external' => collect(),
+            default => collect(),
         };
     }
 
