@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Legacy;
 
 use App\Exports\LegacyBudgetExport;
+use App\Http\Controllers\Controller;
 use App\Models\Legacy\LegacyBudgetPlan;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Excel;

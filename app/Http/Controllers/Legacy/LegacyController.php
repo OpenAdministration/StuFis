@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Legacy;
 
 use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
+use App\Http\Controllers\Controller;
 use forms\projekte\auslagen\AuslagenHandler2;
 use framework\DBConnector;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
@@ -24,7 +25,7 @@ class LegacyController extends Controller
         try {
             ob_start();
             $this->bootstrap();
-            require dirname(__FILE__, 4) . '/legacy/www/index.php';
+            require base_path('legacy/www/index.php');
             $output = ob_get_clean();
             if ($request->input('testing')) {
                 // if wanted by the unit test the content is delivered without the layout

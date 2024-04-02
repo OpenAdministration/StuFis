@@ -190,7 +190,7 @@ class HTMLPageRenderer
         return $out;
     }
 
-private function renderPanelTabs($tabs, $linkbase, $activeTab): void
+    private function renderPanelTabs($tabs, $linkbase, $activeTab): void
     {
 
         ?>
@@ -281,7 +281,12 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab): void
         );
     }
 
-    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false): void
+    public static function injectModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false, callable $canConfirm = null, string $actionButtonType = "button"){
+        (new HTMLPageRenderer([]))->buildModal($id, $titel, $bodycontent, $abortLabel, $actionLabel, $danger, $canConfirm, $actionButtonType);
+    }
+
+    private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false,
+                                callable $canConfirm = null, string $actionButtonType = "button"): void
     {
         if ($danger === 'danger') {
             $buttonType1 = 'primary';
@@ -290,6 +295,9 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab): void
             $buttonType1 = 'default';
             $buttonType2 = 'primary';
         }
+
+        $disabled = isset($canConfirm) && $canConfirm() === false;
+
         $hasFooter = isset($abortLabel) || isset($actionLabel); ?>
         <div class='modal fade' id='<?php echo $id; ?>-dlg' tabindex='-1' role='dialog'
              aria-labelledby='<?php echo $id; ?>-label'>
@@ -311,9 +319,11 @@ private function renderPanelTabs($tabs, $linkbase, $activeTab): void
                                         data-dismiss='modal'><?php echo $abortLabel; ?></button>
                             <?php } ?>
                             <?php if (isset($actionLabel)) { ?>
-                                <button type='button' class='btn btn-<?php echo $buttonType2; ?>'
-                                        id='<?php echo $id; ?>-btn-action'><?php echo $actionLabel; ?></button>
-
+                                <button type="<?= $actionButtonType ?>" class='btn btn-<?php echo $buttonType2; ?>'
+                                        id='<?php echo $id; ?>-btn-action' <?= $disabled ? "disabled" : "" ?>
+                                >
+                                    <?php echo $actionLabel; ?>
+                                </button>
                             <?php } ?>
                         </div>
                     <?php } ?>

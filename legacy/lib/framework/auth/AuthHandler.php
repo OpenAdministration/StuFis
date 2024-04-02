@@ -77,7 +77,7 @@ class AuthHandler extends Singleton
 
     public function getUserGroups(): array
     {
-        return request()?->user()->getGroups()->toArray();
+        return Auth::user()?->getGroups()->toArray();
     }
 
     /**
