@@ -544,7 +544,6 @@ class FintsController extends Renderer
     {
         if (isset($this->fintsHandler)) {
             $this->fintsHandler->logout();
-
         } else {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
         }

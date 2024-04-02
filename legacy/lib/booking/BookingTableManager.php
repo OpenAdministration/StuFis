@@ -287,7 +287,7 @@ class BookingTableManager extends Renderer
                     <form id="#form-delete-instruction-<?php echo $instruct_id; ?>" method="POST" class="ajax-form"
                           action="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
                         <?php $this->renderNonce(); ?>
-                        <button type="button" formaction="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
+                        <button type="submit" formaction="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
                             <i class="fa fa-fw fa-trash"></i>
                         </button>
                     </form>
