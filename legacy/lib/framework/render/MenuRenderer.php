@@ -229,7 +229,7 @@ class MenuRenderer extends Renderer
                                                  href="#collapse<?php echo $i . '-' . $j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
-                                                            class="panel-projekt-name"><?php echo $projekt['name']; ?></span>
+                                                            class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
                                                     <span class="panel-projekt-money text-muted hidden-xs ">
                                                         <?php echo number_format($projekt['ausgaben'], 2, ',', '.'); ?>
                                                     </span>
