@@ -20,7 +20,7 @@
         <td align="center"><b>Differenz</b></td>
     </tr>
     <tr><td colspan="5"></td></tr>
-    @php($rowNumber = 5)
+    @php($rowNumber = 6)
     @foreach([$inGroup, $outGroup] as $groups)
         @php($groupRows = [])
         <tr>
