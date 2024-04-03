@@ -998,7 +998,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         $changed_posten = [];
         if (isset($this->routeInfo['validated']['belege'])) {
             foreach ($this->routeInfo['validated']['belege'] as $kb => $b) {
-                if (strpos($kb, 'new_') !== false) {
+                if (str_contains($kb, 'new_')) {
                     $changed_belege_flag = true;
                     $new_belege[$kb] = $b;
                 } elseif (!isset($this->auslagen_data['belege'][$kb])) {
@@ -2171,7 +2171,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                             if (!isset($p['in'][$ppp['projekt_posten_id']])) {
                                 $p['in'][$ppp['projekt_posten_id']] = 0;
                             }
-                            $p['in'][$ppp['projekt_posten_id']] += $ppp['einnahmen'];
+                            $p['in'][$ppp['projekt_posten_id']] += $ppp['einnahmen']; // does this calc right with decimals?
                         }
                         if ($ppp['ausgaben'] > 0) {
                             if (!isset($p['out'][$ppp['projekt_posten_id']])) {
@@ -2240,7 +2240,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                     <option value="0" data-alias="Bitte Wählen">
                         <?php foreach ($this->projekt_data['posten'] as $p) { ?>
                     <option value="<?php echo $p['id']; ?>"
-                            data-alias="<?php echo(($p['einnahmen']) === '0.00' ? '[Einnahme] ' : '') . (($p['ausgaben']) === '0.00' ? '[Ausgabe] ' : '') . $p['name']; ?>">
+                            data-alias="<?php echo(($p['einnahmen']) !== '0.00' ? '[Einnahme] ' : '') . (($p['ausgaben']) !== '0.00' ? '[Ausgabe] ' : '') . $p['name']; ?>">
                         <?php
                         } ?>
                 </datalist>
@@ -2418,7 +2418,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
         $inOutPrefix = ['0' => ''];
         foreach ($this->projekt_data['posten'] as $pp) {
-            $inOutPrefix[$pp['id']] = (($pp['einnahmen']) ? '[Einnahme] ' : '') . (($pp['ausgaben']) ? '[Ausgabe] ' : '');
+            $inOutPrefix[$pp['id']] = (($pp['einnahmen']) !== '0.00' ? '[Einnahme] ' : '') . (($pp['ausgaben'])  !== '0.00' ? '[Ausgabe] ' : '');
         }
 
         // if nonempty add lines
