@@ -88,7 +88,7 @@ class BookingHandler extends Renderer
                     $belegStr = "IP{$row['projekt_id']} A{$row['auslagen_id']} - " . $row['short'];
                 break;
                 case 'extern':
-                    $belegStr = "E{$row['extern_id']} - V" . $row['vorgang_id'];
+                    $belegStr = "E{$row['extern_id']} - V n.a.";
                 break;
                 default:
                     throw new LegacyDieException(400, 'Unknown beleg_type: ' . $row['beleg_type']);
@@ -224,8 +224,8 @@ class BookingHandler extends Renderer
                 'fullname' => 'user.name',
                 'kostenstelle',
                 'booking.comment',
-                'vorgang_id',
-                'extern_id',
+                //'vorgang_id', extern
+                //'extern_id',
             ],
             ['hhp_id' => $hhp_id],
             [
@@ -250,11 +250,6 @@ class BookingHandler extends Renderer
                     'type' => 'left',
                     'table' => 'auslagen',
                     'on' => [['belege.auslagen_id', 'auslagen.id'], ['booking.beleg_type', 'belegposten']],
-                ],
-                [
-                    'type' => 'left',
-                    'table' => 'extern_data',
-                    'on' => [['booking.beleg_id', 'extern_data.id'], ['booking.beleg_type', 'extern']],
                 ],
                 [
                     'type' => 'left',
@@ -318,7 +313,7 @@ class BookingHandler extends Renderer
                             break;
                             case 'extern':
                                 $eId = $row['extern_id'];
-                                $vId = $row['vorgang_id'];
+                                $vId = "n.a.";
                                 /*generateLinkFromID(
                                     "E$eId&nbsp;-&nbsp;V" . $vId,
                                     "rest/extern/$eId/$vId",
@@ -685,59 +680,7 @@ class BookingHandler extends Renderer
             $instructedExtern = [-1]; // -1 cannot exist as id, but will not sql error with NOT IN (-1)
         }
 
-        $extern = DBConnector::getInstance()->dbFetchAll(
-            'extern_data',
-            [DBConnector::FETCH_ASSOC],
-            [
-                'id' => 'extern_data.id',
-                'vorgang_id',
-                'extern_id',
-                'projekt_name',
-                'org_name',
-                'value',
-                'flag_vorkasse',
-                'flag_pruefbescheid',
-                'flag_rueckforderung',
-            ],
-            [
-                [
-                    'flag_vorkasse' => 1,
-                    'state_payed' => ['IS NOT', null],
-                    'state_booked' => ['IS', null],
-                    'extern_data.id' => ['NOT IN', $instructedExtern],
-                    'value' => ['<>', 0],
-                ],
-                [
-                    'flag_pruefbescheid' => 1,
-                    'state_payed' => ['IS NOT', null],
-                    'state_booked' => ['IS', null],
-                    'extern_data.id' => ['NOT IN', $instructedExtern],
-                    'value' => ['<>', 0],
-                ],
-                [
-                    'flag_rueckforderung' => 1,
-                    'state_booked' => ['IS', null],
-                    'flag_widersprochen' => 0,
-                    'extern_data.id' => ['NOT IN', $instructedExtern],
-                    'value' => ['<>', 0],
-                ],
-                [
-                    'flag_rueckforderung' => 1,
-                    'state_payed' => ['IS NOT', null],
-                    'state_booked' => ['IS', null],
-                    'extern_data.id' => ['NOT IN', $instructedExtern],
-                    'value' => ['<>', 0],
-                ],
-            ],
-            [
-                ['type' => 'inner', 'table' => 'extern_meta', 'on' => ['extern_meta.id', 'extern_data.extern_id']],
-            ]
-        );
-        foreach ($extern as $k => $row) {
-            $vz = ($row['flag_vorkasse'] === '1' || $row['flag_pruefbescheid'] === '1') ? -1 : 1;
-            $extern[$k]['value'] = $vz * (float) $row['value'];
-            $extern[$k]['type'] = 'extern';
-        }
+        $extern = [];
         $alGrund = array_merge($auslagen, $extern);
         // sort with reverse order
         usort(
@@ -819,7 +762,7 @@ class BookingHandler extends Renderer
                                     URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]['id']
                                 );
                             break;
-                            case 'extern':
+                            /*case 'extern':
                                 echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='$value' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
                                 $caption = 'E' . $alGrund[$idxGrund]['extern_id'] . '-V' . $alGrund[$idxGrund]['vorgang_id'] .
                                     ' - ' . $alGrund[$idxGrund]['projekt_name'] . ' - ' . $alGrund[$idxGrund]['org_name'];
@@ -828,7 +771,7 @@ class BookingHandler extends Renderer
                                     '/',
                                     URIBASE . '/extern/' . $alGrund[$idxGrund]['extern_id']
                                 );
-                            break;
+                            break;*/
                             default:
                                 throw new LegacyDieException(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
                             break;

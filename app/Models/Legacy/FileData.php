@@ -30,6 +30,9 @@ class FileData extends Model
      */
     protected $table = 'filedata';
 
+
+    public $timestamps = false;
+
     /**
      * @var array
      */

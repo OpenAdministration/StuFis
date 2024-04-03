@@ -689,7 +689,7 @@ class ProjektHandler extends FormHandlerInterface
                             '...',
                             'Beschluss / Protokoll-Link',
                             ['required'],
-                            ORG_DATA['projekt-form']['protokoll-prefix']
+                            ORG_DATA['projekt-form']['protokoll-prefix'] ?? ''
                         );
                     } ?>
                     <?php echo $this->templater->getDatePickerForm(

@@ -125,8 +125,6 @@ return new class extends Migration
             });
         }
 
-
-
         if(!Schema::hasTable('filedata')) {
             Schema::create('filedata', static function (Blueprint $table) {
                 $table->comment('');
@@ -140,7 +138,7 @@ return new class extends Migration
             Schema::create('fileinfo', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
-                $table->string('link', 127);
+                $table->string('link', 127); // fk zu belege.id
                 $table->dateTime('added_on')->default(DB::raw('CURRENT_TIMESTAMP'));
                 $table->string('hashname');
                 $table->string('filename');

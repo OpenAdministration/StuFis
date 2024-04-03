@@ -2692,7 +2692,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 "Diese Abrechnung kann endgültig gelöscht werden wenn,
                     <ul>
                         <li>du Projektersteller*in, Abrechnungsersteller*in oder Haushaltsverantwortliche*r bist <i class='fa $permissionIcon'></i></li>
-                        <li>die Abrechnung noch nicht im Status 'Angewiesen' ist <i class='fa $abrechnungIcon'></i></li>
+                        <li>die Abrechnung noch nicht im Status 'Zahlung beauftragt' ist <i class='fa $abrechnungIcon'></i></li>
                     </ul>
                     Wenn die Abrechnung gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.
                     ",
