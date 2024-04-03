@@ -7,6 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Request;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -65,12 +66,16 @@ class StumvAuthService extends AuthService
 
     public function userCommittees(): Collection
     {
-        return $this->api()->get('/api/my/committees')->collect();
+        return \Session::remember('stumv.comittees', function () {
+            return $this->api()->get('/api/my/committees')->collect();
+        });
     }
 
     public function userGroupsRaw(): Collection
     {
-        return $this->api()->get('/api/my/groups')->collect();
+        return \Session::remember('stumv.groups', function () {
+            return $this->api()->get('/api/my/groups')->collect();
+        });
     }
 
     public function userGroups() : Collection
@@ -90,6 +95,7 @@ class StumvAuthService extends AuthService
 
     public function afterLogout()
     {
+        \Session::flush();
         return redirect(to:
             config('services.laravelpassport.host') .
             config('services.laravelpassport.logout_path')
