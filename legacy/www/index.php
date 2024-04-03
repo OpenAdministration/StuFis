@@ -65,21 +65,6 @@ switch ($controllerName) {
     case 'error':
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
-    case 'saml':
-    switch ($routeInfo['action']) {
-            case 'logout':
-                AuthSamlHandler::getInstance()->logout();
-                HTMLPageRenderer::redirect(FULL_APP_PATH);
-                break;
-            case 'login':
-                AuthSamlHandler::getInstance()->login();
-                break;
-            case 'metadata':
-                header('Content-Type: text/xml');
-                echo AuthSamlHandler::getInstance()->getSpMetaDataXML();
-                break;
-        }
-        break;
     default:
         $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';
         if (class_exists($className)) {

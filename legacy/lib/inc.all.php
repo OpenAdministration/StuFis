@@ -17,8 +17,7 @@ const GREMIEN = ORG_DATA['gremien'] ?? [];
 const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
 define('DEV', env('APP_DEBUG'));
 define('URIBASE', env('URIBASE'));
-define('BASE_URL', env('APP_ENV'));
-const FULL_APP_PATH = BASE_URL . URIBASE;
+define('BASE_URL', env('APP_URL'));
 define('FINTS_REGNR', $_ENV['FINTS_REG_NR'] ?? '');
 
 setlocale(LC_TIME, 'de_DE.UTF8', 'de_DE.UTF-8');

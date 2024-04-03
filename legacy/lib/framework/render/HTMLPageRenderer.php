@@ -146,9 +146,9 @@ class HTMLPageRenderer
             $cssFiles = array_merge($cssFiles, ...array_column($this->routeInfo['load'], 'css'));
         }
         foreach ($cssFiles as $cssFile) {
-            $out .= "<link rel='stylesheet' href='" . URIBASE . "css/$cssFile.css'>" . PHP_EOL;
+            $out .= "<link rel='stylesheet' href='" . asset("css/$cssFile.css") . "'>" . PHP_EOL;
         }
-        $out .= "<link rel='stylesheet' href='" . URIBASE . "css/main.css'>" . PHP_EOL;
+        $out .= "<link rel='stylesheet' href='" . asset("css/main.css") . "'>" . PHP_EOL;
         return $out;
     }
 
