@@ -41,6 +41,9 @@ Route::get('terms', function (){
     return redirect(config('app.terms_url'));
 })->name('terms');
 
+Route::get('git-repo', function (){
+    return redirect(config('app.git-repo'));
+})->name('git-repo');
 
 if (App::isLocal()){
     Route::get('dev/groups', [\App\Http\Controllers\Dev::class, 'groups']);

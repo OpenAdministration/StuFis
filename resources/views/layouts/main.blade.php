@@ -15,50 +15,54 @@
 <div x-data="{ mobileMenu : false }" class="h-full flex">
     <!-- Narrow sidebar -->
     <div class="hidden w-28 bg-indigo-700 overflow-y-auto md:block">
-        <div class="w-full py-6 flex flex-col items-center justify-between">
-            <x-logo class="h-16 w-auto"/>
-            <div class="mt-6 w-full px-2 space-y-1">
-                <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
-                            :active="Route::is('legacy.dashboard')"
-                            icon="heroicon-o-home"
-                >
-                    Übersicht
-                </x-nav-item>
-                @can('finance', Auth::user())
-                    <x-nav-item :href="route('legacy.todo.belege')"
-                                :active="Route::is('legacy.todo.*')"
-                                icon="heroicon-o-clipboard-document-check"
+        <div class="w-full h-full py-6 flex flex-col items-center justify-between">
+            <div class="">
+                <x-logo class="h-16 w-auto mx-auto"/>
+                <div class="text-white center text-2xl text-bold mb-3 mt-1.5 text-center tracking-wider">{{ config('app.name') }}</div>
+                <div class="w-full px-2 space-y-1">
+                    <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
+                                :active="Route::is('legacy.dashboard')"
+                                icon="heroicon-o-home"
                     >
-                        TODO
+                        Übersicht
                     </x-nav-item>
-                    <x-nav-item :href="route('legacy.booking')"
-                                :active="Route::is('legacy.booking*')"
-                                icon="heroicon-o-book-open"
+                    @can('finance', Auth::user())
+                        <x-nav-item :href="route('legacy.todo.belege')"
+                                    :active="Route::is('legacy.todo.*')"
+                                    icon="heroicon-o-clipboard-document-check"
+                        >
+                            TODO
+                        </x-nav-item>
+                        <x-nav-item :href="route('legacy.booking')"
+                                    :active="Route::is('legacy.booking*')"
+                                    icon="heroicon-o-book-open"
+                        >
+                            Buchungen
+                        </x-nav-item>
+                        <x-nav-item :href="route('legacy.konto')"
+                                    :active="Route::is('legacy.konto')"
+                                    icon="heroicon-o-credit-card"
+                        >
+                            Konto
+                        </x-nav-item>
+                    @endcan
+                    <x-nav-item :href="route('legacy.sitzung')"
+                                :active="Route::is('legacy.sitzung')"
+                                icon="heroicon-o-user-group"
                     >
-                        Buchungen
+                        Sitzung
                     </x-nav-item>
-                    <x-nav-item :href="route('legacy.konto')"
-                                :active="Route::is('legacy.konto')"
-                                icon="heroicon-o-credit-card"
+                    <x-nav-item :href="route('legacy.hhp')"
+                                :active="Route::is('legacy.hhp')"
+                                icon="heroicon-o-table-cells"
                     >
-                        Konto
+                        Haushalt
                     </x-nav-item>
-                @endcan
-                <x-nav-item :href="route('legacy.sitzung')"
-                            :active="Route::is('legacy.sitzung')"
-                            icon="heroicon-o-user-group"
-                >
-                    Sitzung
-                </x-nav-item>
-                <x-nav-item :href="route('legacy.hhp')"
-                            :active="Route::is('legacy.hhp')"
-                            icon="heroicon-o-table-cells"
-                >
-                    Haushalt
-                </x-nav-item>
+                </div>
             </div>
             <div class="flex flex-col items-center space-y-0.5 text-indigo-400 text-sm mt-6">
                 <a href="{{ route('terms') }}">ToS</a>
+                <a href="{{ route('git-repo') }}">Github</a>
                 <a href="{{ route('about') }}">Impressum</a>
                 <a href="{{ route('privacy') }}">Datenschutz</a>
             </div>
@@ -107,6 +111,7 @@
                 <div class="flex-shrink-0 px-4 flex items-center">
                     <!-- Mobile -->
                     <x-logo class="h-16 w-auto"/>
+                    <span class="text-4xl text-white ml-4 tracking-wide">{{ config('app.name') }}</span>
                 </div>
                 <div class="mt-5 flex-1 h-0 px-2 overflow-y-auto">
                     <nav class="h-full flex flex-col">
@@ -151,6 +156,7 @@
                             </x-nav-item>
                             <div class="h-4"></div>
                             <x-nav-item mobile :href="route('terms')">TOS</x-nav-item>
+                            <x-nav-item mobile :href="route('git-repo')">Github</x-nav-item>
                             <x-nav-item mobile :href="route('about')">Impressum</x-nav-item>
                             <x-nav-item mobile :href="route('privacy')">Datenschutz</x-nav-item>
                         </div>
@@ -209,7 +215,7 @@
 
                                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu"
                                  aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                                    <a class="block px-4 py-2 text-black">{{ Auth::user()->name }}</a>
+                                <a class="block px-4 py-2 text-black">{{ Auth::user()->name }}</a>
                                 @foreach($profileSkeleton as $idx => $item)
                                     <!-- Active: "bg-gray-100", Not Active: "" -->
                                     <a href="{{ $item['link'] ?? route(...$item['route']) }}" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-{{ $idx }}">
@@ -235,13 +241,13 @@
                 <!-- End main area -->
             </main>
             @isset($sideColumn)
-            <aside class="relative hidden w-1/3 flex-shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
-                <!-- Start secondary column (hidden on smaller screens) -->
-                <div class="absolute inset-0 py-6 px-4 sm:px-6 lg:px-8">
-                    <div class="h-full rounded-lg border-2 border-dashed border-gray-200"></div>
-                </div>
-                <!-- End secondary column -->
-            </aside>
+                <aside class="relative hidden w-1/3 flex-shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
+                    <!-- Start secondary column (hidden on smaller screens) -->
+                    <div class="absolute inset-0 py-6 px-4 sm:px-6 lg:px-8">
+                        <div class="h-full rounded-lg border-2 border-dashed border-gray-200"></div>
+                    </div>
+                    <!-- End secondary column -->
+                </aside>
             @endisset
         </div>
     </div>

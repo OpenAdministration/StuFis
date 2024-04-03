@@ -1071,11 +1071,6 @@ class RestHandler extends EscFunc
                     'on' => [['beleg_posten.id', 'booking.beleg_id'], ['booking.beleg_type', 'belegposten']],
                 ],
                 ['table' => 'belege', 'type' => 'inner', 'on' => ['belege.id', 'beleg_posten.beleg_id']],
-                [
-                    'table' => 'extern_data',
-                    'type' => 'left',
-                    'on' => [['extern_data.id', 'booking.belegposten_id'], ['booking.beleg_type', 'extern']],
-                ],
             ]
         );
 
