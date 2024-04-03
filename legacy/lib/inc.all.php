@@ -16,7 +16,7 @@ define('ORG_DATA', (include SYSBASE . '/config/config.orgs.php')[REALM] ?? []);
 const GREMIEN = ORG_DATA['gremien'] ?? [];
 const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
 define('DEV', env('APP_DEBUG'));
-define('URIBASE', env('URIBASE'));
+const URIBASE = "/";
 define('BASE_URL', env('APP_URL'));
 define('FINTS_REGNR', $_ENV['FINTS_REG_NR'] ?? '');
 
