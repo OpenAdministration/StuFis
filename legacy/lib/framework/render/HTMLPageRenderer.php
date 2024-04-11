@@ -3,13 +3,9 @@
 namespace framework\render;
 
 use App\Exceptions\LegacyRedirectException;
-use Composer\InstalledVersions;
-use DateTime;
-use framework\auth\AuthHandler;
 use framework\render\html\BT;
 use framework\render\html\Html;
 use framework\render\html\HtmlAlert;
-use JetBrains\PhpStorm\NoReturn;
 
 class HTMLPageRenderer
 {
