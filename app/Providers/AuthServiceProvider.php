@@ -28,10 +28,14 @@ class AuthServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AuthService::class, function (Application $application){
-            return match (config('auth.service')){
-                'stumv' => new StumvAuthService(),
-                'local' => new LocalAuthService(),
-            };
+            $serviceName = ucfirst(strtolower(config('auth.service')));
+            // weird to escape, but correct
+            $classPath = "\App\Services\Auth\\{$serviceName}AuthService";
+            if(class_exists($classPath)){
+                return new $classPath();
+            }
+
+            abort(500, 'Config Error. Wrong Auth provider given in Environment. Fitting AuthService Class not found');
         });
     }
 
