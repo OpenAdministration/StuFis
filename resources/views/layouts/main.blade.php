@@ -18,7 +18,7 @@
         <div class="w-full h-full py-6 flex flex-col items-center justify-between">
             <div class="">
                 <x-logo class="h-16 w-auto mx-auto"/>
-                <div class="text-white center text-2xl text-bold mb-3 mt-1.5 text-center tracking-wider">{{ config('app.name') }}</div>
+                <div class="text-white center text-2xl text-bold mb-5 mt-1.5 text-center tracking-wider">{{ config('app.name') }}</div>
                 <div class="w-full px-2 space-y-1">
                     <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
                                 :active="Route::is('legacy.dashboard')"
