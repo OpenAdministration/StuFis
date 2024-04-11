@@ -32,29 +32,6 @@ class AuthController
 
     }
 
-    private function remap_keycloak($user) : array
-    {
-        $attributes = $user->getRaw();
-        $tokenResponse = $user->accessTokenResponseBody;
-        $uniqueAttributes = [
-            'provider_sub' => $attributes['sub'],
-            'provider' => $this->driverName,
-        ];
-        $updateableAttributes = [
-            'name' => $user->name,
-            'username' => $attributes['preferred_username'],
-            'email' => $attributes['email'],
-            'provider_token' => $user->token,
-            'provider_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
-            'provider_refresh_token' => $user->refreshToken,
-            'provider_refresh_token_expiration' => now()->addSeconds($tokenResponse['refresh_expires_in']),
-            'picture_url' => $attributes['picture'] ?? '',
-            'iban' => $attributes['iban'] ?? '',
-            'address' => implode(' ', $attributes['address']),
-        ];
-        return [$uniqueAttributes, $updateableAttributes];
-    }
-
     public function logout() {
         Auth::logout();
         // call after logout routine
