@@ -11,14 +11,14 @@ $conf = [];
 const AUTH_HANDLER = AuthHandler::class;
 
 
-define('REALM', env('AUTH_REALM'));
+define('REALM', config('app.realm'));
 define('ORG_DATA', (include SYSBASE . '/config/config.orgs.php')[REALM] ?? []);
 const GREMIEN = ORG_DATA['gremien'] ?? [];
 const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
-define('DEV', env('APP_DEBUG'));
+define('DEV', config('app.debug'));
 const URIBASE = "/";
-define('BASE_URL', env('APP_URL'));
-define('FINTS_REGNR', $_ENV['FINTS_REG_NR'] ?? '');
+define('BASE_URL', config('app.url'));
+define('FINTS_REGNR', config('app.fints.registration-number', ''));
 
 setlocale(LC_TIME, 'de_DE.UTF8', 'de_DE.UTF-8');
 
