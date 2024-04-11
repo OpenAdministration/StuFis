@@ -36,7 +36,7 @@ STUMV_REDIRECT_URI=https://demo.stufis.de/auth/callback
 # stumv host url including http(s) and a trailing / 
 STUMV_HOST=https://stumv.de/
 STUMV_LOGOUT_PATH=logout
-# note the demo realm, make sure to fix it to your relam, all empty groups will not be re-mapped
+# note the demo realm, make sure to fix it to your realm, all empty groups will not be re-mapped
 # equivalent to login stufis group
 STUMV_GROUP_LOGIN=cn=members,ou=demo,ou=Communities,dc=open-administration,dc=de
 # equivalent to ref-finanzen stufis group
@@ -88,7 +88,9 @@ Your Auth Provider has to provide the following infos:
 * General info: 
   * all available committees
 
-Best: Copy StuMvAuthService and start from there. StuMV gets most of its information from oauth2 userinfo, but some additional infos via oauth2-guarded API calls. If you have all infos provided as claims inside the userinfo that should work out as well.
+Best: Copy `StumvAuthService` and start from there. StuMV gets most of its information from oauth2 userinfo, but some additional infos via oauth2-guarded API calls. If you have all infos provided as claims inside the userinfo that should work out as well. 
+
+Important: Do not change the Namespace of the new AuthService, otherwise the autodiscovery in `AuthServiceProvider` will fail. 
 ### Group Memberships
 StuFis expects the following groups to be used: 
 * login 
@@ -107,19 +109,6 @@ StuFis expects the following groups to be used:
 * admin
   * can: everything
   * do not use in production, there should not be a person with that much power
-### AuthServiceProvider
-
-```php
-$this->app->singleton(AuthService::class, function (Application $application){
-            return match (config('auth.service')){
-                'stumv' => new StumvAuthService(),
-                'local' => new LocalAuthService(),
-                // new line for your xxx provider: 
-                'xxx' => new XxxAuthService(),
-            };
-        });
-```
-Don't forget to include the class or give the full classpath!
 
 ## Debugging
 
