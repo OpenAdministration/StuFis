@@ -182,6 +182,12 @@
                     </svg>
                 </button>
                 <div class="flex-1 flex justify-between px-4 sm:px-6">
+                    <div class="ml-2 flex items-center">
+                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 pr-3 rounded-2xl items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <x-heroicon-o-plus-small class="h-6 w-6"/>
+                            <span>Neues Projekt</span>
+                        </a>
+                    </div>
                     <div class="flex-1 flex">
                         <!--
                         <form class="w-full flex md:ml-0" action="#" method="GET">
@@ -195,7 +201,7 @@
                             </div>
                         </form>-->
                     </div>
-                    <div class="ml-2 flex items-center space-x-4 sm:ml-6 sm:space-x-6">
+                    <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
                         <!-- Profile dropdown -->
                         <div x-data="{ profile: false }" class="relative flex-shrink-0" >
                             <div>
@@ -225,10 +231,7 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 rounded-full items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <x-heroicon-o-plus-small class="h-6 w-6"/>
-                            <span class="sr-only">Neues Projekt</span>
-                        </a>
+
                     </div>
                 </div>
             </div>
