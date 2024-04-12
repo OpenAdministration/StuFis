@@ -1,10 +1,6 @@
 <?php
 
-use Dotenv\Exception\ValidationException;
-use framework\auth\AuthCasHandler;
-use framework\auth\AuthDummyHandler;
 use framework\auth\AuthHandler;
-use framework\auth\AuthSamlHandler;
 
 $conf = [];
 
