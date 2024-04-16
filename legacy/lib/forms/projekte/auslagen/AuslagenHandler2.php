@@ -2230,6 +2230,9 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     public function render_beleg_container(array $belege, bool $editable = true, string $label = ''): void
     {
+        if(!isset($this->projekt_data['posten'])){
+            abort(420, __('errors.project.no-budgets'));
+        }
         if ($label) {
             echo '<label>' . $label . '</label>';
         } ?>
