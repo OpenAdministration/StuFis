@@ -1281,7 +1281,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             return $_ENV['IBAN_SECRET_KEY'];
         }
 
-        $env = new EnvSetter(SYSBASE . '/.env');
+        $env = new EnvSetter(base_path('/.env'));
         $key = Key::createNewRandomKey()->saveToAsciiSafeString();
         $env->setEnvVar('IBAN_SECRET_KEY', $key);
         return $key;
