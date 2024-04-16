@@ -551,7 +551,7 @@ class ChatHandler
      */
     private function createKeys(): void
     {
-        if (!isset($_ENV['CHAT_PUBLIC_KEY'], $_ENV['CHAT_PRIVATE_KEY'])) {
+        if (!config('app.chat.private_key') && !config('app.chat.public_key')) {
             $config = [
                 'digest_alg' => 'sha512',
                 'private_key_bits' => 4096,
@@ -562,7 +562,7 @@ class ChatHandler
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey['key'];
 
-            $writer = new EnvSetter(SYSBASE . '/.env');
+            $writer = new EnvSetter(base_path('/.env'));
             $writer->setEnvVars([
                 'CHAT_PUBLIC_KEY' => $pubKey,
                 'CHAT_PRIVATE_KEY' => $privKey,
@@ -576,8 +576,8 @@ class ChatHandler
     private function getKey(string $type = 'public'): string
     {
         return match ($type) {
-            'public' => $_ENV['CHAT_PUBLIC_KEY'],
-            'private' => $_ENV['CHAT_PRIVATE_KEY'],
+            'public' => config('app.chat.public_key'),
+            'private' => config('app.chat.private_key'),
             default => ''
         };
     }
