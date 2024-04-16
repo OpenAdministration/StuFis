@@ -82,7 +82,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'de',
 
     /*
     |--------------------------------------------------------------------------
@@ -224,9 +224,18 @@ return [
     'terms_url' => env('TERMS_URL', 'https://open-administration.de/index.php/nutzungsbedingungen/'),
     'help_contact_mail' => env('HELP_CONTACT_MAIL', 'stufis@open-administration.de'),
     'git-repo' => env('GIT_URL', 'https://github.com/openadministration/stufis'),
+    'blog_url' => env('BLOG_URL', 'https://open-administration.de'),
+    'docs_url' => env('DOCS_URL', 'https://doku.open-administration.de'),
+
     'realm' => env('AUTH_REALM'),
 
     'fints' => [
         'registration-number' => env('FINTS_REG_NR'),
     ],
+
+    'chat' => [
+        'public_key' => env('CHAT_PUBLIC_KEY'),
+        'private_key' => env('CHAT_PRIVATE_KEY'),
+    ]
+
 ];
