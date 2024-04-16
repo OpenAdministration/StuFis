@@ -2,10 +2,10 @@
 
 namespace framework\render;
 
-use App\Exceptions\LegacyDieException;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
+use function Laravel\Prompts\error;
 
 class ErrorHandler extends Renderer
 {
@@ -124,8 +124,8 @@ class ErrorHandler extends Renderer
         $msg = $this->errorInformation['msg'];
         $debug = $this->errorInformation['debug'];
 
-        throw new LegacyDieException($code, $msg, $debug);
-
+        error($debug);
+        abort($code, $msg);
     }
 
     public function renderJson(): void

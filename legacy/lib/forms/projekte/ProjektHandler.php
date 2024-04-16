@@ -13,7 +13,6 @@ use forms\projekte\exceptions\InvalidDataException;
 use forms\projekte\exceptions\WrongVersionException;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
-use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
 use PDOException;
 
@@ -63,7 +62,7 @@ class ProjektHandler extends FormHandlerInterface
             if (!empty($res)) {
                 $this->data = $res[0];
             } else {
-                throw new LegacyDieException('Konnte Projekt nicht finden :(');
+                abort(404);
             }
             $tmp = DBConnector::getInstance()->dbFetchAll(
                 'projektposten',

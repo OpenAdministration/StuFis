@@ -29,21 +29,29 @@ Route::middleware(['auth'])->group(function(){
 });
 
 // guest routes
-Route::get('about', function (){
+Route::get('about', static function (){
     return redirect(config('app.about_url'));
 })->name('about');
 
-Route::get('privacy', function (){
+Route::get('privacy', static function (){
     return redirect(config('app.privacy_url'));
 })->name('privacy');
 
-Route::get('terms', function (){
+Route::get('terms', static function (){
     return redirect(config('app.terms_url'));
 })->name('terms');
 
-Route::get('git-repo', function (){
+Route::get('git-repo', static function (){
     return redirect(config('app.git-repo'));
 })->name('git-repo');
+
+Route::get('blog', static function (){
+    return redirect(config('app.blog_url'));
+})->name('blog');
+
+Route::get('docs', static function (){
+    return redirect(config('app.docs_url'));
+})->name('docs');
 
 if (App::isLocal()){
     Route::get('dev/groups', [\App\Http\Controllers\Dev::class, 'groups']);

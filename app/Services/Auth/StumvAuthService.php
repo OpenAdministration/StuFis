@@ -7,7 +7,6 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Request;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -46,7 +45,7 @@ class StumvAuthService extends AuthService
 
         $attributes = $user->getRaw();
         $identifiers = [
-            'provider_uid' => $attributes['id'],
+            'provider_uid' => $attributes['id'], // can be username, here: ldap uuid
             'provider' => 'stumv',
         ];
         $userAttributes = [
