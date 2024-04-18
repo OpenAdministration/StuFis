@@ -1,5 +1,17 @@
 <x-layout>
     <div class="mt-8 sm:mx-8">
+        @if(count($errors)>0)
+            <div class="alert alert-danger">
+                <ul>
+
+                    @foreach($errors->all() as $error)
+
+                        <li>{{$error}}</li>
+
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="sm:flex sm:items-center">
             <div class="sm:flex-auto">
                 <h1 class="text-xl font-semibold text-gray-900">{{ __('konto.manual-headline') }}</h1>
@@ -12,7 +24,7 @@
                 </a>
             </div>
         </div>
-        {{-- @if($data->isEmpty()) --}}
+        @if(!$data)
             <!--a href="{{ route('budget-plan.create') }}" class="relative block w-full p-12 mt-8 text-center border-2 border-gray-300 border-dashed rounded-lg group hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <x-heroicon-o-table-cells stroke-width="1" class="w-12 h-12 mx-auto text-gray-400 group-hover:text-gray-600" />
                 <span class="block mt-2 text-sm font-medium text-gray-700 group-hover:text-black">
@@ -37,55 +49,50 @@
                     </div>
                     <br>
                     <div class="col-md-6 offset-md-3">
-                                  @if(session('status'))
-                                    <div class="alert alert-success">
-                                        {{ session('status') }}
-                                    </div>
-                                  @endif
-
-                      </div>
+                        @if(session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+                    </div>
                 </div>
             </form>
 
-        {{-- @else
+        @else
             <div class="flex flex-col mt-8 overflow-hidden bg-white shadow sm:rounded-md">
-                <ul role="list" class="divide-y divide-gray-200">
-                    @foreach($plans as $plan)
-                        <li>
-                            <a href="{{ route('budget-plan.show', ['plan_id' => $plan->id]) }}" class="block group hover:bg-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div class="px-4 py-4 sm:px-6">
-                                        <div class="flex items-center">
-                                            <p class="text-sm font-medium text-indigo-600 truncate">
-                                                {{ $plan->organisation }}
-                                            </p>
-                                            <div class="flex flex-shrink-0 ml-2">
-                                                <p class="inline-flex px-2 text-xs font-semibold leading-5 text-green-800 bg-green-100 rounded-full">
-                                                    {{ $plan->state }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 sm:flex sm:justify-between">
-                                            <div class="sm:flex">
-                                                <p class="flex items-center text-sm text-gray-500">
-                                                    <x-heroicon-m-calendar class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" />
-                                                    <x-date :date="$plan->start_date" format="M y"/>
-                                                    <span class="px-1">-</span>
-                                                    <x-date :date="$plan->end_date" format="M y"/>
-                                                </p>
-                                                <!-- follows: class="flex items-center mt-2 text-sm text-gray-500 sm:mt-0 sm:ml-6" -->
-                                            </div>
-                                        </div>
+                <form method="POST" enctype="multipart/form-data" id="assign" action="{{ url('konto/import/manual/assign') }}" >
+                    @csrf
+                    <div class="row">
+                        <ul role="list" class="divide-y divide-gray-200">
+                            @foreach($mapping as $attr => $label)
+                                <li>
+                                    <div>
+                                        <label for="{{ $attr }}" class="block text-sm font-medium leading-6 text-gray-900">{{ $label }}</label>
+                                        <select id="{{ $attr }}" name="{{ $attr }}" class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                            @foreach($data[0] as $csvheader => $value)
+                                                <option>{{ $csvheader }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    <div class="flex-shrink-0 pr-4">
-                                        <x-heroicon-s-chevron-right class="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
-                                    </div>
+
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <div class="py-4">
+                            <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" id="submit-assign">{{ __('konto.manual-button-assign') }}</button>
+                        </div>
+                        <br>
+                        <div class="col-md-6 offset-md-3">
+                            @if(session('status'))
+                                <div class="alert alert-success">
+                                    {{ session('status') }}
                                 </div>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
+                            @endif
+                        </div>
+                    </div>
+                </form>
             </div>
-        @endif --}}
+        @endif
     </div>
 </x-layout>

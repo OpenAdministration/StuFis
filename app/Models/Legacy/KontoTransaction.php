@@ -66,10 +66,10 @@ class KontoTransaction extends Model
         return $this->belongsTo(Konto::class, 'konto_id');
     }
 
-    public static function getLabels()
+    public function getLabels()
     {
         $labels = [];
-        $attributes = self::getFillable();
+        $attributes = $this->getFillable(); // $attributes = self::getFillable();
 
         foreach($attributes as $attribute)
         {

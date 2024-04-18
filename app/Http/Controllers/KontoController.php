@@ -49,30 +49,28 @@ class KontoController extends Controller
 
         $file = $request->file('file');
         $fileContents = file($file->getPathname());
+        $header = null;
+        $data = array();
 
+        // csv in array speichern, header sind array header
         foreach ($fileContents as $line) {
-            $data = str_getcsv($line);
+            $row = str_getcsv($line);
 
-            // bevor wir die Zeile als Transaktion parsen, sollten wir die Zeile in ein Array geben, anzeigen, und den Nutzer zuordnen lassen
-            $mapping = [
-                'date' => null,
-                'valuta' => null,
-                'type' => null,
-                'empf_iban' => null,
-                'empf_bic' => null,
-                'empf_name' => null,
-                'primanota' => null
-            ];
-/*
-            \Schema::getColumnListing((new KontoTransaction())->getTable());
+            // header raus ziehen
+            if (!$header)
+                $header = $row;
+            else
+                $data[] = array_combine($header, $row);
+        }
 
+        // hole dbmodel keys und zugeörige translation slugs (aka labels)
+        //$mapping = KontoTransaction::getLabels();
+        $foo = new KontoTransaction();
+        $mapping = $foo->getLabels();
 
-            foreach(KontoTransaction->getAttributes() as $key => $value){
-
-            }
-*/
-            // hole dbmodel keys und zugeörige translation slugs (aka labels)
-            $mapping = KontoTransaction::getLabels();
+        // render view mit mapping und data
+        // TODO livewire
+        return view('konto.manual', ['data' => $data, 'mapping' => $mapping]);
 
             // labels anzeigen inkl translation syntax
                 // -> blade view rendern
@@ -85,36 +83,20 @@ class KontoController extends Controller
 
             // neues Objekt erstellen mit den Werten aus $data, welche zum header gehören, der in $mapping zugeordnet ist
             $db_entry = array();
-            foreach ($mapping as $key => $value)
+            foreach ($mapping as $key => $value) // value sollte jetzt der zugeordnete csv header sein
             {
                 $db_entry[$key] = $data[$mapping[$key]];
             }
             KontoTransaction::create($db_entry);
 
-/*
-            KontoTransaction::create([
-                'date' => $data[$mapping['date']],
-                'valuta' => $data[$mapping['valuta']],
-                'type' => $data[$mapping['type']],
-                'empf_iban' => $data[$mapping['empf_iban']],
-                'empf_bic' => $data[$mapping['empf_bic']],
-                'empf_name' => $data[$mapping['empf_name']],
-                'primanota' => $data[$mapping['primanota']],
-                'value' => $data[$mapping['value']],
-                'saldo' => $data[$mapping['saldo']],
-                'zweck' => $data[$mapping['zweck']],
-                'comment' => $data[$mapping['comment']],
-                'gvcode' => $data[$mapping['gvcode']],
-                'customer_ref' => $data[$mapping['customer_ref']]
-            ]);
-*/
-        }
+
+
 
         //write the logic here to store csv data in database, header mapping als yaml o.ä. speichern?
         // beim ersten mal alle dropdowns leer lassen, in zukunft die zuletzt zugeordnete zurdnung vorauswählen (?)
         // https://tailwindui.com/components/#product-application-ui
 
-        return redirect('file-form')->with('status', 'File Has been uploaded successfully in Laravel');
+        //return redirect('file-form')->with('status', 'File Has been uploaded successfully in Laravel');
 
     }
 
