@@ -275,7 +275,7 @@ return [
             'hide-protokoll',
         ],
     ],
-    'sm' => [
+    'hs-sm' => [
         'gremien' => [
             'Zentral' => [
                 'StuRa',
