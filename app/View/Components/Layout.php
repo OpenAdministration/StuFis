@@ -41,6 +41,8 @@ class Layout extends Component
      */
     public function render()
     {
-        return view('components.layouts.index');
+        return view('components.layouts.index', [
+            'version' => config('app.version')
+        ]);
     }
 }
