@@ -61,13 +61,12 @@
                 </div>
             </div>
             <div class="flex flex-col items-center space-y-0.5 text-indigo-400 text-sm mt-6">
-                <a href="{{ route('terms') }}">ToS</a>
-                <a href="{{ route('git-repo') }}">Github</a>
-                <a href="{{ route('about') }}">Impressum</a>
-                <a href="{{ route('privacy') }}">Datenschutz</a>
+                <a href="{{ route('terms') }}" target="_blank">ToS</a>
+                <a href="{{ route('privacy') }}" target="_blank">Datenschutz</a>
+                <a href="{{ route('about') }}" target="_blank">Impressum</a>
+                <a href="{{ route('git-repo') }}" target="_blank">Version {{ $version }}</a>
             </div>
         </div>
-
     </div>
     <!--
       Mobile menu
@@ -230,8 +229,6 @@
                                 @endforeach
                             </div>
                         </div>
-
-
                     </div>
                 </div>
             </div>
