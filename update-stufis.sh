@@ -12,9 +12,9 @@ cd "$(dirname "$0")"
 # puts StuFis in Maintenance Mode
 php artisan down
 
-php artisan backup:run
+php artisan backup:run --disable-notifications
 
-php artisan backup:clean
+php artisan backup:clean --disable-notifications
 
 php artisan backup:list
 
@@ -32,10 +32,10 @@ npm run production
 # update db
 php artisan migrate --force
 
-# not usable yet. there are some _ENV leftovers
+# not usable yet. needs testing
 #php artisan config:cache
+#php artisan view:cache
+#php artisan route:cache
 
-php artisan route:cache
-php artisan view:cache
 
 php artisan up
