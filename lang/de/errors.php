@@ -5,7 +5,10 @@ return [
     '404.subtitle' => 'Sorry! Wir konnten die Seite leider nicht finden...',
 
     '420.title' => 'Anforderungsfehler',
-    '420.subtitle' => 'Das zugehörige Projekt hat keinen Projektposten welchem ein Titel zugeordnet ist. Die/der Haushaltsverantwortliche*r muss ihn eintragen.',
+    '420.subtitle' => 'Das zugehörige Projekt hat keinen Projektposten welchem ein Haushaltstitel zugeordnet ist. Die/der Haushaltsverantwortliche*r muss ihn eintragen.',
+
+    '500.title' => 'Serverfehler',
+    '500.subtitle' => 'Es ist leider ein Serverfehler aufgetreten.',
 
     'back-link' => 'Zurück',
     'doc-link.title' => 'Dokumentation',
