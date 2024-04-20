@@ -43,7 +43,14 @@
                               @enderror
                         </div>
                     </div>
+                    <div class="col-md-6 offset-md-3">
+                        <div class="form-group">
+                            <label for="choose-konto" class="block text-sm font-medium leading-6 text-gray-900">{{ __('konto.csv-label-choose-konto') }}</label>
+                            <select id="choose-konto" name="choose-konto" class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
 
+                            </select>
+                        </div>
+                    </div>
                     <div class="py-4">
                         <button type="submit" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" id="submit">{{ __('konto.manual-button-submit') }}</button>
                     </div>
