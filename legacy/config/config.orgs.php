@@ -147,29 +147,25 @@ return [
                 'hint-text' => 'Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.',
             ],
             'fsr-ref' => [
-                'label' => 'Beschluss FSR/Referat/AG bis zu 250 EUR',
+                'label' => 'Beschluss 250€',
                 'label-additional' => 'Beschluss-Nr (Verkündung)',
-                'hint-text' => 'Interne Förderrichtlinie §6: für ein internes Projekt bis zu (inkl.) 250 EUR Muss auf der nächsten StuRa Sitzung vom HV bekannt gemacht werden.',
+                'hint-text' => 'Förderrichtlinie §13 Abs. 1: für ein internes Projekt bis zu (inkl.) 250 EUR Muss auf der nächsten StuRa Sitzung vom HV verkündet werden.',
             ],
             'kleidung' => [
                 'label' => 'Gremienkleidung',
-                'hint-text' => ' Interne Förderrichtlinie §5: bis zu 30€ pro Person für das teuerste Kleidungsstück (pro Gremium und Legislatur). Für Aktive ist ein Beschluss des Fachschaftsrates / Referates notwendig.',
+                'hint-text' => 'Förderrichtlinie §14: bis zu 30€ pro Person (pro Gremium und Legislatur). Für Aktive Beschluss notwendig.',
             ],
             'fahrt' => [
                 'label' => 'Fahrtkosten',
-                'hint-text' => 'Interne Förderrichtlinie §4a: Fahrtkosten',
-            ],
-            'buero' => [
-                'label' => 'Büromaterial',
-                'hint-text' => 'Interne Förderrichtlinie §3: bis zu 50 EUR',
+                'hint-text' => 'Förderrichtlinie §12 Abs. 1, 2',
             ],
             'verbrauch' => [
                 'label' => 'Verbrauchsmaterial',
-                'hint-text' => 'Interne Förderrichtlinie §2: bis zu 150 EUR',
+                'hint-text' => 'Finanzordnung §11 Abs 3: bis zu 150 €',
             ],
             'bahn-card' => [
                 'label' => 'Bahncard',
-                'hint-text' => ' Interne Förderrichtlinie §4c: Privat gekaufte Bahn-Cards können nachträglich gefördert werden, falls für den StuRa die Anschaffung der Bahncard nachweislich günstiger war. Antrag ist bis zu einem Semester nach Exma möglich.',
+                'hint-text' => 'Förderrichtlinie §12 Abs. 3: Privat gekaufte Bahn-Cards, falls für den StuRa die Anschaffung der Bahncard nachweislich günstiger war.',
             ],
             'andere' => [
                 'label' => 'Andere Rechtsgrundlage',
