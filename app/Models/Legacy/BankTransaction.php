@@ -72,7 +72,7 @@ class BankTransaction extends Model
 
         foreach($this->getFillable() as $attribute)
         {
-            $labels[$attribute] = 'label.konto.transaction.'.$attribute;
+            $labels[$attribute] = 'konto.label.transaction.'.$attribute;
         }
 
         return $labels;
