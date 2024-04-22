@@ -3,6 +3,9 @@
 return [
     "manual-headline" => "Manueller Konto Import",
     "manual-headline-sub" => "Bitte lade dir die entsprechenden Transaktionen bei deiner Bank herunter und lade die CSV hier hoch um sie in dein Konto zu importieren",
+    "csv-label-choose-konto" => "Konto auswählen",
+    "manual-button-submit" => "Vorschau anzeigen",
+    "csv-button-new-konto" => "Neues Konto anlegen",
     "label.transaction.date" => "Datum",
     "label.transaction.valuta" => "Valuta",
     "label.transaction.type" => "Typ",
