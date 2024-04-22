@@ -2,46 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Konto;
-use App\Models\Legacy\KontoTransaction;
+use App\Models\Legacy\BankTransaction;
 use Illuminate\Http\Request;
 
-class KontoController extends Controller
+class TransactionImportController extends Controller
 {
-
-    public function index(){
-        //$data = BudgetPlan::orderByDesc('start_date')->get();
-        //return view('budget-plan.index', ['plans' => $plans]);
-        return view('konto.import.index');
-    }
-
-    function csvToArray($filename = '', $delimiter = ',')
-    {
-        if (!file_exists($filename) || !is_readable($filename))
-            return false;
-
-        $header = null;
-        $data = array();
-        if (($handle = fopen($filename, 'r')) !== false)
-        {
-            while (($row = fgetcsv($handle, null, $delimiter)) !== false)
-            {
-                if (!$header)
-                    $header = $row;
-                else
-                    $data[] = array_combine($header, $row);
-            }
-            fclose($handle);
-        }
-
-        return $data;
-    }
 
     public function store(Request $request)
     {
 
         $validatedData = $request->validate([
-         'file' => 'required|mimes:csv|max:2048',
+         'file' => 'required|extensions:csv|max:2048',
         ]);
 
         //$path = $request->file('file')->store('public/files');
@@ -54,7 +25,7 @@ class KontoController extends Controller
 
         // csv in array speichern, header sind array header
         foreach ($fileContents as $line) {
-            $row = str_getcsv($line);
+            $row = str_getcsv($line, ';');
 
             // header raus ziehen
             if (!$header)
@@ -65,7 +36,7 @@ class KontoController extends Controller
 
         // hole dbmodel keys und zugeörige translation slugs (aka labels)
         //$mapping = KontoTransaction::getLabels();
-        $foo = new KontoTransaction();
+        $foo = new BankTransaction();
         $mapping = $foo->getLabels();
 
         // render view mit mapping und data
@@ -87,7 +58,7 @@ class KontoController extends Controller
             {
                 $db_entry[$key] = $data[$mapping[$key]];
             }
-            KontoTransaction::create($db_entry);
+            BankTransaction::create($db_entry);
 
 
 
