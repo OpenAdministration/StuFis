@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * App\Models\Legacy\Konto
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $sync_until
  * @property string $iban
  * @property string $last_sync
+ * @property Collection $csv_import_mapping
  * @property BankTransaction[] $kontos
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $kontoTransactions
  * @property-read int|null $konto_transactions_count
@@ -41,7 +43,7 @@ class BankAccount extends Model
     /**
      * @var array
      */
-    protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync'];
+    protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_mapping'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

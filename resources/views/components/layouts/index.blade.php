@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
-    @livewireStyles
     @livewireScripts
     <script src="{{ asset('js/app.js') }}" defer></script>
 </head>
@@ -64,7 +63,7 @@
                 <a href="{{ route('terms') }}" target="_blank">ToS</a>
                 <a href="{{ route('privacy') }}" target="_blank">Datenschutz</a>
                 <a href="{{ route('about') }}" target="_blank">Impressum</a>
-                <a href="{{ route('git-repo') }}" target="_blank">Version {{ $version }}</a>
+                <a href="{{ route('git-repo') }}" target="_blank">Version FIXME</a>
             </div>
         </div>
     </div>

@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 class TransactionImportController extends Controller
 {
 
+
+
     public function store(Request $request)
     {
 
@@ -28,10 +30,11 @@ class TransactionImportController extends Controller
             $row = str_getcsv($line, ';');
 
             // header raus ziehen
-            if (!$header)
+            if (!$header) {
                 $header = $row;
-            else
+            } else {
                 $data[] = array_combine($header, $row);
+            }
         }
 
         // hole dbmodel keys und zugeörige translation slugs (aka labels)
@@ -59,8 +62,6 @@ class TransactionImportController extends Controller
                 $db_entry[$key] = $data[$mapping[$key]];
             }
             BankTransaction::create($db_entry);
-
-
 
 
         //write the logic here to store csv data in database, header mapping als yaml o.ä. speichern?
