@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -33,6 +34,7 @@ use Illuminate\Support\Collection;
  */
 class BankAccount extends Model
 {
+    public $timestamps = false;
     /**
      * The table associated with the model.
      *
@@ -44,6 +46,19 @@ class BankAccount extends Model
      * @var array
      */
     protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_mapping'];
+
+    public function csvImportMapping() : Attribute
+    {
+        return Attribute::make(
+            get: static function (?string $value){
+                if(empty($value)){
+                    return [];
+                }
+                return json_decode($value, true);
+            } ,
+            set: static fn (array|Collection $value) => json_encode($value),
+        );
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

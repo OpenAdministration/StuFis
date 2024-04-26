@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -29,12 +30,23 @@ class TransactionImportWire extends Component
 
     public function mount()
     {
-        $foo = new BankTransaction();
-        $this->mapping = collect(array_flip(array_keys($foo->getLabels())));
-        $this->mapping = $this->mapping->map(function (){
-            return "";
-        });
+
+        $this->mapping = $this->createMapping();
         $this->data = collect();
+    }
+
+    /**
+     * Fills up the mapping array with missing column keys (and empty values)
+     * @param array $merger
+     * @return Collection
+     */
+    private function createMapping(array $merger = []) : Collection
+    {
+        $foo = new BankTransaction();
+        $emptyMapping = collect(array_flip(array_keys($foo->getLabels())));
+        return $emptyMapping->map(function ($value, $key) use ($merger){
+            return $merger[$key] ?? "";
+        });
     }
 
     function parseCSV()
@@ -67,7 +79,6 @@ class TransactionImportWire extends Component
                 return str_getcsv($line, $this->separator);
             });
 
-
         // get labels for mapping
         //TODO: gespeichertes Mapping vom letzten Mal anzeigen, falls eins existiert
 
@@ -87,22 +98,24 @@ class TransactionImportWire extends Component
 
     public function save()
     {
-            // mapping als vorlage speichern
-            $account = BankAccount::findOrFail($this->account_id);
-            $account->csv_import_mapping = $this->mapping;
-            $account->save();
+        // mapping als vorlage speichern
+        $account = BankAccount::findOrFail($this->account_id);
+        $account->csv_import_mapping = $this->mapping;
+        $account->save();
 
-            // create BankTransaction with values from $data, according to the keys assigned in $mapping
-            $db_entry = array();
-            foreach ($this->mapping as $key => $value) // value sollte jetzt der zugeordnete csv header sein
-            {
-                $db_entry[$key] = $this->data[$this->mapping[$key]];
-            }
-            BankTransaction::create($db_entry);
+        // create BankTransaction with values from $data, according to the keys assigned in $mapping
+        /* $db_entry = array();
+        foreach ($this->mapping as $key => $value) // value sollte jetzt der zugeordnete csv header sein
+        {
+            $db_entry[$key] = $this->data[$this->mapping[$key]];
+        }
+        BankTransaction::create($db_entry);
+        */
+
 
     }
 
-    public function render()
+    public function render() : \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
     {
         $accounts = BankAccount::all();
         $labels = (new BankTransaction())->getLabels();
@@ -116,6 +129,8 @@ class TransactionImportWire extends Component
 
     public function updatedAccountId()
     {
+        $account = BankAccount::findOrFail($this->account_id);
         $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->limit(1)->first();
+        $this->mapping = $this->createMapping($account->csv_import_mapping);
     }
 }
