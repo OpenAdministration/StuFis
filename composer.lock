@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6c619b8cadbc39b41f82cd734e53e7e4",
+    "content-hash": "4500eeb541cf22373cd41ecb205f4e21",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -993,6 +993,41 @@
                 }
             ],
             "time": "2023-10-12T05:21:21+00:00"
+        },
+        {
+            "name": "globalcitizen/php-iban",
+            "version": "v4.2.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/globalcitizen/php-iban.git",
+                "reference": "d8d2b7c60ba01286fc625763618760aa3b684c00"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/globalcitizen/php-iban/zipball/d8d2b7c60ba01286fc625763618760aa3b684c00",
+                "reference": "d8d2b7c60ba01286fc625763618760aa3b684c00",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.4 || ^5.5 || ^5.6 || ^7.0 || ^7.4 || ^8.0 || ^8.1"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "oophp-iban.php",
+                    "php-iban.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0-only"
+            ],
+            "description": "php-iban is a library for parsing and validating IBAN (and IIBAN) bank account information.",
+            "support": {
+                "issues": "https://github.com/globalcitizen/php-iban/issues",
+                "source": "https://github.com/globalcitizen/php-iban/tree/v4.2.3"
+            },
+            "time": "2024-03-25T00:37:02+00:00"
         },
         {
             "name": "graham-campbell/result-type",
