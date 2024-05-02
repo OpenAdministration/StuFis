@@ -13,6 +13,7 @@ return [
     "csv-latest-saldo" => "aktueller Saldo",
     "csv-latest-date" => "Datum der letzten Kontobuchung",
     "csv-latest-zweck" => "letzter Verwendungszweck",
+    "csv-import-success-msg" => "Kontoauszüge erfolgreich importiert. Neuer Saldo ist: :new-saldo €",
     "label.transaction.date" => "Ausführungsdatum",
     "hint.transaction.date" => "z. B. 13.08.2021",
     "label.transaction.valuta" => "Valutadatum",

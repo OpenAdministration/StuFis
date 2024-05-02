@@ -51,14 +51,20 @@
                 @endisset
             </dl>
         </div>
-
         @isset($account_id)
+            <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ __('CSV Upload') }}</h2>
+
             <div class="flex items-center justify-center w-full">
-                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                        </svg>
+                <label for="dropzone-file" @class([
+                        "flex flex-col items-center justify-center w-full border-2 border-gray-300  rounded-lg cursor-pointer dark:border-gray-600 dark:hover:border-gray-500",
+                        "h-64 border-dashed dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100   bg-gray-50 dark:hover:bg-gray-600" => empty($csv),
+                        "bg-green-100 h-16 border-green-200" => !empty($csv),
+                ])>
+                    <div @class([
+                        "flex flex-col items-center justify-center pt-5 pb-6",
+                        "hidden" => !empty($csv),
+                    ])>
+                        <x-fas-upload class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"></x-fas-upload>
                         <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">{{ __('Click to upload') }}</span>{{ __(' or drag and drop') }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('CSV from Bank') }}</p>
                     </div>
@@ -93,12 +99,12 @@
                         <x-slot:rows>
                             @isset($firstNewTransaction[$mapping[$attr]])
                                 <x-grid-list.item-card.row label="konto.csv-preview-first">
-                                    {{ $firstNewTransaction[$mapping[$attr]] }}
+                                    {{ $this->formatDataView($firstNewTransaction[$mapping[$attr]], $attr) }}
                                 </x-grid-list.item-card.row>
                             @endisset
                             @isset($lastNewTransaction[$mapping[$attr]])
                                 <x-grid-list.item-card.row label="konto.csv-preview-last">
-                                    {{ $lastNewTransaction[$mapping[$attr]] }}
+                                    {{ $this->formatDataView($lastNewTransaction[$mapping[$attr]], $attr) }}
                                 </x-grid-list.item-card.row>
                             @endisset
                         </x-slot:rows>
@@ -106,17 +112,12 @@
                 @endforeach
             </x-grid-list>
             <div class="py-4">
-                <button wire:click="save" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto" id="submit-assign">
-                    {{ __('konto.manual-button-assign') }}
+                <button wire:click="save" wire:loading.class="disabled opacity-50"
+                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
+                        id="submit-assign">
+                    <span>{{ __('konto.manual-button-assign') }}</span>
+                    <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden"/>
                 </button>
-            </div>
-            <br>
-            <div class="col-md-6 offset-md-3">
-                @if(session('status'))
-                    <div class="alert alert-success">
-                        {{ session('status') }}
-                    </div>
-                @endif
             </div>
         </div>
     @endif

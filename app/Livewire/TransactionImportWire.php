@@ -4,7 +4,11 @@ namespace App\Livewire;
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use Carbon\Carbon;
+use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -19,20 +23,26 @@ class TransactionImportWire extends Component
     public $separator;
     public $csvFileEncoding;
 
-    public int $account_id;
+    #[Url]
+    public $account_id;
 
     public $latestTransaction;
 
     public $mapping;
+    public $db_col_types;
 
     public $data;
     public $header;
 
     public function mount()
     {
-
         $this->mapping = $this->createMapping();
         $this->data = collect();
+
+        $foo = new BankTransaction();
+        foreach($this->mapping as $db_column => $csv_colum){
+            $this->db_col_types[$db_column] = DB::getSchemaBuilder()->getColumnType($foo->getTable(), $db_column);
+        }
     }
 
     /**
@@ -80,7 +90,6 @@ class TransactionImportWire extends Component
             });
 
         // get labels for mapping
-        //TODO: gespeichertes Mapping vom letzten Mal anzeigen, falls eins existiert
 
 
         // rendern & assign procedure
@@ -102,17 +111,46 @@ class TransactionImportWire extends Component
         $account = BankAccount::findOrFail($this->account_id);
         $account->csv_import_mapping = $this->mapping;
         $account->save();
+        $last_id = BankTransaction::where('konto_id', $this->account_id)
+            ->orderBy('id', 'desc')->limit(1)->first('id')->id ?? 1;
+
+        // In case no saldo is given in CSV, we need to calculate it row by row
+        // first Saldo should be sourced from last entry in DB
+        $currentSaldo = $this->latestTransaction->saldo;
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
-        /* $db_entry = array();
-        foreach ($this->mapping as $key => $value) // value sollte jetzt der zugeordnete csv header sein
-        {
-            $db_entry[$key] = $this->data[$this->mapping[$key]];
+        DB::beginTransaction();
+        foreach ($this->data as $row){
+            $transaction = new BankTransaction();
+            $transaction->id = ++$last_id;
+            $transaction->konto_id = $this->account_id;
+
+            foreach ($this->mapping as $db_col_name => $csv_col_id)
+            {
+                if(!empty($this->mapping[$db_col_name])){
+                    $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
+                }else{
+                    // In case no saldo is given in CSV, we need to calculate it row by row
+                    if($db_col_name === 'saldo'){
+                        $currentValue = str($row[$this->mapping['value']])->replace(',','.');
+                        $currentSaldo = bcadd($currentSaldo, $currentValue, 2);
+                        $transaction->$db_col_name = $this->formatDataDb($currentSaldo, $db_col_name);
+                    }
+                }
+            }
+
+            $transaction->save();
         }
-        BankTransaction::create($db_entry);
-        */
+        try {
+            DB::commit();
+        }catch (\Exception $exception){
+            DB::rollBack();
+            $this->addError('csv', 'Nope');
+            return;
+        }
 
-
+        return redirect()->route('konto.import.manual')
+            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $currentSaldo])]);
     }
 
     public function render() : \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
@@ -132,5 +170,46 @@ class TransactionImportWire extends Component
         $account = BankAccount::findOrFail($this->account_id);
         $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->limit(1)->first();
         $this->mapping = $this->createMapping($account->csv_import_mapping);
+    }
+
+    public function formatDataDb(string|int $value, string $db_col_name): int|string
+    {
+        $type = $this->db_col_types[$db_col_name];
+        return match ($type){
+            'integer' => (int) $value,
+            'date' => $this->guessCarbon($value, 'Y-m-d'),
+            'decimal' => number_format((float) $value, 2, '.', ''),
+            default => $value,
+        };
+    }
+
+    public function formatDataView(string|int $value, string $db_col_name): int|string
+    {
+        $type = $this->db_col_types[$db_col_name];
+        if($db_col_name === "empf_iban") $type = 'iban';
+        if($db_col_name === "empf_bic") $type = 'bic';
+        return match ($type){
+            'date' => $this->guessCarbon($value, 'd.m.Y'),
+            'decimal' => number_format((float) $value, 2, ',', '.'),
+            'iban' => iban_to_human_format($value),
+            default => $value
+        };
+    }
+
+    /**
+     * Guess the format of the input date because banks do not like standards
+    */
+    private function guessCarbon(string $dateString, string $newFormat) : string
+    {
+        $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
+        foreach ($formats as $format){#
+            try {
+                $ret = Carbon::rawCreateFromFormat($format, $dateString);
+            }catch (InvalidFormatException $e){
+                continue;
+            }
+            return $ret->format($newFormat);
+        }
+        return __("Not a date");
     }
 }

@@ -235,6 +235,7 @@
 
         <div class="relative z-0 flex flex-1 overflow-hidden">
             <main class="relative z-0 flex-1 overflow-y-auto focus:outline-none">
+                <x-message/>
                 <!-- Start main area-->
                 {{ $slot }}
                 <!-- End main area -->

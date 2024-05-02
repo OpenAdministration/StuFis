@@ -11,7 +11,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('konto_type', function($table) {
-            $table->jsonb('csv_import_mapping');
+            $table->json('csv_import_mapping')->default('{}');
         });
     }
 

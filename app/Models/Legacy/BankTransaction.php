@@ -53,6 +53,8 @@ class BankTransaction extends Model
      */
     protected $table = 'konto';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

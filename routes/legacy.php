@@ -11,6 +11,7 @@ Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
     Route::get('menu/stura', [LegacyController::class, 'render'])->name('sitzung');
     Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
     Route::get('konto/{hhp?}/{konto?}', [LegacyController::class, 'render'])->name('konto');
+    Route::get('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');
     Route::get('booking/{hhp_id}/instruct', [LegacyController::class, 'render'])->name('booking.instruct');
     Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');

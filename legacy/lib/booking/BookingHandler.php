@@ -552,13 +552,22 @@ class BookingHandler extends Renderer
     private function renderFintsButton(): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
+        echo "Kontoauszüge importieren: ";
         echo HtmlButton::make()
             ->asLink(URIBASE . 'konto/credentials')
             ->style('primary')
             ->icon('refresh')
             ->disable(!$isKv)
             ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
-            ->body('Kontoauszüge importieren (FINTS)');
+            ->body('mit Bankzugang');
+
+        echo HtmlButton::make()
+            ->asLink(URIBASE . 'konto/import/manual')
+            ->style('primary')
+            ->icon('upload')
+            ->disable(!$isKv)
+            ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
+            ->body('mit CSV');
     }
 
     private function renderBookingText(): void
