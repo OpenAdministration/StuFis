@@ -56,13 +56,15 @@
         @isset($account_id)
             <h2 class="text-xl font-semibold text-gray-900">{{ __('konto.csv-upload-headline') }}</h2>
             <p class="mt-2 mb-4 text-sm text-gray-500">{{  __('konto.csv-upload-headline-sub') }}</p>
-            <x-drop-area wire:model="csv">
+            <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
                 <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
             </x-drop-area>
 
         @endisset
         @isset($csv)
+            <h2 class="text-xl font-semibold text-gray-900">{{ __('konto.transaction.headline') }}</h2>
+            <p class="mt-2 mb-4 text-sm text-gray-500">{{  __('konto.transaction.headline-sub') }}</p>
             <div class="my-5">
                 <x-toggle wire:click="reverseCsvOrder" :active="$csvOrder === 1">
                     <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
@@ -113,7 +115,7 @@
                 <button wire:click="save" wire:loading.class="disabled opacity-50" wire:target="save"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
                         id="submit-assign">
-                    <x-fas-floppy-disk/>
+                    <x-fas-floppy-disk class="w-4 h-4 mr-2"/>
                     <span>{{ __('konto.manual-button-assign') }}</span>
                     <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden" wire:target="save"/>
                 </button>

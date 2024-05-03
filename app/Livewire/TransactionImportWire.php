@@ -38,7 +38,7 @@ class TransactionImportWire extends Component
     public $data;
     public $header;
 
-    // CSV entries in order = 1, in reverse order = -1
+    // CSV entries in order = -1, in reverse order = 1
     public $csvOrder = -1;
 
 
@@ -68,7 +68,7 @@ class TransactionImportWire extends Component
                 new MoneyRule($this->data->pluck($this->mapping->get('value')))
             ],
             'mapping.saldo' => [
-                'required', 'int',
+                'int',
                 new MoneyRule($this->data->pluck($this->mapping->get('saldo'))),
                 //new MoneyRule($this->data->pluck($this->mapping->get('value'))),
                 new BalanceRule(
@@ -151,14 +151,14 @@ class TransactionImportWire extends Component
         $this->validate();
         // mapping als vorlage speichern
         $account = BankAccount::findOrFail($this->account_id);
-        $account->csv_import_mapping = $this->mapping;
+        $account->csv_import_settings = ["csv_import_mapping" => $this->mapping, "csv_order" => $this->csvOrder];
         $account->save();
         $last_id = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->limit(1)->first('id')->id ?? 1;
 
         // In case no saldo is given in CSV, we need to calculate it row by row
-        // first Saldo should be sourced from last entry in DB
-        $currentBalance = $this->latestTransaction->saldo;
+        // first Saldo should be sourced from last entry in DB, if there is no entry, we assume 0
+        $currentBalance = $this->latestTransaction->saldo ?? 0;
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
         DB::beginTransaction();
@@ -190,6 +190,8 @@ class TransactionImportWire extends Component
             return;
         }
 
+        $currentBalance = $this->latestTransaction->saldo;
+
         return redirect()->route('konto.import.manual')
             ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $currentBalance])]);
     }
@@ -206,11 +208,12 @@ class TransactionImportWire extends Component
         ]);
     }
 
-    public function updatedAccountId()
+    public function updatedAccountId() : void
     {
         $account = BankAccount::findOrFail($this->account_id);
         $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->limit(1)->first();
-        $this->mapping = $this->createMapping($account->csv_import_mapping);
+        $this->mapping = $this->createMapping($account->csv_import_settings["csv_import_mapping"] ?? []);
+        $this->csvOrder = (int) ($account->csv_import_settings["csv_order"] ?? -1);
     }
 
     /**
@@ -219,7 +222,7 @@ class TransactionImportWire extends Component
      * @param $arrayKey string the name of the key which was updated (without mapping. prefix)
      * @return void
      */
-    public function updatedMapping($value, $arrayKey)
+    public function updatedMapping() : void
     {
         $this->validate();
         // date, value, saldo
@@ -273,26 +276,11 @@ class TransactionImportWire extends Component
     public function reverseCsvOrder(){
         $this->data = $this->data->reverse();
         $this->csvOrder *= -1;
+        $this->validate();
     }
 
     public function isCsvOrderReversed() : bool
     {
-        return ($this->csvOrder == -1) ? true : false;
-    }
-
-    private function validateSaldo(){
-        // benötigt: Saldo und Value werden gemappt
-        if(empty($this->mapping['saldo']) || empty($this->mapping['value']))
-            $this->addError('mapping.saldo','saldo / betrag zuordnen');
-
-        foreach ($this->data as $row){
-
-                // In case no saldo is given in CSV, we need to calculate it row by row
-
-                $currentValue = str($row[$this->mapping['value']])->replace(',','.');
-                $currentBalance = bcadd($currentBalance, $currentValue, 2);
-
-        }
-
+        return $this->csvOrder === -1;
     }
 }

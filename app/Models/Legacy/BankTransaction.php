@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $saldo
  * @property string $zweck
  * @property string $comment
- * @property integer $gvcode
  * @property string $customer_ref
  * @property BankAccount $finanzformularKontoType
  * @property-read \App\Models\Legacy\BankAccount $konto
@@ -33,7 +32,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereEmpfBic($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereEmpfIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereEmpfName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereGvcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereKontoId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction wherePrimanota($value)
@@ -58,7 +56,7 @@ class BankTransaction extends Model
     /**
      * @var array
      */
-    protected $fillable = ['date', 'valuta', 'type', 'empf_iban', 'empf_bic', 'empf_name', 'primanota', 'value', 'saldo', 'zweck', 'comment', 'gvcode', 'customer_ref'];
+    protected $fillable = ['date', 'valuta', 'type', 'empf_iban', 'empf_bic', 'empf_name', 'primanota', 'value', 'saldo', 'zweck', 'comment', 'customer_ref'];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
