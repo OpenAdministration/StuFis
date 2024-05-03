@@ -560,7 +560,7 @@ class BookingHandler extends Renderer
             ->disable(!$isKv)
             ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
             ->body('mit Bankzugang');
-
+        echo "&nbsp;";
         echo HtmlButton::make()
             ->asLink(URIBASE . 'konto/import/manual')
             ->style('primary')

@@ -29,7 +29,7 @@
         "barryvdh/laravel-ide-helper": "^2.13",
         "fakerphp/faker": "^1.9.1",
         "laravel/browser-kit-testing": "^6.4",
-        "laravel/dusk": "^7.9",
+        "laravel/dusk": "^8.2",
         "laravel/sail": "^1.0.1",
         "laravel/tinker": "^2.7",
         "mockery/mockery": "^1.4.4",

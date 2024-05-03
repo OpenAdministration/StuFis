@@ -13,7 +13,9 @@
     </div>
     <div>
         <div class="py-3">
-            <label for="account_id" class="block text-sm font-medium leading-6 text-gray-900">{{ __('konto.csv-label-choose-konto') }}</label>
+            <label for="account_id" class="block text-sm font-medium leading-6 text-gray-900">
+                {{ __('konto.csv-label-choose-konto') }}
+            </label>
             <select wire:model.live="account_id"
                     class="my-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
             >
@@ -52,27 +54,22 @@
             </dl>
         </div>
         @isset($account_id)
-            <h2 class="text-xl font-semibold text-gray-900 mb-3">{{ __('CSV Upload') }}</h2>
+            <h2 class="text-xl font-semibold text-gray-900">{{ __('konto.csv-upload-headline') }}</h2>
+            <p class="mt-2 mb-4 text-sm text-gray-500">{{  __('konto.csv-upload-headline-sub') }}</p>
+            <x-drop-area wire:model="csv">
+                <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
+            </x-drop-area>
 
-            <div class="flex items-center justify-center w-full">
-                <label for="dropzone-file" @class([
-                        "flex flex-col items-center justify-center w-full border-2 border-gray-300  rounded-lg cursor-pointer dark:border-gray-600 dark:hover:border-gray-500",
-                        "h-64 border-dashed dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100   bg-gray-50 dark:hover:bg-gray-600" => empty($csv),
-                        "bg-green-100 h-16 border-green-200" => !empty($csv),
-                ])>
-                    <div @class([
-                        "flex flex-col items-center justify-center pt-5 pb-6",
-                        "hidden" => !empty($csv),
-                    ])>
-                        <x-fas-upload class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"></x-fas-upload>
-                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">{{ __('Click to upload') }}</span>{{ __(' or drag and drop') }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('CSV from Bank') }}</p>
-                    </div>
-                    <input id="dropzone-file" type="file" wire:model.live="csv" />
-                </label>
+        @endisset
+        @isset($csv)
+            <div class="my-5">
+                <x-toggle wire:click="reverseCsvOrder" :active="$csvOrder === 1">
+                    <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
+                    <span class="text-sm text-gray-500 ml-1">{{ __('konto.manual-button-reverse-csv-order-sub') }}</span>
+                </x-toggle>
             </div>
-            @error('csv') <span class="error">{{ $message }}</span> @enderror
-        @endif
+        @endisset
     </div>
     @if($data->count() > 0)
         <div>
@@ -94,6 +91,7 @@
                                         <option value="{{ $csv_column_id }}">{{ $value }}</option>
                                     @endforeach
                                 </select>
+                                @error("mapping.$attr")<span class="text-red-500"> {{ $message }}</span> @enderror
                             </div>
                         </div>
                         <x-slot:rows>
@@ -112,11 +110,12 @@
                 @endforeach
             </x-grid-list>
             <div class="py-4">
-                <button wire:click="save" wire:loading.class="disabled opacity-50"
+                <button wire:click="save" wire:loading.class="disabled opacity-50" wire:target="save"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
                         id="submit-assign">
+                    <x-fas-floppy-disk/>
                     <span>{{ __('konto.manual-button-assign') }}</span>
-                    <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden"/>
+                    <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden" wire:target="save"/>
                 </button>
             </div>
         </div>

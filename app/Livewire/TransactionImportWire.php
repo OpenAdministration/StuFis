@@ -4,6 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use App\Rules\CsvTransactionImport\BalanceRule;
+use App\Rules\CsvTransactionImport\IbanRule;
+use App\Rules\CsvTransactionImport\MoneyRule;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;
@@ -31,11 +34,18 @@ class TransactionImportWire extends Component
     public $mapping;
     public $db_col_types;
 
+    /** @var Collection */
     public $data;
     public $header;
 
+    // CSV entries in order = 1, in reverse order = -1
+    public $csvOrder = -1;
+
+
     public function mount()
     {
+        //$this->authorize('cashOfficer', User::class);
+
         $this->mapping = $this->createMapping();
         $this->data = collect();
 
@@ -43,6 +53,38 @@ class TransactionImportWire extends Component
         foreach($this->mapping as $db_column => $csv_colum){
             $this->db_col_types[$db_column] = DB::getSchemaBuilder()->getColumnType($foo->getTable(), $db_column);
         }
+    }
+
+    public function rules() : array
+    {
+        // mapping has only the csv column numbers as values, so we need to work around a bit,
+        // we only check if a matching column was given, the values of this columns only in special cases
+        return [
+            'mapping.date' => 'required|int',
+            'mapping.valuta' => 'required|int',
+            'mapping.type' => 'required|int',
+            'mapping.value' => [
+                'required', 'int',
+                new MoneyRule($this->data->pluck($this->mapping->get('value')))
+            ],
+            'mapping.saldo' => [
+                'required', 'int',
+                new MoneyRule($this->data->pluck($this->mapping->get('saldo'))),
+                //new MoneyRule($this->data->pluck($this->mapping->get('value'))),
+                new BalanceRule(
+                    $this->data->pluck($this->mapping->get('value')),
+                    $this->data->pluck($this->mapping->get('saldo')),
+                    $this->latestTransaction?->saldo
+                )
+            ],
+            'mapping.empf_name' => 'required|int',
+            'mapping.empf_bic' => 'sometimes|int',
+            'mapping.empf_iban' => [
+                'required', 'int',
+                new IbanRule($this->data->pluck($this->mapping->get('empf_iban')))
+            ],
+            'mapping.zweck' => 'required|int'
+        ];
     }
 
     /**
@@ -91,7 +133,6 @@ class TransactionImportWire extends Component
 
         // get labels for mapping
 
-
         // rendern & assign procedure
 
         // replace mapping values with data keys (csv headers are the new mapping values)
@@ -107,6 +148,7 @@ class TransactionImportWire extends Component
 
     public function save()
     {
+        $this->validate();
         // mapping als vorlage speichern
         $account = BankAccount::findOrFail($this->account_id);
         $account->csv_import_mapping = $this->mapping;
@@ -116,7 +158,7 @@ class TransactionImportWire extends Component
 
         // In case no saldo is given in CSV, we need to calculate it row by row
         // first Saldo should be sourced from last entry in DB
-        $currentSaldo = $this->latestTransaction->saldo;
+        $currentBalance = $this->latestTransaction->saldo;
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
         DB::beginTransaction();
@@ -125,16 +167,15 @@ class TransactionImportWire extends Component
             $transaction->id = ++$last_id;
             $transaction->konto_id = $this->account_id;
 
-            foreach ($this->mapping as $db_col_name => $csv_col_id)
-            {
+            foreach ($this->mapping as $db_col_name => $csv_col_id) {
                 if(!empty($this->mapping[$db_col_name])){
                     $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
                 }else{
                     // In case no saldo is given in CSV, we need to calculate it row by row
                     if($db_col_name === 'saldo'){
                         $currentValue = str($row[$this->mapping['value']])->replace(',','.');
-                        $currentSaldo = bcadd($currentSaldo, $currentValue, 2);
-                        $transaction->$db_col_name = $this->formatDataDb($currentSaldo, $db_col_name);
+                        $currentBalance = bcadd($currentBalance, $currentValue, 2);
+                        $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                     }
                 }
             }
@@ -150,7 +191,7 @@ class TransactionImportWire extends Component
         }
 
         return redirect()->route('konto.import.manual')
-            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $currentSaldo])]);
+            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $currentBalance])]);
     }
 
     public function render() : \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
@@ -172,6 +213,18 @@ class TransactionImportWire extends Component
         $this->mapping = $this->createMapping($account->csv_import_mapping);
     }
 
+    /**
+     * is called when mapping got updated
+     * @param $value
+     * @param $arrayKey string the name of the key which was updated (without mapping. prefix)
+     * @return void
+     */
+    public function updatedMapping($value, $arrayKey)
+    {
+        $this->validate();
+        // date, value, saldo
+    }
+
     public function formatDataDb(string|int $value, string $db_col_name): int|string
     {
         $type = $this->db_col_types[$db_col_name];
@@ -190,7 +243,7 @@ class TransactionImportWire extends Component
         if($db_col_name === "empf_bic") $type = 'bic';
         return match ($type){
             'date' => $this->guessCarbon($value, 'd.m.Y'),
-            'decimal' => number_format((float) $value, 2, ',', '.'),
+            'decimal' => number_format((float) $value, 2, ',', '.') . ' €',
             'iban' => iban_to_human_format($value),
             default => $value
         };
@@ -202,7 +255,7 @@ class TransactionImportWire extends Component
     private function guessCarbon(string $dateString, string $newFormat) : string
     {
         $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
-        foreach ($formats as $format){#
+        foreach ($formats as $format){
             try {
                 $ret = Carbon::rawCreateFromFormat($format, $dateString);
             }catch (InvalidFormatException $e){
@@ -211,5 +264,35 @@ class TransactionImportWire extends Component
             return $ret->format($newFormat);
         }
         return __("Not a date");
+    }
+
+    /**
+     * Change the order of CSV entries in current upload
+     * @return void
+     */
+    public function reverseCsvOrder(){
+        $this->data = $this->data->reverse();
+        $this->csvOrder *= -1;
+    }
+
+    public function isCsvOrderReversed() : bool
+    {
+        return ($this->csvOrder == -1) ? true : false;
+    }
+
+    private function validateSaldo(){
+        // benötigt: Saldo und Value werden gemappt
+        if(empty($this->mapping['saldo']) || empty($this->mapping['value']))
+            $this->addError('mapping.saldo','saldo / betrag zuordnen');
+
+        foreach ($this->data as $row){
+
+                // In case no saldo is given in CSV, we need to calculate it row by row
+
+                $currentValue = str($row[$this->mapping['value']])->replace(',','.');
+                $currentBalance = bcadd($currentBalance, $currentValue, 2);
+
+        }
+
     }
 }
