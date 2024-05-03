@@ -20,7 +20,7 @@ return [
     "csv-latest-saldo" => "aktueller Saldo",
     "csv-latest-date" => "Datum der letzten Kontobuchung",
     "csv-latest-zweck" => "letzter Verwendungszweck",
-    "csv-import-success-msg" => "Kontoauszüge erfolgreich importiert. Neuer Saldo ist: :new-saldo €",
+    "csv-import-success-msg" => ":transaction-amount Kontoauszüge erfolgreich importiert. Neuer Saldo ist: :new-saldo €",
     "transaction.headline" => "Zuordnung der Tabellenspalten",
     "transaction.headline-sub" => "Ordne hier den vorgegebenen Feldern die korrekte Tabellenüberschrift aus deiner .csv Datei hinzu. Du hast immer einen Beispielwert stehen, dan dem du dich orientieren kannst. Wenn du eine Zuordnung getroffen hast, wird dir darunter der erste und letzte Zeileneintrag der .csv Datei in der jeweiligen Spalte angezeigt. Bitte überprüfe die Zuordnung genau. Nach dem Drücken des Importieren-Knopfes werden die Daten so gespeichert und können nicht mehr angepasst werden. Das StuFiS wird sich in Zukunft die Zuordnung merken und dir diese direkt vorschlagen. Einzelne Felder wie Primanota müssen nicht zwingend gefüllt werden.",
     "label.transaction.date" => "Ausführungsdatum",

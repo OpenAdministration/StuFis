@@ -158,7 +158,7 @@ class TransactionImportWire extends Component
 
         // In case no saldo is given in CSV, we need to calculate it row by row
         // first Saldo should be sourced from last entry in DB, if there is no entry, we assume 0
-        $currentBalance = $this->latestTransaction->saldo ?? 0;
+        $currentBalance = $this->latestTransaction->saldo ?? 0; // alternative to 0: throw error
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
         DB::beginTransaction();
@@ -170,13 +170,10 @@ class TransactionImportWire extends Component
             foreach ($this->mapping as $db_col_name => $csv_col_id) {
                 if(!empty($this->mapping[$db_col_name])){
                     $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
-                }else{
-                    // In case no saldo is given in CSV, we need to calculate it row by row
-                    if($db_col_name === 'saldo'){
-                        $currentValue = str($row[$this->mapping['value']])->replace(',','.');
-                        $currentBalance = bcadd($currentBalance, $currentValue, 2);
-                        $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
-                    }
+                }else if($db_col_name === 'saldo'){
+                    $currentValue = str($row[$this->mapping['value']])->replace(',','.');
+                    $currentBalance = bcadd($currentBalance, $currentValue, 2);
+                    $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                 }
             }
 
@@ -190,10 +187,11 @@ class TransactionImportWire extends Component
             return;
         }
 
-        $currentBalance = $this->latestTransaction->saldo;
+        $newBalance = BankTransaction::where('konto_id', $this->account_id)
+            ->orderBy('id', 'desc')->limit(1)->first()->saldo;
 
         return redirect()->route('konto.import.manual')
-            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $currentBalance])]);
+            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
     }
 
     public function render() : \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
@@ -253,7 +251,8 @@ class TransactionImportWire extends Component
     }
 
     /**
-     * Guess the format of the input date because banks do not like standards
+     * Guess the format of the input date because banks do not like standards :(
+     * FIXME better do it file wise not cell wise, or normalize data better at upload
     */
     private function guessCarbon(string $dateString, string $newFormat) : string
     {
