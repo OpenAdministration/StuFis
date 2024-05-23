@@ -26,6 +26,8 @@ Route::middleware(['auth'])->group(function(){
     Route::get('plan/create', [\App\Http\Controllers\BudgetPlanController::class, 'create'])->name('budget-plan.create');
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
     //Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
+
+    Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
 });
 
 // guest routes

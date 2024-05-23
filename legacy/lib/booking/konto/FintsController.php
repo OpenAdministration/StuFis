@@ -269,7 +269,7 @@ class FintsController extends Renderer
             // pw set
             $success = $this->fintsHandler->login();  // throws if Tan needed
             if ($success) {
-                throw new LegacyRedirectException(redirect()->route('konto.credentials'));
+                throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
             }
         }
         // if no pw or wrong one

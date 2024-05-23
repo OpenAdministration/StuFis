@@ -8,6 +8,8 @@ class Layout extends Component
 {
     public string $title = "StuFiS - Finanzen";
 
+    public string $version;
+
     /**
      * @var string if not empty, the legacy iframe will be shown with this content, instead of the slot
      */
@@ -32,6 +34,7 @@ class Layout extends Component
     public function __construct($legacyContent = '')
     {
         $this->legacyContent = $legacyContent;
+        $this->version = config('app.version');
     }
 
     /**

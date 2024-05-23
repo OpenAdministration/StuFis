@@ -19,6 +19,8 @@ php artisan backup:clean --disable-notifications
 
 php artisan backup:list
 
+git fetch
+
 if [ -n "$1" ]
 then
     git checkout "$1"

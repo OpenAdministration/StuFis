@@ -7,7 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
-    @livewireStyles
     @livewireScripts
     <script src="{{ asset('js/app.js') }}" defer></script>
 </head>
@@ -201,6 +200,9 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
+                        <a href="{{ config('app.docs_url') }}" class="text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <x-fas-book-open />
+                        </a>
                         <!-- Profile dropdown -->
                         <div x-data="{ profile: false }" class="relative flex-shrink-0" >
                             <div>
@@ -236,6 +238,7 @@
 
         <div class="relative z-0 flex flex-1 overflow-hidden">
             <main class="relative z-0 flex-1 overflow-y-auto focus:outline-none">
+                <x-message/>
                 <!-- Start main area-->
                 {{ $slot }}
                 <!-- End main area -->
