@@ -1,17 +1,7 @@
 <div class="mt-8 sm:mx-8">
-    <div class="sm:flex sm:items-center">
-        <div class="sm:flex-auto">
-            <h1 class="text-xl font-semibold text-gray-900">{{ __('konto.manual-headline') }}</h1>
-            <p class="mt-2 text-sm text-gray-700">{{ __('konto.manual-headline-sub') }}</p>
-        </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <a href="#" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
-                <x-heroicon-o-plus class="-ml-0.5 mr-2 h-4 w-4"/>
-                {{ __('konto.csv-button-new-konto') }}
-            </a>
-        </div>
-    </div>
-    <div>
+    <x-headline :headline="__('konto.manual-headline')" :sub-text="__('konto.manual-headline-sub')"/>
+
+    <div class="max-w-screen-lg">
         <div class="py-3">
             <label for="account_id" class="block text-sm font-medium leading-6 text-gray-900">
                 {{ __('konto.csv-label-choose-konto') }}
@@ -26,27 +16,29 @@
             </select>
             <dl class="-my-3 divide-y divide-gray-100 px-6 py-4 text-sm leading-6">
                 @isset($latestTransaction)
-                    <div class="flex justify-between gap-x-4 py-3">
-                        <dt class="text-gray-500">{{ __('konto.csv-latest-saldo') }}:</dt>
-                        <dd class="text-gray-700">
-                            {{ $latestTransaction->saldo }} €
-                        </dd>
-                    </div>
-                    <div class="flex justify-between gap-x-4 py-3">
-                        <dt class="text-gray-500">{{ __('konto.csv-latest-date') }}:</dt>
-                        <dd class="text-gray-700">
-                            {{ $latestTransaction->date }}
-                        </dd>
-                    </div>
-                    <div class="flex justify-between gap-x-4 py-3">
-                        <dt class="text-gray-500">{{ __('konto.csv-latest-zweck') }}:</dt>
-                        <dd class="text-gray-700">
-                            {{ $latestTransaction->zweck }}
-                        </dd>
+                    <div wire:transition.opacity>
+                        <div class="flex justify-between gap-x-4 py-3">
+                            <dt class="text-gray-500">{{ __('konto.csv-latest-saldo') }}:</dt>
+                            <dd class="text-gray-700">
+                                {{ $latestTransaction->saldo }} €
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-x-4 py-3">
+                            <dt class="text-gray-500">{{ __('konto.csv-latest-date') }}:</dt>
+                            <dd class="text-gray-700">
+                                {{ $latestTransaction->date }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-x-4 py-3">
+                            <dt class="text-gray-500">{{ __('konto.csv-latest-zweck') }}:</dt>
+                            <dd class="text-gray-700">
+                                {{ $latestTransaction->zweck }}
+                            </dd>
+                        </div>
                     </div>
                 @else
                     @isset($account_id)
-                        <div class="flex justify-between gap-x-4 py-3">
+                        <div wire:transition class="flex justify-between gap-x-4 py-3">
                             <dt class="text-gray-700 center">{{ __('konto.csv-no-transaction') }}</dt>
                         </div>
                     @endisset
@@ -54,17 +46,17 @@
             </dl>
         </div>
         @isset($account_id)
-            <h2 class="text-xl font-semibold text-gray-900">{{ __('konto.csv-upload-headline') }}</h2>
-            <p class="mt-2 mb-4 text-sm text-gray-500">{{  __('konto.csv-upload-headline-sub') }}</p>
-            <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
-                <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
-            </x-drop-area>
+            <div wire:transition.opacity>
+                <x-headline :headline="__('konto.csv-upload-headline')" :sub-text="__('konto.csv-upload-headline-sub')"/>
+                <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
+                    <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
+                </x-drop-area>
+            </div>
 
         @endisset
         @isset($csv)
-            <h2 class="text-xl font-semibold text-gray-900">{{ __('konto.transaction.headline') }}</h2>
-            <p class="mt-2 mb-4 text-sm text-gray-500">{{  __('konto.transaction.headline-sub') }}</p>
+            <x-headline :headline="__('konto.transaction.headline')" :sub-text="__('konto.transaction.headline-sub')"/>
             <div class="my-5">
                 <x-toggle wire:click="reverseCsvOrder" :active="$csvOrder === 1">
                     <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
@@ -74,8 +66,7 @@
         @endisset
     </div>
     @if($data->count() > 0)
-        <div>
-            <x-grid-list>
+            <x-grid-list wire:transition>
                 @foreach($labels as $attr => $label)
                     <x-grid-list.item-card wire:key="{{ $attr }}">
                         <div>
@@ -120,6 +111,5 @@
                     <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden" wire:target="save"/>
                 </button>
             </div>
-        </div>
     @endif
 </div>
