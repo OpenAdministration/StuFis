@@ -63,9 +63,10 @@ npm install
 npm run production
 php artisan migrate --force # this is the bit dangerous part ^^
 
-#optional   
+# optional   
+php artisan legacy:migrate-files-to-storage # migrates old files from DB to storage
 
-# prod env
+# prod env (experimental)
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -76,6 +77,6 @@ php artisan view:cache
 
 you need php8.2 and to fix the symbolic link like 
 
-```
+```bash
 ln -s ~/StuFis/public htdocs-ssl
 ```

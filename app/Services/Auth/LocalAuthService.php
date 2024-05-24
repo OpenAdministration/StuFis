@@ -2,7 +2,6 @@
 
 namespace App\Services\Auth;
 
-use App\Services\Auth\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -57,6 +56,7 @@ class LocalAuthService extends AuthService
             'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
             'revision' => collect(['login', 'ref-finanzen']),
+            'admin' => collect(['admin']),
             'external' => collect(['login']),
         };
     }
