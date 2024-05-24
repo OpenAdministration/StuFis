@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use App\Models\User;
 use App\Rules\CsvTransactionImport\BalanceRule;
 use App\Rules\CsvTransactionImport\IbanRule;
 use App\Rules\CsvTransactionImport\MoneyRule;
@@ -44,7 +45,7 @@ class TransactionImportWire extends Component
 
     public function mount()
     {
-        //$this->authorize('cashOfficer', User::class);
+        $this->authorize('cashOfficer', User::class);
 
         $this->mapping = $this->createMapping();
         $this->data = collect();
