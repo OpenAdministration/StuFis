@@ -12,6 +12,9 @@ cd "$(dirname "$0")"
 # puts StuFis in Maintenance Mode
 php artisan down
 
+php artisan clear-compiled
+php artisan optimize:clear
+
 # does backup of files + db
 php artisan backup:run --disable-notifications
 

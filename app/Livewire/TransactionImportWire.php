@@ -8,14 +8,13 @@ use App\Models\User;
 use App\Rules\CsvTransactionImport\BalanceRule;
 use App\Rules\CsvTransactionImport\IbanRule;
 use App\Rules\CsvTransactionImport\MoneyRule;
-use Carbon\Carbon;
-use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Spatie\Regex\Regex;
 
 class TransactionImportWire extends Component
 {
@@ -102,7 +101,7 @@ class TransactionImportWire extends Component
         });
     }
 
-    function parseCSV()
+    public function parseCSV() : void
     {
         $this->validateOnly('csv');
         // temp save uploaded file
@@ -130,6 +129,18 @@ class TransactionImportWire extends Component
                 return !empty($line);
             })->map(function ($line){
                 return str_getcsv($line, $this->separator);
+            })->map(function ($lineArray){
+                // normalize data
+                foreach ($lineArray as $key => $cell){
+                    // tests
+                    $moneyTest = Regex::match('/([0-9]+),([0-9]{1,2})/', $cell);
+
+                    // conversions
+                    if($moneyTest->hasMatch()){
+                        $lineArray[$key] = $moneyTest->group(1) . '.' . $moneyTest->group(2);
+                    }
+                }
+                return $lineArray;
             });
 
         // get labels for mapping
@@ -142,7 +153,7 @@ class TransactionImportWire extends Component
 
     }
 
-    public function updatedCsv()
+    public function updatedCsv(): void
     {
         $this->parseCSV();
     }
@@ -152,7 +163,10 @@ class TransactionImportWire extends Component
         $this->validate();
         // mapping als vorlage speichern
         $account = BankAccount::findOrFail($this->account_id);
-        $account->csv_import_settings = ["csv_import_mapping" => $this->mapping, "csv_order" => $this->csvOrder];
+        $account->csv_import_settings = [
+            "csv_import_mapping" => $this->mapping,
+            "csv_order" => $this->csvOrder
+        ];
         $account->save();
         $last_id = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->limit(1)->first('id')->id ?? 1;
@@ -182,7 +196,7 @@ class TransactionImportWire extends Component
         }
         try {
             DB::commit();
-        }catch (\Exception $exception){
+        } catch (\Exception $exception){
             DB::rollBack();
             $this->addError('csv', 'Nope');
             return;
@@ -210,15 +224,14 @@ class TransactionImportWire extends Component
     public function updatedAccountId() : void
     {
         $account = BankAccount::findOrFail($this->account_id);
-        $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->limit(1)->first();
+        $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)
+            ->orderBy('id', 'desc')->limit(1)->first();
         $this->mapping = $this->createMapping($account->csv_import_settings["csv_import_mapping"] ?? []);
         $this->csvOrder = (int) ($account->csv_import_settings["csv_order"] ?? -1);
     }
 
     /**
      * is called when mapping got updated
-     * @param $value
-     * @param $arrayKey string the name of the key which was updated (without mapping. prefix)
      * @return void
      */
     public function updatedMapping() : void
@@ -232,8 +245,8 @@ class TransactionImportWire extends Component
         $type = $this->db_col_types[$db_col_name];
         return match ($type){
             'integer' => (int) $value,
-            'date' => $this->guessCarbon($value, 'Y-m-d'),
-            'decimal' => number_format((float) $value, 2, '.', ''),
+            'date' => guessCarbon($value, 'Y-m-d'),
+            'decimal' => (float) $value,
             default => $value,
         };
     }
@@ -244,7 +257,7 @@ class TransactionImportWire extends Component
         if($db_col_name === "empf_iban") $type = 'iban';
         if($db_col_name === "empf_bic") $type = 'bic';
         return match ($type){
-            'date' => $this->guessCarbon($value, 'd.m.Y'),
+            'date' => guessCarbon($value, 'd.m.Y'),
             'decimal' => number_format((float) $value, 2, ',', '.') . ' €',
             'iban' => iban_to_human_format($value),
             default => $value
@@ -252,28 +265,11 @@ class TransactionImportWire extends Component
     }
 
     /**
-     * Guess the format of the input date because banks do not like standards :(
-     * FIXME better do it file wise not cell wise, or normalize data better at upload
-    */
-    private function guessCarbon(string $dateString, string $newFormat) : string
-    {
-        $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
-        foreach ($formats as $format){
-            try {
-                $ret = Carbon::rawCreateFromFormat($format, $dateString);
-            }catch (InvalidFormatException $e){
-                continue;
-            }
-            return $ret->format($newFormat);
-        }
-        return __("Not a date");
-    }
-
-    /**
      * Change the order of CSV entries in current upload
      * @return void
      */
-    public function reverseCsvOrder(){
+    public function reverseCsvOrder(): void
+    {
         $this->data = $this->data->reverse();
         $this->csvOrder *= -1;
         $this->validate();
