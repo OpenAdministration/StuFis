@@ -16,10 +16,10 @@ class BalanceRule implements ValidationRule
     public function __construct(Collection $differences,Collection $balances,?string $initalBalance){
         // make sure all given Money strings have the same format: XXXX.XX (2 decimals, with . as separator)
         $this->differences = $differences->map(function ($item){
-            return number_format((float) str_replace(',','.', $item), 2, '.', '');
+            return number_format((float) str_replace(',','.', $item ?? ''), 2, '.', '');
         });
         $this->balances = $balances->map(function ($item){
-            return number_format((float) str_replace(',','.', $item), 2, '.', '');
+            return number_format((float) str_replace(',','.', $item ?? ''), 2, '.', '');
         });
         $this->initalBalance = is_null($initalBalance) ? null : number_format((float) str_replace(',','.', $initalBalance), 2, '.', '');
     }
