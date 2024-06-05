@@ -29,6 +29,8 @@ Route::middleware(['auth'])->group(function(){
 
     Route::get('konto/import/manual', [\App\Http\Controllers\KontoController::class, 'manual'])->name('konto.import.manual');
     Route::post('konto/import/manual/upload', [\App\Http\Controllers\KontoController::class, 'store']);
+
+    Route::get('antrag', [\App\Http\Controllers\AntragController::class, 'index'])->name('antrag');
 });
 
 
