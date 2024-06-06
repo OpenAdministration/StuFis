@@ -142,7 +142,6 @@ class TransactionImportWire extends Component
                 }
                 return $lineArray;
             });
-        dd($this->data);
 
         // get labels for mapping
 
