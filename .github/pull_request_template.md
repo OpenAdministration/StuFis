@@ -3,7 +3,8 @@ Checklist for @DieMichii
 - [ ] automated Testing
 - [ ] Documentation
 - [ ] Version bump (composer) and Version Tag
+- [ ] Changelog written
 
-Content:
+Changelog:
 
 FIXME
