@@ -6,9 +6,8 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Request;
 
 class AuthController
 {
@@ -29,7 +28,6 @@ class AuthController
             Auth::login($user);
         }
         return redirect()->intended(RouteServiceProvider::HOME);
-
     }
 
     public function logout() {
