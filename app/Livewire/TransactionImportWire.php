@@ -126,7 +126,7 @@ class TransactionImportWire extends Component
         $this->header = str_getcsv($lines->first(), $this->separator);
         $this->data = $lines->except(0)
             ->filter(function ($line){
-                return !(empty($line) || Regex::match('/^(,*|;*)\r?\n?/', $line));
+                return !(empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch());
             })->map(function ($line){
                 return str_getcsv($line, $this->separator);
             })->map(function ($lineArray){
@@ -142,6 +142,7 @@ class TransactionImportWire extends Component
                 }
                 return $lineArray;
             });
+        dd($this->data);
 
         // get labels for mapping
 
