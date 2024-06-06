@@ -244,10 +244,11 @@ class TransactionImportWire extends Component
     public function formatDataDb(string|int $value, string $db_col_name): int|string
     {
         $type = $this->db_col_types[$db_col_name];
+        //if($type === 'decimal') dd([$value, (float) $value,$db_col_name]);
         return match ($type){
             'integer' => (int) $value,
             'date' => guessCarbon($value, 'Y-m-d'),
-            'decimal' => (float) $value,
+            'decimal' => $value, // no casting needed, string is expected
             default => $value,
         };
     }
