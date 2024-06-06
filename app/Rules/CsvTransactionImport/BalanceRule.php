@@ -32,13 +32,17 @@ class BalanceRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         try {
-            // if there is no inital balance (no prior transaction) then make sure4 the first csv entry as correct
+            // if there is no initial balance (no prior transaction) then make sure the first csv entry as correct
             $currentBalance = $this->initalBalance ?? bcsub($this->balances[0], $this->differences[0],2);
             foreach ($this->differences as $id => $currentValue){
                 $currentBalance = bcadd($currentBalance, $currentValue, 2);
                 $csvBalance = $this->balances->get($id);
                 if($currentBalance !== $csvBalance){
-                    $fail(__('konto.csv-verify-balance-error'));
+                    $fail(__('konto.csv-verify-balance-error', [
+                        'error-in-row' => $id + 1,
+                        'calc-saldo' => $currentBalance,
+                        'csv-saldo' => $csvBalance,
+                    ]));
                 }
             }
         }catch (\ValueError $error){

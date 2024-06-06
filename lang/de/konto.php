@@ -50,6 +50,6 @@ return [
     'csv-verify-iban-error' => 'Validierungs-Fehler: Enthält ungültige IBANs',
     'csv-verify-money-error' => 'Validierungs-Fehler: Enthält nicht-numerische Daten',
     'csv-verify-balance-error-wrong-datatype' => 'Validierungs-Fehler: Falscher Datentyp',
-    'csv-verify-balance-error' => 'Validierungsfehler: Es besteht evtl. keine lückenlose Transaktionshistorie.'
+    'csv-verify-balance-error' => 'Validierungsfehler: Es besteht keine lückenlose Transaktionshistorie in Zeile :error-in-row der CSV. Berechnetes Saldo :calc-saldo ≠ CSV-Saldo :csv-saldo'
 
 ];

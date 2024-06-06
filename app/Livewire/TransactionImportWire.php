@@ -133,11 +133,12 @@ class TransactionImportWire extends Component
                 // normalize data
                 foreach ($lineArray as $key => $cell){
                     // tests
-                    $moneyTest = Regex::match('/([0-9]+),([0-9]{1,2})/', $cell);
+                    $moneyTest = Regex::match('/(\-?)([0-9]+),([0-9]{1,2})/', $cell);
 
                     // conversions
                     if($moneyTest->hasMatch()){
-                        $lineArray[$key] = $moneyTest->group(1) . '.' . $moneyTest->group(2);
+                        // group 1: sign, group 2: money before delimiter, group 3: cents after delimiter
+                        $lineArray[$key] = $moneyTest->group(1) . $moneyTest->group(2) . '.' . $moneyTest->group(3);
                     }
                 }
                 return $lineArray;
