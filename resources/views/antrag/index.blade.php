@@ -2,11 +2,11 @@
     <div class="mt-8 sm:mx-8 lg:px-8">
         <!-- Fortschrittsanzeige -->
         <x-progressbar>
-            <x-progressbar.step completed valid>Step 1</x-progressbar.step>
-            <x-progressbar.step completed valid>Step 2</x-progressbar.step>
-            <x-progressbar.step completed valid>Step 3</x-progressbar.step>
-            <x-progressbar.step active>Step 4</x-progressbar.step>
-            <x-progressbar.step>Step 5</x-progressbar.step>
+            <x-progressbar.step active>Step 1</x-progressbar.step>
+            <x-progressbar.step >Step 2</x-progressbar.step>
+            <x-progressbar.step >Step 3</x-progressbar.step>
+            <x-progressbar.step >Step 4</x-progressbar.step>
+            <x-progressbar.step >Step 5</x-progressbar.step>
         </x-progressbar>
 
         <!-- Überschrift -->
@@ -16,7 +16,6 @@
                 <h2 class="text-2xl font-medium tracking-tight text-gray-900 uppercase sm:text-4xl">
                     StuRa: Externes Projekt
                 </h2>
-                <p class="mt-6 text-lg leading-8 text-gray-600">Hinweis Vorsteuerabzugsberechtigung</p>
             </div>
         </div>
 
@@ -26,80 +25,81 @@
             @csrf
             <div class="space-y-12 sm:space-y-16">
                 <div>
-                    <h2 class="mt-8 text-base font-semibold leading-7 text-gray-900">Ausgaben</h2>
 
-                    <x-antrag.table>
-                        <x-slot name="header">
-                            <x-antrag.table.header>#</x-antrag.table.header>
-                            <x-antrag.table.header>Name</x-antrag.table.header>
-                            <x-antrag.table.header>Beschreibung</x-antrag.table.header>
-                            <x-antrag.table.header>Betrag</x-antrag.table.header>
-                        </x-slot>
-
-                        <x-antrag.table.row.category id="1" sum="72,33"></x-antrag.table.row.category>
-
-                        <x-antrag.table.row.posten name="ausgaben" id="1.1"/>
-
-                        <x-antrag.table.row.link href="#">Posten hinzufügen</x-antrag.table.row.link>
-                        <x-antrag.table.row.link href="#">Kategorie hinzufügen</x-antrag.table.row.link>
-
-                        <x-slot name="footer">
-                            <x-antrag.table.header>&sum;</x-antrag.table.header>
-                            <x-antrag.table.header>Gesamtausgaben</x-antrag.table.header>
-                            <x-antrag.table.header></x-antrag.table.header>
-                            <x-antrag.table.header>72,33 €</x-antrag.table.header>
-                        </x-slot>
-
-                    </x-antrag.table>
-
-                    <h2 class="mt-8 text-base font-semibold leading-7 text-gray-900">Einnahmen</h2>
-
-                    <x-antrag.table>
-                        <x-slot name="header">
-                            <x-antrag.table.header>#</x-antrag.table.header>
-                            <x-antrag.table.header>Name</x-antrag.table.header>
-                            <x-antrag.table.header>Beschreibung</x-antrag.table.header>
-                            <x-antrag.table.header>Betrag</x-antrag.table.header>
-                        </x-slot>
-
-                        <x-antrag.table.row.category id="1" sum="72,33">Förderungen</x-antrag.table.row.category>
-
-                        <x-antrag.table.row>
-                            <x-antrag.table.cell class="font-medium text-gray-900">1.1</x-antrag.table.cell>
-                            <x-antrag.table.cell><b class="pl-1">StuRa-Förderung</b></x-antrag.table.cell>
-                            <x-antrag.table.cell/>
-                            <x-antrag.table.cell>
-                                <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                            </x-antrag.table.cell>
-                        </x-antrag.table.row>
-
-                        <x-antrag.table.row.posten name="einnahmen" id="1.2"/>
-
-                        <x-antrag.table.row.link href="#">Posten hinzufügen</x-antrag.table.row.link>
-                        <x-antrag.table.row.link href="#">Kategorie hinzufügen</x-antrag.table.row.link>
-
-                        <x-slot name="footer">
-                            <x-antrag.table.header>&sum;</x-antrag.table.header>
-                            <x-antrag.table.header>Gesamteinnahmen</x-antrag.table.header>
-                            <x-antrag.table.header></x-antrag.table.header>
-                            <x-antrag.table.header>72,33 €</x-antrag.table.header>
-                        </x-slot>
-
-                    </x-antrag.table>
-
-                    <h2 class="mt-8 text-base font-semibold leading-7 text-gray-900">Saldo</h2>
-
-                    <x-antrag.table stripped>
-                        <x-antrag.table.row>
-                            <x-antrag.table.cell>&#8710;</x-antrag.table.cell>
-                            <x-antrag.table.cell><span class="sm:hidden">Einnahmen - Ausgaben =</span></x-antrag.table.cell>
-                            <x-antrag.table.cell>0 €</x-antrag.table.cell>
-                        </x-antrag.table.row>
-                    </x-antrag.table>
 
                     <div class="pb-12 mt-10 space-y-8 border-b border-gray-900/10 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
 
-                    <!-- File Upload -->
+                        <!-- dropdown -->
+                        <x-antrag.row>
+                            <x-antrag.select name="applicant-type">Antragsteller</x-antrag.select>
+                        </x-antrag.row>
+
+                        <!-- dropdown -->
+                        <x-antrag.row>
+                            <x-antrag.select name="salutation">Anrede</x-antrag.select>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="org-name">Name der Organisation</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="name">Name Ansprechpartner:in</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="street-and-number">Straße und Hausnummer</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="zip-and-place">PLZ und Ort</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="email">E-Mail Adresse</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="phone">Telefonnummer</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="iban">IBAN</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="bic">BIC</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.form-group name="nonprofit" label="Gemeinnützugkeit">
+
+                                <!-- Radio Boxen -->
+
+                            </x-antrag.form-group>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.form-group name="tax-deduction" label="Vorsteuerabzugsberechtigt">
+
+                                <!-- Radio Boxen -->
+
+                            </x-antrag.form-group>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="register-number">Registernummer</x-antrag.input>
+                        </x-antrag.row>
+
+                        <x-antrag.row>
+                            <x-antrag.input name="website">Webseite</x-antrag.input>
+                        </x-antrag.row>
+
+                        <!-- dropdown -->
+                        <x-antrag.row>
+                            <x-antrag.select name="statur-group">Statusgruppe</x-antrag.select>
+                        </x-antrag.row>
+
 
                     <!-- Buttons -->
 
