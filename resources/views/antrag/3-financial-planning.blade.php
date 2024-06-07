@@ -4,8 +4,8 @@
         <x-progressbar>
             <x-progressbar.step completed valid>Step 1</x-progressbar.step>
             <x-progressbar.step completed valid>Step 2</x-progressbar.step>
-            <x-progressbar.step completed valid>Step 3</x-progressbar.step>
-            <x-progressbar.step active>Step 4</x-progressbar.step>
+            <x-progressbar.step active>Step 3</x-progressbar.step>
+            <x-progressbar.step>Step 4</x-progressbar.step>
             <x-progressbar.step>Step 5</x-progressbar.step>
         </x-progressbar>
 
