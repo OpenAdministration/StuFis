@@ -21,12 +21,10 @@
 
         <!-- Formular -->
 
-        <form class="mt-4">
+        <form class="mt-4" >
             @csrf
             <div class="space-y-12 sm:space-y-16">
                 <div>
-
-
                     <div class="pb-12 mt-10 space-y-8 border-b border-gray-900/10 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
 
                         <!-- dropdown -->
@@ -106,8 +104,8 @@
                         <x-antrag.row>
                             <div></div>
                             <div class="mt-2 sm:col-span-2 sm:mt-0">
-                                <x-antrag.button.light>Zurück</x-antrag.button.light>
-                                <x-antrag.button.primary>Weiter</x-antrag.button.primary>
+                                <x-antrag.link-button.light href="/">Zurück</x-antrag.link-button.light>
+                                <x-antrag.link-button.primary href="2">Weiter</x-antrag.link-button.primary>
                             </div>
                         </x-antrag.row>
 
@@ -116,8 +114,8 @@
             </div>
 
             <div class="flex items-center justify-end mt-6 mb-4 gap-x-6">
-                <x-antrag.button.light>Antrag abbrechen</x-antrag.button.light>
-                <x-antrag.button.primary>Entwurf speichern</x-antrag.button.primary>
+                <x-antrag.link-button.light>Antrag abbrechen</x-antrag.link-button.light>
+                <x-antrag.link-button.primary>Entwurf speichern</x-antrag.link-button.primary>
             </div>
         </form>
     </div>

@@ -76,6 +76,28 @@
                         <x-antrag.table.row.posten name="einnahmen" id="1.2"/>
 
                         <x-antrag.table.row.link href="#">Posten hinzufügen</x-antrag.table.row.link>
+
+                        <x-antrag.table.row.category id="2" sum="0">Eintritt</x-antrag.table.row.category>
+
+                        <x-antrag.table.row>
+                            <x-antrag.table.cell class="font-medium text-gray-900">2.1</x-antrag.table.cell>
+                            <x-antrag.table.cell><b class="pl-1">Studis</b></x-antrag.table.cell>
+                            <x-antrag.table.cell/>
+                            <x-antrag.table.cell>
+                                <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            </x-antrag.table.cell>
+                        </x-antrag.table.row>
+
+                        <x-antrag.table.row>
+                            <x-antrag.table.cell class="font-medium text-gray-900">2.2</x-antrag.table.cell>
+                            <x-antrag.table.cell><b class="pl-1">Vollzahler</b></x-antrag.table.cell>
+                            <x-antrag.table.cell/>
+                            <x-antrag.table.cell>
+                                <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            </x-antrag.table.cell>
+                        </x-antrag.table.row>
+
+                        <x-antrag.table.row.link href="#">Posten hinzufügen</x-antrag.table.row.link>
                         <x-antrag.table.row.link href="#">Kategorie hinzufügen</x-antrag.table.row.link>
 
                         <x-slot name="footer">
@@ -106,8 +128,8 @@
                         <x-antrag.row>
                             <div></div>
                             <div class="mt-2 sm:col-span-2 sm:mt-0">
-                                <x-antrag.button.light>Zurück</x-antrag.button.light>
-                                <x-antrag.button.primary>Weiter</x-antrag.button.primary>
+                                <x-antrag.link-button.light href="2">Zurück</x-antrag.link-button.light>
+                                <x-antrag.link-button.primary href="4">Weiter</x-antrag.link-button.primary>
                             </div>
                         </x-antrag.row>
 
@@ -116,8 +138,8 @@
             </div>
 
             <div class="flex items-center justify-end mt-6 mb-4 gap-x-6">
-                <x-antrag.button.light>Antrag abbrechen</x-antrag.button.light>
-                <x-antrag.button.primary>Entwurf speichern</x-antrag.button.primary>
+                <x-antrag.link-button.light>Antrag abbrechen</x-antrag.link-button.light>
+                <x-antrag.link-button.primary>Entwurf speichern</x-antrag.link-button.primary>
             </div>
         </form>
     </div>

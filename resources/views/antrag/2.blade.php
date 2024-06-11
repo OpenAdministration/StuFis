@@ -117,8 +117,8 @@
                         <x-antrag.row>
                             <div></div>
                             <div class="mt-2 sm:col-span-2 sm:mt-0">
-                                <x-antrag.button.light>Zurück</x-antrag.button.light>
-                                <x-antrag.button.primary>Weiter</x-antrag.button.primary>
+                                <x-antrag.link-button.light href="1">Zurück</x-antrag.link-button.light>
+                                <x-antrag.link-button.primary href="3">Weiter</x-antrag.link-button.primary>
                             </div>
                         </x-antrag.row>
 
@@ -127,8 +127,8 @@
             </div>
 
             <div class="flex items-center justify-end mt-6 mb-4 gap-x-6">
-                <x-antrag.button.light>Antrag abbrechen</x-antrag.button.light>
-                <x-antrag.button.primary>Entwurf speichern</x-antrag.button.primary>
+                <x-antrag.link-button.light>Antrag abbrechen</x-antrag.link-button.light>
+                <x-antrag.link-button.primary>Entwurf speichern</x-antrag.link-button.primary>
             </div>
         </form>
     </div>

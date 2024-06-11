@@ -27,7 +27,7 @@ Route::middleware(['auth'])->group(function(){
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
     //Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
 
-    Route::get('antrag', [\App\Http\Controllers\AntragController::class, 'index'])->name('antrag');
+    Route::get('antrag/{site}', [\App\Http\Controllers\AntragController::class, 'index'])->name('antrag');
     Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
 });
 
