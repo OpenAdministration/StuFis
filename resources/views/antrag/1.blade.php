@@ -105,7 +105,7 @@
                             <div></div>
                             <div class="mt-2 sm:col-span-2 sm:mt-0">
                                 <x-antrag.link-button.light href="/">Zurück</x-antrag.link-button.light>
-                                <x-antrag.link-button.primary href="2">Weiter</x-antrag.link-button.primary>
+                                <x-antrag.link-button.primary href="/antrag/2">Weiter</x-antrag.link-button.primary>
                             </div>
                         </x-antrag.row>
 

@@ -21,6 +21,58 @@
 
         <!-- Formular -->
 
+        <!-- Antragssteller:in Org bzw Name -->
+            <!-- Assoziationen (zb Fakultät etc.) -->
+            <!-- Kontaktdaten -->
+            <!-- Bankverbindung -->
+        <!-- Projektname + Projektzeitraum -->
+            <!-- Projektbeschreibung -->
+            <!-- Zielgruppe, TN-Zahl... -->
+            <!-- Aufgabenbereiche HSG -->
+        <!-- Finanzplanung: Volumen, Förderung, Vorkasse -->
+        <!-- Anhänge -->
+
+        <!--
+            Herr Lukas Staab
+            Open Administration UG
+
+            Am Stollen 11
+            98693 Ilmenau
+
+            Student:in, Informatik, TU Ilmenau
+
+            lukas.staab@open-administration.de
+            0177 123456789
+
+            DE12 3456 7890 1234 5678 90
+            BLABLIBLUB24X
+
+            www.open-administration.de
+            R-123/456/789
+
+            nicht gemeinnützig, vorsteuerabzugsberechtigt
+        -->
+
+        <!--
+            Sommerfest 5.7.-7.7.2024
+
+            Anlässlich meines persönlichen Jubiläums organisiere ich ein Open Administration Sommerfest.
+            Eingeladen sind alle angehörigen der TU Ilmenau. Es wird gegrillt, für Grillgut (sowohl Fleisch als auch Veggie)
+            und Getränke sowie für Deko und Fahrtkosten beim Einkauf benötige ich eine Förderung.
+
+            Aufgaben nach LHG: Kultur & Soziales
+
+            Zielgruppe: Meine Freund:innen, Angehörige der TU Ilmenau
+            200 Teilnehmende (80% Studierende)
+        -->
+
+        <!--
+            Finanzplan Volumen: 524€
+            Antragssumme: 424€
+            Vorkasse: 0€
+        -->
+
+
         <form class="mt-4">
             @csrf
             <div class="space-y-12 sm:space-y-16">
@@ -28,6 +80,39 @@
 
 
                     <div class="pb-12 mt-10 space-y-8 border-b border-gray-900/10 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
+                        <x-summary-card>
+                            <x-slot name="heading">
+                                <x-heading title="Herr Lukas Staab, Open Administration UG" subtitle="Student:in, Informatik, TU Ilmenau" />
+                            </x-slot>
+                            <x-dl.element label="Antragssteller:in">
+                                Herr Lukas Staab,
+                                Open Administration UG
+                            </x-dl.element>
+                            <x-dl.element label="Adresse">
+                                Am Stollen 11<br/>
+                                98693 Ilmenau
+                            </x-dl.element>
+                            <x-dl.element label="Statusgruppe">
+                                Student:in, Informatik, TU Ilmenau
+                            </x-dl.element>
+                            <x-dl.element label="Kontaktdaten">
+                                <x-fas-envelope class="inline w-5 h-5 p-1 pt-0"/><a href="mailto:lukas.staab@open-administration.de">lukas.staab@open-administration.de</a><br/>
+                                <x-fas-phone class="inline w-5 h-5 p-1 pt-0"/><a href="tel:0177123456789">0177 123456789</a>
+                            </x-dl.element>
+                            <x-dl.element label="Bankverbindung">
+                                DE12 3456 7890 1234 5678 90<br/>
+                                BLABLIBLUB24X
+                            </x-dl.element>
+                            <x-dl.element label="Sonstige Angaben">
+                                www.open-administration.de<br/>
+                                R-123/456/789<br/>
+                                nicht gemeinnützig, vorsteuerabzugsberechtigt
+                            </x-dl.element>
+                            <x-attachments>
+                                <x-attachment-item file="resume_back_end_developer.pdf" size="2.4mb" />
+                                <x-attachment-item file="coverletter_back_end_developer.pdf" size="4.5mb" />
+                            </x-attachments>
+                          </x-summary-card>
 
 
                         <x-antrag.row>

@@ -34,10 +34,14 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
+                            Vorkasse beantragen:
+                            <x-toggle></x-toggle>
+                        </x-antrag.row>
 
-                            <!-- toggle -->
-
-                            <x-antrag.input.number name="advance-payment" max="72.33" value="0">Vorkasse bantragen €</x-antrag.input.number>
+                        <x-antrag.row>
+                            <x-antrag.input.number name="advance-payment" max="72.33" value="0">
+                                Höhe der Vorkasse in €
+                            </x-antrag.input.number>
                         </x-antrag.row>
 
 
