@@ -84,16 +84,9 @@
                             <x-slot name="heading">
                                 <x-heading title="Herr Lukas Staab, Open Administration UG" subtitle="Student:in, Informatik, TU Ilmenau" />
                             </x-slot>
-                            <x-dl.element label="Antragssteller:in">
-                                Herr Lukas Staab,
-                                Open Administration UG
-                            </x-dl.element>
                             <x-dl.element label="Adresse">
                                 Am Stollen 11<br/>
                                 98693 Ilmenau
-                            </x-dl.element>
-                            <x-dl.element label="Statusgruppe">
-                                Student:in, Informatik, TU Ilmenau
                             </x-dl.element>
                             <x-dl.element label="Kontaktdaten">
                                 <x-fas-envelope class="inline w-5 h-5 p-1 pt-0"/><a href="mailto:lukas.staab@open-administration.de">lukas.staab@open-administration.de</a><br/>
@@ -108,20 +101,57 @@
                                 R-123/456/789<br/>
                                 nicht gemeinnützig, vorsteuerabzugsberechtigt
                             </x-dl.element>
+                        </x-summary-card>
+
+                        <x-summary-card>
+                            <x-slot name="heading">
+                                <x-heading title="Sommerfest 5.7.-7.7.2024" />
+                            </x-slot>
+                            <x-dl.element label="Projektbeschreibung">
+                                <p>
+                                    Anlässlich meines persönlichen Jubiläums organisiere ich ein Open Administration Sommerfest.
+                                    Eingeladen sind alle angehörigen der TU Ilmenau. Es wird gegrillt, für Grillgut (sowohl Fleisch als auch Veggie)
+                                    und Getränke sowie für Deko und Fahrtkosten beim Einkauf benötige ich eine Förderung.
+                                </p>
+                            </x-dl.element>
+                            <x-dl.element label="Aufgabenbereiche nach LHG">
+                                Kultur & Soziales
+                            </x-dl.element>
+                            <x-dl.element label="Zielgruppe">
+                                Meine Freund:innen, Angehörige der TU Ilmenau<br/>
+                                200 Teilnehmende (80% Studierende)
+                            </x-dl.element>
+                        </x-summary-card>
+&nbsp;
+                        <x-summary-card>
+                            <x-slot name="heading">
+                                <a href="3"><x-heading title="-> Finanzplan" /></a>
+                            </x-slot>
+                            <x-dl.element label="Finanzplan Volumen">
+                                424 €
+                            </x-dl.element>
+                            <x-dl.element label="Antragssumme">
+                                72,33 €
+                            </x-dl.element>
+                            <x-dl.element label="Vorkasse">
+                                0 €
+                            </x-dl.element>
+                        </x-summary-card>
+&nbsp;
+                        <x-summary-card>
+                            <x-slot name="heading">
+                                <x-heading title="Weitere Anhänge"/>
+                            </x-slot>
                             <x-attachments>
-                                <x-attachment-item file="resume_back_end_developer.pdf" size="2.4mb" />
-                                <x-attachment-item file="coverletter_back_end_developer.pdf" size="4.5mb" />
+                                <x-attachment-item file="finanzlpan.pdf" size="2.4mb" />
+                                <x-attachment-item file="ausführliche-projektbeschreibung.pdf" size="4.5mb" />
                             </x-attachments>
-                          </x-summary-card>
+                        </x-summary-card>
 
 
-                        <x-antrag.row>
-                            <div></div>
-                            <a href="https://tailwindui.com/components/application-ui/data-display/description-lists" class="hover:underline hover:text-indigo-600">UI Components for Summary</a>
-                        </x-antrag.row>
 
                         <fieldset>
-                            <legend class="sr-only">Terms &amp; Conditions</legend>
+                            <legend class="sr-only">Allgemeine Vertragsbedingungen</legend>
                             <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:py-6">
                                 <div class="text-sm font-semibold leading-6 text-gray-900" aria-hidden="true"></div>
                                 <div class="mt-4 sm:col-span-2 sm:mt-0">

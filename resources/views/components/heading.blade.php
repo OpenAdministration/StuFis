@@ -1,4 +1,4 @@
-@props(['title', 'subtitle'])
+@props(['title', 'subtitle' => ''])
 
 <div>
   <h3 class="text-base font-semibold leading-7 text-gray-900">{{ $title }}</h3>
