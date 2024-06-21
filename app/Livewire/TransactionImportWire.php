@@ -6,6 +6,7 @@ use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use App\Models\User;
 use App\Rules\CsvTransactionImport\BalanceRule;
+use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanRule;
 use App\Rules\CsvTransactionImport\MoneyRule;
 use Illuminate\Support\Collection;
@@ -60,8 +61,16 @@ class TransactionImportWire extends Component
         // mapping has only the csv column numbers as values, so we need to work around a bit,
         // we only check if a matching column was given, the values of this columns only in special cases
         return [
-            'mapping.date' => 'required|int',
-            'mapping.valuta' => 'required|int',
+            'mapping.date' => [
+                'required',
+                'int',
+                new DateColumnRule($this->data->pluck($this->mapping->get('date')))
+            ],
+            'mapping.valuta' => [
+                'required',
+                'int',
+                new DateColumnRule($this->data->pluck($this->mapping->get('valuta')))
+            ],
             'mapping.type' => 'required|int',
             'mapping.value' => [
                 'required', 'int',
