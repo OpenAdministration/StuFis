@@ -511,7 +511,7 @@ class BookingHandler extends Renderer
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Datum</th>
+                <th>Valuta</th>
                 <th>Empfänger</th>
                 <th class="visible-md visible-lg">Verwendungszweck</th>
                 <th class="visible-md visible-lg">IBAN</th>
