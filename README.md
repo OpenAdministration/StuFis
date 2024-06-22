@@ -5,7 +5,7 @@ StuFiS ist ein auf verfasste Studierendenschaften zugeschnitten Software zur Ver
 Mehr Infos zu Software finden sich [hier](https://open-administration.de/index.php/finanzverwaltungssoftware/).
 
 ## Demo 
-Alle Infos zur Demo finden sich unter [https://www.stufis.de/demo-login]
+Alle Infos zur Demo finden sich unter https://www.stufis.de/demo-login
 
 ## Dokumentation
 Unsere Dokumentation und die Hilfeseiten zur Software können [hier](https://doku.open-administration.de/) gefunden werden
