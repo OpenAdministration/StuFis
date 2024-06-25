@@ -14,6 +14,7 @@
 namespace forms;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\Legacy\BankTransaction;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
@@ -181,15 +182,10 @@ class RestHandler extends EscFunc
         if ($fields['id'] === '1') {
             DBConnector::getInstance()->dbInsert('konto', $fields);
         } else {
-            $last = DBConnector::getInstance()->dbFetchAll(
-                'konto',
-                [DBConnector::FETCH_ASSOC],
-                [],
-                [
-                    'konto_id' => 0,
-                    'id' => $fields['id'] - 1,
-                ]
-            )[0];
+            $last = BankTransaction::where('konto_id', '=', $fields['konto_id'])
+                ->orderBy('id', 'desc')
+                ->first()?->toArray();
+
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {
                 DBConnector::getInstance()->dbInsert('konto', $fields);
             } else {
