@@ -31,13 +31,13 @@ The installation process is pretty simple and straight forward. The configuratio
 * a registration Number from [Deutsche Kreditwirtschaft](https://www.hbci-zka.de/register/hersteller.htm)
 * OAuth2 Identity Provider (IdP), SAML in the future 
 
-## Installation Dev
+## Installation (Dev Local & Production)
 
 ```bash
 git clone https://github.com/openAdministration/StuFis 
-composer install 
-npm install
-npm run dev
+composer install # in production: composer install --no-dev --optimize  
+npm install # in production: npm ci
+npm run dev # in production: npm run production
 cp .env.example .env
 php artisan key:generate
 ```
