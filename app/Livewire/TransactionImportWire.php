@@ -153,6 +153,10 @@ class TransactionImportWire extends Component
                 return $lineArray;
             });
 
+        if($this->isCsvOrderReversed()){
+            $this->data->reverse();
+        }
+
         // get labels for mapping
 
         // rendern & assign procedure
