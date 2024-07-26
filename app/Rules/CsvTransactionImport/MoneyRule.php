@@ -21,7 +21,7 @@ class MoneyRule implements ValidationRule
         foreach ($this->column as $entry){
 
             if(!is_numeric(str_replace(',','.', $entry))){
-                $fail(__('konto.csv-verify-money-error'));
+                $fail(__('konto.csv-verify-money-error', ['value' => $entry]));
             }
         }
     }

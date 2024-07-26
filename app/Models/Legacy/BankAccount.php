@@ -3,7 +3,9 @@
 namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
@@ -34,6 +36,9 @@ use Illuminate\Support\Collection;
  */
 class BankAccount extends Model
 {
+    use HasFactory;
+
+
     public $timestamps = false;
     /**
      * The table associated with the model.
@@ -63,8 +68,8 @@ class BankAccount extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function kontoTransactions()
+    public function bankTransactions() : HasMany
     {
-        return $this->hasMany('App\Models\Legacy\BankTransaction', 'konto_id');
+        return $this->hasMany(BankTransaction::class, 'konto_id');
     }
 }

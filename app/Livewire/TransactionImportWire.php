@@ -11,8 +11,7 @@ use App\Rules\CsvTransactionImport\IbanRule;
 use App\Rules\CsvTransactionImport\MoneyRule;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Url;
-use Livewire\Attributes\Validate;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Spatie\Regex\Regex;
@@ -21,17 +20,16 @@ class TransactionImportWire extends Component
 {
     use WithFileUploads;
 
-    #[Validate('required|mimes:csv,txt|max:2048')]
     public $csv;
 
     public $separator;
     public $csvFileEncoding;
 
-    #[Url]
     public $account_id;
 
     public $latestTransaction;
 
+    /** @var Collection */
     public $mapping;
     public $db_col_types;
 
@@ -49,6 +47,7 @@ class TransactionImportWire extends Component
 
         $this->mapping = $this->createMapping();
         $this->data = collect();
+        $this->account_id = "";
 
         $foo = new BankTransaction();
         foreach($this->mapping as $db_column => $csv_colum){
@@ -61,6 +60,7 @@ class TransactionImportWire extends Component
         // mapping has only the csv column numbers as values, so we need to work around a bit,
         // we only check if a matching column was given, the values of this columns only in special cases
         return [
+            'csv' => 'required|file|mimes:csv,txt|extensions:csv',
             'mapping.date' => [
                 'required',
                 'int',
@@ -112,14 +112,13 @@ class TransactionImportWire extends Component
 
     public function parseCSV() : void
     {
-        $this->validateOnly('csv');
         // temp save uploaded file
         $this->csv->store();
         $content = $this->csv->get();
 
         // check for windows excel file encoding, transform to utf-8
-        $winEncoding = mb_check_encoding($content, 'Windows-1252');
-        if($winEncoding){
+        $enc = mb_detect_encoding($content, ['Windows-1252', 'UTF-8']);
+        if($enc !== "UTF-8"){
             $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
         }
         // explode content in lines
@@ -142,12 +141,20 @@ class TransactionImportWire extends Component
                 // normalize data
                 foreach ($lineArray as $key => $cell){
                     // tests
-                    $moneyTest = Regex::match('/(\-?)([0-9]+),([0-9]{1,2})/', $cell);
-
+                    $moneyTest = Regex::match('/^(\-?)([0-9]+)([,\.]([0-9]{1,2}))?$/', $cell);
+                    $dateTest = Regex::match('/^([0-3]?[0-9])\.([01]?[0-9])\.((20)?[0-9]{2})$/', $cell);
                     // conversions
-                    if($moneyTest->hasMatch()){
-                        // group 1: sign, group 2: money before delimiter, group 3: cents after delimiter
-                        $lineArray[$key] = $moneyTest->group(1) . $moneyTest->group(2) . '.' . $moneyTest->group(3);
+                    if ($moneyTest->hasMatch()){
+                        $g = $moneyTest->groups();
+                        $lineArray[$key] = $g[1] // sign
+                            . Str::padRight($g[2] ?? '', 1, '0') //  money before delimiter (at least 1 digit)
+                            . '.' // delimiter (3rd group, with the rest together)
+                            . Str::padRight($g[4] ?? '',2,'0'); // cents after delimiter (at least 2 digits)
+                    } else if ($dateTest->hasMatch()){
+                        $g = $dateTest->groups();
+                        $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
+                            . '-' . Str::padLeft($g[2], 2, '0')
+                            . '-' . Str::padLeft($g[1], 2, '0');
                     }
                 }
                 return $lineArray;
@@ -157,20 +164,24 @@ class TransactionImportWire extends Component
             $this->data->reverse();
         }
 
-        // get labels for mapping
-
-        // rendern & assign procedure
-
-        // replace mapping values with data keys (csv headers are the new mapping values)
-
-        // saldi abgleich
-
+        // check if mapping has some presets, if then do an initial validation, no preset, no validation
+        $hasPreset = $this->mapping->reject(function ($value){
+                return $value === "";
+            })->count() > 0;
+        if($hasPreset){
+            $this->validate();
+        }
     }
 
     public function updatedCsv(): void
     {
-        $this->parseCSV();
+        //dump($this->csv->getMimeType());
+        $this->validateOnly('csv');
+        if(in_array($this->csv->getMimeType(),  ["text/csv", "text/plain"])){
+            $this->parseCSV();
+        }
     }
+
 
     public function save()
     {
@@ -237,11 +248,18 @@ class TransactionImportWire extends Component
 
     public function updatedAccountId() : void
     {
-        $account = BankAccount::findOrFail($this->account_id);
-        $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)
-            ->orderBy('id', 'desc')->limit(1)->first();
-        $this->mapping = $this->createMapping($account->csv_import_settings["csv_import_mapping"] ?? []);
-        $this->csvOrder = (int) ($account->csv_import_settings["csv_order"] ?? -1);
+        $account = BankAccount::find($this->account_id);
+        if($account){
+            $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)
+                ->orderBy('id', 'desc')->limit(1)->first();
+            $this->mapping = $this->createMapping($account->csv_import_settings["csv_import_mapping"] ?? []);
+            $this->csvOrder = (int) ($account->csv_import_settings["csv_order"] ?? -1);
+        }else{
+            $this->latestTransaction = null;
+            $this->mapping = null;
+            $this->csvOrder = null;
+        }
+        $this->resetValidation();
     }
 
     /**
@@ -287,6 +305,7 @@ class TransactionImportWire extends Component
     {
         $this->data = $this->data->reverse();
         $this->csvOrder *= -1;
+        $this->resetValidation();
         $this->validate();
     }
 

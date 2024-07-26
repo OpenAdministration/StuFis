@@ -434,10 +434,14 @@ class BookingHandler extends Renderer
         );
         $this->setKontoTabs($kontoId, $selected_id, $kontos);
         $this->renderFintsButton();
-        if ($kontoId > 0) {
-            $this->renderKontoBank($alZahlung, $kontos);
-        } else {
+
+        $konto = DBConnector::getInstance()->dbFetchAll('konto_type', where: ['id' => $kontoId]);
+        $editable = $konto[0]['manually_enterable'] ?? null; // ?? for non existing konto with id 0
+
+        if ($editable ?? $kontoId <= 0) {
             $this->renderKontoKasse($kontoId, $alZahlung, $kontos);
+        } else {
+            $this->renderKontoBank($alZahlung, $kontos);
         }
     }
 

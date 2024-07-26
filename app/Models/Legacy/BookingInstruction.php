@@ -48,6 +48,10 @@ class BookingInstruction extends Model
      */
     protected $table = 'booking_instruction';
 
+    protected $primaryKey = 'uid';
+
+    public $timestamps = false;
+
     /**
      * @var array
      */

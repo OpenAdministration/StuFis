@@ -119,8 +119,8 @@ class RestHandler extends EscFunc
                 break;
             case 'nononce':
             default:
-            throw new LegacyDieException(400, 'Unknown Action: ' . $routeInfo['action']);
-            break;
+                throw new LegacyDieException(400, 'Unknown Action: ' . $routeInfo['action']);
+                break;
         }
     }
 
@@ -189,29 +189,25 @@ class RestHandler extends EscFunc
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {
                 DBConnector::getInstance()->dbInsert('konto', $fields);
             } else {
-                JsonController::print_json(
-                    [
-                        'success' => false,
-                        'status' => '200',
-                        'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
-                        'type' => 'modal',
-                        'subtype' => 'server-error',
-                        'headline' => 'Fehler bei der Verarbeitung',
-                    ]
-                );
+                JsonController::print_json([
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Fehler bei der Verarbeitung',
+                ]);
             }
         }
-        JsonController::print_json(
-            [
-                'success' => true,
-                'status' => '200',
-                'msg' => 'Die Seite wird gleich neu geladen',
-                'type' => 'modal',
-                'subtype' => 'server-success',
-                'reload' => 1000,
-                'headline' => 'Erfolgreich gespeichert',
-            ]
-        );
+        JsonController::print_json([
+            'success' => true,
+            'status' => '200',
+            'msg' => 'Die Seite wird gleich neu geladen',
+            'type' => 'modal',
+            'subtype' => 'server-success',
+            'reload' => 1000,
+            'headline' => 'Erfolgreich gespeichert',
+        ]);
     }
 
     public function handleProjekt($routeInfo = null): void
@@ -261,7 +257,7 @@ class RestHandler extends EscFunc
                     throw new ActionNotSetException('Unbekannte Aktion verlangt!');
             }
         } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
-                InvalidDataException|PDOException|IllegalTransitionException $exception) {
+        InvalidDataException|PDOException|IllegalTransitionException $exception) {
             $ret = false;
             $msgs[] = 'Ein Fehler ist aufgetreten';
             $msgs[] = $exception->getMessage();
@@ -508,7 +504,7 @@ class RestHandler extends EscFunc
                 break;
             default:
                 throw new LegacyDieException(400, 'Unknown Action.');
-            break;
+                break;
         }
         $vali->validateMap($_POST, $validator_map);
         // return error if validation failed
@@ -948,9 +944,9 @@ class RestHandler extends EscFunc
                     }
                 } else {
                     $msg[] = 'In Zahlung ' . $zahlung['id'] . ' wurden folgende Projekte/Auslagen im Verwendungszweck gefunden: ' . implode(
-                        ' & ',
-                        $matches
-                    ) . '. Dort stimmt die Summe der Belegposten (' . $beleg_sum . ') nicht mit der Summe der Zahlung (' . $fields['value'] . ') überein. Bitte prüfe das noch per Hand, und setze ggf. die passenden Projekte auf bezahlt, so das es später keine Probleme beim Buchen gibt (nur gezahlte Auslagen können gebucht werden)';
+                            ' & ',
+                            $matches
+                        ) . '. Dort stimmt die Summe der Belegposten (' . $beleg_sum . ') nicht mit der Summe der Zahlung (' . $fields['value'] . ') überein. Bitte prüfe das noch per Hand, und setze ggf. die passenden Projekte auf bezahlt, so das es später keine Probleme beim Buchen gibt (nur gezahlte Auslagen können gebucht werden)';
                 }
             }
         }
@@ -1088,9 +1084,9 @@ class RestHandler extends EscFunc
 
         if (count($bookingDBbelege) + count($bookingDBzahlung) > 0) {
             $errorMsg[] = 'Beleg oder Zahlung bereits verknüpft - ' . print_r(
-                array_merge($bookingDBzahlung, $bookingDBbelege),
-                true
-            );
+                    array_merge($bookingDBzahlung, $bookingDBbelege),
+                    true
+                );
         }
 
         if (!empty($errorMsg)) {
