@@ -16,7 +16,7 @@ class Html extends AbstractHtmlTag
 
     public static function headline(int $size): self
     {
-        return new self('h'. $size);
+        return new self('h'.$size);
     }
 
     public static function tag(string $tagname): self

@@ -22,7 +22,7 @@ class EventServiceProvider extends ServiceProvider
         ],
 
         UpdatingModel::class => [
-            LogModelChange::class
+            LogModelChange::class,
         ],
 
         SocialiteWasCalled::class => [

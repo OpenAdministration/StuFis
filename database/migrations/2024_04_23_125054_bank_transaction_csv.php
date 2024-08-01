@@ -10,11 +10,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('konto_type', function($table) {
+        Schema::table('konto_type', function ($table) {
             $table->json('csv_import_settings')->default('{}');
         });
 
-        Schema::table('konto', function($table) {
+        Schema::table('konto', function ($table) {
             $table->dropColumn('gvcode');
         });
     }
@@ -24,10 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('konto_type', function($table) {
+        Schema::table('konto_type', function ($table) {
             $table->dropColumn('csv_import_settings');
         });
-        Schema::table('konto', function($table) {
+        Schema::table('konto', function ($table) {
             $table->integer('gvcode')->default(0);
         });
     }

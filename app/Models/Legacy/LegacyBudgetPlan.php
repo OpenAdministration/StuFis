@@ -5,7 +5,7 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property integer $id
+ * @property int $id
  * @property string $von
  * @property string $bis
  * @property string $state
@@ -25,9 +25,6 @@ class LegacyBudgetPlan extends Model
      */
     protected $fillable = ['von', 'bis', 'state'];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function budgetGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(LegacyBudgetGroup::class, 'hhp_id');
@@ -37,5 +34,4 @@ class LegacyBudgetPlan extends Model
     {
         return $this->hasManyThrough(LegacyBudgetItem::class, LegacyBudgetGroup::class);
     }
-
 }

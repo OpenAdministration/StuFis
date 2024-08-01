@@ -24,9 +24,9 @@ class FlickerSVG extends SVG
     private $frequency;
 
     /**
-     * @param int $flickerFrequenz in Hz [1/s]
-     * @param int $width width of the svg, aspect ratio 2:1 is recommended, but not enforced
-     * @param int $height height of the svg
+     * @param  int  $flickerFrequenz  in Hz [1/s]
+     * @param  int  $width  width of the svg, aspect ratio 2:1 is recommended, but not enforced
+     * @param  int  $height  height of the svg
      */
     public function __construct(string $hexCode, int $flickerFrequenz = 10, int $width = 210, int $height = 130)
     {
@@ -77,7 +77,7 @@ class FlickerSVG extends SVG
         $doc->addChild($triRight);
 
         // init flicker rectangles
-        for ($i = 0; $i < 5; ++$i) {
+        for ($i = 0; $i < 5; $i++) {
             $rect = new SVGRect(40 * $i + 10, 20, 30, 75);
             $animation = $this->getAnimation($i);
             $rect->addChild($animation);
@@ -89,7 +89,7 @@ class FlickerSVG extends SVG
     public function getAnimation(int $channelNumber): SVGAnimate
     {
         $timePerHalfByte = 1 / ($this->frequency) * 2;
-        $animation = (new SVGAnimate())
+        $animation = (new SVGAnimate)
             ->setAttribute('attributeName', 'fill')
             ->setAttribute('calcMode', 'discrete')
             ->setAttribute('repeatCount', 'indefinite');
@@ -98,13 +98,13 @@ class FlickerSVG extends SVG
             return $animation
                 ->setAttribute('values', 'white;black;white')
                 ->setAttribute('keyFrames', '0;0.5;1')
-                ->setAttribute('dur', $timePerHalfByte . 's');
+                ->setAttribute('dur', $timePerHalfByte.'s');
         }
         $colors = array_map(static fn (string $pattern) => $pattern[$channelNumber - 1] === '1' ? 'white' : 'black', $this->bitPatterns);
         $keyFrames = range(0, 1, 1.0 / count($this->bitPatterns));
 
         return $animation
-            ->setAttribute('dur', ($timePerHalfByte * count($this->bitPatterns)) . 's')
+            ->setAttribute('dur', ($timePerHalfByte * count($this->bitPatterns)).'s')
             ->setAttribute('values', implode(';', $colors))
             ->setAttribute('keyFrames', implode(';', $keyFrames));
     }

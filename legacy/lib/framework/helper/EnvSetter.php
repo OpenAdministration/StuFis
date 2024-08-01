@@ -15,9 +15,9 @@ class EnvSetter
 
     private LoggerInterface $logger;
 
-    public function __construct(private string $envPath, LoggerInterface $logger = null)
+    public function __construct(private string $envPath, ?LoggerInterface $logger = null)
     {
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger ?? new NullLogger;
         $this->logger->debug('Env @ ', [$this->envPath]);
         if (file_exists($this->envPath)) {
             $envContent = file_get_contents($this->envPath);
@@ -33,7 +33,7 @@ class EnvSetter
     }
 
     /**
-     * @param string[] $config name => value of parameters to set
+     * @param  string[]  $config  name => value of parameters to set
      */
     public function setEnvVars(array $config): void
     {
@@ -49,9 +49,9 @@ class EnvSetter
             }
         }
         // append rest
-        if (!empty($varsToSet)) {
+        if (! empty($varsToSet)) {
             $this->logger->info('Variables were not in .env before file -> still appended', $varsToSet);
-            $this->envLines[] = '### Appended by EnvSetter at ' . date_create()->format(DATE_ATOM);
+            $this->envLines[] = '### Appended by EnvSetter at '.date_create()->format(DATE_ATOM);
             foreach ($varsToSet as $varName) {
                 $this->envLines[] = $this->lineGeneration($varName, $config[$varName]);
                 $_ENV[$varName] = $config[$varName];
@@ -66,14 +66,15 @@ class EnvSetter
     }
 
     /**
-     * @param string $lineContent content of the given line
-     * @param array $needles int => needle name
+     * @param  string  $lineContent  content of the given line
+     * @param  array  $needles  int => needle name
      * @return int|bool key of found needle - false if none
      */
     private function compareLine(string $lineContent, array $needles): int|bool
     {
         $varName = trim(explode('=', $lineContent)[0]);
         $upperNeedles = array_map('strtoupper', $needles);
+
         return array_search($varName, $upperNeedles, true);
     }
 
@@ -81,6 +82,7 @@ class EnvSetter
     {
         $name = trim($name);
         $value = trim($value);
+
         return "$name=\"$value\"";
     }
 }

@@ -5,11 +5,8 @@ namespace App\Providers;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use App\Services\Auth\AuthService;
-use App\Services\Auth\LocalAuthService;
-use App\Services\Auth\StumvAuthService;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -27,12 +24,12 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(AuthService::class, function (Application $application){
+        $this->app->singleton(AuthService::class, function (Application $application) {
             $serviceName = ucfirst(strtolower(config('auth.service')));
             // weird to escape, but correct
             $classPath = "\App\Services\Auth\\{$serviceName}AuthService";
-            if(class_exists($classPath)){
-                return new $classPath();
+            if (class_exists($classPath)) {
+                return new $classPath;
             }
 
             abort(500, 'Config Error. Wrong Auth provider given in Environment. Fitting AuthService Class not found');

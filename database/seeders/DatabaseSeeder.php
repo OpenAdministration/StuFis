@@ -19,18 +19,18 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
         //BudgetPlan::factory(5)->populate()->create();
 
-        if(\App::runningUnitTests()){
+        if (\App::runningUnitTests()) {
             $this->call(DemoSeeder::class);
             $this->call(LocalSeeder::class);
             $this->call(TestSeeder::class);
         }
 
-        if(\App::isLocal()){
+        if (\App::isLocal()) {
             $this->call(DemoSeeder::class);
             $this->call(LocalSeeder::class);
         }
 
-        if(\App::isProduction()){
+        if (\App::isProduction()) {
             $this->call(ProductionSeeder::class);
         }
     }

@@ -6,7 +6,7 @@ use Illuminate\View\Component;
 
 class Layout extends Component
 {
-    public string $title = "StuFiS - Finanzen";
+    public string $title = 'StuFiS - Finanzen';
 
     public string $version;
 
@@ -18,7 +18,7 @@ class Layout extends Component
     public array $profileSkeleton = [
         [
             'text' => 'Mein Profil',
-            'link' => ''
+            'link' => '',
         ],
         [
             'text' => 'Logout',
@@ -45,7 +45,7 @@ class Layout extends Component
     public function render()
     {
         return view('components.layouts.index', [
-            'version' => config('app.version')
+            'version' => config('app.version'),
         ]);
     }
 }

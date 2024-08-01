@@ -8,8 +8,8 @@ use Illuminate\Support\Collection;
 
 class MoneyRule implements ValidationRule
 {
+    public function __construct(private Collection $column) {}
 
-    public function __construct(private Collection $column){}
     /**
      * Run the validation rule.
      *
@@ -18,9 +18,9 @@ class MoneyRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
 
-        foreach ($this->column as $entry){
+        foreach ($this->column as $entry) {
 
-            if(!is_numeric(str_replace(',','.', $entry))){
+            if (! is_numeric(str_replace(',', '.', $entry))) {
                 $fail(__('konto.csv-verify-money-error', ['value' => $entry]));
             }
         }

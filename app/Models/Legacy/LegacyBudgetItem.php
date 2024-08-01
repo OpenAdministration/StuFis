@@ -2,12 +2,11 @@
 
 namespace App\Models\Legacy;
 
-use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property integer $id
- * @property integer $hhpgruppen_id
+ * @property int $id
+ * @property int $hhpgruppen_id
  * @property string $titel_name
  * @property string $titel_nr
  * @property float $value
@@ -44,12 +43,12 @@ class LegacyBudgetItem extends Model
         return $this->belongsTo(LegacyBudgetGroup::class, 'hhpgruppen_id');
     }
 
-    public function bookingSum() : string
+    public function bookingSum(): string
     {
         return $this->bookings()->sum('value');
     }
 
-    public function bookingDiff() : string
+    public function bookingDiff(): string
     {
         return (float) bcsub($this->value, $this->bookings()->sum('value'));
     }

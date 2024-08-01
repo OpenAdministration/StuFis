@@ -1,6 +1,5 @@
 <?php
 
-
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -26,7 +25,6 @@ uses(Tests\TestCase::class)->in('Pest');
 */
 
 use App\Models\User;
-
 
 expect()->extend('toBeOne', function () {
     return $this->toBe(1);
@@ -68,16 +66,14 @@ function cashManager(): User
 }
 
 /**
- * @param $storage_path
- * @param $fileName
  * @return \Illuminate\Http\Testing\File the by livewire expected filetype
  */
-function testFile(string $storage_path, ?string $fileName = null) : \Illuminate\Http\Testing\File
+function testFile(string $storage_path, ?string $fileName = null): \Illuminate\Http\Testing\File
 {
-    if(empty($fileName)){
+    if (empty($fileName)) {
         $fileName = str($storage_path)->explode('/')->last();
     }
     $content = Storage::disk('tests')->get($storage_path);
+
     return \Illuminate\Http\Testing\File::createWithContent($fileName, $content);
 }
-

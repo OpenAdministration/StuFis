@@ -9,20 +9,29 @@ use DateTime;
  * implement file class
  *
  * @category        model
+ *
  * @author 			michael gnehr
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since 			07.05.2018
+ *
  * @copyright 		Copyright Michael Gnehr (C) 2018 - All rights reserved
+ *
  * @platform        PHP
+ *
  * @requirements    PHP 7.0 or higher
  */
 
 /**
  * implement file class
+ *
  * @category        model
+ *
  * @author 			michael gnehr
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since 			07.05.2018
+ *
  * @copyright 		Copyright Michael Gnehr (C) 2018 - All rights reserved
  */
 class File

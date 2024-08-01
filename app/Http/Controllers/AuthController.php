@@ -11,27 +11,30 @@ use Illuminate\Support\Facades\Request;
 
 class AuthController
 {
+    public function __construct(private readonly AuthService $authService) {}
 
-    public function __construct(private readonly AuthService $authService){}
-
-    public function login(){
+    public function login()
+    {
         return $this->authService->prepareLogin();
     }
 
     public function callback(Request $request): RedirectResponse
     {
-        if (Auth::guest() && !\App::runningUnitTests()) {
+        if (Auth::guest() && ! \App::runningUnitTests()) {
             [$identifiers, $userAttributes] = $this->authService->userFromCallback($request);
 
             $user = User::updateOrCreate($identifiers, $userAttributes);
 
             Auth::login($user);
         }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
-    public function logout() {
+    public function logout()
+    {
         Auth::logout();
+
         // call after logout routine
         return $this->authService->afterLogout();
     }

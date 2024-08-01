@@ -5,14 +5,13 @@ use App\Models\Legacy\Project;
 use App\Models\User;
 use function Pest\Laravel\actingAs;
 
-
 test('json casting is working', function () {
     $user = User::factory()->create();
     $cl = new Changelog([
         'user_id' => $user->id,
         'type' => 'projekt',
         'type_id' => '1',
-        'previous_data' => ['test' => 'test']
+        'previous_data' => ['test' => 'test'],
     ]);
 
     expect($cl->save())->toBeTrue();
@@ -28,7 +27,7 @@ test('Event dispatching from legacy project model update', function () {
     $project->name = fake()->sentence();
     $project->save();
 
-    Event::assertDispatched(\App\Events\UpdatingModel::class, function ($event) use ($project){
+    Event::assertDispatched(\App\Events\UpdatingModel::class, function ($event) use ($project) {
         return $event->model->id === $project->id && $event->model instanceof Project;
     });
 });
@@ -50,5 +49,3 @@ test('dispatched event gets logged at legacy project model update', function () 
         ->and($log->user_id)->toBe($user->id)
         ->and($log->previous_data)->toBe(['name' => $old_name]);
 });
-
-

@@ -65,7 +65,7 @@ class FintsController extends Renderer
         echo Html::headline(3)->body($mediumName);
         echo Html::p()->body($challengeText, false);
         $challengeBinary = $tanRequest->getChallengeHhdUc();
-        if (!is_null($challengeBinary)) {
+        if (! is_null($challengeBinary)) {
             try {
                 $p = new FlickerGenerator($challengeBinary->getData());
                 echo $p->getSVG(10, 300);
@@ -76,9 +76,9 @@ class FintsController extends Renderer
                     echo HtmlImage::make('TAN Challenge Bild')
                         ->srcBase64Encoded($challengePhotoBinBase64, $challengeImage->getMimeType());
                 } catch (InvalidArgumentException $e2) {
-                    echo 'Tan Format unbekannt' . PHP_EOL;
+                    echo 'Tan Format unbekannt'.PHP_EOL;
                     if (DEV) {
-                        echo 'Challenge Binary: ' . $challengeBinary . PHP_EOL;
+                        echo 'Challenge Binary: '.$challengeBinary.PHP_EOL;
                     }
                 }
             }
@@ -124,23 +124,25 @@ class FintsController extends Renderer
                     null,
                     null,
                     static function ($tanMode, $tanModeName, $tanMediumName, $id) use ($obj) {
-                        $tanString = '[' . $obj->defaultEscapeFunction($tanMode) . '] ' . $obj->defaultEscapeFunction($tanModeName);
+                        $tanString = '['.$obj->defaultEscapeFunction($tanMode).'] '.$obj->defaultEscapeFunction($tanModeName);
                         if (isset($tanMediumName)) {
-                            $tanString .= ': ' . $obj->defaultEscapeFunction($tanMediumName);
+                            $tanString .= ': '.$obj->defaultEscapeFunction($tanMediumName);
                         }
                         if (FintsConnectionHandler::hasActiveSession($id)) {
-                            $tanString .= ' ' . FA::make('fa-pencil')->href(URIBASE . "konto/credentials/$id/tan-mode")->title('TAN Modus auswählen');
+                            $tanString .= ' '.FA::make('fa-pencil')->href(URIBASE."konto/credentials/$id/tan-mode")->title('TAN Modus auswählen');
                         }
+
                         return $tanString;
                     },
                     static function ($id) { // action
                         if (FintsConnectionHandler::hasActiveSession($id)) {
                             return
-                                "<a href='" . URIBASE . "konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> " .
-                                "<a href='" . URIBASE . "konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>" .
-                                "<a href='" . URIBASE . "konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
+                                "<a href='".URIBASE."konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> ".
+                                "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>".
+                                "<a href='".URIBASE."konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
                         }
-                        return "<a href='" . URIBASE . "konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a>";
+
+                        return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a>";
                     },
                 ]
             );
@@ -148,7 +150,7 @@ class FintsController extends Renderer
             $this->renderAlert('Hinweis', 'Keine Zugangsdaten angelegt', BT::TYPE_INFO);
         }
         echo HtmlForm::make()
-            ->urlTarget(URIBASE . 'rest/clear-session')
+            ->urlTarget(URIBASE.'rest/clear-session')
             ->body(
                 HtmlButton::make()
                     ->style('warning')
@@ -162,13 +164,13 @@ class FintsController extends Renderer
         $post = $this->request->request;
         if (ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])) {
             DBConnector::getInstance()->dbInsert('konto_credentials', [
-                    'name' => $post->getAlpha('name'),
-                    'bank_id' => $post->getInt('bank-id'),
-                    'bank_username' => trim(strip_tags($post->get('bank-username'))),
-                    'owner_id' => DBConnector::getInstance()->getUser()['id'],
-                ]
+                'name' => $post->getAlpha('name'),
+                'bank_id' => $post->getInt('bank-id'),
+                'bank_username' => trim(strip_tags($post->get('bank-username'))),
+                'owner_id' => DBConnector::getInstance()->getUser()['id'],
+            ]
             );
-            HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+            HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
         }
         $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
         $this->renderHeadline('Lege neue Zugangsdaten an');
@@ -177,7 +179,7 @@ class FintsController extends Renderer
         $liveSearch = count($banks) > 5;
 
         echo HtmlForm::make('POST', false)
-            ->urlTarget(URIBASE . 'konto/credentials/new')
+            ->urlTarget(URIBASE.'konto/credentials/new')
             ->addHtmlEntity(HtmlInput::make('text')->label('Name des Zugangs')->name('name'))
             ->addHtmlEntity(HtmlDropdown::make()
                 ->label('Bank')
@@ -199,17 +201,17 @@ class FintsController extends Renderer
                 $success = $this->fintsHandler->setTanMode($tanModeId);
                 if ($success) {
                     HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Modus gespeichert');
-                    HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+                    HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
                 } else {
                     HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN Modus nicht gespeichert');
                 }
             } catch (InvalidArgumentException $e) {
                 HTMLPageRenderer::addFlash(BT::TYPE_INFO, $e->getMessage());
-                HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/tan-mode/$tanModeId/medium");
+                HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/tan-mode/$tanModeId/medium");
             }
         }
         $tanModes = $this->fintsHandler->getUserTanModes();
-        $form = HtmlForm::make('POST', false)->urlTarget(URIBASE . "konto/credentials/$this->credentialId/tan-mode");
+        $form = HtmlForm::make('POST', false)->urlTarget(URIBASE."konto/credentials/$this->credentialId/tan-mode");
         echo $form->begin();
         $this->renderHeadline('Bitte TAN-Modus auswählen');
         $this->renderRadioButtons($tanModes, 'tan-mode-id');
@@ -228,7 +230,7 @@ class FintsController extends Renderer
             $success = $this->fintsHandler->setTanMode($tanModeInt, $post->get('tan-medium-name'));
             if ($success) {
                 HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Medium gespeichert');
-                HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
             } else {
                 HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN Modus nicht gespeichert');
             }
@@ -273,9 +275,9 @@ class FintsController extends Renderer
             }
         }
         // if no pw or wrong one
-        if (!FintsConnectionHandler::hasPassword($credentialId)) {
+        if (! FintsConnectionHandler::hasPassword($credentialId)) {
             $form = HtmlForm::make('POST', false)
-                ->urlTarget(URIBASE . 'konto/credentials/' . $credentialId . '/login')
+                ->urlTarget(URIBASE.'konto/credentials/'.$credentialId.'/login')
                 ->addHtmlEntity(
                     HtmlInput::make(HtmlInput::TYPE_PASSWORD)
                         ->name('bank-password')
@@ -285,7 +287,7 @@ class FintsController extends Renderer
                 ->addSubmitButton();
             // PW unknown
             echo HtmlCard::make()
-                ->cardHeadline('Login Zugang - ' . $credentials['name'])
+                ->cardHeadline('Login Zugang - '.$credentials['name'])
                 ->appendBody(
                     HtmlInput::make('text')
                         ->label('Username')
@@ -321,9 +323,9 @@ class FintsController extends Renderer
                 } else {
                     $syncActive = date_create()->diff(date_create($matchingDbRow['sync_until']))->invert === 0;
                 }
-                $lastSyncString = !empty($matchingDbRow['last_sync']) ? $matchingDbRow['last_sync'] : 'nie';
-                $syncActiveString = $syncActive ? 'letzer sync: ' . $lastSyncString : 'Sync gestoppt';
-                $tableRow['info'] = $matchingDbRow['short'] . $matchingDbRow['id'] . ' ' . $syncActiveString;
+                $lastSyncString = ! empty($matchingDbRow['last_sync']) ? $matchingDbRow['last_sync'] : 'nie';
+                $syncActiveString = $syncActive ? 'letzer sync: '.$lastSyncString : 'Sync gestoppt';
+                $tableRow['info'] = $matchingDbRow['short'].$matchingDbRow['id'].' '.$syncActiveString;
                 $tableRow['action'] = 'update';
             } else {
                 $tableRow['info'] = 'bisher nicht importiert';
@@ -343,9 +345,10 @@ class FintsController extends Renderer
                 null,
                 function ($actionName, $iban) use ($credId): string {
                     $shortIban = FintsConnectionHandler::shortenIban($iban);
+
                     return match ($actionName) {
-                        'update' => "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>",
-                        'import' => "<a href='" . URIBASE . "konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>",
+                        'update' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>",
+                        'import' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>",
                         default => 'error',
                     };
                 },
@@ -356,7 +359,7 @@ class FintsController extends Renderer
             ->style('primary')
             ->body('zurück')
             ->icon('chevron-left')
-            ->asLink(URIBASE . 'konto/credentials');
+            ->asLink(URIBASE.'konto/credentials');
     }
 
     protected function actionNewSepaKonto(): void
@@ -365,7 +368,7 @@ class FintsController extends Renderer
             $post = $this->request->request;
             $syncFrom = date_create($post->get('sync-from'))->format('Y-m-d');
             $kontoIban = $post->getAlnum('iban');
-            [, $iban] = (new NewValidator())->validate($kontoIban, 'iban');
+            [, $iban] = (new NewValidator)->validate($kontoIban, 'iban');
             $kontoName = substr(htmlspecialchars(strip_tags(trim($post->getAlpha('konto-name')))), 0, 32);
             $kontoShort = strtoupper(substr($post->getAlpha('konto-short'), 0, 2));
             $ret = DBConnector::getInstance()->dbInsert('konto_type', [
@@ -376,7 +379,7 @@ class FintsController extends Renderer
             ]);
             // TODO: use $ret
             HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich gespeichert');
-            HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/sepa");
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
         }
 
         $shortIban = $this->routeInfo['short-iban'];
@@ -384,13 +387,12 @@ class FintsController extends Renderer
 
         $this->renderHeadline('Neues Konto Importieren');
         echo HtmlForm::make('POST', false)
-            ->urlTarget(URIBASE . "konto/credentials/$this->credentialId/$shortIban/import")
+            ->urlTarget(URIBASE."konto/credentials/$this->credentialId/$shortIban/import")
             ->addHtmlEntity(HtmlInput::make()->name('iban')->label('IBAN')->value($iban)->readOnly())
             ->addHtmlEntity(HtmlInput::make()->name('konto-name')->label('Bezeichnung Konto'))
             ->addHtmlEntity(HtmlInput::make()->name('konto-short')->label('Eindeutiges Buchstabenkürzel für das Konto (intern)'))
             ->addHtmlEntity(HtmlInput::make('date')->name('sync-from')->label('Startdatum der Synchronisation'))
-            ->addSubmitButton('Speichern')
-        ;
+            ->addSubmitButton('Speichern');
     }
 
     protected function actionImportNewSepaStatements()
@@ -411,7 +413,7 @@ class FintsController extends Renderer
         [$success, $msg] = $this->saveStatements($statements, $dbKonto['id']);
 
         HTMLPageRenderer::addFlash($success ? BT::TYPE_SUCCESS : BT::TYPE_WARNING, $msg);
-        HTMLPageRenderer::redirect(URIBASE . "konto/credentials/$this->credentialId/sepa");
+        HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
     }
 
     protected function saveStatements(StatementOfAccount $statements, int $kontoId): array
@@ -433,7 +435,7 @@ class FintsController extends Renderer
         $kontoRow = $db->dbFetchAll(tables: 'konto_type', where: ['id' => $kontoId])[0];
         $syncUntil = DateHelper::fromDb($kontoRow['sync_until']);
 
-        if (!empty($lastKontoRow)) {
+        if (! empty($lastKontoRow)) {
             $lastKontoRow = $lastKontoRow[0];
             $lastKontoId = $lastKontoRow['id'];
             $lastKontoSaldo = $lastKontoRow['saldo'];
@@ -453,6 +455,7 @@ class FintsController extends Renderer
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
                 $db->dbRollBack();
                 $logger->debug("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString", [var_export($statements, true)]);
+
                 return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
             }
             // echo "Statement $dateString Saldo: $saldoCent";
@@ -488,9 +491,10 @@ class FintsController extends Renderer
                 }
 
                 if ($rewindDiff > 0) {
-                    --$rewindDiff;
+                    $rewindDiff--;
                     $skipped = $skipped === false ? 1 : $skipped + 1;
                     $logger->debug('SKIP TRANSACTION - found in DB');
+
                     continue; // skip this entry, it was in the db before
                 }
 
@@ -528,15 +532,16 @@ class FintsController extends Renderer
         $ret = $db->dbCommitRollbackOnFailure();
 
         if ($ret === true) {
-            $msg = count($transactionData) . ' Einträge importiert.';
+            $msg = count($transactionData).' Einträge importiert.';
         } else {
-            $msg = 'Ein Fehler ist aufgetreten - DBRollback - Import von ' .
-                count($transactionData) . ' Einträgen ausstehend.';
+            $msg = 'Ein Fehler ist aufgetreten - DBRollback - Import von '.
+                count($transactionData).' Einträgen ausstehend.';
         }
         if (DEV && $skipped !== false) {
             $msg .= " $skipped Einträge waren bereits bekannt";
         }
         $logger->debug($msg, ['success' => $ret]);
+
         return [$ret, $msg];
     }
 
@@ -547,22 +552,24 @@ class FintsController extends Renderer
         } else {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
         }
-        HTMLPageRenderer::redirect(URIBASE . 'konto/credentials');
+        HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
     }
 
     /**
-     * @param string|null $creditDebit either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
-     *                    assumed by sign of $amount
+     * @param  string|null  $creditDebit  either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
+     *                                    assumed by sign of $amount
      */
-    private function convertToCent(string|float $amount, string $creditDebit = null): float|int
+    private function convertToCent(string|float $amount, ?string $creditDebit = null): float|int
     {
         $float = (float) $amount;
         $cents = (int) round($float * 100);
 
         if (is_null($creditDebit)) {
             $sign = ($float > 0) - ($float < 0);
+
             return $sign * $cents;
         }
+
         return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * $cents;
     }
 

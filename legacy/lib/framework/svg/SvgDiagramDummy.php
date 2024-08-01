@@ -7,15 +7,20 @@ namespace framework\svg;
  * creates dummy image
  *
  * @author 		Michael Gnehr <michael@gnehr.de>
+ *
  * @category    framework
+ *
  * @since 		09.08.2016
+ *
  * @version 	02.0.0 since 01.07.2018
+ *
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
 class SvgDiagramDummy extends SvgDiagramCore
 {
     /**
      * this class implements following diagram types
+     *
      * @var array
      */
     private static $types = [
@@ -27,7 +32,8 @@ class SvgDiagramDummy extends SvgDiagramCore
 
     /**
      * constructor
-     * @param string $type
+     *
+     * @param  string  $type
      */
     public function __construct($type)
     {
@@ -48,6 +54,7 @@ class SvgDiagramDummy extends SvgDiagramCore
 
     /**
      * (non-PHPdoc)
+     *
      * @see SvgDiagramCore::render()
      */
     public function render(): void
@@ -55,7 +62,7 @@ class SvgDiagramDummy extends SvgDiagramCore
         $svg = '<title>'.$this->settings['DUMMY']['title'].'</title>';
         $n = $this->settings['height'] * $this->settings['width'] / 6200;
         $f = 0.091 * sqrt($this->settings['height'] * $this->settings['width']);
-        for ($i = 0; $i < round($n); ++$i) {
+        for ($i = 0; $i < round($n); $i++) {
             $r = random_int(30, 120);
             $x = random_int($r, $this->settings['width'] - $r);
             $y = random_int($r, $this->settings['height'] - $r);

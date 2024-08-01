@@ -12,12 +12,8 @@ class UpdatingModel implements ShouldDispatchAfterCommit
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-
     /**
      * Create a new event instance.
      */
-    public function __construct(public Model $model) {
-
-    }
-
+    public function __construct(public Model $model) {}
 }

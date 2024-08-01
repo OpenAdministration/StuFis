@@ -8,7 +8,7 @@ use framework\DBConnector;
 
 class DbBuildCommand extends \Ahc\Cli\Input\Command
 {
-    public function __construct(App $app = null)
+    public function __construct(?App $app = null)
     {
         parent::__construct('db:build', 'Builds non existent Database tables', false, $app);
     }
@@ -16,7 +16,7 @@ class DbBuildCommand extends \Ahc\Cli\Input\Command
     public function execute(): void
     {
         $ret = DBConnector::getInstance()->buildDB();
-        $cli = new Writer();
+        $cli = new Writer;
         if ($ret) {
             $cli->ok('[ok] built db', true);
         } else {

@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\Project
  *
- * @property integer $id
- * @property integer $creator_id
+ * @property int $id
+ * @property int $creator_id
  * @property string $createdat
  * @property string $lastupdated
- * @property integer $version
+ * @property int $version
  * @property string $state
- * @property integer $stateCreator_id
+ * @property int $stateCreator_id
  * @property string $name
  * @property string $responsible
  * @property string $org
@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $expenses_count
  * @property-read int|null $posts_count
  * @property-read User $stateCreator
+ *
  * @method static Builder|Project newModelQuery()
  * @method static Builder|Project newQuery()
  * @method static Builder|Project query()
@@ -55,11 +56,13 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder|Project whereState($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
+ *
  * @mixin \Eloquent
  */
 class Project extends Model
 {
     use HasFactory;
+
     /**
      * The table associated with the model.
      *

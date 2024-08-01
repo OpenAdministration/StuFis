@@ -231,7 +231,7 @@ $pathConfig = [
                             'path' => 'exportBank',
                             'type' => 'path',
                             'action' => 'exportBank',
-                            'groups' => 'ref-finanzen-kv'
+                            'groups' => 'ref-finanzen-kv',
                         ],
                     ],
                 ],

@@ -53,5 +53,4 @@ class ProjectFactory extends Factory
             'state' => $state,
         ]);
     }
-
 }

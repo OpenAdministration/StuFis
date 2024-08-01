@@ -4,7 +4,6 @@ namespace framework\render;
 
 use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
-use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,8 +11,11 @@ use Symfony\Component\HttpFoundation\Request;
 abstract class Renderer extends EscFunc
 {
     public const ALERT_WARNING = 'warning';
+
     public const ALERT_INFO = 'info';
+
     public const ALERT_DANGER = 'danger';
+
     public const ALERT_SUCCESS = 'success';
 
     protected $routeInfo;
@@ -29,11 +31,11 @@ abstract class Renderer extends EscFunc
     public function render(): void
     {
         $action = $this->routeInfo['action'];
-        $methodName = 'action' . str_replace('-', '', ucwords($action, '-'));
+        $methodName = 'action'.str_replace('-', '', ucwords($action, '-'));
         if (method_exists($this, $methodName)) {
             echo $this->$methodName();
         } else {
-            throw new LegacyDieException(404, "Methode $methodName not found in " . __CLASS__);
+            throw new LegacyDieException(404, "Methode $methodName not found in ".__CLASS__);
         }
     }
 
@@ -48,7 +50,7 @@ abstract class Renderer extends EscFunc
         array_walk(
             $escapeFunctions,
             static function (&$val) use ($defaultFunction) {
-                if (!isset($val) || empty($val)) {
+                if (! isset($val) || empty($val)) {
                     $val = $defaultFunction;
                 }
             }
@@ -96,17 +98,16 @@ abstract class Renderer extends EscFunc
             }
             if (count(reset($content)) !== $paramSum && count($keys) !== $paramSum) {
                 throw new LegacyDieException(500,
-                    "In Gruppe '$groupName' passt Spaltenzahl (" . count(
+                    "In Gruppe '$groupName' passt Spaltenzahl (".count(
                         reset($content)
-                    ) . ') bzw. Key Anzahl (' . count(
+                    ).') bzw. Key Anzahl ('.count(
                         $keys
-                    ) . ") nicht zur benötigten Parameterzahl $paramSum \n es wurden " . count(
+                    ).") nicht zur benötigten Parameterzahl $paramSum \n es wurden ".count(
                         $escapeFunctions
-                    ) . ' Funktionen übergeben ' . $diff . ' wurde(n) hinzugefügt.'
+                    ).' Funktionen übergeben '.$diff.' wurde(n) hinzugefügt.'
                 );
             }
         }
-
 
         if (count($keys) === 0) {
             $keys = range(0, $paramSum);
@@ -126,7 +127,7 @@ abstract class Renderer extends EscFunc
             <tbody>
             <?php
             foreach ($groupedContent as $groupName => $rows) {
-                if (!is_int($groupName)) { ?>
+                if (! is_int($groupName)) { ?>
                     <tr>
                         <th class="bg-info" colspan="<?php echo count($header); ?>"><?php echo $groupName; ?></th>
                     </tr>
@@ -137,32 +138,32 @@ abstract class Renderer extends EscFunc
                     <tr>
                         <?php
                         //throw away keys
-                        if (!$assoc) {
+                        if (! $assoc) {
                             $row = array_values($row);
                         }
 
-                        $shiftIdx = 0;
-                        foreach ($reflectionsOfFunctions as $idx => $reflectionOfFunction) {
-                            //var_export($keys);
-                            $arg_keys = array_slice(
-                                $keys,
-                                $shiftIdx,
-                                $reflectionOfFunction->getNumberOfParameters()
-                            );
-                            $args = [];
-                            foreach ($arg_keys as $arg_key) {
-                                $args[] = $row[$arg_key];
-                            }
-                            //var_export($args);
-                            //var_export($row);
-                            //var_export($reflectionOfFunction->getNumberOfParameters());
-                            $shiftIdx += $reflectionOfFunction->getNumberOfParameters();
-                            if ($isReflectionMethods[$idx]) {
-                                echo '<td>' . call_user_func_array($escapeFunctions[$idx], $args) . '</td>';
-                            } else {
-                                echo '<td>' . $reflectionOfFunction->invokeArgs($args) . '</td>';
-                            }
-                        } ?>
+                    $shiftIdx = 0;
+                    foreach ($reflectionsOfFunctions as $idx => $reflectionOfFunction) {
+                        //var_export($keys);
+                        $arg_keys = array_slice(
+                            $keys,
+                            $shiftIdx,
+                            $reflectionOfFunction->getNumberOfParameters()
+                        );
+                        $args = [];
+                        foreach ($arg_keys as $arg_key) {
+                            $args[] = $row[$arg_key];
+                        }
+                        //var_export($args);
+                        //var_export($row);
+                        //var_export($reflectionOfFunction->getNumberOfParameters());
+                        $shiftIdx += $reflectionOfFunction->getNumberOfParameters();
+                        if ($isReflectionMethods[$idx]) {
+                            echo '<td>'.call_user_func_array($escapeFunctions[$idx], $args).'</td>';
+                        } else {
+                            echo '<td>'.$reflectionOfFunction->invokeArgs($args).'</td>';
+                        }
+                    } ?>
                     </tr>
                     <?php
                 } ?>
@@ -171,7 +172,7 @@ abstract class Renderer extends EscFunc
             </tbody>
             <?php if ($footer && is_array($footer) && count($footer) > 0) { ?>
                 <tfoot> <?php
-                if (!is_array(array_values($footer)[0])) {
+                if (! is_array(array_values($footer)[0])) {
                     $footer = [$footer];
                 }
                 foreach ($footer as $foot_line) {
@@ -195,14 +196,14 @@ abstract class Renderer extends EscFunc
 
     protected function renderHeadline($text, int $headlineNr = 1): void
     {
-        echo '<h' . htmlspecialchars($headlineNr) . '>' . htmlspecialchars($text) . '</h' . htmlspecialchars(
-                $headlineNr
-            ) . '>';
+        echo '<h'.htmlspecialchars($headlineNr).'>'.htmlspecialchars($text).'</h'.htmlspecialchars(
+            $headlineNr
+        ).'>';
     }
 
     protected function formatDateToMonthYear($dateString)
     {
-        return !empty($dateString) ? strftime('%b %Y', strtotime($dateString)) : '';
+        return ! empty($dateString) ? strftime('%b %Y', strtotime($dateString)) : '';
     }
 
     protected function renderHiddenInput($name, $value): void
@@ -212,21 +213,17 @@ abstract class Renderer extends EscFunc
     }
 
     /**
-     * @param $data array
-     * @param $groupHeaderFun
-     * @param $innerHeaderHeadlineFun
-     * @param $innerHeaderFun
-     * @param $innerContentFun
+     * @param  $data  array
      */
     protected function renderAccordionPanels(array $data, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun): void
     { ?>
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-            if (isset($data) && !empty($data) && $data) {
-                foreach ($data as $groupHeadline => $groupContent) {
-                    if (count($groupContent) === 0) {
-                        continue;
-                    } ?>
+        if (isset($data) && ! empty($data) && $data) {
+            foreach ($data as $groupHeadline => $groupContent) {
+                if (count($groupContent) === 0) {
+                    continue;
+                } ?>
                     <div class="panel panel-default">
                         <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordion"
                              href="#collapse<?php echo $i; ?>">
@@ -243,10 +240,10 @@ abstract class Renderer extends EscFunc
                                             <div class="panel-link">
                                                 <?php echo $innerHeaderHeadlineFun($content); ?>
                                             </div>
-                                            <div class="panel-heading collapsed <?php echo (!isset($content['subcontent'])
-                                                || count($content['subcontent']) === 0) ? 'empty' : ''; ?>"
+                                            <div class="panel-heading collapsed <?php echo (! isset($content['subcontent'])
+                                            || count($content['subcontent']) === 0) ? 'empty' : ''; ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i; ?>"
-                                                 href="#collapse<?php echo $i . '-' . $j; ?>">
+                                                 href="#collapse<?php echo $i.'-'.$j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i>
                                                     <span class="panel-projekt-name">
@@ -255,7 +252,7 @@ abstract class Renderer extends EscFunc
                                                 </h4>
                                             </div>
                                             <?php if (isset($content['subcontent']) && count($content['subcontent']) > 0) { ?>
-                                                <div id="collapse<?php echo $i . '-' . $j; ?>"
+                                                <div id="collapse<?php echo $i.'-'.$j; ?>"
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <?php echo $innerContentFun($content['subcontent']); ?>
@@ -263,22 +260,22 @@ abstract class Renderer extends EscFunc
                                                 </div>
                                             <?php } ?>
                                         </div>
-                                        <?php ++$j;
+                                        <?php $j++;
                                     } ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <?php
-                    ++$i;
-                }
-            } else {
-                $this->renderAlert(
-                    'Warnung',
-                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
-                    'warning'
-                );
-            } ?>
+                    $i++;
+            }
+        } else {
+            $this->renderAlert(
+                'Warnung',
+                "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                'warning'
+            );
+        } ?>
         </div>
         <?php
     }
@@ -289,13 +286,11 @@ abstract class Renderer extends EscFunc
     }
 
     /**
-     * @param $strongMsg
-     * @param $msg
-     * @param $type string has to be <i>"success"</i>, "info", "warning" or "danger"
+     * @param  $type  string has to be <i>"success"</i>, "info", "warning" or "danger"
      */
     protected function renderAlert($strongMsg, $msg, string $type = self::ALERT_SUCCESS): void
     {
-        if (!in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER])) {
+        if (! in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER])) {
             throw new LegacyDieException(500, 'Falscher Datentyp in renderAlert()');
         }
         if (is_array($msg)) {
@@ -316,6 +311,7 @@ abstract class Renderer extends EscFunc
         foreach ($matches[0] as $match) {
             $text = str_replace($match, $this->mailto($match), $text);
         }
+
         return $text;
     }
 
@@ -335,10 +331,11 @@ abstract class Renderer extends EscFunc
             $projekt_id = array_pop($array);
             $text = str_replace(
                 $match,
-                "<a target='_blank' href='" . URIBASE . "projekt/$projekt_id/auslagen/$auslagen_id'><i class='fa fa-fw fa-chain'></i>$match</a>",
+                "<a target='_blank' href='".URIBASE."projekt/$projekt_id/auslagen/$auslagen_id'><i class='fa fa-fw fa-chain'></i>$match</a>",
                 $text
             );
         }
+
         return $text;
     }
 
@@ -369,24 +366,24 @@ abstract class Renderer extends EscFunc
             [],
             ['von' => false]
         );
-        if (!isset($hhps) || empty($hhps)) {
+        if (! isset($hhps) || empty($hhps)) {
             throw new LegacyDieException(500, 'Konnte keine Haushaltspläne finden');
         }
-        if (!isset($routeInfo['hhp-id'])) {
+        if (! isset($routeInfo['hhp-id'])) {
             foreach (array_reverse($hhps, true) as $id => $hhp) {
                 if ($hhp['state'] === 'final') {
                     $routeInfo['hhp-id'] = $id;
                 }
             }
         } ?>
-        <form action="<?php echo $urlPrefix . $routeInfo['hhp-id'] . $urlSuffix; ?>"
-              data-action='<?php echo $urlPrefix . '%%' . $urlSuffix; ?>'>
+        <form action="<?php echo $urlPrefix.$routeInfo['hhp-id'].$urlSuffix; ?>"
+              data-action='<?php echo $urlPrefix.'%%'.$urlSuffix; ?>'>
             <div class="input-group col-xs-2 pull-right hhp-selector">
                 <select class="selectpicker" id="hhp-id"><?php
                     foreach ($hhps as $id => $hhp) {
                         $von = date_create($hhp['von'])->format('M Y');
-                        $bis = !empty($hhp['bis']) ? date_create($hhp['bis'])->format('M Y') : false;
-                        $name = $bis ? $von . ' bis ' . $bis : 'ab ' . $von; ?>
+                        $bis = ! empty($hhp['bis']) ? date_create($hhp['bis'])->format('M Y') : false;
+                        $name = $bis ? $von.' bis '.$bis : 'ab '.$von; ?>
                         <option value="<?php echo $id; ?>" <?php echo $id == $routeInfo['hhp-id'] ? 'selected' : ''; ?>
                                 data-subtext="<?php echo $hhp['state']; ?>"><?php echo $name; ?>
                         </option>

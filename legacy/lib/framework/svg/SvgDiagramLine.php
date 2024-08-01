@@ -7,15 +7,20 @@ namespace framework\svg;
  * this class is an alias for SvgDiagramBlock
  *
  * @author 		Michael Gnehr <michael@gnehr.de>
+ *
  * @category    framework
+ *
  * @since 		09.08.2016
+ *
  * @version 	02.0.0 since 01.07.2018
+ *
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
 class SvgDiagramLine extends SvgDiagramBlock
 {
     /**
      * this class implements following diagram types
+     *
      * @var array
      */
     private static $types = [
@@ -26,7 +31,8 @@ class SvgDiagramLine extends SvgDiagramBlock
 
     /**
      * constructor
-     * @param string $type
+     *
+     * @param  string  $type
      */
     public function __construct($type)
     {
@@ -47,8 +53,9 @@ class SvgDiagramLine extends SvgDiagramBlock
 
     /**
      * set Settings variables
-     * @param string|number $key : 'pointRadius'|'line-width'
-     * @param mixed $value
+     *
+     * @param  string|number  $key  : 'pointRadius'|'line-width'
+     * @param  mixed  $value
      */
     public function setLineSetting($key, $value)
     {

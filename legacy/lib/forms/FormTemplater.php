@@ -3,7 +3,6 @@
 namespace forms;
 
 use forms\projekte\PermissionHandler;
-use forms\projekte\StateHandler;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\Helper;
@@ -11,6 +10,7 @@ use framework\Helper;
 class FormTemplater
 {
     private static $ID_DELIMITER = '__';
+
     /**
      * @var PermissionHandler
      */
@@ -41,7 +41,7 @@ class FormTemplater
         $selectable = [];
         foreach ($all_titels as /*$g_id =>*/ $group) {
             $ret_group = [
-                'label' => ($group[0]['type'] ? 'Ausgabe' : 'Einnahme') . ' - ' . $group[0]['gruppen_name'],
+                'label' => ($group[0]['type'] ? 'Ausgabe' : 'Einnahme').' - '.$group[0]['gruppen_name'],
                 'options' => [],
             ];
             foreach ($group as $titel) {
@@ -55,6 +55,7 @@ class FormTemplater
             //set in parent
             $selectable['groups'][] = $ret_group;
         }
+
         return $selectable;
     }
 
@@ -102,86 +103,86 @@ class FormTemplater
     /**
      * generate List
      *
-     * @param array $list
-     * @param string $label
-     * @param bool $wrapped
-     * @param bool $linebreak
-     * @param string $wrapped_class
-     * @param string $default_tag
-     * @param string $width_class
+     * @param  array  $list
+     * @param  string  $label
+     * @param  bool  $wrapped
+     * @param  bool  $linebreak
+     * @param  string  $wrapped_class
+     * @param  string  $default_tag
+     * @param  string  $width_class
      */
     public static function generateListGroup($list, $label = '', $wrapped = true, $linebreak = true, $wrapped_class = 'col-xs-12 form-group', $default_tag = 'div', $width_class = 'col-xs-12'): string
     {
-        if (!is_array($list)) {
+        if (! is_array($list)) {
             $list = [$list];
         }
         $out = '';
         if ($label) {
-            $out .= '<label>' . $label . '</label>';
+            $out .= '<label>'.$label.'</label>';
         }
-        $out .= '<div class="input-group ' . $width_class . '">';
+        $out .= '<div class="input-group '.$width_class.'">';
         foreach ($list as $entry) {
             if (is_string($entry)) {
-                $out .= "<$default_tag class=\"list-group-item\">" . $entry . "</$default_tag>";
+                $out .= "<$default_tag class=\"list-group-item\">".$entry."</$default_tag>";
             } else {
                 $tag = $entry['tag'] ?? $default_tag;
                 $text = htmlspecialchars($entry['text'] ?? '');
                 $html = $entry['html'] ?? '';
-                if (!isset($entry['attr']['class'])) {
+                if (! isset($entry['attr']['class'])) {
                     $entry['attr']['class'] = 'list-group-item';
                 }
                 $attr = '';
                 if (isset($entry['attr'])) {
                     foreach ($entry['attr'] as $k => $v) {
-                        $attr .= ' ' . "{$k}=\"{$v}\"";
+                        $attr .= ' '."{$k}=\"{$v}\"";
                     }
                 }
-                $out .= "<{$tag}{$attr}>" . $text . $html . "</$tag>";
+                $out .= "<{$tag}{$attr}>".$text.$html."</$tag>";
             }
         }
         $out .= '</div>';
         if ($wrapped) {
-            return '<div class="' . $wrapped_class . '">' . $out . '</div><div class="clearfix"></div>' . (($linebreak) ? '<br>' : '');
+            return '<div class="'.$wrapped_class.'">'.$out.'</div><div class="clearfix"></div>'.(($linebreak) ? '<br>' : '');
         }
 
-        return $out . (($linebreak) ? '<br>' : '');
+        return $out.(($linebreak) ? '<br>' : '');
     }
 
     /**
-     * @param string $key current    editable key
-     * @param string $function editable function
-     * @param string $type editable type
-     * @param string $value current value
-     * @param array $values value list
-     * @param null $values_out value - html map
-     * @param string $title hover title
-     * @param array $additional_params
-     * @param string $additional_class class
-     * @param string $target_prefix target uri prefix
-     * @param string $target target uri
+     * @param  string  $key  current    editable key
+     * @param  string  $function  editable function
+     * @param  string  $type  editable type
+     * @param  string  $value  current value
+     * @param  array  $values  value list
+     * @param  null  $values_out  value - html map
+     * @param  string  $title  hover title
+     * @param  array  $additional_params
+     * @param  string  $additional_class  class
+     * @param  string  $target_prefix  target uri prefix
+     * @param  string  $target  target uri
      */
     public static function jsonEditable(string $key, $function = 'edit', $type = '', $value = '', $values = ['value'], $values_out = null, $title = 'Ändern', $additional_params = [], $additional_class = '', $target_prefix = '/', $target = 'rest/forms/editable'): string
     {
         $opt = '';
         if (isset($additional_params) && is_array($additional_params)) {
             foreach ($additional_params as $k => $v) {
-                $opt .= ' data-' . "{$k}=\"{$v}\"";
+                $opt .= ' data-'."{$k}=\"{$v}\"";
             }
         }
         if ($type !== 'disabled') {
-            return '<div	class="editable ' . $additional_class .
-                '" title="' . $title .
-                '" data-key="' . $key .
-                '" data-mfunction="' . $function .
-                '" data-type="' . $type .
-                '" data-value="' . $value .
-                '" data-target="' . $target_prefix . $target . '" ' .
-                $opt . '>' .
-                (($values_out) ? $values_out[$value] : $value) .
+            return '<div	class="editable '.$additional_class.
+                '" title="'.$title.
+                '" data-key="'.$key.
+                '" data-mfunction="'.$function.
+                '" data-type="'.$type.
+                '" data-value="'.$value.
+                '" data-target="'.$target_prefix.$target.'" '.
+                $opt.'>'.
+                (($values_out) ? $values_out[$value] : $value).
                 '</div>';
         }
 
-        return '<div class="editable-disabled' . $additional_class . '">' . (($values_out) ? $values_out[$value] : $value) . '</div>';
+        return '<div class="editable-disabled'.$additional_class.'">'.(($values_out) ? $values_out[$value] : $value).'</div>';
     }
 
     public function getWikiLinkForm($name, $value = '', $width = 12, $placeholder = '', $label_text = '', $validator = [], $linkPrefix = ''): string
@@ -199,31 +200,32 @@ class FormTemplater
             $additonal_str = implode(' ', $additonal_array);
 
             $value = htmlspecialchars($value);
-            if (isset($linkPrefix) && !empty($linkPrefix)) {
+            if (isset($linkPrefix) && ! empty($linkPrefix)) {
                 $out .= "<div class='input-group'>";
-                $out .= "<div class='input-group-addon form-field-to-replace'>" . $linkPrefix . '</div>';
+                $out .= "<div class='input-group-addon form-field-to-replace'>".$linkPrefix.'</div>';
             }
             $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
-            if (isset($linkPrefix) && !empty($linkPrefix)) {
+            if (isset($linkPrefix) && ! empty($linkPrefix)) {
                 $out .= '</div>';
             }
         } else {
-            if (!empty($linkPrefix)) {
+            if (! empty($linkPrefix)) {
                 $out .= "<div id='$unique_id'>
-                            <a target='_blank' href='" . htmlspecialchars($linkPrefix) . $this->getReadOnlyValue($value) . "'>" .
-                    "<i class='fa fa-fw fa-wikipedia-w'></i> " . htmlspecialchars($linkPrefix) . $this->getReadOnlyValue($value) .
+                            <a target='_blank' href='".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value)."'>".
+                    "<i class='fa fa-fw fa-wikipedia-w'></i> ".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value).
                     '</a>
                          </div>';
             } else {
-                $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . '</div>';
+                $out .= "<div id='$unique_id'>".$this->getReadOnlyValue($value).'</div>';
             }
         }
+
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
     private function getUniqueIdFromName($name): string
     {
-        return htmlspecialchars(explode('[', $name)[0] . self::$ID_DELIMITER . uniqid('', true));
+        return htmlspecialchars(explode('[', $name)[0].self::$ID_DELIMITER.uniqid('', true));
     }
 
     private function checkWritePermission($name): bool
@@ -231,21 +233,22 @@ class FormTemplater
         if ($this->permissionHandler->checkWritePermission() === true) {
             return true;
         }
+
         return $this->permissionHandler->checkWritePermissionField($name);
     }
 
     private function constructValidatorStrings($validatorArray): array
     {
-        if (!isset($validatorArray) || empty($validatorArray)) {
+        if (! isset($validatorArray) || empty($validatorArray)) {
             return [];
         }
         $ret = ['required'];
 
         if (isset($validatorArray['min-length'])) {
-            $ret[] = 'data-minlength=' . $validatorArray['min-length'];
+            $ret[] = 'data-minlength='.$validatorArray['min-length'];
         }
         if (isset($validatorArray['email'])) {
-            $ret[] = "data-remote='" . URIBASE . "validate.php?ajax=1&action=validate.email&nonce=" . csrf_token() . "'";
+            $ret[] = "data-remote='".URIBASE.'validate.php?ajax=1&action=validate.email&nonce='.csrf_token()."'";
         }
         if (isset($validatorArray['iban'])) {
             $ret[] = "data-validateiban='1'";
@@ -257,14 +260,16 @@ class FormTemplater
     private function getReadOnlyValue($values): string
     {
         if (is_array($values)) {
-            if (!empty($values)) {
+            if (! empty($values)) {
                 return implode(',', array_map([$this, 'getReadOnlyValue'], $values));
             }
-            return '<i>' . htmlspecialchars($this->noValueStringInReadOnly) . '</i>';
+
+            return '<i>'.htmlspecialchars($this->noValueStringInReadOnly).'</i>';
         }
         if (empty($values)) {
-            return '<i>' . htmlspecialchars($this->noValueStringInReadOnly) . '</i>';
+            return '<i>'.htmlspecialchars($this->noValueStringInReadOnly).'</i>';
         }
+
         return htmlspecialchars($values);
     }
 
@@ -278,16 +283,16 @@ class FormTemplater
 
         $classes_array = $this->constructWidthClasses($width);
         $classes_array[] = 'form-group';
-        if (!empty($validator) && $editable) {
+        if (! empty($validator) && $editable) {
             $classes_array[] = 'has-feedback';
         }
         $classes_str = implode(' ', $classes_array);
         $out .= "<div class='$classes_str'>";
-        if (!empty($label_text)) {
+        if (! empty($label_text)) {
             $out .= "<label class='control-label' for='$unique_id'>$label_text</label>";
         }
         $out .= $content;
-        if (!empty($validator) && $editable) {
+        if (! empty($validator) && $editable) {
             //$out .= "<span class='glyphicon form-control-feedback' aria-hidden='true'></span>";
             $out .= "<div class='help-block with-errors'></div>";
         }
@@ -303,17 +308,18 @@ class FormTemplater
 
     private function constructWidthClasses($width): array
     {
-        if (!isset($width)) {
+        if (! isset($width)) {
             return [];
         }
         $base_cls = ['col-xs-', 'col-xs-', 'col-md-', 'col-lg-'];
         $ret_cls = [];
-        if (!is_array($width)) {
+        if (! is_array($width)) {
             $width = [$width];
         }
-        for ($i = 0; $i < count($width) && $i < 4; ++$i) {
-            $ret_cls[] = $base_cls[$i] . $width[$i];
+        for ($i = 0; $i < count($width) && $i < 4; $i++) {
+            $ret_cls[] = $base_cls[$i].$width[$i];
         }
+
         return $ret_cls;
     }
 
@@ -332,23 +338,24 @@ class FormTemplater
             $additonal_str = implode(' ', $additonal_array);
 
             $value = htmlspecialchars($value);
-            if (isset($domainSuffix) && !empty($domainSuffix)) {
+            if (isset($domainSuffix) && ! empty($domainSuffix)) {
                 $out .= "<div class='input-group'>";
             }
             $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
-            if (isset($domainSuffix) && !empty($domainSuffix)) {
-                $out .= "<div class='input-group-addon form-field-to-replace'>" . $domainSuffix . '</div>';
+            if (isset($domainSuffix) && ! empty($domainSuffix)) {
+                $out .= "<div class='input-group-addon form-field-to-replace'>".$domainSuffix.'</div>';
                 $out .= '</div>';
             }
-        } elseif (!empty($domainSuffix)) {
+        } elseif (! empty($domainSuffix)) {
             $out .= "<div id='$unique_id'>
-                        <a target='_blank' href='mailto:" . $this->getReadOnlyValue($value) . htmlspecialchars($domainSuffix) . "'>" .
-                "<i class='fa fa-fw fa-envelope-o'></i> " . $this->getReadOnlyValue($value) . htmlspecialchars($domainSuffix) .
+                        <a target='_blank' href='mailto:".$this->getReadOnlyValue($value).htmlspecialchars($domainSuffix)."'>".
+                "<i class='fa fa-fw fa-envelope-o'></i> ".$this->getReadOnlyValue($value).htmlspecialchars($domainSuffix).
                 '</a>
                      </div>';
         } else {
-            $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . '</div>';
+            $out .= "<div id='$unique_id'>".$this->getReadOnlyValue($value).'</div>';
         }
+
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
@@ -356,10 +363,11 @@ class FormTemplater
     {
         $unique_id = htmlspecialchars($this->getUniqueIdFromName($name));
 
-        $editable = !$name || $this->checkWritePermission($name);
+        $editable = ! $name || $this->checkWritePermission($name);
         $out = "<div class='single-file-container'>";
         $out .= "<input class='form-control single-file' type='file' name='$name' id='$unique_id'>";
         $out .= '</div>';
+
         /*
         $myOut = "<div class=\"single-file-container\">";
         $myOut .= "<input class=\"form-control single-file\" type=\"file\" name=\"" . htmlspecialchars($ctrl["name"]) . "\" orig-name=\"" . htmlspecialchars($ctrl["orig-name"]) . "\" id=\"" . htmlspecialchars($ctrl["id"]) . "\"/>";
@@ -407,19 +415,20 @@ class FormTemplater
             $additonal_str = implode(' ', $additonal_array);
 
             $value = htmlspecialchars($value);
-            if (isset($textPrefix) && !empty($textPrefix)) {
+            if (isset($textPrefix) && ! empty($textPrefix)) {
                 $out .= "<div class='input-group'>";
-                $out .= "<div class='input-group-addon'>" . $textPrefix . '</div>';
+                $out .= "<div class='input-group-addon'>".$textPrefix.'</div>';
             }
             $out .= "<input type='$type' class='form-control' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
-            if (isset($textPrefix) && !empty($textPrefix)) {
+            if (isset($textPrefix) && ! empty($textPrefix)) {
                 $out .= '</div>';
             }
-        } elseif (!empty($textPrefix)) {
-            $out .= "<div id='$unique_id'>" . ($textPrefix) . ' - ' . $this->getReadOnlyValue($value) . '</div>';
+        } elseif (! empty($textPrefix)) {
+            $out .= "<div id='$unique_id'>".($textPrefix).' - '.$this->getReadOnlyValue($value).'</div>';
         } else {
-            $out .= "<div id='$unique_id'>" . $this->getReadOnlyValue($value) . '</div>';
+            $out .= "<div id='$unique_id'>".$this->getReadOnlyValue($value).'</div>';
         }
+
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
@@ -438,8 +447,9 @@ class FormTemplater
             $out .= "<span class='input-group-addon'>€</span>";
             $out .= '</div>';
         } else {
-            $out .= "<div class='money' id='$unique_id' data-addtosum='$sum_id'>" . htmlspecialchars(number_format($value, 2, ',', '.')) . '&nbsp;€</div>';
+            $out .= "<div class='money' id='$unique_id' data-addtosum='$sum_id'>".htmlspecialchars(number_format($value, 2, ',', '.')).'&nbsp;€</div>';
         }
+
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
@@ -460,7 +470,7 @@ class FormTemplater
         //var_dump($selectable);
         if ($editable) {
             $additonal_array = $this->constructValidatorStrings($validator);
-            $additonal_array[] = 'data-live-search=' . ($searchable ? "'true'" : "'false'");
+            $additonal_array[] = 'data-live-search='.($searchable ? "'true'" : "'false'");
             $additonal_array[] = "data-style=''";
             $additonal_array[] = "data-style-base='form-control'";
             $additonal_str = implode(' ', $additonal_array);
@@ -476,7 +486,7 @@ class FormTemplater
                     $val = $option['value'] ?? $option['label'];
                     $sub = $option['subtext'] ?? '';
                     // do not add strict parameter to in_array
-                    $out .= "<option data-subtext='$sub' value='$val' " . (in_array($val, $values) ? 'selected' : '') . ">{$option['label']}</option>";
+                    $out .= "<option data-subtext='$sub' value='$val' ".(in_array($val, $values) ? 'selected' : '').">{$option['label']}</option>";
                 }
                 $out .= '</optgroup>';
             }
@@ -500,16 +510,17 @@ class FormTemplater
             $res = [];
             foreach ($values as $value) {
                 if (is_array($value)) {
-                    $res[] = $this->getReadOnlyValue($value['label']) . "&nbsp;<small><span class='text-muted'>" . htmlspecialchars($value['subtext']) . '</span></small>';
+                    $res[] = $this->getReadOnlyValue($value['label'])."&nbsp;<small><span class='text-muted'>".htmlspecialchars($value['subtext']).'</span></small>';
                 } else {
                     $res[] = $this->getReadOnlyValue($value);
                 }
             }
 
-            $out .= "<div data-value='" . implode(";", array_keys($tmp_vals)) . "' data-name='$name' id='$unique_id'>";
+            $out .= "<div data-value='".implode(';', array_keys($tmp_vals))."' data-name='$name' id='$unique_id'>";
             $out .= implode(',', $res);
             $out .= '</div>';
         }
+
         return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
@@ -517,7 +528,7 @@ class FormTemplater
     {
         $out = '';
 
-        $editable = !$name || $this->checkWritePermission($name);
+        $editable = ! $name || $this->checkWritePermission($name);
         $unique_id = $this->getUniqueIdFromName($name);
 
         if ($editable) {
@@ -525,8 +536,8 @@ class FormTemplater
             $additonal_str = implode(' ', $additonal_array);
             $out .= "<textarea id='$unique_id' placeholder='$placeholder' name='$name' class='form-control' rows='$min_rows' $additonal_str>$value</textarea>";
         } else {
-            $out .= "<div id='$unique_id' class='textarea_readonly'>" .
-                Helper::make_links_clickable($this->getReadOnlyValue($value)) .
+            $out .= "<div id='$unique_id' class='textarea_readonly'>".
+                Helper::make_links_clickable($this->getReadOnlyValue($value)).
                 '</div>';
         }
 
@@ -534,40 +545,39 @@ class FormTemplater
     }
 
     /**
-     * @param $names
-     * @param string|array $value
-     * @param int $width
-     * @param string|array $placeholder
-     * @param string $label_text
-     * @param array $validator
-     * @param false $daterange
-     * @param string $startDate
+     * @param  string|array  $value
+     * @param  int  $width
+     * @param  string|array  $placeholder
+     * @param  string  $label_text
+     * @param  array  $validator
+     * @param  false  $daterange
+     * @param  string  $startDate
      */
     public function getDatePickerForm($names, $value = '', $width = 12, $placeholder = '', $label_text = '', $validator = [], $daterange = false, $startDate = ''): string
     {
-        if (!is_array($value)) {
+        if (! is_array($value)) {
             $value = [$value, $value];
         }
-        if (!isset($placeholder) || !is_array($placeholder)) {
+        if (! isset($placeholder) || ! is_array($placeholder)) {
             $placeholder = [$placeholder, $placeholder];
         }
-        if (!is_array($names)) {
+        if (! is_array($names)) {
             if ($daterange) {
-                $names = [$names . '[]', $names . '[]'];
+                $names = [$names.'[]', $names.'[]'];
             } else {
                 $names = [$names];
             }
         }
         $out = '';
 
-        $editable = ((count($names) === 0 || (count($names) === 1 && !$names[0])) ? true : $this->permissionHandler->isEditable($names, 'and'));
+        $editable = ((count($names) === 0 || (count($names) === 1 && ! $names[0])) ? true : $this->permissionHandler->isEditable($names, 'and'));
         $unique_id0 = $this->getUniqueIdFromName($names[0]);
 
         if ($editable) {
             $additonal_array = $this->constructValidatorStrings($validator);
 
             $additonal_str = implode(' ', $additonal_array);
-            $out .= "<div id='$unique_id0' class='input-group " . ($daterange ? 'input-daterange' : 'date') . "' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' ><!--data-date-start-date='$startDate'-->";
+            $out .= "<div id='$unique_id0' class='input-group ".($daterange ? 'input-daterange' : 'date')."' data-provide='datepicker' data-date-format='yyyy-mm-dd' data-date-calendar-weeks='true' data-date-language='de' ><!--data-date-start-date='$startDate'-->";
             if ($daterange) {
                 $out .= "<div class='input-group-addon' style='background-color: transparent; border: none;'>von</div>";
                 $out .= "<div class='input-group'>";
@@ -601,6 +611,7 @@ class FormTemplater
             }
         }
         $out .= '</div>';
+
         return $this->getOutputWrapped($out, $width, $editable, $names[0], $unique_id0, $label_text, $validator);
     }
 

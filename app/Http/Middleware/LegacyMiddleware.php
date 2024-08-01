@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\Response;
 
 class LegacyMiddleware
@@ -16,7 +15,7 @@ class LegacyMiddleware
      */
     public function handle(Request $request, Closure $next, string $groupName): Response
     {
-        if(\Auth::user()?->getGroups()->contains($groupName)){
+        if (\Auth::user()?->getGroups()->contains($groupName)) {
             return $next($request);
         }
         //dump($groupName);

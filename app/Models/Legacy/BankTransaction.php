@@ -6,13 +6,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Thiagoprz\CompositeKey\HasCompositeKey;
 
 /**
  * App\Models\Legacy\KontoTransaction
  *
- * @property integer $id
- * @property integer $konto_id
+ * @property int $id
+ * @property int $konto_id
  * @property string $date
  * @property string $valuta
  * @property string $type
@@ -27,6 +26,7 @@ use Thiagoprz\CompositeKey\HasCompositeKey;
  * @property string $customer_ref
  * @property BankAccount $finanzformularKontoType
  * @property-read \App\Models\Legacy\BankAccount $konto
+ *
  * @method static Builder|BankTransaction newModelQuery()
  * @method static Builder|BankTransaction newQuery()
  * @method static Builder|BankTransaction query()
@@ -44,6 +44,7 @@ use Thiagoprz\CompositeKey\HasCompositeKey;
  * @method static Builder|BankTransaction whereValue($value)
  * @method static Builder|BankTransaction whereValuta($value)
  * @method static Builder|BankTransaction whereZweck($value)
+ *
  * @mixin \Eloquent
  */
 class BankTransaction extends Model
@@ -69,20 +70,16 @@ class BankTransaction extends Model
      */
     protected $fillable = ['date', 'valuta', 'type', 'empf_iban', 'empf_bic', 'empf_name', 'primanota', 'value', 'saldo', 'zweck', 'comment', 'customer_ref'];
 
-    /**
-     * @return BelongsTo
-     */
-    public function account() : BelongsTo
+    public function account(): BelongsTo
     {
         return $this->belongsTo(BankAccount::class, 'konto_id');
     }
 
-    public function getLabels() : array
+    public function getLabels(): array
     {
         $labels = [];
 
-        foreach($this->getFillable() as $attribute)
-        {
+        foreach ($this->getFillable() as $attribute) {
             $labels[$attribute] = 'konto.label.transaction.'.$attribute;
         }
 

@@ -19,16 +19,16 @@ test('csv import is not accessible as normal user', function () {
         ->assertForbidden();
 });
 
-test('show last transactions', function (){
+test('show last transactions', function () {
     $lastTransactions = [];
-    BankAccount::all()->each(function ($account) use (&$lastTransactions){
+    BankAccount::all()->each(function ($account) use (&$lastTransactions) {
         $tmp = $account->bankTransactions()->orderBy('id', 'desc')->first();
-        if($tmp){
+        if ($tmp) {
             $lastTransactions[$account->id] = $tmp;
         }
     });
     $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
-    foreach ($lastTransactions as $transaction){
+    foreach ($lastTransactions as $transaction) {
         Log::debug($transaction->date);
         $wire->set('account_id', $transaction->konto_id)
             ->assertSee(number_format($transaction->saldo, 2, ',', '.'))
@@ -39,14 +39,14 @@ test('show last transactions', function (){
 
 test('account has no transactions view', function () {
     $noTransactions = [];
-    BankAccount::all()->each(function ($account) use (&$noTransactions){
+    BankAccount::all()->each(function ($account) use (&$noTransactions) {
         $count = $account->bankTransactions()->count();
-        if($count === 0){
+        if ($count === 0) {
             $noTransactions[$account->id] = $account->id;
         }
     });
     $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
-    foreach ($noTransactions as $id){
+    foreach ($noTransactions as $id) {
         $wire->set('account_id', $id)
             ->assertSee(__('konto.csv-no-transaction'));
     }
@@ -55,7 +55,7 @@ test('account has no transactions view', function () {
 test('csv upload visibility', function () {
     $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
     $accountIds = BankAccount::all()->pluck('id')->toArray();
-    foreach ($accountIds as $accountId){
+    foreach ($accountIds as $accountId) {
         $wire->set('account_id', $accountId)
             ->assertSee(__('konto.csv-upload-headline'));
     }
@@ -63,47 +63,47 @@ test('csv upload visibility', function () {
 });
 
 const CSV_1 = [
-    'header' =>  [
-        0 => "Bezeichnung Auftragskonto",
-        1 => "IBAN Auftragskonto",
-        2 => "BIC Auftragskonto",
-        3 => "Bankname Auftragskonto",
-        4 => "Buchungstag",
-        5 => "Valutadatum",
-        6 => "Name Zahlungsbeteiligter",
-        7 => "IBAN Zahlungsbeteiligter",
-        8 => "BIC (SWIFT-Code) Zahlungsbeteiligter",
-        9 => "Buchungstext",
-        10 => "Verwendungszweck",
-        11 => "Betrag",
-        12 => "Waehrung",
-        13 => "Saldo nach Buchung",
-        14 => "Bemerkung",
-        15 => "Kategorie",
-        16 => "Steuerrelevant",
-        17 => "Glaeubiger ID",
-        18 => "Mandatsreferenz",
+    'header' => [
+        0 => 'Bezeichnung Auftragskonto',
+        1 => 'IBAN Auftragskonto',
+        2 => 'BIC Auftragskonto',
+        3 => 'Bankname Auftragskonto',
+        4 => 'Buchungstag',
+        5 => 'Valutadatum',
+        6 => 'Name Zahlungsbeteiligter',
+        7 => 'IBAN Zahlungsbeteiligter',
+        8 => 'BIC (SWIFT-Code) Zahlungsbeteiligter',
+        9 => 'Buchungstext',
+        10 => 'Verwendungszweck',
+        11 => 'Betrag',
+        12 => 'Waehrung',
+        13 => 'Saldo nach Buchung',
+        14 => 'Bemerkung',
+        15 => 'Kategorie',
+        16 => 'Steuerrelevant',
+        17 => 'Glaeubiger ID',
+        18 => 'Mandatsreferenz',
     ],
     'data' => [
-        1 => [ "AStA - Basiskonto", "DE12429644757213399722",
-            "NKZUVJYQ0P5", "Meine Bank", "2024-06-05", "2024-06-05", "Person 5", "DE63365090851878254100",
-            "IHHVRZIL", "Gutschrift", "Entry 5", "420.99", "EUR", "18474.22", "", "Sonstiges", "", "", "", ],
-        2 => [ "AStA - Basiskonto", "DE12429644757213399722",
-            "NKZUVJYQ0P5", "Meine Bank", "2024-06-05", "2024-06-05", "Person 4", "DE76169365307164900914",
-            "MWFYLYEL", "Basislastschrift", "Entry 4", "-43.40", "EUR", "18053.23", "", "Sonstiges", "", "", "", ],
-        3 => [ "AStA - Basiskonto", "DE12429644757213399722",
-            "NKZUVJYQ0P5", "Meine Bank", "2024-06-04", "2024-06-04", "Person 3", "DE67615841552532938268",
-            "MVGUQVQWJZY", "Gutschrift", "Entry 3", "2.00", "EUR", "18096.63", "", "Sonstiges", "", "", "", ],
-        4 => [ "AStA - Basiskonto", "DE12429644757213399722",
-            "NKZUVJYQ0P5", "Meine Bank", "2024-06-03", "2024-06-04", "Person 2", "DE79181333728582849451",
-            "GENODEF1SDE", "Gutschrift", "Entry 2", "5.00", "EUR", "18094.63", "", "Sonstiges", "", "", "", ],
-        5 => [ "AStA - Basiskonto", "DE12429644757213399722",
-            "NKZUVJYQ0P5", "Meine Bank", "2024-06-03", "2024-06-03", "Person 1", "DE73447318315829961821",
-            "DZFPEL2K", "Euro-Überweisung", "Entry 1", "-13.14", "EUR", "18089.63", "", "Sonstiges", "", "", "", ],
-    ]
+        1 => ['AStA - Basiskonto', 'DE12429644757213399722',
+            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-05', '2024-06-05', 'Person 5', 'DE63365090851878254100',
+            'IHHVRZIL', 'Gutschrift', 'Entry 5', '420.99', 'EUR', '18474.22', '', 'Sonstiges', '', '', '', ],
+        2 => ['AStA - Basiskonto', 'DE12429644757213399722',
+            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-05', '2024-06-05', 'Person 4', 'DE76169365307164900914',
+            'MWFYLYEL', 'Basislastschrift', 'Entry 4', '-43.40', 'EUR', '18053.23', '', 'Sonstiges', '', '', '', ],
+        3 => ['AStA - Basiskonto', 'DE12429644757213399722',
+            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-04', '2024-06-04', 'Person 3', 'DE67615841552532938268',
+            'MVGUQVQWJZY', 'Gutschrift', 'Entry 3', '2.00', 'EUR', '18096.63', '', 'Sonstiges', '', '', '', ],
+        4 => ['AStA - Basiskonto', 'DE12429644757213399722',
+            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-03', '2024-06-04', 'Person 2', 'DE79181333728582849451',
+            'GENODEF1SDE', 'Gutschrift', 'Entry 2', '5.00', 'EUR', '18094.63', '', 'Sonstiges', '', '', '', ],
+        5 => ['AStA - Basiskonto', 'DE12429644757213399722',
+            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-03', '2024-06-03', 'Person 1', 'DE73447318315829961821',
+            'DZFPEL2K', 'Euro-Überweisung', 'Entry 1', '-13.14', 'EUR', '18089.63', '', 'Sonstiges', '', '', '', ],
+    ],
 ];
 
-test('parse csv utf8 encoding', function (){
+test('parse csv utf8 encoding', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     \Livewire::actingAs(cashManager())
@@ -111,11 +111,10 @@ test('parse csv utf8 encoding', function (){
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
         ->assertSet('header', CSV_1['header'])
-        ->assertSet('data', collect(CSV_1['data']))
-    ;
+        ->assertSet('data', collect(CSV_1['data']));
 });
 
-test('parse csv win encoding', function (){
+test('parse csv win encoding', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
     \Livewire::actingAs(cashManager())
@@ -123,8 +122,7 @@ test('parse csv win encoding', function (){
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
         ->assertSet('header', CSV_1['header'])
-        ->assertSet('data', collect(CSV_1['data']))
-    ;
+        ->assertSet('data', collect(CSV_1['data']));
 });
 
 test('views showing properly', function () {
@@ -144,16 +142,15 @@ test('views showing properly', function () {
         ->assertSee(__('konto.transaction.headline'))
         ->assertSee(__('konto.transaction.headline-sub'))
         ->assertSee(__('konto.manual-button-reverse-csv-order'))
-        ->assertSee(__('konto.manual-button-reverse-csv-order-sub'))
-    ;
+        ->assertSee(__('konto.manual-button-reverse-csv-order-sub'));
     foreach ([
-        "konto.label.transaction.date", "konto.hint.transaction.date", "konto.label.transaction.valuta", "konto.hint.transaction.valuta",
-        "konto.label.transaction.type", "konto.hint.transaction.type", "konto.label.transaction.empf_iban", "konto.hint.transaction.empf_iban",
-        "konto.label.transaction.empf_bic", "konto.hint.transaction.empf_bic", "konto.label.transaction.empf_name", "konto.hint.transaction.empf_name",
-        "konto.label.transaction.primanota", "konto.hint.transaction.primanota", "konto.label.transaction.value", "konto.hint.transaction.value",
-        "konto.label.transaction.saldo", "konto.hint.transaction.saldo", "konto.label.transaction.zweck", "konto.hint.transaction.zweck",
-        "konto.label.transaction.comment", "konto.hint.transaction.comment", "konto.label.transaction.customer_ref", "konto.hint.transaction.customer_ref"
-    ] as $translationKey){
+        'konto.label.transaction.date', 'konto.hint.transaction.date', 'konto.label.transaction.valuta', 'konto.hint.transaction.valuta',
+        'konto.label.transaction.type', 'konto.hint.transaction.type', 'konto.label.transaction.empf_iban', 'konto.hint.transaction.empf_iban',
+        'konto.label.transaction.empf_bic', 'konto.hint.transaction.empf_bic', 'konto.label.transaction.empf_name', 'konto.hint.transaction.empf_name',
+        'konto.label.transaction.primanota', 'konto.hint.transaction.primanota', 'konto.label.transaction.value', 'konto.hint.transaction.value',
+        'konto.label.transaction.saldo', 'konto.hint.transaction.saldo', 'konto.label.transaction.zweck', 'konto.hint.transaction.zweck',
+        'konto.label.transaction.comment', 'konto.hint.transaction.comment', 'konto.label.transaction.customer_ref', 'konto.hint.transaction.customer_ref',
+    ] as $translationKey) {
         $lw->assertSee(__($translationKey));
     }
 });
@@ -230,11 +227,10 @@ test('only csv upload accepted', function () {
         ->set('csv', $pdf)
         ->assertHasErrors(['csv'])
         ->set('csv', $pdf_csv)
-        ->assertHasErrors(['csv'])
-    ;
+        ->assertHasErrors(['csv']);
 });
 
-test('if csv import is saved', function (){
+test('if csv import is saved', function () {
     $account_id = 4;
     $transactionAmount = BankTransaction::where('konto_id', '=', $account_id)->count();
     expect($transactionAmount)->toBe(0);
@@ -255,22 +251,21 @@ test('if csv import is saved', function (){
         ->set('mapping.saldo', 13)
         ->call('reverseCsvOrder')
         ->call('save')
-        ->assertHasNoErrors()
-    ;
+        ->assertHasNoErrors();
 
-    $transaction = BankTransaction::where('konto_id', '=',4)->first();
+    $transaction = BankTransaction::where('konto_id', '=', 4)->first();
     expect([
         $transaction?->value,
         $transaction?->saldo,
         $transaction?->empf_name,
         $transaction?->empf_iban,
-        $transaction?->zweck
+        $transaction?->zweck,
     ])->toBe([
-        "-13.14", "18089.63", "Person 1", "DE73447318315829961821", "Entry 1"
+        '-13.14', '18089.63', 'Person 1', 'DE73447318315829961821', 'Entry 1',
     ]);
 });
 
-test('if mapping was saved and loaded', function (){
+test('if mapping was saved and loaded', function () {
     $account_id = 4;
     $transactionAmount = BankTransaction::where('konto_id', '=', $account_id)->count();
     expect($transactionAmount)->toBe(5);
@@ -287,10 +282,7 @@ test('if mapping was saved and loaded', function (){
         ->assertSet('mapping.type', 9)
         ->assertSet('mapping.zweck', 10)
         ->assertSet('mapping.value', 11)
-        ->assertSet('mapping.saldo', 13)
-    ;
+        ->assertSet('mapping.saldo', 13);
 });
 
-test('csv upload with correct saldo check', function (){
-
-});
+test('csv upload with correct saldo check', function () {});

@@ -13,6 +13,7 @@ class StateHandler
      * @var string
      */
     private $actualState;
+
     /**
      * @var array
      */
@@ -22,16 +23,19 @@ class StateHandler
      * @var array
      */
     private $validations;
+
     /**
      * @var array
      */
     private $postTransitionHooks;
+
     /**
      * @var array
      */
     private $states;
 
     private $parentTableName;
+
     /**
      * @var string[][] keys: gremien, mail
      */
@@ -40,18 +44,17 @@ class StateHandler
     /**
      * StateHandler constructor.
      *
-     * @param        $parentTableName
-     * @param array $allStates
-     * @param array $transitions
-     * @param array $validations
-     * @param array $postTransitionHooks
-     * @param null $start if empty or null, draft will be picked if available, otherwise first entry in states
+     * @param  array  $allStates
+     * @param  array  $transitions
+     * @param  array  $validations
+     * @param  array  $postTransitionHooks
+     * @param  null  $start  if empty or null, draft will be picked if available, otherwise first entry in states
      */
     public function __construct($parentTableName, $allStates, $transitions, $validations = [], $postTransitionHooks = [], $start = null, array $owners = [])
     {
         $this->owners = $owners;
         $this->parentTableName = $parentTableName;
-        if (!is_array($allStates) || !is_array($transitions)) {
+        if (! is_array($allStates) || ! is_array($transitions)) {
             throw new InvalidArgumentException('Keine Arrays in States / Transitions übergeben!');
         }
 
@@ -67,21 +70,21 @@ class StateHandler
         $this->states = $allStates;
 
         foreach ($this->states as $state => $desc) {
-            if (!isset($validations[$state])) {
+            if (! isset($validations[$state])) {
                 $validations[$state] = static function ($newState) {
                     return true;
                 };
-            } elseif (!is_callable($validations[$state])) {
+            } elseif (! is_callable($validations[$state])) {
                 throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
             }
-            if (!isset($postTransitionHooks[$state])) {
+            if (! isset($postTransitionHooks[$state])) {
                 $postTransitionHooks[$state] = static function ($newState) {
                     return true;
                 };
-            } elseif (!is_callable($postTransitionHooks[$state])) {
+            } elseif (! is_callable($postTransitionHooks[$state])) {
                 throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
             }
-            if (!isset($transitions[$state])) {
+            if (! isset($transitions[$state])) {
                 throw new InvalidArgumentException("Cannot find state '$state' in \$transition array as key");
             }
         }
@@ -97,8 +100,6 @@ class StateHandler
     }
 
     /**
-     * @param $newState
-     *
      * @return bool
      *
      * @throws IllegalStateException
@@ -106,13 +107,13 @@ class StateHandler
      */
     public function transitionTo($newState)
     {
-        if (!$this->isExitingState($newState)) {
+        if (! $this->isExitingState($newState)) {
             throw new IllegalStateException("$newState nicht bekannt!");
         }
-        if (!$this->isTransitionableTo($newState)) {
+        if (! $this->isTransitionableTo($newState)) {
             throw new IllegalTransitionException("$this->actualState nicht in $newState überführbar - Daten fehlen!");
         }
-        if (!$this->isAllowedToTransitionTo($newState)) {
+        if (! $this->isAllowedToTransitionTo($newState)) {
             throw new IllegalTransitionException("$this->actualState nicht in $newState überführbar - nicht die passenden Rechte!");
         }
         $oldState = $this->actualState;
@@ -120,19 +121,17 @@ class StateHandler
         if (isset($this->postTransitionHooks[$oldState])) {
             return $this->postTransitionHooks[$oldState]($newState);
         }
+
         return true;
     }
 
-    /**
-     * @param $state
-     */
     private function isExitingState($state): bool
     {
         return isset($this->states[$state]);
     }
 
     /**
-     * @param $newState string
+     * @param  $newState  string
      */
     public function isTransitionableTo($newState): bool
     {
@@ -177,6 +176,7 @@ class StateHandler
             $ret = $ret || AuthHandler::getInstance()->hasGremium($this->owners['gremien']);
             $ret = $ret || AuthHandler::getInstance()->getUserMail() === $this->owners['mail'];
         }
+
         // var_dump($ret);
         return $ret;
     }
@@ -189,6 +189,7 @@ class StateHandler
                 $ret[] = $stateName;
             }
         }
+
         return $ret;
     }
 
@@ -198,7 +199,7 @@ class StateHandler
     }
 
     /**
-     * @param $onlyValidChanges bool
+     * @param  $onlyValidChanges  bool
      */
     public function getNextStates($onlyValidChanges = false): array
     {
@@ -206,8 +207,8 @@ class StateHandler
     }
 
     /**
-     * @param $state            string
-     * @param $onlyValidChanges bool
+     * @param  $state  string
+     * @param  $onlyValidChanges  bool
      */
     public function getNextStatesFrom($state, $onlyValidChanges = false): array
     {
@@ -222,6 +223,7 @@ class StateHandler
         } else {
             $ret = array_keys($list);
         }
+
         return $ret;
     }
 
@@ -231,13 +233,14 @@ class StateHandler
     }
 
     /**
-     * @param $state string
+     * @param  $state  string
      */
     public function getFullStateNameFrom(string $state): string
     {
-        if (!$this->isExitingState($state)) {
+        if (! $this->isExitingState($state)) {
             return false;
         }
+
         return $this->states[$state][0] ?? $state;
     }
 
@@ -247,7 +250,7 @@ class StateHandler
     }
 
     /**
-     * @param $state string
+     * @param  $state  string
      */
     public function getAltStateNameFrom($state): string
     {

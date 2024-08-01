@@ -236,6 +236,6 @@ return [
     'chat' => [
         'public_key' => env('CHAT_PUBLIC_KEY'),
         'private_key' => env('CHAT_PRIVATE_KEY'),
-    ]
+    ],
 
 ];

@@ -7,15 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\ProjectPost
  *
- * @property integer $id
- * @property integer $projekt_id
- * @property integer $titel_id
+ * @property int $id
+ * @property int $projekt_id
+ * @property int $titel_id
  * @property float $einnahmen
  * @property float $ausgaben
  * @property string $name
  * @property string $bemerkung
  * @property Project $projekte
  * @property-read \App\Models\Legacy\Project $project
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost query()
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereProjektId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereTitelId($value)
+ *
  * @mixin \Eloquent
  */
 class ProjectPost extends Model

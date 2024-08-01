@@ -8,16 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\KontoCredential
  *
- * @property integer $id
- * @property integer $bank_id
- * @property integer $owner_id
+ * @property int $id
+ * @property int $bank_id
+ * @property int $owner_id
  * @property string $name
  * @property string $bank_username
- * @property integer $tan_mode
+ * @property int $tan_mode
  * @property string $tan_medium_name
  * @property string $tan_mode_name
  * @property Bank $kontoBank
  * @property User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential query()
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanMediumName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanMode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanModeName($value)
+ *
  * @mixin \Eloquent
  */
 class BankAccountCredential extends Model
