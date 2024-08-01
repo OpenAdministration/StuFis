@@ -18,9 +18,9 @@
         ])>
             <label for="dropzone-file" class="flex flex-col items-center">
                 <div @class([
-                "flex flex-col items-center justify-center pt-5 pb-6",
-                "hidden" => $uploadDone,
-            ])>
+                    "flex flex-col items-center justify-center pt-5 pb-6",
+                    "hidden" => $uploadDone,
+                ])>
                     <x-fas-upload class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"/>
                     {{ $slot }}
                 </div>
