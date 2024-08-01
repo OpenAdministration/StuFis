@@ -29,6 +29,7 @@
         "barryvdh/laravel-debugbar": "^3.12",
         "barryvdh/laravel-ide-helper": "^2.13",
         "fakerphp/faker": "^1.9.1",
+        "laravel/pint": "^1.17",
         "laravel/sail": "^1.0.1",
         "laravel/tinker": "^2.7",
         "mockery/mockery": "^1.4.4",
