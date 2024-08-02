@@ -32,6 +32,7 @@
         "laravel/pint": "^1.17",
         "laravel/sail": "^1.0.1",
         "laravel/tinker": "^2.7",
+        "magentron/laravel-blade-lint": "^2.0",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^v7.0",
         "pestphp/pest": "^2.34",
