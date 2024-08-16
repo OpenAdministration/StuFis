@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class BudgetPlan extends Model
 {
-
     use HasFactory;
 
     /**
@@ -46,12 +45,8 @@ class BudgetPlan extends Model
 
     ];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BudgetItem::class);
     }
-
 }

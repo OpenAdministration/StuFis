@@ -26,33 +26,33 @@ class BookingHandler extends Renderer
         switch ($this->routeInfo['action']) {
             case 'instruct':
                 $this->renderBooking('instruct');
-            break;
+                break;
             case 'confirm-instruct':
                 $this->setBookingTabs('text', $this->routeInfo['hhp-id']);
                 $this->renderBookingText();
-            break;
+                break;
             case 'konto':
                 $kontoId = $this->routeInfo['konto-id'] ?? 0;
                 $this->renderKonto($kontoId);
-            break;
+                break;
             case 'history':
                 $this->renderBookingHistory('history');
-            break;
+                break;
             case 'export-csv':
                 $this->renderCSV();
-            break;
+                break;
             case 'export-zip':
                 $this->renderFullBookingZip();
-            break;
+                break;
             default:
                 throw new LegacyDieException(400, "Action: {$this->routeInfo['action']} kann nicht interpretiert werden");
-            break;
+                break;
         }
     }
 
     private function setBookingTabs($active, $active_hhp_id): void
     {
-        $linkbase = URIBASE . "booking/$active_hhp_id/";
+        $linkbase = URIBASE."booking/$active_hhp_id/";
         $tabs = [
             'instruct' => "<i class='fa fa-fw fa-legal'></i> Anweisen",
             'text' => "<i class='fa fa-fw fa-file-text-o'></i> Durchführen",
@@ -63,7 +63,7 @@ class BookingHandler extends Renderer
 
     private function renderCSV(): void
     {
-        if (!isset($this->routeInfo['hhp-id'])) {
+        if (! isset($this->routeInfo['hhp-id'])) {
             throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
         }
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB($this->routeInfo['hhp-id']);
@@ -80,19 +80,19 @@ class BookingHandler extends Renderer
             'comment' => 'Buchungstext',
         ];
         foreach ($data as $lfdNr => $row) {
-            $userStr = isset($row['fullname']) ? $row['fullname'] . ' (' . $row['username'] . ')' : $row['username'];
+            $userStr = isset($row['fullname']) ? $row['fullname'].' ('.$row['username'].')' : $row['username'];
             $belegStr = '';
 
             switch ($row['beleg_type']) {
                 case 'belegposten':
-                    $belegStr = "IP{$row['projekt_id']} A{$row['auslagen_id']} - " . $row['short'];
-                break;
+                    $belegStr = "IP{$row['projekt_id']} A{$row['auslagen_id']} - ".$row['short'];
+                    break;
                 case 'extern':
                     $belegStr = "E{$row['extern_id']} - V n.a.";
-                break;
+                    break;
                 default:
-                    throw new LegacyDieException(400, 'Unknown beleg_type: ' . $row['beleg_type']);
-                break;
+                    throw new LegacyDieException(400, 'Unknown beleg_type: '.$row['beleg_type']);
+                    break;
             }
 
             $csvData[] = [
@@ -102,7 +102,7 @@ class BookingHandler extends Renderer
                 'beleg_name' => $belegStr,
                 'datum' => $row['timestamp'],
                 'user' => $userStr,
-                'zahlung-name' => $kontoTypes[$row['zahlung_type']]['short'] . $row['zahlung_id'],
+                'zahlung-name' => $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'],
                 'zahlung-datum' => $row['zahlung_date'],
                 'comment' => $row['comment'],
             ];
@@ -112,21 +112,21 @@ class BookingHandler extends Renderer
         $hhp = $hhps[$this->routeInfo['hhp-id']];
         $von = date_create($hhp['von'])->format('Y-m');
         $bis = date_create($hhp['bis'])->format('Y-m');
-        $csvBuilder->echoCSV(date_create()->format('Y-m-d') . "-Buchungsliste-$von-bis-$bis");
+        $csvBuilder->echoCSV(date_create()->format('Y-m-d')."-Buchungsliste-$von-bis-$bis");
     }
 
     private function renderFullBookingZip(): void
     {
-        if (!isset($this->routeInfo['hhp-id'])) {
+        if (! isset($this->routeInfo['hhp-id'])) {
             throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
         }
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zipFileName = 'HHA.zip';
         $zipFilePath = tempnam(sys_get_temp_dir(), 'HHA');
 
         if (($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true) {
-            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: ' . $ret);
+            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: '.$ret);
         }
 
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB(
@@ -156,40 +156,40 @@ class BookingHandler extends Renderer
 
         foreach ($dataByTitel as $titel_nr => $items) {
             foreach ($items as $key => $row) {
-                $items[$key]['zahlung'] = $kontoTypes[$row['zahlung_type']]['short'] . $row['zahlung_id'];
+                $items[$key]['zahlung'] = $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'];
                 $items[$key]['einnahmen'] = ($row['zahlung_value'] > 0) ? (float) $row['zahlung_value'] : '0.00';
                 $items[$key]['ausgaben'] = ($row['zahlung_value'] < 0) ? -(float) $row['zahlung_value'] : '0.00';
                 switch ($row['beleg_type']) {
                     case 'belegposten':
                         $items[$key]['beleg_type'] = 'Intern';
-                    break;
+                        break;
                     case 'extern':
                         $items[$key]['beleg_type'] = 'Extern';
-                    break;
+                        break;
                     default:
-                        throw new LegacyDieException(400, $row['beleg_type'] . 'kann nicht interpretiert werden');
-                    break;
+                        throw new LegacyDieException(400, $row['beleg_type'].'kann nicht interpretiert werden');
+                        break;
                 }
             }
             $items[] = [
                 'id' => '',
                 'zahlung_date' => 'Summe',
-                'value' => '=SUM(C2:C' . (count($items) + 1) . ')',
+                'value' => '=SUM(C2:C'.(count($items) + 1).')',
                 'zahlung' => '',
-                'einnahmen' => '=SUM(E2:E' . (count($items) + 1) . ')',
-                'ausgaben' => '=SUM(F2:F' . (count($items) + 1) . ')',
+                'einnahmen' => '=SUM(E2:E'.(count($items) + 1).')',
+                'ausgaben' => '=SUM(F2:F'.(count($items) + 1).')',
                 'beleg_type' => '',
                 'comment' => '',
             ];
             $csvHandler = new CSVBuilder($items, $header);
             $csvString = $csvHandler->getCSV();
-            $zip->addFromString($titel_nr . '.csv', $csvString);
+            $zip->addFromString($titel_nr.'.csv', $csvString);
         }
 
         if ($zip->close() === true && ($content = file_get_contents($zipFilePath)) !== false) {
             header('Content-Type: application/zip');
-            header('Content-disposition: attachment; filename=' . $zipFileName);
-            header('Content-Length: ' . filesize($zipFileName));
+            header('Content-disposition: attachment; filename='.$zipFileName);
+            header('Content-Length: '.filesize($zipFileName));
             echo $content;
             unlink($zipFilePath);
         } else {
@@ -265,12 +265,12 @@ class BookingHandler extends Renderer
 
     private function renderBookingHistory($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . 'booking/', '/history');
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE.'booking/', '/history');
         $this->setBookingTabs($active, $hhp_id);
 
         [$kontoTypes, $ret] = $this->fetchBookingHistoryDataFromDB($hhp_id);
 
-        if (!empty($ret)) {
+        if (! empty($ret)) {
             // var_dump(reset($ret));?>
             <table class="table" align="right">
                 <thead>
@@ -288,7 +288,7 @@ class BookingHandler extends Renderer
                 <tbody>
 				<?php
                 foreach ($ret as $lfdNr => $row) {
-                    $userStr = isset($row['fullname']) ? $row['fullname'] . ' (' . $row['username'] . ')' : $row['username']; ?>
+                    $userStr = isset($row['fullname']) ? $row['fullname'].' ('.$row['username'].')' : $row['username']; ?>
                     <tr class=" <?php echo (int) $row['canceled'] !== 0 ? 'booking__canceled-row' : ''; ?>">
 
                         <td class="no-wrap">
@@ -297,7 +297,7 @@ class BookingHandler extends Renderer
                         <td class="money no-wrap <?php echo TextStyle::BOLD; ?>">
 							<?php echo DBConnector::getInstance()->convertDBValueToUserValue($row['value'], 'money'); ?>
                         </td>
-                        <td class="<?php echo TextStyle::PRIMARY . ' ' . TextStyle::BOLD; ?> no-wrap">
+                        <td class="<?php echo TextStyle::PRIMARY.' '.TextStyle::BOLD; ?> no-wrap">
 							<?php echo trim(htmlspecialchars($row['titel_nr'])); ?>
                         </td>
 						<?php
@@ -305,15 +305,15 @@ class BookingHandler extends Renderer
                             case 'belegposten':
                                 $projektId = $row['projekt_id'];
                                 $auslagenId = $row['auslagen_id'];
-                                echo "<td class='no-wrap'>" . generateLinkFromID(
-                                        "A$auslagenId&nbsp;-&nbsp;B" . $row['short'],
-                                        "projekt/$projektId/auslagen/$auslagenId",
-                                        TextStyle::BLACK
-                                    ) . '</td>';
-                            break;
+                                echo "<td class='no-wrap'>".generateLinkFromID(
+                                    "A$auslagenId&nbsp;-&nbsp;B".$row['short'],
+                                    "projekt/$projektId/auslagen/$auslagenId",
+                                    TextStyle::BLACK
+                                ).'</td>';
+                                break;
                             case 'extern':
                                 $eId = $row['extern_id'];
-                                $vId = "n.a.";
+                                $vId = 'n.a.';
                                 /*generateLinkFromID(
                                     "E$eId&nbsp;-&nbsp;V" . $vId,
                                     "rest/extern/$eId/$vId",
@@ -322,9 +322,9 @@ class BookingHandler extends Renderer
                                 ?>
                                 <td class='no-wrap'>
                                     <form method="POST"
-                                          action="<?php echo URIBASE; ?>rest/forms/extern/<?php echo $eId . '/' . $vId; ?>/zahlungsanweisung"
+                                          action="<?php echo URIBASE; ?>rest/forms/extern/<?php echo $eId.'/'.$vId; ?>/zahlungsanweisung"
                                           class="ajax-form">
-										<?php echo 'E' . $eId . ' - V' . $vId; ?>
+										<?php echo 'E'.$eId.' - V'.$vId; ?>
                                         <button type='submit' class='btn-link'><i class='fa fa-print'></i></button>
                                         <?php $this->renderNonce() ?>
                                         <input type="hidden" name="d" value="0">
@@ -333,21 +333,21 @@ class BookingHandler extends Renderer
 								<?php
                             break;
                             default:
-                                throw new LegacyDieException(400, 'Unknown beleg_type: ' . $row['beleg_type']);
+                                throw new LegacyDieException(400, 'Unknown beleg_type: '.$row['beleg_type']);
                         } ?>
                         <td class="no-wrap">
 							<?php echo date('d.m.Y', strtotime($row['timestamp'])); ?>
-                            <i title="<?php echo $row['timestamp'] . ' von ' . $userStr; ?>"
+                            <i title="<?php echo $row['timestamp'].' von '.$userStr; ?>"
                                class="fa fa-fw fa-question-circle" aria-hidden="true"></i>
                         </td>
 
                         <td class="no-wrap"
-                            title="<?php echo 'DATUM: ' . $row['zahlung_date'] . PHP_EOL . 'WERT: ' . $row['zahlung_value']; ?>">
+                            title="<?php echo 'DATUM: '.$row['zahlung_date'].PHP_EOL.'WERT: '.$row['zahlung_value']; ?>">
 							<?php echo generateLinkFromID(
-                                $kontoTypes[$row['zahlung_type']]['short'] . $row['zahlung_id'],
-                                '',
-                                TextStyle::BLACK
-                            ); ?>
+							    $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'],
+							    '',
+							    TextStyle::BLACK
+							); ?>
                         </td>
 						<?php if ($row['canceled'] === 0) { ?>
                             <td class="no-wrap">
@@ -369,8 +369,8 @@ class BookingHandler extends Renderer
                             <td>Durch <a href='#<?php echo $row['canceled']; ?>'>B-Nr: <?php echo $row['canceled']; ?></a></td>
 						<?php } ?>
                         <td class="col-xs-4 <?php echo TextStyle::SECONDARY; ?>"><?php echo htmlspecialchars(
-                                $row['comment']
-                            ); ?></td>
+                            $row['comment']
+                        ); ?></td>
                     </tr>
 				<?php
                 } ?>
@@ -399,7 +399,7 @@ class BookingHandler extends Renderer
     {
         // TODO: filter kontos?
         $kontos = array_map(fn ($item) => $item['name'], $kontos);
-        $linkbase = URIBASE . "konto/$selected_hhp_id/";
+        $linkbase = URIBASE."konto/$selected_hhp_id/";
         $tabs = [];
         foreach ($kontos as $id => $kontoName) {
             $icon = $id > 0 ? 'fa-credit-card' : 'fa-money';
@@ -410,7 +410,7 @@ class BookingHandler extends Renderer
 
     private function renderKonto(int $kontoId = 0): void
     {
-        [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . 'konto/', '/' . $kontoId);
+        [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE.'konto/', '/'.$kontoId);
         $startDate = $hhps[$selected_id]['von'];
         $endDate = $hhps[$selected_id]['bis'];
         $where = ['konto_id' => $kontoId];
@@ -434,10 +434,14 @@ class BookingHandler extends Renderer
         );
         $this->setKontoTabs($kontoId, $selected_id, $kontos);
         $this->renderFintsButton();
-        if ($kontoId > 0) {
-            $this->renderKontoBank($alZahlung, $kontos);
-        } else {
+
+        $konto = DBConnector::getInstance()->dbFetchAll('konto_type', where: ['id' => $kontoId]);
+        $editable = $konto[0]['manually_enterable'] ?? null; // ?? for non existing konto with id 0
+
+        if ($editable ?? $kontoId <= 0) {
             $this->renderKontoKasse($kontoId, $alZahlung, $kontos);
+        } else {
+            $this->renderKontoBank($alZahlung, $kontos);
         }
     }
 
@@ -486,16 +490,16 @@ class BookingHandler extends Renderer
                     $prefix = $kontos[$row['konto_id']]['short'];
                     echo '<tr>';
                     echo "<td>{$prefix}{$row['id']}</td>";
-                    echo '<td>' . date_create($row['date'])->format('d.m.Y') . '</td>';
+                    echo '<td>'.date_create($row['date'])->format('d.m.Y').'</td>';
                     echo "<td>{$row['type']} - {$row['zweck']}</td>";
-                    echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
-                            $row['value'],
-                            'money'
-                        ) . '</td>';
-                    echo "<td class='money'>" . DBConnector::getInstance()->convertDBValueToUserValue(
-                            $row['saldo'],
-                            'money'
-                        ) . '</td>';
+                    echo "<td class='money'>".DBConnector::getInstance()->convertDBValueToUserValue(
+                        $row['value'],
+                        'money'
+                    ).'</td>';
+                    echo "<td class='money'>".DBConnector::getInstance()->convertDBValueToUserValue(
+                        $row['saldo'],
+                        'money'
+                    ).'</td>';
                     echo '<td>FIXME</td>';
                     echo '</tr>';
                 } ?>
@@ -511,7 +515,7 @@ class BookingHandler extends Renderer
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Datum</th>
+                <th>Valuta</th>
                 <th>Empfänger</th>
                 <th class="visible-md visible-lg">Verwendungszweck</th>
                 <th class="visible-md visible-lg">IBAN</th>
@@ -521,15 +525,15 @@ class BookingHandler extends Renderer
             </thead>
             <tbody>
             <?php foreach ($alZahlung as $zahlung) {
-        $prefix = $kontos[$zahlung['konto_id']]['short'];
-        $vzweck = explode('DATUM', $zahlung['zweck'])[0];
-        if (empty($vzweck)) {
-            $vzweck = $zahlung['type'];
-        } ?>
+                $prefix = $kontos[$zahlung['konto_id']]['short'];
+                $vzweck = explode('DATUM', $zahlung['zweck'])[0];
+                if (empty($vzweck)) {
+                    $vzweck = $zahlung['type'];
+                } ?>
                 <tr title="<?php echo htmlspecialchars(
-                    $zahlung['type'] . ' - IBAN: ' . $zahlung['empf_iban'] . ' - BIC: ' . $zahlung['empf_bic'] . PHP_EOL . $zahlung['zweck']
+                    $zahlung['type'].' - IBAN: '.$zahlung['empf_iban'].' - BIC: '.$zahlung['empf_bic'].PHP_EOL.$zahlung['zweck']
                 ); ?>">
-                    <td><?php echo htmlspecialchars($prefix . $zahlung['id']); ?></td>
+                    <td><?php echo htmlspecialchars($prefix.$zahlung['id']); ?></td>
                     <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
                     <td><?php echo htmlspecialchars($zahlung['valuta']); ?></td>
                     <td><?php echo htmlspecialchars($zahlung['empf_name']); ?></td>
@@ -543,7 +547,7 @@ class BookingHandler extends Renderer
                     </td>
                 </tr>
                 <?php
-    } ?>
+            } ?>
             </tbody>
         </table>
         <?php
@@ -552,38 +556,38 @@ class BookingHandler extends Renderer
     private function renderFintsButton(): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
-        echo "Kontoauszüge importieren: ";
+        echo 'Kontoauszüge importieren: ';
         echo HtmlButton::make()
-            ->asLink(URIBASE . 'konto/credentials')
+            ->asLink(URIBASE.'konto/credentials')
             ->style('primary')
             ->icon('refresh')
-            ->disable(!$isKv)
-            ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
+            ->disable(! $isKv)
+            ->title(! $isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
             ->body('mit Bankzugang');
-        echo "&nbsp;";
+        echo '&nbsp;';
         echo HtmlButton::make()
-            ->asLink(URIBASE . 'konto/import/manual')
+            ->asLink(URIBASE.'konto/import/manual')
             ->style('primary')
             ->icon('upload')
-            ->disable(!$isKv)
-            ->title(!$isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
+            ->disable(! $isKv)
+            ->title(! $isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
             ->body('mit CSV');
     }
 
     private function renderBookingText(): void
     {
-        $btm = new BookingTableManager();
+        $btm = new BookingTableManager;
         $btm->render();
     }
 
     private function renderBooking(string $active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE . 'booking/', '/instruct');
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->routeInfo, URIBASE.'booking/', '/instruct');
         $this->setBookingTabs($active, $hhp_id);
         $startDate = $hhps[$hhp_id]['von'];
         $endDate = $hhps[$hhp_id]['bis'];
 
-        if (!isset($endDate) || empty($endDate)) {
+        if (! isset($endDate) || empty($endDate)) {
             $fixedWhere = [
                 'date' => ['>=', $startDate],
             ];
@@ -710,89 +714,89 @@ class BookingHandler extends Renderer
                 </thead>
                 <?php
                 $idxZahlung = 0;
-            $idxGrund = 0;
-            while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)) {
-                echo '<tr>';
-                if (isset($alZahlung[$idxZahlung])) {
-                    if (isset($alGrund[$idxGrund])) {
-                        $value = min(
-                                [(float) $alZahlung[$idxZahlung]['value'], $alGrund[$idxGrund]['value']]
-                            );
-                    } else {
-                        // var_dump($alZahlung[$idxZahlung]);
-                        $value = (float) $alZahlung[$idxZahlung]['value'];
-                    }
+        $idxGrund = 0;
+        while ($idxZahlung < count($alZahlung) || $idxGrund < count($alGrund)) {
+            echo '<tr>';
+            if (isset($alZahlung[$idxZahlung])) {
+                if (isset($alGrund[$idxGrund])) {
+                    $value = min(
+                        [(float) $alZahlung[$idxZahlung]['value'], $alGrund[$idxGrund]['value']]
+                    );
                 } else {
-                    $value = $alGrund[$idxGrund]['value'];
+                    // var_dump($alZahlung[$idxZahlung]);
+                    $value = (float) $alZahlung[$idxZahlung]['value'];
                 }
-                echo '<td>';
+            } else {
+                $value = $alGrund[$idxGrund]['value'];
+            }
+            echo '<td>';
 
-                while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
-                    echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
+            while (isset($alZahlung[$idxZahlung]) && (float) $alZahlung[$idxZahlung]['value'] === $value) {
+                echo "<input type='checkbox' class='form-check-input booking__form-zahlung' data-value='{$value}' data-id='{$alZahlung[$idxZahlung]['id']}' data-type='{$alZahlung[$idxZahlung]['konto_id']}'>";
 
-                    // print_r($alZahlung[$idxZahlung]);
-                    if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
-                        $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
-                        $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}" . PHP_EOL . "DATUM: {$alZahlung[$idxZahlung]['date']}";
-                    } else {
-                        $title = 'VALUTA: ' . $alZahlung[$idxZahlung]['valuta'] . PHP_EOL . 'IBAN: ' . $alZahlung[$idxZahlung]['empf_iban'] . PHP_EOL . 'BIC: ' . $alZahlung[$idxZahlung]['empf_bic'];
-                        $caption = $konto_types[$alZahlung[$idxZahlung]['konto_id']]['short'];
-                        $caption .= $alZahlung[$idxZahlung]['id'] . ' - ';
-                        // shorten and simplify some types
-                        $caption .= match ($alZahlung[$idxZahlung]['type']) {
-                            'FOLGELASTSCHRIFT' => 'LASTSCHRIFT',
-                            'ONLINE-UEBERWEISUNG' => 'ÜBERWEISUNG',
-                            'UEBERWEISUNGSGUTSCHRIFT' => 'GUTSCHRIFT',
-                            default => $alZahlung[$idxZahlung]['type'],
-                        };
-                        $caption .= $value < 0 ? ' an ' : ' von ';
-                        $caption .= $alZahlung[$idxZahlung]['empf_name'] . ' - ' .
-                                explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
-                    }
-
-                    $url = str_replace('//', '/', URIBASE . '/zahlung/' . $alZahlung[$idxZahlung]['id']);
-                    echo "<a href='" . htmlspecialchars($url) . "' title='" . htmlspecialchars(
-                                $title
-                            ) . "'>" . htmlspecialchars($caption) . '</a>';
-                    ++$idxZahlung;
-                    echo '<br>';
+                // print_r($alZahlung[$idxZahlung]);
+                if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
+                    $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
+                    $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}".PHP_EOL."DATUM: {$alZahlung[$idxZahlung]['date']}";
+                } else {
+                    $title = 'VALUTA: '.$alZahlung[$idxZahlung]['valuta'].PHP_EOL.'IBAN: '.$alZahlung[$idxZahlung]['empf_iban'].PHP_EOL.'BIC: '.$alZahlung[$idxZahlung]['empf_bic'];
+                    $caption = $konto_types[$alZahlung[$idxZahlung]['konto_id']]['short'];
+                    $caption .= $alZahlung[$idxZahlung]['id'].' - ';
+                    // shorten and simplify some types
+                    $caption .= match ($alZahlung[$idxZahlung]['type']) {
+                        'FOLGELASTSCHRIFT' => 'LASTSCHRIFT',
+                        'ONLINE-UEBERWEISUNG' => 'ÜBERWEISUNG',
+                        'UEBERWEISUNGSGUTSCHRIFT' => 'GUTSCHRIFT',
+                        default => $alZahlung[$idxZahlung]['type'],
+                    };
+                    $caption .= $value < 0 ? ' an ' : ' von ';
+                    $caption .= $alZahlung[$idxZahlung]['empf_name'].' - '.
+                            explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
                 }
-                echo "</td><td class='money'>";
-                echo DBConnector::getInstance()->convertDBValueToUserValue($value, 'money');
-                echo '</td><td>';
-                while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]['value'] === $value) {
-                    switch ($alGrund[$idxGrund]['type']) {
-                            case 'auslage':
-                                echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage' data-id='{$alGrund[$idxGrund]['id']}'>";
-                                $caption = 'A' . $alGrund[$idxGrund]['id'] . ' - ' . $alGrund[$idxGrund]['name'] . ' - ' . $alGrund[$idxGrund]['name_suffix'];
-                                $url = str_replace(
-                                    '//',
-                                    '/',
-                                    URIBASE . "/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/" . $alGrund[$idxGrund]['id']
-                                );
-                            break;
-                            /*case 'extern':
-                                echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='$value' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
-                                $caption = 'E' . $alGrund[$idxGrund]['extern_id'] . '-V' . $alGrund[$idxGrund]['vorgang_id'] .
-                                    ' - ' . $alGrund[$idxGrund]['projekt_name'] . ' - ' . $alGrund[$idxGrund]['org_name'];
-                                $url = str_replace(
-                                    '//',
-                                    '/',
-                                    URIBASE . '/extern/' . $alGrund[$idxGrund]['extern_id']
-                                );
-                            break;*/
-                            default:
-                                throw new LegacyDieException(400, 'Type ' . $alGrund[$idxGrund]['type'] . ' not known');
-                            break;
-                        }
 
-                    echo "<a href='" . htmlspecialchars($url) . "'>" . $caption . '</a>';
-                    ++$idxGrund;
-                    echo '<br>';
+                $url = str_replace('//', '/', URIBASE.'/zahlung/'.$alZahlung[$idxZahlung]['id']);
+                echo "<a href='".htmlspecialchars($url)."' title='".htmlspecialchars(
+                    $title
+                )."'>".htmlspecialchars($caption).'</a>';
+                $idxZahlung++;
+                echo '<br>';
+            }
+            echo "</td><td class='money'>";
+            echo DBConnector::getInstance()->convertDBValueToUserValue($value, 'money');
+            echo '</td><td>';
+            while (isset($alGrund[$idxGrund]) && $alGrund[$idxGrund]['value'] === $value) {
+                switch ($alGrund[$idxGrund]['type']) {
+                    case 'auslage':
+                        echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='{$value}' data-type='auslage' data-id='{$alGrund[$idxGrund]['id']}'>";
+                        $caption = 'A'.$alGrund[$idxGrund]['id'].' - '.$alGrund[$idxGrund]['name'].' - '.$alGrund[$idxGrund]['name_suffix'];
+                        $url = str_replace(
+                            '//',
+                            '/',
+                            URIBASE."/projekt/{$alGrund[$idxGrund]['projekt_id']}/auslagen/".$alGrund[$idxGrund]['id']
+                        );
+                        break;
+                        /*case 'extern':
+                            echo "<input type='checkbox' class='form-check-input booking__form-beleg' data-value='$value' data-type='extern' data-id='{$alGrund[$idxGrund]['id']}' data-v-id='{$alGrund[$idxGrund]['vorgang_id']}' data-e-id='{$alGrund[$idxGrund]['id']}'>";
+                            $caption = 'E' . $alGrund[$idxGrund]['extern_id'] . '-V' . $alGrund[$idxGrund]['vorgang_id'] .
+                                ' - ' . $alGrund[$idxGrund]['projekt_name'] . ' - ' . $alGrund[$idxGrund]['org_name'];
+                            $url = str_replace(
+                                '//',
+                                '/',
+                                URIBASE . '/extern/' . $alGrund[$idxGrund]['extern_id']
+                            );
+                        break;*/
+                    default:
+                        throw new LegacyDieException(400, 'Type '.$alGrund[$idxGrund]['type'].' not known');
+                        break;
                 }
-                echo '</td>';
-                echo '</tr>';
-            } ?>
+
+                echo "<a href='".htmlspecialchars($url)."'>".$caption.'</a>';
+                $idxGrund++;
+                echo '<br>';
+            }
+            echo '</td>';
+            echo '</tr>';
+        } ?>
             </table>
         </div>
         <!--<form id="instruct-booking" role="form" action="<?php echo URIBASE; ?>rest/booking/cancel" method="POST"

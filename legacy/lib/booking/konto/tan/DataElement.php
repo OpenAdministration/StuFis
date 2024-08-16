@@ -7,11 +7,15 @@ use InvalidArgumentException;
 class DataElement
 {
     public const ENC_ASCII = '1';
+
     public const ENC_ASC = self::ENC_ASCII;
+
     public const ENC_BCD = '0';
 
     protected string $enc;
+
     protected string $data;
+
     protected string $headerHighBit;
 
     public static function parseNextBlock($challenge): array
@@ -25,6 +29,7 @@ class DataElement
             throw new InvalidArgumentException('Parsing went wromg');
         }
         $rest = substr($challenge, 2 + $length);
+
         return [$rest, new self($data)];
     }
 
@@ -47,13 +52,15 @@ class DataElement
         if ($this->enc === self::ENC_BCD) {
             return ceil(strlen($this->data) / 2);
         }
+
         return strlen($this->data);
     }
 
     public function getHeaderHex(): string
     {
         $lengthBin = str_pad(base_convert($this->getLength(), 10, 2), 6, '0', STR_PAD_LEFT);
-        $headerHex = base_convert($this->headerHighBit . $this->enc . $lengthBin, 2, 16);
+        $headerHex = base_convert($this->headerHighBit.$this->enc.$lengthBin, 2, 16);
+
         return str_pad($headerHex, 2, '0', STR_PAD_LEFT);
     }
 
@@ -66,6 +73,7 @@ class DataElement
             if (strlen($hexData) % 2 === 1) {
                 $hexData .= 'F';
             }
+
             return $hexData;
         }
         // ASCII encoding
@@ -73,6 +81,7 @@ class DataElement
         foreach (str_split($this->data) as $char) {
             $hexData .= base_convert(ord($char), 10, 16);
         }
+
         return $hexData;
     }
 
@@ -81,12 +90,14 @@ class DataElement
         if (empty($this->data)) {
             return '';
         }
-        return $this->getHeaderHex() . $this->getDataHex();
+
+        return $this->getHeaderHex().$this->getDataHex();
     }
 
     public static function hexToByte(string $hex, int $length = 8): string
     {
         $byte = base_convert($hex, 16, 2);
+
         return str_pad($byte, $length, '0', STR_PAD_LEFT);
     }
 
@@ -110,8 +121,9 @@ class DataElement
             } else {
                 $sum += $number;
             }
-            $doubleIt = !$doubleIt;
+            $doubleIt = ! $doubleIt;
         }
+
         return $sum;
     }
 

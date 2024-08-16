@@ -9,21 +9,22 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\Booking
  *
- * @property integer $id
- * @property integer $titel_id
- * @property integer $user_id
- * @property integer $kostenstelle
- * @property integer $zahlung_id
- * @property integer $zahlung_type
- * @property integer $beleg_id
+ * @property int $id
+ * @property int $titel_id
+ * @property int $user_id
+ * @property int $kostenstelle
+ * @property int $zahlung_id
+ * @property int $zahlung_type
+ * @property int $beleg_id
  * @property string $beleg_type
  * @property string $timestamp
  * @property string $comment
  * @property float $value
- * @property integer $canceled
+ * @property int $canceled
  * @property BudgetItem $haushaltstitel
  * @property User $user
  * @property-read BudgetItem $budgetItem
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungType($value)
+ *
  * @mixin \Eloquent
  */
 class Booking extends Model
@@ -49,6 +51,8 @@ class Booking extends Model
      * @var string
      */
     protected $table = 'booking';
+
+    public $timestamps = false;
 
     /**
      * @var array

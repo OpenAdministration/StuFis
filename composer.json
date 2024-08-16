@@ -1,7 +1,7 @@
 {
     "name": "openadministration/stufis",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "4.1.2",
+    "version": "4.1.5",
     "license": "AGPL",
     "require": {
         "php": "^8.2",
@@ -29,13 +29,15 @@
         "barryvdh/laravel-debugbar": "^3.12",
         "barryvdh/laravel-ide-helper": "^2.13",
         "fakerphp/faker": "^1.9.1",
-        "laravel/browser-kit-testing": "^6.4",
-        "laravel/dusk": "^8.2",
+        "laravel/pint": "^1.17",
         "laravel/sail": "^1.0.1",
         "laravel/tinker": "^2.7",
+        "magentron/laravel-blade-lint": "^2.0",
         "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^6.1",
-        "phpunit/phpunit": "^9.5.10",
+        "nunomaduro/collision": "^v7.0",
+        "pestphp/pest": "^2.34",
+        "pestphp/pest-plugin-laravel": "^2.4",
+        "pestphp/pest-plugin-livewire": "^2.1",
         "roave/security-advisories": "dev-latest",
         "spatie/laravel-ignition": "^2.0"
     },
@@ -81,7 +83,10 @@
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true

@@ -3,17 +3,23 @@
  * FRAMEWORK JsonHandler
  *
  * @category          framework
+ *
  * @author            michael g
  * @author            Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since             17.02.2018
+ *
  * @copyright         Copyright (C) 2018 - All rights reserved
+ *
  * @platform          PHP
+ *
  * @requirements      PHP 7.0 or higher
  */
 
 namespace forms;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\Legacy\BankTransaction;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
@@ -40,10 +46,10 @@ class RestHandler extends EscFunc
 {
     // ================================================================================================
 
-    public function handlePost(array $routeInfo = null): void
+    public function handlePost(?array $routeInfo = null): void
     {
-        if(!\App::runningUnitTests()){
-            if (!isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
+        if (! \App::runningUnitTests()) {
+            if (! isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
                 throw new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
             }
         }
@@ -89,9 +95,9 @@ class RestHandler extends EscFunc
             case 'save-default-tan-mode':
                 $this->saveDefaultTanMode($routeInfo);
                 break;
-            /*case "login-credentials":
-                $this->loginCredentials($routeInfo);
-                break;*/
+                /*case "login-credentials":
+                    $this->loginCredentials($routeInfo);
+                    break;*/
             case 'lock-credentials':
                 $this->lockCredentials($routeInfo);
                 break;
@@ -118,8 +124,8 @@ class RestHandler extends EscFunc
                 break;
             case 'nononce':
             default:
-            throw new LegacyDieException(400, 'Unknown Action: ' . $routeInfo['action']);
-            break;
+                throw new LegacyDieException(400, 'Unknown Action: '.$routeInfo['action']);
+                break;
         }
     }
 
@@ -177,45 +183,36 @@ class RestHandler extends EscFunc
                 ]
             );
         }
-        $fields['type'] = 'BAR-' . ($fields['value'] > 0 ? 'EIN' : 'AUS');
+        $fields['type'] = 'BAR-'.($fields['value'] > 0 ? 'EIN' : 'AUS');
         if ($fields['id'] === '1') {
             DBConnector::getInstance()->dbInsert('konto', $fields);
         } else {
-            $last = DBConnector::getInstance()->dbFetchAll(
-                'konto',
-                [DBConnector::FETCH_ASSOC],
-                [],
-                [
-                    'konto_id' => 0,
-                    'id' => $fields['id'] - 1,
-                ]
-            )[0];
+            $last = BankTransaction::where('konto_id', '=', $fields['konto_id'])
+                ->orderBy('id', 'desc')
+                ->first()?->toArray();
+
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {
                 DBConnector::getInstance()->dbInsert('konto', $fields);
             } else {
-                JsonController::print_json(
-                    [
-                        'success' => false,
-                        'status' => '200',
-                        'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
-                        'type' => 'modal',
-                        'subtype' => 'server-error',
-                        'headline' => 'Fehler bei der Verarbeitung',
-                    ]
-                );
+                JsonController::print_json([
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Fehler bei der Verarbeitung',
+                ]);
             }
         }
-        JsonController::print_json(
-            [
-                'success' => true,
-                'status' => '200',
-                'msg' => 'Die Seite wird gleich neu geladen',
-                'type' => 'modal',
-                'subtype' => 'server-success',
-                'reload' => 1000,
-                'headline' => 'Erfolgreich gespeichert',
-            ]
-        );
+        JsonController::print_json([
+            'success' => true,
+            'status' => '200',
+            'msg' => 'Die Seite wird gleich neu geladen',
+            'type' => 'modal',
+            'subtype' => 'server-success',
+            'reload' => 1000,
+            'headline' => 'Erfolgreich gespeichert',
+        ]);
     }
 
     public function handleProjekt($routeInfo = null): void
@@ -231,7 +228,7 @@ class RestHandler extends EscFunc
 
         try {
 
-            if (!isset($_POST['action'])) {
+            if (! isset($_POST['action'])) {
                 throw new ActionNotSetException('Es wurde keine Aktion übertragen');
             }
 
@@ -247,14 +244,14 @@ class RestHandler extends EscFunc
                     }
                     break;
                 case 'changeState':
-                    if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
+                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
                         throw new IdNotSetException('ID nicht gesetzt.');
                     }
                     $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'none']);
                     $ret = $projektHandler->setState($_POST['newState']);
                     break;
                 case 'update':
-                    if (!isset($_POST['id']) || !is_numeric($_POST['id'])) {
+                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
                         throw new IdNotSetException('ID nicht gesetzt.');
                     }
                     $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'edit']);
@@ -265,7 +262,7 @@ class RestHandler extends EscFunc
                     throw new ActionNotSetException('Unbekannte Aktion verlangt!');
             }
         } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
-                InvalidDataException|PDOException|IllegalTransitionException $exception) {
+        InvalidDataException|PDOException|IllegalTransitionException $exception) {
             $ret = false;
             $msgs[] = 'Ein Fehler ist aufgetreten';
             $msgs[] = $exception->getMessage();
@@ -282,7 +279,7 @@ class RestHandler extends EscFunc
                 $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
             } else {
                 $msgs[] = 'Daten erfolgreich gespeichert!';
-                $target = URIBASE . 'projekt/' . $projektHandler->getID();
+                $target = URIBASE.'projekt/'.$projektHandler->getID();
             }
 
         }
@@ -311,7 +308,7 @@ class RestHandler extends EscFunc
      */
     public function handleAuslagen(array $routeInfo = []): void
     {
-        if (!isset($routeInfo['mfunction'])) {
+        if (! isset($routeInfo['mfunction'])) {
             if (isset($_POST['action'])) {
                 $routeInfo['mfunction'] = $_POST['action'];
             } else {
@@ -320,7 +317,7 @@ class RestHandler extends EscFunc
         }
 
         // validate
-        $vali = new Validator();
+        $vali = new Validator;
         $validator_map = [];
         switch ($routeInfo['mfunction']) {
             case 'updatecreate':
@@ -512,7 +509,7 @@ class RestHandler extends EscFunc
                 break;
             default:
                 throw new LegacyDieException(400, 'Unknown Action.');
-            break;
+                break;
         }
         $vali->validateMap($_POST, $validator_map);
         // return error if validation failed
@@ -532,11 +529,11 @@ class RestHandler extends EscFunc
 
         if ($routeInfo['mfunction'] === 'updatecreate') {
             // may add nonexisting arrays
-            if (!isset($validated['belege'])) {
+            if (! isset($validated['belege'])) {
                 $validated['belege'] = [];
             }
             foreach ($validated['belege'] as $k => $v) {
-                if (!isset($v['posten'])) {
+                if (! isset($v['posten'])) {
                     $validated['belege'][$k]['posten'] = [];
                 }
             }
@@ -581,7 +578,7 @@ class RestHandler extends EscFunc
                     }
 
                     // check file non empty
-                    $fileIdx = 'beleg_' . $kb;
+                    $fileIdx = 'beleg_'.$kb;
                     if (isset($_FILES[$fileIdx]['error']) && $_FILES[$fileIdx]['error'] === 0) {
                         $empty = false;
                         break;
@@ -651,10 +648,10 @@ class RestHandler extends EscFunc
                         ErrorHandler::handleException($e);
                         break;
                     }
-                    if (!$r || count($r) === 0) {
+                    if (! $r || count($r) === 0) {
                         break;
                     }
-                    $pdate = date_create(substr($r[0]['createdat'], 0, 4) . '-01-01 00:00:00');
+                    $pdate = date_create(substr($r[0]['createdat'], 0, 4).'-01-01 00:00:00');
                     $pdate->modify('+1 year');
                     $now = date_create();
                     // info mail
@@ -683,7 +680,7 @@ class RestHandler extends EscFunc
                             }
                             // new message - info mail
                             $tMail = [];
-                            if (!preg_match(
+                            if (! preg_match(
                                 '/^(draft|wip|revoked|ok-by-hv|need-stura|done-hv|done-other|ok-by-stura)/',
                                 $r[0]['state']
                             )) {
@@ -692,30 +689,30 @@ class RestHandler extends EscFunc
                             // switch type
                             switch ($valid['type']) {
                                 case '-1':
-                                    if (!$auth->hasGroup('ref-finanzen')
-                                        && (!isset($r[0]['username']) || $r[0]['username'] !== $auth->getUsername())) {
+                                    if (! $auth->hasGroup('ref-finanzen')
+                                        && (! isset($r[0]['username']) || $r[0]['username'] !== $auth->getUsername())) {
                                         break 3;
                                     }
-                                    if (!$auth->hasGroup('ref-finanzen')) {
+                                    if (! $auth->hasGroup('ref-finanzen')) {
                                         $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
                                     } else {
                                         $tMail['to'][] = $r[0]['email'];
                                     }
                                     break;
                                 case '0':
-                                    if (!$auth->hasGroup('ref-finanzen')) {
+                                    if (! $auth->hasGroup('ref-finanzen')) {
                                         $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
                                     } else {
                                         $tMail['to'][] = $r[0]['responsible'];
                                     }
                                     break;
                                 case '2':
-                                    if (!$auth->hasGroup('admin')) {
+                                    if (! $auth->hasGroup('admin')) {
                                         break 3;
                                     }
                                     break;
                                 case '3':
-                                    if (!$auth->hasGroup('ref-finanzen')) {
+                                    if (! $auth->hasGroup('ref-finanzen')) {
                                         break 3;
                                     }
                                     $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
@@ -724,10 +721,10 @@ class RestHandler extends EscFunc
                                     break 3;
                             }
                             if (count($tMail) > 0) {
-                                $tMail['param']['msg'][] = 'Im %Projekt% #' . $r[0]['id'] . ' gibt es eine neue Nachricht.';
-                                $tMail['param']['link']['Projekt'] = BASE_URL . URIBASE . 'projekt/' . $r[0]['id'] . '#projektchat';
+                                $tMail['param']['msg'][] = 'Im %Projekt% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
+                                $tMail['param']['link']['Projekt'] = BASE_URL.URIBASE.'projekt/'.$r[0]['id'].'#projektchat';
                                 $tMail['param']['headline'] = 'Projekt - Neue Nachricht';
-                                $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Projekt #' . $r[0]['id'];
+                                $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Projekt #'.$r[0]['id'];
                                 $tMail['template'] = 'projekt_default';
                                 $mail[] = $tMail;
                             }
@@ -744,6 +741,7 @@ class RestHandler extends EscFunc
                             //	$mail_result = $mh->easyMail($m);
                         }
                     }
+
                     return;
 
                     break;
@@ -761,10 +759,10 @@ class RestHandler extends EscFunc
                         ErrorHandler::handleException($e);
                         break;
                     }
-                    if (!$r || count($r) === 0) {
+                    if (! $r || count($r) === 0) {
                         break;
                     }
-                    $pdate = date_create(substr($r[0]['created'], 0, 4) . '-01-01 00:00:00');
+                    $pdate = date_create(substr($r[0]['created'], 0, 4).'-01-01 00:00:00');
                     $pdate->modify('+1 year');
                     $now = date_create();
                     // info mail
@@ -793,11 +791,11 @@ class RestHandler extends EscFunc
                             // switch type
                             switch ($valid['type']) {
                                 case '-1':
-                                    if (!$auth->hasGroup('ref-finanzen') &&
-                                        $auth->getUsername() !== AuslagenHandler2::state2stateInfo('wip;' . $r[0]['created'])['user']) {
+                                    if (! $auth->hasGroup('ref-finanzen') &&
+                                        $auth->getUsername() !== AuslagenHandler2::state2stateInfo('wip;'.$r[0]['created'])['user']) {
                                         break 3;
                                     }
-                                    if (!$auth->hasGroup('ref-finanzen')) {
+                                    if (! $auth->hasGroup('ref-finanzen')) {
                                         $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
                                     } else {
                                         $u = $db->dbFetchAll(
@@ -806,7 +804,7 @@ class RestHandler extends EscFunc
                                             ['email', 'id'],
                                             [
                                                 'username' => AuslagenHandler2::state2stateInfo(
-                                                    'wip;' . $r[0]['created']
+                                                    'wip;'.$r[0]['created']
                                                 )['user'],
                                             ]
                                         );
@@ -816,7 +814,7 @@ class RestHandler extends EscFunc
                                     }
                                     break;
                                 case '3':
-                                    if (!$auth->hasGroup('ref-finanzen')) {
+                                    if (! $auth->hasGroup('ref-finanzen')) {
                                         break 3;
                                     }
                                     $tMail['to'][] = 'ref-finanzen@tu-ilmenau.de';
@@ -825,10 +823,10 @@ class RestHandler extends EscFunc
                                     break 3;
                             }
                             if (count($tMail) > 0) {
-                                $tMail['param']['msg'][] = 'In der %Abrechnung% #' . $r[0]['id'] . ' gibt es eine neue Nachricht.';
-                                $tMail['param']['link']['Abrechnung'] = BASE_URL . URIBASE . 'projekt/' . $r[0]['projekt_id'] . '/auslagen/' . $r[0]['id'] . '#auslagenchat';
+                                $tMail['param']['msg'][] = 'In der %Abrechnung% #'.$r[0]['id'].' gibt es eine neue Nachricht.';
+                                $tMail['param']['link']['Abrechnung'] = BASE_URL.URIBASE.'projekt/'.$r[0]['projekt_id'].'/auslagen/'.$r[0]['id'].'#auslagenchat';
                                 $tMail['param']['headline'] = 'Auslagen - Neue Nachricht';
-                                $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #' . $r[0]['id'];
+                                $tMail['subject'] = 'Stura-Finanzen: Neue Nachricht in Abrechnung #'.$r[0]['id'];
                                 $tMail['template'] = 'projekt_default';
                                 $mail[] = $tMail;
                             }
@@ -854,7 +852,7 @@ class RestHandler extends EscFunc
         }
         $chat->setErrorMessage('Access Denied.');
         $chat->answerError();
-        return;
+
     }
 
     private function updateKonto($routeInfo): void
@@ -865,7 +863,7 @@ class RestHandler extends EscFunc
         $auth->requireGroup('ref-finanzen-kv');
 
         $ret = true;
-        if (!DBConnector::getInstance()->dbBegin()) {
+        if (! DBConnector::getInstance()->dbBegin()) {
             throw new LegacyDieException(500,
                 'Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!'
             );
@@ -913,7 +911,7 @@ class RestHandler extends EscFunc
             // $msgs[]= print_r($zahlung,true);
             DBConnector::getInstance()->dbInsert('konto', $fields);
             if (isset($inserted[$zahlung['konto_id']])) {
-                ++$inserted[$zahlung['konto_id']];
+                $inserted[$zahlung['konto_id']]++;
             } else {
                 $inserted[$zahlung['konto_id']] = 1;
             }
@@ -944,24 +942,24 @@ class RestHandler extends EscFunc
                     foreach ($ahs as $ah) {
                         $ret = $ah->state_change('payed', $ah->getAuslagenEtag());
                         if ($ret !== true) {
-                            $msg[] = 'Konnte IP' . $ah->getProjektID() . '-A' . $ah->getID() .
-                                " nicht in den Status 'gezahlt' überführen. " .
-                                'Bitte ändere das noch (per Hand) nachträglich!' .
+                            $msg[] = 'Konnte IP'.$ah->getProjektID().'-A'.$ah->getID().
+                                " nicht in den Status 'gezahlt' überführen. ".
+                                'Bitte ändere das noch (per Hand) nachträglich!'.
                                 $fields['date'];
                         }
                     }
                 } else {
-                    $msg[] = 'In Zahlung ' . $zahlung['id'] . ' wurden folgende Projekte/Auslagen im Verwendungszweck gefunden: ' . implode(
+                    $msg[] = 'In Zahlung '.$zahlung['id'].' wurden folgende Projekte/Auslagen im Verwendungszweck gefunden: '.implode(
                         ' & ',
                         $matches
-                    ) . '. Dort stimmt die Summe der Belegposten (' . $beleg_sum . ') nicht mit der Summe der Zahlung (' . $fields['value'] . ') überein. Bitte prüfe das noch per Hand, und setze ggf. die passenden Projekte auf bezahlt, so das es später keine Probleme beim Buchen gibt (nur gezahlte Auslagen können gebucht werden)';
+                    ).'. Dort stimmt die Summe der Belegposten ('.$beleg_sum.') nicht mit der Summe der Zahlung ('.$fields['value'].') überein. Bitte prüfe das noch per Hand, und setze ggf. die passenden Projekte auf bezahlt, so das es später keine Probleme beim Buchen gibt (nur gezahlte Auslagen können gebucht werden)';
                 }
             }
         }
 
         $ret = DBConnector::getInstance()->dbCommit();
 
-        if (!$ret) {
+        if (! $ret) {
             DBConnector::getInstance()->dbRollBack();
             JsonController::print_json(
                 [
@@ -973,7 +971,7 @@ class RestHandler extends EscFunc
                     'headline' => 'Ein Datenbank Fehler ist aufgetreten! (Rollback)',
                 ]
             );
-        } elseif (!empty($inserted)) {
+        } elseif (! empty($inserted)) {
             $type = (count($msg_xmlrpc) + count($msg)) > 1 ? 'warning' : 'success';
 
             foreach ($inserted as $konto_id => $number) {
@@ -986,7 +984,7 @@ class RestHandler extends EscFunc
                     'status' => '200',
                     'msg' => array_merge($msg_xmlrpc, $msg),
                     'type' => 'modal',
-                    'subtype' => 'server-' . $type,
+                    'subtype' => 'server-'.$type,
                 ]
             );
         } else {
@@ -1091,13 +1089,13 @@ class RestHandler extends EscFunc
         );
 
         if (count($bookingDBbelege) + count($bookingDBzahlung) > 0) {
-            $errorMsg[] = 'Beleg oder Zahlung bereits verknüpft - ' . print_r(
+            $errorMsg[] = 'Beleg oder Zahlung bereits verknüpft - '.print_r(
                 array_merge($bookingDBzahlung, $bookingDBbelege),
                 true
             );
         }
 
-        if (!empty($errorMsg)) {
+        if (! empty($errorMsg)) {
             JsonController::print_json(
                 [
                     'success' => false,
@@ -1115,7 +1113,7 @@ class RestHandler extends EscFunc
             [DBConnector::FETCH_NUMERIC],
             [['id', DBConnector::GROUP_MAX]]
         );
-        if (is_array($lastEntry) && !empty($lastEntry)) {
+        if (is_array($lastEntry) && ! empty($lastEntry)) {
             $nextId = $lastEntry[0][0] + 1;
         } else {
             $nextId = 1;
@@ -1218,34 +1216,34 @@ class RestHandler extends EscFunc
                                 'action' => 'none',
                             ]
                         );
-                        if (!in_array('A' . $beleg['auslagen_id'], $doneAuslage, true)) {
+                        if (! in_array('A'.$beleg['auslagen_id'], $doneAuslage, true)) {
                             if ($ah->state_change_possible('booked') !== true) {
-                                $stateChangeNotOk[] = 'IP-' . date_create($beleg['projekt_createdate'])->format('y') . '-' .
-                                    $beleg['projekt_id'] . '-A' . $beleg['auslagen_id'] . ' (' . $ah->getStateString() . ')';
+                                $stateChangeNotOk[] = 'IP-'.date_create($beleg['projekt_createdate'])->format('y').'-'.
+                                    $beleg['projekt_id'].'-A'.$beleg['auslagen_id'].' ('.$ah->getStateString().')';
                             } else {
                                 $ah->state_change('booked', $beleg['etag']);
-                                $doneAuslage[] = 'A' . $beleg['auslagen_id'];
+                                $doneAuslage[] = 'A'.$beleg['auslagen_id'];
                             }
                         }
                         break;
                     case 'extern':
                         $evh = new ExternVorgangHandler($beleg['id']);
 
-                        if (!in_array('E' . $beleg['id'], $doneAuslage, true)
+                        if (! in_array('E'.$beleg['id'], $doneAuslage, true)
                             && $evh->state_change_possible('booked') !== true) {
-                            $stateChangeNotOk[] = 'EP-' .
-                                $beleg['extern_id'] . '-V' . $beleg['vorgang_id'] . ' (' . $evh->getStateString() .
+                            $stateChangeNotOk[] = 'EP-'.
+                                $beleg['extern_id'].'-V'.$beleg['vorgang_id'].' ('.$evh->getStateString().
                                 ')';
                         } else {
                             $evh->state_change('booked', $beleg['etag']);
-                            $doneAuslage[] = 'E' . $beleg['id'];
+                            $doneAuslage[] = 'E'.$beleg['id'];
                         }
 
                         break;
                 }
             }
         } // transferred states to booked - otherwise throw error
-        if (!empty($stateChangeNotOk)) {
+        if (! empty($stateChangeNotOk)) {
             DBConnector::getInstance()->dbRollBack();
             JsonController::print_json(
                 [
@@ -1363,7 +1361,7 @@ class RestHandler extends EscFunc
                 'type' => 'modal',
                 'subtype' => 'server-success',
                 'reload' => 2000,
-                'headline' => count($confirmedInstructions) . (count($confirmedInstructions) >= 1 ? ' Vorgänge ' : ' Vorgang ') . ' erfolgreich gespeichert',
+                'headline' => count($confirmedInstructions).(count($confirmedInstructions) >= 1 ? ' Vorgänge ' : ' Vorgang ').' erfolgreich gespeichert',
             ]
         );
     }
@@ -1371,8 +1369,9 @@ class RestHandler extends EscFunc
     private function cancelBooking($routeInfo): void
     {
         (AUTH_HANDLER)::getInstance()->requireGroup('ref-finanzen-hv');
-        if (!isset($_REQUEST['booking_id'])) {
+        if (! isset($_REQUEST['booking_id'])) {
             $msgs[] = 'Daten wurden nicht korrekt übermittelt';
+
             return;
         }
         $booking_id = $_REQUEST['booking_id'];
@@ -1383,7 +1382,7 @@ class RestHandler extends EscFunc
             [['id', DBConnector::GROUP_MAX]],
             ['id' => $booking_id]
         )[0];
-        if ($ret !== false && !empty($ret)) {
+        if ($ret !== false && ! empty($ret)) {
             $ret = $ret[0];
             if ($ret['canceled'] !== 0) {
                 DBConnector::getInstance()->dbBegin();
@@ -1392,7 +1391,7 @@ class RestHandler extends EscFunc
                     'booking',
                     [
                         'id' => $maxBookingId + 1,
-                        'comment' => 'Rotbuchung zu B-Nr: ' . $booking_id,
+                        'comment' => 'Rotbuchung zu B-Nr: '.$booking_id,
                         'titel_id' => $ret['titel_id'],
                         'belegposten_id' => $ret['belegposten_id'],
                         'zahlung_id' => $ret['zahlung_id'],
@@ -1407,7 +1406,7 @@ class RestHandler extends EscFunc
                     ['id' => $booking_id],
                     ['canceled' => $maxBookingId + 1]
                 );
-                if (!DBConnector::getInstance()->dbCommit()) {
+                if (! DBConnector::getInstance()->dbCommit()) {
                     DBConnector::getInstance()->dbRollBack();
                     JsonController::print_json(
                         [
@@ -1456,7 +1455,7 @@ class RestHandler extends EscFunc
                     'subtype' => 'server-success',
                     'reload' => 1000,
                     'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . 'hhp',
+                    'redirect' => URIBASE.'hhp',
                 ]
             );
         } else {
@@ -1475,7 +1474,7 @@ class RestHandler extends EscFunc
 
     private function saveDefaultTanMode($routeInfo): void
     {
-        if (!isset($_POST['tan-mode-id'])) {
+        if (! isset($_POST['tan-mode-id'])) {
             JsonController::print_json(
                 [
                     'success' => false,
@@ -1498,12 +1497,12 @@ class RestHandler extends EscFunc
             if ($tanClosed = $fHandler->hasTanSessionInformation()) {
                 $fHandler->deleteTanSessionInformation();
             }
-            $redirectUrl = $tanMediumName === null ? URIBASE . "konto/credentials/$credId/tan-mode/$tanMode/medium" : URIBASE . 'konto/credentials/';
+            $redirectUrl = $tanMediumName === null ? URIBASE."konto/credentials/$credId/tan-mode/$tanMode/medium" : URIBASE.'konto/credentials/';
             JsonController::print_json(
                 [
                     'success' => true,
                     'status' => '200',
-                    'msg' => "Tan $tanMode für Zugangsdaten $credId gespeichert". ($tanClosed ? ' - offene Tans wurden abgebrochen' : ''),
+                    'msg' => "Tan $tanMode für Zugangsdaten $credId gespeichert".($tanClosed ? ' - offene Tans wurden abgebrochen' : ''),
                     'type' => 'modal',
                     'subtype' => 'server-success',
                     'reload' => 1000,
@@ -1597,7 +1596,7 @@ class RestHandler extends EscFunc
                     'subtype' => 'server-success',
                     'reload' => 1000,
                     'headline' => 'Daten gespeichert',
-                    'redirect' => URIBASE . "konto/credentials/$credId/sepa",
+                    'redirect' => URIBASE."konto/credentials/$credId/sepa",
                 ]
             );
         } else {
@@ -1675,7 +1674,7 @@ class RestHandler extends EscFunc
                 'type' => 'modal',
                 'subtype' => 'server-success',
                 'reload' => 1000,
-                'redirect' => URIBASE . 'konto/credentials/' . $credId . '/sepa',
+                'redirect' => URIBASE.'konto/credentials/'.$credId.'/sepa',
                 'headline' => 'Tan Verfahren abgebrochen',
             ]
         );

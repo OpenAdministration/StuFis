@@ -19,21 +19,22 @@ class EnvWriter
 
     public function __construct(private string $envFilename = '.env')
     {
-        $content = file_get_contents(SYSBASE . $envFilename);
+        $content = file_get_contents(SYSBASE.$envFilename);
         $this->lines = explode(PHP_EOL, $content);
         $keys = $this->lines;
         array_walk($keys, static function ($line) {
             if (str_starts_with($line, '#')) {
                 return '';
             }
+
             return trim(explode('=', $line)[0]);
         });
         $this->keys = array_flip($keys);
     }
 
     /**
-     * @param string $comment without #
-     * @param array $keyValueParis key: name value: value
+     * @param  string  $comment  without #
+     * @param  array  $keyValueParis  key: name value: value
      */
     public function addVarBlock(string $comment, array $keyValueParis): void
     {
@@ -60,13 +61,14 @@ class EnvWriter
     private function composeLine(string $key, string $value): string
     {
         $key = strtoupper($key);
+
         return "$key=$value";
     }
 
     public function addLine(string $content, bool $isComment = false): void
     {
         if ($isComment) {
-            $content = '# ' . $content;
+            $content = '# '.$content;
         }
         $this->lines[] = $content;
     }
@@ -74,6 +76,6 @@ class EnvWriter
     public function save(): void
     {
         $content = implode(PHP_EOL, $this->lines);
-        file_put_contents(SYSBASE . $this->envFilename, $content);
+        file_put_contents(SYSBASE.$this->envFilename, $content);
     }
 }

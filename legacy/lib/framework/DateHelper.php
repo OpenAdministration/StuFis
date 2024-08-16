@@ -27,6 +27,7 @@ class DateHelper
 
         // find older date
         $startDate = max($lastSync, $syncFrom);
+
         return [$startDate, $syncUntil];
     }
 
@@ -35,6 +36,7 @@ class DateHelper
         if (is_null($sqlDateString)) {
             return date_create();
         }
+
         return DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $sqlDateString);
     }
 }

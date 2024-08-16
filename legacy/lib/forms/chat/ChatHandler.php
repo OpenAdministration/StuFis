@@ -15,24 +15,28 @@ class ChatHandler
     // MEMBER =========================================================
     /**
      * last lead comments
+     *
      * @var array
      */
     private $comments;
 
     /**
      * maximum comments id
+     *
      * @var int
      */
     private $max_comment_id = 0;
 
     /**
      * maximum comments id - posted
+     *
      * @var int
      */
     private $post_last_id = 0;
 
     /**
      * keep this values in filter
+     *
      * @var array
      */
     private $keep = ['0', '1'];
@@ -44,36 +48,42 @@ class ChatHandler
 
     /**
      * access group
+     *
      * @var string
      */
     private $group;
 
     /**
      * access group_id
+     *
      * @var string
      */
     private $group_id;
 
     /**
      * username
+     *
      * @var string
      */
     private $user;
 
     /**
      * userfullname
+     *
      * @var string
      */
     private $userfullname;
 
     /**
      * is error
+     *
      * @var array
      */
     private $error = null;
 
     /**
      * array map
+     *
      * @var array
      */
     private $colors = [
@@ -156,10 +166,11 @@ class ChatHandler
 
     /**
      * class constructor
-     * @param ?string $group
-     * @param ?int $group_id
-     * @param ?string $userName
-     * @param ?string $userfullname
+     *
+     * @param  ?string  $group
+     * @param  ?int  $group_id
+     * @param  ?string  $userName
+     * @param  ?string  $userfullname
      */
     public function __construct(?string $group, ?int $group_id, ?string $userName = null, ?string $userfullname = null)
     {
@@ -176,14 +187,15 @@ class ChatHandler
 
     /**
      * TODO admin comment button
-     * @param string $group group
-     * @param int $group_id group identifier
-     * @param string $user user name + identifier
-     * @param \string[][] $buttons
+     *
+     * @param  string  $group  group
+     * @param  int  $group_id  group identifier
+     * @param  string  $user  user name + identifier
+     * @param  \string[][]  $buttons
      */
     public static function renderChatPanel($group, $group_id, $user, $buttons = [['label' => 'Senden', 'color' => 'success', 'type' => '0']]): void
     {
-        if (!$group_id) {
+        if (! $group_id) {
             return;
         } ?>
 			<div class="panel panel-default chat-panel">
@@ -191,24 +203,25 @@ class ChatHandler
 				<div class="panel-heading">Kommentare/Nachrichten</div>
 				<div class="panel-body chat">
 					<div class="new-chat-comment"
-                         data-url="<?php echo URIBASE . 'rest/chat'; ?>"
+                         data-url="<?php echo URIBASE.'rest/chat'; ?>"
                          data-target_id="<?php echo $group_id; ?>"
                          data-target="<?php echo $group; ?>">
                         <?php if (count($buttons) > 0) { ?>
 						<div class="chat-container chat-right">
 							<span class="chat-time">Jetzt gerade</span>
-							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())), 0, 16); echo $tid; ?>">
+							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())), 0, 16);
+                            echo $tid; ?>">
 								<?php echo htmlspecialchars($user); ?>
 							</label>
 							<textarea id="new-comment_<?php echo $tid; ?>" class="chat-textarea form-control col-xs-10" rows="3"></textarea>
 							<?php foreach ($buttons as $btn) {
-            ?>
+							    ?>
 									<button type="button" style="margin: 0 0 5px 8px;"
 											data-type="<?php echo $btn['type']; ?>"
 											<?php echo (isset($btn['hover-title'])) ? 'title="'.$btn['hover-title'].'"' : ''; ?>
 											class="btn btn-<?php echo $btn['color']; ?> pull-right chat-submit"><?php echo $btn['label']; ?></button>
 								<?php
-        }
+							}
                             ?>
 							<div class="clearfix"></div>
 						</div>
@@ -229,9 +242,9 @@ class ChatHandler
 
     /**
      * load chat comments to instance
-     * @param  $group_id
-     * @param bool $sort
-     * @param number $incremental
+     *
+     * @param  bool  $sort
+     * @param  number  $incremental
      */
     public function _loadComments(string $group, $group_id, $sort = true, $incremental = 0): void
     {
@@ -247,10 +260,11 @@ class ChatHandler
 
     /**
      * load chat comments to instance
-     * @param bool $sort
-     * @param number $incremental
-     * @param string $group
-     * @param int $group_id
+     *
+     * @param  bool  $sort
+     * @param  number  $incremental
+     * @param  string  $group
+     * @param  int  $group_id
      */
     public function loadComments($sort = true, $incremental = 0, $group = null, $group_id = null): void
     {
@@ -259,7 +273,8 @@ class ChatHandler
 
     /**
      * add color and position information to comments
-     * @param array $colors
+     *
+     * @param  array  $colors
      */
     public function _commentStyle(string $user, $colors): void
     {
@@ -290,9 +305,9 @@ class ChatHandler
             }
             //------------
             $cc = $c['creator'];
-            if (!isset($map[$colorKey]['user'][$cc])) {
+            if (! isset($map[$colorKey]['user'][$cc])) {
                 $map[$colorKey]['user'][$cc] = $this->colors[$colorKey][($map[$colorKey]['color-position'] % $map[$colorKey]['color-count'])];
-                ++$map[$colorKey]['color-position'];
+                $map[$colorKey]['color-position']++;
             }
             $this->comments[$k]['color'] = $map[$colorKey]['user'][$cc];
             //extra class
@@ -315,7 +330,8 @@ class ChatHandler
 
     /**
      * unset not required comment information
-     * @param array $keep unset types not in this array
+     *
+     * @param  array  $keep  unset types not in this array
      */
     public function filterComments($keep = null): void
     {
@@ -323,14 +339,14 @@ class ChatHandler
         $this->max_comment_id = 0;
         $count = 0;
         foreach ($this->comments as $k => $c) {
-            if (!in_array((string) $c['type'], $kp, true)) {
-                ++$count;
+            if (! in_array((string) $c['type'], $kp, true)) {
+                $count++;
                 unset($this->comments[$k]);
             } else {
                 if (((int) $this->comments[$k]['type']) === -1 || str_starts_with($this->comments[$k]['text'], '$enc$')) {
                     $this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
                 }
-                ++$count;
+                $count++;
                 $this->max_comment_id = max($this->max_comment_id, $c['id'], $this->post_last_id);
                 unset($this->comments[$k]['id']);
                 unset($this->comments[$k]['target']);
@@ -374,10 +390,11 @@ class ChatHandler
 
     /**
      * create chat entry
-     * @param int $type 1: state change, -1: deprecated private msg, 2: admin, 3: ref-finanzen
+     *
+     * @param  int  $type  1: state change, -1: deprecated private msg, 2: admin, 3: ref-finanzen
      */
     public function _createComment(string $group, int $group_id, string $timestamp,
-                                   string $creator, string $creator_alias, string $text, int $type): void
+        string $creator, string $creator_alias, string $text, int $type): void
     {
         try {
             $this->db->dbInsert('comments', [
@@ -397,10 +414,11 @@ class ChatHandler
 
     /**
      * create chat entry
-     * @param string $text
-     * @param int $type
-     * @param string $group
-     * @param int $group_id
+     *
+     * @param  string  $text
+     * @param  int  $type
+     * @param  string  $group
+     * @param  int  $group_id
      */
     public function createComment($text, $type, $group = null, $group_id = null): void
     {
@@ -412,11 +430,11 @@ class ChatHandler
     /**
      * set error message -> may use this for ACL
      *
-     * @param mixed $msg
+     * @param  mixed  $msg
      */
     public function setErrorMessage($msg): void
     {
-        if (!$this->error && is_string($msg) && $msg) {
+        if (! $this->error && is_string($msg) && $msg) {
             $this->error = $msg;
         }
     }
@@ -431,6 +449,7 @@ class ChatHandler
 
     /**
      * return error message
+     *
      * @return string|array
      */
     public function getError()
@@ -452,21 +471,25 @@ class ChatHandler
 
     /**
      * validate post data
+     *
      * @param array string
      */
     public function validatePost($post)
     {
-        $vali = new Validator();
+        $vali = new Validator;
         $vali->validateMap($post, self::$validateMap['action'], true);
         if ($vali->getIsError()) {
             $this->error = $vali->getLastErrorMsg();
+
             return null;
         }
         $vali->validateMap($post, self::$validateMap[$vali->getFiltered('action')], true);
         if ($vali->getIsError()) {
             $this->error = $vali->getLastErrorMsg();
+
             return null;
         }
+
         return $vali->getFiltered();
     }
 
@@ -506,14 +529,16 @@ class ChatHandler
      */
     public function answerAll($post): void
     {
-        if (!$post || !is_array($post) || !isset($post['action'])) {
+        if (! $post || ! is_array($post) || ! isset($post['action'])) {
             $this->error = 'Action Denied.';
             $this->answerError();
+
             return;
         }
         $post = $this->validatePost($post);
         if ($this->error) {
             $this->answerError();
+
             return;
         }
         switch ($post['action']) {
@@ -524,7 +549,7 @@ class ChatHandler
                     'code' => 200,
                     'msg' => 'created',
                 ]);
-             break;
+                break;
             case 'gethistory':
                 $this->post_last_id = $post['last'];
                 $this->loadComments(true, $post['last'], $post['target'], $post['target_id']);
@@ -536,10 +561,10 @@ class ChatHandler
                     'data' => $this->comments,
                     'last' => $this->max_comment_id,
                 ]);
-             break;
+                break;
             default:
                 throw new LegacyDieException(400, 'Chat: Error: Unhandles Action passed Validation: '.$post['action']);
-             break;
+                break;
         }
     }
 
@@ -551,7 +576,7 @@ class ChatHandler
      */
     private function createKeys(): void
     {
-        if (!config('app.chat.private_key') && !config('app.chat.public_key')) {
+        if (! config('app.chat.private_key') && ! config('app.chat.public_key')) {
             $config = [
                 'digest_alg' => 'sha512',
                 'private_key_bits' => 4096,
@@ -591,7 +616,8 @@ class ChatHandler
             return '';
         }
         $this->createKeys();
-        return '$enc$' . $this->_encryptMessage($text, $this->getKey('public'));
+
+        return '$enc$'.$this->_encryptMessage($text, $this->getKey('public'));
     }
 
     /**
@@ -606,6 +632,7 @@ class ChatHandler
         if (str_starts_with($text, '$enc$')) {
             $text = substr($text, 5);
         }
+
         return $this->_decryptMessage($text, $this->getKey('private'));
     }
 
@@ -615,6 +642,7 @@ class ChatHandler
     private function _encryptMessage(string $text, string $key): string
     {
         openssl_public_encrypt($text, $encrypted, $key);
+
         return base64_encode($encrypted);
     }
 
@@ -624,6 +652,7 @@ class ChatHandler
     private function _decryptMessage(string $encrypted, string $key): string
     {
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
+
         return $decrypted ?? '<strong><i>! Corrupted message. !</i></strong>';
     }
 }

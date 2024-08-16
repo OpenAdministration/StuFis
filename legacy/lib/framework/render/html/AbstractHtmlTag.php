@@ -5,15 +5,21 @@ namespace framework\render\html;
 abstract class AbstractHtmlTag
 {
     protected string $tag;
+
     protected string $id;
 
     protected array $attributes;
+
     protected array $dataAttributes;
+
     protected array $classes;
+
     protected array $unaryAttributes;
 
     protected $bodyPrefix;
+
     protected $body;
+
     protected $bodySuffix;
 
     /**
@@ -38,7 +44,7 @@ abstract class AbstractHtmlTag
     }
 
     /**
-     * @param $content object|string object has to be stringable
+     * @param  $content  object|string object has to be stringable
      */
     public function body(object|string $content, bool $escape = true): self
     {
@@ -51,6 +57,7 @@ abstract class AbstractHtmlTag
         } else {
             $this->body = $content;
         }
+
         return $this;
     }
 
@@ -64,6 +71,7 @@ abstract class AbstractHtmlTag
         } else {
             $this->body .= $content;
         }
+
         return $this;
     }
 
@@ -73,47 +81,53 @@ abstract class AbstractHtmlTag
             return $this->id;
         }
         if (isset($this->attributes['name'])) {
-            $uniqueId = $this->attributes['name'] . '-' . uniqid('', true);
+            $uniqueId = $this->attributes['name'].'-'.uniqid('', true);
         } else {
             $uniqueId = uniqid('', true);
         }
         $this->id($uniqueId);
+
         return $this->id;
     }
 
     public function id(string $id): self
     {
         $this->id = $id;
+
         return $this->attr('id', $id);
     }
 
     public function setClasses(array $classes): self
     {
         $this->classes = $classes;
+
         return $this;
     }
 
     public function addClasses(array $classes): self
     {
         $this->classes = array_merge($this->classes, $classes);
+
         return $this;
     }
 
     public function attr(string $name, string $val): self
     {
         $this->attributes[$name] = $val;
+
         return $this;
     }
 
     public function dataAttr(string $name, string $val): self
     {
         $this->dataAttributes[$name] = $val;
+
         return $this;
     }
 
     public function begin(): string
     {
-        return $this->beginWrap() . "<$this->tag " . $this->implodeAttrClassesData() . '>';
+        return $this->beginWrap()."<$this->tag ".$this->implodeAttrClassesData().'>';
     }
 
     protected function beginWrap(): string
@@ -122,14 +136,15 @@ abstract class AbstractHtmlTag
         foreach ($this->wrapStack as $wrapper) {
             $wrap .= $wrapper->begin();
         }
+
         return $wrap;
     }
 
     protected function implodeAttrClassesData(): string
     {
         $ret = [array_reduce($this->classes, static function ($val1, $val2) {
-            return $val1 . ' ' . $val2;
-        }, "class='") . "'"];
+            return $val1.' '.$val2;
+        }, "class='")."'"];
         foreach ($this->attributes as $name => $value) {
             $name = htmlentities($name);
             $value = htmlentities($value);
@@ -141,20 +156,22 @@ abstract class AbstractHtmlTag
             $ret[] = "data-$name='$value'";
         }
         $ret[] = implode(' ', $this->unaryAttributes);
+
         return implode(' ', $ret);
     }
 
     public function end(): string
     {
-        return "</{$this->tag}>" . $this->wrapEnd();
+        return "</{$this->tag}>".$this->wrapEnd();
     }
 
     protected function wrapEnd(): string
     {
         $wrap = '';
         foreach ($this->wrapStack as $wrapper) {
-            $wrap = $wrapper->end() . $wrap;
+            $wrap = $wrapper->end().$wrap;
         }
+
         return $wrap;
     }
 
@@ -162,6 +179,7 @@ abstract class AbstractHtmlTag
     {
         $this->unaryAttributes[] = 'readonly';
         $this->attr('onclick', "='return false;'");
+
         return $this;
     }
 
@@ -172,18 +190,21 @@ abstract class AbstractHtmlTag
         } else {
             $this->unaryAttributes = array_diff($this->unaryAttributes, ['disabled']);
         }
+
         return $this;
     }
 
     public function required(): self
     {
         $this->unaryAttributes[] = 'require';
+
         return $this;
     }
 
     public function title(string $title): self
     {
         $this->attributes['title'] = $title;
+
         return $this;
     }
 
@@ -193,6 +214,7 @@ abstract class AbstractHtmlTag
             $prefix = htmlentities($prefix);
         }
         $this->bodyPrefix .= $prefix;
+
         return $this;
     }
 
@@ -205,6 +227,7 @@ abstract class AbstractHtmlTag
             $prefix = htmlentities($prefix);
         }
         $this->bodyPrefix = $prefix;
+
         return $this;
     }
 
@@ -214,6 +237,7 @@ abstract class AbstractHtmlTag
             $suffix = htmlentities($suffix);
         }
         $this->bodySuffix = $suffix;
+
         return $this;
     }
 
@@ -223,6 +247,7 @@ abstract class AbstractHtmlTag
             $suffix = htmlentities($suffix);
         }
         $this->bodySuffix .= $suffix;
+
         return $this;
     }
 
@@ -231,6 +256,7 @@ abstract class AbstractHtmlTag
         $pre = $this->bodyPrefix ?? '';
         $text = $this->body ?? '';
         $suf = $this->bodySuffix ?? '';
-        return $this->begin() . $pre . $text . $suf . $this->end();
+
+        return $this->begin().$pre.$text.$suf.$this->end();
     }
 }

@@ -23,7 +23,7 @@ class MenuRenderer extends Renderer
 
     public function __construct($pathinfo = [])
     {
-        if (!isset($pathinfo['action']) || empty($pathinfo)) {
+        if (! isset($pathinfo['action']) || empty($pathinfo)) {
             $pathinfo['action'] = self::DEFAULT;
         }
         $this->pathinfo = $pathinfo;
@@ -75,7 +75,7 @@ class MenuRenderer extends Renderer
 
     public function renderProjekte($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE . "menu/$active/");
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE."menu/$active/");
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
@@ -115,6 +115,7 @@ class MenuRenderer extends Renderer
                         ),
                         'warning'
                     );
+
                     return;
                 }
                 if (is_null($hhp_bis)) {
@@ -132,7 +133,7 @@ class MenuRenderer extends Renderer
                 }
                 break;
             default:
-                throw new LegacyDieException(400, 'Not known active Tab: ' . $active);
+                throw new LegacyDieException(400, 'Not known active Tab: '.$active);
                 break;
         }
 
@@ -164,7 +165,7 @@ class MenuRenderer extends Renderer
                 );
             }
         );
-        if (!empty($pids)) {
+        if (! empty($pids)) {
             $auslagen = DBConnector::getInstance()->dbFetchAll(
                 'auslagen',
                 [DBConnector::FETCH_ASSOC, DBConnector::FETCH_GROUPED],
@@ -193,7 +194,7 @@ class MenuRenderer extends Renderer
 
         <div class="panel-group" id="accordion">
             <?php $i = 0;
-        if (isset($projekte) && !empty($projekte) && $projekte) {
+        if (isset($projekte) && ! empty($projekte) && $projekte) {
             foreach ($projekte as $gremium => $inhalt) {
                 if (count($inhalt) === 0) {
                     continue;
@@ -218,15 +219,15 @@ class MenuRenderer extends Renderer
                                         $year = date('y', strtotime($projekt['createdat'])); ?>
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
-                                                    "IP-$year-$id",
-                                                    'projekt/' . $id
-                                                ); ?>
+                                                "IP-$year-$id",
+                                                'projekt/'.$id
+                                            ); ?>
                                             </div>
-                                            <div class="panel-heading collapsed <?php echo (!isset($auslagen[$id]) || count(
-                                                    $auslagen[$id]
-                                                ) === 0) ? 'empty' : ''; ?>"
+                                            <div class="panel-heading collapsed <?php echo (! isset($auslagen[$id]) || count(
+                                                $auslagen[$id]
+                                            ) === 0) ? 'empty' : ''; ?>"
                                                  data-toggle="collapse" data-parent="#accordion<?php echo $i; ?>"
-                                                 href="#collapse<?php echo $i . '-' . $j; ?>">
+                                                 href="#collapse<?php echo $i.'-'.$j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
                                                             class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
@@ -238,106 +239,107 @@ class MenuRenderer extends Renderer
                                                 </h4>
                                             </div>
                                             <?php if (isset($auslagen[$id]) && count($auslagen[$id]) > 0) { ?>
-                                                <div id="collapse<?php echo $i . '-' . $j; ?>"
+                                                <div id="collapse<?php echo $i.'-'.$j; ?>"
                                                      class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <?php
-                                                        $sum_a_in = 0;
-                                                        $sum_a_out = 0;
-                                                        $sum_e_in = 0;
-                                                        $sum_e_out = 0;
-                                                        foreach ($auslagen[$id] as $a) {
-                                                            if (strpos($a['state'], 'booked') === 0 || strpos($a['state'], 'instructed') === 0) {
-                                                                $sum_a_in += $a['einnahmen'];
-                                                                $sum_a_out += $a['ausgaben'];
-                                                            }
-                                                            if (strpos($a['state'], 'revocation') !== 0 && strpos($a['state'], 'draft') !== 0) {
-                                                                $sum_e_in += $a['einnahmen'];
-                                                                $sum_e_out += $a['ausgaben'];
-                                                            }
-                                                        }
+                                                    $sum_a_in = 0;
+                                                $sum_a_out = 0;
+                                                $sum_e_in = 0;
+                                                $sum_e_out = 0;
+                                                foreach ($auslagen[$id] as $a) {
+                                                    if (strpos($a['state'], 'booked') === 0 || strpos($a['state'], 'instructed') === 0) {
+                                                        $sum_a_in += $a['einnahmen'];
+                                                        $sum_a_out += $a['ausgaben'];
+                                                    }
+                                                    if (strpos($a['state'], 'revocation') !== 0 && strpos($a['state'], 'draft') !== 0) {
+                                                        $sum_e_in += $a['einnahmen'];
+                                                        $sum_e_out += $a['ausgaben'];
+                                                    }
+                                                }
 
-                                                        $this->renderTable(
-                                                            [
-                                                                'Name',
-                                                                'Zahlungsempfänger',
-                                                                'Einnahmen',
-                                                                'Ausgaben',
-                                                                'Status',
-                                                            ],
-                                                            [$auslagen[$id]],
-                                                            [],
-                                                            [
-                                                                [$this, 'auslagenLinkEscapeFunction'],
-                                                                // 3 Parameter
-                                                                null,
-                                                                // 1 parameter
-                                                                [$this, 'moneyEscapeFunction'],
-                                                                [$this, 'moneyEscapeFunction'],
-                                                                function ($stateString) {
-                                                                    $text = AuslagenHandler2::getStateStringFromName(
-                                                                        AuslagenHandler2::state2stateInfo(
-                                                                            $stateString
-                                                                        )['state']
-                                                                    );
-                                                                    return "<div class='label label-info'>$text</div>";
-                                                                },
-                                                            ],
-                                                            [
-                                                                [
-                                                                    '',
-                                                                    'Eingereicht:',
-                                                                    '&Sigma;: ' . number_format(
-                                                                        $sum_e_in,
-                                                                        2
-                                                                    ) . '&nbsp;€',
-                                                                    '&Sigma;: ' . number_format(
-                                                                        $sum_e_out,
-                                                                        2
-                                                                    ) . '&nbsp;€',
-                                                                    '&Delta;: ' . number_format(
-                                                                        $sum_e_out - $sum_e_in,
-                                                                        2
-                                                                    ) . '&nbsp;€',
+                                                $this->renderTable(
+                                                    [
+                                                        'Name',
+                                                        'Zahlungsempfänger',
+                                                        'Einnahmen',
+                                                        'Ausgaben',
+                                                        'Status',
+                                                    ],
+                                                    [$auslagen[$id]],
+                                                    [],
+                                                    [
+                                                        [$this, 'auslagenLinkEscapeFunction'],
+                                                        // 3 Parameter
+                                                        null,
+                                                        // 1 parameter
+                                                        [$this, 'moneyEscapeFunction'],
+                                                        [$this, 'moneyEscapeFunction'],
+                                                        function ($stateString) {
+                                                            $text = AuslagenHandler2::getStateStringFromName(
+                                                                AuslagenHandler2::state2stateInfo(
+                                                                    $stateString
+                                                                )['state']
+                                                            );
+
+                                                            return "<div class='label label-info'>$text</div>";
+                                                        },
+                                                    ],
+                                                    [
+                                                        [
+                                                            '',
+                                                            'Eingereicht:',
+                                                            '&Sigma;: '.number_format(
+                                                                $sum_e_in,
+                                                                2
+                                                            ).'&nbsp;€',
+                                                            '&Sigma;: '.number_format(
+                                                                $sum_e_out,
+                                                                2
+                                                            ).'&nbsp;€',
+                                                            '&Delta;: '.number_format(
+                                                                $sum_e_out - $sum_e_in,
+                                                                2
+                                                            ).'&nbsp;€',
+                                                        ],
+                                                        [
+                                                            '',
+                                                            'Ausgezahlt:',
+                                                            '&Sigma;: '.number_format(
+                                                                $sum_a_in,
+                                                                2
+                                                            ).'&nbsp€',
+                                                            '&Sigma;: '.number_format(
+                                                                $sum_a_out,
+                                                                2
+                                                            ).'&nbsp€',
+                                                            '&Delta;: '.number_format(
+                                                                $sum_a_out - $sum_a_in,
+                                                                2
+                                                            ).'&nbsp€',
                                                                 ],
-                                                                [
-                                                                    '',
-                                                                    'Ausgezahlt:',
-                                                                    '&Sigma;: ' . number_format(
-                                                                        $sum_a_in,
-                                                                        2
-                                                                    ) . '&nbsp€',
-                                                                    '&Sigma;: ' . number_format(
-                                                                        $sum_a_out,
-                                                                        2
-                                                                    ) . '&nbsp€',
-                                                                    '&Delta;: ' . number_format(
-                                                                        $sum_a_out - $sum_a_in,
-                                                                        2
-                                                                    ) . '&nbsp€',
-                                                                ],
-                                                            ]
-                                                        ); ?>
+                                                    ]
+                                                ); ?>
                                                     </div>
                                                 </div>
                                             <?php } ?>
                                         </div>
 
-                                        <?php ++$j;
+                                        <?php $j++;
                                     } ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <?php
-                    ++$i;
+                    $i++;
             }
         } else {
             $this->renderAlert(
-                    'Warnung',
-                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='" . URIBASE . "projekt/create'>Neues Projekt erstellen</a>",
-                    'warning'
-                );
+                'Warnung',
+                "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                'warning'
+            );
         } ?>
         </div>
         <?php
@@ -353,8 +355,9 @@ class MenuRenderer extends Renderer
             [],
             ['org_name' => true, 'id' => false]
         );
-        if (!is_array($extern_meta) || empty($extern_meta)) {
+        if (! is_array($extern_meta) || empty($extern_meta)) {
             $this->renderAlert('Schade', 'Hier existieren noch keine externen Anträge. Beschwere dich am besten bei Dave um das zu ändern!', 'info');
+
             return;
         }
         $idToKeys = [];
@@ -390,7 +393,8 @@ class MenuRenderer extends Renderer
         };
         $innerHeaderHeadlineFun = function ($content) {
             $date = date_create($content['projekt_von'])->format('y');
-            return "<a href=''>EP-" . $date . '-' . $content['id'] . '</a>';
+
+            return "<a href=''>EP-".$date.'-'.$content['id'].'</a>';
         };
         $innerHeaderFun = function ($content) {
             return $content['projekt_name'];
@@ -436,7 +440,7 @@ class MenuRenderer extends Renderer
 
             $escFun = [
                 function ($extern_id, $vorgang_id) {
-                    return "V$vorgang_id <a href='" . URIBASE . "/print/extern/$extern_id/vorgang/$vorgang_id'>" .
+                    return "V$vorgang_id <a href='".URIBASE."/print/extern/$extern_id/vorgang/$vorgang_id'>".
                         "<i class='fa fa-fw fa-print'></i></a>";
                 },
                 function ($vorkasse, $bewilligung, $preuf, $rueck, $mahn) {
@@ -453,10 +457,11 @@ class MenuRenderer extends Renderer
                     } else {
                         $str = '';
                     }
+
                     return $str;
                 },
                 function ($hhpId, $titelId, $titelName, $titelNr) {
-                    return "<a title='$titelName' href='" . URIBASE . "/hhp/$hhpId/titel/$titelId' >HP$hhpId - " .
+                    return "<a title='$titelName' href='".URIBASE."/hhp/$hhpId/titel/$titelId' >HP$hhpId - ".
                         "$titelNr<i class='fa fa-fw fa-info' ></i></a>";
                 },
                 function ($value) use ($obj) {
@@ -473,6 +478,7 @@ class MenuRenderer extends Renderer
                         $out_val = $value - $sum_value;
                         $sum_value = $value;
                     }
+
                     return $obj->moneyEscapeFunction($out_val);
                 },
                 function ($wiederspruch) {
@@ -516,7 +522,7 @@ class MenuRenderer extends Renderer
 
     public function setOverviewTabs($active): void
     {
-        $linkbase = URIBASE . 'menu/';
+        $linkbase = URIBASE.'menu/';
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
@@ -531,13 +537,13 @@ class MenuRenderer extends Renderer
 
     public function setTodoTabs($active): void
     {
-        $linkbase = URIBASE . 'menu/';
+        $linkbase = URIBASE.'menu/';
         $tabs = [
             'belege' => "<i class='fa fa-fw fa-folder-open-o'></i> Belege fehlen",
             'hv' => "<i class='fa fa-fw fa-legal'></i> Haushaltsverantwortliche*r",
             'kv' => "<i class='fa fa-fw fa-calculator'></i> Kassenverantwortliche*r",
         ];
-        if(AuthHandler::getInstance()->hasGroup('ref-finanzen-kv')){
+        if (AuthHandler::getInstance()->hasGroup('ref-finanzen-kv')) {
             $tabs['kv/exportBank'] = "<i class='fa fa-fw fa-money'></i> Überweisungen";
         }
         //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
@@ -596,7 +602,7 @@ class MenuRenderer extends Renderer
         //TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
         [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState('need-stura');
-        [, $internContentHV,] = $this->fetchProjectsWithState('ok-by-hv');
+        [, $internContentHV] = $this->fetchProjectsWithState('ok-by-hv');
         $groups = [
             'Vom StuRa abzustimmen' => $internContent,
             'zur Verkündung (genehmigt von HV)' => $internContentHV,
@@ -635,6 +641,7 @@ class MenuRenderer extends Renderer
             [$this, 'moneyEscapeFunction'],
             [$this, 'date2relstrEscapeFunction'],
         ];
+
         return [$header, $dbres, $escapeFunctionsIntern];
     }
 
@@ -657,8 +664,7 @@ class MenuRenderer extends Renderer
     }
 
     /**
-     * @param string $missingColumn  can be: hv, kv, belege
-     *
+     * @param  string  $missingColumn  can be: hv, kv, belege
      * @return array [$header, $auslagen, $escapeFunctionAuslagen]
      */
     private function fetchAuslagenWithState(string $stateString, string $missingColumn): array
@@ -699,6 +705,7 @@ class MenuRenderer extends Renderer
             [$this, 'moneyEscapeFunction'],
             [$this, 'date2relstrEscapeFunction'],
         ];
+
         return [$headerAuslagen, $auslagen, $escapeFunctionsAuslagen];
     }
 
@@ -717,7 +724,7 @@ class MenuRenderer extends Renderer
 
     }
 
-    private function renderMissingBelege() : void
+    private function renderMissingBelege(): void
     {
         $this->setTodoTabs('belege');
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'belege');
@@ -763,11 +770,12 @@ class MenuRenderer extends Renderer
             null,                                                       // 1 Parameter
             function ($str) {
                 $p = $str;
-                if (!$p) {
+                if (! $p) {
                     return '';
                 }
                 $p = CryptoHandler::decrypt_by_key($p, $_ENV['IBAN_SECRET_KEY']);
                 $p = CryptoHandler::unpad_string($p);
+
                 return $p;
             },                                                       // 1 Parameter
             function ($pId, $pCreate, $aId, $vwdzweck, $aName, $pName) {  // 6 Parameter - Verwendungszweck
@@ -776,13 +784,14 @@ class MenuRenderer extends Renderer
                 $ret = array_filter(
                     $ret,
                     static function ($val) {
-                        return !empty(trim($val));
+                        return ! empty(trim($val));
                     }
                 );
                 $ret = implode(' - ', $ret);
                 if (strlen($ret) > 140) {
                     $ret = substr($ret, 0, 140);
                 }
+
                 return $ret;
             },
             function ($ausgaben, $einnahmen) use ($obj) {                 // 2 Parameter

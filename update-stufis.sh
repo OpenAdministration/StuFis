@@ -32,7 +32,7 @@ else
 fi
 # install dependencies
 composer install --no-dev --optimize-autoloader
-npm install
+npm ci
 # compile tailwind css
 npm run production
 # update db

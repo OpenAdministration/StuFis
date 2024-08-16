@@ -18,8 +18,8 @@ class Helper
      * uses file_get_cntents
      *  - don't work if  'php_value allow_url_fopen' or 'php_value allow_url_include' is disabled
      *
-     * @param string $auth
-     * @param bool $auth_encode
+     * @param  string  $auth
+     * @param  bool  $auth_encode
      */
     public static function do_post_request(string $url, array $data, $auth = null, $auth_encode = false): array
     {
@@ -65,6 +65,7 @@ class Helper
         } elseif ($postresult) {
             $result['data'] = strip_tags($postresult);
         }
+
         return $result;
     }
 
@@ -72,9 +73,9 @@ class Helper
      * do post request
      * uses curl
      *
-     * @param array   $data
-     * @param string  $auth
-     * @param bool $auth_encode
+     * @param  array  $data
+     * @param  string  $auth
+     * @param  bool  $auth_encode
      */
     public static function do_post_request2(string $url, $data = null, $auth = null, $auth_encode = false): array
     {
@@ -123,6 +124,7 @@ class Helper
         } elseif ($postresult) {
             $result['data'] = strip_tags($postresult);
         }
+
         return $result;
     }
 
@@ -134,10 +136,11 @@ class Helper
     public static function hasMultipleKeys(array $keys, array $array): bool
     {
         foreach ($keys as $key) {
-            if (!array_key_exists($key, $array)) {
+            if (! array_key_exists($key, $array)) {
                 return false;
             }
         }
+
         return true;
     }
 }

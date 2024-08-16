@@ -4,18 +4,22 @@
  * filter and validation class
  *
  * @category        framework
+ *
  * @author 			michael g
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since 			17.02.2018
+ *
  * @copyright 		Copyright (C) 2018 - All rights reserved
+ *
  * @platform        PHP
+ *
  * @requirements    PHP 7.0 or higher
  */
 
 namespace framework;
 
 use App\Exceptions\LegacyDieException;
-use framework\render\ErrorHandler;
 
 class Validator
 {
@@ -60,19 +64,17 @@ class Validator
     /**
      * class constructor
      */
-    public function __contstruct()
-    {
-    }
+    public function __contstruct() {}
 
     // ==========================================
 
     /**
      * set validation status
      *
-     * @param bool $isError	error flag
-     * @param int $code 	html code
-     * @param string  $msg  	short message
-     * @param string  $desc 	error description
+     * @param  bool  $isError  error flag
+     * @param  int  $code  html code
+     * @param  string  $msg  short message
+     * @param  string  $desc  error description
      */
     private function setError($isError, $code = 0, $msg = '', $desc = '')
     {
@@ -80,6 +82,7 @@ class Validator
         $this->lastErrorCode = $code;
         $this->lastErrorMsg = $msg;
         $this->lastErrorDescription = ($desc == '') ? $msg : $desc;
+
         return $isError;
     }
 
@@ -126,7 +129,8 @@ class Validator
     /**
      * filter may sanitize input values are stored here
      * Post validators will create sanitized array
-     * @param ?int $key
+     *
+     * @param  ?int  $key
      * @return mixed $filtered
      */
     public function getFiltered($key = null)
@@ -142,8 +146,9 @@ class Validator
 
     /**
      * call selected validator function
-     * @param mixed $value
-     * @param array|string $validator
+     *
+     * @param  mixed  $value
+     * @param  array|string  $validator
      * @return bool value is ok
      */
     public function validate($value, $validator): bool
@@ -158,7 +163,8 @@ class Validator
 
         $this->setError(true, 403, 'Access Denied', "POST unknown validator: $validatorName");
         throw new LegacyDieException(500, "Validator: Unknown Validator: $validatorName", 'Validator: validate');
-        return !$this->isError;
+
+        return ! $this->isError;
     }
 
     /**
@@ -171,18 +177,18 @@ class Validator
      *  ]
      *  validator may contains parameter 'optional' -> so required can be disabled per parameter
      *
-     * @param $source_unsafe
-     * @param bool $required key is required
+     * @param  bool  $required  key is required
      */
     public function validateMap(&$source_unsafe, array $map, $required = true): bool
     {
         $out = [];
         foreach ($map as $key => $validator) {
             $this->lastMapKey = $key;
-            if (!isset($source_unsafe[$key])) {
-                if ($required && !in_array('optional', $validator, true)) {
+            if (! isset($source_unsafe[$key])) {
+                if ($required && ! in_array('optional', $validator, true)) {
                     $this->setError(true, 403, 'Access Denied', "missing parameter: '$key'");
-                    return !$this->isError;
+
+                    return ! $this->isError;
                 }
 
                 $this->setError(false);
@@ -195,7 +201,8 @@ class Validator
             }
         }
         $this->filtered = $out;
-        return !$this->isError;
+
+        return ! $this->isError;
     }
 
     /**
@@ -210,20 +217,22 @@ class Validator
      *  	]
      *  ]
      *
-     * @param string $groupKey
-     * @param bool $required keys is required (groupKey key is always required)
+     * @param  string  $groupKey
+     * @param  bool  $required  keys is required (groupKey key is always required)
      */
     public function validatePostGroup(array $map, $groupKey = 'mfunction', $required = true): bool
     {
-        if (!isset($_POST[$groupKey]) || !isset($map[$_POST[$groupKey]])) {
+        if (! isset($_POST[$groupKey]) || ! isset($map[$_POST[$groupKey]])) {
             $this->setError(true, 403, 'Access Denied', "POST request don't match $groupKey.");
-            return !$this->isError;
+
+            return ! $this->isError;
         }
 
         $ret = $this->validateMap($_POST, $map[$_POST[$groupKey]], $required);
         if ($ret) {
-            $this->filtered = [$_POST[$groupKey] . '' => $this->filtered];
+            $this->filtered = [$_POST[$groupKey].'' => $this->filtered];
         }
+
         return $ret;
     }
 
@@ -233,12 +242,11 @@ class Validator
     /**
      * dummy validator
      * always return 'valid'
-     * @param $value
-     * @param $params
      */
     public function V_dummy($value = null, $params = null): bool
     {
         $this->filtered = $value;
+
         return true;
     }
 
@@ -253,40 +261,44 @@ class Validator
      *  odd 	1
      *  modulo	2
      *  error	2	error message on error case
-     *
-     * @param $value
-     * @param $params
      */
     public function V_integer($value, $params = []): bool
     {
         if (filter_var($value, FILTER_VALIDATE_INT) === false) {
             $msg = $params['error'] ?? 'No Integer';
-            return !$this->setError(true, 200, $msg, 'No Integer');
+
+            return ! $this->setError(true, 200, $msg, 'No Integer');
         }
 
         $v = filter_var($value, FILTER_VALIDATE_INT);
         $this->filtered = $v;
         if (in_array('even', $params, true) && $v % 2 != 0) {
             $msg = $params['error'] ?? 'Integer have to be even';
-            return !$this->setError(true, 200, $msg, 'integer not even');
+
+            return ! $this->setError(true, 200, $msg, 'integer not even');
         }
         if (in_array('odd', $params, true) && $v % 2 == 0) {
             $msg = $params['error'] ?? 'Integer have to be odd';
-            return !$this->setError(true, 200, $msg, 'integer not odd');
+
+            return ! $this->setError(true, 200, $msg, 'integer not odd');
         }
         if (isset($params['min']) && $v < $params['min']) {
             $msg = $params['error'] ?? "Integer out of range: smaller than {$params['min']}";
-            return !$this->setError(true, 200, $msg, 'integer to small');
+
+            return ! $this->setError(true, 200, $msg, 'integer to small');
         }
         if (isset($params['max']) && $v > $params['max']) {
             $msg = $params['error'] ?? "Integer out of range: larger than {$params['max']}";
-            return !$this->setError(true, 200, $msg, 'integer to big');
+
+            return ! $this->setError(true, 200, $msg, 'integer to big');
         }
         if (isset($params['modulo']) && $v % $params['modulo'] !== 0) {
             $msg = $params['error'] ?? 'Integer modulo failed';
-            return !$this->setError(true, 200, $msg, 'modulo failed');
+
+            return ! $this->setError(true, 200, $msg, 'modulo failed');
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -300,26 +312,26 @@ class Validator
      *  step				2	step - be carefull may produce errors (wrong deteced values)
      *  format				2	trim to x decimal places
      *  error				2	error message on error case
-     *
-     * @param $value
-     * @param $params
      */
     public function V_float($value, $params = []): bool
     {
         $decimal = $params['decimal_seperator'] ?? '.';
         if (filter_var($value, FILTER_VALIDATE_FLOAT, ['options' => ['decimal' => $decimal]]) === false) {
             $msg = $params['error'] ?? 'No Float';
-            return !$this->setError(true, 200, $msg, 'No Float');
+
+            return ! $this->setError(true, 200, $msg, 'No Float');
         }
 
         $v = filter_var($value, FILTER_VALIDATE_FLOAT, ['options' => ['decimal' => $decimal]]);
         if (isset($params['min']) && $v < $params['min']) {
             $msg = $params['error'] ?? "Float out of range: smaller than {$params['min']}";
-            return !$this->setError(true, 200, $msg, 'float to small');
+
+            return ! $this->setError(true, 200, $msg, 'float to small');
         }
         if (isset($params['max']) && $v > $params['max']) {
             $msg = $params['error'] ?? "Float out of range: larger than {$params['max']}";
-            return !$this->setError(true, 200, $msg, 'float to big');
+
+            return ! $this->setError(true, 200, $msg, 'float to big');
         }
         if (isset($params['step'])) {
             $mod = $params['step'];
@@ -334,7 +346,8 @@ class Validator
             $k = strlen($ex);
             if ((is_numeric($cv) && mb_strpos($value, '.') && mb_strpos($value, '.') + ($k) < mb_strlen($value)) || $cv % $mod !== 0) {
                 $msg = $params['error'] ?? 'float invalid step';
-                return !$this->setError(true, 200, $msg, 'float invalid step');
+
+                return ! $this->setError(true, 200, $msg, 'float invalid step');
             }
         }
         if (isset($params['format'])) {
@@ -342,12 +355,14 @@ class Validator
         } else {
             $this->filtered = $v;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * check if integer and larger than 0
-     * @param null $params
+     *
+     * @param  null  $params
      */
     public function V_id(int $value, $params = null): bool
     {
@@ -367,23 +382,22 @@ class Validator
      *  maxlength 2		maximum string length - default 127, set -1 for unlimited value
      *  error	  2 	replace whole error message on error case
      *  empty	  1 	allow empty value
-     *
-     * @param $value
-     * @param $params
      */
     public function V_text($value, $params = []): bool
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             $msg = 'No Text';
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'No Text');
+
+            return ! $this->setError(true, 200, $msg, 'No Text');
         }
 
         if (in_array('empty', $params, true) && $value === '') {
             $this->filtered = '';
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $s = ''.$value;
         if (in_array('strip', $params, true)) {
@@ -403,17 +417,20 @@ class Validator
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'text validation failed - too short');
+
+            return ! $this->setError(true, 200, $msg, 'text validation failed - too short');
         }
         if (isset($params['maxlength']) && $params['maxlength'] !== -1 && strlen($s) > $params['maxlength']) {
             $msg = "The text is too long (Maximum length: {$params['maxlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'text validation failed - too long');
+
+            return ! $this->setError(true, 200, $msg, 'text validation failed - too long');
         }
         $this->filtered = $s;
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -422,35 +439,32 @@ class Validator
      * $param
      *  empty		1	allow empty value
      *  maxlength	2	maximum string length
-     *
-     * @param $value
-     * @param $params
      */
     public function V_mail($value, $params = []): bool
     {
         $email = filter_var($value, FILTER_SANITIZE_EMAIL);
         if (in_array('empty', $params, true) && $email === '') {
             $this->filtered = $email;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         if (isset($params['maxlength']) && strlen($email) >= $params['maxlength']) {
             $msg = "E-Mail is too long (Maximum length: {$params['maxlength']})";
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         $re = '/^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})$/';
-        if ($email !== '' && (filter_var($email, FILTER_VALIDATE_EMAIL) === false || !preg_match($re, $email))) {
-            return !$this->setError(true, 200, 'mail validation failed', 'mail validation failed');
+        if ($email !== '' && (filter_var($email, FILTER_VALIDATE_EMAIL) === false || ! preg_match($re, $email))) {
+            return ! $this->setError(true, 200, 'mail validation failed', 'mail validation failed');
         } else {
             $this->filtered = $email;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
     }
 
     /**
      * phone validator
-     *
-     * @param $value
-     * @param $params
      */
     public function V_phone($value, $params = null): bool
     {
@@ -460,35 +474,37 @@ class Validator
         if ($phone === '') {
             $this->filtered = '';
         } elseif (strlen($phone) > 40) {
-            return !$this->setError(true, 200, 'phone validation failed', 'phone validation failed');
+            return ! $this->setError(true, 200, 'phone validation failed', 'phone validation failed');
         } else {
             $this->filtered = $phone;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * name validator
      *
-     * @param $value
-     * $param
-     *  minlength 2		minimum string length
-     *  maxlength 2		maximum string length - default 127, set -1 for unlimited value
-     *  error	  2 	replace whole error message on error case
-     *  empty	  1 	allow empty value
-     *  multi	  2		allow multiple names seperated with this seperator, length 1
-     *  multi_add_space  1 adds space after seperator to prettify list
+     * @param  $value
+     *                $param
+     *                minlength 2		minimum string length
+     *                maxlength 2		maximum string length - default 127, set -1 for unlimited value
+     *                error	  2 	replace whole error message on error case
+     *                empty	  1 	allow empty value
+     *                multi	  2		allow multiple names seperated with this seperator, length 1
+     *                multi_add_space  1 adds space after seperator to prettify list
      */
     public function V_name($value, $params = null): bool
     {
         $name = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $name === '') {
             $this->filtered = '';
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $re = '';
         $re_no_sep = '/^[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+[a-zA-Z0-9\-_ .äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+$/u';
-        if (!isset($params['multi']) || strlen($params['multi']) !== 1) {
+        if (! isset($params['multi']) || strlen($params['multi']) !== 1) {
             $re = $re_no_sep;
             $params['multi'] = null;
             unset($params['multi']);
@@ -499,11 +515,12 @@ class Validator
             }
             $re = '/^[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+[a-zA-Z0-9\-_ '.$sep.'.äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*[a-zA-Z0-9äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]+$/';
         }
-        if ($name !== '' && (!preg_match($re, $name))) {
+        if ($name !== '' && (! preg_match($re, $name))) {
             $msg = ($params['error'] ?? 'name validation failed');
-            return !$this->setError(true, 200, $msg, 'name validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'name validation failed');
         }
-        if (!isset($params['maxlength'])) {
+        if (! isset($params['maxlength'])) {
             $params['maxlength'] = 127;
         }
         if (isset($params['maxlength']) && $params['maxlength'] !== -1 && strlen($name) > $params['maxlength']) {
@@ -511,16 +528,18 @@ class Validator
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'name validation failed - too long');
+
+            return ! $this->setError(true, 200, $msg, 'name validation failed - too long');
         }
         if (isset($params['minlength']) && strlen($name) < $params['minlength']) {
             $msg = "The name is too short (Minimum length: {$params['minlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'name validation failed - too short');
+
+            return ! $this->setError(true, 200, $msg, 'name validation failed - too short');
         }
-        if (!isset($params['multi']) || !mb_strpos($name, $params['multi'])) {
+        if (! isset($params['multi']) || ! mb_strpos($name, $params['multi'])) {
             $this->filtered = $name;
         } elseif (mb_strpos($name, $params['multi'])) {
             $tmp_list = explode($params['multi'], $name);
@@ -533,57 +552,59 @@ class Validator
             }
             $this->filtered = implode($params['multi'].((in_array('multi_add_space', $params, true)) ? ' ' : ''), $tmp_names);
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * url validator
      *
-     * @param $value
-     * @param $params
-     * 	empty	  		1 	allow empty value
-     * 	error	 		2 	replace whole error message on error case
-     *  forceprotocol	1	force http://|https:// in url
-     *  forceslash		1	force trailingslash
+     * @param  $params
+     *                 empty	  		1 	allow empty value
+     *                 error	 		2 	replace whole error message on error case
+     *                 forceprotocol	1	force http://|https:// in url
+     *                 forceslash		1	force trailingslash
      */
     public function V_url($value, $params = null): bool
     {
         $url = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $url === '') {
             $this->filtered = '';
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $re = '/^((http[s]?)((:|%3A)\/\/))'.((in_array('forceprotocol', $params, true)) ? '' : '?').'(((\w)+((-|\.)(\w+))*)+(\w){0,6}?(:([0-5]?[0-9]{1,4}|6([0-4][0-9]{3}|5([0-4][0-9]{2}|5([0-2][0-9]|3[0-5])))))?\/'.((in_array('forceslash', $params, true)) ? '' : '?').')((\w)+((\.|-)(\w)+)*\/'.((in_array('forceslash', $params, true)) ? '' : '?').')*$/';
-        if (!preg_match($re, $url) || strlen($url) >= 128) {
+        if (! preg_match($re, $url) || strlen($url) >= 128) {
             $msg = $params['error'] ?? 'url validation failed';
-            return !$this->setError(true, 200, $msg, 'url validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'url validation failed');
         }
 
         $this->filtered = $url;
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * ip validator
      * check if string is a valid ip address (supports ipv4 and ipv6)
-     * @param $value
-     * @param $params
      */
     public function V_ip($value, $params = null): bool
     {
         if (self::isValidIP($value)) {
             $this->filtered = $value;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
 
-        return !$this->setError(true, 200, 'No ip address', 'No ip address');
+        return ! $this->setError(true, 200, 'No ip address', 'No ip address');
     }
 
     /**
      * check if string is a valid ip address (supports ipv4 and ipv6)
      * helper function
      *
-     * @param bool $recursive if true also allowes IP address with surrounding brackets []
+     * @param  bool  $recursive  if true also allowes IP address with surrounding brackets []
      */
     public static function isValidIP(string $ipadr, $recursive = true): bool
     {
@@ -600,9 +621,10 @@ class Validator
 
     /**
      * check if string is ends with other string
-     * @param string $haystack
-     * @param array|string $needle
-     * @param string|null $needleprefix
+     *
+     * @param  string  $haystack
+     * @param  array|string  $needle
+     * @param  string|null  $needleprefix
      * @return bool
      */
     public static function endsWith($haystack, $needle, $needleprefix = null)
@@ -614,6 +636,7 @@ class Validator
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -629,34 +652,35 @@ class Validator
      *
      * $param
      *  empty	1	allow empty value
-     *
-     * @param $value
-     * @param $params
      */
     public function V_domain($value, $params = null): bool
     {
         $host = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $host === '') {
             $this->filtered = $host;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         if ($this->V_ip($host)) {
             $this->filtered = $host;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         } elseif (preg_match('/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/', $host) &&
             (((version_compare(PHP_VERSION, '7.0.0') >= 0) && filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false) ||
                 (version_compare(PHP_VERSION, '7.0.0') < 0))) {
             $this->filtered = $host;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         } else {
             $value_idn = idn_to_ascii($host);
             if (preg_match('/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/', $value_idn) &&
                 ((version_compare(PHP_VERSION, '7.0.0') >= 0) && filter_var($value_idn, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false ||
                     (version_compare(PHP_VERSION, '7.0.0') < 0))) {
                 $this->filtered = $value_idn;
-                return !$this->setError(false);
+
+                return ! $this->setError(false);
             } else {
-                return !$this->setError(true, 200, 'Kein gültiger Hostname angegeben');
+                return ! $this->setError(true, 200, 'Kein gültiger Hostname angegeben');
             }
         }
     }
@@ -679,17 +703,15 @@ class Validator
      *  trimRight  2	trim Text on right side, parameter trim characters
      *  empty	   1	allow empty string if not in regex
      *
-     * @param $value
-     * @param $params
      * @return bool
      */
     public function V_regex($value, $params = ['pattern' => '/.*/'])
     {
         $v = ''.$value;
-        if (!in_array('noTagStrip', $params, true)) {
+        if (! in_array('noTagStrip', $params, true)) {
             $v = strip_tags($v);
         }
-        if (!in_array('noTrim', $params, true)) {
+        if (! in_array('noTrim', $params, true)) {
             $v = trim($v);
         }
         if (isset($params['trimLeft'])) {
@@ -700,7 +722,8 @@ class Validator
         }
         if (in_array('empty', $params, true) && $v === '') {
             $this->filtered = $v;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         if (isset($params['replace'])) {
             $v = str_replace($params['replace'][0], $params['replace'][1], $v);
@@ -716,26 +739,30 @@ class Validator
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         if (isset($params['minlength']) && strlen($v) < $params['minlength']) {
             $msg = "String is too short (Minimum length: {$params['minlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         $re = $params['pattern'];
-        if (!preg_match($re, $v) || (isset($params['maxlength']) && strlen($v) >= $params['maxlength'])) {
+        if (! preg_match($re, $v) || (isset($params['maxlength']) && strlen($v) >= $params['maxlength'])) {
             $msg = ((isset($params['errorkey'])) ? $params['errorkey'] : 'regex').' validation failed';
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, $msg);
+
+            return ! $this->setError(true, 200, $msg, $msg);
         } else {
             $this->filtered = $v;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -749,8 +776,6 @@ class Validator
      *  hash	  1 	hash password	 - only available if Crypto class is defined
      *	error	   2	replace whole error message on error case
      *
-     * @param $value
-     * @param $params
      * @return bool
      */
     public function V_password($value, $params = [])
@@ -758,33 +783,36 @@ class Validator
         $p = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $p === '') {
             $this->filtered = $p;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         if (isset($params['maxlength']) && strlen($p) >= $params['maxlength']) {
             $msg = "The password is too long (Maximum length: {$params['maxlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         if (isset($params['minlength']) && strlen($p) < $params['minlength']) {
             $msg = "The password is too short (Minimum length: {$params['minlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         $emsg = null;
         if (in_array('hash', $params, true)) {
-            if (!class_exists('\CryptoHandler')) {
+            if (! class_exists('\CryptoHandler')) {
                 $emsg = 'Validator: Password: "hash" requires Crypto class to be loaded.';
-            } elseif (!defined('AUTH_PW_PEPPER')) {
+            } elseif (! defined('AUTH_PW_PEPPER')) {
                 $emsg = 'Validator: Password: "hash": global constant AUTH_PW_PEPPER required.';
             } else {
                 $p = CryptoHandler::hashPassword($p.AUTH_PW_PEPPER);
             }
         } elseif (in_array('encrypt', $params, true)) {
-            if (!class_exists('\CryptoHandler')) {
+            if (! class_exists('\CryptoHandler')) {
                 $emsg = 'Validator: Password: "encrypt" requires Crypto class to be loaded.';
             } else {
                 $p = CryptoHandler::pad_string($p);
@@ -795,20 +823,21 @@ class Validator
             if (isset($params['error'])) {
                 $emsg = $params['error'];
             }
-            return !$this->setError(true, 200, $emsg);
+
+            return ! $this->setError(true, 200, $emsg);
         }
         $this->filtered = $p;
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * name validator
      *
-     * @param $value
-     * @param $params
-     * 	empty		1 	allow empty value
-     * 	maxlength	2	maximum string length
-     *  error		2	replace whole error message on error case
+     * @param  $params
+     *                 empty		1 	allow empty value
+     *                 maxlength	2	maximum string length
+     *                 error		2	replace whole error message on error case
      * @return bool
      */
     public function V_path($value, $params = null)
@@ -816,35 +845,38 @@ class Validator
         $path = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $path === '') {
             $this->filtered = '';
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         if (isset($params['maxlength']) && strlen($path) >= $params['maxlength']) {
             $msg = "The path is too long (Maximum length: {$params['maxlength']})";
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg);
+
+            return ! $this->setError(true, 200, $msg);
         }
         $re = '/^((\w)+((\.|-)(\w)+)*)(\/(\w)+((\.|-)(\w)+)*)*$/';
-        if (!preg_match($re, $path)) {
+        if (! preg_match($re, $path)) {
             $msg = 'path validation failed';
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'path validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'path validation failed');
         } else {
             $this->filtered = $path;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * color validator
      *
-     * @param $value
-     * @param $params
-     * 	empty	  1 	allow empty value
-     *  error	   2	replace whole error message on error case
+     * @param  $params
+     *                 empty	  1 	allow empty value
+     *                 error	   2	replace whole error message on error case
      * @return bool
      */
     public function V_color($value, $params = null)
@@ -852,19 +884,22 @@ class Validator
         $color = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $color === '') {
             $this->filtered = '';
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $re = '/^([a-fA-F0-9]){6}$/';
-        if (!preg_match($re, $color) || strlen($color) != 6) {
+        if (! preg_match($re, $color) || strlen($color) != 6) {
             $msg = 'color validation failed';
             if (isset($params['error'])) {
                 $msg = $params['error'];
             }
-            return !$this->setError(true, 200, $msg, 'color validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'color validation failed');
         } else {
             $this->filtered = $color;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -873,8 +908,6 @@ class Validator
      * $param
      *  error	2	overwrite error message
      *
-     * @param $value
-     * @param $params
      * @return bool
      */
     public function V_filename($value, $params = null)
@@ -885,11 +918,13 @@ class Validator
         $fname = str_replace('..', '.', $fname);
         if ((strlen($fname) >= 255) || ($fname === '')) {
             $msg = (isset($params['error'])) ? $params['error'] : 'filename validation failed';
-            return !$this->setError(true, 200, $msg, 'filename validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'filename validation failed');
         } else {
             $this->filtered = $fname;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -901,8 +936,6 @@ class Validator
      *  error		2	overwrite error message
      *  parse		2	parse date to format after validation
      *
-     * @param $value
-     * @param $params
      * @return bool
      */
     public function V_time($value, $params = null)
@@ -911,18 +944,22 @@ class Validator
         $fmt = (isset($params['format'])) ? $params['format'] : 'H:i';
         if (in_array('empty', $params, true) && ($time === '0' || $time === 'false' || $time === '' || $time === false || $time == 0)) {
             $this->filtered = false;
-            return !$this->setError(false);
-        } elseif (!in_array('empty', $params, true) && ($time === '0' || $time === 'false' || $time === '' || $time === false || $time == 0)) {
+
+            return ! $this->setError(false);
+        } elseif (! in_array('empty', $params, true) && ($time === '0' || $time === 'false' || $time === '' || $time === false || $time == 0)) {
             $msg = (isset($params['error'])) ? $params['error'] : 'time validation failed, format: "'.$fmt.'"';
-            return !$this->setError(true, 200, $msg, 'time validation failed, format: "'.$fmt.'"');
+
+            return ! $this->setError(true, 200, $msg, 'time validation failed, format: "'.$fmt.'"');
         } else {
             $d = \DateTime::createFromFormat($fmt, $time);
             if ($d && $d->format($fmt) == $time) {
                 $this->filtered = $d->format((isset($params['parse'])) ? $params['parse'] : $fmt);
-                return !$this->setError(false);
+
+                return ! $this->setError(false);
             } else {
                 $msg = (isset($params['error'])) ? $params['error'] : 'time validation failed, format: "'.$fmt.'"';
-                return !$this->setError(true, 200, $msg, 'time validation failed, format: "'.$fmt.'"');
+
+                return ! $this->setError(true, 200, $msg, 'time validation failed, format: "'.$fmt.'"');
             }
         }
     }
@@ -940,35 +977,40 @@ class Validator
      *  validator	2	run this validator on each array element
      *  error		2	overwrite error message
      *
-     * @param array $a
-     * @param array $params
+     * @param  array  $a
+     * @param  array  $params
      * @return bool
      */
     public function V_array($a, $params)
     {
-        if (!is_array($a)) {
+        if (! is_array($a)) {
             if ($a === '0' && in_array('false', $params, true)) {
                 $a = [];
             } else {
                 $msg = (isset($params['error'])) ? $params['error'] : 'Value is no array';
-                return !$this->setError(true, 200, $msg, 'array validator failed');
+
+                return ! $this->setError(true, 200, $msg, 'array validator failed');
             }
         }
-        if ((!in_array('empty', $params, true) || count($a) > 0) && isset($params['minlength']) && count($a) < $params['minlength']) {
+        if ((! in_array('empty', $params, true) || count($a) > 0) && isset($params['minlength']) && count($a) < $params['minlength']) {
             $msg = (isset($params['error'])) ? $params['error'] : 'Array to short: require minimal length of "'.$params['minlength'].'" elements';
-            return !$this->setError(true, 200, $msg, 'array validator failed: array to short');
+
+            return ! $this->setError(true, 200, $msg, 'array validator failed: array to short');
         }
         if (isset($params['maxlength']) && count($a) > $params['maxlength']) {
             $msg = (isset($params['error'])) ? $params['error'] : 'Array to long: maximal array length "'.$params['maxlength'].'"';
-            return !$this->setError(true, 200, $msg, 'array validator failed: array to long');
+
+            return ! $this->setError(true, 200, $msg, 'array validator failed: array to long');
         }
-        if (!in_array('empty', $params, true) && count($a) == 0) {
+        if (! in_array('empty', $params, true) && count($a) == 0) {
             $msg = (isset($params['error'])) ? $params['error'] : 'Array to short: empty array is not permitted.';
-            return !$this->setError(true, 200, $msg, 'array validator failed: array is empty');
+
+            return ! $this->setError(true, 200, $msg, 'array validator failed: array is empty');
         }
-        if (!isset($params['validator'])) {
+        if (! isset($params['validator'])) {
             $this->filtered = $a;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $out = [];
         $tmp_last_mapkey = $this->lastMapKey;
@@ -1001,7 +1043,8 @@ class Validator
             $this->lastMapKey = "{$tmp_last_mapkey}[{$tmp_last_key}]{$curr}";
         }
         $this->filtered = $out;
-        return !$this->isError;
+
+        return ! $this->isError;
     }
 
     /**
@@ -1012,22 +1055,23 @@ class Validator
      *  map 		2 validation map
      *  reqired 	2 boolean, default false
      *
-     * @param array $a
-     * @param array $params
+     * @param  array  $a
+     * @param  array  $params
      * @return bool
      */
     public function V_arraymap($a, $params)
     {
-        if (!isset($params['map'])) {
-            return !$this->setError(true, 200, 'invalid configuration on arraymap validation', 'arraymap validator failed: wrong configuration: missing parameter map');
+        if (! isset($params['map'])) {
+            return ! $this->setError(true, 200, 'invalid configuration on arraymap validation', 'arraymap validator failed: wrong configuration: missing parameter map');
         }
         $tmp_last_mapkey = $this->lastMapKey;
-        $this->validateMap($a, $params['map'], (!isset($params['map']) ? 'required' : $params['required']));
+        $this->validateMap($a, $params['map'], (! isset($params['map']) ? 'required' : $params['required']));
         if ($this->isError) {
             $curr = $this->_capsule_lastMapKey();
             $this->lastMapKey = "{$tmp_last_mapkey}{$curr}";
         }
-        return !$this->isError;
+
+        return ! $this->isError;
     }
 
     /**
@@ -1039,8 +1083,6 @@ class Validator
      *  parse		2	parse date to format after validation
      *  empty		1	allow empty array
      *
-     * @param $value
-     * @param $params
      * @return bool
      */
     public function V_date($value, $params = null)
@@ -1048,7 +1090,8 @@ class Validator
         $date = trim(strip_tags(''.$value));
         if (in_array('empty', $params, true) && $date === '') {
             $this->filtered = $date;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         $fmt = (isset($params['format'])) ? $params['format'] : 'Y-m-d';
         $d = \DateTime::createFromFormat($fmt, $date);
@@ -1056,9 +1099,11 @@ class Validator
             $this->filtered = $d->format((isset($params['parse'])) ? $params['parse'] : $fmt);
         } else {
             $msg = (isset($params['error'])) ? $params['error'] : 'date validation failed, format: "'.$fmt.'"';
-            return !$this->setError(true, 200, $msg, 'date validation failed, format: "'.$fmt.'"');
+
+            return ! $this->setError(true, 200, $msg, 'date validation failed, format: "'.$fmt.'"');
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
@@ -1069,8 +1114,8 @@ class Validator
      *  empty		1	allow empty array
      *  error		2	overwrite error message
      *
-     * @param string $value
-     * @param array $params
+     * @param  string  $value
+     * @param  array  $params
      * @return bool
      */
     public function V_iban($value, $params)
@@ -1081,23 +1126,26 @@ class Validator
         //empty
         if (in_array('empty', $params, true) && $iban === '') {
             $this->filtered = $iban;
-            return !$this->setError(false);
+
+            return ! $this->setError(false);
         }
         //check iban
-        if (!self::_checkIBAN($iban)) {
+        if (! self::_checkIBAN($iban)) {
             $msg = $params['error'] ?? 'iban validation failed';
-            return !$this->setError(true, 200, $msg, 'iban validation failed');
+
+            return ! $this->setError(true, 200, $msg, 'iban validation failed');
         } else {
             $this->filtered = $iban;
         }
-        return !$this->setError(false);
+
+        return ! $this->setError(false);
     }
 
     /**
      * check if string is valid iban,
      *
-     * @param string $iban to check
-     * @param bool $acceptCensoredIban define if censored IBANs should be handled valid or invalid (default: valid)
+     * @param  string  $iban  to check
+     * @param  bool  $acceptCensoredIban  define if censored IBANs should be handled valid or invalid (default: valid)
      *
      * @see https://en.wikipedia.org/wiki/International_Bank_Account_Number#Validating_the_IBAN
      * @see https://stackoverflow.com/questions/20983339/validate-iban-php
@@ -1108,7 +1156,7 @@ class Validator
         $countries = ['AL' => 28, 'AD' => 24, 'AT' => 20, 'AZ' => 28, 'BH' => 22, 'BE' => 16, 'BA' => 20, 'BR' => 29, 'BG' => 22, 'CR' => 21, 'HR' => 21, 'CY' => 28, 'CZ' => 24, 'DK' => 18, 'DO' => 28, 'EE' => 20, 'FO' => 18, 'FI' => 18, 'FR' => 27, 'GE' => 22, 'DE' => 22, 'GI' => 23, 'GR' => 27, 'GL' => 18, 'GT' => 28, 'HU' => 28, 'IS' => 26, 'IE' => 22, 'IL' => 23, 'IT' => 27, 'JO' => 30, 'KZ' => 20, 'KW' => 30, 'LV' => 21, 'LB' => 28, 'LI' => 21, 'LT' => 20, 'LU' => 20, 'MK' => 19, 'MT' => 31, 'MR' => 27, 'MU' => 30, 'MC' => 27, 'MD' => 24, 'ME' => 22, 'NL' => 18, 'NO' => 15, 'PK' => 24, 'PS' => 29, 'PL' => 28, 'PT' => 25, 'QA' => 29, 'RO' => 24, 'SM' => 27, 'SA' => 24, 'RS' => 22, 'SK' => 24, 'SI' => 19, 'ES' => 24, 'SE' => 24, 'CH' => 21, 'TN' => 24, 'TR' => 26, 'AE' => 23, 'GB' => 22, 'VG' => 24];
 
         //1. check country code exists + iban has valid length
-        if (!array_key_exists(substr($iban, 0, 2), $countries)) {
+        if (! array_key_exists(substr($iban, 0, 2), $countries)) {
             return false;
         }
         // check if censored iban
@@ -1122,7 +1170,7 @@ class Validator
         }
 
         //2. Rearrange country code and checksum
-        $rearranged = substr($iban, 4) . substr($iban, 0, 4);
+        $rearranged = substr($iban, 4).substr($iban, 0, 4);
 
         //3. convert to integer
         $iban_letters = str_split($rearranged);
@@ -1139,6 +1187,7 @@ class Validator
                 }
             }
         }
+
         //4. calculate mod 97 -> has to be 1
         return self::_bcmod($iban_int_only, '97') === 1;
     }
@@ -1147,8 +1196,8 @@ class Validator
      * _bcmod - get modulus (substitute for bcmod)
      * be careful with big $modulus values
      *
-     * @param string $left_operand <p>The left operand, as a string.</p>
-     * @param int $modulus <p>The modulus, as a string. </p>
+     * @param  string  $left_operand  <p>The left operand, as a string.</p>
+     * @param  int  $modulus  <p>The modulus, as a string. </p>
      *
      * based on
      * https://stackoverflow.com/questions/10626277/function-bcmod-is-not-available
@@ -1163,7 +1212,7 @@ class Validator
         $take = 5; // how many numbers to take at once?
         $mod = '';
         do {
-            $a = (int) $mod . substr($left_operand, 0, $take);
+            $a = (int) $mod.substr($left_operand, 0, $take);
             $left_operand = substr($left_operand, $take);
             $mod = $a % $modulus;
         } while ($left_operand !== '');
@@ -1182,6 +1231,7 @@ class Validator
                 $capsuled = '['.substr($capsuled, 0, $pos).']'.substr($capsuled, $pos);
             }
         }
+
         return $capsuled;
     }
 }

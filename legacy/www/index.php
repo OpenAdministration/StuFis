@@ -1,4 +1,5 @@
 <?php
+
 // auth ----------------------------------
 use booking\BookingHandler;
 use booking\HHPHandler;
@@ -6,7 +7,6 @@ use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use forms\RestHandler;
-use framework\auth\AuthSamlHandler;
 use framework\file\FileController;
 use framework\render\ErrorHandler;
 use framework\render\HTMLPageRenderer;
@@ -15,7 +15,7 @@ use framework\render\Renderer;
 use framework\Router;
 
 // routing ------------------------------
-$router = new Router();
+$router = new Router;
 $routeInfo = $router->route();
 // handle route -------------------------
 // print_r($routeInfo);
@@ -48,25 +48,25 @@ switch ($controllerName) {
         $bHandler = new BookingHandler($routeInfo);
         $htmlRenderer->appendRendererContent($bHandler);
         $htmlRenderer->render();
-    break;
+        break;
     case 'fints':
         $fintsHandler = new FintsController($routeInfo);
         $htmlRenderer->appendRendererContent($fintsHandler);
         $htmlRenderer->render();
         break;
     case 'rest':
-        $restHandler = new RestHandler();
+        $restHandler = new RestHandler;
         $restHandler->handlePost($routeInfo);
         break;
     case 'files':
-        $fileController = new FileController();
+        $fileController = new FileController;
         $fileController->handle($routeInfo);
         break;
     case 'error':
         ErrorHandler::handleErrorRoute($routeInfo);
         break;
     default:
-        $className = '\\framework\\render\\' . ucfirst($controllerName) . 'Controller';
+        $className = '\\framework\\render\\'.ucfirst($controllerName).'Controller';
         if (class_exists($className)) {
             $controller = new $className($routeInfo);
             if ($controller instanceof Renderer) {

@@ -9,13 +9,6 @@ use Illuminate\Support\Facades\Request;
 
 class LocalAuthService extends AuthService
 {
-
-    private string $username;
-    public function __construct()
-    {
-        $this->username = config('local.auth.username');
-    }
-
     public function prepareLogin(): Response|RedirectResponse
     {
         return redirect()->route('login.callback');
@@ -24,14 +17,14 @@ class LocalAuthService extends AuthService
     public function userFromCallback(Request $request): array
     {
         return [
-            ['username' => $this->username],
-            []
+            ['username' => config('local.auth.username', 'user')],
+            [],
         ];
     }
 
     public function userCommittees(): Collection
     {
-        return match ($this->username){
+        return match (\Auth::user()->username) {
             'user' => collect(['Students Council']),
             'hhv' => collect(['Financial Department']),
             'kv' => collect(['Financial Department']),
@@ -51,7 +44,7 @@ class LocalAuthService extends AuthService
 
     public function userGroupsRaw(): Collection
     {
-        return match ($this->username){
+        return match (\Auth::user()->username) {
             'user' => collect(['login']),
             'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
@@ -61,7 +54,5 @@ class LocalAuthService extends AuthService
         };
     }
 
-    public function afterLogout(){}
-
-
+    public function afterLogout() {}
 }

@@ -6,15 +6,20 @@ namespace framework\svg;
  * Adding Beam (Block) Diagram Class
  *
  * @author 		Michael Gnehr <michael@gnehr.de>
+ *
  * @category    framework
+ *
  * @since 		09.08.2016
+ *
  * @version 	02.0.0 since 01.07.2018
+ *
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
 class SvgDiagramAddingBeam extends SvgDiagramBlock
 {
     /**
      * this class implements following diagram types
+     *
      * @var array
      */
     private static $types = [
@@ -25,7 +30,8 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 
     /**
      * constructor
-     * @param string $type
+     *
+     * @param  string  $type
      */
     public function __construct($type)
     {
@@ -48,13 +54,15 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 
     /**
      * sets Explanation array -> creates color fields with description
+     *
      * @var array
      */
     protected $explanation = [];
 
     /**
      * achsis description
-     * @param mixed $set form: array('x' => $Xvalue, 'y' => $Yvalue);
+     *
+     * @param  mixed  $set  form: array('x' => $Xvalue, 'y' => $Yvalue);
      */
     protected $achsisDescription;
 
@@ -62,8 +70,9 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 
     /**
      * set AddBlock Settings variables
-     * @param string|number $key : 'interpret_date'
-     * @param mixed $value
+     *
+     * @param  string|number  $key  : 'interpret_date'
+     * @param  mixed  $value
      */
     public function setAddBeamSetting($key, $value)
     {
@@ -74,7 +83,8 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 
     /**
      * sets Explanation array -> creates color fields with description
-     * @param mixed $set
+     *
+     * @param  mixed  $set
      */
     public function setExplanation($set)
     {
@@ -85,7 +95,8 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
 
     /**
      * set achsis description
-     * @param mixed $set form: array('x' => $Xvalue, 'y' => $Yvalue);
+     *
+     * @param  mixed  $set  form: array('x' => $Xvalue, 'y' => $Yvalue);
      */
     public function setAchsisDescription($set)
     {
@@ -100,6 +111,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
     /**
      * (non-PHPdoc)
      * generate block chart from data - sums values per beam
+     *
      * @see \intertopia\Classes\svg\SvgDiagramCore::render()
      */
     public function render()
@@ -144,7 +156,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
             $chartcontent .= $this->drawText(
                 $key,
                 $this->settings['padding'] + $entryWidth * ($i + 1) + $entryWidth / 2,
-                (!$this->settings['ADDBLOCK']['sub_x_description']) ? $xAchsisYPos + 25 : $xAchsisYPos + 50,
+                (! $this->settings['ADDBLOCK']['sub_x_description']) ? $xAchsisYPos + 25 : $xAchsisYPos + 50,
                 'middle',
                 'black',
                 null,
@@ -155,9 +167,9 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                 $yAchsisDescLineLength,
                 null,
                 2);
-            ++$i;
+            $i++;
             //calculate y max value
-            if (!$this->settings['ADDBLOCK']['interpret_date']) {
+            if (! $this->settings['ADDBLOCK']['interpret_date']) {
                 if (count($set) > 0) {
                     if (is_array(current($set))) {
                         foreach ($set as $setset) {
@@ -169,7 +181,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                 }
             } else {
                 $data = [];
-                if (!is_array(current($set))) {
+                if (! is_array(current($set))) {
                     $data = [$set];
                 } else {
                     $data = $set;
@@ -198,7 +210,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
             } else {
                 if ($yAchsisMax - $yAchsisMax / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag) >= $yMaxEntryVal) {
                     $yAchsisMax = $yAchsisMax - $yAchsisMax / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag);
-                    ++$shrinkFlag;
+                    $shrinkFlag++;
                 } else {
                     break;
                 }
@@ -208,14 +220,14 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
         $yAchsisStepHeight = ($yAchsisLength) / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag);
 
         //draw step description
-        for ($i = 0; $i < ($this->settings['BLOCK']['ySteps'] - $shrinkFlag); ++$i) {
+        for ($i = 0; $i < ($this->settings['BLOCK']['ySteps'] - $shrinkFlag); $i++) {
             $chartcontent .= $this->drawHLine(
                 $xAchsisYPos - $yAchsisStepHeight * ($i + 1),
                 $this->settings['padding'] + $entryWidth - $yAchsisDescLineLength / 2,
                 $yAchsisDescLineLength);
 
             if ($this->settings['BLOCK']['yGrid']) {
-                for ($ii = 0; $ii < ($this->settings['BLOCK']['ySteps']); ++$ii) {
+                for ($ii = 0; $ii < ($this->settings['BLOCK']['ySteps']); $ii++) {
                     $chartcontent .= $this->drawHLine(
                         $xAchsisYPos - $yAchsisStepHeight * ($i + 1) + $ii * ($yAchsisStepHeight / ($this->settings['BLOCK']['ySteps'])),
                         $this->settings['padding'] + $entryWidth,
@@ -224,7 +236,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
             }
 
             $chartcontent .= $this->drawText(
-                (!$this->settings['ADDBLOCK']['interpret_date']) ?
+                (! $this->settings['ADDBLOCK']['interpret_date']) ?
                 ''.($yAchsisStep * ($i + 1)) :
                 ''.$this->convertToHoursMins(($yAchsisStep * ($i + 1))),
                 $this->settings['padding'] + $entryWidth - $yAchsisDescLineLength / 2 - 5,
@@ -240,7 +252,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
             $chartcontent .= $this->drawText(
                 $this->achsisDescription['x'],
                 null,
-                ((!$this->settings['ADDBLOCK']['interpret_date']) ? $xAchsisYPos : $xAchsisYPos + 25)
+                ((! $this->settings['ADDBLOCK']['interpret_date']) ? $xAchsisYPos : $xAchsisYPos + 25)
                 + $this->settings['BLOCK']['AchsisDescriptionHeight'] + $xFontOffset - 5,
                 'middle',
                 'black',
@@ -264,7 +276,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
         $i = 0;
         foreach ($this->dataset as $key => $set) {
             $data = [];
-            if (!is_array(current($set))) {
+            if (! is_array(current($set))) {
                 $data = [$set];
             } else {
                 $data = $set;
@@ -280,7 +292,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                 $colorpos = 0;
                 foreach ($dset as $value) {
                     $barHeight = 0;
-                    if (!$this->settings['ADDBLOCK']['interpret_date']) {
+                    if (! $this->settings['ADDBLOCK']['interpret_date']) {
                         $barHeight = (($yAchsisLength) * $value) / $yAchsisMax;
                     } else {
                         $barHeight = (($yAchsisLength) * $this->timeToMinutes($value)) / $yAchsisMax;
@@ -297,7 +309,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                         2,
                         ''.$value)
                     );
-                    ++$colorpos;
+                    $colorpos++;
                 }
 
                 //x Achsis description - sub_x_description
@@ -312,9 +324,9 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                         20);
                 }
 
-                ++$j;
+                $j++;
             }
-            ++$i;
+            $i++;
         }
 
         //daw explanation
@@ -331,7 +343,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
             foreach ($this->explanation as $leg) {
                 $yy = $y + ($this->settings['BLOCK']['explanationLineHeight'] * floor($i / $this->settings['BLOCK']['perExplanationLine']));
                 $xx = $this->settings['padding'] + ($i % $this->settings['BLOCK']['perExplanationLine']) * $x_width;
-                $chartcontent .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'] ,
+                $chartcontent .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'],
                     $this->settings['BLOCK']['explanationLineHeight'] - 10,
                     $this->colorMap[$i], 'black', 1, (($this->translator !== null) ? $this->translator->translate('explanation') : 'explanation'));
                 $chartcontent .= $this->drawText($leg,
@@ -341,7 +353,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
                     'black',
                     'bold',
                     20);
-                ++$i;
+                $i++;
             }
         }
         $this->setSvgResult($chartcontent, true);

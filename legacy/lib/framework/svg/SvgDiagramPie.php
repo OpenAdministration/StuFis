@@ -6,15 +6,20 @@ namespace framework\svg;
  * Pie Diagram Class
  *
  * @author 		Michael Gnehr <michael@gnehr.de>
+ *
  * @category    framework
+ *
  * @since 		09.08.2016
+ *
  * @version 	02.0.0 since 01.07.2018
+ *
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
 class SvgDiagramPie extends SvgDiagramCore
 {
     /**
      * this class implements following diagram types
+     *
      * @var array
      */
     private static $types = [
@@ -25,7 +30,8 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * constructor
-     * @param string $type
+     *
+     * @param  string  $type
      */
     public function __construct($type)
     {
@@ -49,13 +55,15 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * force pie diagram explanation to right side
+     *
      * @var bool
      */
     protected $forceExplanationRight = false;
 
     /**
      * force pie diagram explanation to right side
-     * @param bool $boolean
+     *
+     * @param  bool  $boolean
      */
     protected $forceExplanationBottom = false;
 
@@ -63,8 +71,9 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * set Pie Settings variables
-     * @param string|number $key : 'perExplanationLineRight'|'perExplanationLineBelow'|'explanationLineHeight'|'radiusOffset'|'drawStroke'|'percentageOnExplanation'
-     * @param mixed $value
+     *
+     * @param  string|number  $key  : 'perExplanationLineRight'|'perExplanationLineBelow'|'explanationLineHeight'|'radiusOffset'|'drawStroke'|'percentageOnExplanation'
+     * @param  mixed  $value
      */
     public function setPieSetting($key, $value)
     {
@@ -75,7 +84,8 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * force pie diagram explanation to right side
-     * @param bool $boolean
+     *
+     * @param  bool  $boolean
      */
     public function setForceCircleRight($boolean)
     {
@@ -91,7 +101,8 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * force pie diagram explanation to the bottom
-     * @param bool $boolean
+     *
+     * @param  bool  $boolean
      */
     public function setForceCircleBottom($boolean)
     {
@@ -109,6 +120,7 @@ class SvgDiagramPie extends SvgDiagramCore
 
     /**
      * generate pie chart from data
+     *
      * @see SvgDiagramCore::render()
      */
     public function render(): void
@@ -126,7 +138,7 @@ class SvgDiagramPie extends SvgDiagramCore
         $circleX_offset = 0;
         $circleY = 0;
         $radius = 0;
-        if (($this->settings['width'] * 2 / 3 < $this->settings['height'] && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
+        if (($this->settings['height'] > $this->settings['width'] * 2 / 3 && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
             $xAchsisYPos = $this->settings['height'] - $this->settings['padding'];
             if (count($this->dataset) > 0) {
                 $xAchsisYPos = $xAchsisYPos - ceil(count($this->dataset) / $this->settings['PIE']['perExplanationLineBelow']) * $this->settings['PIE']['explanationLineHeight'];
@@ -156,7 +168,7 @@ class SvgDiagramPie extends SvgDiagramCore
         $winkel = 0;
         $y = 0;
         $x_width = 0;
-        if (($this->settings['width'] * 2 / 3 < $this->settings['height'] && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
+        if (($this->settings['height'] > $this->settings['width'] * 2 / 3 && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
             $y = $xAchsisYPos + $this->settings['PIE']['explanationLineHeight'];
             $x_width = ($this->settings['width'] - 2 * $this->settings['padding']) / $this->settings['PIE']['perExplanationLineBelow'];
         } else {
@@ -183,13 +195,13 @@ class SvgDiagramPie extends SvgDiagramCore
                 '<title>'.$set[0].'</title></path>';
 
             //daw explanation
-            if (($this->settings['width'] * 2 / 3 < $this->settings['height'] && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
+            if (($this->settings['height'] > $this->settings['width'] * 2 / 3 && $this->forceExplanationRight == false) || ($this->forceExplanationBottom == true)) { //explanation below diagramm
                 $yy = $y + ($this->settings['PIE']['explanationLineHeight'] * floor($i / $this->settings['PIE']['perExplanationLineBelow']));
                 $xx = $this->settings['padding'] + ($i % $this->settings['PIE']['perExplanationLineBelow']) * $x_width;
-                $pathObj .= $this->drawBar($xx, $yy + 5, $this->settings['PIE']['explanationLineHeight'] , $this->settings['PIE']['explanationLineHeight'] - 10,
+                $pathObj .= $this->drawBar($xx, $yy + 5, $this->settings['PIE']['explanationLineHeight'], $this->settings['PIE']['explanationLineHeight'] - 10,
                     $this->colorMap[$i], 'black', 1, (($this->translator !== null) ? $this->translator->translate('explanation') : 'explanation'));
                 $pathObj .= $this->drawText(
-                    $leg.(($this->settings['PIE']['percentageOnExplanation']) ? ' (' .round((($set[0] * 100) / $entrySum), 2).'%)' : ''),
+                    $leg.(($this->settings['PIE']['percentageOnExplanation']) ? ' ('.round((($set[0] * 100) / $entrySum), 2).'%)' : ''),
                     $xx + $this->settings['PIE']['explanationLineHeight'] + 7,
                     $yy - 7 + $this->settings['PIE']['explanationLineHeight'],
                     'start',
@@ -199,10 +211,10 @@ class SvgDiagramPie extends SvgDiagramCore
             } else {
                 $yy = $y + ($this->settings['BLOCK']['explanationLineHeight'] * floor($i / $this->settings['PIE']['perExplanationLineRight']));
                 $xx = ($circleX + $radius + $this->settings['PIE']['explanationLineHeight']) + ($i % $this->settings['PIE']['perExplanationLineRight']) * $x_width;
-                $pathObj .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'] , $this->settings['PIE']['explanationLineHeight'] - 10,
+                $pathObj .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'], $this->settings['PIE']['explanationLineHeight'] - 10,
                     $this->colorMap[$i], 'black', 1, (($this->translator !== null) ? $this->translator->translate('explanation') : 'explanation'));
                 $pathObj .= $this->drawText(
-                    $leg.(($this->settings['PIE']['percentageOnExplanation']) ? ' (' .round((($set[0] * 100) / $entrySum), 2).'%)' : ''),
+                    $leg.(($this->settings['PIE']['percentageOnExplanation']) ? ' ('.round((($set[0] * 100) / $entrySum), 2).'%)' : ''),
                     $xx + $this->settings['PIE']['explanationLineHeight'] + 7,
                     $yy - 7 + $this->settings['PIE']['explanationLineHeight'],
                     'start',
@@ -213,7 +225,7 @@ class SvgDiagramPie extends SvgDiagramCore
 
             // add to svg
             $chartcontent .= $this->suroundElementWithMouseHilight($pathObj);
-            ++$i;
+            $i++;
         }
         $this->setSvgResult($chartcontent, true);
     }

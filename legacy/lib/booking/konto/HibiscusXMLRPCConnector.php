@@ -15,11 +15,15 @@ use XML_RPC2_CurlException;
 class HibiscusXMLRPCConnector extends Singleton
 {
     private static $HIBISCUS_PASSWORD;
+
     private static $HIBISCUS_USERNAME;
+
     private static $HIBISCUS_BASE_URL;
+
     private static $HIBISCUS_RPCPATH;
 
     private $fetchableKontos;
+
     private $lastFetchedKontos;
 
     //private $xmlClient;
@@ -44,9 +48,6 @@ class HibiscusXMLRPCConnector extends Singleton
     }
 
     /**
-     * @param $name
-     * @param $value
-     *
      * @throws Exception
      */
     final protected static function static__set($name, $value): void
@@ -54,7 +55,7 @@ class HibiscusXMLRPCConnector extends Singleton
         if (property_exists(__CLASS__, $name)) {
             self::$$name = $value;
         } else {
-            throw new Exception("$name ist keine Variable in " . __CLASS__);
+            throw new Exception("$name ist keine Variable in ".__CLASS__);
         }
     }
 
@@ -63,7 +64,7 @@ class HibiscusXMLRPCConnector extends Singleton
      */
     public function updateKontoIDs(): array
     {
-        if (!empty($this->fetchableKontos) && !empty($this->lastFetchedKontos)) {
+        if (! empty($this->fetchableKontos) && ! empty($this->lastFetchedKontos)) {
             return [true, []];
         }
         $ret = true;
@@ -71,8 +72,8 @@ class HibiscusXMLRPCConnector extends Singleton
         $ktos = [];
         try {
             $client = XML_RPC2_Client::create(
-                'https://' . rawurldecode(self::$HIBISCUS_USERNAME) . ':' . rawurlencode(self::$HIBISCUS_PASSWORD) .
-                '@' . rawurldecode(self::$HIBISCUS_BASE_URL) . 'xmlrpc/hibiscus.xmlrpc.konto',
+                'https://'.rawurldecode(self::$HIBISCUS_USERNAME).':'.rawurlencode(self::$HIBISCUS_PASSWORD).
+                '@'.rawurldecode(self::$HIBISCUS_BASE_URL).'xmlrpc/hibiscus.xmlrpc.konto',
                 ['sslverify' => false, 'debug' => false, 'prefix' => 'hibiscus.xmlrpc.konto.']
             );
             $ktos = $client->find();
@@ -98,7 +99,7 @@ class HibiscusXMLRPCConnector extends Singleton
                     }
                 }
 
-                if (!isset($dbKtos[$ktoId])) {
+                if (! isset($dbKtos[$ktoId])) {
                     $short = strtoupper(substr($ktoName, 0, 2));
                     $ret_tmp = DBConnector::getInstance()->dbInsert(
                         'konto_type',
@@ -110,7 +111,7 @@ class HibiscusXMLRPCConnector extends Singleton
                             'sync_from' => $syncFrom->format('Y-m-d'),
                         ]
                     );
-                    $msgs[] = "<strong>Konto $ktoId:</strong> $ktoName ($short) (IBAN: $ktoIBAN) wurde neu gefunden" .
+                    $msgs[] = "<strong>Konto $ktoId:</strong> $ktoName ($short) (IBAN: $ktoIBAN) wurde neu gefunden".
                         (($ret_tmp > 0) ? ' und hinzugefügt' : ' konnte aber nicht hinzugefügt werden!');
                     $ret = $ret && ($ret_tmp > 0);
                 }
@@ -133,7 +134,7 @@ class HibiscusXMLRPCConnector extends Singleton
                     ]
                 );
                 if ($affectedRows > 0) {
-                    $msgs[] = "<strong>Konto $id:</strong> {$dbKto['name']} (IBAN: {$dbKto['iban']})" .
+                    $msgs[] = "<strong>Konto $id:</strong> {$dbKto['name']} (IBAN: {$dbKto['iban']})".
                         'kann im FINTS nicht mehr gefunden werden. Die Synchronisation wird eingestellt.';
                 }
             }
@@ -167,7 +168,7 @@ class HibiscusXMLRPCConnector extends Singleton
     public function fetchAllUmsatz(): array
     {
         [$success, $msgs] = $this->updateKontoIDs();
-        if (!$success) {
+        if (! $success) {
             return [false, $msgs, []];
         }
         // get data from RPC
@@ -227,20 +228,20 @@ class HibiscusXMLRPCConnector extends Singleton
                     $umsopt['id:min'] = 1 + $lastUmsatzId[0]['max-id'];
                 }
                 $sync_from = $this->fetchableKontos[$ktoid]['sync_from'];
-                if (strtolower($sync_from) !== 'null' && !is_null($sync_from) && strtotime($sync_from) > 0) {
+                if (strtolower($sync_from) !== 'null' && ! is_null($sync_from) && strtotime($sync_from) > 0) {
                     $umsopt['datum:min'] = $this->fetchableKontos[$ktoid]['sync_from'];
                 } else {
                     $umsopt['datum:min'] = '2017-01-01';
                 }
                 if (strtolower($this->fetchableKontos[$ktoid]['sync_until']) !== 'null'
-                    && !is_null($this->fetchableKontos[$ktoid]['sync_until'])) {
+                    && ! is_null($this->fetchableKontos[$ktoid]['sync_until'])) {
                     $umsopt['datum:max'] = $this->fetchableKontos[$ktoid]['sync_until'];
                 }
 
                 $client = XML_RPC2_Client::create(
-                    'https://' . rawurldecode(self::$HIBISCUS_USERNAME) . ':' . rawurlencode(
+                    'https://'.rawurldecode(self::$HIBISCUS_USERNAME).':'.rawurlencode(
                         self::$HIBISCUS_PASSWORD
-                    ) . '@' . rawurldecode(self::$HIBISCUS_BASE_URL) . '/xmlrpc/hibiscus.xmlrpc.umsatz',
+                    ).'@'.rawurldecode(self::$HIBISCUS_BASE_URL).'/xmlrpc/hibiscus.xmlrpc.umsatz',
                     ['sslverify' => false, 'debug' => false, 'prefix' => 'hibiscus.xmlrpc.umsatz.']
                 );
                 $newUmsatz = $client->list($umsopt);
@@ -276,9 +277,9 @@ class HibiscusXMLRPCConnector extends Singleton
         }*/
 
         $client = XML_RPC2_Client::create(
-            'https://' . rawurldecode(self::$HIBISCUS_USERNAME) . ':' . rawurlencode(
+            'https://'.rawurldecode(self::$HIBISCUS_USERNAME).':'.rawurlencode(
                 self::$HIBISCUS_PASSWORD
-            ) . '@' . rawurldecode(self::$HIBISCUS_BASE_URL) . '/xmlrpc/hibiscus.xmlrpc.konto',
+            ).'@'.rawurldecode(self::$HIBISCUS_BASE_URL).'/xmlrpc/hibiscus.xmlrpc.konto',
             ['sslverify' => false, 'debug' => false, 'prefix' => 'hibiscus.xmlrpc.konto.']
         );
         $kto = $client->find();
@@ -375,6 +376,7 @@ class HibiscusXMLRPCConnector extends Singleton
         $newForms[] = $inhalt;
         */
         $newForms = [];
+
         return $newForms;
     }
 
@@ -401,7 +403,7 @@ class HibiscusXMLRPCConnector extends Singleton
             return (float) preg_replace("/[^0-9+\-]/", '', $num);
         }
 
-        return (float) (preg_replace("/[^0-9+\-]/", '', substr($num, 0, $sep)) . '.' .
+        return (float) (preg_replace("/[^0-9+\-]/", '', substr($num, 0, $sep)).'.'.
             preg_replace("/[^0-9+\-]/", '', substr($num, $sep + 1, strlen($num))));
     }
 }

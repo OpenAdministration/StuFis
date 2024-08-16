@@ -30,6 +30,5 @@ class LocalSeeder extends Seeder
             'provider_uid' => 'hhv',
         ]);
 
-
     }
 }

@@ -5,15 +5,17 @@ namespace forms;
 use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
 use framework\Helper;
-use framework\render\ErrorHandler;
 use framework\render\JsonController;
 use Illuminate\Support\Str;
 
 class ExternVorgangHandler extends FormHandlerInterface
 {
     private $id;
+
     protected $routeInfo;
+
     private $data;
+
     private $meta_data;
 
     public function __construct($routeInfoOrId)
@@ -39,7 +41,7 @@ class ExternVorgangHandler extends FormHandlerInterface
                 ['table' => 'haushaltstitel', 'type' => 'left', 'on' => ['haushaltstitel.id', 'extern_data.titel_id']],
             ]
         );
-        if (!is_array($this->data) || count($this->data) !== 1) {
+        if (! is_array($this->data) || count($this->data) !== 1) {
             throw new LegacyDieException(400, 'Datensatz konnte nicht gefunden werden');
         }
         $this->data = $this->data[0];
@@ -51,7 +53,7 @@ class ExternVorgangHandler extends FormHandlerInterface
                 'id' => $this->data['extern_id'],
             ]
         );
-        if (!is_array($this->meta_data) || count($this->meta_data) !== 1) {
+        if (! is_array($this->meta_data) || count($this->meta_data) !== 1) {
             throw new LegacyDieException(400, 'Datensatz konnte nicht gefunden werden');
         }
         $this->meta_data = $this->meta_data[0];
@@ -80,18 +82,18 @@ class ExternVorgangHandler extends FormHandlerInterface
             case 'payed':
             case 'booked':
                 $colName = "state_$stateName";
-            break;
+                break;
             default:
                 throw new LegacyDieException(400, "Wrong State $stateName in External");
-            break;
+                break;
         }
-        $newEtag  = Str::random(32);
+        $newEtag = Str::random(32);
         //TODO: also Version number tracking?
         DBConnector::getInstance()->dbUpdate(
             'extern_data',
             ['id' => $this->id, 'etag' => $etag],
             [
-                $colName => DBConnector::getInstance()->getUser()['fullname'] . ';' . date_create()->format(DateTime),
+                $colName => DBConnector::getInstance()->getUser()['fullname'].';'.date_create()->format(DateTime),
                 'etag' => $newEtag,
             ]
         );
@@ -135,10 +137,10 @@ class ExternVorgangHandler extends FormHandlerInterface
             switch ($this->routeInfo['mfunction']) {
                 case 'zahlungsanweisung':
                     $this->post_pdf_zahlungsanweisung($_POST['d'] === '0');
-                break;
+                    break;
                 default:
-                    throw new LegacyDieException(400, 'mfunction ' . $this->routeInfo['mfunction'] . ' not known');
-                break;
+                    throw new LegacyDieException(400, 'mfunction '.$this->routeInfo['mfunction'].' not known');
+                    break;
             }
         }
     }
@@ -153,24 +155,24 @@ class ExternVorgangHandler extends FormHandlerInterface
             case $this->data['flag_vorkasse']:
                 $ausgabe = $this->data['value'];
                 $name = 'Auszahlung Vorkasse';
-            break;
+                break;
             case $this->data['flag_pruefbescheid']:
                 $ausgabe = $this->data['value'];
                 $name = 'Auszahlung Prüfbescheid';
-            break;
+                break;
             case $this->data['flag_rueckforderung']:
                 $einnahme = $this->data['value'];
                 $name = 'Rückforderungsbescheid';
-            break;
+                break;
         }
         $details[] = [
-            'beleg-id' => 'V' . $this->data['vorgang_id'],
+            'beleg-id' => 'V'.$this->data['vorgang_id'],
             'projektposten' => '',
             'titel' => $this->data['titel_nr'],
             'einnahmen' => $einnahme,
             'ausgaben' => $ausgabe,
         ];
-        $recht = 'StuRa-Beschluss: ' . $this->meta_data['beschluss_nr'];
+        $recht = 'StuRa-Beschluss: '.$this->meta_data['beschluss_nr'];
 
         $out = [
             'APIKEY' => FUI2PDF_APIKEY,
@@ -195,7 +197,7 @@ class ExternVorgangHandler extends FormHandlerInterface
 
             'details' => $details,
         ];
-        $result = Helper::do_post_request2(FUI2PDF_URL . '/pdfbuilder', $out, FUI2PDF_AUTH);
+        $result = Helper::do_post_request2(FUI2PDF_URL.'/pdfbuilder', $out, FUI2PDF_AUTH);
         // return result to
         if ($result['success'] && $modal) {
             if (isset($result['data']['success']) && $result['data']['success']) {
@@ -207,30 +209,30 @@ class ExternVorgangHandler extends FormHandlerInterface
                         'container' => 'object',
                         'headline' =>
                         //direct link
-                            '<form method="POST" action="' . URIBASE . 'index.php' . $this->routeInfo['path'] . '"><a ' .
-                            '" href="#" class="modal-form-fallback-submit text-white">' .
-                            'Zahlungsanweisung-E' .
-                            str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT) .
-                            '-V' .
-                            str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT) .
-                            '.pdf' .
-                            '</a>' .
-                            '<input type="hidden" name="auslagen-id" value="' . $this->data['vorgang_id'] . '">' .
-                            '<input type="hidden" name="projekt-id" value="' . $this->data['extern_id'] . '">' .
-                            '<input type="hidden" name="d" value="1">' . '</form>',
+                            '<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'"><a '.
+                            '" href="#" class="modal-form-fallback-submit text-white">'.
+                            'Zahlungsanweisung-E'.
+                            str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT).
+                            '-V'.
+                            str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT).
+                            '.pdf'.
+                            '</a>'.
+                            '<input type="hidden" name="auslagen-id" value="'.$this->data['vorgang_id'].'">'.
+                            '<input type="hidden" name="projekt-id" value="'.$this->data['extern_id'].'">'.
+                            '<input type="hidden" name="d" value="1">'.'</form>',
                         'attr' => [
                             'type' => 'application/pdf',
-                            'download' => 'Zahlungsanweisung-E' .
-                                str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT) .
-                                '-V' .
-                                str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT) .
+                            'download' => 'Zahlungsanweisung-E'.
+                                str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT).
+                                '-V'.
+                                str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT).
                                 '.pdf',
                         ],
-                        'fallback' => '<form method="POST" action="' . URIBASE . 'index.php' . $this->routeInfo['path'] . '">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a ' .
-                            '" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.' .
-                            '<input type="hidden" name="auslagen-id" value="' . $this->data['vorgang_id'] . '">' .
-                            '<input type="hidden" name="projekt-id" value="' . $this->data['extern_id'] . '">' .
-                            '<input type="hidden" name="d" value="1">' .
+                        'fallback' => '<form method="POST" action="'.URIBASE.'index.php'.$this->routeInfo['path'].'">Die Datei kann leider nicht angezeigt werden, kann aber unter diesem <a '.
+                            '" href="#" class="modal-form-fallback-submit">Link</a> heruntergeladen werden.'.
+                            '<input type="hidden" name="auslagen-id" value="'.$this->data['vorgang_id'].'">'.
+                            '<input type="hidden" name="projekt-id" value="'.$this->data['extern_id'].'">'.
+                            '<input type="hidden" name="d" value="1">'.
                             '</form>',
                         'datapre' => 'data:application/pdf;base64,',
                         'data' => $result['data']['data'],
@@ -243,27 +245,27 @@ class ExternVorgangHandler extends FormHandlerInterface
                         'type' => 'modal',
                         'subtype' => 'server-error',
                         'status' => '200',
-                        'msg' => '<div style="white-space: pre-wrap;">' . print_r(
-                                $result['data']['error'] ?? $result['data'],
-                                true
-                            ) . '</div>',
+                        'msg' => '<div style="white-space: pre-wrap;">'.print_r(
+                            $result['data']['error'] ?? $result['data'],
+                            true
+                        ).'</div>',
                     ]
                 );
             }
-        } elseif ($result['success'] && !$modal) {
+        } elseif ($result['success'] && ! $modal) {
             header('Content-Type: application/pdf');
             header(
-                'Content-Disposition: attachment; filename="' . 'Belegvorlage_P' .
-                str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT) .
-                '-A' .
-                str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT) .
+                'Content-Disposition: attachment; filename="'.'Belegvorlage_P'.
+                str_pad($this->data['extern_id'], 3, '0', STR_PAD_LEFT).
+                '-A'.
+                str_pad($this->data['vorgang_id'], 3, '0', STR_PAD_LEFT).
                 '.pdf'
-                . '"'
+                .'"'
             );
             echo base64_decode($result['data']['data']);
             exit();
         } else {
-            throw new LegacyDieException(400, print_r($result, true), '[' . get_class($this) . '][PDF-Creation]');
+            throw new LegacyDieException(400, print_r($result, true), '['.get_class($this).'][PDF-Creation]');
             $this->error = 'Error during PDF creation.';
         }
     }

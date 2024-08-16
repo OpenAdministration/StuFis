@@ -3,11 +3,16 @@
  * CONTROLLER FileHandler
  *
  * @category        framework
+ *
  * @author 			michael g
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since 			08.05.2018
+ *
  * @copyright 		Copyright (C) 2018 - All rights reserved
+ *
  * @platform        PHP
+ *
  * @requirements    PHP 7.0 or higher
  */
 
@@ -15,7 +20,6 @@ namespace framework\file;
 
 use App\Exceptions\LegacyDieException;
 use framework\DBConnector;
-use framework\render\ErrorHandler;
 use Illuminate\Support\Facades\Storage;
 
 class FileController
@@ -36,7 +40,7 @@ class FileController
     public function handle($routeInfo): void
     {
         if ($routeInfo['action'] === 'get') {
-            if (!isset($routeInfo['fdl'])) {
+            if (! isset($routeInfo['fdl'])) {
                 $routeInfo['fdl'] = 0;
             }
             $this->get($routeInfo);
@@ -52,8 +56,9 @@ class FileController
         $fh = new FileHandler($this->db);
         //get file
         $file = $fh->checkFileHash($routeInfo['key']);
-        if (!$file) {
+        if (! $file) {
             throw new LegacyDieException(404);
+
             return;
         }
         //TODO FIXME ACL - user has permission to download/view this file?
@@ -63,10 +68,10 @@ class FileController
         }
         //old:
         //$fh->deliverFileData($file, $routeInfo['fdl']);
-        if(Storage::exists(FileHandler::getDiskpathOfFile($file))){
-            echo "data:application/pdf;base64,";
+        if (Storage::exists(FileHandler::getDiskpathOfFile($file))) {
+            echo 'data:application/pdf;base64,';
             echo base64_encode(Storage::get(FileHandler::getDiskpathOfFile($file)));
         }
-        return;
+
     }
 }

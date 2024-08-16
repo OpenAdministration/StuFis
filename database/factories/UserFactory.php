@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
 
 /**
@@ -25,5 +24,4 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
         ];
     }
-
 }

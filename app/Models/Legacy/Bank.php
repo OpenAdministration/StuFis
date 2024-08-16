@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\Bank
  *
- * @property integer $id
+ * @property int $id
  * @property string $url
- * @property integer $blz
+ * @property int $blz
  * @property string $name
  * @property BankAccountCredential[] $finanzformularKontoCredentials
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankAccountCredential> $kontoCredentials
  * @property-read int|null $konto_credentials_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Bank query()
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUrl($value)
+ *
  * @mixin \Eloquent
  */
 class Bank extends Model

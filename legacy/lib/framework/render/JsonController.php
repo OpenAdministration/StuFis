@@ -3,11 +3,16 @@
  * FRAMEWORK JsonHandler
  *
  * @category        framework
+ *
  * @author 			michael g
  * @author 			Stura - Referat IT <ref-it@tu-ilmenau.de>
+ *
  * @since 			17.02.2018
+ *
  * @copyright 		Copyright (C) 2018 - All rights reserved
+ *
  * @platform        PHP
+ *
  * @requirements    PHP 7.0 or higher
  */
 
@@ -19,6 +24,7 @@ class JsonController
 {
     /**
      * json result of the function
+     *
      * @var array
      */
     protected $json_result;
@@ -29,9 +35,7 @@ class JsonController
      * private class constructor
      * implements singleton pattern
      */
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * dummy function for inheritance
@@ -56,7 +60,8 @@ class JsonController
 
     /**
      * returns 404 not found in html format
-     * @param false|string $message (optional) error message
+     *
+     * @param  false|string  $message  (optional) error message
      */
     public function json_not_found($message = false)
     {
@@ -67,7 +72,8 @@ class JsonController
 
     /**
      * echo json result  stored in $this->json_result
-     * @param bool $jsonHeader, default: false
+     *
+     * @param  bool  $jsonHeader,  default: false
      */
     protected function print_json_result($jsonHeader = false): void
     {
@@ -75,13 +81,12 @@ class JsonController
     }
 
     /**
-     * @param array $json json data
-     * @param bool $jsonHeader, default: true
+     * @param  array  $json  json data
+     * @param  bool  $jsonHeader,  default: true
      */
     public static function print_json(array $json, $jsonHeader = true): void
     {
-        #$json = json_encode($json, JSON_HEX_QUOT | JSON_HEX_TAG);
+        //$json = json_encode($json, JSON_HEX_QUOT | JSON_HEX_TAG);
         throw new LegacyJsonException($json);
-
     }
 }
