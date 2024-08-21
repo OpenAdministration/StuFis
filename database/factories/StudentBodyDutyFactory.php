@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\StudentBodyDuty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\StudentBodyDuty>
+ * @extends Factory<StudentBodyDuty>
  */
 class StudentBodyDutyFactory extends Factory
 {
@@ -17,7 +18,8 @@ class StudentBodyDutyFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'short_key' => $this->faker->word(),
+            'long_key' => $this->faker->sentence(),
         ];
     }
 }

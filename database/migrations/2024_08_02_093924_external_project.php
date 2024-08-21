@@ -215,9 +215,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-
-        // TODO: antrags definiton (customizing)
-
         // TODO später: status definiton / transitions definitons
     }
 
