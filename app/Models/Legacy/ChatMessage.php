@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $creator_alias
  * @property string $text
  * @property bool $type
- *
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage query()
@@ -27,7 +26,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereText($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereTimestamp($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereType($value)
- *
  * @mixin \Eloquent
  */
 class ChatMessage extends Model

@@ -31,7 +31,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $comments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\ExpensesReceipt> $receipts
  * @property-read int|null $receipts_count
- *
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses query()
@@ -53,7 +52,12 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungVwzk($value)
- *
+ * @property string $ok-belege
+ * @property string $ok-hv
+ * @property string $ok-kv
+ * @property string $zahlung-iban
+ * @property string $zahlung-name
+ * @property string $zahlung-vwzk
  * @mixin \Eloquent
  */
 class Expenses extends Model

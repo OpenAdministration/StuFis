@@ -5,6 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * App\Models\BudgetItem
+ *
+ * @property-read \App\Models\BudgetPlan|null $budgetPlan
+ * @method static \Database\Factories\BudgetItemFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem query()
+ * @mixin \Eloquent
+ */
 class BudgetItem extends Model
 {
     use HasFactory;

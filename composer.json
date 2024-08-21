@@ -14,7 +14,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.2",
-        "livewire/livewire": "^3.0",
+        "livewire/livewire": "v3.5.4",
         "maatwebsite/excel": "^3.1",
         "meyfa/php-svg": "^0.11.3",
         "nemiah/php-fints": "dev-master",

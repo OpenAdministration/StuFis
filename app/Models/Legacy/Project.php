@@ -35,7 +35,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $expenses_count
  * @property-read int|null $posts_count
  * @property-read User $stateCreator
- *
  * @method static Builder|Project newModelQuery()
  * @method static Builder|Project newQuery()
  * @method static Builder|Project query()
@@ -56,7 +55,11 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder|Project whereState($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
- *
+ * @property string|null $org-mail
+ * @property string|null $recht-additional
+ * @property string|null $date-start
+ * @property string|null $date-end
+ * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
  * @mixin \Eloquent
  */
 class Project extends Model

@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $ausgaben
  * @property float $einnahmen
  * @property ExpensesReceipt $expensesReceipt
- *
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost query()
@@ -24,7 +23,6 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereProjektPostenId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceiptPost whereShort($value)
- *
  * @mixin \Eloquent
  */
 class ExpensesReceiptPost extends Model

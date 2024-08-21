@@ -36,7 +36,7 @@ return new class extends Migration
            $table->integer('position'); // internal render order
            $table->string('view_key'); // where to render
 
-            $table->unique(['form_definition_id', 'name']);
+           $table->unique(['form_definition_id', 'name']);
         });
 
         Schema::create('form_field_options', function (Blueprint $table) {
@@ -55,18 +55,6 @@ return new class extends Migration
             $table->string('validation_rule');
             $table->string('validation_parameter');
         });
-
-        Schema::create('form_field_data', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('form_field_id');
-            // application_id | project_id
-            // form_field_id
-            // value
-
-            $table->foreign('form_field_id')->references('id')->on('form_fields');
-        });
-
-        // validation?
 
         Schema::create('student_body_duties', function (Blueprint $table) {
             $table->id();
@@ -110,6 +98,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('student_body_duties_id');
             $table->unsignedBigInteger('project_id');
+            $table->timestamps();
 
             $table->foreign('student_body_duties_id', 'p2sbd_student_body_duties_id')->references('id')->on('student_body_duties');
             $table->foreign('project_id')->references('id')->on('projects');
@@ -123,6 +112,7 @@ return new class extends Migration
             // tui.legal_basis.stura_details_label
             $table->boolean('has_details'); // z.B. Beschluss Nr.
             $table->boolean('active');
+            $table->timestamps();
         });
 
         Schema::create('applications', function (Blueprint $table) {
@@ -143,6 +133,8 @@ return new class extends Migration
             $table->decimal('funding_total');
 
             $table->json('extra_fields');
+
+            $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('user'); // eigentlich akteure
             $table->foreign('project_id')->references('id')->on('projects');
@@ -167,6 +159,7 @@ return new class extends Migration
             $table->unsignedBigInteger('application_id');
             $table->string('name');
             $table->boolean('is_expense'); // 1 = Ausgabe 0 = Einnahme
+            $table->timestamps();
 
             $table->foreign('application_id')->references('id')->on('applications');
         });
@@ -179,6 +172,7 @@ return new class extends Migration
             $table->integer('amount');
             $table->decimal('total');
             $table->string('description');
+            $table->timestamps();
 
             $table->foreign('topic_id')->references('id')->on('finance_plan_topics');
         });
@@ -196,18 +190,21 @@ return new class extends Migration
 
             $table->string('website');
             $table->string('register_number');
+            $table->timestamps();
         });
 
         Schema::create('actor_mails', function (Blueprint $table){
             $table->id();
             $table->unsignedBigInteger('actor_id');
             $table->string('value');
+            $table->timestamps();
         });
 
         Schema::create('actor_phones', function (Blueprint $table){
             $table->id();
             $table->unsignedBigInteger('actor_id');
             $table->string('value');
+            $table->timestamps();
         });
 
         Schema::create('actor_socials', function (Blueprint $table){
@@ -215,6 +212,7 @@ return new class extends Migration
             $table->unsignedBigInteger('actor_id');
             $table->string('provider');
             $table->string('url');
+            $table->timestamps();
         });
 
 

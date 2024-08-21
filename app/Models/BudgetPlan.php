@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * App\Models\BudgetPlan
+ *
  * @property int $id
  * @property Carbon $start_date
  * @property Carbon $end_date
@@ -19,6 +21,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $parent_plan_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property-read int|null $budget_items_count
+ * @method static \Database\Factories\BudgetPlanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan query()
+ * @mixin \Eloquent
  */
 class BudgetPlan extends Model
 {
