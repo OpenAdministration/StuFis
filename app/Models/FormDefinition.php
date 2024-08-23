@@ -49,6 +49,11 @@ class FormDefinition extends Model
         return $this->hasMany(FormField::class, 'form_definition_id');
     }
 
+    public function formFields() : HasMany
+    {
+        return $this->fields();
+    }
+
     public function isActive() : bool
     {
         return $this->active;

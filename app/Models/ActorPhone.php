@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\ActorPhoneFactory;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,10 +24,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|ActorPhone whereValue($value)
  * @property string|null $created_at
  * @property string|null $updated_at
- * @property-read \App\Models\Actor|null $actor
+ * @property-read Actor|null $actor
  * @method static Builder|ActorPhone whereCreatedAt($value)
  * @method static Builder|ActorPhone whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @mixin Eloquent
  */
 class ActorPhone extends Model
 {

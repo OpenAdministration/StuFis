@@ -5,10 +5,12 @@ namespace App\Models;
 use Database\Factories\FinancePlanTopicFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\FinancePlanTopic
@@ -25,10 +27,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|FinancePlanTopic whereId($value)
  * @method static Builder|FinancePlanTopic whereIsExpense($value)
  * @method static Builder|FinancePlanTopic whereName($value)
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Application $application
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FinancePlanItem> $financePlanItems
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Application $application
+ * @property-read Collection<int, FinancePlanItem> $financePlanItems
  * @property-read int|null $finance_plan_items_count
  * @method static Builder|FinancePlanTopic whereCreatedAt($value)
  * @method static Builder|FinancePlanTopic whereUpdatedAt($value)

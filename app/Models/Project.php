@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -58,5 +59,10 @@ class Project extends Model
     public function studentBodyDuties() : HasMany
     {
         return $this->hasMany(StudentBodyDuty::class, 'projects_to_student_body_duties');
+    }
+
+    public function formDefinition() : HasOne
+    {
+        return $this->hasOne(FormDefinition::class);
     }
 }

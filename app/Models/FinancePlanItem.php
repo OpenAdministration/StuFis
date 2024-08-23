@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\FinancePlanItem
@@ -30,10 +31,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|FinancePlanItem whereTopicId($value)
  * @method static Builder|FinancePlanItem whereTotal($value)
  * @method static Builder|FinancePlanItem whereValue($value)
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Application|null $application
- * @property-read \App\Models\FinancePlanTopic|null $financePlanTopic
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Application|null $application
+ * @property-read FinancePlanTopic|null $financePlanTopic
  * @method static Builder|FinancePlanItem whereCreatedAt($value)
  * @method static Builder|FinancePlanItem whereUpdatedAt($value)
  * @mixin Eloquent

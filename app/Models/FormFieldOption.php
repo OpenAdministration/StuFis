@@ -33,6 +33,8 @@ class FormFieldOption extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     public function field(): BelongsTo
     {
         return $this->belongsTo(FormField::class);

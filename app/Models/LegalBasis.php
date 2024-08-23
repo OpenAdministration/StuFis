@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use Database\Factories\LegalBasisFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\LegalBasis
@@ -12,17 +15,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string $uuid
  * @property int $has_details
  * @property int $active
- * @method static \Database\Factories\LegalBasisFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis query()
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis whereActive($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis whereHasDetails($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis whereUuid($value)
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegalBasis whereUpdatedAt($value)
+ * @method static LegalBasisFactory factory($count = null, $state = [])
+ * @method static Builder|LegalBasis newModelQuery()
+ * @method static Builder|LegalBasis newQuery()
+ * @method static Builder|LegalBasis query()
+ * @method static Builder|LegalBasis whereActive($value)
+ * @method static Builder|LegalBasis whereHasDetails($value)
+ * @method static Builder|LegalBasis whereUuid($value)
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @method static Builder|LegalBasis whereCreatedAt($value)
+ * @method static Builder|LegalBasis whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class LegalBasis extends Model

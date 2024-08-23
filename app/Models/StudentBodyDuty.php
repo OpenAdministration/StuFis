@@ -28,6 +28,8 @@ class StudentBodyDuty extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
 
     public function projects() : BelongsToMany
     {

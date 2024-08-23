@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use Database\Factories\BudgetItemFactory;
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * App\Models\BudgetItem
  *
- * @property-read \App\Models\BudgetPlan|null $budgetPlan
- * @method static \Database\Factories\BudgetItemFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetItem query()
- * @mixin \Eloquent
+ * @property-read BudgetPlan|null $budgetPlan
+ * @method static BudgetItemFactory factory($count = null, $state = [])
+ * @method static Builder|BudgetItem newModelQuery()
+ * @method static Builder|BudgetItem newQuery()
+ * @method static Builder|BudgetItem query()
+ * @mixin Eloquent
  */
 class BudgetItem extends Model
 {
@@ -46,6 +49,6 @@ class BudgetItem extends Model
      */
     public function budgetPlan()
     {
-        return $this->belongsTo(\App\Models\BudgetPlan::class, 'budget_plan_id');
+        return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
     }
 }

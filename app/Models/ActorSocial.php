@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|ActorSocial whereUrl($value)
  * @property string|null $created_at
  * @property string|null $updated_at
- * @property-read \App\Models\Actor|null $actor
+ * @property-read Actor|null $actor
  * @method static Builder|ActorSocial whereCreatedAt($value)
  * @method static Builder|ActorSocial whereUpdatedAt($value)
  * @mixin Eloquent

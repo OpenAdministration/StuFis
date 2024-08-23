@@ -45,6 +45,8 @@ class FormField extends Model
 {
     use HasFactory;
 
+
+
     public function formDefinition(): BelongsTo
     {
         return $this->belongsTo(FormDefinition::class);
@@ -54,9 +56,18 @@ class FormField extends Model
     {
         return $this->hasMany(FormFieldOption::class);
     }
+    public function formFieldOptions(): HasMany
+    {
+        return $this->options();
+    }
 
     public function validations() : HasMany
     {
         return $this->hasMany(FormFieldValidation::class);
+    }
+
+    public function formFieldValidations(): HasMany
+    {
+        return $this->validations();
     }
 }

@@ -4,6 +4,9 @@ namespace App\Models;
 
 use App\Models\Enums\BudgetPlanState;
 use Carbon\Carbon;
+use Database\Factories\BudgetPlanFactory;
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,11 +25,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read int|null $budget_items_count
- * @method static \Database\Factories\BudgetPlanFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BudgetPlan query()
- * @mixin \Eloquent
+ * @method static BudgetPlanFactory factory($count = null, $state = [])
+ * @method static Builder|BudgetPlan newModelQuery()
+ * @method static Builder|BudgetPlan newQuery()
+ * @method static Builder|BudgetPlan query()
+ * @mixin Eloquent
  */
 class BudgetPlan extends Model
 {

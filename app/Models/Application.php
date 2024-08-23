@@ -5,10 +5,12 @@ namespace App\Models;
 use Database\Factories\ApplicationFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\Application
@@ -41,15 +43,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|Application whereState($value)
  * @method static Builder|Application whereUserId($value)
  * @method static Builder|Application whereVersion($value)
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ApplicationAttachment> $attachments
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, ApplicationAttachment> $attachments
  * @property-read int|null $attachments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FinancePlanItem> $financePlanItems
+ * @property-read Collection<int, FinancePlanItem> $financePlanItems
  * @property-read int|null $finance_plan_items_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FinancePlanTopic> $financePlanTopics
+ * @property-read Collection<int, FinancePlanTopic> $financePlanTopics
  * @property-read int|null $finance_plan_topics_count
- * @property-read \App\Models\Project $project
+ * @property-read Project $project
  * @method static Builder|Application whereCreatedAt($value)
  * @method static Builder|Application whereUpdatedAt($value)
  * @mixin Eloquent

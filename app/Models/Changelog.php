@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use Database\Factories\ChangelogFactory;
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\Changelog
@@ -13,20 +17,20 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $type
  * @property int $type_id
  * @property array $previous_data
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Database\Factories\ChangelogFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog query()
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog wherePreviousData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereTypeId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Changelog whereUserId($value)
- * @mixin \Eloquent
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @method static ChangelogFactory factory($count = null, $state = [])
+ * @method static Builder|Changelog newModelQuery()
+ * @method static Builder|Changelog newQuery()
+ * @method static Builder|Changelog query()
+ * @method static Builder|Changelog whereCreatedAt($value)
+ * @method static Builder|Changelog whereId($value)
+ * @method static Builder|Changelog wherePreviousData($value)
+ * @method static Builder|Changelog whereType($value)
+ * @method static Builder|Changelog whereTypeId($value)
+ * @method static Builder|Changelog whereUpdatedAt($value)
+ * @method static Builder|Changelog whereUserId($value)
+ * @mixin Eloquent
  */
 class Changelog extends Model
 {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\Actor
@@ -39,8 +40,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $phones_count
  * @property-read Collection<int, ActorSocial> $socials
  * @property-read int|null $socials_count
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @method static Builder|Actor whereCreatedAt($value)
  * @method static Builder|Actor whereUpdatedAt($value)
  * @mixin Eloquent
@@ -53,12 +54,27 @@ class Actor extends Model
         return $this->hasMany(ActorMail::class);
     }
 
+    public function actorMails() : HasMany
+    {
+        return $this->mails();
+    }
+
     public function socials() : HasMany {
         return $this->hasMany(ActorSocial::class);
     }
 
+    public function actorSocials() : HasMany
+    {
+        return $this->socials();
+    }
+
     public function phones() : HasMany {
         return $this->hasMany(ActorPhone::class);
+    }
+
+    public function actorPhones() : HasMany
+    {
+        return $this->phones();
     }
 
 }

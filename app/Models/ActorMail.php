@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Database\Factories\ActorMailFactory;
+use Eloquent;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,19 +15,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $actor_id
  * @property string $value
- * @method static \Database\Factories\ActorMailFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail query()
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail whereActorId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail whereValue($value)
+ * @method static ActorMailFactory factory($count = null, $state = [])
+ * @method static Builder|ActorMail newModelQuery()
+ * @method static Builder|ActorMail newQuery()
+ * @method static Builder|ActorMail query()
+ * @method static Builder|ActorMail whereActorId($value)
+ * @method static Builder|ActorMail whereId($value)
+ * @method static Builder|ActorMail whereValue($value)
  * @property string|null $created_at
  * @property string|null $updated_at
- * @property-read \App\Models\Actor|null $actor
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ActorMail whereUpdatedAt($value)
- * @mixin \Eloquent
+ * @property-read Actor|null $actor
+ * @method static Builder|ActorMail whereCreatedAt($value)
+ * @method static Builder|ActorMail whereUpdatedAt($value)
+ * @mixin Eloquent
  */
 class ActorMail extends Model
 {

@@ -31,7 +31,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|ApplicationAttachment whereName($value)
  * @method static Builder|ApplicationAttachment wherePath($value)
  * @method static Builder|ApplicationAttachment whereUpdatedAt($value)
- * @property-read \App\Models\Application $application
+ * @property-read Application $application
  * @mixin Eloquent
  */
 class ApplicationAttachment extends Model
