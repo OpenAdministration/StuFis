@@ -38,7 +38,7 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.input name="org-name">Name der Organisation</x-antrag.input>
+                            <x-antrag.input name="org_name">Name der Organisation</x-antrag.input>
                         </x-antrag.row>
 
                         <x-antrag.row>
@@ -46,11 +46,11 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.input name="street-and-number">Straße und Hausnummer</x-antrag.input>
+                            <x-antrag.input name="street_and_number">Straße und Hausnummer</x-antrag.input>
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.input name="zip-and-place">PLZ und Ort</x-antrag.input>
+                            <x-antrag.input name="zip_and_place">PLZ und Ort</x-antrag.input>
                         </x-antrag.row>
 
                         <x-antrag.row>
@@ -78,7 +78,7 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.form-group name="tax-deduction" label="Vorsteuerabzugsberechtigt">
+                            <x-antrag.form-group name="tax_deduction" label="Vorsteuerabzugsberechtigt">
 
                                 <!-- Radio Boxen -->
 
@@ -86,7 +86,7 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.input name="register-number">Registernummer</x-antrag.input>
+                            <x-antrag.input name="register_number">Registernummer</x-antrag.input>
                         </x-antrag.row>
 
                         <x-antrag.row>
@@ -95,7 +95,7 @@
 
                         <!-- dropdown -->
                         <x-antrag.row>
-                            <x-antrag.select name="statur-group">Statusgruppe</x-antrag.select>
+                            <x-antrag.select name="status_group">Statusgruppe</x-antrag.select>
                         </x-antrag.row>
 
 

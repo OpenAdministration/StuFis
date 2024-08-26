@@ -30,7 +30,7 @@
                     <div class="pb-12 mt-10 space-y-8 border-b border-gray-900/10 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
 
                         <x-antrag.row>
-                            <x-antrag.input.number name="stura-funding" readonly value="72.33">StuRa-Förderung €</x-antrag.input.number>
+                            <x-antrag.input.number name="funding_total" readonly value="72.33">StuRa-Förderung €</x-antrag.input.number>
                         </x-antrag.row>
 
                         <x-antrag.row>
@@ -39,7 +39,7 @@
                         </x-antrag.row>
 
                         <x-antrag.row>
-                            <x-antrag.input.number name="advance-payment" max="72.33" value="0">
+                            <x-antrag.input.number name="advance_payment" max="72.33" value="0">
                                 Höhe der Vorkasse in €
                             </x-antrag.input.number>
                         </x-antrag.row>
