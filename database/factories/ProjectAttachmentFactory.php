@@ -20,9 +20,9 @@ class ProjectAttachmentFactory extends Factory
     {
         return [
             'application_id' => Application::factory(),
-            'name' => $this->faker->name(),
-            'path' => $this->faker->filePath(),
-            'mime_type' => $this->faker->mimeType(),
+            'name' => fake()->name(),
+            'path' => fake()->filePath(),
+            'mime_type' => fake()->mimeType(),
         ];
     }
 }

@@ -19,7 +19,7 @@ class ActorPhoneFactory extends Factory
     {
         return [
             'actor_id' => Actor::factory(),
-            'phone' => $this->faker->phoneNumber(),
+            'phone' => fake()->phoneNumber(),
         ];
     }
 }

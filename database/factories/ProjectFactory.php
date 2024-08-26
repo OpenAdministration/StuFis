@@ -18,13 +18,13 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'version' => $this->faker->numberBetween(1,36),
+            'version' => fake()->numberBetween(1,36),
             'state' => 'draft',
             'user_id' => User::factory(),
-            'name' => $this->faker->name(),
-            'start_date' => $this->faker->date(),
-            'end_date' => $this->faker->date(),
-            'description' => $this->faker->text(),
+            'name' => fake()->name(),
+            'start_date' => fake()->date(),
+            'end_date' => fake()->date(),
+            'description' => fake()->text(),
             'extra_fields' => '{}'
         ];
     }

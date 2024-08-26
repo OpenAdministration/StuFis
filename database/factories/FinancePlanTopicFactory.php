@@ -19,8 +19,8 @@ class FinancePlanTopicFactory extends Factory
     {
         return [
             'application_id' => Application::factory(),
-            'name' => $this->faker->name(),
-            'is_active' => $this->faker->boolean(),
+            'name' => fake()->name(),
+            'is_active' => fake()->boolean(),
         ];
     }
 }

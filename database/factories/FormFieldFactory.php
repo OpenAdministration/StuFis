@@ -19,11 +19,11 @@ class FormFieldFactory extends Factory
     {
         return [
             'form_definition_id' => FormDefinition::factory(),
-            'name' => $this->faker->unique()->word(),
-            'label' => $this->faker->unique()->word(),
-            'type' => $this->faker->randomElement(['date', 'textarea', 'number']),
+            'name' => fake()->unique()->word(),
+            'label' => fake()->unique()->word(),
+            'type' => fake()->randomElement(['date', 'textarea', 'number']),
             'default_value' => '',
-            'position' => $this->faker->unique()->numberBetween(1,100),
+            'position' => fake()->unique()->numberBetween(1,100),
             'view_key' => '',
         ];
     }

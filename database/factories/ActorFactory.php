@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Actor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Actor>
+ * @extends Factory<Actor>
  */
 class ActorFactory extends Factory
 {
@@ -18,10 +19,10 @@ class ActorFactory extends Factory
     {
         return [
             'is_organisation' => false,
-            'name' => $this->faker->name(),
-            'address' => $this->faker->address(),
-            'iban' => $this->faker->iban(),
-            'bic' => $this->faker->swiftBicNumber(),
+            'name' => fake()->name(),
+            'address' => fake()->address(),
+            'iban' => fake()->iban(),
+            'bic' => fake()->swiftBicNumber(),
         ];
     }
 
@@ -29,8 +30,8 @@ class ActorFactory extends Factory
     {
         return $this->state([
             'is_organisation' => true,
-            'website' => $this->faker->url(),
-            'register_number' => $this->faker->creditCardNumber(), // next best to fake
+            'website' => fake()->url(),
+            'register_number' => fake()->creditCardNumber(), // next best to fake
         ]);
     }
 }

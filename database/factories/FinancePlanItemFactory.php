@@ -20,11 +20,11 @@ class FinancePlanItemFactory extends Factory
     {
         return [
             'topic_id' => FinancePlanTopic::factory(),
-            'name' => $this->faker->name(),
-            'value' => $this->faker->randomFloat(2, 1, 100),
-            'amount' => $this->faker->numberBetween(1,10),
-            'total' => $this->faker->randomFloat(2, 10, 1000),
-            'description' => $this->faker->text(),
+            'name' => fake()->name(),
+            'value' => fake()->randomFloat(2, 1, 100),
+            'amount' => fake()->numberBetween(1,10),
+            'total' => fake()->randomFloat(2, 10, 1000),
+            'description' => fake()->text(),
         ];
     }
 }

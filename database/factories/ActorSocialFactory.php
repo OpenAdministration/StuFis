@@ -18,8 +18,8 @@ class ActorSocialFactory extends Factory
     public function definition(): array
     {
         return [
-            'provider' => $this->faker->randomElement(['facebook', 'instagram', 'twitter']),
-            'url' => $this->faker->url(),
+            'provider' => fake()->randomElement(['facebook', 'instagram', 'twitter']),
+            'url' => fake()->url(),
         ];
     }
 }

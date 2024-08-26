@@ -12,12 +12,12 @@ class BankAccountFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->name(),
-            'short' => $this->faker->randomLetter(),
-            //'sync_from' => $this->faker->date(),
-            //'sync_until' => $this->faker->date(),
-            'iban' => $this->faker->iban('de'),
-            //'last_sync' => $this->faker->date(),
+            'name' => fake()->name(),
+            'short' => fake()->randomLetter(),
+            //'sync_from' => fake()->date(),
+            //'sync_until' => fake()->date(),
+            'iban' => fake()->iban('de'),
+            //'last_sync' => fake()->date(),
         ];
     }
 }

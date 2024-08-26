@@ -18,8 +18,8 @@ class StudentBodyDutyFactory extends Factory
     public function definition(): array
     {
         return [
-            'short_key' => $this->faker->word(),
-            'long_key' => $this->faker->sentence(),
+            'short_key' => fake()->word(),
+            'long_key' => fake()->sentence(),
         ];
     }
 }

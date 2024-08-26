@@ -13,37 +13,37 @@ class BankTransactionFactory extends Factory
 
     public function definition(): array
     {
-        $date = $this->faker->date();
+        $date = fake()->date();
 
         return [
             'date' => $date,
             'valuta' => $date,
-            'type' => $this->faker->word(),
-            'empf_iban' => $this->faker->iban('de'),
-            'empf_bic' => $this->faker->swiftBicNumber(),
-            'empf_name' => $this->faker->name(),
-            'primanota' => $this->faker->randomDigit(),
-            'zweck' => $this->faker->word(),
-            'comment' => $this->faker->word(),
-            'customer_ref' => $this->faker->word(),
+            'type' => fake()->word(),
+            'empf_iban' => fake()->iban('de'),
+            'empf_bic' => fake()->swiftBicNumber(),
+            'empf_name' => fake()->name(),
+            'primanota' => fake()->randomDigit(),
+            'zweck' => fake()->word(),
+            'comment' => fake()->word(),
+            'customer_ref' => fake()->word(),
             'konto_id' => BankAccount::factory(),
 
-            'value' => ($this->faker->boolean() ? '' : '-').$this->faker->randomFloat(2),
-            'saldo' => $this->faker->randomFloat(2),
+            'value' => (fake()->boolean() ? '' : '-').fake()->randomFloat(2),
+            'saldo' => fake()->randomFloat(2),
         ];
     }
 
     public function continuous(int $amount, Carbon $minDate, null|string|float $startValue = null): self
     {
-        $lastSaldo = $startValue ?? $this->faker->randomFloat(2);
+        $lastSaldo = $startValue ?? fake()->randomFloat(2);
         $lastDate = $minDate;
         $seq = [];
         $id = 1;
 
         for ($i = 0; $i < $amount; $i++) {
-            $val = ($this->faker->boolean() ? '' : '-').$this->faker->randomFloat(2, 100, 100000);
+            $val = (fake()->boolean() ? '' : '-').fake()->randomFloat(2, 100, 100000);
             $lastSaldo = bcadd($lastSaldo, $val, 2);
-            $minutes = $this->faker->randomNumber(4);
+            $minutes = fake()->randomNumber(4);
             $lastDate = $lastDate->addMinutes($minutes);
             $seq[] = [
                 'id' => $id++,

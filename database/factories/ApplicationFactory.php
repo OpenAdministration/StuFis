@@ -27,11 +27,11 @@ class ApplicationFactory extends Factory
             'state' => 'draft',
             'form_name' => FormDefinition::factory(),
             'form_version' => FormDefinition::factory(),
-            'version' => $this->faker->numberBetween(1, 10),
+            'version' => fake()->numberBetween(1, 10),
             'legal_basis' => LegalBasis::factory(),
-            'legal_basis_details' => $this->faker->text(),
-            'constraints' => $this->faker->text(),
-            'funding_total' => $this->faker->randomFloat(2, 1, 1000),
+            'legal_basis_details' => fake()->text(),
+            'constraints' => fake()->text(),
+            'funding_total' => fake()->randomFloat(2, 1, 1000),
             'extra_fields' => "{}"
         ];
     }

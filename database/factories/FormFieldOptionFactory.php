@@ -20,8 +20,8 @@ class FormFieldOptionFactory extends Factory
     {
         return [
             'form_field_id' => FormField::factory(),
-            'text' => $this->faker->word(),
-            'subtext' => $this->faker->text(50),
+            'text' => fake()->word(),
+            'subtext' => fake()->text(50),
         ];
     }
 }

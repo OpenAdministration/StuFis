@@ -17,9 +17,9 @@ class LegalBasisFactory extends Factory
     public function definition(): array
     {
         return [
-            'uuid' => $this->faker->unique()->word(),
-            'has_details' => $this->faker->boolean(),
-            'active' => $this->faker->boolean(),
+            'uuid' => fake()->unique()->word(),
+            'has_details' => fake()->boolean(),
+            'active' => fake()->boolean(),
         ];
     }
 }

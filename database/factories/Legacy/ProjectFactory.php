@@ -22,20 +22,20 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'createdat' => $this->faker->dateTime(),
-            'lastupdated' => $this->faker->dateTime(),
+            'createdat' => fake()->dateTime(),
+            'lastupdated' => fake()->dateTime(),
             'version' => 1,
             'state' => 'draft',
-            'name' => $this->faker->text(30),
-            'responsible' => $this->faker->userName(),
-            'org' => $this->faker->company(),
-            'org-mail' => $this->faker->companyEmail(),
-            'protokoll' => $this->faker->url(),
+            'name' => fake()->text(30),
+            'responsible' => fake()->userName(),
+            'org' => fake()->company(),
+            'org-mail' => fake()->companyEmail(),
+            'protokoll' => fake()->url(),
             'recht' => 'stura',
-            'recht-additional' => $this->faker->text(10),
-            'date-start' => $this->faker->date(),
-            'date-end' => $this->faker->date(),
-            'beschreibung' => $this->faker->text(500),
+            'recht-additional' => fake()->text(10),
+            'date-start' => fake()->date(),
+            'date-end' => fake()->date(),
+            'beschreibung' => fake()->text(500),
         ];
     }
 
