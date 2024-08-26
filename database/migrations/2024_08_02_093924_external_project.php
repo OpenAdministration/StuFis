@@ -36,6 +36,7 @@ return new class extends Migration
            $table->integer('position'); // internal render order
            $table->string('view_key'); // where to render
 
+           $table->timestamps();
            $table->unique(['form_definition_id', 'name']);
         });
 
@@ -59,7 +60,7 @@ return new class extends Migration
         Schema::create('student_body_duties', function (Blueprint $table) {
             $table->id();
             $table->string('short_key'); // ex. "th-2004.internationals"
-            $table->string('description_keys'); // ex. "th-2004.internationals"
+            $table->string('long_key'); // ex. "th-2004.internationals"
         });
 
         Schema::create('projects', function (Blueprint $table) {
