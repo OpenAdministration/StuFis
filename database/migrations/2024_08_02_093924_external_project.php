@@ -184,13 +184,17 @@ return new class extends Migration
             $table->boolean('is_organisation');
 
             $table->string('name');
-            $table->string('address');
+            $table->string('street');
+            $table->string('city');
+            $table->string('zip_code');
 
             $table->string('iban');
             $table->string('bic');
 
             $table->string('website');
             $table->string('register_number');
+            $table->boolean('vat_deduction');
+            $table->boolean('charity');
             $table->timestamps();
         });
 

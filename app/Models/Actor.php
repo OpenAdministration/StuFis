@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property string $bic
  * @property string $website
  * @property string $register_number
+ * @property int $vat_deduction
  * @method static ActorFactory factory($count = null, $state = [])
  * @method static Builder|Actor newModelQuery()
  * @method static Builder|Actor newQuery()
@@ -49,6 +50,16 @@ use Illuminate\Support\Carbon;
 class Actor extends Model
 {
     use HasFactory;
+
+    public function scopeOrganisation(Builder $builder): void
+    {
+        $builder->where('is_organisation', '=', true);
+    }
+
+    public function scopeUser(Builder $builder): void
+    {
+        $builder->where('is_organisation', '=', false);
+    }
 
     public function mails(): HasMany {
         return $this->hasMany(ActorMail::class);

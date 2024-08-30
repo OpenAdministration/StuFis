@@ -20,7 +20,9 @@ class ActorFactory extends Factory
         return [
             'is_organisation' => false,
             'name' => fake()->name(),
-            'address' => fake()->address(),
+            'street' => fake()->streetAddress(),
+            'zip_code' => fake()->postcode(),
+            'city' => fake()->city(),
             'iban' => fake()->iban(),
             'bic' => fake()->swiftBicNumber(),
         ];
@@ -28,10 +30,15 @@ class ActorFactory extends Factory
 
     public function asOrganisation() : static
     {
-        return $this->state([
-            'is_organisation' => true,
-            'website' => fake()->url(),
-            'register_number' => fake()->creditCardNumber(), // next best to fake
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'is_organisation' => true,
+                'name' => fake()->company(),
+                'website' => fake()->url(),
+                'register_number' => fake()->creditCardNumber(), // next best to fake
+                'vat_deduction' => fake()->boolean(),
+                'charity' => fake()->boolean(),
+            ];
+        });
     }
 }
