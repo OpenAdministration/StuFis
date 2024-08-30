@@ -5,15 +5,18 @@ namespace App\Rules\CsvTransactionImport;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Translation\PotentiallyTranslatedString;
+use Intervention\Validation\Rules\Iban;
 
-class IbanRule implements ValidationRule
+class IbanColumnRule implements ValidationRule
 {
     public function __construct(public Collection $ibans) {}
 
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
+     * @param Closure(string): PotentiallyTranslatedString $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
@@ -21,7 +24,8 @@ class IbanRule implements ValidationRule
             if (empty($iban)) {
                 continue;
             }
-            if (! verify_iban($iban)) {
+            $v = Validator::make(['iban' => $iban], ['iban' => new Iban()]);
+            if ($v->fails()) {
                 $fail(__('konto.csv-verify-iban-error'));
             }
         }
