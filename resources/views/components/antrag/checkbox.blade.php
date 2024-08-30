@@ -1,5 +1,5 @@
 @props([
-    'name',
+    'name' => $attributes->thatStartWith('wire:model')->first(),
     'label',
 ])
 <div class="relative flex gap-x-3">

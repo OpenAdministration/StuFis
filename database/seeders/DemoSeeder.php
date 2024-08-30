@@ -2,6 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Actor;
+use App\Models\ActorMail;
+use App\Models\ActorPhone;
+use App\Models\ActorSocial;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use Illuminate\Database\Seeder;
@@ -112,6 +116,17 @@ class DemoSeeder extends Seeder
             'name' => 'Bank empty',
             'short' => 'E',
         ])->create();
+
+        Actor::factory()->count(10)->asOrganisation()
+            ->has(ActorMail::factory()->count(2))
+            ->has(ActorPhone::factory()->count(2))
+            ->has(ActorSocial::factory()->count(3))
+        ->create();
+
+        Actor::factory()->count(2)
+            ->has(ActorMail::factory()->count(2))
+            ->has(ActorPhone::factory()->count(2))
+        ->create();
 
         // insert does not take 0 as id
         //\DB::table('konto_type')->where('short', '=', 'C')->update([

@@ -28,7 +28,8 @@ Route::middleware(['auth'])->group(function () {
 
     //Route::get('antrag/{site?}', [\App\Http\Controllers\AntragController::class, 'index'])->name('antrag');
     Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
-    Route::get('antrag/{site?}', [\App\Livewire\Antrag::class, 'render'])->name('antrag');
+    Route::get('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
+    Route::get('antrag/new-org', \App\Livewire\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');
 });
 
 // guest routes

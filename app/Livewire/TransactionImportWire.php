@@ -5,10 +5,12 @@ namespace App\Livewire;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use App\Models\User;
-use App\Rules\CsvTransactionImport\BalanceRule;
+use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
-use App\Rules\CsvTransactionImport\IbanRule;
-use App\Rules\CsvTransactionImport\MoneyRule;
+use App\Rules\CsvTransactionImport\IbanColumnRule;
+use App\Rules\CsvTransactionImport\MoneyColumnRule;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -76,13 +78,13 @@ class TransactionImportWire extends Component
             'mapping.type' => 'required|int',
             'mapping.value' => [
                 'required', 'int',
-                new MoneyRule($this->data->pluck($this->mapping->get('value'))),
+                new MoneyColumnRule($this->data->pluck($this->mapping->get('value'))),
             ],
             'mapping.saldo' => [
                 'int',
-                new MoneyRule($this->data->pluck($this->mapping->get('saldo'))),
+                new MoneyColumnRule($this->data->pluck($this->mapping->get('saldo'))),
                 //new MoneyRule($this->data->pluck($this->mapping->get('value'))),
-                new BalanceRule(
+                new BalanceColumnRule(
                     $this->data->pluck($this->mapping->get('value')),
                     $this->data->pluck($this->mapping->get('saldo')),
                     $this->latestTransaction?->saldo
@@ -92,7 +94,7 @@ class TransactionImportWire extends Component
             'mapping.empf_bic' => 'sometimes|int',
             'mapping.empf_iban' => [
                 'required', 'int',
-                new IbanRule($this->data->pluck($this->mapping->get('empf_iban'))),
+                new IbanColumnRule($this->data->pluck($this->mapping->get('empf_iban'))),
             ],
             'mapping.zweck' => 'required|int',
         ];
@@ -236,7 +238,7 @@ class TransactionImportWire extends Component
             ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
     }
 
-    public function render(): \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
+    public function render(): Application|Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
     {
         $accounts = BankAccount::all();
         $labels = (new BankTransaction)->getLabels();

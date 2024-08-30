@@ -3,36 +3,30 @@
 namespace App\Livewire\Forms;
 
 use App\Models\Project;
-use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class ProjectForm extends Form
 {
-    #[Validate('required')]
     public $name = '';
-
-    #[Validate('required')]
     public $start_date = '';
-
-    #[Validate('required')]
     public $end_date = '';
-
-    #[Validate('required')]
     public $description = '';
 
-    #[Validate('required')]
-    public $target_group = '';
-
-    #[Validate('required')]
     public $student_body_duties = [];
 
-    #[Validate('required')]
-    public $estimated_guests = '';
+    public function rules() : array
+    {
+        return [
+            'name' => 'required|min:3',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'description' => 'required|min:3',
+            'target_group' => 'required',
+            'student_body_duties' => 'required|array',
+        ];
+    }
 
-    #[Validate('required')]
-    public $estimated_students = '';
-
-    public function store()
+    public function store(): void
     {
         $this->validate();
 

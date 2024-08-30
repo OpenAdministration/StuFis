@@ -4,7 +4,7 @@
     'sum' => '0,00',
 ])
 <x-antrag.table.row>
-    <x-antrag.table.header>{{ $id }}</x-antrag.table.cell>
+    <x-antrag.table.header>{{ $id }}</x-antrag.table.header>
     <x-antrag.table.header>
         @if ($slot->isNotEmpty())
             {{ $slot }}

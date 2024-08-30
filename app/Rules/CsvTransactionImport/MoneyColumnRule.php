@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
 
-class MoneyRule implements ValidationRule
+class MoneyColumnRule implements ValidationRule
 {
     public function __construct(private Collection $column) {}
 
