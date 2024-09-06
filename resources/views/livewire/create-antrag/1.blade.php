@@ -48,7 +48,6 @@
                     <x-antrag.button.primary wire:click="nextPage()">Weiter</x-antrag.button.primary>
                 </div>
             </x-antrag.row>
-
         </div>
     </div>
 

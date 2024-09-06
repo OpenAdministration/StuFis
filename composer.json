@@ -20,6 +20,7 @@
         "nemiah/php-fints": "dev-master",
         "open-administration/php-latex-renderer": "^1.1",
         "owenvoke/blade-fontawesome": "^2.6",
+        "propaganistas/laravel-phone": "^5.3",
         "socialiteproviders/keycloak": "^5.2",
         "socialiteproviders/laravelpassport": "^4.3",
         "spatie/laravel-backup": "^8.6",

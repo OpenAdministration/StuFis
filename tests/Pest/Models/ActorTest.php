@@ -21,3 +21,12 @@ test('actor factory and relations', function () {
     assertModelExists($actor);
 
 });
+
+test('new organisation', function () {
+    \Livewire::actingAs(user())
+        ->test('create-antrag.new-organisation')
+        ->set('orgForm.name', fake()->company())
+        ->set('orgForm', [fake()->companyEmail(), fake()->companyEmail()])
+        ->call('create')
+        ->assertHasErrors();
+});

@@ -10,7 +10,7 @@ use Livewire\Form;
 
 class ActorForm extends Form
 {
-    public $is_organisation = 0;
+    public $is_organisation = false;
     public $name = '';
     public $zip_code = "";
     public $city = '';
@@ -25,8 +25,8 @@ class ActorForm extends Form
 
     public $register_number = '';
 
-    public $vat_deduction = 0;
-    public $charitable = 0;
+    public $vat_deduction = false;
+    public $charitable = false;
 
     public function rules() : array
     {
@@ -41,7 +41,7 @@ class ActorForm extends Form
             'city' => 'string',
 
             'phones' => 'required|array',
-            'phones.*' => 'sometimes|string', // better validation?
+            'phones.*' => 'sometimes|phone:de', // better validation?
 
             'socials' => 'required|array',
             'socials.*' => 'sometimes|array',
@@ -64,6 +64,7 @@ class ActorForm extends Form
 
     public function create() : void
     {
+        $this->validate();
         $actor = Actor::create(
             $this->except(['socials', 'mails', 'phones'])
         );
