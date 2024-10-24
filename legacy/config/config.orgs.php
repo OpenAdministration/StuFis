@@ -383,7 +383,7 @@ return [
             ],
             'mittel' => [
                 'label' => 'Antrag auf Mittelfreigabe',
-                'hint-text' => 'Interne Förderrichtlinie §41, Abs (7) und (8): StuRa bis zu 100 EUR & FSRe bis zu 50 €',
+                'hint-text' => 'Interne Förderrichtlinie §41 (7), (8). sowie §42: StuRa bis zu 100 EUR & FSRe bis zu 75 EUR',
             ],
             'vertrag' => [
                 'label' => 'Verträge',
@@ -505,4 +505,5 @@ return [
         'projekt-form' => [
         ],
     ],
+
 ];
