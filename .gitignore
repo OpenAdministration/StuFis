@@ -18,3 +18,5 @@ yarn-error.log
 /public/css/app.css
 /public/js/app.js
 composer.phar
+/.env.testing
+/auth.json

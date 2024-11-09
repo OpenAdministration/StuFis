@@ -45,12 +45,10 @@ class BudgetPlan extends Model
     /**
      * @var array
      */
-    protected $fillable = ['start_date', 'end_date', 'resolution_date', 'approval_date', 'state', 'parent_plan'];
+    protected $fillable = ['resolution_date', 'approval_date', 'state', 'parent_plan'];
 
     protected $casts = [
         'state' => BudgetPlanState::class,
-        'start_date' => 'date',
-        'end_date' => 'date',
         'resolution_date' => 'date',
         'approval_date' => 'date',
 
@@ -59,5 +57,10 @@ class BudgetPlan extends Model
     public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BudgetItem::class);
+    }
+
+    public function fiscalYear(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(FiscalYear::class);
     }
 }
