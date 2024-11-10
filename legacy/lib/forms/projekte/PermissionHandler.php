@@ -10,33 +10,36 @@ class PermissionHandler
      * @var array
      */
     protected $dataFields;
+
     /**
      * @var StateHandler
      */
     protected $stateHandler;
+
     /**
      * @var array ["stateName" => ["groups => [...], "persons" => [...], "gremium" => [...]],...]
-     *                                Any match with group, gremium or person will grant write Permission!
+     *            Any match with group, gremium or person will grant write Permission!
      */
     protected $writePermissionAll;
 
     /**
      * @var array [ "stateName1" =>
-     *                                      [ "fieldName1" =>
-     *                                          [ "groups => [...], "persons" => [...], "gremien" => [...], ]
-     *                                      ,...]
-     *                                  ,...]
-     *                                  Any match with group, gremium or person will grant write Permission!
-     *                                  If fieldName array is just true than value can be edited from anyone in this
-     *                                  state
+     *            [ "fieldName1" =>
+     *            [ "groups => [...], "persons" => [...], "gremien" => [...], ]
+     *            ,...]
+     *            ,...]
+     *            Any match with group, gremium or person will grant write Permission!
+     *            If fieldName array is just true than value can be edited from anyone in this
+     *            state
      */
     protected $writePermissionField;
 
     /**
      * @var array [ "fieldname1" => [ "state1", "state2", ...],... ]
-     *                          Any Match with any State will grant visibility
+     *            Any Match with any State will grant visibility
      */
     protected $visibleFields;
+
     protected $editMode;
 
     /**
@@ -46,35 +49,35 @@ class PermissionHandler
     {
         $states = $stateHandler->getStates();
         foreach ($states as $stateName => $desc) {
-            if (!isset($writePermissionAll[$stateName])) {
+            if (! isset($writePermissionAll[$stateName])) {
                 exit("Status $stateName is not defined in \$writePermissionAll");
             }
 
             if ($writePermissionAll[$stateName] !== true) { //could be explicit true or false
-                if (!isset($writePermissionAll[$stateName]['groups'])) {
+                if (! isset($writePermissionAll[$stateName]['groups'])) {
                     $writePermissionAll[$stateName]['groups'] = [];
                 }
-                if (!isset($writePermissionAll[$stateName]['persons'])) {
+                if (! isset($writePermissionAll[$stateName]['persons'])) {
                     $writePermissionAll[$stateName]['persons'] = [];
                 }
-                if (!isset($writePermissionAll[$stateName]['gremien'])) {
+                if (! isset($writePermissionAll[$stateName]['gremien'])) {
                     $writePermissionAll[$stateName]['gremien'] = [];
                 }
             }
             foreach ($dataFields as $dataFieldName => $content) {
-                if (!isset($writePermissionField[$stateName][$dataFieldName]['groups'])) {
+                if (! isset($writePermissionField[$stateName][$dataFieldName]['groups'])) {
                     $writePermissionField[$stateName][$dataFieldName]['groups'] = [];
                 }
-                if (!isset($writePermissionField[$stateName][$dataFieldName]['persons'])) {
+                if (! isset($writePermissionField[$stateName][$dataFieldName]['persons'])) {
                     $writePermissionField[$stateName][$dataFieldName]['persons'] = [];
                 }
-                if (!isset($writePermissionField[$stateName][$dataFieldName]['gremien'])) {
+                if (! isset($writePermissionField[$stateName][$dataFieldName]['gremien'])) {
                     $writePermissionField[$stateName][$dataFieldName]['gremien'] = [];
                 }
             }
         }
         foreach ($dataFields as $dataFieldName => $content) {
-            if (!isset($visibleFields[$dataFieldName])) {
+            if (! isset($visibleFields[$dataFieldName])) {
                 $visibleFields[$dataFieldName] = true;
             }
         }
@@ -93,6 +96,7 @@ class PermissionHandler
         if ($this->visibleFields[$fieldname] === true) {
             return true;
         }
+
         return in_array($this->stateHandler->getActualState(), $this->visibleFields[$fieldname], true);
     }
 
@@ -115,6 +119,7 @@ class PermissionHandler
         if ($couldBe === true) {
             $this->editMode = $oldEditMode;
         }
+
         //var_dump(["edit" =>$ret]);
         return $ret;
     }
@@ -126,6 +131,7 @@ class PermissionHandler
         }
         // https://stackoverflow.com/questions/2715026/are-php5-objects-passed-by-reference -> yes
         $state = $this->stateHandler->getActualState();
+
         return $this->checkPermissionArray($this->writePermissionAll[$state]);
     }
 
@@ -146,6 +152,7 @@ class PermissionHandler
             $ret |= in_array(AuthHandler::getInstance()->getUsername(), $permArray['persons'], true);
             $ret |= in_array(AuthHandler::getInstance()->getUserFullName(), $permArray['persons'], true);
         }
+
         //var_dump($ret);
         return (bool) $ret;
     }
@@ -158,6 +165,7 @@ class PermissionHandler
         // https://stackoverflow.com/questions/2715026/are-php5-objects-passed-by-reference -> yes
         $fieldname = $this->cleanFieldNameFromArrayTags($fieldname);
         $state = $this->stateHandler->getActualState();
+
         /*var_dump([
             "name" => $fieldname,
             "rules" => $this->writePermissionField[$state][$fieldname],
@@ -188,12 +196,14 @@ class PermissionHandler
             if (strtolower($conjunctureWith) === 'and') {
                 return $ret_and;
             }
+
             return null;
         }
 
         if ($this->checkWritePermission() === true) {
             return true;
         }
+
         return $this->checkWritePermissionField($names);
     }
 }

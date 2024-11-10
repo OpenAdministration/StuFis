@@ -1,10 +1,9 @@
 <?php
 
-
 use App\Http\Controllers\Legacy\LegacyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
+Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function () {
     Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
     Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');
     Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');
@@ -27,8 +26,9 @@ Route::middleware(['auth', 'legacy:login'])->name('legacy.')->group(function(){
     Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
         [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
 
-    Route::get('auslagen/{auslage_id}', static function ($auslage_id){
+    Route::get('auslagen/{auslage_id}', static function ($auslage_id) {
         $auslage = \App\Models\Legacy\Expenses::find($auslage_id);
+
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     });
 

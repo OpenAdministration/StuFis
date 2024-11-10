@@ -4,11 +4,11 @@ namespace framework\auth;
 
 use App\Exceptions\LegacyDieException;
 use Auth;
-use framework\render\ErrorHandler;
 use framework\Singleton;
 
 /**
  * Class AuthHandler
+ *
  * @static requireAuth()
  * @static hasGroup()
  */
@@ -22,12 +22,13 @@ class AuthHandler extends Singleton
     /**
      * check group permission - die on error
      * return void if successful
-     * @param array|string $groups String of groups
+     *
+     * @param  array|string  $groups  String of groups
      * @return void die() if group is not there
      */
     public function requireGroup(array|string $groups): void
     {
-        if (!$this->hasGroup($groups)) {
+        if (! $this->hasGroup($groups)) {
             throw new LegacyDieException(403, 'Fehlende Zugangsberechtigung', $groups);
         }
     }
@@ -39,9 +40,10 @@ class AuthHandler extends Singleton
 
     /**
      * check group permission - return result of check as boolean
-     * @param array|string $groups String of groups
-     * @param string $delimiter Delimiter of the groups in $group
-     * @return bool  true if the user has one or more groups from $group
+     *
+     * @param  array|string  $groups  String of groups
+     * @param  string  $delimiter  Delimiter of the groups in $group
+     * @return bool true if the user has one or more groups from $group
      */
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
@@ -62,7 +64,8 @@ class AuthHandler extends Singleton
     /**
      * handle session and user login
      */
-    public function requireAuth(){
+    public function requireAuth()
+    {
         Auth::user()->getGroups()->has('login');
     }
 
@@ -84,27 +87,30 @@ class AuthHandler extends Singleton
      * return username or user mail address
      * if not set return null
      */
-    public function getUsername(): string {
+    public function getUsername(): string
+    {
         return Auth::user()->username;
     }
 
     /**
      * return user displayname
      */
-    public function getUserFullName(): string {
+    public function getUserFullName(): string
+    {
         return Auth::user()->name;
     }
 
     /**
      * return user mail address
      */
-    public function getUserMail(): string {
+    public function getUserMail(): string
+    {
         return Auth::user()->email;
     }
 
     /**
-     * @param $gremien   array|string with $delimiter concat sting
-     * @param $delimiter string delimiter between gremien
+     * @param  $gremien  array|string with $delimiter concat sting
+     * @param  $delimiter  string delimiter between gremien
      */
     public function hasGremium(array|string $gremien, string $delimiter = ','): bool
     {
@@ -122,11 +128,9 @@ class AuthHandler extends Singleton
 
     /**
      * Returns the Gremien of the User
-     * @return array
      */
     public function getUserGremien(): array
     {
         return Auth::user()->getCommittees()->toArray();
     }
-
 }

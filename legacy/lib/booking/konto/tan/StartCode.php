@@ -20,6 +20,7 @@ class StartCode extends DataElement
         [$ctrlBytes, $rest] = self::parseControlBytes($rest, $hasControl);
         $data = substr($rest, 0, $length);
         $rest = substr($rest, $length);
+
         return [$rest, new self($ctrlBytes, $data)];
     }
 
@@ -35,7 +36,7 @@ class StartCode extends DataElement
 
     public function toHex(): string
     {
-        return $this->getHeaderHex() . implode('', $this->controlBytes) . $this->getDataHex();
+        return $this->getHeaderHex().implode('', $this->controlBytes).$this->getDataHex();
     }
 
     private static function parseControlBytes($challenge, $hasControl): array
@@ -48,6 +49,7 @@ class StartCode extends DataElement
             $rest = substr($challenge, 2);
             $hasControl = self::hexToByte($ctrl)[0] === '1';
         }
+
         return [$controlBytes, $rest];
     }
 
@@ -58,6 +60,7 @@ class StartCode extends DataElement
             $luhn = $this->calcLuhn($ctrl);
         }
         $luhn += parent::getLuhnChecksum(); // Luhn from Startcode data
+
         return $luhn;
     }
 

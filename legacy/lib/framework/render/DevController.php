@@ -6,7 +6,6 @@ use booking\konto\tan\FlickerGenerator;
 use DateTime;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
-use framework\render\html\Html;
 
 class DevController extends Renderer
 {
@@ -25,7 +24,7 @@ class DevController extends Renderer
 
     public function actionSession(): void
     {
-        echo '<pre>' . var_export($_SESSION, true) . '</pre>';
+        echo '<pre>'.var_export($_SESSION, true).'</pre>';
     }
 
     public function actionGroups(): void
@@ -36,21 +35,21 @@ class DevController extends Renderer
         echo "\n---MAPPED GROUPS---\n";
         echo var_export(AuthHandler::getInstance()->getUserGroups(), true);
         echo "\n---PERMISSIONS---\n";
-        foreach (['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-kv', 'ref-finanzen-belege'] as $group){
-            echo "$group: " . var_export(AuthHandler::getInstance()->hasGroup($group), true) . "\n";
+        foreach (['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-kv', 'ref-finanzen-belege'] as $group) {
+            echo "$group: ".var_export(AuthHandler::getInstance()->hasGroup($group), true)."\n";
         }
-        echo "admin: " . var_export(AuthHandler::getInstance()->isAdmin(), true) . "\n";
+        echo 'admin: '.var_export(AuthHandler::getInstance()->isAdmin(), true)."\n";
         echo '</pre>';
     }
 
     public function actionGremien(): void
     {
-        echo '<pre>' . var_export(AuthHandler::getInstance()->getUserGremien(), true) . '</pre>';
+        echo '<pre>'.var_export(AuthHandler::getInstance()->getUserGremien(), true).'</pre>';
     }
 
     public function actionAttributes(): void
     {
-        echo '<pre>' . var_export(AuthHandler::getInstance()->debugInfo(), true) . '</pre>';
+        echo '<pre>'.var_export(AuthHandler::getInstance()->debugInfo(), true).'</pre>';
     }
 
     public function actionLogout()
@@ -81,11 +80,11 @@ class DevController extends Renderer
         $startDate = max($lastSync, $syncFrom);
 
         $this->renderList([
-            'From: ' . $syncFrom->format('Y-m-d'),
-            'last: ' . $lastSync->format('Y-m-d'),
-            'until ' . $syncUntil->format('Y-m-d'),
-            'res-start ' . $startDate->format('Y-m-d'),
-            'res-end ' . $syncUntil->format('Y-m-d'),
+            'From: '.$syncFrom->format('Y-m-d'),
+            'last: '.$lastSync->format('Y-m-d'),
+            'until '.$syncUntil->format('Y-m-d'),
+            'res-start '.$startDate->format('Y-m-d'),
+            'res-end '.$syncUntil->format('Y-m-d'),
         ]);
     }
 
@@ -102,6 +101,6 @@ class DevController extends Renderer
         // var_dump(str_replace(' ', '', $hexSol));
         echo '</pre>';
         $svg = $p->getSVG(10, 300);
-        echo PHP_EOL . $svg;
+        echo PHP_EOL.$svg;
     }
 }

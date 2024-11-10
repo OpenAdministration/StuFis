@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\KontoTransaction
  *
- * @property integer $id
- * @property integer $konto_id
+ * @property int $id
+ * @property int $konto_id
  * @property string $date
  * @property string $valuta
  * @property string $type
@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $customer_ref
  * @property BankAccount $finanzformularKontoType
  * @property-read \App\Models\Legacy\BankAccount $konto
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction query()
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereValuta($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankTransaction whereZweck($value)
+ *
  * @mixin \Eloquent
  */
 class BankTransaction extends Model
@@ -70,8 +72,7 @@ class BankTransaction extends Model
     {
         $labels = [];
 
-        foreach($this->getFillable() as $attribute)
-        {
+        foreach ($this->getFillable() as $attribute) {
             $labels[$attribute] = 'konto.label.transaction.'.$attribute;
         }
 

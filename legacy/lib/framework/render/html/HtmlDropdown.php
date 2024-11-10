@@ -7,12 +7,13 @@ class HtmlDropdown extends HtmlInput
     private string $items;
 
     /**
-     * @param string $type has to be there bc of inheritance, otherwise it would not be there
+     * @param  string  $type  has to be there bc of inheritance, otherwise it would not be there
      * @return static
      */
     public static function make(string $type = 'select'): self
     {
         $wrapStack[] = Html::tag('div')->addClasses(['form-group']);
+
         return new self(
             tag: 'select',
             classes: ['selectpicker', 'form-control'],
@@ -21,7 +22,7 @@ class HtmlDropdown extends HtmlInput
     }
 
     /**
-     * @param array $items value => [text =>, subtext =>, titel =>, disabled =>] (with or without keys possible)
+     * @param  array  $items  value => [text =>, subtext =>, titel =>, disabled =>] (with or without keys possible)
      * @return $this
      */
     public function setItems(array $items): self
@@ -40,23 +41,26 @@ class HtmlDropdown extends HtmlInput
                 ->attr('value', $value);
         }
         $this->body($itemString, false);
+
         return $this;
     }
 
     public function style(string $btType = BT::TYPE_PRIMARY): self
     {
         $this->dataAttr('style', "btn-$btType");
+
         return $this;
     }
 
     public function liveSearch(bool $active = true): self
     {
         $this->dataAttr('live-search', $active);
+
         return $this;
     }
 
     /**
-     * @param int $max 0 equals infinite
+     * @param  int  $max  0 equals infinite
      * @return $this
      */
     public function multiSelect(int $max = 0): self
@@ -65,17 +69,19 @@ class HtmlDropdown extends HtmlInput
             $this->dataAttr('max-options', $max);
         }
         $this->unaryAttributes[] = 'multiple';
+
         return $this;
     }
 
     public function showTick(): self
     {
         $this->unaryAttributes[] = 'show-tick';
+
         return $this;
     }
 
     public function end(): string
     {
-        return "</{$this->tag}>" . $this->wrapEnd();
+        return "</{$this->tag}>".$this->wrapEnd();
     }
 }

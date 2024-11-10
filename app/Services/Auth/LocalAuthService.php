@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Request;
 
 class LocalAuthService extends AuthService
 {
-
     private string $username;
+
     public function __construct()
     {
         $this->username = config('local.auth.username');
@@ -25,13 +25,13 @@ class LocalAuthService extends AuthService
     {
         return [
             ['username' => $this->username],
-            []
+            [],
         ];
     }
 
     public function userCommittees(): Collection
     {
-        return match ($this->username){
+        return match ($this->username) {
             'user' => collect(['Students Council']),
             'hhv' => collect(['Financial Department']),
             'kv' => collect(['Financial Department']),
@@ -51,7 +51,7 @@ class LocalAuthService extends AuthService
 
     public function userGroupsRaw(): Collection
     {
-        return match ($this->username){
+        return match ($this->username) {
             'user' => collect(['login']),
             'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
@@ -61,7 +61,5 @@ class LocalAuthService extends AuthService
         };
     }
 
-    public function afterLogout(){}
-
-
+    public function afterLogout() {}
 }

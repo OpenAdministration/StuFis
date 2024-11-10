@@ -11,7 +11,9 @@ class FlickerGenerator
     private StartCode $startCode;
 
     private DataElement $de1;
+
     private DataElement $de2;
+
     private DataElement $de3;
 
     public function __construct(string $challengeText)
@@ -35,7 +37,7 @@ class FlickerGenerator
         [$reducedChallenge, $this->de2] = DataElement::parseNextBlock($reducedChallenge);
         [$reducedChallenge, $this->de3] = DataElement::parseNextBlock($reducedChallenge);
 
-        if (!empty($reducedChallenge)) {
+        if (! empty($reducedChallenge)) {
             throw new \InvalidArgumentException("Challenge has unexpected ending $reducedChallenge");
         }
     }
@@ -48,6 +50,7 @@ class FlickerGenerator
             $intVal = (int) base_convert($hexChar, 16, 10);
             $xor ^= $intVal;
         }
+
         return base_convert($xor, 10, 16);
     }
 
@@ -60,7 +63,8 @@ class FlickerGenerator
         //var_dump(implode('|', str_split($hex, 2)));
         $lc = strlen($hex) / 2 + 1;
         $lc = str_pad(base_convert($lc, 10, 16), 2, '0', STR_PAD_LEFT);
-        return $lc . $hex;
+
+        return $lc.$hex;
     }
 
     private function calcLuhnChecksum(): int
@@ -69,6 +73,7 @@ class FlickerGenerator
         $luhn += $this->de1->getLuhnChecksum();
         $luhn += $this->de2->getLuhnChecksum();
         $luhn += $this->de3->getLuhnChecksum();
+
         return (10 - ($luhn % 10)) % 10;
     }
 
@@ -80,8 +85,9 @@ class FlickerGenerator
 
         $xor = $this->calcXorChecksum();
 
-        $hexCode = $payload . $luhn . $xor;
+        $hexCode = $payload.$luhn.$xor;
         echo $hexCode;
+
         return new FlickerSVG($hexCode, $freq, $width, $width / 2);
     }
 

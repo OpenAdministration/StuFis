@@ -41,12 +41,12 @@ use framework\MailHandler;
 				margin-top: 1px;
 			}
 		</style>
-		<link rel="stylesheet" type="text/css" href="<?php echo URIBASE . 'css/logging.css'; ?>" media="screen,projection">
+		<link rel="stylesheet" type="text/css" href="<?php echo URIBASE.'css/logging.css'; ?>" media="screen,projection">
 	</head>
 	<body>
 <?php
 // install - secret key
-if (!file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') === 0) {
+if (! file_exists(SYSBASE.'/secret.php') || filesize(SYSBASE.'/secret.php') === 0) {
     CryptoHandler::new_protected_key_to_file(SYSBASE.'/secret.php', URIBASE);
 }
 
@@ -74,14 +74,14 @@ function htmlLogLine($text, $extra_empty = false, $bold = false, $extra_tab_spac
 }
 
 $mh = MailHandler::getInstance();
-    echo '<div class="box wrap">'."\n";
-        echo '<div class="logging">'."\n";
-    //run smtp test ----------------------------------
-    MailHandler::smtpdebug(function ($t, $e = false, $b = false, $s = 0) {
-        htmlLogLine($t, $e, $b, $s);
-    });
-        echo "</div>\n";
-    echo "</div>\n";
+echo '<div class="box wrap">'."\n";
+echo '<div class="logging">'."\n";
+//run smtp test ----------------------------------
+MailHandler::smtpdebug(function ($t, $e = false, $b = false, $s = 0) {
+    htmlLogLine($t, $e, $b, $s);
+});
+echo "</div>\n";
+echo "</div>\n";
 
 // test email ===============================================
 $auth = (AUTH_HANDLER);

@@ -37,7 +37,6 @@ class FintsConnectionHandler
 
     /**
      * FintsConnectionHandler2 constructor.
-     * @param int $credentialId
      */
     public function __construct(
         private int $credentialId,
@@ -49,12 +48,12 @@ class FintsConnectionHandler
         $persist = $this->getCache('persist');
         $this->finTs = FinTs::new($options, $credentials, $persist);
 
-        if (!is_null($tanModeInt)) {
+        if (! is_null($tanModeInt)) {
             $this->finTs->selectTanMode($tanModeInt, $tanMediumName);
         }
 
         $this->logger = new Logger('fints', [
-            new RotatingFileHandler(SYSBASE . '/runtime/logs/fints.log'),
+            new RotatingFileHandler(SYSBASE.'/runtime/logs/fints.log'),
         ]);
         $this->logger->info('FINTS created', ['credentialId' => $this->credentialId]);
 
@@ -67,17 +66,20 @@ class FintsConnectionHandler
     public static function saveCredentials(mixed $bankId, mixed $bankuser, mixed $name): int
     {
         $db = DBConnector::getInstance();
+
         return (int) $db->dbInsert('konto_credentials', [
-           'bank_id' => $bankId,
-           'owner_id' => $db->getUser()['id'],
-           'bank_username' => $bankuser,
-           'name' => $name,
+            'bank_id' => $bankId,
+            'owner_id' => $db->getUser()['id'],
+            'bank_username' => $bankuser,
+            'name' => $name,
         ]);
     }
 
     /**
      * try to login. If wrong credentials, delete saved pw and add Flash to PageRenderer
+     *
      * @return bool $success returns if password is correct
+     *
      * @throws NeedsTanException
      */
     public function login(): bool
@@ -85,11 +87,12 @@ class FintsConnectionHandler
         // resume execution if any
         $resumableAction = $this->resumableAction();
         if ($resumableAction instanceof DialogInitialization) {
-            if (!$resumableAction->isDone()) {
+            if (! $resumableAction->isDone()) {
                 throw new NeedsTanException($resumableAction, 'Tan wird zum Login benötigt');
             }
             $this->setCache('logged-in', true);
             $this->saveAction();
+
             return true;
         }
         // regular execution
@@ -97,7 +100,7 @@ class FintsConnectionHandler
             $this->logger->info('Start login', ['credId' => $this->credentialId]);
             if ($this->finTs->getSelectedTanMode() === null) {
                 HTMLPageRenderer::addFlash(BT::TYPE_INFO, 'Vor dem ersten Login muss der TAN Modus gesetzt werden');
-                HTMLPageRenderer::redirect(URIBASE . 'konto/credentials/' . $this->credentialId . '/tan-mode');
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials/'.$this->credentialId.'/tan-mode');
             }
             $loginAction = $this->finTs->login();
             $this->saveAction($loginAction);
@@ -110,6 +113,7 @@ class FintsConnectionHandler
             }
             HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Login erfolgreich');
             $this->setCache('logged-in', true);
+
             return true;
         } catch (CurlException  $e) {
             $this->logger->error('Login: Connection failed', ['exception' => $e]);
@@ -119,6 +123,7 @@ class FintsConnectionHandler
             static::deleteLoginPassword($this->credentialId);
             $this->logger->error('Login failed', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Login nicht erfolgreich, bitte überprüfe die Login Daten', $e->getMessage());
+
             return false;
         }
     }
@@ -133,8 +138,10 @@ class FintsConnectionHandler
         } catch (ServerException $e) {
             $this->logger->error('Logout failed', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
+
             return false;
         }
+
         return true;
     }
 
@@ -158,7 +165,7 @@ class FintsConnectionHandler
         }
 
         return array_map(static function (TanMode $tanMode) {
-            return '[' . $tanMode->getId() . '] ' . $tanMode->getName();
+            return '['.$tanMode->getId().'] '.$tanMode->getName();
         }, $tanModes);
     }
 
@@ -196,11 +203,13 @@ class FintsConnectionHandler
         if (count($filtered) === 0) {
             throw new InvalidArgumentException("Iban $iban nicht vorhanden");
         }
+
         return array_values($filtered)[0];
     }
 
     /**
      * @return SEPAAccount[]
+     *
      * @throws NeedsTanException
      */
     public function getSepaAccounts(): array
@@ -210,7 +219,7 @@ class FintsConnectionHandler
         }
         $action = $this->resumableAction();
         if ($action instanceof GetSEPAAccounts) {
-            if (!$action->isDone()) {
+            if (! $action->isDone()) {
                 throw new NeedsTanException($action);
             }
         } else {
@@ -220,6 +229,7 @@ class FintsConnectionHandler
         }
         $accounts = $action->getAccounts();
         $this->setCache('SepaAccounts', $accounts);
+
         return $accounts;
     }
 
@@ -237,11 +247,12 @@ class FintsConnectionHandler
             return $account->getIban();
         }, $accounts);
         $this->setCache('ibans', $ibans);
+
         return $ibans;
     }
 
     /**
-     * @param $shortIban string DE12[...]0009 styled: DE120009
+     * @param  $shortIban  string DE12[...]0009 styled: DE120009
      * @return string|null full iban string from this credential konto
      */
     public function lengthenIban(string $shortIban): ?string
@@ -259,14 +270,14 @@ class FintsConnectionHandler
 
     public static function shortenIban(string $fullIban): string
     {
-        return substr($fullIban, 0, 4) . substr($fullIban, -4);
+        return substr($fullIban, 0, 4).substr($fullIban, -4);
     }
 
-    private function saveAction(BaseAction $action = null): void
+    private function saveAction(?BaseAction $action = null): void
     {
         // remember action if any
         $this->activeAction = $action;
-        if ($action?->needsTan() && !$action?->isDone()) {
+        if ($action?->needsTan() && ! $action?->isDone()) {
             // chache it if tan is missing
             $this->logger->info('Save Action - TAN needed', ['credId' => $this->credentialId, 'action' => $action::class]);
             $this->setCache('action', $action);
@@ -293,13 +304,16 @@ class FintsConnectionHandler
         return request()?->session()->get("fints.$this->credentialId.$key");
     }
 
-    private function forgetCachedCredentials(int $credential_id) : void{
+    private function forgetCachedCredentials(int $credential_id): void
+    {
         request()?->session()->forget("fints.$this->credentialId");
     }
 
     /**
      * creates FINTS Connection Instance. Password needs to be set already
+     *
      * @return static
+     *
      * @throws LegacyDieException
      */
     public static function load(int $credentialId): self
@@ -321,25 +335,25 @@ class FintsConnectionHandler
             throw new LegacyDieException(500, 'found multiple DB entries');
         }
 
-        if (!self::hasPassword($credentialId)) {
+        if (! self::hasPassword($credentialId)) {
             throw new LegacyDieException(400, "Bank Passwort für Credentials $credentialId benötigt");
         }
         $username = $res['bank_username'];
 
         $credentials = Credentials::create($username, self::getPassword($credentialId));
 
-        $options = new FinTsOptions();
+        $options = new FinTsOptions;
         $options->url = $res['bank.url'];
         $options->bankCode = $res['bank.blz'];
         $options->productName = FINTS_REGNR;
-        $options->productVersion = InstalledVersions::getRootPackage()['version'] . DEV ? '-dev' : '';
+        $options->productVersion = InstalledVersions::getRootPackage()['version'].DEV ? '-dev' : '';
 
         $tanModeInt = null;
-        if ($res['tan_mode'] !== 'null' && !is_null($res['tan_mode'])) {
+        if ($res['tan_mode'] !== 'null' && ! is_null($res['tan_mode'])) {
             $tanModeInt = (int) $res['tan_mode'];
         }
         $tanMediumName = null;
-        if ($res['tan_medium_name'] !== 'null' && !is_null($res['tan_medium_name'])) {
+        if ($res['tan_medium_name'] !== 'null' && ! is_null($res['tan_medium_name'])) {
             $tanMediumName = $res['tan_medium_name'];
         }
 
@@ -347,7 +361,8 @@ class FintsConnectionHandler
     }
 
     /**
-     * @param BaseAction $action - has the result afterwards if successful
+     * @param  BaseAction  $action  - has the result afterwards if successful
+     *
      * @throws NeedsTanException
      */
     private function execute(BaseAction $action): void
@@ -361,7 +376,7 @@ class FintsConnectionHandler
             }
         } catch (CurlException|ServerException $e) {
             $this->logger->error('Aktion nicht ausgeführt', ['exception' => $e]);
-            ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt', );
+            ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt');
         }
     }
 
@@ -406,12 +421,15 @@ class FintsConnectionHandler
         } catch (CurlException $e) {
             $this->logger->error('Submit Tan: no Connection', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
+
             return false;
         } catch (ServerException $e) {
             $this->logger->error('Wrong Tan', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN nicht akzeptiert', $e->getMessage());
+
             return false;
         }
+
         return true;
     }
 
@@ -434,6 +452,7 @@ class FintsConnectionHandler
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
         }
         $db = DBConnector::getInstance();
+
         return $db->dbUpdate(
             table: 'konto_credentials',
             filter: ['id' => $this->credentialId, 'owner_id' => $db->getUser()['id']],
@@ -452,6 +471,7 @@ class FintsConnectionHandler
             if ($action->isDone()) {
                 $this->finTs->getLogger()->debug(var_export($action, true));
                 $this->saveAction();
+
                 return $action->getStatement();
             }
             throw new NeedsTanException($action);
@@ -462,6 +482,7 @@ class FintsConnectionHandler
         // might be a bug in fints TODO: see if minimal example with the same bug can be found
         $action = GetStatementOfAccount::create($account, $start, $end);
         $this->execute($action);
+
         return $action->getStatement();
     }
 

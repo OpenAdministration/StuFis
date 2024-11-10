@@ -12,7 +12,8 @@ class HtmlAlert extends AbstractHtmlTag
     public function strongMsg(string $msg): self
     {
         $strong = Html::tag('strong')->body($msg);
-        $this->bodyPrefix($strong. ' ', false);
+        $this->bodyPrefix($strong.' ', false);
+
         return $this;
     }
 }

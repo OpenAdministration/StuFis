@@ -21,6 +21,7 @@ class NewValidator
      * mixed
      */
     protected mixed $sanitizedValue;
+
     /*
      * all error msgs, keys represent
      */
@@ -28,10 +29,11 @@ class NewValidator
 
     /**
      * add an Error
-     * @param string $msg error message
-     * @param string $validator validator name
-     * @param array $keys in array
-     * @param mixed $value value which should be validated (debug purpose only, not sanitized)
+     *
+     * @param  string  $msg  error message
+     * @param  string  $validator  validator name
+     * @param  array  $keys  in array
+     * @param  mixed  $value  value which should be validated (debug purpose only, not sanitized)
      */
     private function addError(string $msg, string $validator, array $keys, mixed $value): void
     {
@@ -59,7 +61,8 @@ class NewValidator
     /**
      * filter may sanitize input values are stored here
      * Post validators will create sanitized array
-     * @param array $keys - will be applied afterwards
+     *
+     * @param  array  $keys  - will be applied afterwards
      * @return mixed $filtered value
      */
     public function getSanitizedArray(array $keys = []): mixed
@@ -68,14 +71,14 @@ class NewValidator
         foreach ($keys as $key) {
             $ret = $ret[$key];
         }
+
         return $ret;
     }
 
     // ==========================================
     /**
      * call selected validator function
-     * @param mixed $value
-     * @param array|string $validator
+     *
      * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
@@ -86,9 +89,7 @@ class NewValidator
 
     /**
      * call selected validator function
-     * @param mixed $value
-     * @param array|string $validator
-     * @param array $keys
+     *
      * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
@@ -103,10 +104,12 @@ class NewValidator
                 return $this->$vMethod($value, $validatorParams, $keys);
             } catch (TypeError $typeError) {
                 $this->addError($typeError->getMessage(), $validatorName, $keys, $value);
+
                 return [false, null];
             }
         }
         $this->addError('Unknown Validator', $validatorName, $keys, $value);
+
         return [$this->isError, null];
     }
 
@@ -118,9 +121,9 @@ class NewValidator
      *    ]
      * validator may contains parameter 'optional' -> so required can be disabled per parameter
      *
-     * @param mixed $source_unsafe values to check and filter
-     * @param array $map validation map
-     * @param bool $allKeysRequired all keys in validation map are required
+     * @param  mixed  $source_unsafe  values to check and filter
+     * @param  array  $map  validation map
+     * @param  bool  $allKeysRequired  all keys in validation map are required
      * @return array [error, sanitized array]
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
@@ -128,8 +131,8 @@ class NewValidator
     {
         $out = [];
         foreach ($map as $key => $validator) {
-            if (!isset($source_unsafe[$key])) {
-                if ($allKeysRequired && !in_array('optional', $validator, true)) {
+            if (! isset($source_unsafe[$key])) {
+                if ($allKeysRequired && ! in_array('optional', $validator, true)) {
                     $this->addError("Missing parameter: '$key'", __METHOD__, [$key], $source_unsafe);
                 }
             } else {
@@ -138,6 +141,7 @@ class NewValidator
             }
         }
         $this->sanitizedValue = $out;
+
         return [$this->isError(), $out];
     }
 
@@ -155,11 +159,6 @@ class NewValidator
      *  odd    1
      *  modulo    2
      *  error    2    error message on error case
-     *
-     * @param string|int $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_integer(string|int $value, array $params, array $keys): array
@@ -169,6 +168,7 @@ class NewValidator
         if ($v === false) {
             $msg = $params['error'] ?? 'No Integer';
             $this->addError($msg, 'integer', $keys, $value);
+
             return [$this->isError, null];
         }
         $v = (int) $v;
@@ -193,21 +193,25 @@ class NewValidator
             $msg = $params['error'] ?? 'Integer modulo failed';
             $this->addError($msg, 'integer', $keys, $value);
         }
+
         return [$this->isError, $v];
     }
 
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_in(mixed $value, array $params, array $keys): array
     {
-        if (!isset($params[0]) || !is_array($params[0])) {
+        if (! isset($params[0]) || ! is_array($params[0])) {
             $this->addError('Options/Choices not set', 'in', $keys, $value);
+
             return [false, null];
         }
         $choices = $params[0];
-        if (!in_array($value, $choices, true)) {
+        if (! in_array($value, $choices, true)) {
             $this->addError('Not in choices/options', 'in', $keys, $value);
+
             return [false, null];
         }
+
         return [true, $value];
     }
 
@@ -222,11 +226,6 @@ class NewValidator
      *  step                2    step - be carefull may produce errors (wrong deteced values)
      *  format                2    trim to x decimal places
      *  error                2    error message on error case
-     *
-     * @param string|float $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_float(string|float $value, array $params, array $keys): array
@@ -235,6 +234,7 @@ class NewValidator
         if (filter_var($value, FILTER_VALIDATE_FLOAT, ['options' => ['decimal' => $decimal]]) === false) {
             $msg = $params['error'] ?? 'No Float';
             $this->addError($msg, 'float', $keys, $value);
+
             return [$this->isError, null];
         }
 
@@ -266,15 +266,12 @@ class NewValidator
         if (isset($params['format'])) {
             $v = number_format($v, $params['format'], $decimal, '');
         }
+
         return [$this->isError, $v];
     }
 
     /**
      * check if integer and larger than 0
-     * @param int $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_id(int $value, array $params, array $keys): array
@@ -295,11 +292,6 @@ class NewValidator
      *  maxlength 2        maximum string length - default 127, set -1 for unlimited value
      *  error      2    replace whole error message on error case
      *  empty      1    allow empty value
-     *
-     * @param string $s
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_text(string $s, array $params, array $keys): array
@@ -328,6 +320,7 @@ class NewValidator
             $msg = $params['error'] ?? "The text is too long (Maximum length: {$params['maxlength']})";
             $this->addError($msg, 'text', $keys, $s);
         }
+
         return [$this->isError, $s];
     }
 
@@ -337,11 +330,6 @@ class NewValidator
      * $param
      *  empty        1    allow empty value
      *  maxlength    2    maximum string length
-     *
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_mail(string $value, array $params, array $keys): array
@@ -355,21 +343,18 @@ class NewValidator
             $this->addError($msg, 'mail', $keys, $value);
         }
         $re = '/^([a-zA-Z0-9_.+-])+@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,6})$/';
-        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false || !preg_match($re, $email)) {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false || ! preg_match($re, $email)) {
             $msg = $params['error'] ?? 'Email Validation failed';
             $this->addError($msg, 'mail', $keys, $value);
+
             return [$this->isError, strip_tags($email)];
         }
+
         return [$this->isError, $email];
     }
 
     /**
      * phone validator
-     *
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_phone(string $value, array $params, array $keys): array
@@ -381,22 +366,21 @@ class NewValidator
         if (strlen($phone) > 40) {
             $msg = $params['error'] ?? 'Email Validation failed';
             $this->addError($msg, 'phone', $keys, $phone);
+
             return [$this->isError, ''];
         }
+
         return [$this->isError, $phone];
     }
 
     /**
      * url validator
      *
-     * @param string $value
-     * @param array $params
-     *    empty            1    allow empty value
-     *    error            2    replace whole error message on error case
-     *  forceprotocol    1    force http://|https:// in url
-     *  forceslash        1    force trailingslash
-     * @param array $keys
-     * @return array
+     * @param  array  $params
+     *                         empty            1    allow empty value
+     *                         error            2    replace whole error message on error case
+     *                         forceprotocol    1    force http://|https:// in url
+     *                         forceslash        1    force trailingslash
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_url(string $value, array $params, array $keys): array
@@ -406,9 +390,10 @@ class NewValidator
             return [$this->isError, ''];
         }
         $re = '/^((http[s]?)((:|%3A)\/\/))'.((in_array('forceprotocol', $params, true)) ? '' : '?').'(((\w)+((-|\.)(\w+))*)+(\w){0,6}?(:([0-5]?[\d]{1,4}|6([0-4][\d]{3}|5([0-4][\d]{2}|5([0-2][\d]|3[0-5])))))?\/'.((in_array('forceslash', $params, true)) ? '' : '?').')((\w)+((\.|-)(\w)+)*\/'.((in_array('forceslash', $params, true)) ? '' : '?').')*$/';
-        if (!preg_match($re, $url) || strlen($url) >= 128) {
+        if (! preg_match($re, $url) || strlen($url) >= 128) {
             $msg = $params['error'] ?? 'url validation failed';
             $this->addError($msg, 'url', $keys, $url);
+
             return [$this->isError, ''];
         }
 
@@ -418,10 +403,6 @@ class NewValidator
     /**
      * ip validator
      * check if string is a valid ip address (supports ipv4 and ipv6)
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_ip(string $value, array $params, array $keys): array
@@ -432,6 +413,7 @@ class NewValidator
         }
         $msg = $params['error'] ?? 'ip validation failed';
         $this->addError($msg, 'ip', $keys, $ip);
+
         return [false, ''];
     }
 
@@ -439,9 +421,7 @@ class NewValidator
      * check if string is a valid ip address (supports ipv4 and ipv6)
      * helper function
      *
-     * @param string $ipadr
-     * @param bool $recursive if true also allowes IP address with surrounding brackets []
-     * @return bool
+     * @param  bool  $recursive  if true also allowes IP address with surrounding brackets []
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private static function isValidIP(string $ipadr, bool $recursive = true): bool
@@ -463,11 +443,6 @@ class NewValidator
      *
      * $param
      *  empty    1    allow empty value
-     *
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_domain(string $value, array $params, array $keys): array
@@ -490,6 +465,7 @@ class NewValidator
         }
         $msg = $params['error'] ?? 'No valid Hostname';
         $this->addError($msg, 'domain', $keys, $host);
+
         return [false, ''];
     }
 
@@ -510,19 +486,14 @@ class NewValidator
      *  trimLeft   2    trim Text on left side, parameter trim characters
      *  trimRight  2    trim Text on right side, parameter trim characters
      *  empty       1    allow empty string if not in regex
-     *
-     * @param string $v
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_regex(string $v, array $params, array $keys): array
     {
-        if (!in_array('noTagStrip', $params, true)) {
+        if (! in_array('noTagStrip', $params, true)) {
             $v = strip_tags($v);
         }
-        if (!in_array('noTrim', $params, true)) {
+        if (! in_array('noTrim', $params, true)) {
             $v = trim($v);
         }
         if (isset($params['trimLeft'])) {
@@ -546,19 +517,23 @@ class NewValidator
         if (isset($params['maxlength']) && strlen($v) >= $params['maxlength']) {
             $msg = $params['error'] ?? "String is too long (Maximum length: {$params['maxlength']})";
             $this->addError($msg, 'regex', $keys, $v);
+
             return [false, ''];
         }
         if (isset($params['minlength']) && strlen($v) < $params['minlength']) {
             $msg = $params['error'] ?? "String is too short (Minimum length: {$params['minlength']})";
             $this->addError($msg, 'regex', $keys, $v);
+
             return [false, ''];
         }
         $re = $params['pattern'];
-        if (!preg_match($re, $v)) {
+        if (! preg_match($re, $v)) {
             $msg = $params['error'] ?? 'Validation failed';
             $this->addError($msg, 'regex', $keys, $v);
+
             return [false, ''];
         }
+
         return [$this->isError, $v];
     }
 
@@ -573,10 +548,6 @@ class NewValidator
      *  hash      1    hash password     - only available if Crypto class is defined
      *    error       2    replace whole error message on error case
      *
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      * @throws Exception
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
@@ -589,11 +560,13 @@ class NewValidator
         if (isset($params['maxlength']) && strlen($p) >= $params['maxlength']) {
             $msg = $params['error'] ?? "The password is too long (Maximum length: {$params['maxlength']})";
             $this->addError($msg, 'password', $keys, $p);
+
             return [false, ''];
         }
         if (isset($params['minlength']) && strlen($p) < $params['minlength']) {
             $msg = $params['error'] ?? "The password is too short (Minimum length: {$params['minlength']})";
             $this->addError($msg, 'password', $keys, $p);
+
             return [false, ''];
         }
         if (in_array('hash', $params, true)) {
@@ -603,6 +576,7 @@ class NewValidator
             $p = CryptoHandler::pad_string($p);
             $p = CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE.'/secret.php'), $_ENV['APP_SECRET']);
         }
+
         return [$this->isError, $p];
     }
 
@@ -617,31 +591,29 @@ class NewValidator
      *  empty        1    allow empty array
      *  values    2    run this validator on each array element
      *  error        2    overwrite error message
-     *
-     * @param array $a
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_array(array $a, array $params, array $keys): array
     {
-        if ((!in_array('empty', $params, true) || count($a) > 0) && isset($params['minlength']) && count($a) < $params['minlength']) {
-            $msg = $params['error'] ?? ('Array to short: require minimal length of "' . $params['minlength'] . '" elements');
+        if ((! in_array('empty', $params, true) || count($a) > 0) && isset($params['minlength']) && count($a) < $params['minlength']) {
+            $msg = $params['error'] ?? ('Array to short: require minimal length of "'.$params['minlength'].'" elements');
             $this->addError($msg, 'array', $keys, $a);
+
             return [false, ''];
         }
         if (isset($params['maxlength']) && count($a) > $params['maxlength']) {
-            $msg = $params['error'] ?? ('Array to long: maximal array length "' . $params['maxlength'] . '"');
+            $msg = $params['error'] ?? ('Array to long: maximal array length "'.$params['maxlength'].'"');
             $this->addError($msg, 'array', $keys, $a);
+
             return [false, ''];
         }
-        if (!in_array('empty', $params, true) && count($a) === 0) {
+        if (! in_array('empty', $params, true) && count($a) === 0) {
             $msg = $params['error'] ?? 'Array to short: empty array is not permitted.';
             $this->addError($msg, 'array', $keys, $a);
+
             return [false, ''];
         }
-        if (!isset($params['values'])) {
+        if (! isset($params['values'])) {
             return [$this->isError, $a];
         }
 
@@ -659,6 +631,7 @@ class NewValidator
 
             $out[$keyFiltered] = $sanitizedEntry;
         }
+
         return [$this->isError, $out];
     }
 
@@ -669,11 +642,6 @@ class NewValidator
      * $param
      *  empty        1    allow empty array
      *  error        2    overwrite error message
-     *
-     * @param string $value
-     * @param array $params
-     * @param array $keys
-     * @return array
      */
     #[ArrayShape(self::VALIDATOR_RETURN_ARRAY)]
     private function V_iban(string $value, array $params, array $keys): array
@@ -686,20 +654,21 @@ class NewValidator
             return [true, ''];
         }
         //check iban
-        if (!self::_checkIBAN($iban)) {
+        if (! self::_checkIBAN($iban)) {
             $msg = $params['error'] ?? 'IBAN validation failed';
             $this->addError($msg, 'iban', $keys, $iban);
+
             return [false, ''];
         }
+
         return [true, $iban];
     }
 
     /**
      * check if string is valid iban,
      *
-     * @param string $iban to check
+     * @param  string  $iban  to check
      *
-     * @return bool
      * @see https://en.wikipedia.org/wiki/International_Bank_Account_Number#Validating_the_IBAN
      * @see https://stackoverflow.com/questions/20983339/validate-iban-php
      */
@@ -710,7 +679,7 @@ class NewValidator
         $countries = ['AL' => 28, 'AD' => 24, 'AT' => 20, 'AZ' => 28, 'BH' => 22, 'BE' => 16, 'BA' => 20, 'BR' => 29, 'BG' => 22, 'CR' => 21, 'HR' => 21, 'CY' => 28, 'CZ' => 24, 'DK' => 18, 'DO' => 28, 'EE' => 20, 'FO' => 18, 'FI' => 18, 'FR' => 27, 'GE' => 22, 'DE' => 22, 'GI' => 23, 'GR' => 27, 'GL' => 18, 'GT' => 28, 'HU' => 28, 'IS' => 26, 'IE' => 22, 'IL' => 23, 'IT' => 27, 'JO' => 30, 'KZ' => 20, 'KW' => 30, 'LV' => 21, 'LB' => 28, 'LI' => 21, 'LT' => 20, 'LU' => 20, 'MK' => 19, 'MT' => 31, 'MR' => 27, 'MU' => 30, 'MC' => 27, 'MD' => 24, 'ME' => 22, 'NL' => 18, 'NO' => 15, 'PK' => 24, 'PS' => 29, 'PL' => 28, 'PT' => 25, 'QA' => 29, 'RO' => 24, 'SM' => 27, 'SA' => 24, 'RS' => 22, 'SK' => 24, 'SI' => 19, 'ES' => 24, 'SE' => 24, 'CH' => 21, 'TN' => 24, 'TR' => 26, 'AE' => 23, 'GB' => 22, 'VG' => 24];
 
         //1. check country code exists + iban has valid length
-        if (!array_key_exists(substr($iban, 0, 2), $countries)) {
+        if (! array_key_exists(substr($iban, 0, 2), $countries)) {
             return false;
         }
         // check if censored iban
@@ -724,7 +693,7 @@ class NewValidator
         }
 
         //2. Rearrange country code and checksum
-        $rearranged = substr($iban, 4) . substr($iban, 0, 4);
+        $rearranged = substr($iban, 4).substr($iban, 0, 4);
 
         //3. convert to integer
         $iban_letters = str_split($rearranged);
@@ -741,6 +710,7 @@ class NewValidator
                 }
             }
         }
+
         //4. calculate mod 97 -> have to be 1
         return bcmod($iban_int_only, '97') === '1';
     }

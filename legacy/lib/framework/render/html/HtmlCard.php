@@ -18,24 +18,28 @@ class HtmlCard extends AbstractHtmlTag
     public static function make(string $type = 'default'): static
     {
         $card = new self([], ['panel', "panel-$type"]);
+
         return $card;
     }
 
     public function body(object|string $content, bool $escape = true): static
     {
         $this->bodyDiv->body($content, $escape);
+
         return $this;
     }
 
     public function appendBody(object|string $content, bool $escape = true): AbstractHtmlTag
     {
         $this->bodyDiv->appendBody($content, $escape);
+
         return $this;
     }
 
     public function cardHeadline(object|string $content, bool $escape = true): static
     {
         $this->headerDiv->body($content, $escape);
+
         return $this;
     }
 
@@ -44,6 +48,6 @@ class HtmlCard extends AbstractHtmlTag
         $header = (string) $this->headerDiv;
         $body = (string) $this->bodyDiv;
 
-        return $this->beginWrap() . $this->begin() . $header . $body . $this->end() . $this->wrapEnd();
+        return $this->beginWrap().$this->begin().$header.$body.$this->end().$this->wrapEnd();
     }
 }

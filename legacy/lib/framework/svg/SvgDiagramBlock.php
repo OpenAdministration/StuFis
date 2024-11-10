@@ -6,15 +6,20 @@ namespace framework\svg;
  * Block (and Line) Diagram Class
  *
  * @author 		Michael Gnehr <michael@gnehr.de>
+ *
  * @category    framework
+ *
  * @since 		09.08.2016
+ *
  * @version 	02.0.0 since 01.07.2018
+ *
  * @copyright 	Copyright (C) 2016-Today - All rights reserved - do not copy or reditribute
  */
 class SvgDiagramBlock extends SvgDiagramCore
 {
     /**
      * this class implements following diagram types
+     *
      * @var array
      */
     private static $types = [
@@ -26,7 +31,8 @@ class SvgDiagramBlock extends SvgDiagramCore
 
     /**
      * constructor
-     * @param string $type
+     *
+     * @param  string  $type
      */
     public function __construct($type)
     {
@@ -54,13 +60,15 @@ class SvgDiagramBlock extends SvgDiagramCore
 
     /**
      * sets Explanation array -> creates color fields with description
+     *
      * @var array
      */
     protected $explanation = [];
 
     /**
      * achsis description
-     * @param mixed $set form: array('x' => $Xvalue, 'y' => $Yvalue);
+     *
+     * @param  mixed  $set  form: array('x' => $Xvalue, 'y' => $Yvalue);
      */
     protected $achsisDescription;
 
@@ -68,10 +76,11 @@ class SvgDiagramBlock extends SvgDiagramCore
 
     /**
      * set Block Settings variables
-     * @param string|number $key : 'xFontOffset'|'xAchsisDescLineLength'|'yAchsisDescLineLength'
+     *
+     * @param  string|number  $key  : 'xFontOffset'|'xAchsisDescLineLength'|'yAchsisDescLineLength'
      *                              |'AchsisDescriptionHeight'|'ySteps'|'perExplanationLine'
      *                              |'explanationLineHeight'|'yGrid',
-     * @param mixed $value
+     * @param  mixed  $value
      */
     public function setBlockSetting($key, $value)
     {
@@ -82,7 +91,8 @@ class SvgDiagramBlock extends SvgDiagramCore
 
     /**
      * sets Explanation array -> creates color fields with description
-     * @param mixed $set
+     *
+     * @param  mixed  $set
      */
     public function setExplanation($set)
     {
@@ -93,7 +103,8 @@ class SvgDiagramBlock extends SvgDiagramCore
 
     /**
      * set achsis description
-     * @param mixed $set form: array('x' => $Xvalue, 'y' => $Yvalue);
+     *
+     * @param  mixed  $set  form: array('x' => $Xvalue, 'y' => $Yvalue);
      */
     public function setAchsisDescription($set)
     {
@@ -108,6 +119,7 @@ class SvgDiagramBlock extends SvgDiagramCore
     /**
      * (non-PHPdoc)
      * generate block or line chart from data
+     *
      * @see \intertopia\Classes\svg\SvgDiagramCore::render()
      */
     public function render()
@@ -161,7 +173,7 @@ class SvgDiagramBlock extends SvgDiagramCore
                 $yAchsisDescLineLength,
                 null,
                 2);
-            ++$i;
+            $i++;
             //calculate y max value
             $yMaxEntryVal = max([$yMaxEntryVal, max($set)]);
         }
@@ -180,7 +192,7 @@ class SvgDiagramBlock extends SvgDiagramCore
             } else {
                 if ($yAchsisMax - $yAchsisMax / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag) >= $yMaxEntryVal) {
                     $yAchsisMax = $yAchsisMax - $yAchsisMax / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag);
-                    ++$shrinkFlag;
+                    $shrinkFlag++;
                 } else {
                     break;
                 }
@@ -190,14 +202,14 @@ class SvgDiagramBlock extends SvgDiagramCore
         $yAchsisStepHeight = ($yAchsisLength) / ($this->settings['BLOCK']['ySteps'] - $shrinkFlag);
 
         //draw step description
-        for ($i = 0; $i < ($this->settings['BLOCK']['ySteps'] - $shrinkFlag); ++$i) {
+        for ($i = 0; $i < ($this->settings['BLOCK']['ySteps'] - $shrinkFlag); $i++) {
             $chartcontent .= $this->drawHLine(
                 $xAchsisYPos - $yAchsisStepHeight * ($i + 1),
                 $this->settings['padding'] + $entryWidth - $yAchsisDescLineLength / 2,
                 $yAchsisDescLineLength);
 
             if ($this->settings['BLOCK']['yGrid']) {
-                for ($ii = 0; $ii < ($this->settings['BLOCK']['ySteps']); ++$ii) {
+                for ($ii = 0; $ii < ($this->settings['BLOCK']['ySteps']); $ii++) {
                     $chartcontent .= $this->drawHLine(
                         $xAchsisYPos - $yAchsisStepHeight * ($i + 1) + $ii * ($yAchsisStepHeight / ($this->settings['BLOCK']['ySteps'])),
                         $this->settings['padding'] + $entryWidth,
@@ -254,7 +266,7 @@ class SvgDiagramBlock extends SvgDiagramCore
                         continue;
                     }
                     $lines[$j][] = ['x' => $this->settings['padding'] + $entryWidth * ($i + 1.5), 'y' => $xAchsisYPos - $barHeight, 'value' => $value];
-                    ++$j;
+                    $j++;
                 } else {
                     $chartcontent .= $this->suroundElementWithMouseHilight($this->drawBar(
                         $elementPosition + $barWidth * ($j + 1),
@@ -265,11 +277,11 @@ class SvgDiagramBlock extends SvgDiagramCore
                         'black',
                         2,
                         ''.$value));
-                    ++$j;
+                    $j++;
                 }
             }
 
-            ++$i;
+            $i++;
         }
         //draw lines & points
         if ($line === true) {
@@ -292,9 +304,9 @@ class SvgDiagramBlock extends SvgDiagramCore
                             $this->settings['LINE']['line-width'],
                             $color);
                     }
-                    ++$pointIndex;
+                    $pointIndex++;
                 }
-                ++$lineNumber;
+                $lineNumber++;
                 $chartcontent .= $this->suroundElementWithMouseHilight($lineObj);
             }
         }
@@ -310,7 +322,7 @@ class SvgDiagramBlock extends SvgDiagramCore
             foreach ($this->explanation as $leg) {
                 $yy = $y + ($this->settings['BLOCK']['explanationLineHeight'] * floor($i / $this->settings['BLOCK']['perExplanationLine']));
                 $xx = $this->settings['padding'] + ($i % $this->settings['BLOCK']['perExplanationLine']) * $x_width;
-                $chartcontent .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'] ,
+                $chartcontent .= $this->drawBar($xx, $yy + 5, $this->settings['BLOCK']['explanationLineHeight'],
                     $this->settings['BLOCK']['explanationLineHeight'] - 10,
                     $this->colorMap[$i], 'black', 1, (($this->translator !== null) ? $this->translator->translate('explanation') : 'explanation'));
                 $chartcontent .= $this->drawText($leg,
@@ -320,7 +332,7 @@ class SvgDiagramBlock extends SvgDiagramCore
                     'black',
                     'bold',
                     20);
-                ++$i;
+                $i++;
             }
         }
         $this->setSvgResult($chartcontent, true);

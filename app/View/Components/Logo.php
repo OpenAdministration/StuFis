@@ -6,7 +6,6 @@ use Illuminate\View\Component;
 
 class Logo extends Component
 {
-
     public $idPrefix;
 
     /**
@@ -14,7 +13,7 @@ class Logo extends Component
      *
      * @return void
      */
-    public function __construct(public $col1 = "#00c9ab", public $col2 = "#007f8b")
+    public function __construct(public $col1 = '#00c9ab', public $col2 = '#007f8b')
     {
         $this->idPrefix = \Str::random(10);
     }

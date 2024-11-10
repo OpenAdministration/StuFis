@@ -7,6 +7,7 @@ class HtmlForm extends AbstractHtmlTag
     public static function make(string $method = 'POST', bool $isAjax = true, bool $nonce = true): self
     {
         $ajax = $isAjax ? 'ajax-form' : '';
+
         return new self(['method' => $method], [$ajax], [], $nonce);
     }
 
@@ -26,6 +27,7 @@ class HtmlForm extends AbstractHtmlTag
     public function urlTarget(string $url): self
     {
         $this->attr('action', $url);
+
         return $this;
     }
 
@@ -36,12 +38,14 @@ class HtmlForm extends AbstractHtmlTag
                 ->name($name)
                 ->value($value)
         );
+
         return $this;
     }
 
     public function addHtmlEntity(AbstractHtmlTag $htmlTag): self
     {
         $this->appendBody($htmlTag, false);
+
         return $this;
     }
 
@@ -51,6 +55,7 @@ class HtmlForm extends AbstractHtmlTag
             ->style('primary')
             ->body($text);
         $this->appendBody($btn, false);
+
         return $this;
     }
 }

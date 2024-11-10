@@ -9,24 +9,24 @@ use framework\NewValidator;
 
 class ConfigOrgCommand extends \Ahc\Cli\Input\Command
 {
-    public function __construct(App $app = null)
+    public function __construct(?App $app = null)
     {
         parent::__construct('config:org', 'Validates Config Files', false, $app);
     }
 
     public function execute(): void
     {
-        $out = new Writer();
-        $orgs = include SYSBASE . '/config/config.orgs.php';
+        $out = new Writer;
+        $orgs = include SYSBASE.'/config/config.orgs.php';
 
         foreach ($orgs as $realmName => $org) {
             if (strtolower($realmName) !== $realmName) {
                 $out->warn("Realm $realmName only small letters", true);
             }
-            $v = new NewValidator();
+            $v = new NewValidator;
             [$error, $filteredOrg] = $v->validateArray($org, $this->getOrgValidationMap());
             $ignored = ArrayHelper::diff_recursive($org, $filteredOrg);
-            if (!empty($ignored)) {
+            if (! empty($ignored)) {
                 $ignored = ArrayHelper::convolve_keys($ignored);
                 foreach ($ignored as $key => $value) {
                     $out->warn("org:$realmName:$key unchecked (unused)", true);

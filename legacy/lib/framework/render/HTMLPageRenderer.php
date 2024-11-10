@@ -10,13 +10,19 @@ use framework\render\html\HtmlAlert;
 class HTMLPageRenderer
 {
     private static $profiling_timing;
+
     private static $profiling_names;
+
     private static $profiling_sources;
+
     private static $errorHandler;
+
     private static $tabsConfig;
 
     private $bodyContent;
+
     private $titel;
+
     protected $routeInfo;
 
     public function __construct($routeInfo, $bodyContent = '')
@@ -31,7 +37,7 @@ class HTMLPageRenderer
     }
 
     /**
-     * @param $name string Name des Profiling Flags
+     * @param  $name  string Name des Profiling Flags
      */
     public static function registerProfilingBreakpoint(string $name): void
     {
@@ -42,9 +48,9 @@ class HTMLPageRenderer
     }
 
     /**
-     * @param $tabs      array keys are tabnames, values are htmlcode inside tab header
-     * @param $linkbase  string linkbase - where clicked link will go - followed by tabnames
-     * @param string|int $activeTab string
+     * @param  $tabs  array keys are tabnames, values are htmlcode inside tab header
+     * @param  $linkbase  string linkbase - where clicked link will go - followed by tabnames
+     * @param  string|int  $activeTab  string
      */
     public static function setTabs(array $tabs, string $linkbase, string|int $activeTab): void
     {
@@ -82,16 +88,16 @@ class HTMLPageRenderer
             $this->renderError();
         } else {
             $this->renderFlash();
-            if (!empty(self::$tabsConfig)) {
+            if (! empty(self::$tabsConfig)) {
                 $this->renderPanelTabs(self::$tabsConfig['tabs'], self::$tabsConfig['linkbase'], self::$tabsConfig['active']);
             }
             echo $this->bodyContent;
-            if (!empty(self::$tabsConfig)) {
+            if (! empty(self::$tabsConfig)) {
                 echo '</div></div>';
             }
         }
         echo '</div>';
-        if (!$this->hasError()) {
+        if (! $this->hasError()) {
             $this->renderModals();
         }
         $this->renderFooter();
@@ -126,11 +132,11 @@ class HTMLPageRenderer
         // by micha-dev
         // https://people.mozilla.com/~bsterne/content-security-policy/details.html
         // https://wiki.mozilla.org/Security/CSP/Specification
-        # header("X-Content-Security-Policy: allow 'self'; options inline-script eval-script");
-        # header('X-Frame-Options: DENY');
-        # header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        # header('Cache-Control: post-check=0, pre-check=0', false);
-        # header('Pragma: no-cache');
+        // header("X-Content-Security-Policy: allow 'self'; options inline-script eval-script");
+        // header('X-Frame-Options: DENY');
+        // header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        // header('Cache-Control: post-check=0, pre-check=0', false);
+        // header('Pragma: no-cache');
     }
 
     private function includeCSS(): string
@@ -142,9 +148,10 @@ class HTMLPageRenderer
             $cssFiles = array_merge($cssFiles, ...array_column($this->routeInfo['load'], 'css'));
         }
         foreach ($cssFiles as $cssFile) {
-            $out .= "<link rel='stylesheet' href='" . asset("css/$cssFile.css") . "'>" . PHP_EOL;
+            $out .= "<link rel='stylesheet' href='".asset("css/$cssFile.css")."'>".PHP_EOL;
         }
-        $out .= "<link rel='stylesheet' href='" . asset("css/main.css") . "'>" . PHP_EOL;
+        $out .= "<link rel='stylesheet' href='".asset('css/main.css')."'>".PHP_EOL;
+
         return $out;
     }
 
@@ -180,9 +187,10 @@ class HTMLPageRenderer
         }
         //var_dump($this->routeInfo["load"]);
         foreach ($jsFiles as $jsFile) {
-            $out .= "<script src='" . asset("js/$jsFile.js") . "'></script>" . PHP_EOL;
+            $out .= "<script src='".asset("js/$jsFile.js")."'></script>".PHP_EOL;
         }
-        $out .= "<script src='" . asset("js/main.js") . "'></script>" . PHP_EOL;
+        $out .= "<script src='".asset('js/main.js')."'></script>".PHP_EOL;
+
         return $out;
     }
 
@@ -195,7 +203,7 @@ class HTMLPageRenderer
                 <ul class="nav nav-tabs">
                     <?php
                     foreach ($tabs as $link => $fullname) {
-                        echo "<li class='" . (($link === $activeTab) ? 'active' : '') . "'><a href='$linkbase$link'>$fullname</a></li>";
+                        echo "<li class='".(($link === $activeTab) ? 'active' : '')."'><a href='$linkbase$link'>$fullname</a></li>";
                     } ?>
                 </ul>
             </div>
@@ -205,7 +213,7 @@ class HTMLPageRenderer
 
     private function renderModals(): void
     {
-        $this->buildModal('please-wait', 'Bitte warten - Die Anfrage wird verarbeitet.', '' .
+        $this->buildModal('please-wait', 'Bitte warten - Die Anfrage wird verarbeitet.', ''.
             '<div class="planespinner"><div class="rotating-plane"></div></div>');
         $this->buildModal('server-message', 'Antwort vom Server', '...');
         $this->buildModal('server-question', 'Antwort vom Server', '...', 'Ok', 'Fenster schließen');
@@ -277,12 +285,13 @@ class HTMLPageRenderer
         );
     }
 
-    public static function injectModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false, callable $canConfirm = null, string $actionButtonType = "button"){
+    public static function injectModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false, ?callable $canConfirm = null, string $actionButtonType = 'button')
+    {
         (new HTMLPageRenderer([]))->buildModal($id, $titel, $bodycontent, $abortLabel, $actionLabel, $danger, $canConfirm, $actionButtonType);
     }
 
     private function buildModal($id, $titel, $bodycontent, $abortLabel = null, $actionLabel = null, $danger = false,
-                                callable $canConfirm = null, string $actionButtonType = "button"): void
+        ?callable $canConfirm = null, string $actionButtonType = 'button'): void
     {
         if ($danger === 'danger') {
             $buttonType1 = 'primary';
@@ -316,7 +325,7 @@ class HTMLPageRenderer
                             <?php } ?>
                             <?php if (isset($actionLabel)) { ?>
                                 <button type="<?= $actionButtonType ?>" class='btn btn-<?php echo $buttonType2; ?>'
-                                        id='<?php echo $id; ?>-btn-action' <?= $disabled ? "disabled" : "" ?>
+                                        id='<?php echo $id; ?>-btn-action' <?= $disabled ? 'disabled' : '' ?>
                                 >
                                     <?php echo $actionLabel; ?>
                                 </button>
@@ -340,22 +349,22 @@ class HTMLPageRenderer
             return;
         }
         $out = '';
-        for ($i = 0; $i < $size - 1; ++$i) {
-            $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$i] . '</strong></span>';
-            $out .= "<i class='profiling-source'>" .
-                basename(self::$profiling_sources[$i]['file']) . ':' .
-                self::$profiling_sources[$i]['line'] . '
+        for ($i = 0; $i < $size - 1; $i++) {
+            $out .= "<span class='profiling-names'><strong>".self::$profiling_names[$i].'</strong></span>';
+            $out .= "<i class='profiling-source'>".
+                basename(self::$profiling_sources[$i]['file']).':'.
+                self::$profiling_sources[$i]['line'].'
                 </i>';
             $sum += self::$profiling_timing[$i + 1] - self::$profiling_timing[$i];
-            $out .= '<div>' . sprintf('&nbsp;&nbsp;&nbsp;%f<br>', self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]) . '</div>';
+            $out .= '<div>'.sprintf('&nbsp;&nbsp;&nbsp;%f<br>', self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]).'</div>';
         }
-        $out .= "<span class='profiling-names'><strong>" . self::$profiling_names[$size - 1] . '</strong></span>';
-        $out .= "<i class='profiling-source'>" .
-            basename(self::$profiling_sources[$size - 1]['file']) . ':' .
-            self::$profiling_sources[$size - 1]['line'] . '
+        $out .= "<span class='profiling-names'><strong>".self::$profiling_names[$size - 1].'</strong></span>';
+        $out .= "<i class='profiling-source'>".
+            basename(self::$profiling_sources[$size - 1]['file']).':'.
+            self::$profiling_sources[$size - 1]['line'].'
                 </i>';
         //Wrapp all output till now with div
-        $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: ' . sprintf('%f', $sum) . '</h3>' . $out;
+        $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: '.sprintf('%f', $sum).'</h3>'.$out;
         $out .= '</div>';
         echo $out;
     }
@@ -369,13 +378,13 @@ class HTMLPageRenderer
     }
 
     /**
-     * @param string $TYPE const of BT::
+     * @param  string  $TYPE  const of BT::
      */
     public static function addFlash(string $TYPE, string $string, mixed $debugInfo = ''): void
     {
         $alert = HtmlAlert::make($TYPE)->body($string);
         if (DEV) {
-            if (!is_string($debugInfo)) {
+            if (! is_string($debugInfo)) {
                 $debugInfo = var_export($debugInfo, true);
             }
             $strong = match ($TYPE) {
@@ -386,7 +395,7 @@ class HTMLPageRenderer
                 // primary?
                 // secondary?
             };
-            $alert->appendBody(PHP_EOL . Html::tag('i')->body($debugInfo), false)->strongMsg($strong);
+            $alert->appendBody(PHP_EOL.Html::tag('i')->body($debugInfo), false)->strongMsg($strong);
         }
         $flashs = request()?->session()->get('flash', []);
         $flashs[] = $alert;

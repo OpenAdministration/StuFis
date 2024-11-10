@@ -37,5 +37,4 @@ abstract class TestCase extends BaseTestCase
     {
         $this->actingAs(User::where(['username' => $username])->first());
     }
-
 }

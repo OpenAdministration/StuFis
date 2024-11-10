@@ -12,14 +12,13 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithPreCalculateFormulas;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class LegacyBudgetExport implements FromView,
-    WithColumnFormatting, WithColumnWidths, WithPreCalculateFormulas
+class LegacyBudgetExport implements FromView, WithColumnFormatting, WithColumnWidths, WithPreCalculateFormulas
 {
     use Exportable;
 
-    public function __construct(public LegacyBudgetPlan $plan){}
+    public function __construct(public LegacyBudgetPlan $plan) {}
 
-    public function view() : View
+    public function view(): View
     {
 
         return view('exports.legacy.budget-plan', [
@@ -42,10 +41,11 @@ class LegacyBudgetExport implements FromView,
     public function sum(string $column, array|Collection $rows)
     {
         $rows = collect($rows);
-        $fields = $rows->map(function ($row) use ($column){
+        $fields = $rows->map(function ($row) use ($column) {
             return "$column$row";
         })->join(',');
-        return "=SUM(" . $fields . ")";
+
+        return '=SUM('.$fields.')';
     }
 
     public function columnWidths(): array
@@ -58,5 +58,4 @@ class LegacyBudgetExport implements FromView,
             'E' => 15,
         ];
     }
-
 }

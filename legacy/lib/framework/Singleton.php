@@ -14,9 +14,10 @@ abstract class Singleton
      */
     final protected static function initSingleton(string $className): static
     {
-        if (!isset(self::$instances[$className])) {
-            self::$instances[$className] = new $className();
+        if (! isset(self::$instances[$className])) {
+            self::$instances[$className] = new $className;
         }
+
         return self::$instances[$className];
     }
 

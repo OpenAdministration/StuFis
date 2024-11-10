@@ -16,7 +16,7 @@ class DeleteProject extends Controller
             || $project->creator->id === \Auth::user()->id;
         $dataPerm = $project->expenses()->count() === 0;
 
-        if($userPerm === false || $dataPerm === false){
+        if ($userPerm === false || $dataPerm === false) {
             abort(403);
         }
 

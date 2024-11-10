@@ -11,7 +11,9 @@ use framework\render\Renderer;
 class HHPHandler extends Renderer
 {
     protected $routeInfo;
+
     private $hhps;
+
     private $stateStrings;
 
     public function __construct($routeInfo)
@@ -36,24 +38,25 @@ class HHPHandler extends Renderer
     {
         if (isset($this->routeInfo['hhp-id'])) {
             $hhp_id = $this->routeInfo['hhp-id'];
-            if (!isset($this->hhps[$hhp_id])) {
+            if (! isset($this->hhps[$hhp_id])) {
                 throw new LegacyDieException(500, "Haushaltsplan HP-$hhp_id ist nicht bekannt.");
+
                 return;
             }
         }
         switch ($this->routeInfo['action']) {
             case 'pick-hhp':
                 $this->renderHHPPicker();
-            break;
+                break;
             case 'view-hhp':
                 $this->renderHaushaltsplan();
-            break;
+                break;
             case 'export-csv':
                 $this->exportCSV();
-            break;
+                break;
             case 'view-titel':
                 $this->renderTitelDetails();
-            break;
+                break;
             case 'import':
                 $this->renderImporter();
                 break;
@@ -65,7 +68,7 @@ class HHPHandler extends Renderer
                 break;
             default:
                 throw new LegacyDieException(500, "Action in HHP '{$this->routeInfo['action']}' not known");
-            break;
+                break;
         }
     }
 
@@ -84,9 +87,9 @@ class HHPHandler extends Renderer
                 [$this, 'formatDateToMonthYear'],
                 [$this, 'formatDateToMonthYear'],
                 function ($stateString) use ($obj) {
-                    return "<div class='label label-info'>" . htmlspecialchars(
-                            $obj->stateStrings[$stateString]
-                        ) . '</div>';
+                    return "<div class='label label-info'>".htmlspecialchars(
+                        $obj->stateStrings[$stateString]
+                    ).'</div>';
                 },
             ]
         );
@@ -123,7 +126,7 @@ class HHPHandler extends Renderer
 
             $type = array_values($group)[0]['type'];
             $data[] = [
-                'group' => ($type + 1) . '.' . $group_nr++ . ' ' . array_values($group)[0]['gruppen_name'],
+                'group' => ($type + 1).'.'.$group_nr++.' '.array_values($group)[0]['gruppen_name'],
                 'titel-nr' => '',
                 'titel-name' => '',
                 'plan-value' => '',
@@ -132,10 +135,10 @@ class HHPHandler extends Renderer
             ];
             $rowsBefore = count($data) + 2;
             foreach ($group as /* $titel_id => */ $row) {
-                if (!isset($row['_booked'])) {
+                if (! isset($row['_booked'])) {
                     $row['_booked'] = 0;
                 }
-                if (!isset($row['_saved'])) {
+                if (! isset($row['_saved'])) {
                     $row['_saved'] = 0;
                 }
                 $data[] = [
@@ -161,7 +164,7 @@ class HHPHandler extends Renderer
         $csvBuilder = new CSVBuilder($data, $header, cellEscape: '');
         $von = date_create($hhp['von'])->format('Y-m');
         $bis = date_create($hhp['bis'])->format('Y-m');
-        $csvBuilder->echoCSV(date_create()->format('Y-m-d') . '-HHA-' . $von . '-bis-' . $bis);
+        $csvBuilder->echoCSV(date_create()->format('Y-m-d').'-HHA-'.$von.'-bis-'.$bis);
     }
 
     public function renderImporter(): void
@@ -200,16 +203,16 @@ class HHPHandler extends Renderer
 
     public function renderImportPreview(): void
     {
-        [$groups, $titel,] = $this->reverseCSV($_POST['importCSV']);
+        [$groups, $titel] = $this->reverseCSV($_POST['importCSV']);
         $dateStart = date_create($_POST['date-start'])->format('Y-m-d');
         $mergedGroups = [];
         foreach ($groups as $number => $group) {
             $typeName = $group['type'] === 0 ? '[EINNAHME]' : '[AUSGABE]';
-            $mergedGroups[$typeName . ' ' . $group['gruppen_name']] = $titel[$number];
+            $mergedGroups[$typeName.' '.$group['gruppen_name']] = $titel[$number];
         }
-        $this->renderHeadline('Vorschau Import HHP ab ' . htmlspecialchars($dateStart));
+        $this->renderHeadline('Vorschau Import HHP ab '.htmlspecialchars($dateStart));
         $this->renderTable(['Titel Nr', 'Titelname', 'Wert'], $mergedGroups, [], [
-                null, null, [$this, 'moneyEscapeFunction'],
+            null, null, [$this, 'moneyEscapeFunction'],
         ]);
 
         $this->renderHeadline('Speichern'); ?>
@@ -244,7 +247,7 @@ class HHPHandler extends Renderer
             'id' => $newHHPid - 1,
             'state' => 'final',
         ], [
-            'bis' => date_create($dateStart . ' -1 day')->format('Y-m-d'),
+            'bis' => date_create($dateStart.' -1 day')->format('Y-m-d'),
         ]);
 
         foreach ($groups as $groupNr => $group) {
@@ -255,6 +258,7 @@ class HHPHandler extends Renderer
                 $db->dbInsert('haushaltstitel', $titel);
             }
         }
+
         return true;
     }
 
@@ -270,7 +274,7 @@ class HHPHandler extends Renderer
         foreach ($rows as $row) {
             $cells = explode(';', str_replace('"', '', $row));
             // new group
-            if (!empty($cells[0])) {
+            if (! empty($cells[0])) {
                 $groupString = $cells[0];
                 [$activeGroupId, $groupName] = explode(' ', $groupString, 2);
                 $groupType = explode('.', $activeGroupId)[0] === '1' ? 0 /* Einnahme */ : 1 /* Ausgabe */;
@@ -292,6 +296,7 @@ class HHPHandler extends Renderer
                 ];
             }
         }
+
         return [$groups, $titel, $newHHPid];
     }
 
@@ -301,7 +306,7 @@ class HHPHandler extends Renderer
         $hhp = $this->hhps[$hhp_id];
         $groups = DBConnector::getInstance()->dbgetHHP($hhp_id);
         // var_dump($groups);
-        $this->renderHeadline('Haushaltsplan seit ' . $this->formatDateToMonthYear($hhp['von'])); ?>
+        $this->renderHeadline('Haushaltsplan seit '.$this->formatDateToMonthYear($hhp['von'])); ?>
         <table class="table table-striped">
 			<?php
             $group_nr = 1;
@@ -318,7 +323,7 @@ class HHPHandler extends Renderer
                 <thead>
                 <tr>
                     <th class="bg-info"
-                        colspan="6"><?php echo($type === 0 ? 'E' : 'A') . '.' . $group_nr++ . ' ' . array_values(
+                        colspan="6"><?php echo ($type === 0 ? 'E' : 'A').'.'.$group_nr++.' '.array_values(
                             $group
                         )[0]['gruppen_name']; ?></th>
                 </tr>
@@ -327,13 +332,13 @@ class HHPHandler extends Renderer
                     <th>Titelnr</th>
                     <th>Titelname</th>
                     <th class="money">
-                        <?php echo 'soll-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben'); ?>
+                        <?php echo 'soll-'.(array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben'); ?>
                     </th>
                     <th class="money">
-                        <?php echo 'ist-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben') . ' (gebucht)'; ?>
+                        <?php echo 'ist-'.(array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben').' (gebucht)'; ?>
                     </th>
                     <th class="money">
-                        <?php echo 'ist-' . (array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben') . ' (beschlossen)'; ?>
+                        <?php echo 'ist-'.(array_values($group)[0]['type'] === 0 ? 'Einnahmen' : 'Ausgaben').' (beschlossen)'; ?>
                     </th>
                 </tr>
                 </thead>
@@ -343,10 +348,10 @@ class HHPHandler extends Renderer
             $gsum_ist = 0;
             $gsum_saved = 0;
             foreach ($group as $titel_id => $row) {
-                if (!isset($row['_booked'])) {
+                if (! isset($row['_booked'])) {
                     $row['_booked'] = 0;
                 }
-                if (!isset($row['_saved'])) {
+                if (! isset($row['_saved'])) {
                     $row['_saved'] = 0;
                 }
                 $gsum_soll += $row['value'];
@@ -355,7 +360,7 @@ class HHPHandler extends Renderer
                     <tr>
                         <td></td>
                         <td><?php echo $row['titel_nr']; ?></td>
-                        <td><a href="<?php echo URIBASE . "hhp/$hhp_id/titel/$titel_id"; ?>">
+                        <td><a href="<?php echo URIBASE."hhp/$hhp_id/titel/$titel_id"; ?>">
                                 <i class="fa fa-fw fa-search-plus"></i><?php echo $row['titel_name']; ?>
                             </a>
                         </td>
@@ -404,15 +409,17 @@ class HHPHandler extends Renderer
     {
         $str = '';
         if ($should !== 0.0) {
-            $str = "title='Titel ist zu " . number_format((float) ($is / $should) * 100, 0) . "% ausgelastet'";
+            $str = "title='Titel ist zu ".number_format((float) ($is / $should) * 100, 0)."% ausgelastet'";
         }
         if ($is > $should) {
             if ($is > $should * 1.5) {
-                return $str . " class='money hhp-danger'";
+                return $str." class='money hhp-danger'";
             }
-            return $str . " class='money hhp-warning'";
+
+            return $str." class='money hhp-warning'";
         }
-        return $str . " class='money'";
+
+        return $str." class='money'";
     }
 
     private function renderTitelDetails(): void
@@ -432,9 +439,9 @@ class HHPHandler extends Renderer
             $titel = $titel[0];
         }
         $this->renderHeadline(
-            'HHP seit ' . $this->formatDateToMonthYear(
+            'HHP seit '.$this->formatDateToMonthYear(
                 $hhp['von']
-            ) . " - Titel {$titel['titel_nr']} - {$titel['titel_name']}"
+            )." - Titel {$titel['titel_nr']} - {$titel['titel_name']}"
         );
 
         $this->renderHeadline('Buchungen', 4);

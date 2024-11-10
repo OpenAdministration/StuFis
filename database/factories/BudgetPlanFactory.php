@@ -2,13 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\BudgetGroup;
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetPlanState;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Factories\Sequence;
 
 class BudgetPlanFactory extends Factory
 {
@@ -17,6 +15,7 @@ class BudgetPlanFactory extends Factory
     public function definition(): array
     {
         $year = Carbon::create(fake()->unique()->year());
+
         return [
             'state' => BudgetPlanState::FINAL,
             'start_date' => $year->dayOfYear(1)->format('Y-m-d'),
@@ -27,7 +26,8 @@ class BudgetPlanFactory extends Factory
         ];
     }
 
-    public function populate(){
+    public function populate()
+    {
         return $this->has(
             BudgetItem::factory(5)
         );
