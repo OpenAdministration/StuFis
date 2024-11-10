@@ -5,6 +5,7 @@ namespace framework\render;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
+
 use function Laravel\Prompts\error;
 
 class ErrorHandler extends Renderer
@@ -14,26 +15,31 @@ class ErrorHandler extends Renderer
         'headline' => 'Fehlerhafte Anfrage',
         'msg' => 'Etwas ist schief gelaufen, bitte kontaktiere den Systemadmin',
     ];
+
     public const E401_UNAUTHORISED = [
         'code' => 401,
         'headline' => 'Nicht Autorisiert',
         'msg' => 'Du bist nicht berechtigt auf diesen Inhalt zuzugreifen.',
     ];
+
     public const E402_PAYMENT_REQUIRED = [
         'code' => 403,
         'headline' => 'Zahlung benötigt',
         'msg' => 'Es wird eine Zahlung benötigt.',
     ];
+
     public const E403_FORBIDDEN = [
         'code' => 403,
         'headline' => 'Zugriff verweigert',
         'msg' => 'Sie sind nicht berechtigt auf diesen Inhalt zuzugreifen.',
     ];
+
     public const E404_NOT_FOUND = [
         'code' => 404,
         'headline' => 'Seite nicht gefunden',
         'msg' => 'Da ist wohl etwas schief gegangen. Die angeforderte Seite konnte nicht gefunden werden.',
     ];
+
     public const E405_WRONG_METHOD = [
         'code' => 405,
         'headline' => 'Seite so nicht erreichbar',
@@ -61,10 +67,7 @@ class ErrorHandler extends Renderer
     private $errorInformation;
 
     /**
-     * @param Exception $e
-     * @param string $additionalInformation
-     * @param string $debugInfo
-     * @param int $htmlCode
+     * @param  string  $debugInfo
      */
     #[NoReturn]
     public static function handleException(Exception $e, string $additionalInformation = '', $debugInfo = '', int $htmlCode = 500): void
@@ -90,7 +93,7 @@ class ErrorHandler extends Renderer
     /**
      * ErrorHandler constructor.
      */
-    public function __construct(array $errorInformation, array $stackTrace = null, string $additionalInfo = '', array|string $debugInfo = '')
+    public function __construct(array $errorInformation, ?array $stackTrace = null, string $additionalInfo = '', array|string $debugInfo = '')
     {
         parent::__construct();
         if (is_array($debugInfo)) {
@@ -109,11 +112,12 @@ class ErrorHandler extends Renderer
         $reflectClass = new ReflectionClass(__CLASS__);
         $constantArray = $reflectClass->getConstants();
         $filteredConstants = array_filter($constantArray, static function ($val, $key) use ($htmlCode) {
-            return str_starts_with($key, 'E' . $htmlCode);
+            return str_starts_with($key, 'E'.$htmlCode);
         }, ARRAY_FILTER_USE_BOTH);
         if (count($filteredConstants) === 1) {
             return array_values($filteredConstants)[0];
         }
+
         // throw another Error ^^'
         return self::UNKOWN_ERROR_CODE;
     }
@@ -134,7 +138,7 @@ class ErrorHandler extends Renderer
             [
                 'success' => false,
                 'status' => $this->errorInformation['code'],
-                'msg' => $this->errorInformation['msg'] . (PHP_EOL . $this->errorInformation['additional'] ?? '') . (PHP_EOL . DEV ? $this->errorInformation['debug'] ?? '' : ''),
+                'msg' => $this->errorInformation['msg'].(PHP_EOL.$this->errorInformation['additional'] ?? '').(PHP_EOL.DEV ? $this->errorInformation['debug'] ?? '' : ''),
                 'type' => 'modal',
                 'subtype' => 'server-error',
                 'headline' => $this->errorInformation['headline'],
@@ -151,6 +155,7 @@ class ErrorHandler extends Renderer
                 $item['class'] = substr($item['class'], strrpos($item['class'], '\\'));
             }
         }
+
         return $stackTrace;
     }
 }

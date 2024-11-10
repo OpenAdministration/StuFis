@@ -9,8 +9,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up(): void
     {
@@ -20,16 +18,16 @@ return new class extends Migration
         Schema::dropIfExists('extern_data');
         Schema::dropIfExists('extern_meta');
 
-        if(!Schema::hasTable('user')){
+        if (! Schema::hasTable('user')) {
             Schema::create('user', static function (Blueprint $table) {
                 $table->integer('id', true);
                 $table->string('fullname', 255);
                 $table->string('username', 32);
                 $table->string('email', 128);
-                $table->string('iban', 32)->default("");
+                $table->string('iban', 32)->default('');
             });
         }
-        if(!Schema::hasTable('auslagen')) {
+        if (! Schema::hasTable('auslagen')) {
             Schema::create('auslagen', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -52,7 +50,7 @@ return new class extends Migration
                 $table->string('created')->default('');
             });
         }
-        if(!Schema::hasTable('belege')) {
+        if (! Schema::hasTable('belege')) {
             Schema::create('belege', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -64,7 +62,7 @@ return new class extends Migration
                 $table->integer('file_id')->nullable();
             });
         }
-        if(!Schema::hasTable('beleg_posten')) {
+        if (! Schema::hasTable('beleg_posten')) {
             Schema::create('beleg_posten', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -78,7 +76,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('booking')) {
+        if (! Schema::hasTable('booking')) {
             Schema::create('booking', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -98,7 +96,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('booking_instruction')) {
+        if (! Schema::hasTable('booking_instruction')) {
             Schema::create('booking_instruction', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id');
@@ -111,7 +109,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('comments')) {
+        if (! Schema::hasTable('comments')) {
             Schema::create('comments', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -125,7 +123,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('filedata')) {
+        if (! Schema::hasTable('filedata')) {
             Schema::create('filedata', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -134,7 +132,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('fileinfo')) {
+        if (! Schema::hasTable('fileinfo')) {
             Schema::create('fileinfo', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -150,7 +148,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('haushaltsgruppen')) {
+        if (! Schema::hasTable('haushaltsgruppen')) {
             Schema::create('haushaltsgruppen', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -160,7 +158,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('haushaltsplan')) {
+        if (! Schema::hasTable('haushaltsplan')) {
             Schema::create('haushaltsplan', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -170,7 +168,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('haushaltstitel')) {
+        if (! Schema::hasTable('haushaltstitel')) {
             Schema::create('haushaltstitel', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -181,7 +179,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('konto')) {
+        if (! Schema::hasTable('konto')) {
             Schema::create('konto', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id');
@@ -204,7 +202,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('konto_bank')) {
+        if (! Schema::hasTable('konto_bank')) {
             Schema::create('konto_bank', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -214,7 +212,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('konto_credentials')) {
+        if (! Schema::hasTable('konto_credentials')) {
             Schema::create('konto_credentials', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -228,7 +226,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('konto_type')) {
+        if (! Schema::hasTable('konto_type')) {
             Schema::create('konto_type', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -241,7 +239,7 @@ return new class extends Migration
             });
         }
 
-        if(!Schema::hasTable('projekte')) {
+        if (! Schema::hasTable('projekte')) {
             Schema::create('projekte', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id', true);
@@ -263,7 +261,7 @@ return new class extends Migration
                 $table->text('beschreibung')->nullable();
             });
         }
-        if(!Schema::hasTable('projektposten')) {
+        if (! Schema::hasTable('projektposten')) {
             Schema::create('projektposten', static function (Blueprint $table) {
                 $table->comment('');
                 $table->integer('id');

@@ -10,22 +10,33 @@ use framework\render\Renderer;
 class BookingTableManager extends Renderer
 {
     private $col_zahlung;
+
     private $col_auslagen;
+
     private $col_posten;
+
     private $col_rest;
 
     private $zahlung_lastValue;
+
     private $auslage_lastValue;
+
     private $posten_lastValue;
 
     private $actual_instruction;
+
     private $table_tmp;
+
     private $table;
+
     private $executed;
 
     private $instructions;
+
     private $zahlungDB;
+
     private $belegeDB;
+
     private $kontoTypes;
 
     public function __construct($instructionsWhitelist = [])
@@ -50,7 +61,7 @@ class BookingTableManager extends Renderer
         $zahlungenDB = [];
         $belegeDB = [];
 
-        if (!empty($instructionsWhitelist)) {
+        if (! empty($instructionsWhitelist)) {
             $where = ['booking_instruction.id' => ['IN', $instructionsWhitelist], 'booking_instruction.done' => 0];
         } else {
             $where = ['booking_instruction.done' => 0];
@@ -85,13 +96,13 @@ class BookingTableManager extends Renderer
                 switch ($row['beleg_type']) {
                     case 'belegposten':
                         $auslagen_ids[] = $row['beleg'];
-                    break;
+                        break;
                     case 'extern':
                         $extern_ids[] = $row['beleg'];
-                    break;
+                        break;
                     default:
-                        throw new LegacyDieException(400, 'Beleg' . $row['beleg_type']);
-                    break;
+                        throw new LegacyDieException(400, 'Beleg'.$row['beleg_type']);
+                        break;
                 }
             }
             $where = [];
@@ -107,7 +118,7 @@ class BookingTableManager extends Renderer
                 [],
                 ['value' => false]
             );
-            if (!empty($auslagen_ids)) {
+            if (! empty($auslagen_ids)) {
                 $auslagen = DBConnector::getInstance()->dbFetchAll(
                     'auslagen',
                     [DBConnector::FETCH_ASSOC],
@@ -161,7 +172,7 @@ class BookingTableManager extends Renderer
             } else {
                 $auslagen = [];
             }
-            if (!empty($extern_ids)) {
+            if (! empty($extern_ids)) {
                 $extern = DBConnector::getInstance()->dbFetchAll(
                     'extern_data',
                     [DBConnector::FETCH_ASSOC],
@@ -235,7 +246,7 @@ class BookingTableManager extends Renderer
 
     /**
      * @return array "instruct_id" => [
-     *                  [beleg]
+     *               [beleg]
      *               ]
      */
     public function getBelegeDB(): array
@@ -277,13 +288,13 @@ class BookingTableManager extends Renderer
                 <tbody>
 				<?php
                 foreach ($this->instructions as $instruct_id => $instruction) {
-                    echo "<tr><td class='bg-info' colspan='" . count($header) . "'>";
+                    echo "<tr><td class='bg-info' colspan='".count($header)."'>";
                     echo "<input type='checkbox' class='form-check-input' name='activeInstruction[$instruct_id]'>";
                     $zCount = count($this->zahlungDB[$instruct_id]);
                     $bCount = count($this->belegeDB[$instruct_id]);
-                    echo "<strong>Angewiesener Vorgang $instruct_id</strong> - " . $zCount . ' Zahlung' . ($zCount === 1
-                            ? '' : 'en') . ' und ' . $bCount . ' Belegposten';
-                    echo ' - Angewiesen von: ' . array_values($instruction)[0]['fullname']; ?>
+                    echo "<strong>Angewiesener Vorgang $instruct_id</strong> - ".$zCount.' Zahlung'.($zCount === 1
+                            ? '' : 'en').' und '.$bCount.' Belegposten';
+                    echo ' - Angewiesen von: '.array_values($instruction)[0]['fullname']; ?>
                     <form id="#form-delete-instruction-<?php echo $instruct_id; ?>" method="POST" class="ajax-form"
                           action="<?php echo URIBASE; ?>rest/booking/instruct/<?php echo $instruct_id; ?>/delete">
                         <?php $this->renderNonce(); ?>
@@ -301,7 +312,7 @@ class BookingTableManager extends Renderer
                                 $cell = $row[$key];
                                 $title = $cell['title'] ?? '';
                                 $colspan = $cell['colspan'] ?? 1;
-                                $id = 'booking-table_' . $key . '-' . $nr_of_rows;
+                                $id = 'booking-table_'.$key.'-'.$nr_of_rows;
                                 echo "<td id='$id' class='vertical-center no-wrap' colspan='$colspan' rowspan='{$cell['rowspan']}' title='$title'>{$cell['val']}</td>";
                             }
                         }
@@ -313,7 +324,7 @@ class BookingTableManager extends Renderer
 			<?php
             $this->renderNonce(); ?>
             <button class="btn btn-primary pull-right"
-				<?php echo !AuthHandler::getInstance()->hasGroup('ref-finanzen-kv') ?
+				<?php echo ! AuthHandler::getInstance()->hasGroup('ref-finanzen-kv') ?
                     "disabled title='Nur Kassenverantwortliche können eine Buchung durchführen!'" : ''; ?>
             >
                 Buchung(en) durchführen
@@ -324,7 +335,7 @@ class BookingTableManager extends Renderer
 
     public function run(): void
     {
-        foreach ($this->instructions  as $instruction_id => $someNotUsedValue) {
+        foreach ($this->instructions as $instruction_id => $someNotUsedValue) {
             $this->nextInstruction($instruction_id); //set
             $zAll = $this->zahlungDB[$instruction_id];
             $bAll = $this->belegeDB[$instruction_id];
@@ -390,23 +401,24 @@ class BookingTableManager extends Renderer
     {
         switch ($b['type']) {
             case 'belegposten':
-                $prefilledText = $b['projekt_name'] . ' - ' . $b['auslagen_name'];
-                $newPostenName = 'P' . $b['posten_short'];
+                $prefilledText = $b['projekt_name'].' - '.$b['auslagen_name'];
+                $newPostenName = 'P'.$b['posten_short'];
                 $newPostenNameRaw = $b['posten_id'];
                 $newBelegName = $this->auslagenLinkEscapeFunction(
                     $b['projekt_id'],
                     $b['auslagen_id'],
-                    'B' . $b['belege_short']
+                    'B'.$b['belege_short']
                 );
                 break;
             case 'extern':
-                $prefilledText = $b['projekt_name'] . ' - ' . $b['org_name'];
-                $newPostenName = 'V' . $b['vorgang_id'];
+                $prefilledText = $b['projekt_name'].' - '.$b['org_name'];
+                $newPostenName = 'V'.$b['vorgang_id'];
                 $newPostenNameRaw = $b['id'];
-                $newBelegName = 'E' . $b['extern_id'];
+                $newBelegName = 'E'.$b['extern_id'];
                 break;
             default:
-                throw new LegacyDieException(500, 'Unbekannter Typ: ' . $b['type'], var_export($b, true));
+                throw new LegacyDieException(500, 'Unbekannter Typ: '.$b['type'], var_export($b, true));
+
                 return;
         }
 
@@ -460,11 +472,12 @@ class BookingTableManager extends Renderer
                     $idx = 0;
                     while ($idx < $rowspan) {
                         $ret_table[$instruction_id][$id + $idx][$key] = $row[$key];
-                        ++$idx;
+                        $idx++;
                     }
                 }
             }
         }
+
         return $ret_table;
     }
 
@@ -494,7 +507,7 @@ class BookingTableManager extends Renderer
         } else {
             throw new LegacyDieException(500, "Konto Type $zahlungIdType nicht bekannt.");
         }
-        $newValue = $prefix . $zahlungId;
+        $newValue = $prefix.$zahlungId;
         if ($this->zahlung_lastValue === $newValue) {
             $this->extendLastZahlung();
         } else {
@@ -567,36 +580,42 @@ class BookingTableManager extends Renderer
             'rowspan' => 1,
             'colspan' => 1,
         ];
-        ++$this->col_rest;
+        $this->col_rest++;
     }
 
     public function extendLastBeleg(): bool
     {
         if (isset($this->table_tmp[$this->col_auslagen]['beleg'])) {
-            ++$this->table_tmp[$this->col_auslagen]['beleg']['rowspan'];
+            $this->table_tmp[$this->col_auslagen]['beleg']['rowspan']++;
+
             return true;
         }
+
         return false;
     }
 
     public function extendLastZahlung(): bool
     {
         if (isset($this->table_tmp[$this->col_zahlung]['zahlung'], $this->table_tmp[$this->col_zahlung]['zahlung-value'])) {
-            ++$this->table_tmp[$this->col_zahlung]['zahlung']['rowspan'];
-            ++$this->table_tmp[$this->col_zahlung]['zahlung-value']['rowspan'];
+            $this->table_tmp[$this->col_zahlung]['zahlung']['rowspan']++;
+            $this->table_tmp[$this->col_zahlung]['zahlung-value']['rowspan']++;
+
             return true;
         }
+
         return false;
     }
 
     public function extendLastPosten(): bool
     {
         if (isset($this->table_tmp[$this->col_posten]['posten'])) {
-            ++$this->table_tmp[$this->col_posten]['posten']['rowspan'];
-            ++$this->table_tmp[$this->col_posten]['posten-soll']['rowspan'];
-            ++$this->table_tmp[$this->col_posten]['titel']['rowspan'];
+            $this->table_tmp[$this->col_posten]['posten']['rowspan']++;
+            $this->table_tmp[$this->col_posten]['posten-soll']['rowspan']++;
+            $this->table_tmp[$this->col_posten]['titel']['rowspan']++;
+
             return true;
         }
+
         return false;
     }
 }

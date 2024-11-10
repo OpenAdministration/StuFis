@@ -9,7 +9,8 @@ use Illuminate\Support\Collection;
 
 class DateColumnRule implements ValidationRule
 {
-    public function __construct(private Collection $column){}
+    public function __construct(private Collection $column) {}
+
     /**
      * Run the validation rule.
      *
@@ -20,10 +21,10 @@ class DateColumnRule implements ValidationRule
         try {
             $firstDate = guessCarbon($this->column->first());
             $lastDate = guessCarbon($this->column->last());
-            if(!$firstDate->lessThanOrEqualTo($lastDate)){
+            if (! $firstDate->lessThanOrEqualTo($lastDate)) {
                 $fail(__('konto.csv-verify-date-order-error'));
             }
-        }catch (InvalidFormatException $exception){
+        } catch (InvalidFormatException $exception) {
             $fail(__('konto.csv-verify-date-error'));
         }
     }

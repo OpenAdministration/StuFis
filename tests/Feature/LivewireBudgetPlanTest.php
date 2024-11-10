@@ -11,7 +11,7 @@ class LivewireBudgetPlanTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function setUp() : void
+    public function setUp(): void
     {
         parent::setUp();
         $this->actingAs(User::factory()->create());
@@ -46,6 +46,4 @@ class LivewireBudgetPlanTest extends TestCase
             'approval_date' => '2019-12-24',
         ]);
     }
-
-
 }

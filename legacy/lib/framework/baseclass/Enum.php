@@ -24,6 +24,7 @@ abstract class Enum
         }
 
         $keys = array_map('strtolower', array_keys($constants));
+
         return in_array(strtolower($name), $keys, true);
     }
 
@@ -33,16 +34,18 @@ abstract class Enum
             self::$constCacheArray = [];
         }
         $calledClass = static::class;
-        if (!array_key_exists($calledClass, self::$constCacheArray)) {
+        if (! array_key_exists($calledClass, self::$constCacheArray)) {
             $reflect = new ReflectionClass($calledClass);
             self::$constCacheArray[$calledClass] = $reflect->getConstants();
         }
+
         return self::$constCacheArray[$calledClass];
     }
 
     public static function isValidValue($value): bool
     {
         $values = array_values(self::getConstants());
+
         return in_array($value, $values, $strict = true);
     }
 }

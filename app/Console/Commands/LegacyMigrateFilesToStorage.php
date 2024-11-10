@@ -27,7 +27,7 @@ class LegacyMigrateFilesToStorage extends Command
      */
     public function handle()
     {
-        FileInfo::lazy(20)->each(function (FileInfo $fileInfo){
+        FileInfo::lazy(20)->each(function (FileInfo $fileInfo) {
             $data = $fileInfo->fileData;
             $link = $fileInfo->link;
             $beleg = ExpensesReceipt::find($link);
@@ -35,14 +35,14 @@ class LegacyMigrateFilesToStorage extends Command
             $pdfData = $data->data;
             $hash = $fileInfo->hashname;
             $path = "auslagen/$expenses_id/$hash.pdf";
-            if ($pdfData !== null){
-                if(empty($data->diskpath)){
+            if ($pdfData !== null) {
+                if (empty($data->diskpath)) {
                     $data->diskpath = $path;
                 }
-                if(!\Storage::has($path)){
+                if (! \Storage::has($path)) {
                     \Storage::put($path, $pdfData);
                 }
-                if ($this->argument('delete') === "true"){
+                if ($this->argument('delete') === 'true') {
                     $data->data = null;
                 }
                 $data->save();

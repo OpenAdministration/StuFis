@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -38,8 +37,7 @@ class NewComment extends Notification
         return (new MailMessage)
             ->line(__('comment.notification.line1'))
             ->line(__('comment.notification.line2', ['type' => $notifiable, 'id' => 0]))
-            ->action('Notification Action', url('/'))
-                    ;
+            ->action('Notification Action', url('/'));
     }
 
     /**

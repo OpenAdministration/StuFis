@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(LegacySeeder::class);
 
-        if(\App::isLocal()){
+        if (\App::isLocal()) {
             $this->call(LocalSeeder::class);
         }
     }

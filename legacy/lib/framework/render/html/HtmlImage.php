@@ -17,12 +17,14 @@ class HtmlImage extends AbstractHtmlTag
     public function srcLink(string $url): self
     {
         $this->attr('src', $url);
+
         return $this;
     }
 
     public function srcBase64Encoded(string $encodedData, string $mimeType): self
     {
         $this->attr('src', "data:image/$mimeType;base64,$encodedData");
+
         return $this;
     }
 

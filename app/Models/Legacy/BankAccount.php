@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 /**
  * App\Models\Legacy\Konto
  *
- * @property integer $id
+ * @property int $id
  * @property string $name
  * @property string $short
  * @property string $sync_from
@@ -20,6 +20,7 @@ use Illuminate\Support\Collection;
  * @property BankTransaction[] $kontos
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $kontoTransactions
  * @property-read int|null $konto_transactions_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount query()
@@ -30,11 +31,13 @@ use Illuminate\Support\Collection;
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereShort($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncUntil($value)
+ *
  * @mixin \Eloquent
  */
 class BankAccount extends Model
 {
     public $timestamps = false;
+
     /**
      * The table associated with the model.
      *
@@ -47,15 +50,16 @@ class BankAccount extends Model
      */
     protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_settings'];
 
-    public function csvImportSettings() : Attribute
+    public function csvImportSettings(): Attribute
     {
         return Attribute::make(
-            get: static function (?string $value){
-                if(empty($value)){
+            get: static function (?string $value) {
+                if (empty($value)) {
                     return [];
                 }
+
                 return json_decode($value, true);
-            } ,
+            },
             set: static fn (array|Collection $value) => json_encode($value),
         );
     }

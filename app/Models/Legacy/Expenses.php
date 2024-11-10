@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\Expenses
  *
- * @property integer $id
- * @property integer $projekt_id
+ * @property int $id
+ * @property int $projekt_id
  * @property string $name_suffix
  * @property string $state
  * @property string $ok_belege
@@ -23,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $last_change
  * @property string $last_change_by
  * @property string $etag
- * @property integer $version
+ * @property int $version
  * @property string $created
  * @property Project $project
  * @property ExpensesReceipt[] $beleges
@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $comments_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\ExpensesReceipt> $receipts
  * @property-read int|null $receipts_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses query()
@@ -52,11 +53,11 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungVwzk($value)
+ *
  * @mixin \Eloquent
  */
 class Expenses extends Model
 {
-
     /**
      * The table associated with the model.
      *

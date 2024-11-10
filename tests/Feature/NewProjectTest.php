@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Tests\TestCase;
 
 class NewProjectTest extends TestCase
@@ -33,8 +31,7 @@ class NewProjectTest extends TestCase
         $response
             ->seeText('neues Projekt anlegen')
             ->seeElement('input', ['type' => 'text', 'name' => 'name'])
-            ->type('Testing Project Name', 'name')// add more stuff from the form @ /legacy/lib/forms/projekte/ProjektHandler.php -> render()
-        ;
+            ->type('Testing Project Name', 'name'); // add more stuff from the form @ /legacy/lib/forms/projekte/ProjektHandler.php -> render()
     }
 
     public function test_project_is_saveable(): void

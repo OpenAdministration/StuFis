@@ -9,7 +9,7 @@ use Monolog\Logger;
 
 class GenerateCommand extends \Ahc\Cli\Input\Command
 {
-    public function __construct(App $app = null)
+    public function __construct(?App $app = null)
     {
         parent::__construct('generate', 'Generate unset secrets', false, $app);
         $this->argument('[type]', 'Type of secret');
@@ -22,7 +22,7 @@ class GenerateCommand extends \Ahc\Cli\Input\Command
 
     private function generateChatKeys(): void
     {
-        if (!isset($_ENV['CHAT_PUBLIC_KEY'], $_ENV['CHAT_PRIVATE_KEY'])) {
+        if (! isset($_ENV['CHAT_PUBLIC_KEY'], $_ENV['CHAT_PRIVATE_KEY'])) {
             $this->io()->info('Generate Chat Keys ...', true);
             $config = [
                 'digest_alg' => 'sha512',
@@ -34,7 +34,7 @@ class GenerateCommand extends \Ahc\Cli\Input\Command
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey['key'];
 
-            $env = new EnvSetter(SYSBASE . '/.env', new Logger('env', [new StreamHandler('php://stdout')]));
+            $env = new EnvSetter(SYSBASE.'/.env', new Logger('env', [new StreamHandler('php://stdout')]));
             $env->setEnvVars([
                 'CHAT_PUBLIC_KEY' => $pubKey,
                 'CHAT_PRIVATE_KEY' => $privKey,

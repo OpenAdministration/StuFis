@@ -10,27 +10,45 @@ use PDO;
 class DBConnector extends Singleton
 {
     public const GROUP_NOTHING = 0;
+
     public const GROUP_SUM = 1;
+
     public const GROUP_SUM_ROUND2 = 2;
+
     public const GROUP_COUNT = 3;
+
     public const GROUP_MAX = 4;
+
     public const GROUP_MIN = 5;
+
     public const FETCH_NUMERIC = 1;
+
     public const FETCH_ASSOC = 2;
+
     public const FETCH_UNIQUE_FIRST_COL_AS_KEY = 3;
+
     public const FETCH_ONLY_FIRST_COLUMN = 4;
+
     public const FETCH_UNIQUE = 5;
+
     public const FETCH_GROUPED = 6;
 
     public const SQL_DATE_FORMAT = 'Y-m-d';
+
     public const SQL_DATETIME_FORMAT = 'Y-m-d H:i:s';
 
     private PDO $pdo;
+
     private array $scheme;
+
     private array $schemeKeys;
+
     private array $validFields;
+
     private int $transactionCount = 0;
+
     private array $user;
+
     public string $dbPrefix;
 
     public function __construct()
@@ -448,7 +466,7 @@ class DBConnector extends Singleton
         $blacklist = ['log', 'log_property'];
         foreach ($scheme as $tblname => $content) {
             $validFields[] = ["$tblname.*"];
-            if (!is_array($content)) {
+            if (! is_array($content)) {
                 continue;
             }
             if (in_array($tblname, $blacklist, true)) {
@@ -458,7 +476,7 @@ class DBConnector extends Singleton
             //all all colnames of this table
             $validFields[] = $colnames;
             $func = static function (&$val, $key) use ($tblname) {
-                $val = $tblname . '.' . $val;
+                $val = $tblname.'.'.$val;
             };
             //add all colnames with tablename.colname
             array_walk($colnames, $func);
@@ -476,6 +494,7 @@ class DBConnector extends Singleton
                 if ($value === false || $value === '') {
                     return $value;
                 }
+
                 return number_format($value, 2, ',', '');
             case 'date':
             case 'daterange':
@@ -493,32 +512,35 @@ class DBConnector extends Singleton
             case 'titelnr':
                 $value = trim(str_replace(' ', '', $value));
                 $nv = '';
-                for ($i = 0; $i < $length; ++$i) {
+                for ($i = 0; $i < $length; $i++) {
                     if ($i % 4 === 1) {
                         $nv .= ' ';
                     }
                     $nv .= $value[$i];
                 }
+
                 return $nv;
             case 'kostennr':
                 $value = trim(str_replace(' ', '', $value));
                 $nv = '';
-                for ($i = 0; $i < $length; ++$i) {
+                for ($i = 0; $i < $length; $i++) {
                     if ($i % 3 == 2) {
                         $nv .= ' ';
                     }
                     $nv .= $value[$i];
                 }
+
                 return $nv;
             case 'kontennr':
                 $value = trim(str_replace(' ', '', $value));
                 $nv = '';
-                for ($i = 0; $i < $length; ++$i) {
+                for ($i = 0; $i < $length; $i++) {
                     if ($i % 2 === 0 && $i > 0) {
                         $nv .= ' ';
                     }
                     $nv .= $value[$i];
                 }
+
                 return $nv;
             case 'money':
                 return str_replace(['.', ',', ' '], ['', '.', ''], $value);
@@ -545,7 +567,6 @@ class DBConnector extends Singleton
 
     /**
      * @deprecated use Auth::user() instead
-     * @return array
      */
     public function getUser(): array
     {
@@ -556,25 +577,22 @@ class DBConnector extends Singleton
         $user = \Auth::user()?->toArray();
         $user['fullname'] = $user['name'];
         $this->user = $user;
+
         return $user;
     }
 
     /**
-     * @param string|array $tables table which should be used in FROM statement
-     *                                      if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
-     *
-     * @param array $fetchStyles
-     *
-     * @param array $showColumns if empty array there will be all coulums (*) shown
-     *                                      if keys are not numeric, key will be used as alias
-     *                                      don't use same alias twice (ofc)
-     *                                      renaming of tables is possible
-     *                                      e.g.: newname => tablename.*, numerik keys(newname) will be ignored
-     *                                      will be: newname.col1, newname.col2 ...
-     *                                      if values of $showColumns are arrays, there can be aggregated functions as
-     *                                      second value, fist value is the columnname e.g. alias => ["colname", SUM]
-     *
-     * @param array $where val no array [colname => val,...]: WHERE colname = val AND ...
+     * @param  string|array  $tables  table which should be used in FROM statement
+     *                                if $tabels is array [t1,t2, ...]: FROM t1, t2, ...
+     * @param  array  $showColumns  if empty array there will be all coulums (*) shown
+     *                              if keys are not numeric, key will be used as alias
+     *                              don't use same alias twice (ofc)
+     *                              renaming of tables is possible
+     *                              e.g.: newname => tablename.*, numerik keys(newname) will be ignored
+     *                              will be: newname.col1, newname.col2 ...
+     *                              if values of $showColumns are arrays, there can be aggregated functions as
+     *                              second value, fist value is the columnname e.g. alias => ["colname", SUM]
+     * @param  array  $where  val no array [colname => val,...]: WHERE colname = val AND ...
      *
      *                                  if val is array [colname => [operator,value],...]: WHERE colname operator value
      *                                  AND
@@ -586,13 +604,12 @@ class DBConnector extends Singleton
      *
      *                                  Version from before can be used as ANDBLOCK, the following syntax is also possible:
      *                                      [ ANDBLOCK1, ANDBLOCK2, ... ]: WHERE (ANDBLOCK1) OR (ANDBLOCK2) OR (...)
-     *
-     * @param array $joins Fields which should be joined:
-     *                                      ["type"="inner",table => "tblname","on" =>
-     *                                      [["tbl1.col","tbl2.col"],...],"operator"
-     *                                      => ["=",...]] Will be: FROM $table INNER JOIN tblname ON (tbl1.col =
-     *                                      tbl2.col AND
-     *                                      ... )
+     * @param  array  $joins  Fields which should be joined:
+     *                        ["type"="inner",table => "tblname","on" =>
+     *                        [["tbl1.col","tbl2.col"],...],"operator"
+     *                        => ["=",...]] Will be: FROM $table INNER JOIN tblname ON (tbl1.col =
+     *                        tbl2.col AND
+     *                        ... )
      *
      *                                  accepted values (<u>default</u>):
      *
@@ -602,12 +619,10 @@ class DBConnector extends Singleton
      *
      *                                  There can be multiple arrays of the above structure, there will be processed in
      *                                  original order from php
-     *
-     * @param array $sort Order by key (field) with val===true ? asc : desc
-     *
-     * @param array $groupBy Array with columns which will be grouped by
-     * @param int $limit limits the output of the query
-     * @param bool $debug gives more debug logging/output
+     * @param  array  $sort  Order by key (field) with val===true ? asc : desc
+     * @param  array  $groupBy  Array with columns which will be grouped by
+     * @param  int  $limit  limits the output of the query
+     * @param  bool  $debug  gives more debug logging/output
      * @return array|bool
      */
     public function dbFetchAll(
@@ -615,12 +630,12 @@ class DBConnector extends Singleton
         array $joins = [], array $sort = [], array $groupBy = [], int $limit = 0, bool $debug = false
     ) {
         //check if all tables are known
-        if (!is_array($tables)) {
+        if (! is_array($tables)) {
             $tables = [$tables];
         }
 
         foreach ($tables as $table) {
-            if (!isset($this->scheme[$table])) {
+            if (! isset($this->scheme[$table])) {
                 throw new LegacyDieException(500, "Unkown table $table");
             }
         }
@@ -650,11 +665,11 @@ class DBConnector extends Singleton
                 $col = $content;
                 $aggregate = 0;
             }
-            if (!is_int($alias) && ($pos = strpos($col, '.*')) !== false) {
+            if (! is_int($alias) && ($pos = strpos($col, '.*')) !== false) {
                 $tname = substr($col, 0, $pos);
                 $rename = $alias;
                 foreach ($this->scheme[$tname] as $colName => $dev_null) {
-                    $newShowColumns[$rename . '.' . $colName] = [$tname . '.' . $colName, $aggregate];
+                    $newShowColumns[$rename.'.'.$colName] = [$tname.'.'.$colName, $aggregate];
                 }
             } else {
                 $newShowColumns[$alias] = [$col, $aggregate];
@@ -664,39 +679,39 @@ class DBConnector extends Singleton
         //check join
         $validJoinOnOperators = ['=', '<', '>', '<>', '<=', '>='];
         foreach (array_keys($joins) as $nr) {
-            if (!isset($joins[$nr]['table'])) {
-                throw new LegacyDieException(500, "no Jointable set in '" . $nr . "' use !");
-            } elseif (!array_key_exists($joins[$nr]['table'], $this->scheme)) {
-                throw new LegacyDieException(500, 'Unknown Table ' . $joins[$nr]['table']);
-            } elseif (isset($joins[$nr]['type']) && !in_array(
-                    strtolower($joins[$nr]['type']),
-                    ['inner', 'left', 'natural', 'right']
-                )) {
-                throw new LegacyDieException(500, 'Unknown Join type ' . $joins[$nr]['type']);
+            if (! isset($joins[$nr]['table'])) {
+                throw new LegacyDieException(500, "no Jointable set in '".$nr."' use !");
+            } elseif (! array_key_exists($joins[$nr]['table'], $this->scheme)) {
+                throw new LegacyDieException(500, 'Unknown Table '.$joins[$nr]['table']);
+            } elseif (isset($joins[$nr]['type']) && ! in_array(
+                strtolower($joins[$nr]['type']),
+                ['inner', 'left', 'natural', 'right']
+            )) {
+                throw new LegacyDieException(500, 'Unknown Join type '.$joins[$nr]['type']);
             }
-            if (!isset($joins[$nr]['on'])) {
+            if (! isset($joins[$nr]['on'])) {
                 $joins[$nr]['on'] = [];
             }
-            if (!is_array($joins[$nr]['on'])) {
+            if (! is_array($joins[$nr]['on'])) {
                 throw new LegacyDieException(500, "on '{$joins[$nr]['on']}' has to be an array!");
             }
-            if (count($joins[$nr]['on']) === 2 && !is_array($joins[$nr]['on'][0])) {
+            if (count($joins[$nr]['on']) === 2 && ! is_array($joins[$nr]['on'][0])) {
                 $joins[$nr]['on'] = [$joins[$nr]['on']]; //if only 1 "on" set bring it into an array-form
             }
             foreach ($joins[$nr]['on'] as $pair) {
-                if (!is_array($pair)) {
+                if (! is_array($pair)) {
                     throw new LegacyDieException(500, "Join on '$pair' is not an array");
                 }
                 if (count($pair) !== 2) {
-                    throw new LegacyDieException(500, 'unvalid joinon pair:' . implode(', ', $pair));
+                    throw new LegacyDieException(500, 'unvalid joinon pair:'.implode(', ', $pair));
                 }
             }
             if (isset($joins[$nr]['operator'])) {
-                if (!is_array($joins[$nr]['operator'])) {
+                if (! is_array($joins[$nr]['operator'])) {
                     $joins[$nr]['operator'] = [$joins[$nr]['operator']];
                 }
                 foreach ($joins[$nr]['operator'] as $op) {
-                    if (!in_array($op, $validJoinOnOperators, true)) {
+                    if (! in_array($op, $validJoinOnOperators, true)) {
                         throw new LegacyDieException(500, "unallowed join operator '$op' in {$nr}th join");
                     }
                 }
@@ -705,21 +720,21 @@ class DBConnector extends Singleton
             }
             if (count($joins[$nr]['on']) !== count($joins[$nr]['operator'])) {
                 throw new LegacyDieException(500,
-                    'not same amount of on-pairs(' . count($joins[$nr]['on']) . ') and operators (' . count(
+                    'not same amount of on-pairs('.count($joins[$nr]['on']).') and operators ('.count(
                         $joins[$nr]['operator']
-                    ) . ')!'
+                    ).')!'
                 );
             }
         }
 
         foreach ($sort as $field => $value) {
-            if (!in_array($field, $this->validFields, true)) {
+            if (! in_array($field, $this->validFields, true)) {
                 throw new LegacyDieException(500, "Unkown column $field in ORDER");
             }
         }
 
         foreach ($groupBy as $field) {
-            if (!in_array($field, $this->validFields, true)) {
+            if (! in_array($field, $this->validFields, true)) {
                 throw new LegacyDieException(500, "Unkown column $field in GROUP");
             }
         }
@@ -730,11 +745,11 @@ class DBConnector extends Singleton
         $cols = [];
         foreach ($newShowColumns as $alias => [$col, $aggregateConst]) {
             if (in_array($col, $this->validFields, true)) {
-                $as = (!is_int($alias)) ? " as `$alias`" : '';
+                $as = (! is_int($alias)) ? " as `$alias`" : '';
                 if (strpos($col, '.')) {
-                    $cols[] = $this->quoteIdent($this->dbPrefix  . $col, $aggregateConst) . $as;
+                    $cols[] = $this->quoteIdent($this->dbPrefix.$col, $aggregateConst).$as;
                 } else {
-                    $cols[] = $this->quoteIdent($col, $aggregateConst) . $as;
+                    $cols[] = $this->quoteIdent($col, $aggregateConst).$as;
                 }
             } else {
                 throw new LegacyDieException(500, "Unkown column $col in fetchAll");
@@ -745,18 +760,18 @@ class DBConnector extends Singleton
         $j = [];
         //var_dump($joins);
         foreach ($joins as $nr => $join) {
-            $jtype = isset($join['type']) ? (strtoupper($join['type']) . ' JOIN') : 'NATURAL JOIN';
+            $jtype = isset($join['type']) ? (strtoupper($join['type']).' JOIN') : 'NATURAL JOIN';
             if ($jtype === 'NATURAL JOIN') {
-                $j[] = PHP_EOL . 'NATURAL JOIN ' . $this->dbPrefix  . $join['table'];
+                $j[] = PHP_EOL.'NATURAL JOIN '.$this->dbPrefix.$join['table'];
             } else {
                 $jon = [];
-                for ($i = 0; $i < count($join['on']); ++$i) {
+                for ($i = 0; $i < count($join['on']); $i++) {
                     $expl = explode('.', $join['on'][$i][0]);
                     if (count($expl) > 1
                         && isset($this->scheme[$expl[0]])
                         && in_array($join['on'][$i][0], $this->validFields, true)
                     ) {
-                        $first = $this->quoteIdent($this->dbPrefix  . $join['on'][$i][0]);
+                        $first = $this->quoteIdent($this->dbPrefix.$join['on'][$i][0]);
                     } else {
                         $first = '?';
                         $joinVals[] = $join['on'][$i][0];
@@ -766,14 +781,14 @@ class DBConnector extends Singleton
                         && isset($this->scheme[$expl[0]])
                         && in_array($join['on'][$i][1], $this->validFields, true)
                     ) {
-                        $second = $this->quoteIdent($this->dbPrefix  . $join['on'][$i][1]);
+                        $second = $this->quoteIdent($this->dbPrefix.$join['on'][$i][1]);
                     } else {
                         $second = '?';
                         $joinVals[] = $join['on'][$i][1];
                     }
-                    $jon[] = $first . ' ' . $join['operator'][$i] . ' ' . $second;
+                    $jon[] = $first.' '.$join['operator'][$i].' '.$second;
                 }
-                $j[] = PHP_EOL . $jtype . ' ' . $this->dbPrefix  . $join['table'] . ' ON ' . implode(' AND ', $jon);
+                $j[] = PHP_EOL.$jtype.' '.$this->dbPrefix.$join['table'].' ON '.implode(' AND ', $jon);
             }
         }
         [$whereSql, $whereVals] = $this->buildWhereSql($where);
@@ -781,9 +796,9 @@ class DBConnector extends Singleton
         $o = [];
         foreach ($sort as $k => $v) {
             if (str_contains($k, '.')) {
-                $o[] = $this->quoteIdent($this->dbPrefix . $k) . ' ' . ($v ? 'ASC' : 'DESC');
+                $o[] = $this->quoteIdent($this->dbPrefix.$k).' '.($v ? 'ASC' : 'DESC');
             } else {
-                $o[] = $this->quoteIdent($k) . ' ' . ($v ? 'ASC' : 'DESC');
+                $o[] = $this->quoteIdent($k).' '.($v ? 'ASC' : 'DESC');
             }
         }
 
@@ -791,7 +806,7 @@ class DBConnector extends Singleton
         foreach ($groupBy as $item) {
             if (in_array($item, $this->validFields, true)) {
                 if (str_contains($item, '.')) {
-                    $g[] = $this->quoteIdent($this->dbPrefix  . $item);
+                    $g[] = $this->quoteIdent($this->dbPrefix.$item);
                 } else {
                     $g[] = $this->quoteIdent($item);
                 }
@@ -802,28 +817,28 @@ class DBConnector extends Singleton
         $vals = array_merge($joinVals, $whereVals);
 
         foreach ($tables as $key => $table) {
-            $tables[$key] = $this->dbPrefix  . $table;
+            $tables[$key] = $this->dbPrefix.$table;
         }
 
-        $sql = PHP_EOL . 'SELECT ' . implode(',' . PHP_EOL, $cols) . PHP_EOL . 'FROM ' . implode(
-                ',' . PHP_EOL,
-                $tables
-            );
+        $sql = PHP_EOL.'SELECT '.implode(','.PHP_EOL, $cols).PHP_EOL.'FROM '.implode(
+            ','.PHP_EOL,
+            $tables
+        );
         if (count($j) > 0) {
-            $sql .= ' ' . implode(' ', $j) . ' ';
+            $sql .= ' '.implode(' ', $j).' ';
         }
 
         $sql .= $whereSql;
 
         if (count($groupBy) > 0) {
-            $sql .= PHP_EOL . 'GROUP BY ' . implode(',', $g);
+            $sql .= PHP_EOL.'GROUP BY '.implode(',', $g);
         }
         if (count($o) > 0) {
-            $sql .= PHP_EOL . 'ORDER BY ' . implode(', ', $o);
+            $sql .= PHP_EOL.'ORDER BY '.implode(', ', $o);
         }
 
         if ($limit !== 0) {
-            $sql .= PHP_EOL . 'LIMIT ' . $limit;
+            $sql .= PHP_EOL.'LIMIT '.$limit;
         }
 
         //HTMLPageRenderer::registerProfilingBreakpoint($sql);
@@ -834,7 +849,7 @@ class DBConnector extends Singleton
         }
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($vals);
-        if (!$ret) {
+        if (! $ret) {
             $errormsg = ['error' => $query->errorInfo(), 'sql' => $sql];
             if (DEV) {
                 $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
@@ -880,7 +895,7 @@ class DBConnector extends Singleton
         }
         foreach ($where as $whereGroup) {
             foreach ($whereGroup as $field => $value) {
-                if (!in_array($field, $this->validFields, true)) {
+                if (! in_array($field, $this->validFields, true)) {
                     throw new LegacyDieException(500, "Unkown column $field in WHERE");
                 }
             }
@@ -908,10 +923,10 @@ class DBConnector extends Singleton
             $wg = [];
             foreach ($whereGroup as $k => $v) {
                 if (str_contains($k, '.')) {
-                    $k = $this->dbPrefix  . $k;
+                    $k = $this->dbPrefix.$k;
                 }
                 if (is_array($v)) {
-                    if (!in_array(strtolower($v[0]), $validWhereOperators)) {
+                    if (! in_array(strtolower($v[0]), $validWhereOperators)) {
                         throw new LegacyDieException(500, "Unknown where operator $v[0]");
                     }
                     if (is_array($v[1])) {
@@ -919,27 +934,27 @@ class DBConnector extends Singleton
                             case 'not in':
                             case 'in':
                                 $tmp = implode(',', array_fill(0, count($v[1]), '?'));
-                                $wg[] = $this->quoteIdent($k) . " $v[0] (" . $tmp . ')';
+                                $wg[] = $this->quoteIdent($k)." $v[0] (".$tmp.')';
                                 break;
                             case 'between':
-                                $wg[] = $this->quoteIdent($k) . " $v[0] ? AND ?";
+                                $wg[] = $this->quoteIdent($k)." $v[0] ? AND ?";
                                 if (count($v[1]) !== 2) {
-                                    throw new LegacyDieException(500, 'To many values for ' . $v[0]);
+                                    throw new LegacyDieException(500, 'To many values for '.$v[0]);
                                 }
                                 break;
                             default:
-                                throw new LegacyDieException(500, 'unknown identifier ' . $v[0]);
+                                throw new LegacyDieException(500, 'unknown identifier '.$v[0]);
                         }
                         $vals = array_merge($vals, $v[1]);
                     } elseif ((strtolower($v[0]) === 'is' || strtolower($v[0]) === 'is not')
                         && (is_null($v[1]) || strtolower($v[1]) === 'null')) {
-                        $wg[] = $this->quoteIdent($k) . ' ' . $v[0] . ' null';
+                        $wg[] = $this->quoteIdent($k).' '.$v[0].' null';
                     } else {
-                        $wg[] = $this->quoteIdent($k) . ' ' . $v[0] . ' ?';
+                        $wg[] = $this->quoteIdent($k).' '.$v[0].' ?';
                         $vals[] = $v[1];
                     }
                 } else {
-                    $wg[] = $this->quoteIdent($k) . ' = ?';
+                    $wg[] = $this->quoteIdent($k).' = ?';
                     $vals[] = $v;
                 }
             }
@@ -949,7 +964,7 @@ class DBConnector extends Singleton
         }
 
         if (count($w) > 0) {
-            $whereSql = PHP_EOL . 'WHERE (' . implode(') OR (', $w) . ')';
+            $whereSql = PHP_EOL.'WHERE ('.implode(') OR (', $w).')';
         } else {
             $whereSql = ' ';
         }
@@ -964,6 +979,7 @@ class DBConnector extends Singleton
             foreach ($field as $item) {
                 $ret[] = $this->quoteIdent($item, $aggregateConst);
             }
+
             return $ret;
         }
         switch ($aggregateConst) {
@@ -992,33 +1008,33 @@ class DBConnector extends Singleton
                 $aggregateSuf = '';
                 break;
         }
-        $ret = '`' . str_replace('`', '``', $field) . '`';
+        $ret = '`'.str_replace('`', '``', $field).'`';
         $ret = str_replace(['.', '`*`'], ['`.`', '*'], $ret);
-        return $aggregatePre . $ret . $aggregateSuf;
+
+        return $aggregatePre.$ret.$aggregateSuf;
     }
 
     /**
-     * @param $table    string  table in db
-     * @param $fields   array   all fields which should be filled
-     *
+     * @param  $table  string  table in db
+     * @param  $fields  array   all fields which should be filled
      * @return string last inserted id
      */
     public function dbInsert(string $table, array $fields): string
     {
-        if (!isset($this->scheme[$table])) {
+        if (! isset($this->scheme[$table])) {
             throw new LegacyDieException(500, "Unkown table $table");
         }
         //if (isset($fields["id"])) unset($fields["id"]);
 
         $fields = array_intersect_key($fields, $this->scheme[$table]);
         $p = array_fill(0, count($fields), '?');
-        $sql = 'INSERT ' . $this->dbPrefix  . "$table (" . implode(
-                ',',
-                array_map(
-                    [$this, 'quoteIdent'],
-                    array_keys($fields)
-                )
-            ) . ') VALUES (' . implode(',', $p) . ')';
+        $sql = 'INSERT '.$this->dbPrefix."$table (".implode(
+            ',',
+            array_map(
+                [$this, 'quoteIdent'],
+                array_keys($fields)
+            )
+        ).') VALUES ('.implode(',', $p).')';
 
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute(array_values($fields));
@@ -1029,25 +1045,26 @@ class DBConnector extends Singleton
             }
             throw new LegacyDieException(500, print_r($info, true));
         }
+
         return $this->pdo->lastInsertId();
     }
 
     /**
-     * @param array $fieldSchema array values equal keys of fields in multiFields, non valid entries will be removed
-     * @param mixed ...$multiFields multiple rows of $fields @see DBConnector::dbInsert()
+     * @param  array  $fieldSchema  array values equal keys of fields in multiFields, non valid entries will be removed
+     * @param  mixed  ...$multiFields  multiple rows of $fields @see DBConnector::dbInsert()
      * @return string last inserted id (from pdo)
      */
     public function dbInsertMultiple(string $table, array $fieldSchema, array ...$multiFields): string
     {
-        if (!isset($this->scheme[$table])) {
+        if (! isset($this->scheme[$table])) {
             throw new LegacyDieException(500, "Unknown table $table");
         }
         $fieldSchema = array_flip(array_intersect_key(array_flip($fieldSchema), $this->scheme[$table]));
 
-        $sql = 'INSERT ' . $this->dbPrefix  . "$table (" . implode(
-                ',',
-                $this->quoteIdent($fieldSchema)
-            ) . ') VALUES ';
+        $sql = 'INSERT '.$this->dbPrefix."$table (".implode(
+            ',',
+            $this->quoteIdent($fieldSchema)
+        ).') VALUES ';
         $values = [];
         foreach ($multiFields as $fields) {
             $fields = array_intersect_key($fields, array_flip($fieldSchema));
@@ -1060,9 +1077,9 @@ class DBConnector extends Singleton
             $values[] = array_values($fields);
         }
 
-        $placeholderSingle = '(' . implode(',', array_fill(0, count($fieldSchema), '?')) . ')';
+        $placeholderSingle = '('.implode(',', array_fill(0, count($fieldSchema), '?')).')';
         $placeholder = array_fill(0, count($values), $placeholderSingle);
-        $sql .= implode(',' . PHP_EOL, $placeholder);
+        $sql .= implode(','.PHP_EOL, $placeholder);
 
         //TODO: php 7.4: [] can be removed, array merge accepts also no arguments there
         $values = array_merge([], ...$values);
@@ -1076,13 +1093,14 @@ class DBConnector extends Singleton
             }
             throw new LegacyDieException(500, 'Ein Datenbank Fehler ist aufgetreten', $info);
         }
+
         return $this->pdo->lastInsertId();
     }
 
     public function logAppend($logId, $key, $value): void
     {
         $query = $this->pdo->prepare(
-            'INSERT INTO ' . $this->dbPrefix  . 'log_property (log_id, name, value) VALUES (?, ?, ?)'
+            'INSERT INTO '.$this->dbPrefix.'log_property (log_id, name, value) VALUES (?, ?, ?)'
         );
         if (is_array($value)) {
             $value = print_r($value, true);
@@ -1093,6 +1111,7 @@ class DBConnector extends Singleton
     public function dbBegin(): bool
     {
         DB::beginTransaction();
+
         return true;
     }
 
@@ -1101,7 +1120,7 @@ class DBConnector extends Singleton
         try {
             DB::commit();
             $success = true;
-        }catch (\Throwable $exception){
+        } catch (\Throwable $exception) {
             $success = false;
             DB::rollBack();
         }
@@ -1114,27 +1133,29 @@ class DBConnector extends Singleton
         try {
             DB::commit();
             $success = true;
-        }catch (\Throwable $exception){
+        } catch (\Throwable $exception) {
             $success = false;
         }
+
         return $success;
     }
 
     public function dbRollBack(): bool
     {
         DB::rollBack();
+
         return true;
     }
 
     /**
-     * @param $table  string tablename
-     * @param $filter array where clause
-     * @param $fields array new values
+     * @param  $table  string tablename
+     * @param  $filter  array where clause
+     * @param  $fields  array new values
      * @return int amount of changed rows
      */
     public function dbUpdate(string $table, array $filter, array $fields, bool $debugDump = false): int
     {
-        if (!isset($this->scheme[$table])) {
+        if (! isset($this->scheme[$table])) {
             throw new LegacyDieException(500, "Unkown table $table");
         }
 
@@ -1153,34 +1174,35 @@ class DBConnector extends Singleton
         }
         $u = [];
         foreach ($fields as $k => $v) {
-            $u[] = $this->quoteIdent($k) . ' = ?';
+            $u[] = $this->quoteIdent($k).' = ?';
         }
 
         [$whereSql, $val] = $this->buildWhereSql($filter);
 
-        $sql = 'UPDATE ' . $this->dbPrefix  . "$table SET " . implode(', ', $u) . $whereSql;
+        $sql = 'UPDATE '.$this->dbPrefix."$table SET ".implode(', ', $u).$whereSql;
         //print_r($sql);
         $query = $this->pdo->prepare($sql);
         $values = array_merge(array_values($fields), $val);
 
         $ret = $query->execute($values);
-        if($debugDump){
+        if ($debugDump) {
             dump($sql, $values);
         }
         if ($ret === false) {
             throw new LegacyDieException(500, "DB Update in $table failed", $query->errorInfo());
         }
+
         return $query->rowCount();
     }
 
     /**
-     * @param $table string table name
-     * @param $filter array
+     * @param  $table  string table name
+     * @param  $filter  array
      * @return int amount of deleted rows, otherwise handles Error
      */
     public function dbDelete(string $table, array $filter): int
     {
-        if (!isset($this->scheme[$table])) {
+        if (! isset($this->scheme[$table])) {
             throw new LegacyDieException(
                 500,
                 'Ein Datenbankfehler ist aufgetreten',
@@ -1190,29 +1212,26 @@ class DBConnector extends Singleton
 
         [$whereSql, $values] = $this->buildWhereSql($filter);
 
-        $sql = 'DELETE FROM ' . $this->dbPrefix  . $table . $whereSql;
+        $sql = 'DELETE FROM '.$this->dbPrefix.$table.$whereSql;
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($values);
         if ($ret === false) {
             throw new LegacyDieException(
                 500,
                 'Ein Datenbank Fehler ist aufgetreten',
-                "Deletion of table $table not possible:" . PHP_EOL . print_r($query->errorInfo(), true) . PHP_EOL . $sql . print_r($values, true)
+                "Deletion of table $table not possible:".PHP_EOL.print_r($query->errorInfo(), true).PHP_EOL.$sql.print_r($values, true)
             );
         }
 
         return $query->rowCount();
     }
 
-    /**
-     * @param $id
-     */
     public function dbgetHHP($id): array
     {
         $sql = '
             SELECT t.hhpgruppen_id,t.id,g.type,g.gruppen_name,t.titel_nr,t.titel_name,t.value,g.type
-            FROM ' . $this->dbPrefix  . 'haushaltstitel AS t
-            INNER JOIN ' . $this->dbPrefix  . 'haushaltsgruppen AS g ON t.hhpgruppen_id = g.id
+            FROM '.$this->dbPrefix.'haushaltstitel AS t
+            INNER JOIN '.$this->dbPrefix.'haushaltsgruppen AS g ON t.hhpgruppen_id = g.id
             WHERE `hhp_id` = ?
             ORDER BY `type` ASC,`g`.`id` ASC,`titel_nr` ASC';
         $query = $this->pdo->prepare($sql);
@@ -1230,8 +1249,8 @@ class DBConnector extends Singleton
         }
         $sql = '
             SELECT b.titel_id, b.value, b.canceled
-            FROM ' . $this->dbPrefix  . 'booking AS b
-            WHERE b.titel_id IN (' . implode(',', array_fill(0, count($titelIdsToGroupId), '?')) . ')';
+            FROM '.$this->dbPrefix.'booking AS b
+            WHERE b.titel_id IN ('.implode(',', array_fill(0, count($titelIdsToGroupId), '?')).')';
         $query = $this->pdo->prepare($sql);
         $query->execute(array_keys($titelIdsToGroupId)) or throw new LegacyDieException(500, print_r($query->errorInfo(), true));
         while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
@@ -1258,6 +1277,7 @@ class DBConnector extends Singleton
                 $groups[$row['group_id']][$row['titel_id']]['_saved'] = $value;
             }
         }
+
         return $groups;
     }
 
@@ -1374,6 +1394,7 @@ class DBConnector extends Singleton
             }
             $moneyByTitel[$key]['value'] = $value;
         }
+
         //split again (close,open)
         return [array_slice($moneyByTitel, 0, $counter), array_slice($moneyByTitel, $counter)];
     }
@@ -1382,18 +1403,20 @@ class DBConnector extends Singleton
     {
         $r = [];
         foreach ($fields as $key => $val) {
-            $r[] = $this->quoteIdent($key) . " $val";
+            $r[] = $this->quoteIdent($key)." $val";
         }
-        return implode(',' . PHP_EOL, $r);
+
+        return implode(','.PHP_EOL, $r);
     }
 
     public function hasTableColumns(string $tableName, string ...$columns): bool
     {
         foreach ($columns as $column) {
-            if (!isset($this->scheme[$tableName][$column])) {
+            if (! isset($this->scheme[$tableName][$column])) {
                 return false;
             }
         }
+
         return true;
     }
 }

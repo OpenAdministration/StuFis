@@ -20,7 +20,7 @@ class LegacySeeder extends Seeder
                 'gruppen_name' => 'Testgruppe Einnahmen',
                 'hhp_id' => 1,
                 'type' => 0,
-            ],[
+            ], [
                 'id' => 2,
                 'gruppen_name' => 'Testgruppe Einnahmen 2',
                 'hhp_id' => 1,
@@ -43,42 +43,42 @@ class LegacySeeder extends Seeder
             [
                 'titel_name' => 'Einnahme 1',
                 'hhpgruppen_id' => 1,
-                'titel_nr' => "E1.1",
+                'titel_nr' => 'E1.1',
                 'value' => 1000,
             ], [
                 'titel_name' => 'Einnahme 2',
                 'hhpgruppen_id' => 1,
-                'titel_nr' => "E1.2",
+                'titel_nr' => 'E1.2',
                 'value' => 2000,
-            ],[
+            ], [
                 'titel_name' => 'Einnahme 3',
                 'hhpgruppen_id' => 2,
-                'titel_nr' => "E2.1",
+                'titel_nr' => 'E2.1',
                 'value' => 3000,
             ], [
                 'titel_name' => 'Einnahme 4',
                 'hhpgruppen_id' => 2,
-                'titel_nr' => "E2.2",
+                'titel_nr' => 'E2.2',
                 'value' => 4000,
             ], [
                 'titel_name' => 'Ausgabe 1',
                 'hhpgruppen_id' => 3,
-                'titel_nr' => "A1.1",
+                'titel_nr' => 'A1.1',
                 'value' => 10000,
             ], [
                 'titel_name' => 'Ausgabe 2',
                 'hhpgruppen_id' => 3,
-                'titel_nr' => "A1.2",
+                'titel_nr' => 'A1.2',
                 'value' => 20000,
             ], [
                 'titel_name' => 'Ausgabe 3',
                 'hhpgruppen_id' => 4,
-                'titel_nr' => "A2.1",
+                'titel_nr' => 'A2.1',
                 'value' => 10000,
             ], [
                 'titel_name' => 'Ausgabe 4',
                 'hhpgruppen_id' => 4,
-                'titel_nr' => "A2.2",
+                'titel_nr' => 'A2.2',
                 'value' => 20000,
             ],
         ]);

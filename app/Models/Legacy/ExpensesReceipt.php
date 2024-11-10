@@ -2,23 +2,23 @@
 
 namespace App\Models\Legacy;
 
-use App\Models\BelegPosten;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * App\Models\Legacy\ExpensesReceipt
  *
- * @property integer $id
- * @property integer $auslagen_id
+ * @property int $id
+ * @property int $auslagen_id
  * @property string $short
  * @property string $created_on
  * @property string $datum
  * @property string $beschreibung
- * @property integer $file_id
+ * @property int $file_id
  * @property ExpensesReceiptPost[] $posts
  * @property Expenses $auslagen
  * @property-read \App\Models\Legacy\Expenses|null $expenses
  * @property-read int|null $posts_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt query()
@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt whereFileId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt whereShort($value)
+ *
  * @mixin \Eloquent
  */
 class ExpensesReceipt extends Model

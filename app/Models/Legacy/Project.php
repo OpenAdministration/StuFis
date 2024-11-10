@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * App\Models\Legacy\Project
  *
- * @property integer $id
- * @property integer $creator_id
+ * @property int $id
+ * @property int $creator_id
  * @property string $createdat
  * @property string $lastupdated
- * @property integer $version
+ * @property int $version
  * @property string $state
- * @property integer $stateCreator_id
+ * @property int $stateCreator_id
  * @property string $name
  * @property string $responsible
  * @property string $org
@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $expenses_count
  * @property-read int|null $posts_count
  * @property-read User $stateCreator
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|Project newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Project newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Project query()
@@ -52,6 +53,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Project whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Project whereStateCreatorId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Project whereVersion($value)
+ *
  * @mixin \Eloquent
  */
 class Project extends Model
