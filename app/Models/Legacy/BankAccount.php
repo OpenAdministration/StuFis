@@ -22,6 +22,7 @@ use Illuminate\Support\Collection;
  * @property BankTransaction[] $kontos
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $kontoTransactions
  * @property-read int|null $konto_transactions_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount query()

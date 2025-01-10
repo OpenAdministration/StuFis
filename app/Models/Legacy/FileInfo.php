@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $encoding
  * @property FileData $filedatum
  * @property-read \App\Models\Legacy\FileData|null $fileData
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo query()
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereLink($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereMime($value)
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereSize($value)
+ *
  * @mixin \Eloquent
  */
 class FileInfo extends Model

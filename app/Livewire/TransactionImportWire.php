@@ -28,6 +28,7 @@ class TransactionImportWire extends Component
 
     public $csvFileEncoding;
 
+    #[Url]
     public $account_id;
 
     public $latestTransaction;
@@ -157,7 +158,7 @@ class TransactionImportWire extends Component
                         $g = $dateTest->groups();
                         $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
                             .'-'.Str::padLeft($g[2], 2, '0')
-                            .'-'.Str::padLeft($g[1], 2, '0');
+                            .'-'.Str::padLeft($g[1], 2,'0');
                     }
                 }
 

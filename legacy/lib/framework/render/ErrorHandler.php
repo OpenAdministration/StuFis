@@ -5,6 +5,7 @@ namespace framework\render;
 use Exception;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionClass;
+
 use function Laravel\Prompts\error;
 
 class ErrorHandler extends Renderer

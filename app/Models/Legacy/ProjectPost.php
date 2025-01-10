@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $bemerkung
  * @property Project $projekte
  * @property-read \App\Models\Legacy\Project $project
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost query()
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereProjektId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost whereTitelId($value)
+ *
  * @mixin \Eloquent
  */
 class ProjectPost extends Model

@@ -383,7 +383,7 @@ return [
             ],
             'mittel' => [
                 'label' => 'Antrag auf Mittelfreigabe',
-                'hint-text' => 'Interne Förderrichtlinie §41, Abs (7) und (8): StuRa bis zu 100 EUR & FSRe bis zu 50 €',
+                'hint-text' => 'Interne Förderrichtlinie §41 (7), (8). sowie §42: StuRa bis zu 100 EUR & FSRe bis zu 75 EUR',
             ],
             'vertrag' => [
                 'label' => 'Verträge',
@@ -430,4 +430,81 @@ return [
         'projekt-form' => [
         ],
     ],
+    'fhe' => [
+        'gremien' => [
+            'Zentral' => [
+                'Studierendenrat (StuRa)',
+                'Referat Finanzen',
+            ],
+            'Fachschaftsräte' => [
+                'FSR Angewandte Informatik',
+                'FSR Landschaftsarchitektur, Gartenbau und Forst',
+                'FSR Angewandte Sozialwissenschaften',
+                'FSR Stadt- & Raumplanung',
+                'FSR Wirtschaftswissenschaften',
+                'FSR Verkehr- & Transportwesen',
+                'FSR Bauingeneurwesen',
+                'FSR Architektur',
+                'FSR Gebäude- & Energietechnik',
+            ],
+            'Hochschulgruppen' => [
+                'AG Nachhaltigkeit',
+                'AreYouOkay Stud Pro FH Erfurt (Awareness)',
+                'Betonkanu',
+                'Café Aquarium',
+                'Fahrradwerkstatt',
+                'Film-AG',
+                'Foodsharing',
+                'HipoA',
+                'Lautstark gegen Faschismus',
+                'Hochschulliga',
+                'NagNag',
+                'Neurospektrum',
+                'Queerfurt',
+                'AG Spieleabend',
+                'Theater AG',
+                'Werkraum',
+                'DigIT',
+                'Arbeitsgemeinschaft naturgemäße Waldwirtschaft',
+                'Liberale Hochschulgruppe',
+                'Studierende für Christus',
+                'Evangelische Studierenden Gemeinde',
+                'Studierengärten',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => 'https://open-administration.de/index.php/kontakt-und-impressum/',
+        'datenschutz-url' => 'https://open-administration.de/index.php/datenschutz/',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'fh-erfurt.de',
+        'finanzen-mail' => 'finanzen.stura@fh-erfurt.de',
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Beschluss des Studierendenrates gem. Finanzordnung §12 (1)',
+            ],
+            'buero' => [
+                'label' => 'Büromaterial',
+                'hint-text' => '150€ Büromaterial gem. Finanzordnung §12 (3)',
+            ],
+            'umlauf' => [
+                'label' => 'Umlaufbeschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Umlaufbeschluss gem. Geschäftsordnung §14 (3)',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+                'placeholder' => '',
+            ],
+        ],
+        'projekt-form' => [
+        ],
+    ],
+
 ];

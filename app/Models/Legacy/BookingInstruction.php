@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $beleg
  * @property int $by_user
  * @property int $done
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction query()
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlungType($value)
  * @property string|null $instruct_date
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereInstructDate($value)
+ *
  * @mixin \Eloquent
  */
 class BookingInstruction extends Model

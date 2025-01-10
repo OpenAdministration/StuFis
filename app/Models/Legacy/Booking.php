@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property BudgetItem $haushaltstitel
  * @property User $user
  * @property-read BudgetItem $budgetItem
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
@@ -39,6 +40,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungType($value)
+ *
  * @mixin \Eloquent
  */
 class Booking extends Model

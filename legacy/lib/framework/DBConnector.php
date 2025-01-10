@@ -1384,10 +1384,10 @@ class DBConnector extends Singleton
         foreach ($moneyByTitel as $key => $row) {
             $value = 0;
             if ((int) $row['einnahmen'] !== 0) {
-                $value = (float) $row['einnahmen'];
+                $value += (float) $row['einnahmen'];
             }
             if ((int) $row['ausgaben'] !== 0) {
-                $value = -(float) $row['ausgaben'];
+                $value -= (float) $row['ausgaben'];
             }
             if ((int) $row['titel_type'] !== 0) {
                 $value = -$value;

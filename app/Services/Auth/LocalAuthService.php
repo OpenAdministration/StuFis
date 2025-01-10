@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Request;
 
 class LocalAuthService extends AuthService
 {
+    private string $username;
+
+    public function __construct()
+    {
+        $this->username = config('local.auth.username');
+    }
+
     public function prepareLogin(): Response|RedirectResponse
     {
         return redirect()->route('login.callback');
