@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $mime_type
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static ProjectAttachmentFactory factory($count = null, $state = [])
  * @method static Builder|ProjectAttachment newModelQuery()
  * @method static Builder|ProjectAttachment newQuery()
@@ -31,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|ProjectAttachment wherePath($value)
  * @method static Builder|ProjectAttachment whereProjectId($value)
  * @method static Builder|ProjectAttachment whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class ProjectAttachment extends Model

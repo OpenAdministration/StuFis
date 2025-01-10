@@ -9,7 +9,7 @@ class NewOrganisation extends Component
 {
     public ActorForm $orgForm;
 
-    public function mount() : void
+    public function mount(): void
     {
         $this->orgForm->is_organisation = true;
     }
@@ -19,7 +19,7 @@ class NewOrganisation extends Component
         return view('livewire.create-antrag.new-organisation');
     }
 
-    public function create() : void
+    public function create(): void
     {
         $this->orgForm->create();
     }

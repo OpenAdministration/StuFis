@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $actor_id
  * @property string $value
+ *
  * @method static ActorPhoneFactory factory($count = null, $state = [])
  * @method static Builder|ActorPhone newModelQuery()
  * @method static Builder|ActorPhone newQuery()
@@ -22,11 +23,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|ActorPhone whereActorId($value)
  * @method static Builder|ActorPhone whereId($value)
  * @method static Builder|ActorPhone whereValue($value)
+ *
  * @property string|null $created_at
  * @property string|null $updated_at
  * @property-read Actor|null $actor
+ *
  * @method static Builder|ActorPhone whereCreatedAt($value)
  * @method static Builder|ActorPhone whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class ActorPhone extends Model
@@ -35,7 +39,7 @@ class ActorPhone extends Model
 
     public $timestamps = false;
 
-    public function actor() : BelongsTo
+    public function actor(): BelongsTo
     {
         return $this->belongsTo(Actor::class);
     }

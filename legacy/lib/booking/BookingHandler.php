@@ -224,8 +224,8 @@ class BookingHandler extends Renderer
                 'fullname' => 'user.name',
                 'kostenstelle',
                 'booking.comment',
-                //'vorgang_id', extern
-                //'extern_id',
+                // 'vorgang_id', extern
+                // 'extern_id',
             ],
             ['hhp_id' => $hhp_id],
             [

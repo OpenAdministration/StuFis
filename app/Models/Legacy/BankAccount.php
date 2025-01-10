@@ -33,12 +33,15 @@ use Illuminate\Support\Collection;
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereShort($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncUntil($value)
+ *
  * @property int $manually_enterable
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $bankTransactions
  * @property-read int|null $bank_transactions_count
+ *
  * @method static \Database\Factories\Legacy\BankAccountFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereCsvImportSettings($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereManuallyEnterable($value)
+ *
  * @mixin \Eloquent
  */
 class BankAccount extends Model

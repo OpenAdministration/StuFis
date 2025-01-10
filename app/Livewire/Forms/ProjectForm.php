@@ -8,13 +8,16 @@ use Livewire\Form;
 class ProjectForm extends Form
 {
     public $name = '';
+
     public $start_date = '';
+
     public $end_date = '';
+
     public $description = '';
 
     public $student_body_duties = [];
 
-    public function rules() : array
+    public function rules(): array
     {
         return [
             'name' => 'required|min:3',

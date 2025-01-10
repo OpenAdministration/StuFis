@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $uuid
  * @property int $has_details
  * @property int $active
+ *
  * @method static LegalBasisFactory factory($count = null, $state = [])
  * @method static Builder|LegalBasis newModelQuery()
  * @method static Builder|LegalBasis newQuery()
@@ -22,17 +23,21 @@ use Illuminate\Support\Carbon;
  * @method static Builder|LegalBasis whereActive($value)
  * @method static Builder|LegalBasis whereHasDetails($value)
  * @method static Builder|LegalBasis whereUuid($value)
+ *
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static Builder|LegalBasis whereCreatedAt($value)
  * @method static Builder|LegalBasis whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class LegalBasis extends Model
 {
     use HasFactory;
 
-    public function applications() : BelongsToMany {
+    public function applications(): BelongsToMany
+    {
         return $this->belongsToMany(Application::class);
     }
 }

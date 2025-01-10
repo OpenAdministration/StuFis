@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FRAMEWORK JsonHandler
  *
@@ -263,26 +264,26 @@ class RestHandler extends EscFunc
             }
         } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
         InvalidDataException|PDOException|IllegalTransitionException $exception) {
-                    $ret = false;
-                    $msgs[] = 'Ein Fehler ist aufgetreten';
-                    $msgs[] = $exception->getMessage();
-                } catch (IllegalStateException $exception) {
-                    $ret = false;
-                    $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
-                    $msgs[] = $exception->getMessage();
-                } finally {
-                    if ($ret) {
-                        $dbret = DBConnector::getInstance()->dbCommit();
-                    }
-                    if ($ret === false || $dbret === false) {
-                        DBConnector::getInstance()->dbRollBack();
-                        $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
-                    } else {
-                        $msgs[] = 'Daten erfolgreich gespeichert!';
-                        $target = URIBASE.'projekt/'.$projektHandler->getID();
-                    }
+            $ret = false;
+            $msgs[] = 'Ein Fehler ist aufgetreten';
+            $msgs[] = $exception->getMessage();
+        } catch (IllegalStateException $exception) {
+            $ret = false;
+            $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
+            $msgs[] = $exception->getMessage();
+        } finally {
+            if ($ret) {
+                $dbret = DBConnector::getInstance()->dbCommit();
+            }
+            if ($ret === false || $dbret === false) {
+                DBConnector::getInstance()->dbRollBack();
+                $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
+            } else {
+                $msgs[] = 'Daten erfolgreich gespeichert!';
+                $target = URIBASE.'projekt/'.$projektHandler->getID();
+            }
 
-                }
+        }
 
         $json = [
             'success' => ($ret !== false),

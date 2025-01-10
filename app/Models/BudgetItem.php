@@ -12,10 +12,12 @@ use Illuminate\Database\Eloquent\Model;
  * App\Models\BudgetItem
  *
  * @property-read BudgetPlan|null $budgetPlan
+ *
  * @method static BudgetItemFactory factory($count = null, $state = [])
  * @method static Builder|BudgetItem newModelQuery()
  * @method static Builder|BudgetItem newQuery()
  * @method static Builder|BudgetItem query()
+ *
  * @mixin Eloquent
  */
 class BudgetItem extends Model

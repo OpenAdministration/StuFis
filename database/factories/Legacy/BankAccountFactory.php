@@ -14,10 +14,10 @@ class BankAccountFactory extends Factory
         return [
             'name' => fake()->name(),
             'short' => fake()->randomLetter(),
-            //'sync_from' => fake()->date(),
-            //'sync_until' => fake()->date(),
+            // 'sync_from' => fake()->date(),
+            // 'sync_until' => fake()->date(),
             'iban' => fake()->iban('de'),
-            //'last_sync' => fake()->date(),
+            // 'last_sync' => fake()->date(),
         ];
     }
 }

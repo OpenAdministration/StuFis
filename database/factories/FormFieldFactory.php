@@ -23,7 +23,7 @@ class FormFieldFactory extends Factory
             'label' => fake()->unique()->word(),
             'type' => fake()->randomElement(['date', 'textarea', 'number']),
             'default_value' => '',
-            'position' => fake()->unique()->numberBetween(1,100),
+            'position' => fake()->unique()->numberBetween(1, 100),
             'view_key' => '',
         ];
     }

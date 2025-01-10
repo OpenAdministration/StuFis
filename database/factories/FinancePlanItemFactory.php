@@ -22,7 +22,7 @@ class FinancePlanItemFactory extends Factory
             'topic_id' => FinancePlanTopic::factory(),
             'name' => fake()->name(),
             'value' => fake()->randomFloat(2, 1, 100),
-            'amount' => fake()->numberBetween(1,10),
+            'amount' => fake()->numberBetween(1, 10),
             'total' => fake()->randomFloat(2, 10, 1000),
             'description' => fake()->text(),
         ];

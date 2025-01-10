@@ -13,7 +13,9 @@ class Create extends Component
 
     #[Url(as: 'year')]
     public $fiscal_year_id;
+
     public $resolution_date;
+
     public $approval_date;
 
     public $state;
@@ -23,6 +25,7 @@ class Create extends Component
     public function render()
     {
         $fiscal_years = FiscalYear::all();
+
         return view('livewire.budgetplan.create', ['fiscal_years' => $fiscal_years]);
     }
 }

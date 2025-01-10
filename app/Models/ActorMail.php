@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $actor_id
  * @property string $value
+ *
  * @method static ActorMailFactory factory($count = null, $state = [])
  * @method static Builder|ActorMail newModelQuery()
  * @method static Builder|ActorMail newQuery()
@@ -22,11 +23,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|ActorMail whereActorId($value)
  * @method static Builder|ActorMail whereId($value)
  * @method static Builder|ActorMail whereValue($value)
+ *
  * @property string|null $created_at
  * @property string|null $updated_at
  * @property-read Actor|null $actor
+ *
  * @method static Builder|ActorMail whereCreatedAt($value)
  * @method static Builder|ActorMail whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class ActorMail extends Model
@@ -35,7 +39,7 @@ class ActorMail extends Model
 
     public $timestamps = false;
 
-    public function actor() : BelongsTo
+    public function actor(): BelongsTo
     {
         return $this->belongsTo(Actor::class);
     }

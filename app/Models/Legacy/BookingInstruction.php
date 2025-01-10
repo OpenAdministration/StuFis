@@ -38,7 +38,9 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlung($value)
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlungType($value)
+ *
  * @property string|null $instruct_date
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereInstructDate($value)
  *
  * @mixin \Eloquent

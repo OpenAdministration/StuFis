@@ -25,10 +25,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read int|null $budget_items_count
+ *
  * @method static BudgetPlanFactory factory($count = null, $state = [])
  * @method static Builder|BudgetPlan newModelQuery()
  * @method static Builder|BudgetPlan newQuery()
  * @method static Builder|BudgetPlan query()
+ *
  * @mixin Eloquent
  */
 class BudgetPlan extends Model

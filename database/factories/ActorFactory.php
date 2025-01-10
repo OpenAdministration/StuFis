@@ -28,7 +28,7 @@ class ActorFactory extends Factory
         ];
     }
 
-    public function asOrganisation() : static
+    public function asOrganisation(): static
     {
         return $this->state(function (array $attributes) {
             return [

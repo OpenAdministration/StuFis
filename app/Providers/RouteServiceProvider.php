@@ -35,17 +35,17 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-            if($this->app->isLocal()) {
+            if ($this->app->isLocal()) {
                 Route::middleware('web')
                     ->group(base_path('routes/web-local.php'));
             }
 
-            if($this->app->hasDebugModeEnabled()) {
+            if ($this->app->hasDebugModeEnabled()) {
                 Route::middleware('web')
                     ->group(base_path('routes/web-debug.php'));
             }
 
-            # has to be last because there is a catch-all inside
+            // has to be last because there is a catch-all inside
             Route::middleware('legacy')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/legacy.php'));

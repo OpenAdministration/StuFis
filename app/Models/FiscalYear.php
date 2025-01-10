@@ -26,10 +26,8 @@ class FiscalYear extends Model
         'end_date' => 'date',
     ];
 
-
     public function budgetPlans(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BudgetPlan::class);
     }
-
 }

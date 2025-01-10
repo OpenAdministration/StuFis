@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int $amount
  * @property string $total
  * @property string $description
+ *
  * @method static FinancePlanItemFactory factory($count = null, $state = [])
  * @method static Builder|FinancePlanItem newModelQuery()
  * @method static Builder|FinancePlanItem newQuery()
@@ -31,24 +32,27 @@ use Illuminate\Support\Carbon;
  * @method static Builder|FinancePlanItem whereTopicId($value)
  * @method static Builder|FinancePlanItem whereTotal($value)
  * @method static Builder|FinancePlanItem whereValue($value)
+ *
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Application|null $application
  * @property-read FinancePlanTopic|null $financePlanTopic
+ *
  * @method static Builder|FinancePlanItem whereCreatedAt($value)
  * @method static Builder|FinancePlanItem whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class FinancePlanItem extends Model
 {
     use HasFactory;
 
-    public function application() : BelongsTo
+    public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
     }
 
-    public function financePlanTopic() : BelongsTo
+    public function financePlanTopic(): BelongsTo
     {
         return $this->belongsTo(FinancePlanTopic::class);
     }

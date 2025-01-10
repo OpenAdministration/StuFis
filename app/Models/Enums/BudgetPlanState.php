@@ -2,7 +2,7 @@
 
 namespace App\Models\Enums;
 
-enum BudgetPlanState : string
+enum BudgetPlanState: string
 {
     case FINAL = 'final';
     case DRAFT = 'draft';

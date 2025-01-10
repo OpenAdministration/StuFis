@@ -20,7 +20,7 @@ class ActorMailFactory extends Factory
     {
         return [
             'actor_id' => Actor::factory(),
-            'value' => fake()->email()
+            'value' => fake()->email(),
         ];
     }
 }

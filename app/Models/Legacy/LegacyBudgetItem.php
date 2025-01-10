@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property LegacyBudgetGroup $haushaltsgruppen
  * @property-read int|null $bookings_count
  * @property-read \App\Models\Legacy\LegacyBudgetGroup $budgetGroup
+ *
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem query()
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereTitelName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereTitelNr($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereValue($value)
+ *
  * @mixin \Eloquent
  */
 class LegacyBudgetItem extends Model

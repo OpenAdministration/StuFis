@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property string $constraints
  * @property string $funding_total
  * @property mixed $extra_fields
+ *
  * @method static ApplicationFactory factory($count = null, $state = [])
  * @method static Builder|Application newModelQuery()
  * @method static Builder|Application newQuery()
@@ -43,6 +44,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Application whereState($value)
  * @method static Builder|Application whereUserId($value)
  * @method static Builder|Application whereVersion($value)
+ *
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ApplicationAttachment> $attachments
@@ -52,30 +54,33 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, FinancePlanTopic> $financePlanTopics
  * @property-read int|null $finance_plan_topics_count
  * @property-read Project $project
+ *
  * @method static Builder|Application whereCreatedAt($value)
  * @method static Builder|Application whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class Application extends Model
 {
     use HasFactory;
 
-    public function project() : BelongsTo
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function financePlanTopics() : HasMany
+    public function financePlanTopics(): HasMany
     {
         return $this->hasMany(FinancePlanTopic::class);
     }
 
-    public function financePlanItems() : HasMany
+    public function financePlanItems(): HasMany
     {
         return $this->hasMany(FinancePlanItem::class);
     }
 
-    public function attachments() : HasMany{
+    public function attachments(): HasMany
+    {
         return $this->hasMany(ApplicationAttachment::class);
     }
 }

@@ -16,6 +16,7 @@ class CreateAntrag extends Component
     public int $page = 1;
 
     public ActorForm $userForm;
+
     public ActorForm $organisationForm;
 
     public ProjectForm $projectForm;
@@ -23,7 +24,6 @@ class CreateAntrag extends Component
     public ProjectBudgetForm $projectBudgetForm;
 
     public FundingRequestForm $fundingRequestForm;
-
 
     public function store()
     {
@@ -41,30 +41,31 @@ class CreateAntrag extends Component
     {
 
         // for better code analysis, and better error handling a bit more verbose than needed
-        switch($this->page){
+        switch ($this->page) {
             case 1:
                 $users = Actor::user()->get();
                 $orgs = Actor::organisation()->get();
-                return view("livewire.create-antrag.1", ['users' => $users, 'orgs' => $orgs]);
+
+                return view('livewire.create-antrag.1', ['users' => $users, 'orgs' => $orgs]);
             case 2:
-                return view("livewire.create-antrag.2");
+                return view('livewire.create-antrag.2');
             case 3:
-                return view("livewire.create-antrag.3");
+                return view('livewire.create-antrag.3');
             case 4:
-                return view("livewire.create-antrag.4");
+                return view('livewire.create-antrag.4');
             case 5:
-                return view("livewire.create-antrag.5");
+                return view('livewire.create-antrag.5');
             default:
                 abort(404);
         }
     }
 
-    public function nextPage() : void
+    public function nextPage(): void
     {
         $this->page = min($this->page + 1, 5);
     }
 
-    public function previousPage() : void
+    public function previousPage(): void
     {
         $this->page = max($this->page - 1, 1);
     }

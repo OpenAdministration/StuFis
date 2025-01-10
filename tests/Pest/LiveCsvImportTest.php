@@ -201,13 +201,13 @@ test('csv upload with wrong saldo check (order and start)', function () {
         ->set('csv', $csvFile)
         ->set('mapping.date', 4)
         ->set('mapping.valuta', 5)
-        //->set('mapping.empf_name', 6)
-        //->set('mapping.empf_iban', 7)
-        //->set('mapping.type', 9)
-        //->set('mapping.zweck', 10)
-        //->set('mapping.value', 12)
-        //->set('mapping.saldo', 13)
-        //->call('reverseCsvOrder')
+        // ->set('mapping.empf_name', 6)
+        // ->set('mapping.empf_iban', 7)
+        // ->set('mapping.type', 9)
+        // ->set('mapping.zweck', 10)
+        // ->set('mapping.value', 12)
+        // ->set('mapping.saldo', 13)
+        // ->call('reverseCsvOrder')
         ->assertHasErrors(['mapping.date', 'mapping.valuta']);
 });
 

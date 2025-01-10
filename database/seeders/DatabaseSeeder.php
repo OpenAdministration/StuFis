@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
-        //BudgetPlan::factory(5)->populate()->create();
+        // BudgetPlan::factory(5)->populate()->create();
 
         if (\App::runningUnitTests()) {
             $this->call(DemoSeeder::class);

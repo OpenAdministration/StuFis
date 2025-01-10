@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $default_value
  * @property int $position
  * @property string $view_key
+ *
  * @method static FormFieldFactory factory($count = null, $state = [])
  * @method static Builder|FormField newModelQuery()
  * @method static Builder|FormField newQuery()
@@ -34,34 +35,35 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|FormField wherePosition($value)
  * @method static Builder|FormField whereType($value)
  * @method static Builder|FormField whereViewKey($value)
+ *
  * @property-read FormDefinition|null $definition
  * @property-read Collection<int, FormFieldOption> $options
  * @property-read int|null $options_count
  * @property-read Collection<int, FormFieldValidation> $validations
  * @property-read int|null $validations_count
+ *
  * @mixin Eloquent
  */
 class FormField extends Model
 {
     use HasFactory;
 
-
-
     public function formDefinition(): BelongsTo
     {
         return $this->belongsTo(FormDefinition::class);
     }
 
-    public function options() : HasMany
+    public function options(): HasMany
     {
         return $this->hasMany(FormFieldOption::class);
     }
+
     public function formFieldOptions(): HasMany
     {
         return $this->options();
     }
 
-    public function validations() : HasMany
+    public function validations(): HasMany
     {
         return $this->hasMany(FormFieldValidation::class);
     }

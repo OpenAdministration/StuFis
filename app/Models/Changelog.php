@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property array $previous_data
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static ChangelogFactory factory($count = null, $state = [])
  * @method static Builder|Changelog newModelQuery()
  * @method static Builder|Changelog newQuery()
@@ -30,6 +31,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Changelog whereTypeId($value)
  * @method static Builder|Changelog whereUpdatedAt($value)
  * @method static Builder|Changelog whereUserId($value)
+ *
  * @mixin Eloquent
  */
 class Changelog extends Model

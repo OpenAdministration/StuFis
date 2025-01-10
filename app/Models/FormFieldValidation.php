@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $form_field_id
  * @property string $validation_rule
  * @property string $validation_parameter
+ *
  * @method static FormFieldValidationFactory factory($count = null, $state = [])
  * @method static Builder|FormFieldValidation newModelQuery()
  * @method static Builder|FormFieldValidation newQuery()
@@ -24,7 +25,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|FormFieldValidation whereId($value)
  * @method static Builder|FormFieldValidation whereValidationParameter($value)
  * @method static Builder|FormFieldValidation whereValidationRule($value)
+ *
  * @property-read FormField|null $field
+ *
  * @mixin Eloquent
  */
 class FormFieldValidation extends Model

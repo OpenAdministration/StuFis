@@ -121,17 +121,17 @@ class DemoSeeder extends Seeder
             ->has(ActorMail::factory()->count(2))
             ->has(ActorPhone::factory()->count(2))
             ->has(ActorSocial::factory()->count(3))
-        ->create();
+            ->create();
 
         Actor::factory()->count(2)
             ->has(ActorMail::factory()->count(2))
             ->has(ActorPhone::factory()->count(2))
-        ->create();
+            ->create();
 
         // insert does not take 0 as id
-        //\DB::table('konto_type')->where('short', '=', 'C')->update([
+        // \DB::table('konto_type')->where('short', '=', 'C')->update([
         //    'id' => 0,
-        //]);
+        // ]);
 
     }
 }

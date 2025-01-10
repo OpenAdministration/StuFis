@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $actor_id
  * @property string $provider
  * @property string $url
+ *
  * @method static ActorSocialFactory factory($count = null, $state = [])
  * @method static Builder|ActorSocial newModelQuery()
  * @method static Builder|ActorSocial newQuery()
@@ -24,11 +25,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|ActorSocial whereId($value)
  * @method static Builder|ActorSocial whereProvider($value)
  * @method static Builder|ActorSocial whereUrl($value)
+ *
  * @property string|null $created_at
  * @property string|null $updated_at
  * @property-read Actor|null $actor
+ *
  * @method static Builder|ActorSocial whereCreatedAt($value)
  * @method static Builder|ActorSocial whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class ActorSocial extends Model
@@ -37,7 +41,7 @@ class ActorSocial extends Model
 
     public $timestamps = false;
 
-    public function actor() : BelongsTo
+    public function actor(): BelongsTo
     {
         return $this->belongsTo(Actor::class);
     }

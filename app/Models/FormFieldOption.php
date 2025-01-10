@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $text
  * @property string $subtext
  * @property int $position
+ *
  * @method static FormFieldOptionFactory factory($count = null, $state = [])
  * @method static Builder|FormFieldOption newModelQuery()
  * @method static Builder|FormFieldOption newQuery()
@@ -26,7 +27,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|FormFieldOption wherePosition($value)
  * @method static Builder|FormFieldOption whereSubtext($value)
  * @method static Builder|FormFieldOption whereText($value)
+ *
  * @property-read FormField|null $field
+ *
  * @mixin Eloquent
  */
 class FormFieldOption extends Model

@@ -5,6 +5,7 @@ namespace Tests\Feature\Models;
 use App\Models\Actor;
 use App\Models\ActorMail;
 use App\Models\ActorSocial;
+
 use function Pest\Laravel\assertModelExists;
 
 test('actor factory and relations', function () {

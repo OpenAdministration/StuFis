@@ -84,7 +84,7 @@ class TransactionImportWire extends Component
             'mapping.saldo' => [
                 'int',
                 new MoneyColumnRule($this->data->pluck($this->mapping->get('saldo'))),
-                //new MoneyRule($this->data->pluck($this->mapping->get('value'))),
+                // new MoneyRule($this->data->pluck($this->mapping->get('value'))),
                 new BalanceColumnRule(
                     $this->data->pluck($this->mapping->get('value')),
                     $this->data->pluck($this->mapping->get('saldo')),
@@ -158,7 +158,7 @@ class TransactionImportWire extends Component
                         $g = $dateTest->groups();
                         $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
                             .'-'.Str::padLeft($g[2], 2, '0')
-                            .'-'.Str::padLeft($g[1], 2,'0');
+                            .'-'.Str::padLeft($g[1], 2, '0');
                     }
                 }
 
@@ -180,7 +180,7 @@ class TransactionImportWire extends Component
 
     public function updatedCsv(): void
     {
-        //dump($this->csv->getMimeType());
+        // dump($this->csv->getMimeType());
         $this->validateOnly('csv');
         if (in_array($this->csv->getMimeType(), ['text/csv', 'text/plain'])) {
             $this->parseCSV();
@@ -281,7 +281,7 @@ class TransactionImportWire extends Component
     {
         $type = $this->db_col_types[$db_col_name];
 
-        //if($type === 'decimal') dd([$value, (float) $value,$db_col_name]);
+        // if($type === 'decimal') dd([$value, (float) $value,$db_col_name]);
         return match ($type) {
             'integer' => (int) $value,
             'date' => guessCarbon($value, 'Y-m-d'),

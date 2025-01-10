@@ -20,7 +20,7 @@ class FormFieldValidationFactory extends Factory
         return [
             'form_field_id' => FormField::factory(),
             'validation_rule' => fake()->randomElement(['max', 'min']),
-            'validation_parameter' => fake()->numberBetween(10, 255)
+            'validation_parameter' => fake()->numberBetween(10, 255),
         ];
     }
 }

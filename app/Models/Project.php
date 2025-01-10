@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property mixed $extra_fields
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static ProjectFactory factory($count = null, $state = [])
  * @method static Builder|Project newModelQuery()
  * @method static Builder|Project newQuery()
@@ -40,28 +41,29 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Project whereUpdatedAt($value)
  * @method static Builder|Project whereUserId($value)
  * @method static Builder|Project whereVersion($value)
+ *
  * @mixin Eloquent
  */
 class Project extends Model
 {
     use HasFactory;
 
-    public function applications() : HasMany
+    public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }
 
-    public function attachments() : HasMany
+    public function attachments(): HasMany
     {
         return $this->hasMany(ProjectAttachment::class);
     }
 
-    public function studentBodyDuties() : HasMany
+    public function studentBodyDuties(): HasMany
     {
         return $this->hasMany(StudentBodyDuty::class, 'projects_to_student_body_duties');
     }
 
-    public function formDefinition() : HasOne
+    public function formDefinition(): HasOne
     {
         return $this->hasOne(FormDefinition::class);
     }

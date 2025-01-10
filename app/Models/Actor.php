@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string $website
  * @property string $register_number
  * @property int $vat_deduction
+ *
  * @method static ActorFactory factory($count = null, $state = [])
  * @method static Builder|Actor newModelQuery()
  * @method static Builder|Actor newQuery()
@@ -35,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Actor whereName($value)
  * @method static Builder|Actor whereRegisterNumber($value)
  * @method static Builder|Actor whereWebsite($value)
+ *
  * @property-read Collection<int, ActorMail> $mails
  * @property-read int|null $mails_count
  * @property-read Collection<int, ActorPhone> $phones
@@ -43,8 +45,10 @@ use Illuminate\Support\Carbon;
  * @property-read int|null $socials_count
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static Builder|Actor whereCreatedAt($value)
  * @method static Builder|Actor whereUpdatedAt($value)
+ *
  * @mixin Eloquent
  */
 class Actor extends Model
@@ -61,31 +65,33 @@ class Actor extends Model
         $builder->where('is_organisation', '=', false);
     }
 
-    public function mails(): HasMany {
+    public function mails(): HasMany
+    {
         return $this->hasMany(ActorMail::class);
     }
 
-    public function actorMails() : HasMany
+    public function actorMails(): HasMany
     {
         return $this->mails();
     }
 
-    public function socials() : HasMany {
+    public function socials(): HasMany
+    {
         return $this->hasMany(ActorSocial::class);
     }
 
-    public function actorSocials() : HasMany
+    public function actorSocials(): HasMany
     {
         return $this->socials();
     }
 
-    public function phones() : HasMany {
+    public function phones(): HasMany
+    {
         return $this->hasMany(ActorPhone::class);
     }
 
-    public function actorPhones() : HasMany
+    public function actorPhones(): HasMany
     {
         return $this->phones();
     }
-
 }

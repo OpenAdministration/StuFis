@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 class DateColumnRule implements ValidationRule
 {
     public function __construct(private readonly Collection $column) {}
+
     /**
      * Run the validation rule.
      *

@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $customer_ref
  * @property BankAccount $finanzformularKontoType
  * @property-read \App\Models\Legacy\BankAccount $konto
+ *
  * @method static Builder|BankTransaction newModelQuery()
  * @method static Builder|BankTransaction newQuery()
  * @method static Builder|BankTransaction query()
@@ -43,8 +44,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static Builder|BankTransaction whereValue($value)
  * @method static Builder|BankTransaction whereValuta($value)
  * @method static Builder|BankTransaction whereZweck($value)
+ *
  * @property-read \App\Models\Legacy\BankAccount $account
+ *
  * @method static \Database\Factories\Legacy\BankTransactionFactory factory($count = null, $state = [])
+ *
  * @mixin \Eloquent
  */
 class BankTransaction extends Model

@@ -60,8 +60,11 @@ use Laravel\Sanctum\PersonalAccessToken;
  * @method static Builder|User whereRememberToken($value)
  * @method static Builder|User whereUpdatedAt($value)
  * @method static Builder|User whereUsername($value)
+ *
  * @property string $provider_uid
+ *
  * @method static Builder|User whereProviderUid($value)
+ *
  * @mixin Eloquent
  */
 class User extends Authenticatable

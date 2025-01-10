@@ -3,6 +3,7 @@
 use App\Models\Changelog;
 use App\Models\Legacy\Project;
 use App\Models\User;
+
 use function Pest\Laravel\actingAs;
 
 test('json casting is working', function () {

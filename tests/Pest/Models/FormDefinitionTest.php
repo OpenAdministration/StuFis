@@ -4,9 +4,10 @@ use App\Models\FormDefinition;
 use App\Models\FormField;
 use App\Models\FormFieldOption;
 use App\Models\FormFieldValidation;
+
 use function Pest\Laravel\assertModelExists;
 
-test('form definition factory', function (){
+test('form definition factory', function () {
     $def = FormDefinition::factory()->has(
         FormField::factory(5)->has(
             FormFieldOption::factory()->count(5)
@@ -17,7 +18,5 @@ test('form definition factory', function (){
 
     assertModelExists($def);
     expect($def->formFields->count())->toBe(5);
-
-
 
 });

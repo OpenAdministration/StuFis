@@ -27,17 +27,17 @@ return new class extends Migration
         });
 
         Schema::create('form_fields', function (Blueprint $table) {
-           $table->id();
-           $table->unsignedBigInteger('form_definition_id');
-           $table->string('name'); // var name
-           $table->string('label'); // menschenlesbar
-           $table->string('type'); // siehe w3 referenz zzgl. eigene Types (money, iban, ...)
-           $table->string('default_value')->nullable();
-           $table->integer('position'); // internal render order
-           $table->string('view_key'); // where to render
+            $table->id();
+            $table->unsignedBigInteger('form_definition_id');
+            $table->string('name'); // var name
+            $table->string('label'); // menschenlesbar
+            $table->string('type'); // siehe w3 referenz zzgl. eigene Types (money, iban, ...)
+            $table->string('default_value')->nullable();
+            $table->integer('position'); // internal render order
+            $table->string('view_key'); // where to render
 
-           $table->timestamps();
-           $table->unique(['form_definition_id', 'name']);
+            $table->timestamps();
+            $table->unique(['form_definition_id', 'name']);
         });
 
         Schema::create('form_field_options', function (Blueprint $table) {
@@ -73,9 +73,9 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->text('description');
-            //$table->string('target_group'); -> zu veranstaltungspezifisch?
-            //$table->string('participants_total');
-            //$table->string('participants_students');
+            // $table->string('target_group'); -> zu veranstaltungspezifisch?
+            // $table->string('participants_total');
+            // $table->string('participants_students');
 
             $table->json('extra_fields');
 
@@ -155,7 +155,7 @@ return new class extends Migration
             $table->foreign('application_id')->references('id')->on('applications');
         });
 
-        Schema::create('finance_plan_topics', function (Blueprint $table){
+        Schema::create('finance_plan_topics', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('application_id');
             $table->string('name');
@@ -165,7 +165,7 @@ return new class extends Migration
             $table->foreign('application_id')->references('id')->on('applications');
         });
 
-        Schema::create('finance_plan_items', function (Blueprint $table){
+        Schema::create('finance_plan_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('topic_id');
             $table->string('name');
@@ -178,7 +178,7 @@ return new class extends Migration
             $table->foreign('topic_id')->references('id')->on('finance_plan_topics');
         });
 
-        Schema::create('actors', function (Blueprint $table){
+        Schema::create('actors', function (Blueprint $table) {
             $table->id();
 
             $table->boolean('is_organisation');
@@ -198,21 +198,21 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('actor_mails', function (Blueprint $table){
+        Schema::create('actor_mails', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('actor_id');
             $table->string('value');
             $table->timestamps();
         });
 
-        Schema::create('actor_phones', function (Blueprint $table){
+        Schema::create('actor_phones', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('actor_id');
             $table->string('value');
             $table->timestamps();
         });
 
-        Schema::create('actor_socials', function (Blueprint $table){
+        Schema::create('actor_socials', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('actor_id');
             $table->string('provider');

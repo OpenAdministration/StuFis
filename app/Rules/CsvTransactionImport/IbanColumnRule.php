@@ -16,7 +16,7 @@ class IbanColumnRule implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param Closure(string): PotentiallyTranslatedString $fail
+     * @param  Closure(string): PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
@@ -24,7 +24,7 @@ class IbanColumnRule implements ValidationRule
             if (empty($iban)) {
                 continue;
             }
-            $v = Validator::make(['iban' => $iban], ['iban' => new Iban()]);
+            $v = Validator::make(['iban' => $iban], ['iban' => new Iban]);
             if ($v->fails()) {
                 $fail(__('konto.csv-verify-iban-error'));
             }

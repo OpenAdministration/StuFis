@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int $id
  * @property string $short_key
  * @property string $description_keys
+ *
  * @method static StudentBodyDutyFactory factory($count = null, $state = [])
  * @method static Builder|StudentBodyDuty newModelQuery()
  * @method static Builder|StudentBodyDuty newQuery()
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @method static Builder|StudentBodyDuty whereDescriptionKeys($value)
  * @method static Builder|StudentBodyDuty whereId($value)
  * @method static Builder|StudentBodyDuty whereShortKey($value)
+ *
  * @mixin Eloquent
  */
 class StudentBodyDuty extends Model
@@ -30,10 +32,8 @@ class StudentBodyDuty extends Model
 
     public $timestamps = false;
 
-
-    public function projects() : BelongsToMany
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'projects_to_student_body_duties');
     }
-
 }

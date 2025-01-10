@@ -4,8 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-
+return new class extends Migration
+{
     public function up()
     {
         Schema::create('fiscal_year', function (Blueprint $table) {
@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->date('end_date');
         });
 
-        Schema::create('budget_plan', static function (Blueprint $table){
+        Schema::create('budget_plan', static function (Blueprint $table) {
             $table->id();
             $table->string('organisation', 64);
             $table->unsignedBigInteger('fiscal_year_id');
@@ -28,7 +28,7 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('budget_item', static function (Blueprint $table){
+        Schema::create('budget_item', static function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('budget_plan_id');
             $table->string('short_name', 16);
@@ -41,7 +41,7 @@ return new class extends Migration {
             $table->unique(['budget_plan_id', 'short_name']);
             $table->foreign('budget_plan_id')->references('id')->on('budget_plan');
             $table->foreign('parent_id')->references('id')->on('budget_item');
-            //$table->text('diff_description');
+            // $table->text('diff_description');
         });
 
         // TODO: nachtragshhp auch noch hier rein :)
@@ -60,5 +60,4 @@ return new class extends Migration {
         Schema::dropIfExists('budget_item');
         Schema::dropIfExists('fiscal_year');
     }
-
 };

@@ -53,6 +53,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungIban($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses whereZahlungVwzk($value)
+ *
  * @property string $ok-belege
  * @property string $ok-hv
  * @property string $ok-kv

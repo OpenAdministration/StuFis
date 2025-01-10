@@ -18,7 +18,7 @@ class FormDefinitionFactory extends Factory
     public function definition(): array
     {
         return [
-            //'type' => fake()->randomElement(['project', 'application']),
+            // 'type' => fake()->randomElement(['project', 'application']),
             'name' => fake()->city(),
             'version' => fake()->numberBetween(1, 10),
             'title' => fake()->word(),

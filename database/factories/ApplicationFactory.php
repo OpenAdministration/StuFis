@@ -32,7 +32,7 @@ class ApplicationFactory extends Factory
             'legal_basis_details' => fake()->text(),
             'constraints' => fake()->text(),
             'funding_total' => fake()->randomFloat(2, 1, 1000),
-            'extra_fields' => "{}"
+            'extra_fields' => '{}',
         ];
     }
 }
