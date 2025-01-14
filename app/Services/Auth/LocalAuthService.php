@@ -61,5 +61,15 @@ class LocalAuthService extends AuthService
         };
     }
 
+    public function userGroups(): Collection
+    {
+        return $this->userGroupsRaw();
+    }
+
+    public function groupMapping() : Collection
+    {
+        return collect();
+    }
+
     public function afterLogout() {}
 }

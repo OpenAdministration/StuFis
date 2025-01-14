@@ -55,4 +55,33 @@ return [
         ],
     ],
 
+    'oidc' => [
+        'client_id' => env('OIDC_CLIENT_ID'),
+        'client_secret' => env('OIDC_CLIENT_SECRET'),
+        'provider_url' => env('OIDC_PROVIDER_URL'),
+        'certificate_path' => env('OIDC_CERT_PATH'),
+        'scopes' => explode(' ', env('OIDC_SCOPES')),
+        'verify_host' => env('OIDC_VERIFY_HOST', true),
+        'attribute-mapping' => [
+            'uid' => env('OIDC_ATTRIBUTE_UID','sub'),
+            'username' => env('OIDC_ATTRIBUTE_USERNAME','username'),
+            'name' => env('OIDC_ATTRIBUTE_NAME','name'),
+            'email' => env('OIDC_ATTRIBUTE_EMAIL','email'),
+            'picture_url' => env('OIDC_ATTRIBUTE_PICTURE_URL','avatar'),
+            'iban' => env('OIDC_ATTRIBUTE_IBAN','iban'),
+            'address' => env('OIDC_ATTRIBUTE_ADDRESS','address'),
+            'groups' => env('OIDC_ATTRIBUTE_GROUP','groups'),
+            'committees' => env('OIDC_ATTRIBUTE_COMMITTEES','committees'),
+            'all-committees' => env('OIDC_ATTRIBUTE_ALL_COMMITTEES','all-committees'),
+        ],
+        'group-mapping' => [
+            'login' => env('OIDC_GROUP_LOGIN', 'login'),
+            'ref-finanzen' => env('OIDC_GROUP_REVISION'),
+            'ref-finanzen-belege' => env('OIDC_GROUP_INVOICE'),
+            'ref-finanzen-kv' => env('OIDC_GROUP_KV'),
+            'ref-finanzen-hv' => env('OIDC_GROUP_HV'),
+            'admin' => env('OIDC_GROUP_ADMIN'),
+        ],
+    ],
+
 ];

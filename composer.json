@@ -13,6 +13,7 @@
         "globalcitizen/php-iban": "^4.2",
         "guzzlehttp/guzzle": "^7.2",
         "intervention/validation": "^4.4",
+        "jumbojett/openid-connect-php": "^1.0",
         "laravel/framework": "^10.0",
         "laravel/sanctum": "^3.2",
         "livewire/flux": "^1.0",
@@ -24,7 +25,6 @@
         "open-administration/php-latex-renderer": "^1.1",
         "owenvoke/blade-fontawesome": "^2.6",
         "propaganistas/laravel-phone": "^5.3",
-        "socialiteproviders/keycloak": "^5.2",
         "socialiteproviders/laravelpassport": "^4.3",
         "spatie/laravel-backup": "^8.6",
         "spatie/regex": "*"
