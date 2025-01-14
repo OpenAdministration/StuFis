@@ -66,7 +66,7 @@ class LocalAuthService extends AuthService
         return $this->userGroupsRaw();
     }
 
-    public function groupMapping() : Collection
+    public function groupMapping(): Collection
     {
         return collect();
     }

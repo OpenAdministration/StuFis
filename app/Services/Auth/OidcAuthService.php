@@ -11,19 +11,20 @@ use Jumbojett\OpenIDConnectClient;
 class OidcAuthService extends AuthService
 {
     private $oidc;
+
     public function __construct()
     {
-        $this->oidc =  new OpenIDConnectClient(
+        $this->oidc = new OpenIDConnectClient(
             config('services.oidc.provider_url'),
             config('services.oidc.client_id'),
             config('services.oidc.client_secret'),
         );
-        if(!empty(config('services.oidc.certificate_path'))){
+        if (! empty(config('services.oidc.certificate_path'))) {
             $this->oidc->setCertPath(config('services.oidc.certificate_path'));
         }
         $this->oidc->setVerifyHost(config('services.oidc.verify_host'));
         $this->oidc->setRedirectURL(url('/auth/callback'));
-        if(!empty(config('services.oidc.scopes'))){
+        if (! empty(config('services.oidc.scopes'))) {
             $this->oidc->addScope(config('services.oidc.scopes'));
         }
     }

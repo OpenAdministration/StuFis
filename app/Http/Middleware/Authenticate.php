@@ -13,7 +13,7 @@ class Authenticate extends Middleware
         $this->authenticate($request, $guards);
 
         // adds to parent: only user with the login group can authenticate
-        if(!\Auth::user()?->getGroups()->contains('login')){
+        if (! \Auth::user()?->getGroups()->contains('login')) {
             $this->unauthenticated($request, $guards);
         }
 
@@ -22,9 +22,6 @@ class Authenticate extends Middleware
 
     /**
      * Get the path the user should be redirected to when they are not authenticated.
-     *
-     * @param Request $request
-     * @return string
      */
     protected function redirectTo(Request $request): string
     {

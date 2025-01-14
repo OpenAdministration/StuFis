@@ -9,5 +9,5 @@ Route::middleware(['auth'])->group(function () {
 
 Route::get('/session/destroy', function () {
     Session::flush();
-    echo "Session destroyed";
+    echo 'Session destroyed';
 });

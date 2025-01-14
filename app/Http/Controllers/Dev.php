@@ -15,7 +15,7 @@ class Dev extends Controller
         return view('components.dump', ['dump' => [
             'groups-raw' => $groupsRaw,
             'groupMapping' => $groupMapping,
-            'groups' => $groups
+            'groups' => $groups,
         ]]);
     }
 }

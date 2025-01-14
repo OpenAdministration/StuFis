@@ -33,6 +33,7 @@ class LegacyController extends Controller
             if ($request->input('testing')) {
                 return $output;
             }
+
             // otherwise with
             return view('legacy.main', ['content' => $output]);
         } catch (LegacyRedirectException $e) {
