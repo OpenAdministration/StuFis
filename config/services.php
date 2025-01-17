@@ -60,7 +60,7 @@ return [
         'client_secret' => env('OIDC_CLIENT_SECRET'),
         'provider_url' => env('OIDC_PROVIDER_URL'),
         'certificate_path' => env('OIDC_CERT_PATH'),
-        'scopes' => explode(' ', env('OIDC_SCOPES')),
+        'scopes' => explode(' ', env('OIDC_SCOPES', 'openid profile email')),
         'verify_host' => env('OIDC_VERIFY_HOST', true),
         'attribute-mapping' => [
             'uid' => env('OIDC_ATTRIBUTE_UID', 'sub'),
