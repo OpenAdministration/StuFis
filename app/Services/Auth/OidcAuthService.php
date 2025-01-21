@@ -86,11 +86,10 @@ class OidcAuthService extends AuthService
         return collect(config('services.oidc.group-mapping'));
     }
 
-    public function afterLogout()
+    public function afterLogout(): RedirectResponse
     {
         \Session::flush();
-
-        return redirect(to: config('services.oidc.logout_url'));
+        return redirect()->to(config('services.oidc.logout_url'));
     }
 
     public function allCommittees(): Collection
