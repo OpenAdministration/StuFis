@@ -905,7 +905,7 @@ class RestHandler extends EscFunc
             $fields['empf_iban'] = $zahlung['empfaenger_konto'];
             $fields['empf_bic'] = $zahlung['empfaenger_blz'];
             $fields['saldo'] = $zahlung['saldo'];
-            $fields['gvcode'] = $zahlung['gvcode'];
+            //$fields['gvcode'] = $zahlung['gvcode']; # deprecated since csv import
             $fields['zweck'] = $zahlung['zweck'];
             $fields['comment'] = $zahlung['kommentar'];
             $fields['customer_ref'] = $zahlung['customer_ref'];
