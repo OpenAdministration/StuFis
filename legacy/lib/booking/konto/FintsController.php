@@ -517,7 +517,7 @@ class FintsController extends Renderer
                     'saldo' => $this->convertCentForDB($saldoCent),
                     'zweck' => $transaction->getMainDescription(),
                     'comment' => $transaction->getTextKeyAddition(),
-                    'gvcode' => $transaction->getBookingCode(),
+                    //'gvcode' => $transaction->getBookingCode(), // deprecated since csv import
                     'customer_ref' => $transaction->getEndToEndID(),
                 ];
                 AuslagenHandler2::hookZahlung($transaction->getMainDescription());
