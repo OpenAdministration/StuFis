@@ -89,6 +89,7 @@ class OidcAuthService extends AuthService
     public function afterLogout(): RedirectResponse
     {
         \Session::flush();
+
         return redirect()->to(config('services.oidc.logout_url'));
     }
 
