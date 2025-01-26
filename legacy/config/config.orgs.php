@@ -374,11 +374,13 @@ return [
             'stura-vorstand' => [
                 'label' => 'StuRa Vorstandsbeschluss',
                 'label-additional' => 'Datum und TOP',
+                'placeholder' => '',
                 // 'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
             ],
             'fsr' => [
                 'label' => 'FSR Beschluss',
                 'label-additional' => 'Datum und TOP',
+                'placeholder' => '',
                 // 'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
             ],
             'mittel' => [
