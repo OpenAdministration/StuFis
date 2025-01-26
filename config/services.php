@@ -42,7 +42,7 @@ return [
     'laravelpassport' => [
         'client_id' => env('STUMV_CLIENT_ID'),
         'client_secret' => env('STUMV_CLIENT_SECRET'),
-        'redirect' => env('STUMV_REDIRECT_URI'),
+        'redirect' => rtrim(env('APP_URL'), '/') . '/auth/callback',
         'host' => env('STUMV_HOST'),
         'logout_path' => env('STUMV_LOGOUT_PATH', 'logout'),
         'mapping' => [

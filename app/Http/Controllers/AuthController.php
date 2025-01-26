@@ -27,7 +27,6 @@ class AuthController
 
             Auth::login($user);
         }
-
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

@@ -10,14 +10,16 @@ class Authenticate extends Middleware
 {
     public function handle($request, Closure $next, ...$guards)
     {
+        // do it like in the parent
         $this->authenticate($request, $guards);
 
-        // adds to parent: only user with the login group can authenticate
-        if (! \Auth::user()?->getGroups()->contains('login')) {
-            $this->unauthenticated($request, $guards);
+        // adds to parent: only user with the login or admin group pass
+        $groups = \Auth::user()->getGroups();
+        if ($groups->contains('login') || $groups->contains('admin')) {
+            return $next($request);
         }
-
-        return $next($request);
+        // otherwise: non-pass
+        $this->unauthenticated($request, $guards);
     }
 
     /**

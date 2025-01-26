@@ -47,8 +47,6 @@ class AuthHandler extends Singleton
      */
     public function hasGroup(array|string $groups, string $delimiter = ','): bool
     {
-        $this->requireAuth();
-
         if ($this->isAdmin()) {
             return true;
         }
@@ -59,14 +57,6 @@ class AuthHandler extends Singleton
         $hasGroups = array_intersect($groups, $attrGroups);
 
         return count($hasGroups) > 0;
-    }
-
-    /**
-     * handle session and user login
-     */
-    public function requireAuth()
-    {
-        Auth::user()->getGroups()->has('login');
     }
 
     /**

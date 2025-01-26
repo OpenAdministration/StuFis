@@ -51,13 +51,13 @@ class LocalAuthService extends AuthService
 
     public function userGroupsRaw(): Collection
     {
-        return match (\Auth::user()->username) {
-            'user' => collect(['login']),
+        return match ($this->username) {
+            'user-no-login' => collect(),
+            'user', 'external' => collect(['login']),
             'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
             'revision' => collect(['login', 'ref-finanzen']),
             'admin' => collect(['admin']),
-            'external' => collect(['login']),
         };
     }
 
