@@ -35,9 +35,16 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-            if ($this->app->isLocal()) {
+            if (config('stufis.features') === 'dev') {
                 Route::middleware('web')
-                    ->group(base_path('routes/web-local.php'));
+                    ->group(base_path('routes/web-dev.php'));
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
+            }
+
+            if (config('stufis.features') === 'preview') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
             }
 
             if ($this->app->hasDebugModeEnabled()) {

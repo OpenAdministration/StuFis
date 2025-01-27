@@ -23,6 +23,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        if(config('stufis.features') === 'dev'){
+            $this->loadMigrationsFrom([
+                base_path('database/migrations/dev'),
+                base_path('database/migrations/preview')
+            ]);
+        }
+        if(config('stufis.features') === 'preview'){
+            $this->loadMigrationsFrom(base_path('database/migrations/preview'));
+        }
     }
 }

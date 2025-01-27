@@ -1,6 +1,6 @@
 <?php
 
-// in this file all routes are included which are only visible in env=local
+// in this file all routes are included which are only visible in STUFIS_FEATURE_BRANCH=dev
 
 Route::middleware(['auth'])->group(function () {
     // Feature External

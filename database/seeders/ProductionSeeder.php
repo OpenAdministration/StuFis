@@ -11,6 +11,7 @@ class ProductionSeeder extends Seeder
         \DB::table('konto_type')->insert([
             'name' => 'Kasse',
             'short' => 'K',
+            'manually_enterable' => true,
         ]);
     }
 }

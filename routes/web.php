@@ -13,13 +13,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', 'menu/mygremium')->name('home');
-
-Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
-Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
-Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
-
 Route::middleware(['auth'])->group(function () {
+
+    Route::redirect('/', 'menu/mygremium')->name('home');
 
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
     // Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
@@ -27,6 +23,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
 
 });
+
+// login routes
+Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
+Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
+Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+
 
 // guest routes
 Route::get('about', static function () {
