@@ -45,6 +45,11 @@ jobs:
           cp .env.ci .env.testing
           php artisan key:generate --env=testing
 
+      - name: Verify mariadb connection
+        run: |
+          mariadb --version
+          mariadb --host 127.0.0.1 --port 3306 -ustufis_ci -ppassword -e "SHOW DATABASES"
+
       - name: Run Migration
         run: php artisan migrate -v --seed --env=testing
 
