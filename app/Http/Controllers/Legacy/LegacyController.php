@@ -28,8 +28,9 @@ class LegacyController extends Controller
             $this->bootstrap();
             require base_path('legacy/www/index.php');
             $output = ob_get_clean();
+
+            // if wanted by the unit test the content is delivered without the layout
             if ($request->input('testing')) {
-                // if wanted by the unit test the content is delivered without the layout
                 return $output;
             }
 

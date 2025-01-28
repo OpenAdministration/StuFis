@@ -27,9 +27,15 @@ The installation process is pretty simple and straight forward. The configuratio
 
 ## Requirements: 
 * php8.2
+* composer
+* nodeJS / npm
 * MariaDB / Mysql
-* a registration Number from [Deutsche Kreditwirtschaft](https://www.hbci-zka.de/register/hersteller.htm)
-* OAuth2 Identity Provider (IdP), SAML in the future 
+* optional: a registration Number from [Deutsche Kreditwirtschaft](https://www.hbci-zka.de/register/hersteller.htm)
+* OAuth2 Identity Provider (IdP)
+* commandline access to your server, ftp only could work, but is more work / not officially supported
+* basic knowledge how to admin a (linux) server
+
+There might be an unsupported docker image in the future, but right now it has no priority. PRs appreciated.
 
 ## Installation (Dev Local & Production)
 

@@ -24,14 +24,14 @@ class LocalAuthService extends AuthService
     public function userFromCallback(Request $request): array
     {
         return [
-            ['username' => $this->username],
+            ['username' => config('local.auth.username', 'user')],
             [],
         ];
     }
 
     public function userCommittees(): Collection
     {
-        return match ($this->username) {
+        return match (\Auth::user()->username) {
             'user' => collect(['Students Council']),
             'hhv' => collect(['Financial Department']),
             'kv' => collect(['Financial Department']),
@@ -52,13 +52,23 @@ class LocalAuthService extends AuthService
     public function userGroupsRaw(): Collection
     {
         return match ($this->username) {
-            'user' => collect(['login']),
-            'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
+            'user-no-login' => collect(),
+            'user', 'external' => collect(['login']),
+            'hv','hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
             'revision' => collect(['login', 'ref-finanzen']),
             'admin' => collect(['admin']),
-            'external' => collect(['login']),
         };
+    }
+
+    public function userGroups(): Collection
+    {
+        return $this->userGroupsRaw();
+    }
+
+    public function groupMapping(): Collection
+    {
+        return collect();
     }
 
     public function afterLogout() {}
