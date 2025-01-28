@@ -1,0 +1,24 @@
+name: Static Analysis
+
+on: [push]
+
+jobs:
+  phpstan:
+    name: phpstan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Genererate auth.json
+        run: composer config http-basic.composer.fluxui.dev $FLUXUI_USERNAME $FLUXUI_PASSWORD
+
+      - name: Install composer dependencies
+        run: composer install -n --prefer-dist
+
+      - name: Run Static Analysis
+        run: ./vendor/bin/phpstan --error-format=github --memory-limit=1G

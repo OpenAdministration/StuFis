@@ -44,6 +44,14 @@ expect()->extend('toBeOne', function () {
 /**
  * @return User returns a default user without special permissions
  */
+function userNoLogin(): User
+{
+    return User::where(['username' => 'user-no-login'])->first();
+}
+
+/**
+ * @return User returns a default user without special permissions
+ */
 function user(): User
 {
     return User::where(['username' => 'user'])->first();
