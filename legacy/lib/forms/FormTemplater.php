@@ -209,7 +209,7 @@ class FormTemplater
                 $out .= '</div>';
             }
         } else {
-            if (! empty($linkPrefix)) {
+            if (! empty($linkPrefix) && ! empty($value)) {
                 $out .= "<div id='$unique_id'>
                             <a target='_blank' href='".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value)."'>".
                     "<i class='fa fa-fw fa-wikipedia-w'></i> ".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value).

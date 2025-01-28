@@ -589,6 +589,7 @@ return [
             ],
         ],
         'projekt-form' => [
+            'min-description-length' => 10,
         ],
     ],
 ];

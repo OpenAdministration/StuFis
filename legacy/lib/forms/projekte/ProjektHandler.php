@@ -698,7 +698,7 @@ class ProjektHandler extends FormHandlerInterface
                             12,
                             '...',
                             'Beschluss / Protokoll-Link',
-                            ['required'],
+                            [],
                             ORG_DATA['projekt-form']['protokoll-prefix'] ?? ''
                         );
                     } ?>
@@ -845,7 +845,8 @@ class ProjektHandler extends FormHandlerInterface
                     12,
                     "In unserem Projekt geht es um ... \nHat einen Nutzen für die Studierendenschaft weil ... \nFindet dort und dort statt...\nusw.",
                     'Projektbeschreibung',
-                    ['required', 'min-length' => 100],
+                    AuthHandler::getInstance()->hasGroup('ref-finanzen-hv') ?
+                        [] : ['required', 'min-length' => ORG_DATA['projekt-form']['min-description-length'] ?? 100],
                     5
                 ); ?>
 
