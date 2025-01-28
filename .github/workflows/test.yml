@@ -15,7 +15,6 @@ jobs:
         image: mariadb:10.11
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: false
-          MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_USER: stufis_ci
           MYSQL_DATABASE: stufis_ci
           MYSQL_PASSWORD: password
