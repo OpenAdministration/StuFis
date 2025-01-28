@@ -49,7 +49,7 @@ jobs:
         run: |
           sudo apt install mariadb-client
           mariadb --version
-          mariadb --host 127.0.0.1 --port 3306 -ustufis_ci -ppassword -e "SHOW DATABASES"
+          mariadb --host mariadb --port 3306 -ustufis_ci -ppassword -e "SHOW DATABASES"
 
       - name: Run Migration
         run: php artisan migrate -v --seed --env=testing
