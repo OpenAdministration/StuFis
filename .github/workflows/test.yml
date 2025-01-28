@@ -18,7 +18,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: password
           MYSQL_DATABASE: stufis_ci
         ports:
-          - 32574:3306
+          - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     strategy:
       fail-fast: false
@@ -34,11 +34,10 @@ jobs:
           extensions: mbstring, dom, fileinfo, mysql, libxml, xml, xmlwriter, dom, tokenizer, filter, json, phar, pcre, openssl, pdo, intl, curl
           coverage: xdebug
 
-      - name: Genererate auth.json
-        run: composer config http-basic.composer.fluxui.dev ${{secrets.FLUXUI_USERNAME}} ${{secrets.FLUXUI_PASSWORD}}
-
       - name: Run composer install
-        run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
+        run: |
+          composer config http-basic.composer.fluxui.dev ${{secrets.FLUXUI_USERNAME}} ${{secrets.FLUXUI_PASSWORD}}
+          composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
 
       - name: Prepare Laravel Application
         run: |
