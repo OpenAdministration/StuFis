@@ -612,7 +612,7 @@ class ChatHandler
         if ($text === '') {
             return '';
         }
-        //$this->createKeys();
+        // $this->createKeys();
 
         return '$lara$'.$this->_encryptMessage($text, $this->getKey('public'));
     }
@@ -627,10 +627,12 @@ class ChatHandler
         }
         if (str_starts_with($text, '$enc$')) {
             $text = substr($text, 5);
+
             return $this->_decryptMessage($text, $this->getKey('private'));
         }
         if (str_starts_with($text, '$lara$')) {
             $text = substr($text, 6);
+
             return Crypt::decryptString($text);
         }
         throw new InvalidArgumentException('Unknown encryption message type: '.$text);

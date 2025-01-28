@@ -29,7 +29,6 @@ Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])
 Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
 Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
-
 // guest routes
 Route::get('about', static function () {
     return redirect(config('app.about_url'));

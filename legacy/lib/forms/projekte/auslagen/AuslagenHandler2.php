@@ -1722,8 +1722,6 @@ class AuslagenHandler2 extends FormHandlerInterface
 
     /**
      * @deprecated only used by migration command
-     * @param string $str
-     * @return string
      */
     public static function legacyDecryptStr(string $str): string
     {
