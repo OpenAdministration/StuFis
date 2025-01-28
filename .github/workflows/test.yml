@@ -1,6 +1,9 @@
 name: Run tests
 
-on: [push]
+on:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   tests:
@@ -30,6 +33,9 @@ jobs:
           php-version: ${{ matrix.php-versions }}
           extensions: mbstring, dom, fileinfo, mysql, libxml, xml, xmlwriter, dom, tokenizer, filter, json, phar, pcre, openssl, pdo, intl, curl
           coverage: xdebug
+
+      - name: Genererate auth.json
+        run: composer config http-basic.composer.fluxui.dev ${{secrets.FLUXUI_USERNAME}} ${{secrets.FLUXUI_PASSWORD}}
 
       - name: Run composer install
         run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
