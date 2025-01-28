@@ -9,6 +9,8 @@ use framework\DBConnector;
 use framework\helper\EnvSetter;
 use framework\render\ErrorHandler;
 use framework\Validator;
+use http\Exception\InvalidArgumentException;
+use Illuminate\Support\Facades\Crypt;
 
 class ChatHandler
 {
@@ -398,7 +400,7 @@ class ChatHandler
                 'timestamp' => mb_substr($timestamp, 0, 20),
                 'creator' => mb_substr($creator, 0, 127),
                 'creator_alias' => mb_substr($creator_alias, 0, 255),
-                'text' => $this->encryptMessage(mb_substr($text, 0, 45000)),
+                'text' => Crypt::encrypt(mb_substr($text, 0, 45000)),
                 'type' => $type,
             ]);
         } catch (Exception $e) {
@@ -610,25 +612,28 @@ class ChatHandler
         if ($text === '') {
             return '';
         }
-        $this->createKeys();
+        //$this->createKeys();
 
-        return '$enc$'.$this->_encryptMessage($text, $this->getKey('public'));
+        return '$lara$'.$this->_encryptMessage($text, $this->getKey('public'));
     }
 
     /**
      * decrypt chat message
      */
-    private function decryptMessage(string $text): string
+    public function decryptMessage(string $text): string
     {
         if ($text === '') {
             return '';
         }
-        $this->createKeys();
         if (str_starts_with($text, '$enc$')) {
             $text = substr($text, 5);
+            return $this->_decryptMessage($text, $this->getKey('private'));
         }
-
-        return $this->_decryptMessage($text, $this->getKey('private'));
+        if (str_starts_with($text, '$lara$')) {
+            $text = substr($text, 6);
+            return Crypt::decryptString($text);
+        }
+        throw new InvalidArgumentException('Unknown encryption message type: '.$text);
     }
 
     /**
@@ -648,6 +653,6 @@ class ChatHandler
     {
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
-        return $decrypted ?? '<strong><i>! Corrupted message. !</i></strong>';
+        return $decrypted ?? throw new InvalidArgumentException('Corrupted Message: '.$encrypted);
     }
 }
