@@ -7,4 +7,4 @@ it('views project create form without iframe wrapping', function () {
     $response->assertStatus(200)->assertDontSee('<iframe>');
 });
 
-// pest cannot interact with forms
+// pest cannot interact with forms or html well :(

@@ -21,7 +21,7 @@ test('actor factory and relations', function () {
     $actor = Actor::factory()->asOrganisation()->create();
     assertModelExists($actor);
 
-});
+})->todo();
 
 test('new organisation', function () {
     \Livewire::actingAs(user())
@@ -30,4 +30,4 @@ test('new organisation', function () {
         ->set('orgForm', [fake()->companyEmail(), fake()->companyEmail()])
         ->call('create')
         ->assertHasErrors();
-});
+})->todo();

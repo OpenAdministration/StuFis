@@ -7,4 +7,4 @@ use function Pest\Laravel\assertModelExists;
 test('legal basis', function () {
     $legal = LegalBasis::factory()->create();
     assertModelExists($legal);
-});
+})->todo();

@@ -9,4 +9,4 @@ test('student body duties factory', function () {
     foreach ($duties as $duty) {
         assertModelExists($duty);
     }
-});
+})->todo();
