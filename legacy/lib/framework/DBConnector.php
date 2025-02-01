@@ -903,6 +903,7 @@ class DBConnector extends Singleton
         $w = [];
         $vals = [];
         $validWhereOperators = [
+            '!=',
             '=',
             '<',
             '>',

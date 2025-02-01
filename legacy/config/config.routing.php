@@ -185,7 +185,7 @@ $pathConfig = [
                     'navigation' => 'mykonto',
                 ],
                 [
-                    'path' => '(mygremium|allgremium|mystuff|search)',
+                    'path' => '(mygremium|allgremium|open-projects)',
                     'type' => 'pattern',
                     'param' => 'action',
                     'navigation' => 'overview',

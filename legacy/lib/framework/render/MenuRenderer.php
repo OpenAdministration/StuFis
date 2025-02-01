@@ -34,20 +34,8 @@ class MenuRenderer extends Renderer
         switch ($this->pathinfo['action']) {
             case 'mygremium':
             case 'allgremium':
-                HTMLPageRenderer::registerProfilingBreakpoint('start-rendering');
+            case 'open-projects':
                 $this->renderProjekte($this->pathinfo['action']);
-                break;
-            case 'search':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderSearch();
-                break;
-            case 'mystuff':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info');
-                break;
-            case 'extern':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderExtern();
                 break;
             case 'mykonto':
                 $this->renderMyProfile();
@@ -132,6 +120,17 @@ class MenuRenderer extends Renderer
                     ];
                 }
                 break;
+            case 'open-projects':
+                if (is_null($hhp_bis)) {
+                    $where = [
+                        ['state' => ['!=', 'teminated'], 'createdat' => ['>=', $hhp_von]],
+                    ];
+                } else {
+                    $where = [
+                        ['state' => ['!=', 'terminated'], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
+                    ];
+                }
+                break;
             default:
                 throw new LegacyDieException(400, 'Not known active Tab: '.$active);
                 break;
@@ -204,9 +203,9 @@ class MenuRenderer extends Renderer
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
                                 <?php
-                                $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
-                                    // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
-                                    $gremium; ?>
+                            $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
+                                // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
+                                $gremium; ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?php echo $titel; ?>
                             </h4>
                         </div>
@@ -230,7 +229,7 @@ class MenuRenderer extends Renderer
                                                  href="#collapse<?php echo $i.'-'.$j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
-                                                            class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
+                                                        class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
                                                     <span class="panel-projekt-money text-muted hidden-xs ">
                                                         <?php echo number_format($projekt['ausgaben'], 2, ',', '.'); ?>
                                                     </span>
@@ -335,11 +334,20 @@ class MenuRenderer extends Renderer
                     $i++;
             }
         } else {
-            $this->renderAlert(
-                'Warnung',
-                "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
-                'warning'
-            );
+            if ($active === 'open-projects') {
+                $this->renderAlert(
+                    'Yeah',
+                    'Es gibt in diesem Haushaltsjahr keine offenen Projekte. Für den Haushaltsabschluss ist das wirklich eine gute Sache!',
+                    'success'
+                );
+            } else {
+                $this->renderAlert(
+                    'Warnung',
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                    'warning'
+                );
+            }
+
         } ?>
         </div>
         <?php
@@ -526,7 +534,7 @@ class MenuRenderer extends Renderer
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
-            // "mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
+            'open-projects' => "<i class='fa fa-fw fa-file-text'></i> Offene Projekte",
         ];
         if (AuthHandler::getInstance()->hasGroup('ref-finanzen')) {
             // $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
