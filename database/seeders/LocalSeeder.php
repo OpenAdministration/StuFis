@@ -36,5 +36,13 @@ class LocalSeeder extends Seeder
             'provider' => 'local',
             'provider_uid' => 'hhv',
         ]);
+
+        \DB::table('user')->insert([
+            'name' => 'Demo Admin',
+            'username' => 'admin',
+            'email' => 'admin@example.com',
+            'provider' => 'local',
+            'provider_uid' => 'admin',
+        ]);
     }
 }

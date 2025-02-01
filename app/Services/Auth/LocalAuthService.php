@@ -54,5 +54,8 @@ class LocalAuthService extends AuthService
         };
     }
 
-    public function afterLogout() {}
+    public function afterLogout()
+    {
+        return redirect()->route('login.callback');
+    }
 }

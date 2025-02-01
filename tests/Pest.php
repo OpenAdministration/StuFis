@@ -74,6 +74,14 @@ function cashOfficer(): User
 }
 
 /**
+ * @return User returns a admin user, with admin permissions
+ */
+function adminUser(): User
+{
+    return User::where(['username' => 'admin'])->first();
+}
+
+/**
  * @return \Illuminate\Http\Testing\File the by livewire expected filetype
  */
 function testFile(string $storage_path, ?string $fileName = null): \Illuminate\Http\Testing\File

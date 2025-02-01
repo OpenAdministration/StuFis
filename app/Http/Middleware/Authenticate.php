@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class Authenticate extends Middleware
 {
@@ -19,7 +20,7 @@ class Authenticate extends Middleware
             return $next($request);
         }
         // otherwise: non-pass
-        $this->unauthenticated($request, $guards);
+        throw new UnauthorizedHttpException('login-group', 'You are not authorized to access this page');
     }
 
     /**
