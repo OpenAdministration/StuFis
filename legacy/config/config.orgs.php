@@ -176,6 +176,7 @@ return [
         ],
         'projekt-form' => [
             'protokoll-prefix' => 'https://wiki.stura-ilmenau.de/protokoll/',
+            'protokoll-label' => 'Wiki-Link zum Beschluss',
         ],
     ],
     'ue' => [

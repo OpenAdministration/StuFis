@@ -697,7 +697,7 @@ class ProjektHandler extends FormHandlerInterface
                             $this->data['protokoll'],
                             12,
                             '...',
-                            'Beschluss / Protokoll-Link',
+                            ORG_DATA['projekt-form']['protokoll-label'] ?? 'Ergänzender-Link',
                             [],
                             ORG_DATA['projekt-form']['protokoll-prefix'] ?? ''
                         );
