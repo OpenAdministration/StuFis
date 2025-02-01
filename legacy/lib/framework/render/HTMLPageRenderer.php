@@ -39,13 +39,7 @@ class HTMLPageRenderer
     /**
      * @param  $name  string Name des Profiling Flags
      */
-    public static function registerProfilingBreakpoint(string $name): void
-    {
-        self::$profiling_timing[] = microtime(true);
-        $bt = debug_backtrace();
-        self::$profiling_sources[] = array_shift($bt);
-        self::$profiling_names[] = $name;
-    }
+    public static function registerProfilingBreakpoint(string $name): void {}
 
     /**
      * @param  $tabs  array keys are tabnames, values are htmlcode inside tab header
@@ -100,7 +94,6 @@ class HTMLPageRenderer
         if (! $this->hasError()) {
             $this->renderModals();
         }
-        $this->renderFooter();
     }
 
     private function renderFlash(): void
@@ -195,9 +188,7 @@ class HTMLPageRenderer
     }
 
     private function renderPanelTabs($tabs, $linkbase, $activeTab): void
-    {
-
-        ?>
+    { ?>
         <div class="panel panel-default">
             <div class="panel-heading panel-heading-with-tabs">
                 <ul class="nav nav-tabs">
@@ -335,45 +326,6 @@ class HTMLPageRenderer
                 </div>
             </div>
         </div>
-        <?php
-    }
-
-    /**
-     * Print all Profiling Flags from HTMLPageRenderer::registerProfilingBreakpoint()
-     */
-    private function renderProfiling(): void
-    {
-        $sum = 0;
-        $size = isset(self::$profiling_timing) ? count(self::$profiling_timing) : 0;
-        if ($size === 0) {
-            return;
-        }
-        $out = '';
-        for ($i = 0; $i < $size - 1; $i++) {
-            $out .= "<span class='profiling-names'><strong>".self::$profiling_names[$i].'</strong></span>';
-            $out .= "<i class='profiling-source'>".
-                basename(self::$profiling_sources[$i]['file']).':'.
-                self::$profiling_sources[$i]['line'].'
-                </i>';
-            $sum += self::$profiling_timing[$i + 1] - self::$profiling_timing[$i];
-            $out .= '<div>'.sprintf('&nbsp;&nbsp;&nbsp;%f<br>', self::$profiling_timing[$i + 1] - self::$profiling_timing[$i]).'</div>';
-        }
-        $out .= "<span class='profiling-names'><strong>".self::$profiling_names[$size - 1].'</strong></span>';
-        $out .= "<i class='profiling-source'>".
-            basename(self::$profiling_sources[$size - 1]['file']).':'.
-            self::$profiling_sources[$size - 1]['line'].'
-                </i>';
-        // Wrapp all output till now with div
-        $out = '<div class="profiling-output"><h3><i class="fa fa-fw fa-angle-toggle"></i> Ladezeit: '.sprintf('%f', $sum).'</h3>'.$out;
-        $out .= '</div>';
-        echo $out;
-    }
-
-    private function renderFooter(): void
-    {
-        ?>
-        </body>
-        </html>
         <?php
     }
 
