@@ -66,7 +66,7 @@ class TransactionImportWire extends Component
         // mapping has only the csv column numbers as values, so we need to work around a bit,
         // we only check if a matching column was given, the values of this columns only in special cases
         return [
-            'csv' => 'required|file|mimes:csv,txt|extensions:csv',
+            'csv' => 'required|file|extensions:csv|mimes:csv,txt',
             'mapping.date' => [
                 'required',
                 'int',
