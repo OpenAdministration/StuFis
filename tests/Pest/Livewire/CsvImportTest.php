@@ -5,7 +5,7 @@ use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 
 test('csv import is accessible as cash officer', function () {
-    Livewire::actingAs(cashManager())->test(TransactionImportWire::class)
+    Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class)
         ->assertSuccessful();
 });
 
@@ -27,7 +27,7 @@ test('show last transactions', function () {
             $lastTransactions[$account->id] = $tmp;
         }
     });
-    $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
+    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     foreach ($lastTransactions as $transaction) {
         Log::debug($transaction->date);
         $wire->set('account_id', $transaction->konto_id)
@@ -45,7 +45,7 @@ test('account has no transactions view', function () {
             $noTransactions[$account->id] = $account->id;
         }
     });
-    $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
+    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     foreach ($noTransactions as $id) {
         $wire->set('account_id', $id)
             ->assertSee(__('konto.csv-no-transaction'));
@@ -53,7 +53,7 @@ test('account has no transactions view', function () {
 });
 
 test('csv upload visibility', function () {
-    $wire = \Livewire::actingAs(cashManager())->test(TransactionImportWire::class);
+    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     $accountIds = BankAccount::all()->pluck('id')->toArray();
     foreach ($accountIds as $accountId) {
         $wire->set('account_id', $accountId)
@@ -106,7 +106,7 @@ const CSV_1 = [
 test('parse csv utf8 encoding', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
@@ -117,7 +117,7 @@ test('parse csv utf8 encoding', function () {
 test('parse csv win encoding', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
@@ -128,7 +128,7 @@ test('parse csv win encoding', function () {
 test('views showing properly', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    $lw = \Livewire::actingAs(cashManager())
+    $lw = \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->assertSee(__('konto.manual-headline'))
         ->assertSee(__('konto.manual-headline-sub'))
@@ -158,7 +158,7 @@ test('views showing properly', function () {
 test('csv upload some fields are required', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -177,7 +177,7 @@ test('csv upload some fields are required', function () {
 test('csv upload with wrong date check (order and start)', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    $lw = \Livewire::actingAs(cashManager())
+    $lw = \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -195,7 +195,7 @@ test('csv upload with wrong date check (order and start)', function () {
 test('csv upload with wrong saldo check (order and start)', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -217,7 +217,7 @@ test('only csv upload accepted', function () {
     $pdf = testFile('empty.pdf');
     $pdf_csv = testFile('empty.pdf', 'empty.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $image)
@@ -237,7 +237,7 @@ test('if csv import is saved', function () {
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', $account_id) // an account without transactions
         ->set('csv', $csvFile)
@@ -272,7 +272,7 @@ test('if mapping was saved and loaded', function () {
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashManager())
+    \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', $account_id) // an account without transactions
         ->assertSet('mapping.date', 4)

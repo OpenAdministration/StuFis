@@ -68,7 +68,7 @@ function budgetManager(): User
 /**
  * @return User returns a cash management user, with cash manager permissions
  */
-function cashManager(): User
+function cashOfficer(): User
 {
     return User::where(['username' => 'kv'])->first();
 }
