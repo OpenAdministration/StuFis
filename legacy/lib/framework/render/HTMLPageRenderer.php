@@ -9,12 +9,6 @@ use framework\render\html\HtmlAlert;
 
 class HTMLPageRenderer
 {
-    private static $profiling_timing;
-
-    private static $profiling_names;
-
-    private static $profiling_sources;
-
     private static $errorHandler;
 
     private static $tabsConfig;
