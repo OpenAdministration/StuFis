@@ -8,8 +8,8 @@ it('should throw forward to login if not logged in', function () {
 });
 
 it('should throw an error if logged in, but no login permission is granted', function () {
-    /*actingAs(userNoLogin())
+    actingAs(userNoLogin())
         ->get(route('home'))
         ->assertUnauthorized();
-    */
-});
+
+})->todo();

@@ -9,13 +9,6 @@ use Illuminate\Support\Facades\Request;
 
 class LocalAuthService extends AuthService
 {
-    private string $username;
-
-    public function __construct()
-    {
-        $this->username = config('local.auth.username');
-    }
-
     public function prepareLogin(): Response|RedirectResponse
     {
         return redirect()->route('login.callback');
@@ -51,7 +44,7 @@ class LocalAuthService extends AuthService
 
     public function userGroupsRaw(): Collection
     {
-        return match ($this->username) {
+        return match (\Auth::user()->username) {
             'user-no-login' => collect(),
             'user', 'external' => collect(['login']),
             'hv','hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
@@ -59,16 +52,6 @@ class LocalAuthService extends AuthService
             'revision' => collect(['login', 'ref-finanzen']),
             'admin' => collect(['admin']),
         };
-    }
-
-    public function userGroups(): Collection
-    {
-        return $this->userGroupsRaw();
-    }
-
-    public function groupMapping(): Collection
-    {
-        return collect();
     }
 
     public function afterLogout() {}

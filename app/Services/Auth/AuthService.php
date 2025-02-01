@@ -19,11 +19,23 @@ abstract class AuthService
 
     abstract public function userGroupsRaw(): Collection;
 
-    abstract public function groupMapping(): Collection;
+    public function groupMapping(): Collection
+    {
+        return collect([
+            'login' => 'login',
+            'ref-finanzen' => 'ref-finanzen',
+            'ref-finanzen-belege' => 'ref-finanzen-belege',
+            'ref-finanzen-hv' => 'ref-finanzen-hv',
+            'ref-finanzen-kv' => 'ref-finanzen-kv',
+            'admin' => 'admin',
+        ]);
+    }
 
     public function userGroups(): Collection
     {
-        $rawGroups = $this->userGroupsRaw();
+        // remove falsy values from raw groups like empty string, 0 and false
+        // prevent permission escalation by ignoring empty mappings
+        $rawGroups = $this->userGroupsRaw()->filter();
         $mapping = $this->groupMapping();
 
         // mapping is not supported in this AuthService
@@ -32,11 +44,14 @@ abstract class AuthService
         }
 
         // permissions to obtain are the keys of the $mapping
-        $groups = $mapping->filter(function ($value) use ($rawGroups) {
-            // filter permissions, that are not given by provider
-            // prevent permission escalation by ignoring empty mappings
+        $groups = $mapping->filter(function ($groupToSearch) use ($rawGroups) {
             // groups where mapping is 'true' are given as default
-            return $rawGroups->contains($value) && ! empty($value);
+            if ($groupToSearch === true) {
+                return true;
+            }
+
+            // filter permissions, that are not given by provider
+            return $rawGroups->containsStrict($groupToSearch);
         })->keys();
 
         return $groups;
