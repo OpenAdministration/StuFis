@@ -339,11 +339,7 @@ class ChatHandler
                 $count++;
                 unset($this->comments[$k]);
             } else {
-                if (((int) $this->comments[$k]['type']) === -1
-                    || str_starts_with($this->comments[$k]['text'], '$enc$')
-                    || str_starts_with($this->comments[$k]['text'], '$lara$')) {
-                    $this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
-                }
+                $this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
                 $count++;
                 $this->max_comment_id = max($this->max_comment_id, $c['id'], $this->post_last_id);
                 unset($this->comments[$k]['id']);
