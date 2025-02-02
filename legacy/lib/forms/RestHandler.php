@@ -631,9 +631,7 @@ class RestHandler extends EscFunc
         $db = DBConnector::getInstance();
         $chat = new ChatHandler(null, null);
         $valid = $chat->validatePost($_POST);
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         if ($valid) {
             // access permission control
             switch ($valid['target']) {
@@ -861,9 +859,8 @@ class RestHandler extends EscFunc
 
     private function updateKonto($routeInfo): void
     {
-        $auth = AUTH_HANDLER;
         /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $auth->requireGroup('ref-finanzen-kv');
 
         $ret = true;
@@ -1360,7 +1357,7 @@ class RestHandler extends EscFunc
 
     private function cancelBooking($routeInfo): void
     {
-        (AUTH_HANDLER)::getInstance()->requireGroup('ref-finanzen-hv');
+        AuthHandler::getInstance()->requireGroup('ref-finanzen-hv');
         if (! isset($_REQUEST['booking_id'])) {
             $msgs[] = 'Daten wurden nicht korrekt übermittelt';
 

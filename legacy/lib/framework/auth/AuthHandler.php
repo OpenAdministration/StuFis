@@ -16,7 +16,7 @@ class AuthHandler extends Singleton
 {
     public static function getInstance(): static
     {
-        return self::initSingleton(AUTH_HANDLER);
+        return self::initSingleton(static::class);
     }
 
     /**

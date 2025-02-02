@@ -1,10 +1,6 @@
 <?php
 
-use framework\auth\AuthHandler;
-
 $conf = [];
-
-const AUTH_HANDLER = AuthHandler::class;
 
 define('REALM', config('app.realm'));
 if (App::runningUnitTests()) {

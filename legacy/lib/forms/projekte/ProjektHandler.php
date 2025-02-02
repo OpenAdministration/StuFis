@@ -561,9 +561,7 @@ class ProjektHandler extends FormHandlerInterface
 
     private function renderProjekt($title): void
     {
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $validateMe = false;
         $editable = $this->permissionHandler->isAnyDataEditable();
         // build dropdowns
@@ -1029,9 +1027,7 @@ class ProjektHandler extends FormHandlerInterface
         <div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
             <?php
-            $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $btns = [];
         $pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
         $pdate->modify('+1 year');

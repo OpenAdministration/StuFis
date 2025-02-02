@@ -897,9 +897,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
     public function handlePost(): void
     {
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         if ($this->error) {
             $this->_renderPostError();
         }
@@ -1010,9 +1008,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         if ($this->routeInfo['validated']['auslagen-id'] === 'NEW') {
             $this->auslagen_data = $this->get_empty_auslage();
         }
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         // fill data
         $newInfo = $this->stateInfo;
         $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
@@ -1262,9 +1258,7 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     private function get_empty_auslage(): array
     {
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $newInfo = $this->stateInfo;
         $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
         $newInfo['user'] = $auth->getUsername();
@@ -1334,9 +1328,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
             return;
         }
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         // fill data
         $newInfo = $this->stateInfo;
         $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
@@ -1473,9 +1465,7 @@ class AuslagenHandler2 extends FormHandlerInterface
     public function state_change(string $newState, string $etag): bool
     {
         if ($this->state_change_possible($newState)) {
-            $auth = (AUTH_HANDLER);
-            /* @var $auth AuthHandler */
-            $auth = $auth::getInstance();
+            $auth = AuthHandler::getInstance();
             $newInfo = self::state2stateInfo($newState);
             $newInfo['date'] = date_create()->format('Y-m-d H:i:s');
             $newInfo['user'] = $auth->getUsername();
@@ -1759,9 +1749,7 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     private function renderAuslagenerstattung(): void
     {
-        $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $editable = $this->stateInfo['editable'];
         $current_form_id = 'auslagen-form-'.count($this->formSubmitButtons);
         $this->formSubmitButtons[] = $current_form_id;
@@ -2628,9 +2616,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         <div class='clearfix'></div>
         <div id="auslagenchat">
             <?php
-            $auth = (AUTH_HANDLER);
-        /* @var $auth AuthHandler */
-        $auth = $auth::getInstance();
+        $auth = AuthHandler::getInstance();
         $btns = [];
         $pdate = date_create(substr($this->auslagen_data['created'], 0, 4).'-01-01 00:00:00');
         $pdate->modify('+1 year');

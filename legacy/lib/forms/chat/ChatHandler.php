@@ -175,10 +175,9 @@ class ChatHandler
         $this->db = DBConnector::getInstance();
         $this->group = $group;
         $this->group_id = $group_id;
-        /* @var $auth AuthHandler */
-        $auth = AUTH_HANDLER;
-        $this->user = ($userName) ?: $auth::getInstance()->getUsername();
-        $this->userfullname = ($userfullname) ?: $auth::getInstance()->getUserFullName();
+        $auth = AuthHandler::getInstance();
+        $this->user = ($userName) ?: $auth->getUsername();
+        $this->userfullname = ($userfullname) ?: $auth->getUserFullName();
     }
 
     // FRONTEND - GUI =================================================
