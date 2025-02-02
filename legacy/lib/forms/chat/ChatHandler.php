@@ -628,14 +628,13 @@ class ChatHandler
         if ($text === '') {
             return '';
         }
+
         /*
         if (str_starts_with($text, '$enc$')) {
             $text = substr($text, 5);
 
             return $this->_decryptMessage($text, $this->getKey('private'));
         }*/
-        $text = substr($text, 6);
-
         return Crypt::decryptString($text);
     }
 

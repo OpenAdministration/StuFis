@@ -41,14 +41,14 @@ class LegacyMigrateEncryption extends Command
             $messages = ChatMessage::all();
             $count = 0;
             $messages->each(function ($message) use (&$count) {
+                $text = $message->text;
+                $count++;
                 if (str_starts_with($message->text, '$enc$')) {
-                    $count++;
                     $ch = new ChatHandler('', 1, 'cmd', 'cmd');
-                    $text = $ch->decryptMessage($message->text);
-                    $laraEncText = \Crypt::encryptString($text);
-                    $message->text = $laraEncText;
-                    $message->save();
+                    $text = $ch->decryptMessage($text);
                 }
+                $message->text = \Crypt::encryptString($text);
+                $message->save();
             });
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
