@@ -112,7 +112,7 @@ class MenuRenderer extends Renderer
             case 'open-projects':
                 if (is_null($hhp_bis)) {
                     $where = [
-                        ['state' => ['!=', 'teminated'], 'createdat' => ['>=', $hhp_von]],
+                        ['state' => ['!=', 'terminated'], 'createdat' => ['>=', $hhp_von]],
                     ];
                 } else {
                     $where = [
