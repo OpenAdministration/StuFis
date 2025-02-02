@@ -48,7 +48,7 @@ class LegacyMigrateEncryption extends Command
                         $text = substr($text, strlen('$enc$'));
                         $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
                     } elseif ($message->type == -1) {
-                        $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                        // $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
                     }
                 }
                 $message->text = \Crypt::encryptString($text);
