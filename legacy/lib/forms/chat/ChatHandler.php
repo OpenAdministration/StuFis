@@ -397,7 +397,7 @@ class ChatHandler
                 'timestamp' => mb_substr($timestamp, 0, 20),
                 'creator' => mb_substr($creator, 0, 127),
                 'creator_alias' => mb_substr($creator_alias, 0, 255),
-                'text' => '$lara$'.Crypt::encryptString(mb_substr($text, 0, 45000)),
+                'text' => Crypt::encryptString(mb_substr($text, 0, 45000)),
                 'type' => $type,
             ]);
         } catch (Exception $e) {

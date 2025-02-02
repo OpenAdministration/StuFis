@@ -112,11 +112,11 @@ class MenuRenderer extends Renderer
             case 'open-projects':
                 if (is_null($hhp_bis)) {
                     $where = [
-                        ['state' => ['!=', 'terminated'], 'createdat' => ['>=', $hhp_von]],
+                        ['state' => ['not regexp', '(terminated|revoked)'], 'createdat' => ['>=', $hhp_von]],
                     ];
                 } else {
                     $where = [
-                        ['state' => ['!=', 'terminated'], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
+                        ['state' => ['not regexp', '(terminated|revoked)'], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                     ];
                 }
                 break;
