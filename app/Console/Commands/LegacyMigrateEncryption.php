@@ -44,8 +44,10 @@ class LegacyMigrateEncryption extends Command
                 $text = $message->text;
                 $count++;
                 if (str_starts_with($message->text, '$enc$')) {
-                    $ch = new ChatHandler('', 1, 'cmd', 'cmd');
-                    $text = $ch->decryptMessage($text);
+                    $text = substr($text, strlen('$enc$'));
+                    $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                } elseif ($message->type == -1) {
+                    $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
                 }
                 $message->text = \Crypt::encryptString($text);
                 $message->save();

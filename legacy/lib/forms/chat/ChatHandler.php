@@ -617,7 +617,7 @@ class ChatHandler
         }
         // $this->createKeys();
 
-        return '$lara$'.$this->_encryptMessage($text, $this->getKey('public'));
+        return Crypt::encryptString($text);
     }
 
     /**
@@ -651,7 +651,7 @@ class ChatHandler
     /**
      * decrypt chat message by key
      */
-    private function _decryptMessage(string $encrypted, string $key): string
+    public static function legacyDecryptMessage(string $encrypted, string $key): string
     {
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
