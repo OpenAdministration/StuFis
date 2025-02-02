@@ -39,6 +39,8 @@ class ChatMessage extends Model
      */
     protected $table = 'comments';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

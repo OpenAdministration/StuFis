@@ -4,8 +4,10 @@ namespace App\Console\Commands;
 
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Expenses;
+use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class LegacyMigrateEncryption extends Command
@@ -39,21 +41,21 @@ class LegacyMigrateEncryption extends Command
             $messages = ChatMessage::all();
             $count = 0;
             $messages->each(function ($message) use (&$count) {
-                if (! str_starts_with($message->text, '$lara$')) {
-                    $count++;
-                    $text = ltrim($message->text, '$enc$');
-                    $laraEncText = \Crypt::encryptString($text);
-                    $message->text = $laraEncText;
-                    $message->save();
-                }
+                $count++;
+                $ch = new ChatHandler('', 1);
+                $text = $ch->decryptMessage($message->text);
+                $laraEncText = \Crypt::encryptString($text);
+                $message->text = $laraEncText;
+                $message->save();
             });
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count) {
-                $cryptIban = $expense->zahlung_iban;
-                $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
-                $expense->zahlung_iban = \Crypt::encryptString($iban);
+                /** @var Model $expense */
+                $cryptIban = $expense->get('zahlung-iban');
+                $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
+                $expense->update(['zahlung-iban' => \Crypt::encryptString($iban)]);
                 $expense->etag = \Str::random(32);
                 $expense->save();
                 $count++;

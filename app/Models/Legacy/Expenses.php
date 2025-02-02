@@ -70,6 +70,8 @@ class Expenses extends Model
      */
     protected $table = 'auslagen';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */
