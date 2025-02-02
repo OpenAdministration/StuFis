@@ -42,26 +42,29 @@ class LegacyMigrateEncryption extends Command
             $count = 0;
             $messages->each(function ($message) use (&$count) {
                 $text = $message->text;
-                $this->info('Migrate Chat-Id:'.$message->id);
                 if (! empty($text)) {
                     if (str_starts_with($message->text, '$enc$')) {
                         $text = substr($text, strlen('$enc$'));
                         $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
                     } elseif ($message->type == -1) {
-                        // $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                        try {
+                            $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                        } catch (\Exception $exception) {
+                        }
                     }
                 }
                 $message->text = \Crypt::encryptString($text);
                 $message->save();
+                $count++;
             });
-            $this->info('Migrated chat messages from legacy encryption to laravel integrated');
+            $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count) {
                 /** @var Model $expense */
-                $cryptIban = $expense->get('zahlung-iban');
+                $cryptIban = $expense->getAttribute('zahlung-iban');
                 $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
-                $expense->update(['zahlung-iban' => \Crypt::encryptString($iban)]);
+                $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
                 $expense->etag = \Str::random(32);
                 $expense->save();
                 $count++;
