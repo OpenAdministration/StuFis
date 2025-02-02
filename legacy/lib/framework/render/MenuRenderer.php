@@ -68,19 +68,7 @@ class MenuRenderer extends Renderer
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
         $userGremien = AuthHandler::getInstance()->getUserGremien();
-        /*
-        $userGremien = array_filter(
-            $userGremien,
-            static function ($val) {
-                foreach (GREMIUM_PREFIX as $prefix) {
-                    if (str_starts_with($val, $prefix)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        );
-        */
+
         rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case 'allgremium':
@@ -96,6 +84,7 @@ class MenuRenderer extends Renderer
                 break;
             case 'mygremium':
                 if (empty($userGremien)) {
+                    $this->setOverviewTabs($active);
                     $this->renderAlert(
                         'Schade!',
                         $this->makeClickableMails(
