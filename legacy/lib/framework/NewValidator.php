@@ -569,13 +569,6 @@ class NewValidator
 
             return [false, ''];
         }
-        if (in_array('hash', $params, true)) {
-            // TODO: think about salting me
-            $p = CryptoHandler::hashPassword($p);
-        } elseif (in_array('encrypt', $params, true)) {
-            $p = CryptoHandler::pad_string($p);
-            $p = CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE.'/secret.php'), $_ENV['APP_SECRET']);
-        }
 
         return [$this->isError, $p];
     }

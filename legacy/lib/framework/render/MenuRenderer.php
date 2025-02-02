@@ -12,8 +12,8 @@ use App\Exceptions\LegacyDieException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
-use framework\CryptoHandler;
 use framework\DBConnector;
+use Illuminate\Support\Facades\Crypt;
 
 class MenuRenderer extends Renderer
 {
@@ -781,10 +781,8 @@ class MenuRenderer extends Renderer
                 if (! $p) {
                     return '';
                 }
-                $p = CryptoHandler::decrypt_by_key($p, $_ENV['IBAN_SECRET_KEY']);
-                $p = CryptoHandler::unpad_string($p);
 
-                return $p;
+                return Crypt::decryptString($p);
             },                                                       // 1 Parameter
             function ($pId, $pCreate, $aId, $vwdzweck, $aName, $pName) {  // 6 Parameter - Verwendungszweck
                 $year = date('y', strtotime($pCreate));

@@ -38,7 +38,7 @@ class LocalSeeder extends Seeder
         ]);
 
         \DB::table('user')->insert([
-            'name' => 'Demo Admin',
+            'name' => 'The Admin',
             'username' => 'admin',
             'email' => 'admin@example.com',
             'provider' => 'local',

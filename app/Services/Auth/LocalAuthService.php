@@ -47,7 +47,7 @@ class LocalAuthService extends AuthService
         return match (\Auth::user()->username) {
             'user-no-login' => collect(),
             'user', 'external' => collect(['login']),
-            'hv','hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
+            'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
             'kv' => collect(['login', 'ref-finanzen', 'ref-finanzen-kv', 'ref-finanzen-belege']),
             'revision' => collect(['login', 'ref-finanzen']),
             'admin' => collect(['admin']),

@@ -1101,7 +1101,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             'last_change' => (string) ($newInfo['date']),
             'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
             'version' => (int) $this->auslagen_data['version'] + 1,
-            'etag' => CryptoHandler::generateRandomString(16),
+            'etag' => \Str::random(32),
         ];
         // insert/update in db
         if ($this->auslagen_data['id']) {
@@ -1368,7 +1368,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'last_change' => ($newInfo['date']),
                 'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
                 'version' => (int) $this->auslagen_data['version'] + 1,
-                'etag' => \Str::random(16),
+                'etag' => \Str::random(32),
             ]
         );
         // remove from laravell storage
@@ -1484,7 +1484,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             try {
                 $set = [
                     'version' => $this->auslagen_data['version'] + 1,
-                    'etag' => \Str::random(16),
+                    'etag' => \Str::random(32),
                 ];
             } catch (Exception $e) {
                 return false;

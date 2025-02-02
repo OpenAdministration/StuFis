@@ -35,11 +35,12 @@ class LegacyMigrateEncryption extends Command
             return self::FAILURE;
         }
         DB::transaction(function () {
+
             $messages = ChatMessage::all();
             $count = 0;
-            $messages->each(function ($message) use ($count) {
+            $messages->each(function ($message) use (&$count) {
                 if (! str_starts_with($message->text, '$lara$')) {
-                    $count += 1;
+                    $count++;
                     $text = ltrim($message->text, '$enc$');
                     $laraEncText = \Crypt::encryptString($text);
                     $message->text = $laraEncText;
@@ -49,15 +50,17 @@ class LegacyMigrateEncryption extends Command
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
             $count = 0;
-            Expenses::all()->each(function ($expense) use ($count) {
+            Expenses::all()->each(function ($expense) use (&$count) {
                 $cryptIban = $expense->zahlung_iban;
                 $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
                 $expense->zahlung_iban = \Crypt::encryptString($iban);
+                $expense->etag = \Str::random(32);
                 $expense->save();
-                $count += 1;
+                $count++;
             });
 
             $this->info("Migrated $count IBANs from legacy encryption to laravel integrated");
+
         });
 
         $this->info('You can now delete / comment CHAT_PRIVATE_KEY, CHAT_PUBLIC_KEY in your environment file');

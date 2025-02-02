@@ -330,7 +330,7 @@ class RestHandler extends EscFunc
                     ],
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -442,7 +442,7 @@ class RestHandler extends EscFunc
                 $validator_map = [
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -466,7 +466,7 @@ class RestHandler extends EscFunc
                 $validator_map = [
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -1205,42 +1205,27 @@ class RestHandler extends EscFunc
         // check if transferable to new States (payed => booked)
         $stateChangeNotOk = [];
         $doneAuslage = [];
+        $doStateChanges = [];
         // hydrate belege
         foreach ($confirmedInstructions as $instruction) {
             foreach ($belegeDB[$instruction] as $beleg) {
-                switch ($beleg['type']) {
-                    case 'auslage':
-                        $ah = new AuslagenHandler2(
-                            [
-                                'aid' => $beleg['auslagen_id'],
-                                'pid' => $beleg['projekt_id'],
-                                'action' => 'none',
-                            ]
-                        );
-                        if (! in_array('A'.$beleg['auslagen_id'], $doneAuslage, true)) {
-                            if ($ah->state_change_possible('booked') !== true) {
-                                $stateChangeNotOk[] = 'IP-'.date_create($beleg['projekt_createdate'])->format('y').'-'.
-                                    $beleg['projekt_id'].'-A'.$beleg['auslagen_id'].' ('.$ah->getStateString().')';
-                            } else {
-                                $ah->state_change('booked', $beleg['etag']);
-                                $doneAuslage[] = 'A'.$beleg['auslagen_id'];
-                            }
-                        }
-                        break;
-                    case 'extern':
-                        $evh = new ExternVorgangHandler($beleg['id']);
-
-                        if (! in_array('E'.$beleg['id'], $doneAuslage, true)
-                            && $evh->state_change_possible('booked') !== true) {
-                            $stateChangeNotOk[] = 'EP-'.
-                                $beleg['extern_id'].'-V'.$beleg['vorgang_id'].' ('.$evh->getStateString().
-                                ')';
-                        } else {
-                            $evh->state_change('booked', $beleg['etag']);
-                            $doneAuslage[] = 'E'.$beleg['id'];
-                        }
-
-                        break;
+                $ah = new AuslagenHandler2(
+                    [
+                        'aid' => $beleg['auslagen_id'],
+                        'pid' => $beleg['projekt_id'],
+                        'action' => 'none',
+                    ]
+                );
+                if (! in_array('A'.$beleg['auslagen_id'], $doneAuslage, true)) {
+                    if ($ah->state_change_possible('booked') !== true) {
+                        $stateChangeNotOk[] = 'IP-'.date_create($beleg['projekt_createdate'])->format('y').'-'.
+                            $beleg['projekt_id'].'-A'.$beleg['auslagen_id'].' ('.$ah->getStateString().')';
+                    } else {
+                        $doStateChanges[] = function () use ($ah, $beleg) {
+                            return $ah->state_change('booked', $beleg['etag']);
+                        };
+                        $doneAuslage[] = 'A'.$beleg['auslagen_id'];
+                    }
                 }
             }
         } // transferred states to booked - otherwise throw error
@@ -1353,6 +1338,9 @@ class RestHandler extends EscFunc
 
         // delete from instruction list
         DBConnector::getInstance()->dbUpdate('booking_instruction', ['id' => ['IN', $confirmedInstructions]], ['done' => 1]);
+        foreach ($doStateChanges as $doStateChange) {
+            $doStateChange();
+        }
         DBConnector::getInstance()->dbCommit();
         JsonController::print_json(
             [

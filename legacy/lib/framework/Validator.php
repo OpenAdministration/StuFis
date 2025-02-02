@@ -804,22 +804,6 @@ class Validator
             return ! $this->setError(true, 200, $msg);
         }
         $emsg = null;
-        if (in_array('hash', $params, true)) {
-            if (! class_exists('\CryptoHandler')) {
-                $emsg = 'Validator: Password: "hash" requires Crypto class to be loaded.';
-            } elseif (! defined('AUTH_PW_PEPPER')) {
-                $emsg = 'Validator: Password: "hash": global constant AUTH_PW_PEPPER required.';
-            } else {
-                $p = CryptoHandler::hashPassword($p.AUTH_PW_PEPPER);
-            }
-        } elseif (in_array('encrypt', $params, true)) {
-            if (! class_exists('\CryptoHandler')) {
-                $emsg = 'Validator: Password: "encrypt" requires Crypto class to be loaded.';
-            } else {
-                $p = CryptoHandler::pad_string($p);
-                $p = CryptoHandler::encrypt_by_key_pw($p, CryptoHandler::get_key_from_file(SYSBASE.'/secret.php'), CRYPTO_SECRET_KEY);
-            }
-        }
         if (isset($emsg) && $msg) {
             if (isset($params['error'])) {
                 $emsg = $params['error'];

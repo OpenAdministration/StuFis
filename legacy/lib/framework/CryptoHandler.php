@@ -119,22 +119,6 @@ class CryptoHandler
     // without password -----------------------------------------------
 
     /**
-     * encrypt string with key - defuse
-     *
-     * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
-     *
-     * @param  string  $data
-     * @param  string  $keyAscii
-     * @return string encrypted string
-     */
-    public static function encrypt_by_key($data, $keyAscii)
-    {
-        $key = Key::loadFromAsciiSafeString($keyAscii);
-
-        return Crypto::encrypt($data, $key);
-    }
-
-    /**
      * decrypt string with secret key - defuse
      *
      * @see https://github.com/defuse/php-encryption/blob/master/docs/Tutorial.md
