@@ -210,6 +210,7 @@ class DBConnector extends Singleton
             'sync_until' => 'DATE NULL',
             'iban' => 'VARCHAR(32) NULL',
             'last_sync' => 'DATE NULL',
+            'manually_enterable' => 'BOOLEAN NOT NULL DEFAULT 0',
         ];
         $keys['konto_type'] = [
             'primary' => ['id'],

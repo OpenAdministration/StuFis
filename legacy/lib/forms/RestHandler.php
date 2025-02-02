@@ -152,7 +152,10 @@ class RestHandler extends EscFunc
 
     public function saveNewKasseEntry(): void
     {
-        if (((int) $_REQUEST['konto-id']) > 0) {
+        $konto_id = $_REQUEST['konto-id'];
+        $konto = DBConnector::getInstance()->dbFetchAll('konto_type', where: ['id' => $konto_id]);
+        $enterable = $konto[0]['manually_enterable'];
+        if (! $enterable) {
             JsonController::print_json(
                 [
                     'success' => false,
