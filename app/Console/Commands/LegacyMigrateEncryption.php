@@ -42,7 +42,7 @@ class LegacyMigrateEncryption extends Command
             $count = 0;
             $messages->each(function ($message) use (&$count) {
                 $text = $message->text;
-                $count++;
+                $this->info('Migrate Chat-Id:'.$message->id);
                 if (! empty($text)) {
                     if (str_starts_with($message->text, '$enc$')) {
                         $text = substr($text, strlen('$enc$'));
@@ -54,7 +54,7 @@ class LegacyMigrateEncryption extends Command
                 $message->text = \Crypt::encryptString($text);
                 $message->save();
             });
-            $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
+            $this->info('Migrated chat messages from legacy encryption to laravel integrated');
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count) {
