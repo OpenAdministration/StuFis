@@ -652,6 +652,10 @@ class ChatHandler
      */
     public static function legacyDecryptMessage(string $encrypted, string $key): string
     {
+        if (empty($encrypted)) {
+            return '';
+        }
+
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
         return $decrypted ?? throw new \Exception('Corrupted Message: '.$encrypted);
