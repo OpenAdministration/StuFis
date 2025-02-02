@@ -10,6 +10,13 @@ class LocalSeeder extends Seeder
     {
         \DB::table('user')->insert([
             'name' => 'Demo User',
+            'username' => 'user-no-login',
+            'email' => 'user@example.com',
+            'provider' => 'local',
+            'provider_uid' => 'user',
+        ]);
+        \DB::table('user')->insert([
+            'name' => 'Demo User',
             'username' => 'user',
             'email' => 'user@example.com',
             'provider' => 'local',
@@ -30,5 +37,12 @@ class LocalSeeder extends Seeder
             'provider_uid' => 'hhv',
         ]);
 
+        \DB::table('user')->insert([
+            'name' => 'The Admin',
+            'username' => 'admin',
+            'email' => 'admin@example.com',
+            'provider' => 'local',
+            'provider_uid' => 'admin',
+        ]);
     }
 }

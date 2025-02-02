@@ -34,9 +34,29 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/api.php'));
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
+
+            if (config('stufis.features') === 'dev') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-dev.php'));
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
+            }
+
+            if (config('stufis.features') === 'preview') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
+            }
+
+            if ($this->app->hasDebugModeEnabled()) {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-debug.php'));
+            }
+
+            // has to be last because there is a catch-all inside
             Route::middleware('legacy')
                 ->namespace($this->namespace)
                 ->group(base_path('routes/legacy.php'));
+
         });
 
     }

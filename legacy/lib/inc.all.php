@@ -7,7 +7,11 @@ $conf = [];
 const AUTH_HANDLER = AuthHandler::class;
 
 define('REALM', config('app.realm'));
-define('ORG_DATA', (include SYSBASE.'/config/config.orgs.php')[REALM] ?? []);
+if (App::runningUnitTests()) {
+    define('ORG_DATA', (include SYSBASE.'/config/config.orgs.testing.php')[REALM] ?? []);
+} else {
+    define('ORG_DATA', (include SYSBASE.'/config/config.orgs.php')[REALM] ?? []);
+}
 const GREMIEN = ORG_DATA['gremien'] ?? [];
 const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
 define('DEV', config('app.debug'));

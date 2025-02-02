@@ -12,8 +12,8 @@ use App\Exceptions\LegacyDieException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
-use framework\CryptoHandler;
 use framework\DBConnector;
+use Illuminate\Support\Facades\Crypt;
 
 class MenuRenderer extends Renderer
 {
@@ -34,20 +34,8 @@ class MenuRenderer extends Renderer
         switch ($this->pathinfo['action']) {
             case 'mygremium':
             case 'allgremium':
-                HTMLPageRenderer::registerProfilingBreakpoint('start-rendering');
+            case 'open-projects':
                 $this->renderProjekte($this->pathinfo['action']);
-                break;
-            case 'search':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderSearch();
-                break;
-            case 'mystuff':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info');
-                break;
-            case 'extern':
-                $this->setOverviewTabs($this->pathinfo['action']);
-                $this->renderExtern();
                 break;
             case 'mykonto':
                 $this->renderMyProfile();
@@ -80,19 +68,7 @@ class MenuRenderer extends Renderer
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
         $userGremien = AuthHandler::getInstance()->getUserGremien();
-        /*
-        $userGremien = array_filter(
-            $userGremien,
-            static function ($val) {
-                foreach (GREMIUM_PREFIX as $prefix) {
-                    if (str_starts_with($val, $prefix)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        );
-        */
+
         rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
         switch ($active) {
             case 'allgremium':
@@ -108,6 +84,7 @@ class MenuRenderer extends Renderer
                 break;
             case 'mygremium':
                 if (empty($userGremien)) {
+                    $this->setOverviewTabs($active);
                     $this->renderAlert(
                         'Schade!',
                         $this->makeClickableMails(
@@ -129,6 +106,17 @@ class MenuRenderer extends Renderer
                         ['org' => ['in', $userGremien], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                         ['org' => ['is', null], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                         ['org' => '', 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
+                    ];
+                }
+                break;
+            case 'open-projects':
+                if (is_null($hhp_bis)) {
+                    $where = [
+                        ['state' => ['!=', 'teminated'], 'createdat' => ['>=', $hhp_von]],
+                    ];
+                } else {
+                    $where = [
+                        ['state' => ['!=', 'terminated'], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
                     ];
                 }
                 break;
@@ -173,7 +161,7 @@ class MenuRenderer extends Renderer
                     'projekt_id',  // group idx
                     'projekt_id',
                     'auslagen.id',
-                    'name_suffix', //auslagen Link
+                    'name_suffix', // auslagen Link
                     'zahlung-name', // Empf. Name
                     'einnahmen' => ['einnahmen', DBConnector::GROUP_SUM_ROUND2],
                     'ausgaben' => ['ausgaben', DBConnector::GROUP_SUM_ROUND2],
@@ -189,7 +177,7 @@ class MenuRenderer extends Renderer
             );
         }
 
-        //var_dump(end(end($projekte)));
+        // var_dump(end(end($projekte)));
         $this->setOverviewTabs($active); ?>
 
         <div class="panel-group" id="accordion">
@@ -204,9 +192,9 @@ class MenuRenderer extends Renderer
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
                                 <?php
-                                $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
-                                    // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
-                                    $gremium; ?>
+                            $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
+                                // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
+                                $gremium; ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?php echo $titel; ?>
                             </h4>
                         </div>
@@ -230,7 +218,7 @@ class MenuRenderer extends Renderer
                                                  href="#collapse<?php echo $i.'-'.$j; ?>">
                                                 <h4 class="panel-title">
                                                     <i class="fa fa-togglebox"></i><span
-                                                            class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
+                                                        class="panel-projekt-name"><?php echo htmlspecialchars($projekt['name']); ?></span>
                                                     <span class="panel-projekt-money text-muted hidden-xs ">
                                                         <?php echo number_format($projekt['ausgaben'], 2, ',', '.'); ?>
                                                     </span>
@@ -317,7 +305,7 @@ class MenuRenderer extends Renderer
                                                                 $sum_a_out - $sum_a_in,
                                                                 2
                                                             ).'&nbsp€',
-                                                                ],
+                                                        ],
                                                     ]
                                                 ); ?>
                                                     </div>
@@ -335,11 +323,20 @@ class MenuRenderer extends Renderer
                     $i++;
             }
         } else {
-            $this->renderAlert(
-                'Warnung',
-                "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
-                'warning'
-            );
+            if ($active === 'open-projects') {
+                $this->renderAlert(
+                    'Yeah',
+                    'Es gibt in diesem Haushaltsjahr keine offenen Projekte. Für den Haushaltsabschluss ist das wirklich eine gute Sache!',
+                    'success'
+                );
+            } else {
+                $this->renderAlert(
+                    'Warnung',
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                    'warning'
+                );
+            }
+
         } ?>
         </div>
         <?php
@@ -515,9 +512,9 @@ class MenuRenderer extends Renderer
             // return ??
         };
 
-        //$this->renderAccordionPanels($test, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
+        // $this->renderAccordionPanels($test, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
         $this->renderAccordionPanels($extern_meta, $groupHeaderFun, $innerHeaderHeadlineFun, $innerHeaderFun, $innerContentFun);
-        //$this->renderTable($header,[$extern],array_keys($header));
+        // $this->renderTable($header,[$extern],array_keys($header));
     }
 
     public function setOverviewTabs($active): void
@@ -526,12 +523,12 @@ class MenuRenderer extends Renderer
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
-            //"mystuff" => "<i class='fa fa-fw fa-user-o'></i> Meine Anträge",
+            'open-projects' => "<i class='fa fa-fw fa-file-text'></i> Offene Projekte",
         ];
         if (AuthHandler::getInstance()->hasGroup('ref-finanzen')) {
-            //$tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
+            // $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
         }
-        //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
+        // $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
@@ -546,7 +543,7 @@ class MenuRenderer extends Renderer
         if (AuthHandler::getInstance()->hasGroup('ref-finanzen-kv')) {
             $tabs['kv/exportBank'] = "<i class='fa fa-fw fa-money'></i> Überweisungen";
         }
-        //$tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
+        // $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
@@ -597,9 +594,9 @@ class MenuRenderer extends Renderer
 
     private function renderStuRaView(): void
     {
-        $header = ['Projekte', 'Organisation', 'Projektbeginn'/*"Einnahmen", "Ausgaben"*/];
+        $header = ['Projekte', 'Organisation', 'Projektbeginn'/* "Einnahmen", "Ausgaben" */];
 
-        //TODO: also externe Anträge
+        // TODO: also externe Anträge
         // $groups[] = ["name" => "Externe Anträge", "fields" => ["type" => "extern-express", "state" => "need-stura",]];
         [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState('need-stura');
         [, $internContentHV] = $this->fetchProjectsWithState('ok-by-hv');
@@ -647,16 +644,16 @@ class MenuRenderer extends Renderer
 
     private function renderHVView(): void
     {
-        //Projekte -------------------------------------------------------------------------------------------------
+        // Projekte -------------------------------------------------------------------------------------------------
         [$headerIntern, $internWIP, $escapeFunctionsIntern] = $this->fetchProjectsWithState('wip');
         $groupsIntern['zu prüfende Projekte'] = $internWIP;
 
-        //Auslagenerstattungen -------------------------------------------------------------------------------------
+        // Auslagenerstattungen -------------------------------------------------------------------------------------
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'hv');
         $groupsAuslagen['Sachliche Richtigkeit der Auslagen prüfen'] = $auslagenWIP;
 
-        //TODO: Implementierung vom rest
-        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+        // TODO: Implementierung vom rest
+        // $groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
         $this->setTodoTabs('hv');
         $this->renderTable($headerIntern, $groupsIntern, [], $escapeFunctionsIntern);
@@ -676,7 +673,7 @@ class MenuRenderer extends Renderer
             [
                 'projekte.id',
                 'createdat',
-                'name', //Projekte Link
+                'name', // Projekte Link
                 'projekte.id',
                 'auslagen.id',
                 'auslagen.name_suffix', // Auslagen Link
@@ -711,13 +708,13 @@ class MenuRenderer extends Renderer
 
     public function renderKVView(): void
     {
-        //Auslagenerstattungen
-        //$headerAuslagen = ["Projekt", "Erstattung", "Organisation", "zuletzt geändert"];
+        // Auslagenerstattungen
+        // $headerAuslagen = ["Projekt", "Erstattung", "Organisation", "zuletzt geändert"];
 
         [$headerAuslagen, $auslagenWIP, $escapeFunctionsAuslagen] = $this->fetchAuslagenWithState('wip', 'kv');
 
-        //TODO: Implementierung vom rest
-        //$groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
+        // TODO: Implementierung vom rest
+        // $groups[] = ["name" => "Externe Projekte für StuRa Situng vorbereiten", "fields" => ["type" => "extern-express", "state" => "draft"]];
 
         $this->setTodoTabs('kv');
         $this->renderTable($headerAuslagen, ['Rechnerische Richtigkeit der Auslagen prüfen' => $auslagenWIP], [], $escapeFunctionsAuslagen);
@@ -751,7 +748,7 @@ class MenuRenderer extends Renderer
                 'auslagen.id',
                 'auslagen.zahlung-vwzk',
                 'auslagen.name_suffix',
-                'projekte.name', //verwendungszweck
+                'projekte.name', // verwendungszweck
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
                 'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
             ],
@@ -773,10 +770,8 @@ class MenuRenderer extends Renderer
                 if (! $p) {
                     return '';
                 }
-                $p = CryptoHandler::decrypt_by_key($p, $_ENV['IBAN_SECRET_KEY']);
-                $p = CryptoHandler::unpad_string($p);
 
-                return $p;
+                return Crypt::decryptString($p);
             },                                                       // 1 Parameter
             function ($pId, $pCreate, $aId, $vwdzweck, $aName, $pName) {  // 6 Parameter - Verwendungszweck
                 $year = date('y', strtotime($pCreate));

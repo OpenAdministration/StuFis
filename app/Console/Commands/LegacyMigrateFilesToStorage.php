@@ -32,7 +32,7 @@ class LegacyMigrateFilesToStorage extends Command
             $link = $fileInfo->link;
             $beleg = ExpensesReceipt::find($link);
             $expenses_id = $beleg?->auslagen_id;
-            $pdfData = $data->data;
+            $pdfData = $data?->data;
             $hash = $fileInfo->hashname;
             $path = "auslagen/$expenses_id/$hash.pdf";
             if ($pdfData !== null) {

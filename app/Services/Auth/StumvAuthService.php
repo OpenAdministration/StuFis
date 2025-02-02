@@ -53,10 +53,10 @@ class StumvAuthService extends AuthService
             'name' => $attributes['name'],
             'username' => $attributes['nickname'],
             'email' => $attributes['email'],
-            //'provider_token' => $user->token,
-            //'provider_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
-            //'provider_refresh_token' => $user->refreshToken,
-            //'provider_refresh_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
+            // 'provider_token' => $user->token,
+            // 'provider_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
+            // 'provider_refresh_token' => $user->refreshToken,
+            // 'provider_refresh_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
             'picture_url' => $attributes['avatar'] ?? '',
             'iban' => $attributes['iban'] ?? '',
             'address' => $attributes['address'] ?? '',
@@ -79,20 +79,9 @@ class StumvAuthService extends AuthService
         });
     }
 
-    public function userGroups(): Collection
+    public function groupMapping(): Collection
     {
-        $rawGroups = $this->userGroupsRaw();
-        $mapping = collect(config('services.laravelpassport.mapping', []));
-        if ($mapping->isEmpty()) {
-            return $this->userGroupsRaw();
-        }
-
-        // permissions to obtain are the keys of the $mapping
-        return $mapping->filter(function ($value) use ($rawGroups) {
-            // filter permissions, that are not given by provider
-            // prevent permission escalation by ignoring empty mappings
-            return $rawGroups->contains($value) && ! empty($value);
-        })->keys();
+        return collect(config('services.laravelpassport.mapping', []));
     }
 
     public function afterLogout()

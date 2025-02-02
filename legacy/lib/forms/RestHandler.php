@@ -1,4 +1,5 @@
 <?php
+
 /**
  * FRAMEWORK JsonHandler
  *
@@ -151,7 +152,10 @@ class RestHandler extends EscFunc
 
     public function saveNewKasseEntry(): void
     {
-        if (((int) $_REQUEST['konto-id']) > 0) {
+        $konto_id = $_REQUEST['konto-id'];
+        $konto = DBConnector::getInstance()->dbFetchAll('konto_type', where: ['id' => $konto_id]);
+        $enterable = $konto[0]['manually_enterable'];
+        if (! $enterable) {
             JsonController::print_json(
                 [
                     'success' => false,
@@ -194,29 +198,25 @@ class RestHandler extends EscFunc
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {
                 DBConnector::getInstance()->dbInsert('konto', $fields);
             } else {
-                JsonController::print_json(
-                    [
-                        'success' => false,
-                        'status' => '200',
-                        'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
-                        'type' => 'modal',
-                        'subtype' => 'server-error',
-                        'headline' => 'Fehler bei der Verarbeitung',
-                    ]
-                );
+                JsonController::print_json([
+                    'success' => false,
+                    'status' => '200',
+                    'msg' => "Alter Saldo ({$last['saldo']}) und neuer Wert ({$fields['value']}) ergeben nicht neuen Saldo ({$fields['saldo']})!",
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Fehler bei der Verarbeitung',
+                ]);
             }
         }
-        JsonController::print_json(
-            [
-                'success' => true,
-                'status' => '200',
-                'msg' => 'Die Seite wird gleich neu geladen',
-                'type' => 'modal',
-                'subtype' => 'server-success',
-                'reload' => 1000,
-                'headline' => 'Erfolgreich gespeichert',
-            ]
-        );
+        JsonController::print_json([
+            'success' => true,
+            'status' => '200',
+            'msg' => 'Die Seite wird gleich neu geladen',
+            'type' => 'modal',
+            'subtype' => 'server-success',
+            'reload' => 1000,
+            'headline' => 'Erfolgreich gespeichert',
+        ]);
     }
 
     public function handleProjekt($routeInfo = null): void
@@ -266,27 +266,27 @@ class RestHandler extends EscFunc
                     throw new ActionNotSetException('Unbekannte Aktion verlangt!');
             }
         } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
-                InvalidDataException|PDOException|IllegalTransitionException $exception) {
-                    $ret = false;
-                    $msgs[] = 'Ein Fehler ist aufgetreten';
-                    $msgs[] = $exception->getMessage();
-                } catch (IllegalStateException $exception) {
-                    $ret = false;
-                    $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
-                    $msgs[] = $exception->getMessage();
-                } finally {
-                    if ($ret) {
-                        $dbret = DBConnector::getInstance()->dbCommit();
-                    }
-                    if ($ret === false || $dbret === false) {
-                        DBConnector::getInstance()->dbRollBack();
-                        $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
-                    } else {
-                        $msgs[] = 'Daten erfolgreich gespeichert!';
-                        $target = URIBASE.'projekt/'.$projektHandler->getID();
-                    }
+        InvalidDataException|PDOException|IllegalTransitionException $exception) {
+            $ret = false;
+            $msgs[] = 'Ein Fehler ist aufgetreten';
+            $msgs[] = $exception->getMessage();
+        } catch (IllegalStateException $exception) {
+            $ret = false;
+            $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
+            $msgs[] = $exception->getMessage();
+        } finally {
+            if ($ret) {
+                $dbret = DBConnector::getInstance()->dbCommit();
+            }
+            if ($ret === false || $dbret === false) {
+                DBConnector::getInstance()->dbRollBack();
+                $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
+            } else {
+                $msgs[] = 'Daten erfolgreich gespeichert!';
+                $target = URIBASE.'projekt/'.$projektHandler->getID();
+            }
 
-                }
+        }
 
         $json = [
             'success' => ($ret !== false),
@@ -333,7 +333,7 @@ class RestHandler extends EscFunc
                     ],
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -445,7 +445,7 @@ class RestHandler extends EscFunc
                 $validator_map = [
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -469,7 +469,7 @@ class RestHandler extends EscFunc
                 $validator_map = [
                     'etag' => [
                         'regex',
-                        'pattern' => '/^(0|([a-f0-9]){32})$/',
+                        'pattern' => '/^[A-Za-z0-9]{32}$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
@@ -908,7 +908,7 @@ class RestHandler extends EscFunc
             $fields['empf_iban'] = $zahlung['empfaenger_konto'];
             $fields['empf_bic'] = $zahlung['empfaenger_blz'];
             $fields['saldo'] = $zahlung['saldo'];
-            $fields['gvcode'] = $zahlung['gvcode'];
+            // $fields['gvcode'] = $zahlung['gvcode']; # deprecated since csv import
             $fields['zweck'] = $zahlung['zweck'];
             $fields['comment'] = $zahlung['kommentar'];
             $fields['customer_ref'] = $zahlung['customer_ref'];
@@ -1208,42 +1208,27 @@ class RestHandler extends EscFunc
         // check if transferable to new States (payed => booked)
         $stateChangeNotOk = [];
         $doneAuslage = [];
+        $doStateChanges = [];
         // hydrate belege
         foreach ($confirmedInstructions as $instruction) {
             foreach ($belegeDB[$instruction] as $beleg) {
-                switch ($beleg['type']) {
-                    case 'auslage':
-                        $ah = new AuslagenHandler2(
-                            [
-                                'aid' => $beleg['auslagen_id'],
-                                'pid' => $beleg['projekt_id'],
-                                'action' => 'none',
-                            ]
-                        );
-                        if (! in_array('A'.$beleg['auslagen_id'], $doneAuslage, true)) {
-                            if ($ah->state_change_possible('booked') !== true) {
-                                $stateChangeNotOk[] = 'IP-'.date_create($beleg['projekt_createdate'])->format('y').'-'.
-                                    $beleg['projekt_id'].'-A'.$beleg['auslagen_id'].' ('.$ah->getStateString().')';
-                            } else {
-                                $ah->state_change('booked', $beleg['etag']);
-                                $doneAuslage[] = 'A'.$beleg['auslagen_id'];
-                            }
-                        }
-                        break;
-                    case 'extern':
-                        $evh = new ExternVorgangHandler($beleg['id']);
-
-                        if (! in_array('E'.$beleg['id'], $doneAuslage, true)
-                            && $evh->state_change_possible('booked') !== true) {
-                            $stateChangeNotOk[] = 'EP-'.
-                                $beleg['extern_id'].'-V'.$beleg['vorgang_id'].' ('.$evh->getStateString().
-                                ')';
-                        } else {
-                            $evh->state_change('booked', $beleg['etag']);
-                            $doneAuslage[] = 'E'.$beleg['id'];
-                        }
-
-                        break;
+                $ah = new AuslagenHandler2(
+                    [
+                        'aid' => $beleg['auslagen_id'],
+                        'pid' => $beleg['projekt_id'],
+                        'action' => 'none',
+                    ]
+                );
+                if (! in_array('A'.$beleg['auslagen_id'], $doneAuslage, true)) {
+                    if ($ah->state_change_possible('booked') !== true) {
+                        $stateChangeNotOk[] = 'IP-'.date_create($beleg['projekt_createdate'])->format('y').'-'.
+                            $beleg['projekt_id'].'-A'.$beleg['auslagen_id'].' ('.$ah->getStateString().')';
+                    } else {
+                        $doStateChanges[] = function () use ($ah, $beleg) {
+                            return $ah->state_change('booked', $beleg['etag']);
+                        };
+                        $doneAuslage[] = 'A'.$beleg['auslagen_id'];
+                    }
                 }
             }
         } // transferred states to booked - otherwise throw error
@@ -1356,6 +1341,9 @@ class RestHandler extends EscFunc
 
         // delete from instruction list
         DBConnector::getInstance()->dbUpdate('booking_instruction', ['id' => ['IN', $confirmedInstructions]], ['done' => 1]);
+        foreach ($doStateChanges as $doStateChange) {
+            $doStateChange();
+        }
         DBConnector::getInstance()->dbCommit();
         JsonController::print_json(
             [

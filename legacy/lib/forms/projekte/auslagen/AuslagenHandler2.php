@@ -26,6 +26,8 @@ use framework\svg\SvgDiagramAddingBeam;
 use framework\svg\SvgDiagramPie;
 use framework\svg\SvgDiagramRaw;
 use framework\svg\SvgDiagramState;
+use GuzzleHttp\Exception\InvalidArgumentException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 
 /**
@@ -1099,7 +1101,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             'last_change' => (string) ($newInfo['date']),
             'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
             'version' => (int) $this->auslagen_data['version'] + 1,
-            'etag' => CryptoHandler::generateRandomString(16),
+            'etag' => \Str::random(32),
         ];
         // insert/update in db
         if ($this->auslagen_data['id']) {
@@ -1298,6 +1300,7 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     protected static function encryptedStr(string $str): string
     {
+        /*
         $p = $str;
         if (! $p) {
             return '';
@@ -1305,6 +1308,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         $p = CryptoHandler::pad_string($p);
 
         return CryptoHandler::encrypt_by_key($p, self::getKey());
+        */
+        return Crypt::encryptString($str);
     }
 
     private static function getKey(): string
@@ -1363,7 +1368,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'last_change' => ($newInfo['date']),
                 'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
                 'version' => (int) $this->auslagen_data['version'] + 1,
-                'etag' => CryptoHandler::generateRandomString(16),
+                'etag' => \Str::random(32),
             ]
         );
         // remove from laravell storage
@@ -1479,7 +1484,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             try {
                 $set = [
                     'version' => $this->auslagen_data['version'] + 1,
-                    'etag' => CryptoHandler::generateRandomString(16),
+                    'etag' => \Str::random(32),
                 ];
             } catch (Exception $e) {
                 return false;
@@ -1711,6 +1716,15 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     protected static function decryptedStr(string $str): string
     {
+
+        return Crypt::decryptString($str);
+    }
+
+    /**
+     * @deprecated only used by migration command
+     */
+    public static function legacyDecryptStr(string $str): string
+    {
         $p = $str;
         if (! $p) {
             return '';
@@ -1718,8 +1732,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         try {
             $p = CryptoHandler::decrypt_by_key($p, self::getKey());
         } catch (WrongKeyOrModifiedCiphertextException $e) {
-            HTMLPageRenderer::addFlash(BT::TYPE_WARNING,
-                'Beim entschlüsseln der IBAN ist ein Fehler aufgetreten. Bitte kontaktiere den Administrator'
+            throw new InvalidArgumentException(
+                'Beim entschlüsseln der IBAN ist ein Fehler aufgetreten'
             );
         }
         $p = CryptoHandler::unpad_string($p);

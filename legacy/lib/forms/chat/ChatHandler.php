@@ -8,7 +8,10 @@ use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\helper\EnvSetter;
 use framework\render\ErrorHandler;
+use framework\render\JsonController;
 use framework\Validator;
+use http\Exception\InvalidArgumentException;
+use Illuminate\Support\Facades\Crypt;
 
 class ChatHandler
 {
@@ -87,18 +90,18 @@ class ChatHandler
      * @var array
      */
     private $colors = [
-        //own comment color
+        // own comment color
         'owner' => [['DCDCDC', '000']],
         'default' => [['CCCCCC', '000']],
-        //private message
+        // private message
         '-1' => [['DDDDDD', '000']],
-        //normal comments color, map
+        // normal comments color, map
         '0' => [['C7CAC3', '000'], ['AEB2A8', '000'], ['989C90', '000'], ['84887C', '000'], ['BAC4A5', '000']],
-        //system message
+        // system message
         '1' => [['5BC0DE', 'fff']],
-        //admin message
+        // admin message
         '2' => [['AA3939', '000'], ['801515', 'fff'], ['D46A6A', 'fff'], ['550000', 'fff'], ['FFAAAA', '000']],
-        //finanzen message
+        // finanzen message
         '3' => [['0D58A6', 'fff'], ['094480', 'fff'], ['306DAB', 'fff'], ['063465', 'fff'], ['5286BC', 'fff']],
     ];
 
@@ -193,44 +196,44 @@ class ChatHandler
         if (! $group_id) {
             return;
         } ?>
-			<div class="panel panel-default chat-panel">
-	        	<input type="hidden" name="nonce" value="<?= csrf_token() ?>">
-				<div class="panel-heading">Kommentare/Nachrichten</div>
-				<div class="panel-body chat">
-					<div class="new-chat-comment"
-                         data-url="<?php echo URIBASE.'rest/chat'; ?>"
-                         data-target_id="<?php echo $group_id; ?>"
-                         data-target="<?php echo $group; ?>">
-                        <?php if (count($buttons) > 0) { ?>
-						<div class="chat-container chat-right">
-							<span class="chat-time">Jetzt gerade</span>
-							<label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())), 0, 16);
-                            echo $tid; ?>">
-								<?php echo htmlspecialchars($user); ?>
-							</label>
-							<textarea id="new-comment_<?php echo $tid; ?>" class="chat-textarea form-control col-xs-10" rows="3"></textarea>
-							<?php foreach ($buttons as $btn) {
-							    ?>
-									<button type="button" style="margin: 0 0 5px 8px;"
-											data-type="<?php echo $btn['type']; ?>"
-											<?php echo (isset($btn['hover-title'])) ? 'title="'.$btn['hover-title'].'"' : ''; ?>
-											class="btn btn-<?php echo $btn['color']; ?> pull-right chat-submit"><?php echo $btn['label']; ?></button>
-								<?php
-							}
-                            ?>
-							<div class="clearfix"></div>
-						</div>
-						<?php } ?>
-					</div>
-					<div class="clearfix"></div>
-					<div class="chat-section">
-						<div class="chat-loading"><div>Der Chat läd gerade...</div><div class="planespinner"><div class="rotating-plane"></div></div></div>
-						<div class="chat-no-comments">Keine Kommentare vorhanden</div>
-						<div class="clearfix"></div>
-					</div>
-				</div>
-			</div>
-    	<?php
+        <div class="panel panel-default chat-panel">
+            <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
+            <div class="panel-heading">Kommentare/Nachrichten</div>
+            <div class="panel-body chat">
+                <div class="new-chat-comment"
+                     data-url="<?php echo URIBASE.'rest/chat'; ?>"
+                     data-target_id="<?php echo $group_id; ?>"
+                     data-target="<?php echo $group; ?>">
+                    <?php if (count($buttons) > 0) { ?>
+                        <div class="chat-container chat-right">
+                            <span class="chat-time">Jetzt gerade</span>
+                            <label for="new-comment_<?php $tid = substr(base64_encode(sha1(mt_rand())), 0, 16);
+                        echo $tid; ?>">
+                                <?php echo htmlspecialchars($user); ?>
+                            </label>
+                            <textarea id="new-comment_<?php echo $tid; ?>" class="chat-textarea form-control col-xs-10" rows="3"></textarea>
+                            <?php foreach ($buttons as $btn) {
+                                ?>
+                                <button type="button" style="margin: 0 0 5px 8px;"
+                                        data-type="<?php echo $btn['type']; ?>"
+                                    <?php echo (isset($btn['hover-title'])) ? 'title="'.$btn['hover-title'].'"' : ''; ?>
+                                        class="btn btn-<?php echo $btn['color']; ?> pull-right chat-submit"><?php echo $btn['label']; ?></button>
+                                <?php
+                            }
+                        ?>
+                            <div class="clearfix"></div>
+                        </div>
+                    <?php } ?>
+                </div>
+                <div class="clearfix"></div>
+                <div class="chat-section">
+                    <div class="chat-loading"><div>Der Chat läd gerade...</div><div class="planespinner"><div class="rotating-plane"></div></div></div>
+                    <div class="chat-no-comments">Keine Kommentare vorhanden</div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <?php
     }
 
     // LOAD CHAT COMMENTS =============================================
@@ -282,7 +285,7 @@ class ChatHandler
             ];
         }
         foreach ($this->comments as $k => $c) {
-            //position
+            // position
             if ($user === $c['creator']) {
                 $this->comments[$k]['pos'] = 'right';
             } elseif ($c['type'] === 1) {
@@ -290,7 +293,7 @@ class ChatHandler
             } else {
                 $this->comments[$k]['pos'] = 'left';
             }
-            //color + border color
+            // color + border color
             $colorKey = 'default';
             if (array_key_exists($c['type'], $map)) {
                 $colorKey = $c['type'];
@@ -298,14 +301,14 @@ class ChatHandler
             if ($c['type'] != 2 && $c['type'] != 3 && $c['creator'] == $user) {
                 $colorKey = 'owner';
             }
-            //------------
+            // ------------
             $cc = $c['creator'];
             if (! isset($map[$colorKey]['user'][$cc])) {
                 $map[$colorKey]['user'][$cc] = $this->colors[$colorKey][($map[$colorKey]['color-position'] % $map[$colorKey]['color-count'])];
                 $map[$colorKey]['color-position']++;
             }
             $this->comments[$k]['color'] = $map[$colorKey]['user'][$cc];
-            //extra class
+            // extra class
             if (isset($this->classMap[$c['type']])) {
                 $this->comments[$k]['class'] = $this->classMap[$c['type']];
             }
@@ -338,7 +341,9 @@ class ChatHandler
                 $count++;
                 unset($this->comments[$k]);
             } else {
-                if (((int) $this->comments[$k]['type']) === -1 || str_starts_with($this->comments[$k]['text'], '$enc$')) {
+                if (((int) $this->comments[$k]['type']) === -1
+                    || str_starts_with($this->comments[$k]['text'], '$enc$')
+                    || str_starts_with($this->comments[$k]['text'], '$lara$')) {
                     $this->comments[$k]['text'] = $this->decryptMessage($this->comments[$k]['text']);
                 }
                 $count++;
@@ -398,7 +403,7 @@ class ChatHandler
                 'timestamp' => mb_substr($timestamp, 0, 20),
                 'creator' => mb_substr($creator, 0, 127),
                 'creator_alias' => mb_substr($creator_alias, 0, 255),
-                'text' => $this->encryptMessage(mb_substr($text, 0, 45000)),
+                'text' => '$lara$'.Crypt::encryptString(mb_substr($text, 0, 45000)),
                 'type' => $type,
             ]);
         } catch (Exception $e) {
@@ -495,9 +500,7 @@ class ChatHandler
      */
     public function answerJson($json): void
     {
-        http_response_code($json['code']);
-        header('Content-Type: application/json');
-        echo json_encode($json, JSON_HEX_QUOT | JSON_HEX_TAG);
+        JsonController::print_json($json);
     }
 
     /**
@@ -536,9 +539,11 @@ class ChatHandler
 
             return;
         }
+
         switch ($post['action']) {
             case 'newcomment':
                 $this->createComment($post['text'], $post['type'], $post['target'], $post['target_id']);
+
                 $this->answerJson([
                     'success' => true,
                     'code' => 200,
@@ -550,6 +555,7 @@ class ChatHandler
                 $this->loadComments(true, $post['last'], $post['target'], $post['target_id']);
                 $this->commentStyle();
                 $this->filterComments();
+                // dd($this->comments);
                 $this->answerJson([
                     'success' => true,
                     'code' => 200,
@@ -610,25 +616,30 @@ class ChatHandler
         if ($text === '') {
             return '';
         }
-        $this->createKeys();
+        // $this->createKeys();
 
-        return '$enc$'.$this->_encryptMessage($text, $this->getKey('public'));
+        return '$lara$'.$this->_encryptMessage($text, $this->getKey('public'));
     }
 
     /**
      * decrypt chat message
      */
-    private function decryptMessage(string $text): string
+    public function decryptMessage(string $text): string
     {
         if ($text === '') {
             return '';
         }
-        $this->createKeys();
         if (str_starts_with($text, '$enc$')) {
             $text = substr($text, 5);
-        }
 
-        return $this->_decryptMessage($text, $this->getKey('private'));
+            return $this->_decryptMessage($text, $this->getKey('private'));
+        }
+        if (str_starts_with($text, '$lara$')) {
+            $text = substr($text, 6);
+
+            return Crypt::decryptString($text);
+        }
+        throw new InvalidArgumentException('Unknown encryption message type: '.$text);
     }
 
     /**
@@ -648,6 +659,6 @@ class ChatHandler
     {
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
-        return $decrypted ?? '<strong><i>! Corrupted message. !</i></strong>';
+        return $decrypted ?? throw new InvalidArgumentException('Corrupted Message: '.$encrypted);
     }
 }

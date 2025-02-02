@@ -2,7 +2,10 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\Expenses
@@ -29,7 +32,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property ExpensesReceipt[] $beleges
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\ExpensesReceipt> $receipts
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ExpensesReceipt> $receipts
  * @property-read int|null $receipts_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newModelQuery()
@@ -58,6 +61,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Expenses extends Model
 {
+    use HasFactory;
+
     /**
      * The table associated with the model.
      *
@@ -71,7 +76,7 @@ class Expenses extends Model
     protected $fillable = ['projekt_id', 'name_suffix', 'state', 'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'zahlung-iban', 'zahlung-name', 'zahlung-vwzk', 'address', 'last_change', 'last_change_by', 'etag', 'version', 'created'];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return BelongsTo
      */
     public function project()
     {
@@ -79,10 +84,10 @@ class Expenses extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function receipts()
     {
-        return $this->hasMany(\App\Models\Legacy\ExpensesReceipt::class, 'auslagen_id');
+        return $this->hasMany(ExpensesReceipt::class, 'auslagen_id');
     }
 }
