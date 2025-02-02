@@ -10,7 +10,6 @@ use framework\helper\EnvSetter;
 use framework\render\ErrorHandler;
 use framework\render\JsonController;
 use framework\Validator;
-use http\Exception\InvalidArgumentException;
 use Illuminate\Support\Facades\Crypt;
 
 class ChatHandler
@@ -655,6 +654,6 @@ class ChatHandler
     {
         openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
-        return $decrypted ?? throw new InvalidArgumentException('Corrupted Message: '.$encrypted);
+        return $decrypted ?? throw new \Exception('Corrupted Message: '.$encrypted);
     }
 }
