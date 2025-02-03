@@ -333,7 +333,7 @@ class RestHandler extends EscFunc
                     ],
                     'etag' => [
                         'regex',
-                        'pattern' => '/^[A-Za-z0-9]{32}$/',
+                        'pattern' => '/^(0|[A-Za-z0-9]{32})$/',
                         'error' => 'Ungültige Version.',
                     ],
                     'projekt-id' => [
