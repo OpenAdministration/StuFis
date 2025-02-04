@@ -45,6 +45,8 @@ class FileInfo extends Model
      */
     protected $table = 'fileinfo';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

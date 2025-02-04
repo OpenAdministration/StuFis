@@ -39,6 +39,8 @@ class ProjectPost extends Model
      */
     protected $table = 'projektposten';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

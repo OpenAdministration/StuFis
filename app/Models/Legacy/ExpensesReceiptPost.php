@@ -39,6 +39,8 @@ class ExpensesReceiptPost extends Model
      */
     protected $table = 'beleg_posten';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

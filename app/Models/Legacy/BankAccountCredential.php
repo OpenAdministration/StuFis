@@ -35,6 +35,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class BankAccountCredential extends Model
 {
+    public $timestamps = false;
+
     /**
      * @var array
      */
