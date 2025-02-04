@@ -225,7 +225,7 @@ return [
     'help_contact_mail' => env('HELP_CONTACT_MAIL', 'stufis@open-administration.de'),
     'git-repo' => env('GIT_URL', 'https://github.com/openadministration/stufis/releases'),
     'blog_url' => env('BLOG_URL', 'https://open-administration.de'),
-    'docs_url' => env('DOCS_URL', 'https://doku.open-administration.de'),
+    'docs_url' => env('DOCS_URL', 'https://doku.stufis.de'),
 
     'realm' => env('AUTH_REALM'),
 
