@@ -33,6 +33,8 @@ class LegacyBudgetGroup extends Model
      */
     protected $table = 'haushaltsgruppen';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

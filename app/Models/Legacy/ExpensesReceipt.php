@@ -44,6 +44,8 @@ class ExpensesReceipt extends Model
      */
     protected $table = 'belege';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

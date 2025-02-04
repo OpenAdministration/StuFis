@@ -35,6 +35,8 @@ class LegacyBudgetPlan extends Model
      */
     protected $table = 'haushaltsplan';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

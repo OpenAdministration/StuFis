@@ -34,6 +34,8 @@ class Bank extends Model
      */
     protected $table = 'konto_bank';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */

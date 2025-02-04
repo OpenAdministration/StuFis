@@ -37,6 +37,8 @@ class LegacyBudgetItem extends Model
      */
     protected $table = 'haushaltstitel';
 
+    public $timestamps = false;
+
     /**
      * @var array
      */
