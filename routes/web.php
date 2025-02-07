@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function () {
 
-    // legacy is registed later, so we cannot route(legacy.dashboard) there
+    // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::redirect('/', 'menu/mygremium')->name('home');
 
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
