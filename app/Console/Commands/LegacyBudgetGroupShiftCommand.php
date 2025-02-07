@@ -18,7 +18,7 @@ class LegacyBudgetGroupShiftCommand extends Command
     public function handle(): void
     {
         \DB::transaction(function () {
-            $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->first();
+            $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->sole();
             $budgetGroups = LegacyBudgetGroup::where('hhp_id', $latestPlan->id)
                 ->where('id', '>=', $this->argument('new_group_id'));
             $this->info('The following amount of other groups will be shifted back: '.$budgetGroups->count());
