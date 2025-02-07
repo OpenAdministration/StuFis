@@ -93,7 +93,7 @@ class Project extends Model
      */
     public function expenses()
     {
-        return $this->hasMany('App\Models\Legacy\Expenses', 'projekt_id');
+        return $this->hasMany(\App\Models\Legacy\Expenses::class, 'projekt_id');
     }
 
     /**
@@ -101,7 +101,7 @@ class Project extends Model
      */
     public function creator()
     {
-        return $this->belongsTo('App\Models\User', 'creator_id');
+        return $this->belongsTo(\App\Models\User::class, 'creator_id');
     }
 
     /**
@@ -109,7 +109,7 @@ class Project extends Model
      */
     public function stateCreator()
     {
-        return $this->belongsTo('App\Models\User', 'stateCreator_id');
+        return $this->belongsTo(\App\Models\User::class, 'stateCreator_id');
     }
 
     /**

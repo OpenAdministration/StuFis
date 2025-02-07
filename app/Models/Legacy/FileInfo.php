@@ -57,6 +57,6 @@ class FileInfo extends Model
      */
     public function fileData()
     {
-        return $this->belongsTo('App\Models\Legacy\FileData', 'data');
+        return $this->belongsTo(\App\Models\Legacy\FileData::class, 'data');
     }
 }
