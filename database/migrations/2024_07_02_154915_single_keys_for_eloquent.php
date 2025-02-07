@@ -32,15 +32,18 @@ return new class extends Migration
                 ->each(function ($account) use (&$newId) {
                     Schema::disableForeignKeyConstraints();
                     $account->manually_enterable = true;
-                    $account->id = $newId++;
-                    $account->save();
 
                     // update the other foreign keys to the new id
                     BankTransaction::where('konto_id', $account->id)->update(['konto_id' => $newId]);
                     Booking::where('zahlung_type', $account->id)->update(['zahlung_type' => $newId]);
                     BookingInstruction::where('zahlung_type', $account->id)->update(['zahlung_type' => $newId]);
+
+                    $account->id = $newId++;
+                    $account->save();
+
                     Schema::enableForeignKeyConstraints();
                 });
+
         });
     }
 
