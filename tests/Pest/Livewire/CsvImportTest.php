@@ -29,7 +29,7 @@ test('show last transactions', function () {
             $lastTransactions[$account->id] = $tmp;
         }
     });
-    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
+    $wire = Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     foreach ($lastTransactions as $transaction) {
         Log::debug($transaction->date);
         $wire->set('account_id', $transaction->konto_id)
@@ -47,7 +47,7 @@ test('account has no transactions view', function () {
             $noTransactions[$account->id] = $account->id;
         }
     });
-    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
+    $wire = Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     foreach ($noTransactions as $id) {
         $wire->set('account_id', $id)
             ->assertSee(__('konto.csv-no-transaction'));
@@ -55,7 +55,7 @@ test('account has no transactions view', function () {
 });
 
 test('csv upload visibility', function () {
-    $wire = \Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
+    $wire = Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     $accountIds = BankAccount::all()->pluck('id')->toArray();
     foreach ($accountIds as $accountId) {
         $wire->set('account_id', $accountId)
@@ -64,73 +64,32 @@ test('csv upload visibility', function () {
     $wire->set('account_id', '')->assertDontSee(__('konto.csv-upload-headline'));
 });
 
-const CSV_1 = [
-    'header' => [
-        0 => 'Bezeichnung Auftragskonto',
-        1 => 'IBAN Auftragskonto',
-        2 => 'BIC Auftragskonto',
-        3 => 'Bankname Auftragskonto',
-        4 => 'Buchungstag',
-        5 => 'Valutadatum',
-        6 => 'Name Zahlungsbeteiligter',
-        7 => 'IBAN Zahlungsbeteiligter',
-        8 => 'BIC (SWIFT-Code) Zahlungsbeteiligter',
-        9 => 'Buchungstext',
-        10 => 'Verwendungszweck',
-        11 => 'Betrag',
-        12 => 'Waehrung',
-        13 => 'Saldo nach Buchung',
-        14 => 'Bemerkung',
-        15 => 'Kategorie',
-        16 => 'Steuerrelevant',
-        17 => 'Glaeubiger ID',
-        18 => 'Mandatsreferenz',
-    ],
-    'data' => [
-        1 => ['AStA - Basiskonto', 'DE12429644757213399722',
-            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-05', '2024-06-05', 'Person 5', 'DE63365090851878254100',
-            'IHHVRZIL', 'Gutschrift', 'Entry 5', '420.99', 'EUR', '18474.22', '', 'Sonstiges', '', '', '', ],
-        2 => ['AStA - Basiskonto', 'DE12429644757213399722',
-            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-05', '2024-06-05', 'Person 4', 'DE76169365307164900914',
-            'MWFYLYEL', 'Basislastschrift', 'Entry 4', '-43.40', 'EUR', '18053.23', '', 'Sonstiges', '', '', '', ],
-        3 => ['AStA - Basiskonto', 'DE12429644757213399722',
-            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-04', '2024-06-04', 'Person 3', 'DE67615841552532938268',
-            'MVGUQVQWJZY', 'Gutschrift', 'Entry 3', '2.00', 'EUR', '18096.63', '', 'Sonstiges', '', '', '', ],
-        4 => ['AStA - Basiskonto', 'DE12429644757213399722',
-            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-03', '2024-06-04', 'Person 2', 'DE79181333728582849451',
-            'GENODEF1SDE', 'Gutschrift', 'Entry 2', '5.00', 'EUR', '18094.63', '', 'Sonstiges', '', '', '', ],
-        5 => ['AStA - Basiskonto', 'DE12429644757213399722',
-            'NKZUVJYQ0P5', 'Meine Bank', '2024-06-03', '2024-06-03', 'Person 1', 'DE73447318315829961821',
-            'DZFPEL2K', 'Euro-Überweisung', 'Entry 1', '-13.14', 'EUR', '18089.63', '', 'Sonstiges', '', '', '', ],
-    ],
-];
-
-test('parse csv utf8 encoding', function () {
+test('parse csv utf8 encoding', function ($header, $data) {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
-        ->assertSet('header', CSV_1['header'])
-        ->assertSet('data', collect(CSV_1['data']));
-});
+        ->assertSet('header', $header)
+        ->assertSet('data', collect($data));
+})->with('csvImports');
 
-test('parse csv win encoding', function () {
+test('parse csv win encoding', function ($header, $data) {
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
-        ->assertSet('header', CSV_1['header'])
-        ->assertSet('data', collect(CSV_1['data']));
-});
+        ->assertSet('header', $header)
+        ->assertSet('data', collect($data));
+})->with('csvImports');
 
 test('views showing properly', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    $lw = \Livewire::actingAs(cashOfficer())
+    $lw = Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->assertSee(__('konto.manual-headline'))
         ->assertSee(__('konto.manual-headline-sub'))
@@ -160,7 +119,7 @@ test('views showing properly', function () {
 test('csv upload some fields are required', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -179,7 +138,8 @@ test('csv upload some fields are required', function () {
 test('csv upload with wrong date check (order and start)', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    $lw = \Livewire::actingAs(cashOfficer())
+    // input the column numbers to pick
+    $lw = Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -197,7 +157,7 @@ test('csv upload with wrong date check (order and start)', function () {
 test('csv upload with wrong saldo check (order and start)', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $csvFile)
@@ -217,7 +177,7 @@ test('wrong file extension is not accepted', function () {
     $image = testFile('test-image.png');
     $pdf = testFile('empty.pdf');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $image)
@@ -230,7 +190,7 @@ test('wrong mime type is not accepted', function () {
     $image_csv = testFile('test-image.png', 'test-image.csv');
     $pdf_csv = testFile('empty.pdf', 'empty-pdf.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 2) // an account with some transactions
         ->set('csv', $image_csv)
@@ -247,7 +207,7 @@ test('if csv import is saved', function () {
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
@@ -283,7 +243,7 @@ test('if mapping was saved and loaded', function () {
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    \Livewire::actingAs(cashOfficer())
+    Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', $acc->id) // an account without transactions
         ->assertSet('mapping.date', 4)
