@@ -54,7 +54,6 @@ class RouteServiceProvider extends ServiceProvider
 
             // has to be last because there is a catch-all inside
             Route::middleware('legacy')
-                ->namespace($this->namespace)
                 ->group(base_path('routes/legacy.php'));
 
         });
