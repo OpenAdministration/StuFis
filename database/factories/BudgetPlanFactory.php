@@ -10,8 +10,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BudgetPlanFactory extends Factory
 {
-    protected $model = BudgetPlan::class;
-
     public function definition(): array
     {
         $year = Carbon::create(fake()->unique()->year());
