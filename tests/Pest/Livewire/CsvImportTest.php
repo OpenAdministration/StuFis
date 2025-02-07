@@ -4,6 +4,8 @@ use App\Livewire\TransactionImportWire;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 
+$acc = null;
+
 test('csv import is accessible as cash officer', function () {
     Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class)
         ->assertSuccessful();
@@ -238,15 +240,16 @@ test('wrong mime type is not accepted', function () {
 })->todo('works in web, but not in test');
 
 test('if csv import is saved', function () {
-    $account_id = 4;
-    $transactionAmount = BankTransaction::where('konto_id', '=', $account_id)->count();
+
+    $acc = BankAccount::factory()->create();
+    $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(0);
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
-        ->set('account_id', $account_id) // an account without transactions
+        ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
         ->set('mapping.date', 4)
         ->set('mapping.valuta', 5)
@@ -273,15 +276,16 @@ test('if csv import is saved', function () {
 });
 
 test('if mapping was saved and loaded', function () {
-    $account_id = 4;
-    $transactionAmount = BankTransaction::where('konto_id', '=', $account_id)->count();
+
+    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(5);
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     \Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
-        ->set('account_id', $account_id) // an account without transactions
+        ->set('account_id', $acc->id) // an account without transactions
         ->assertSet('mapping.date', 4)
         ->assertSet('mapping.valuta', 5)
         ->assertSet('mapping.empf_name', 6)
