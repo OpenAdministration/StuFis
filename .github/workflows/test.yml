@@ -43,7 +43,6 @@ jobs:
       - name: Prepare Laravel Application
         run: |
           cp .env.ci .env.testing
-          php artisan key:generate --env=testing
 
       - name: Verify mariadb connection
         run: |
