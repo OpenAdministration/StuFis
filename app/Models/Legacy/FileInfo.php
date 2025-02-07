@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -55,7 +56,7 @@ class FileInfo extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function fileData()
+    public function fileData(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Legacy\FileData::class, 'data');
     }

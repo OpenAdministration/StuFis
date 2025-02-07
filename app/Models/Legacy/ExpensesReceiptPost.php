@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -49,7 +50,7 @@ class ExpensesReceiptPost extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function expensesReceipt()
+    public function expensesReceipt(): BelongsTo
     {
         return $this->belongsTo(ExpensesReceipt::class, 'beleg_id');
     }

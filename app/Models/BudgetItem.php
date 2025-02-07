@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Database\Factories\BudgetItemFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,7 +43,7 @@ class BudgetItem extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function bookings()
+    public function bookings(): HasMany
     {
         return $this->hasMany('App\Models\Booking', 'titel_id');
     }
@@ -49,7 +51,7 @@ class BudgetItem extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function budgetPlan()
+    public function budgetPlan(): BelongsTo
     {
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
     }

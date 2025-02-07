@@ -334,7 +334,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('projektposten', static function (Blueprint $table) {
             $table->dropForeign('dev__projektposten_ibfk_1');

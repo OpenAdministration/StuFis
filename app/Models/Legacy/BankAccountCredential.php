@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -45,7 +46,7 @@ class BankAccountCredential extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function kontoBank()
+    public function kontoBank(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Legacy\Bank::class, 'bank_id');
     }
@@ -53,7 +54,7 @@ class BankAccountCredential extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'owner_id');
     }

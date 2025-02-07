@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\BudgetItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -62,7 +63,7 @@ class Booking extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function budgetItem()
+    public function budgetItem(): BelongsTo
     {
         return $this->belongsTo(BudgetItem::class, 'titel_id');
     }
@@ -70,7 +71,7 @@ class Booking extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);
     }

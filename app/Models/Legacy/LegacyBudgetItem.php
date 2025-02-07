@@ -2,6 +2,8 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -47,7 +49,7 @@ class LegacyBudgetItem extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function bookings()
+    public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'titel_id');
     }
@@ -55,7 +57,7 @@ class LegacyBudgetItem extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function budgetGroup()
+    public function budgetGroup(): BelongsTo
     {
         return $this->belongsTo(LegacyBudgetGroup::class, 'hhpgruppen_id');
     }

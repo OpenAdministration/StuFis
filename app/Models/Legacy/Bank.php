@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -44,7 +45,7 @@ class Bank extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function kontoCredentials()
+    public function kontoCredentials(): HasMany
     {
         return $this->hasMany(BankAccountCredential::class, 'bank_id');
     }

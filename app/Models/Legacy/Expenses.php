@@ -80,7 +80,7 @@ class Expenses extends Model
     /**
      * @return BelongsTo
      */
-    public function project()
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'projekt_id');
     }
@@ -88,7 +88,7 @@ class Expenses extends Model
     /**
      * @return HasMany
      */
-    public function receipts()
+    public function receipts(): HasMany
     {
         return $this->hasMany(ExpensesReceipt::class, 'auslagen_id');
     }

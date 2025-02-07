@@ -2,6 +2,8 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Events\UpdatingModel;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -91,7 +93,7 @@ class Project extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function expenses()
+    public function expenses(): HasMany
     {
         return $this->hasMany(\App\Models\Legacy\Expenses::class, 'projekt_id');
     }
@@ -99,7 +101,7 @@ class Project extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'creator_id');
     }
@@ -107,7 +109,7 @@ class Project extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function stateCreator()
+    public function stateCreator(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'stateCreator_id');
     }
@@ -115,7 +117,7 @@ class Project extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function posts()
+    public function posts(): HasMany
     {
         return $this->hasMany(ProjectPost::class, 'projekt_id');
     }
