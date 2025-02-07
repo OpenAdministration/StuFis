@@ -20,18 +20,21 @@ class DatabaseSeeder extends Seeder
         // BudgetPlan::factory(5)->populate()->create();
 
         if (\App::runningUnitTests()) {
-            $this->call(DemoSeeder::class);
+            $this->call(DemoDataSeeder::class);
             $this->call(LocalSeeder::class);
             $this->call(TestSeeder::class);
         }
 
         if (\App::isLocal()) {
-            $this->call(DemoSeeder::class);
+            $this->call(DemoDataSeeder::class);
             $this->call(LocalSeeder::class);
         }
 
         if (\App::isProduction()) {
             $this->call(ProductionSeeder::class);
+            if (config('app.realm') === 'demo') {
+                $this->call(DemoDataSeeder::class);
+            }
         }
     }
 }
