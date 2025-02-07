@@ -77,17 +77,11 @@ class Expenses extends Model
      */
     protected $fillable = ['projekt_id', 'name_suffix', 'state', 'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'zahlung-iban', 'zahlung-name', 'zahlung-vwzk', 'address', 'last_change', 'last_change_by', 'etag', 'version', 'created'];
 
-    /**
-     * @return BelongsTo
-     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'projekt_id');
     }
 
-    /**
-     * @return HasMany
-     */
     public function receipts(): HasMany
     {
         return $this->hasMany(ExpensesReceipt::class, 'auslagen_id');

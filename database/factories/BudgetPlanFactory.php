@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\BudgetItem;
-use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetPlanState;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;

@@ -2,9 +2,9 @@
 
 namespace App\Models\Legacy;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\Legacy\ExpensesReceiptPost
@@ -47,9 +47,6 @@ class ExpensesReceiptPost extends Model
      */
     protected $fillable = ['id', 'projekt_posten_id', 'ausgaben', 'einnahmen'];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function expensesReceipt(): BelongsTo
     {
         return $this->belongsTo(ExpensesReceipt::class, 'beleg_id');

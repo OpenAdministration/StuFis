@@ -2,10 +2,10 @@
 
 namespace App\Models\Legacy;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\ExpensesReceipt
@@ -53,17 +53,11 @@ class ExpensesReceipt extends Model
      */
     protected $fillable = ['auslagen_id', 'short', 'created_on', 'datum', 'beschreibung', 'file_id'];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function posts(): HasMany
     {
         return $this->hasMany(\App\Models\Legacy\ExpensesReceiptPost::class, 'beleg_id');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function expenses(): BelongsTo
     {
         return $this->belongsTo(Expenses::class);

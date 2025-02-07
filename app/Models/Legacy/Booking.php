@@ -2,10 +2,10 @@
 
 namespace App\Models\Legacy;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\BudgetItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\Legacy\Booking
@@ -60,17 +60,11 @@ class Booking extends Model
      */
     protected $fillable = ['titel_id', 'user_id', 'kostenstelle', 'zahlung_id', 'zahlung_type', 'beleg_id', 'beleg_type', 'timestamp', 'comment', 'value', 'canceled'];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function budgetItem(): BelongsTo
     {
         return $this->belongsTo(BudgetItem::class, 'titel_id');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);

@@ -2,8 +2,8 @@
 
 namespace App\Models\Legacy;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\FileData
@@ -40,9 +40,6 @@ class FileData extends Model
      */
     protected $fillable = ['data', 'diskpath'];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
     public function fileInfo(): HasMany
     {
         return $this->hasMany(FileInfo::class, 'data');
