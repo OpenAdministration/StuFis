@@ -13,7 +13,7 @@ class LegacyMigrateFilesToStorage extends Command
      *
      * @var string
      */
-    protected $signature = 'legacy:migrate-files-to-storage {delete=false}';
+    protected $signature = 'legacy:migrate-files-to-storage {--delete}';
 
     /**
      * The console command description.
@@ -42,7 +42,7 @@ class LegacyMigrateFilesToStorage extends Command
                 if (! \Storage::has($path)) {
                     \Storage::put($path, $pdfData);
                 }
-                if ($this->argument('delete') === 'true') {
+                if ($this->option('delete') === true) {
                     $data->data = null;
                 }
                 $data->save();
