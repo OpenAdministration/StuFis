@@ -55,6 +55,12 @@ return [
             'root' => storage_path('tests'),
             'throw' => false,
         ],
+
+        'demo' => [
+            'driver' => 'local',
+            'root' => storage_path('demo'),
+            'throw' => false,
+        ],
     ],
 
     /*
