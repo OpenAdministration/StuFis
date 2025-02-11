@@ -1,6 +1,6 @@
 <?php
 
-dataset('csvImports', [
+dataset('csv imports', [
     [
         'header' => [
             0 => 'Bezeichnung Auftragskonto',
@@ -41,5 +41,4 @@ dataset('csvImports', [
                 'DZFPEL2K', 'Euro-Überweisung', 'Entry 1', '-13.14', 'EUR', '18089.63', '', 'Sonstiges', '', '', '', ],
         ],
     ],
-
 ]);

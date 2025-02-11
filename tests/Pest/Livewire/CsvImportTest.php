@@ -64,27 +64,31 @@ test('csv upload visibility', function () {
     $wire->set('account_id', '')->assertDontSee(__('konto.csv-upload-headline'));
 });
 
-test('parse csv utf8 encoding', function ($header, $data) {
-    $csvFile = testFile('csv-import/test-correct-semicolon.csv');
+test('php.ini has utf8 as default_charset', function () {
+    expect(strtolower(ini_get('default_charset')))->toEqual('utf-8');
+});
 
+test('parse csv utf8 encoding', function ($csvHeader, $csvData) {
+    $csvFile = testFile('csv-import/test-correct-semicolon.csv');
     Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
-        ->assertSet('header', $header)
-        ->assertSet('data', collect($data));
-})->with('csvImports');
+        // check if file is correctly parsed
+        ->assertSet('header', $csvHeader)
+        ->assertSet('data', collect($csvData));
+})->with('csv imports');
 
-test('parse csv win encoding', function ($header, $data) {
+test('parse csv win encoding', function ($csvHeader, $csvData) {
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
     Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
         ->set('account_id', 4) // an account without transactions
         ->set('csv', $csvFile)
-        ->assertSet('header', $header)
-        ->assertSet('data', collect($data));
-})->with('csvImports');
+        ->assertSet('header', $csvHeader)
+        ->assertSet('data', collect($csvData));
+})->with('csv imports');
 
 test('views showing properly', function () {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
@@ -223,7 +227,7 @@ test('if csv import is saved', function () {
         ->call('save')
         ->assertHasNoErrors();
 
-    $transaction = BankTransaction::where('konto_id', '=', 4)->first();
+    $transaction = BankTransaction::where('konto_id', '=', $acc->id)->first();
     expect([
         $transaction?->value,
         $transaction?->saldo,
