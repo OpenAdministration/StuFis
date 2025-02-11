@@ -11,8 +11,8 @@ jobs:
           - '8.2'
     name: php ${{ matrix.php-version }} on ${{ matrix.operating-system }}
     services:
-      mysql:
-        image: mariadb:latest
+      mariadb:
+        image: mariadb:10.11
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: test
@@ -48,7 +48,7 @@ jobs:
         run: vendor/bin/pest
         env:
           DB_CONNECTION: mysql
-          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
           DB_USERNAME: root
           DB_DATABASE: test
           DB_PASSWORD: null
