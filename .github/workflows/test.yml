@@ -47,7 +47,7 @@ jobs:
           COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       - name: run migrations
-        run: ${{ matrix.php-version }} artisan migrate --seed
+        run: php artisan migrate --seed
       - name: Run tests
         run: vendor/bin/pest
         env:
