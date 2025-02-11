@@ -15,7 +15,9 @@ jobs:
         image: mariadb:10.11
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: test
+          MYSQL_DATABASE: stufis_ci
+          MYSQL_USER: stufis_ci
+          MYSQL_PASSWORD: password
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
@@ -49,6 +51,4 @@ jobs:
         env:
           DB_CONNECTION: mysql
           DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
-          DB_USERNAME: root
-          DB_DATABASE: test
-          DB_PASSWORD: null
+
