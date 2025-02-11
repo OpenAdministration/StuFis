@@ -859,7 +859,6 @@ class RestHandler extends EscFunc
 
     private function updateKonto($routeInfo): void
     {
-        /* @var $auth AuthHandler */
         $auth = AuthHandler::getInstance();
         $auth->requireGroup('ref-finanzen-kv');
 
