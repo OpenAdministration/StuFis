@@ -69,10 +69,12 @@ test('php.ini has utf8 as default_charset', function () {
 });
 
 test('parse csv utf8 encoding', function ($csvHeader, $csvData) {
+    $acc = BankAccount::factory()->create();
+
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
     Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
-        ->set('account_id', 4) // an account without transactions
+        ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
         // check if file is correctly parsed
         ->assertSet('header', $csvHeader)
@@ -80,11 +82,12 @@ test('parse csv utf8 encoding', function ($csvHeader, $csvData) {
 })->with('csv imports');
 
 test('parse csv win encoding', function ($csvHeader, $csvData) {
+    $acc = BankAccount::orderBy('id', 'desc')->first();
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
     Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
-        ->set('account_id', 4) // an account without transactions
+        ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
         ->assertSet('header', $csvHeader)
         ->assertSet('data', collect($csvData));
@@ -205,7 +208,7 @@ test('wrong mime type is not accepted', function () {
 
 test('if csv import is saved', function () {
 
-    $acc = BankAccount::factory()->create();
+    $acc = BankAccount::orderBy('id', 'desc')->first();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(0);
 
