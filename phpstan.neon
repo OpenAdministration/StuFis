@@ -6,6 +6,7 @@ parameters:
 
     paths:
         - app/
+        - database/
 
     # Level 10 is the highest level
     level: 1

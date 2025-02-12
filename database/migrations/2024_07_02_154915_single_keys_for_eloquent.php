@@ -25,7 +25,7 @@ return new class extends Migration
 
         // schema changes are not transaction-able
         DB::transaction(function () {
-            $lastId = BankAccount::orderBy('id', 'desc')->pluck('id')->first();
+            $lastId = BankAccount::orderBy('id', 'desc')->limit(1)->pluck('id')->sole();
             $newId = $lastId + 1;
             // migrate the old negative keys
             BankAccount::where('id', '<', 1)

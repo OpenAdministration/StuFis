@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Legacy;
 
-use App\Models\ExpensesReceiptPost;
+use App\Models\Legacy\ExpensesReceiptPost;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ExpensesReceiptPostFactory extends Factory
