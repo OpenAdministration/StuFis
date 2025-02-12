@@ -2,7 +2,7 @@ name: Analysis
 on:
   - push
 jobs:
-  lint:
+  analysis:
     name: Analysis
     runs-on: ubuntu-latest
     steps:
@@ -13,6 +13,8 @@ jobs:
         with:
           php-version: '8.2'
           tools: phpstan
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml, zip, gd
+          coverage: none
       - name: Get composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
@@ -25,6 +27,6 @@ jobs:
       - name: Install composer dependencies
         env:
           COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
-        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+        run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
       - name: Run PHPStan
-        run: phpstan --error-format=github --memory-limit=1G
+        run: phpstan -v --error-format=github --memory-limit=1G
