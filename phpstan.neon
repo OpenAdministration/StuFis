@@ -7,6 +7,7 @@ parameters:
     paths:
         - app/
         - database/
+#        - legacy/
 
     # Level 10 is the highest level
     level: 1
@@ -14,5 +15,6 @@ parameters:
 #    ignoreErrors:
 #        - '#PHPDoc tag @var#'
 #
-#    excludePaths:
+    excludePaths:
+#         - legacy/runtime
 #        - ./*/*/FileToBeExcluded.php

@@ -29,4 +29,4 @@ jobs:
           COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
       - name: Run PHPStan
-        run: phpstan -v --error-format=github --memory-limit=1G
+        run: ./vendor/bin/phpstan --error-format=github --memory-limit=1G
