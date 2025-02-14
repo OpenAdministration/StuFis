@@ -2,6 +2,8 @@
 
 $conf = [];
 
+define('SYSBASE', base_path('/legacy/'));
+
 define('REALM', config('app.realm'));
 if (App::runningUnitTests()) {
     define('ORG_DATA', (include SYSBASE.'/config/config.orgs.testing.php')[REALM] ?? []);

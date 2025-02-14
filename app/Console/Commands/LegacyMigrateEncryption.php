@@ -7,7 +7,6 @@ use App\Models\Legacy\Expenses;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class LegacyMigrateEncryption extends Command
@@ -61,7 +60,6 @@ class LegacyMigrateEncryption extends Command
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count) {
-                /** @var Model $expense */
                 $cryptIban = $expense->getAttribute('zahlung-iban');
                 $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
                 $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
