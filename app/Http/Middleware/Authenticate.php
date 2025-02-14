@@ -10,7 +10,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class Authenticate extends Middleware
 {
-    public function handle(Request $request, Closure $next, ...$guards): Response
+    public function handle($request, Closure $next, ...$guards): Response
     {
         // do it like in the parent
         $this->authenticate($request, $guards);
