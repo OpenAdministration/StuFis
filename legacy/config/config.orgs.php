@@ -438,6 +438,7 @@ return [
             'Zentral' => [
                 'Studierendenrat (StuRa)',
                 'Referat Finanzen',
+                'Studierende',
             ],
             'Fachschaftsräte' => [
                 'FSR Angewandte Informatik',
