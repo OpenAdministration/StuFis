@@ -285,8 +285,9 @@ class HHPHandler extends Renderer
                 ];
             } else {
                 if (empty($cells[1])) {
+                    // group sum here, trash this info
                     continue;
-                } // group sum here, trash this info
+                }
                 $titelnr = $cells[1];
                 $titel[$activeGroupId][] = [
                     // hhpgruppen_id not available here, set later

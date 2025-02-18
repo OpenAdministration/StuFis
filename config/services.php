@@ -17,7 +17,8 @@ return [
         'realms' => env('KEYCLOAK_REALM'),         // Specify your keycloak realm
     ],
 
-    'laravelpassport' => [
+    'stumv' => [
+        // using socialiteproviders/laravelpassport
         'client_id' => env('STUMV_CLIENT_ID'),
         'client_secret' => env('STUMV_CLIENT_SECRET'),
         'redirect' => rtrim(env('APP_URL', 'http://localhost:8000'), '/').'/auth/callback',

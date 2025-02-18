@@ -6,9 +6,11 @@ use App\Services\Auth\AuthService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,6 +47,10 @@ class AppServiceProvider extends ServiceProvider
         if (config('stufis.features') === 'preview') {
             $this->loadMigrationsFrom(base_path('database/migrations/preview'));
         }
+
+        Event::listen(function (SocialiteWasCalled $event) {
+            $event->extendSocialite('stumv', \SocialiteProviders\LaravelPassport\Provider::class);
+        });
 
         $this->bootRoute();
     }
