@@ -15,7 +15,6 @@
         "intervention/validation": "^4.4",
         "jumbojett/openid-connect-php": "^1.0",
         "laravel/framework": "^11.41",
-        "laravel/sanctum": "^4.0",
         "livewire/flux": "^1.0",
         "livewire/flux-pro": "^1.0",
         "livewire/livewire": "^v3.5",
