@@ -2,7 +2,7 @@
 
 // in this file all routes are included which are only visible in STUFIS_FEATURE_BRANCH=dev
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function (): void {
     // Feature External
     Route::get('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
     Route::get('antrag/new-org', \App\Livewire\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');

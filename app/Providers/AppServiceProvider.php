@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
             $this->loadMigrationsFrom(base_path('database/migrations/preview'));
         }
 
-        Event::listen(function (SocialiteWasCalled $event) {
+        Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('stumv', \SocialiteProviders\LaravelPassport\Provider::class);
         });
 

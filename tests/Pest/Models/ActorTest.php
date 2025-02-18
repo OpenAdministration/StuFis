@@ -8,7 +8,7 @@ use App\Models\ActorSocial;
 
 use function Pest\Laravel\assertModelExists;
 
-test('actor factory and relations', function () {
+test('actor factory and relations', function (): void {
     $actor = Actor::factory()->create();
     assertModelExists($actor);
     $actor = Actor::factory()
@@ -23,7 +23,7 @@ test('actor factory and relations', function () {
 
 })->todo();
 
-test('new organisation', function () {
+test('new organisation', function (): void {
     \Livewire::actingAs(user())
         ->test('create-antrag.new-organisation')
         ->set('orgForm.name', fake()->company())

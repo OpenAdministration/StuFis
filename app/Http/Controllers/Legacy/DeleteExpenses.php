@@ -29,7 +29,7 @@ class DeleteExpenses extends Controller
         // to make sure to delete everything and not only parts
         \DB::beginTransaction();
         $reciepts = $expense->receipts;
-        $reciepts->each(function (ExpensesReceipt $receipt) {
+        $reciepts->each(function (ExpensesReceipt $receipt): void {
             // delete all posts
             $receipt->posts()->delete();
             // delete all files db entries (storage later)
@@ -46,7 +46,7 @@ class DeleteExpenses extends Controller
         $expense->delete();
 
         // clean up storage if DB is successfully cleaned
-        DB::afterCommit(function () use ($expense_id) {
+        DB::afterCommit(function () use ($expense_id): void {
             \Storage::deleteDirectory("auslagen/{$expense_id}/");
         });
         \DB::commit();

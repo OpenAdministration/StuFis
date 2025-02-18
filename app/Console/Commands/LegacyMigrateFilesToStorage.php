@@ -27,7 +27,7 @@ class LegacyMigrateFilesToStorage extends Command
      */
     public function handle(): void
     {
-        FileInfo::lazy(20)->each(function (FileInfo $fileInfo) {
+        FileInfo::lazy(20)->each(function (FileInfo $fileInfo): void {
             $data = $fileInfo->fileData;
             $link = $fileInfo->link;
             $beleg = ExpensesReceipt::find($link);

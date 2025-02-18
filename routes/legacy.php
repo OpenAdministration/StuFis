@@ -3,7 +3,7 @@
 use App\Http\Controllers\Legacy\LegacyController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->name('legacy.')->group(function () {
+Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
     Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');
     Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');

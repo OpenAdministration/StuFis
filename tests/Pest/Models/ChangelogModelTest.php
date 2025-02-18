@@ -7,7 +7,7 @@ use App\Models\User;
 
 use function Pest\Laravel\actingAs;
 
-test('json casting is working', function () {
+test('json casting is working', function (): void {
     $user = User::factory()->create();
     $cl = new Changelog([
         'user_id' => $user->id,
@@ -19,7 +19,7 @@ test('json casting is working', function () {
     expect($cl->save())->toBeTrue();
 });
 
-test('Event dispatching from legacy project model update', function () {
+test('Event dispatching from legacy project model update', function (): void {
     Event::fake();
     $user = User::factory()->create();
     $project = Project::factory()->by($user)->create();
@@ -32,7 +32,7 @@ test('Event dispatching from legacy project model update', function () {
     Event::assertDispatched(UpdatingModel::class, fn ($event) => $event->model->id === $project->id && $event->model instanceof Project);
 });
 
-test('dispatched event gets logged at legacy project model update', function () {
+test('dispatched event gets logged at legacy project model update', function (): void {
     $user = User::factory()->create();
     actingAs($user);
     $project = Project::factory()->by($user)->create();

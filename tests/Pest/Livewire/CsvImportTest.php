@@ -6,24 +6,24 @@ use App\Models\Legacy\BankTransaction;
 
 $acc = null;
 
-test('csv import is accessible as cash officer', function () {
+test('csv import is accessible as cash officer', function (): void {
     Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class)
         ->assertSuccessful();
 });
 
-test('csv import is not accessible as budget officer', function () {
+test('csv import is not accessible as budget officer', function (): void {
     Livewire::actingAs(budgetManager())->test(TransactionImportWire::class)
         ->assertForbidden();
 });
 
-test('csv import is not accessible as normal user', function () {
+test('csv import is not accessible as normal user', function (): void {
     Livewire::actingAs(user())->test(TransactionImportWire::class)
         ->assertForbidden();
 });
 
-test('show last transactions', function () {
+test('show last transactions', function (): void {
     $lastTransactions = [];
-    BankAccount::all()->each(function ($account) use (&$lastTransactions) {
+    BankAccount::all()->each(function ($account) use (&$lastTransactions): void {
         $tmp = $account->bankTransactions()->orderBy('id', 'desc')->first();
         if ($tmp) {
             $lastTransactions[$account->id] = $tmp;
@@ -39,9 +39,9 @@ test('show last transactions', function () {
     }
 });
 
-test('account has no transactions view', function () {
+test('account has no transactions view', function (): void {
     $noTransactions = [];
-    BankAccount::all()->each(function ($account) use (&$noTransactions) {
+    BankAccount::all()->each(function ($account) use (&$noTransactions): void {
         $count = $account->bankTransactions()->count();
         if ($count === 0) {
             $noTransactions[$account->id] = $account->id;
@@ -54,7 +54,7 @@ test('account has no transactions view', function () {
     }
 });
 
-test('csv upload visibility', function () {
+test('csv upload visibility', function (): void {
     $wire = Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class);
     $accountIds = BankAccount::all()->pluck('id')->toArray();
     foreach ($accountIds as $accountId) {
@@ -64,11 +64,11 @@ test('csv upload visibility', function () {
     $wire->set('account_id', '')->assertDontSee(__('konto.csv-upload-headline'));
 });
 
-test('php.ini has utf8 as default_charset', function () {
+test('php.ini has utf8 as default_charset', function (): void {
     expect(strtolower(ini_get('default_charset')))->toEqual('utf-8');
 });
 
-test('parse csv utf8 encoding', function ($csvHeader, $csvData) {
+test('parse csv utf8 encoding', function ($csvHeader, $csvData): void {
     $acc = BankAccount::factory()->create();
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
@@ -81,7 +81,7 @@ test('parse csv utf8 encoding', function ($csvHeader, $csvData) {
         ->assertSet('data', collect($csvData));
 })->with('csv imports');
 
-test('parse csv win encoding', function ($csvHeader, $csvData) {
+test('parse csv win encoding', function ($csvHeader, $csvData): void {
     $acc = BankAccount::orderBy('id', 'desc')->first();
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
@@ -93,7 +93,7 @@ test('parse csv win encoding', function ($csvHeader, $csvData) {
         ->assertSet('data', collect($csvData));
 })->with('csv imports');
 
-test('views showing properly', function () {
+test('views showing properly', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     $lw = Livewire::actingAs(cashOfficer())
@@ -123,7 +123,7 @@ test('views showing properly', function () {
     }
 });
 
-test('csv upload some fields are required', function () {
+test('csv upload some fields are required', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
@@ -142,7 +142,7 @@ test('csv upload some fields are required', function () {
         ]);
 });
 
-test('csv upload with wrong date check (order and start)', function () {
+test('csv upload with wrong date check (order and start)', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     // input the column numbers to pick
@@ -161,7 +161,7 @@ test('csv upload with wrong date check (order and start)', function () {
         ->assertHasErrors(['mapping.date', 'mapping.valuta']);
 });
 
-test('csv upload with wrong saldo check (order and start)', function () {
+test('csv upload with wrong saldo check (order and start)', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
@@ -180,7 +180,7 @@ test('csv upload with wrong saldo check (order and start)', function () {
         ->assertHasErrors(['mapping.date', 'mapping.valuta']);
 });
 
-test('wrong file extension is not accepted', function () {
+test('wrong file extension is not accepted', function (): void {
     $image = testFile('test-image.png');
     $pdf = testFile('empty.pdf');
 
@@ -193,7 +193,7 @@ test('wrong file extension is not accepted', function () {
         ->assertHasErrors(['csv']);
 });
 
-test('wrong mime type is not accepted', function () {
+test('wrong mime type is not accepted', function (): void {
     $image_csv = testFile('test-image.png', 'test-image.csv');
     $pdf_csv = testFile('empty.pdf', 'empty-pdf.csv');
 
@@ -206,7 +206,7 @@ test('wrong mime type is not accepted', function () {
         ->assertHasErrors(['csv']);
 })->todo('works in web, but not in test');
 
-test('if csv import is saved', function () {
+test('if csv import is saved', function (): void {
 
     $acc = BankAccount::orderBy('id', 'desc')->first();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
@@ -242,7 +242,7 @@ test('if csv import is saved', function () {
     ]);
 });
 
-test('if mapping was saved and loaded', function () {
+test('if mapping was saved and loaded', function (): void {
 
     $acc = BankAccount::orderBy('id', 'desc')->first();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
@@ -263,4 +263,4 @@ test('if mapping was saved and loaded', function () {
         ->assertSet('mapping.saldo', 13);
 });
 
-test('csv upload with correct saldo check', function () {})->todo();
+test('csv upload with correct saldo check', function (): void {})->todo();

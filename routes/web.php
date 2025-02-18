@@ -13,7 +13,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function (): void {
 
     // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::redirect('/', 'menu/mygremium')->name('home');
