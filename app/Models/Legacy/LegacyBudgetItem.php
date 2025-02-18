@@ -64,6 +64,6 @@ class LegacyBudgetItem extends Model
 
     public function bookingDiff(): float
     {
-        return (float) bcsub($this->value, $this->bookings()->sum('value'));
+        return (float) bcsub($this->value, (string) $this->bookings()->sum('value'));
     }
 }

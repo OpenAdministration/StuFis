@@ -29,9 +29,7 @@ test('Event dispatching from legacy project model update', function () {
     $project->name = fake()->sentence();
     $project->save();
 
-    Event::assertDispatched(UpdatingModel::class, function ($event) use ($project) {
-        return $event->model->id === $project->id && $event->model instanceof Project;
-    });
+    Event::assertDispatched(UpdatingModel::class, fn ($event) => $event->model->id === $project->id && $event->model instanceof Project);
 });
 
 test('dispatched event gets logged at legacy project model update', function () {

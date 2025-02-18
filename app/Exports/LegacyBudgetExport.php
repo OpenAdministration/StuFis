@@ -41,9 +41,7 @@ class LegacyBudgetExport implements FromView, WithColumnFormatting, WithColumnWi
     public function sum(string $column, array|Collection $rows)
     {
         $rows = collect($rows);
-        $fields = $rows->map(function ($row) use ($column) {
-            return "$column$row";
-        })->join(',');
+        $fields = $rows->map(fn ($row) => "$column$row")->join(',');
 
         return '=SUM('.$fields.')';
     }

@@ -10,12 +10,12 @@ return RectorConfig::configure()
         __DIR__.'/bootstrap',
         __DIR__.'/config',
         __DIR__.'/lang',
-        __DIR__.'/legacy',
+        // __DIR__.'/legacy',
         __DIR__.'/public',
         __DIR__.'/resources',
         __DIR__.'/routes',
         __DIR__.'/tests',
     ])
     // uncomment to reach your current PHP version
-    ->withPhpSets(php84: true);
+    ->withPhpSets(php82: true);
 // ->withTypeCoverageLevel(1)

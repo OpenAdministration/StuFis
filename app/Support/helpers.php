@@ -13,7 +13,7 @@ if (! function_exists('guessCarbon')) {
         foreach ($formats as $format) {
             try {
                 $ret = Carbon::rawCreateFromFormat($format, $dateString);
-            } catch (InvalidFormatException $e) {
+            } catch (InvalidFormatException) {
                 continue;
             }
             // if successfully parsed

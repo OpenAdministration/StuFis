@@ -57,16 +57,14 @@ class AppServiceProvider extends ServiceProvider
 
     public function bootRoute()
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
 
     }
 
     public function registerAuth(): void
     {
         $this->app->singleton(AuthService::class, function (Application $application) {
-            $serviceName = ucfirst(strtolower(config('auth.service')));
+            $serviceName = ucfirst(strtolower((string) config('auth.service')));
             // weird to escape, but correct
             $classPath = "\App\Services\Auth\\{$serviceName}AuthService";
             if (class_exists($classPath)) {

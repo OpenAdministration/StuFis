@@ -6,11 +6,8 @@ use Exception;
 
 class LegacyJsonException extends Exception
 {
-    public mixed $content;
-
-    public function __construct(mixed $content)
+    public function __construct(public mixed $content)
     {
-        $this->content = $content;
         parent::__construct('', 200, null);
     }
 }
