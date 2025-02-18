@@ -15,6 +15,7 @@ return new class extends Migration
             // create legacy is already changed, this is not for new setups but for upgrading instances < 4.3.x
             $table->text('text')->change();
         });
+        Schema::dropIfExists('password_resets');
     }
 
     /**
