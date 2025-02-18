@@ -46,6 +46,8 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: run npm
+        run: npm ci
       - name: run migrations
         run: php artisan migrate --seed
       - name: Run tests
