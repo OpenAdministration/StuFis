@@ -15,10 +15,7 @@ class LegacyController extends Controller
 {
     public function bootstrap(): void
     {
-        if (! defined('SYSBASE')) {
-            define('SYSBASE', base_path('/legacy/'));
-        }
-        require_once SYSBASE.'/lib/inc.all.php';
+        require_once base_path('legacy/lib/inc.all.php');
     }
 
     public function render(Request $request)

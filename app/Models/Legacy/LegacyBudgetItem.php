@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,16 +18,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Booking[] $bookings
  * @property LegacyBudgetGroup $haushaltsgruppen
  * @property-read int|null $bookings_count
- * @property-read \App\Models\Legacy\LegacyBudgetGroup $budgetGroup
+ * @property-read LegacyBudgetGroup $budgetGroup
  *
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem query()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereHhpgruppenId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereTitelName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereTitelNr($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetItem whereValue($value)
+ * @method static Builder|LegacyBudgetItem newModelQuery()
+ * @method static Builder|LegacyBudgetItem newQuery()
+ * @method static Builder|LegacyBudgetItem query()
+ * @method static Builder|LegacyBudgetItem whereHhpgruppenId($value)
+ * @method static Builder|LegacyBudgetItem whereId($value)
+ * @method static Builder|LegacyBudgetItem whereTitelName($value)
+ * @method static Builder|LegacyBudgetItem whereTitelNr($value)
+ * @method static Builder|LegacyBudgetItem whereValue($value)
  *
  * @mixin \Eloquent
  */
@@ -56,12 +57,12 @@ class LegacyBudgetItem extends Model
         return $this->belongsTo(LegacyBudgetGroup::class, 'hhpgruppen_id');
     }
 
-    public function bookingSum(): string
+    public function bookingSum(): float
     {
         return $this->bookings()->sum('value');
     }
 
-    public function bookingDiff(): string
+    public function bookingDiff(): float
     {
         return (float) bcsub($this->value, $this->bookings()->sum('value'));
     }
