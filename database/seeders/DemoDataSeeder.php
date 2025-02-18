@@ -31,7 +31,7 @@ class DemoDataSeeder extends Seeder
             ->replace('2024', $biggerYear)
             ->replace('2023', $smallerYear);
         if (App::environment() === 'testing') {
-            $sqlContent = $sqlContent->replace('demo__', config('database.connections.mysql.prefix'));
+            $sqlContent = $sqlContent->replace('demo__', DB::getTablePrefix());
         }
 
         DB::unprepared($sqlContent);
