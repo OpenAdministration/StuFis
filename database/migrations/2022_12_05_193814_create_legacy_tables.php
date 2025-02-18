@@ -118,7 +118,7 @@ return new class extends Migration
                 $table->dateTime('timestamp')->default(DB::raw('CURRENT_TIMESTAMP'));
                 $table->string('creator', 128);
                 $table->string('creator_alias', 256);
-                $table->string('text', 65535);
+                $table->text('text');
                 $table->tinyInteger('type')->default(0)->comment('0 = comment, 1 = state_change, 2 = admin only');
             });
         }
@@ -331,10 +331,8 @@ return new class extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::table('projektposten', static function (Blueprint $table) {
             $table->dropForeign('dev__projektposten_ibfk_1');

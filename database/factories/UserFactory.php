@@ -15,11 +15,13 @@ class UserFactory extends Factory
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'username' => fake()->userName(),
+            'provider' => 'local',
+            'provider_uid' => fake()->uuid(),
             'email' => fake()->unique()->safeEmail(),
             'remember_token' => Str::random(10),
         ];

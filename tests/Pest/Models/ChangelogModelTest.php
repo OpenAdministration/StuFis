@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\UpdatingModel;
 use App\Models\Changelog;
 use App\Models\Legacy\Project;
 use App\Models\User;
@@ -23,12 +24,12 @@ test('Event dispatching from legacy project model update', function () {
     $user = User::factory()->create();
     $project = Project::factory()->by($user)->create();
 
-    Event::assertNotDispatched(\App\Events\UpdatingModel::class);
+    Event::assertNotDispatched(UpdatingModel::class);
 
     $project->name = fake()->sentence();
     $project->save();
 
-    Event::assertDispatched(\App\Events\UpdatingModel::class, function ($event) use ($project) {
+    Event::assertDispatched(UpdatingModel::class, function ($event) use ($project) {
         return $event->model->id === $project->id && $event->model instanceof Project;
     });
 });

@@ -1,55 +1,68 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Create The Application
-|--------------------------------------------------------------------------
-|
-| The first thing we will do is create a new Laravel application instance
-| which serves as the "glue" for all the components of Laravel, and is
-| the IoC container for the system binding all of the various parts.
-|
-*/
+use App\Providers\AppServiceProvider;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Route;
 
-$app = new Illuminate\Foundation\Application(
-    $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
-);
+return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        \SocialiteProviders\Manager\ServiceProvider::class,
+    ])
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        // api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        // channels: __DIR__.'/../routes/channels.php',
+        health: '/up',
+        then: function () {
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/api.php'));
+            Route::middleware('web')
+                ->group(base_path('routes/web.php'));
 
-/*
-|--------------------------------------------------------------------------
-| Bind Important Interfaces
-|--------------------------------------------------------------------------
-|
-| Next, we need to bind some important interfaces into the container so
-| we will be able to resolve them when needed. The kernels serve the
-| incoming requests to this application from both the web and CLI.
-|
-*/
+            if (config('stufis.features') === 'dev') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-dev.php'));
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
+            }
 
-$app->singleton(
-    Illuminate\Contracts\Http\Kernel::class,
-    App\Http\Kernel::class
-);
+            if (config('stufis.features') === 'preview') {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-preview.php'));
+            }
 
-$app->singleton(
-    Illuminate\Contracts\Console\Kernel::class,
-    App\Console\Kernel::class
-);
+            if (App::hasDebugModeEnabled()) {
+                Route::middleware('web')
+                    ->group(base_path('routes/web-debug.php'));
+            }
 
-$app->singleton(
-    Illuminate\Contracts\Debug\ExceptionHandler::class,
-    App\Exceptions\Handler::class
-);
+            // has to be last because there is a catch-all inside
+            Route::middleware('legacy')
+                ->group(base_path('routes/legacy.php'));
+        }
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectUsersTo(AppServiceProvider::HOME);
 
-/*
-|--------------------------------------------------------------------------
-| Return The Application
-|--------------------------------------------------------------------------
-|
-| This script returns the application instance. The instance is given to
-| the calling script so we can separate the building of the instances
-| from the actual running of the application and sending responses.
-|
-*/
+        $middleware->throttleApi();
 
-return $app;
+        $middleware->group('legacy', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
+        $middleware->alias([
+            'auth' => \App\Http\Middleware\Authenticate::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
+    })->create();
