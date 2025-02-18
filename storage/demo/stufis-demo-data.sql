@@ -1148,24 +1148,6 @@ INSERT INTO `demo__konto_type` VALUES
 UNLOCK TABLES;
 
 --
--- Dumping data for table `demo__password_resets`
---
-
-LOCK TABLES `demo__password_resets` WRITE;
-/*!40000 ALTER TABLE `demo__password_resets` DISABLE KEYS */;
-/*!40000 ALTER TABLE `demo__password_resets` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Dumping data for table `demo__personal_access_tokens`
---
-
-LOCK TABLES `demo__personal_access_tokens` WRITE;
-/*!40000 ALTER TABLE `demo__personal_access_tokens` DISABLE KEYS */;
-/*!40000 ALTER TABLE `demo__personal_access_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Dumping data for table `demo__projekte`
 --
 
