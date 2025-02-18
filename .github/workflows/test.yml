@@ -19,7 +19,7 @@ jobs:
           MYSQL_USER: stufis_ci
           MYSQL_PASSWORD: password
         ports:
-          - 3306:3306
+          - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     runs-on: ${{ matrix.operating-system }}
     steps:
@@ -50,9 +50,12 @@ jobs:
         run: npm ci
       - name: run migrations
         run: php artisan migrate --seed
+        env:
+          DB_CONNECTION: 'mariadb-testing'
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
       - name: Run tests
         run: vendor/bin/pest
         env:
-          DB_CONNECTION: mysql
+          DB_CONNECTION: 'mariadb-testing'
           DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
 
