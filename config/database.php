@@ -3,8 +3,8 @@
 return [
 
     'connections' => [
-        'mysql' => [
-            'driver' => 'mysql',
+        'mariadb' => [
+            'driver' => 'mariadb',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
@@ -23,8 +23,8 @@ return [
             ]) : [],
         ],
 
-        'testing-mysql' => [
-            'driver' => 'mysql',
+        'mariadb-testing' => [
+            'driver' => 'mariadb',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
