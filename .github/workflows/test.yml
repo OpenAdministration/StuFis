@@ -1,57 +1,61 @@
-name: Run tests
-
+name: Test
 on:
-  pull_request:
-    branches:
-      - main
-
+  - push
 jobs:
-  tests:
-    name: Run tests
-    runs-on: ubuntu-latest
-
+  test:
+    strategy:
+      matrix:
+        operating-system:
+          - ubuntu-latest
+        php-version:
+          - '8.2'
+    name: php ${{ matrix.php-version }} on ${{ matrix.operating-system }}
     services:
       mariadb:
         image: mariadb:10.11
         env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: false
-          MYSQL_USER: stufis_ci
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: stufis_ci
+          MYSQL_USER: stufis_ci
           MYSQL_PASSWORD: password
         ports:
-          - 3306:3306
+          - 3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    strategy:
-      fail-fast: false
-      matrix:
-        php-versions: [ '8.2' ]
+    runs-on: ${{ matrix.operating-system }}
     steps:
-      - uses: actions/checkout@v4
-
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: mbstring, dom, fileinfo, mysql, libxml, xml, xmlwriter, dom, tokenizer, filter, json, phar, pcre, openssl, pdo, intl, curl
-          coverage: xdebug
+          php-version: ${{ matrix.php-version }}
+          extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml, zip, gd
+          coverage: none
+      - name: Prepare the environment
+        run: cp .env.ci .env
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - name: Setup composer cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install composer dependencies
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: run npm
+        run: npm ci
+      - name: run migrations
+        run: php artisan migrate --seed
+        env:
+          DB_CONNECTION: 'mariadb-testing'
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
+      - name: Run tests
+        run: vendor/bin/pest
+        env:
+          DB_CONNECTION: 'mariadb-testing'
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
 
-      - name: Run composer install
-        run: |
-          composer config http-basic.composer.fluxui.dev ${{secrets.FLUXUI_USERNAME}} ${{secrets.FLUXUI_PASSWORD}}
-          composer install --no-progress --no-suggest --prefer-dist --optimize-autoloader
-
-      - name: Prepare Laravel Application
-        run: |
-          cp .env.ci .env.testing
-
-      - name: Verify mariadb connection
-        run: |
-          sudo apt install mariadb-client
-          mariadb --version
-          mariadb --host localhost --port 3306 -ustufis_ci -ppassword -e "SHOW DATABASES"
-
-      - name: Run Migration
-        run: php artisan migrate -v --seed --env=testing
-
-      - name: Test with phpunit
-        run: php artisan test --coverage

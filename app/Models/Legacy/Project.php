@@ -58,12 +58,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|Project whereState($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
- *
- * @property string|null $org-mail
- * @property string|null $recht-additional
- * @property string|null $date-start
- * @property string|null $date-end
- *
  * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
