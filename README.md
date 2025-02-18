@@ -43,7 +43,7 @@ There might be an unsupported docker image in the future, but right now it has n
 git clone https://github.com/openAdministration/StuFis 
 composer install # in production: composer install --no-dev --optimize  
 npm install # in production: npm ci
-npm run dev # in production: npm run production
+npm run dev # in production: npm run build
 cp .env.example .env
 php artisan key:generate
 ```
@@ -53,7 +53,7 @@ And fill in your Environment File!
 php artisan migrate
 php artisan serve
 # other terminal (for tailwindcss live-compiling)
-npm run watch
+npm run dev
 ```
 
 # Feature Request 
