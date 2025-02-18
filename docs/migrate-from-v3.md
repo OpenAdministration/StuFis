@@ -60,7 +60,7 @@ stumv@host:~/StuMV$ php artisan passport:client
 composer install --no-dev
 php artisan key:generate
 npm install
-npm run production
+npm run build
 php artisan migrate --force # this is the bit dangerous part ^^
 
 # optional   

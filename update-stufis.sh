@@ -34,7 +34,7 @@ fi
 composer install --no-dev --optimize-autoloader
 npm ci
 # compile tailwind css
-npm run production
+npm run build
 # update db
 php artisan migrate --force
 
