@@ -29,9 +29,10 @@ class DatabaseSeeder extends Seeder
         }
 
         if (\App::isProduction()) {
-            $this->call(ProductionSeeder::class);
             if (config('app.realm') === 'demo') {
                 $this->call(DemoDataSeeder::class);
+            } else {
+                $this->call(ProductionSeeder::class);
             }
         }
     }
