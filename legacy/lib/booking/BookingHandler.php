@@ -408,7 +408,7 @@ class BookingHandler extends Renderer
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
-    private function renderKonto(int $kontoId = 0): void
+    private function renderKonto(int $kontoId = 1): void
     {
         [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE.'konto/', '/'.$kontoId);
         $startDate = $hhps[$selected_id]['von'];
