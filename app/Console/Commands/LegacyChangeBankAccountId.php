@@ -29,7 +29,7 @@ class LegacyChangeBankAccountId extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         return DB::transaction(function () {
             $oldId = $this->argument('old-id');
