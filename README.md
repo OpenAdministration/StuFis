@@ -18,7 +18,8 @@ Als Open-Source-Software finanziert sich die Weiterentwicklung aktuell aus dem H
 - StuRa der Universität Erfurt
 - StuRa der Technischen Universität Ilmenau
 - StuRa der Ernst-Abbe-Hochschule Jena
-- StuRa der Hochschule Schmalkalden
+- StuRa der Fachhochschule Erfurt
+- StuRa der Bauhaus-Universität Weimar
 - AStA der ev. Hochschule für Soziale Arbeit Hamburg (Rauhes Haus)
 
 # Installation 
