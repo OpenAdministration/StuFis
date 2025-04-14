@@ -384,6 +384,12 @@ return [
                 'placeholder' => '',
                 // 'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
             ],
+            'fsr-vorstand' => [
+                'label' => 'FSR Vorstandsbeschluss',
+                'label-additional' => 'Datum und TOP',
+                'placeholder' => '',
+                // 'hint-text' => 'Hier ist Platz für einen hilfreichen Text.',
+            ],
             'mittel' => [
                 'label' => 'Antrag auf Mittelfreigabe',
                 'hint-text' => 'Interne Förderrichtlinie §41 (7), (8). sowie §42: StuRa bis zu 100 EUR & FSRe bis zu 75 EUR',
