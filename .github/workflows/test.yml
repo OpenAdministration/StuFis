@@ -8,7 +8,7 @@ jobs:
         operating-system:
           - ubuntu-latest
         php-version:
-          - '8.4'
+          - '8.2'
     name: php ${{ matrix.php-version }} on ${{ matrix.operating-system }}
     services:
       mariadb:
@@ -30,7 +30,7 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
           extensions: bcmath, ctype, fileinfo, json, mbstring, openssl, pdo, tokenizer, xml, zip, gd
-          coverage: xdebug
+          coverage: none
       - name: Prepare the environment
         run: cp .env.ci .env
       - name: Get composer cache directory
