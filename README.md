@@ -14,11 +14,12 @@ Unsere Dokumentation und die Hilfeseiten zur Software können [hier](https://dok
 
 StuFis ist Teil der 15. Runde des [PrototypeFund](https://prototypefund.de/project/studierendenfinanzsoftware/) und damit gefördert durch das [BMBF](https://www.bmbf.de).
 
-Als Open-Source-Software finanziert sich die Weiterentwicklung aktuell aus dem Hosting-Dienstleistungs-Angebot (Software-as-a-Service) der Open Administration UG (haftungsbeschränkt). Unsere aktuellen Unterstützer:innen sind 
+Als Open-Source-Software finanziert sich die Weiterentwicklung aktuell aus dem Hosting-Dienstleistungs-Angebot (Software-as-a-Service) von Open Administration. Unsere aktuellen Unterstützer:innen sind 
 - StuRa der Universität Erfurt
 - StuRa der Technischen Universität Ilmenau
 - StuRa der Ernst-Abbe-Hochschule Jena
-- StuRa der Hochschule Schmalkalden
+- StuRa der Fachhochschule Erfurt
+- StuKo der Bauhaus-Universität Weimar
 - AStA der ev. Hochschule für Soziale Arbeit Hamburg (Rauhes Haus)
 
 # Installation 
@@ -31,9 +32,10 @@ The installation process is pretty simple and straight forward. The configuratio
 * nodeJS / npm
 * MariaDB / Mysql
 * optional: a registration Number from [Deutsche Kreditwirtschaft](https://www.hbci-zka.de/register/hersteller.htm)
-* OAuth2 Identity Provider (IdP)
+* OAuth2 Identity Provider (IdP) or StuMV
 * commandline access to your server, ftp only could work, but is more work / not officially supported
 * basic knowledge how to admin a (linux) server
+* since v4.2.0 a fluxui.dev licence, [more infos](https://www.stufis.de/warum-flux)
 
 There might be an unsupported docker image in the future, but right now it has no priority. PRs appreciated.
 
