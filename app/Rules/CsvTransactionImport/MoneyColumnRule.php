@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 class MoneyColumnRule implements ValidationRule
 {
-    public function __construct(private Collection $column) {}
+    public function __construct(private readonly Collection $column) {}
 
     /**
      * Run the validation rule.

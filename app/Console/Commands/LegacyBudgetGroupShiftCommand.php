@@ -17,7 +17,7 @@ class LegacyBudgetGroupShiftCommand extends Command
 
     public function handle(): void
     {
-        \DB::transaction(function () {
+        \DB::transaction(function (): void {
             $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->sole();
             $budgetGroups = LegacyBudgetGroup::where('hhp_id', $latestPlan->id)
                 ->where('id', '>=', $this->argument('new_group_id'));

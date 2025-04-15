@@ -40,10 +40,22 @@ class LegacyChangeBankAccountId extends Command
                 $this->warn("The bank account id $oldId does exist");
                 $this->comment($account->first());
             } else {
-                $this->info("The bank account id $oldId NOT exist");
+                $this->info("The bank account id $oldId does NOT exist");
             }
-            $contine = $this->ask('Do you want to continue? y/N', 'n');
-            if ($contine === 'n') {
+
+            $t_count = BankTransaction::where('konto_id', $oldId)->count();
+            $b_count = Booking::where('zahlung_type', $oldId)->count();
+            $bi_change = BookingInstruction::where('zahlung_type', $oldId)->count();
+
+            $this->table(['Table', 'found Entries'], [
+                ['konto', $t_count],
+                ['booking', $b_count],
+                ['booking_instruction', $bi_change],
+
+            ]);
+
+            $continue = $this->ask('Do you want to continue? y/N', 'n');
+            if ($continue !== 'y') {
                 return self::SUCCESS;
             }
 
@@ -58,7 +70,6 @@ class LegacyChangeBankAccountId extends Command
                 ['konto', $t_change],
                 ['booking', $b_change],
                 ['booking_instruction', $bi_change],
-
             ]);
 
             Schema::enableForeignKeyConstraints();

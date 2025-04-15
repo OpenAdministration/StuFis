@@ -35,11 +35,11 @@ class LegacyMigrateEncryption extends Command
 
             return self::FAILURE;
         }
-        DB::transaction(function () {
+        DB::transaction(function (): void {
 
             $messages = ChatMessage::all();
             $count = 0;
-            $messages->each(function ($message) use (&$count) {
+            $messages->each(function ($message) use (&$count): void {
                 $text = $message->text;
                 if (! empty($text)) {
                     if (str_starts_with($message->text, '$enc$')) {
@@ -48,7 +48,7 @@ class LegacyMigrateEncryption extends Command
                     } elseif ($message->type == -1) {
                         try {
                             $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
-                        } catch (\Exception $exception) {
+                        } catch (\Exception) {
                         }
                     }
                 }
@@ -59,7 +59,7 @@ class LegacyMigrateEncryption extends Command
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
             $count = 0;
-            Expenses::all()->each(function ($expense) use (&$count) {
+            Expenses::all()->each(function ($expense) use (&$count): void {
                 $cryptIban = $expense->getAttribute('zahlung-iban');
                 $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
                 $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));

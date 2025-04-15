@@ -4,14 +4,14 @@ use App\Models\User;
 
 use function Pest\Laravel\actingAs;
 
-it('should be all testing accounts in DB', function () {
+it('should be all testing accounts in DB', function (): void {
     foreach (['user', 'hhv', 'kv', 'user-no-login', 'admin'] as $username) {
         $userExists = User::where(['username' => $username, 'provider' => 'local'])->exists();
         expect($userExists)->toBeTrue();
     }
 });
 
-it('all accounts have matching groups', function () {
+it('all accounts have matching groups', function (): void {
     foreach (['user', 'hhv', 'kv', 'user-no-login', 'admin'] as $username) {
         $user = User::where(['username' => $username, 'provider' => 'local'])->first();
         actingAs($user);

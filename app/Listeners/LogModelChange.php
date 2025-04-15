@@ -27,7 +27,7 @@ class LogModelChange
             ->map(fn ($item, $key) => $model->getOriginal($key));
 
         Changelog::create([
-            'type' => get_class($model),
+            'type' => $model::class,
             'type_id' => $model->getKey(),
             'previous_data' => $changes,
             'user_id' => \Auth::user()->id,

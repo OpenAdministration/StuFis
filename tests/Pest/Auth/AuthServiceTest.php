@@ -2,7 +2,7 @@
 
 use App\Services\Auth\AuthService;
 
-it('should do no mapping if mapping is empty', function () {
+it('should do no mapping if mapping is empty', function (): void {
     $mock = Mockery::mock(AuthService::class);
     $mock->shouldReceive('userGroups')->passthru();
     $mock->shouldReceive('groupMapping')->andReturn(collect());
@@ -10,14 +10,14 @@ it('should do no mapping if mapping is empty', function () {
     expect($mock->userGroups())->toEqual(collect(['login', 'something-else']));
 });
 
-it('should omit non-mapped groups', function () {
+it('should omit non-mapped groups', function (): void {
     $mock = Mockery::mock(AuthService::class);
     $mock->shouldReceive('userGroups', 'groupMapping')->passthru();
     $mock->shouldReceive('userGroupsRaw')->andReturn(collect(['login', 'something-else']));
     expect($mock->userGroups())->toEqual(collect(['login']));
 });
 
-it('does not escalate permission if mapping has a empty value', function () {
+it('does not escalate permission if mapping has a empty value', function (): void {
     $mock = Mockery::mock(AuthService::class);
     $mock->shouldReceive('userGroups')->passthru();
     $mock->shouldReceive('userGroupsRaw')->andReturn(collect(['', 'something-else']));
@@ -31,7 +31,7 @@ it('does not escalate permission if mapping has a empty value', function () {
     expect($mock->userGroups())->not->toEqual(collect(['login']));
 });
 
-it('gives default permissions if mapping has a true value', function () {
+it('gives default permissions if mapping has a true value', function (): void {
     $mock = Mockery::mock(AuthService::class);
     $mock->shouldReceive('userGroups')->passthru();
     $mock->shouldReceive('userGroupsRaw')->andReturn(collect());

@@ -110,9 +110,7 @@ class TransactionImportWire extends Component
         $foo = new BankTransaction;
         $emptyMapping = collect(array_flip(array_keys($foo->getLabels())));
 
-        return $emptyMapping->map(function ($value, $key) use ($merger) {
-            return $merger[$key] ?? '';
-        });
+        return $emptyMapping->map(fn ($value, $key) => $merger[$key] ?? '');
     }
 
     public function parseCSV(): void
@@ -122,7 +120,7 @@ class TransactionImportWire extends Component
         $content = $this->csv->get();
 
         // check for windows excel file encoding, transform to utf-8
-        $enc = mb_detect_encoding($content, ['Windows-1252', 'UTF-8']);
+        $enc = mb_detect_encoding((string) $content, ['Windows-1252', 'UTF-8']);
         if ($enc !== 'UTF-8') {
             $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
         }
@@ -136,13 +134,11 @@ class TransactionImportWire extends Component
         $this->separator = $amountSemicolon > $amountComma ? ';' : ',';
 
         // extract header and data, explode data with csv separator guesses above
-        $this->header = str_getcsv($lines->first(), $this->separator);
+        $this->header = str_getcsv((string) $lines->first(), $this->separator);
         $this->data = $lines->except(0)
-            ->filter(function ($line) {
-                return ! (empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch());
-            })->map(function ($line) {
-                return str_getcsv($line, $this->separator);
-            })->map(function ($lineArray) {
+            ->filter(fn ($line) => ! (empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch()))
+            ->map(fn ($line) => str_getcsv((string) $line, $this->separator))
+            ->map(function ($lineArray) {
                 // normalize data
                 foreach ($lineArray as $key => $cell) {
                     // tests
@@ -171,9 +167,7 @@ class TransactionImportWire extends Component
         }
 
         // check if mapping has some presets, if then do an initial validation, no preset, no validation
-        $hasPreset = $this->mapping->reject(function ($value) {
-            return $value === '';
-        })->count() > 0;
+        $hasPreset = $this->mapping->reject(fn ($value) => $value === '')->count() > 0;
         if ($hasPreset) {
             $this->validate();
         }
@@ -217,7 +211,7 @@ class TransactionImportWire extends Component
                     $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
                 } elseif ($db_col_name === 'saldo') {
                     $currentValue = str($row[$this->mapping['value']])->replace(',', '.');
-                    $currentBalance = bcadd($currentBalance, $currentValue, 2);
+                    $currentBalance = bcadd($currentBalance, (string) $currentValue, 2);
                     $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                 }
             }
@@ -226,7 +220,7 @@ class TransactionImportWire extends Component
         }
         try {
             DB::commit();
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             DB::rollBack();
             $this->addError('csv', 'Nope');
 

@@ -2,7 +2,7 @@
 
 use App\Models\Legacy\Expenses;
 
-it('should transfer the state in auslagenerstattung', function () {
+it('should transfer the state in auslagenerstattung', function (): void {
     // create an expense in stated paid
     $expense = Expenses::factory(2)
         ->state('payed')

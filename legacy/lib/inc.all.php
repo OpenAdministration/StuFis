@@ -4,7 +4,7 @@ $conf = [];
 
 define('SYSBASE', base_path('/legacy/'));
 
-define('REALM', config('app.realm'));
+define('REALM', config('stufis.realm'));
 if (App::runningUnitTests()) {
     define('ORG_DATA', (include SYSBASE.'/config/config.orgs.testing.php')[REALM] ?? []);
 } else {
@@ -15,7 +15,7 @@ const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
 define('DEV', config('app.debug'));
 const URIBASE = '/';
 define('BASE_URL', config('app.url'));
-define('FINTS_REGNR', config('app.fints.registration-number', ''));
+define('FINTS_REGNR', config('stufis.fints.registration_number', ''));
 
 setlocale(LC_TIME, 'de_DE.UTF8', 'de_DE.UTF-8');
 

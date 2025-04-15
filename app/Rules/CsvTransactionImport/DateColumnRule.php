@@ -25,7 +25,7 @@ class DateColumnRule implements ValidationRule
                 $fail(__('konto.csv-verify-date-order-error'));
             }
             // dump("$attribute test if $firstDate >= $lastDate -> Result: ". !$firstDate->lessThanOrEqualTo($lastDate) );
-        } catch (InvalidFormatException $exception) {
+        } catch (InvalidFormatException) {
             $fail(__('konto.csv-verify-date-error'));
         }
     }

@@ -32,7 +32,7 @@ class BookingHandler extends Renderer
                 $this->renderBookingText();
                 break;
             case 'konto':
-                $kontoId = $this->routeInfo['konto-id'] ?? 0;
+                $kontoId = $this->routeInfo['konto-id'] ?? 1;
                 $this->renderKonto($kontoId);
                 break;
             case 'history':
@@ -408,7 +408,7 @@ class BookingHandler extends Renderer
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
-    private function renderKonto(int $kontoId = 0): void
+    private function renderKonto(int $kontoId): void
     {
         [$hhps, $selected_id] = $this->renderHHPSelector($this->routeInfo, URIBASE.'konto/', '/'.$kontoId);
         $startDate = $hhps[$selected_id]['von'];

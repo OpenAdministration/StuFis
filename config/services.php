@@ -21,7 +21,7 @@ return [
         // using socialiteproviders/laravelpassport
         'client_id' => env('STUMV_CLIENT_ID'),
         'client_secret' => env('STUMV_CLIENT_SECRET'),
-        'redirect' => rtrim(env('APP_URL', 'http://localhost:8000'), '/').'/auth/callback',
+        'redirect' => rtrim((string) env('APP_URL', 'http://localhost:8000'), '/').'/auth/callback',
         'host' => env('STUMV_HOST'),
         'logout_path' => env('STUMV_LOGOUT_PATH', 'logout'),
         'mapping' => [
@@ -39,7 +39,7 @@ return [
         'client_secret' => env('OIDC_CLIENT_SECRET'),
         'provider_url' => env('OIDC_PROVIDER_URL'),
         'certificate_path' => env('OIDC_CERT_PATH'),
-        'scopes' => explode(' ', env('OIDC_SCOPES', 'openid profile email')),
+        'scopes' => explode(' ', (string) env('OIDC_SCOPES', 'openid profile email')),
         'verify_host' => env('OIDC_VERIFY_HOST', true),
         'attribute-mapping' => [
             'uid' => env('OIDC_ATTRIBUTE_UID', 'sub'),

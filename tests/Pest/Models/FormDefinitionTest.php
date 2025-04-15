@@ -7,7 +7,7 @@ use App\Models\FormFieldValidation;
 
 use function Pest\Laravel\assertModelExists;
 
-test('form definition factory', function () {
+test('form definition factory', function (): void {
     $def = FormDefinition::factory()->has(
         FormField::factory(5)->has(
             FormFieldOption::factory()->count(5)

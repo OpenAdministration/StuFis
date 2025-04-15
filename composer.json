@@ -42,6 +42,7 @@
         "pestphp/pest": "^2.34",
         "pestphp/pest-plugin-laravel": "^2.4",
         "pestphp/pest-plugin-livewire": "^2.1",
+        "rector/rector": "^1.2",
         "roave/security-advisories": "dev-latest"
     },
     "autoload": {

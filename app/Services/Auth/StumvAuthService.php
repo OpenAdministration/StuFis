@@ -67,16 +67,12 @@ class StumvAuthService extends AuthService
 
     public function userCommittees(): Collection
     {
-        return \Session::remember('stumv.comittees', function () {
-            return $this->api()->get('/api/my/committees')->collect();
-        });
+        return \Session::remember('stumv.comittees', fn () => $this->api()->get('/api/my/committees')->collect());
     }
 
     public function userGroupsRaw(): Collection
     {
-        return \Session::remember('stumv.groups', function () {
-            return $this->api()->get('/api/my/groups')->collect();
-        });
+        return \Session::remember('stumv.groups', fn () => $this->api()->get('/api/my/groups')->collect());
     }
 
     public function groupMapping(): Collection

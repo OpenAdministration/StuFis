@@ -10,11 +10,6 @@ class Layout extends Component
 
     public string $version;
 
-    /**
-     * @var string if not empty, the legacy iframe will be shown with this content, instead of the slot
-     */
-    public string $legacyContent = '';
-
     public array $profileSkeleton = [
         [
             'text' => 'Mein Profil',
@@ -31,10 +26,12 @@ class Layout extends Component
      *
      * @return void
      */
-    public function __construct($legacyContent = '')
+    public function __construct(/**
+     * @var string if not empty, the legacy iframe will be shown with this content, instead of the slot
+     */
+        public string $legacyContent = '')
     {
-        $this->legacyContent = $legacyContent;
-        $this->version = config('app.version');
+        $this->version = config('stufis.version');
     }
 
     /**
@@ -45,7 +42,7 @@ class Layout extends Component
     public function render()
     {
         return view('components.layouts.index', [
-            'version' => config('app.version'),
+            'version' => config('stufis.version'),
         ]);
     }
 }

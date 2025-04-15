@@ -16,7 +16,7 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
-        if (App::isProduction() && config('app.realm') !== 'demo') {
+        if (App::isProduction() && config('stufis.realm') !== 'demo') {
             throw new \InvalidArgumentException('Realm is not demo but we are in production, aborting for your safety');
         }
 
