@@ -31,7 +31,7 @@ class Layout extends Component
      */
         public string $legacyContent = '')
     {
-        $this->version = config('app.version');
+        $this->version = config('stufis.version');
     }
 
     /**
@@ -42,7 +42,7 @@ class Layout extends Component
     public function render()
     {
         return view('components.layouts.index', [
-            'version' => config('app.version'),
+            'version' => config('stufis.version'),
         ]);
     }
 }

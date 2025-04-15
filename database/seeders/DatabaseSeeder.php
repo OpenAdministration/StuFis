@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
         }
 
         if (\App::isProduction()) {
-            if (config('app.realm') === 'demo') {
+            if (config('stufis.realm') === 'demo') {
                 $this->call(DemoDataSeeder::class);
             }
             $this->call(ProductionSeeder::class);
