@@ -44,10 +44,10 @@ class LegacyMigrateEncryption extends Command
                 if (! empty($text)) {
                     if (str_starts_with($message->text, '$enc$')) {
                         $text = substr($text, strlen('$enc$'));
-                        $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                        $text = ChatHandler::legacyDecryptMessage($text, config('stufis.chat.private_key'));
                     } elseif ($message->type == -1) {
                         try {
-                            $text = ChatHandler::legacyDecryptMessage($text, config('app.chat.private_key'));
+                            $text = ChatHandler::legacyDecryptMessage($text, config('stufis.chat.private_key'));
                         } catch (\Exception) {
                         }
                     }
