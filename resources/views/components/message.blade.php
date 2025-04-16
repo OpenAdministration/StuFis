@@ -17,7 +17,7 @@
         "bg-red-100" => $isError,
     ]) x-data="{ showMessage: true }" x-show="showMessage">
         <div class="flex">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
                 @if($isSuccess)
                     <x-fas-award class="h-5 w-5 text-green-400"/>
                 @elseif($isWarning)
@@ -35,7 +35,7 @@
                     "text-red-800" => $isWarning,
                 ])>{{ session('message') }}</p>
             </div>
-            <button class="flex-shrink-0" x-on:click="showMessage = false">
+            <button class="shrink-0" x-on:click="showMessage = false">
                 <x-fas-x class="text-green-800 hover:text-green-900 h-5 w-5 opacity-75 p-1"></x-fas-x>
             </button>
         </div>
