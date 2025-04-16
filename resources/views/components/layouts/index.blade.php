@@ -6,10 +6,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
+    @livewireStyles
     @vite('resources/css/app.css')
-    @livewireScripts
-    @fluxStyles
-    <script src="{{ asset('js/app.js') }}" defer></script>
+    @vite('resources/js/app.js')
 </head>
 <body class="h-full overflow-hidden">
 <div x-data="{ mobileMenu : false }" class="h-full flex">
@@ -101,13 +100,13 @@
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0"
                      class="absolute top-1 right-0 -mr-14 p-1">
-                    <button @click="mobileMenu=false" type="button" class="h-12 w-12 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white">
+                    <button @click="mobileMenu=false" type="button" class="h-12 w-12 rounded-full flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-white">
                         <x-heroicon-o-x-mark class="h-6 w-6 text-white"/>
                         <span class="sr-only">Close sidebar</span>
                     </button>
                 </div>
 
-                <div class="flex-shrink-0 px-4 flex items-center">
+                <div class="shrink-0 px-4 flex items-center">
                     <!-- Mobile -->
                     <x-logo class="h-16 w-auto"/>
                     <span class="text-4xl text-white ml-4 tracking-wide">{{ config('app.name') }}</span>
@@ -163,7 +162,7 @@
                 </div>
             </div>
 
-            <div class="flex-shrink-0 w-14" aria-hidden="true">
+            <div class="shrink-0 w-14" aria-hidden="true">
                 <!-- Dummy element to force sidebar to shrink to fit close icon -->
             </div>
         </div>
@@ -172,8 +171,8 @@
     <!-- Content area -->
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="w-full">
-            <div class="relative z-10 flex-shrink-0 h-16 bg-white border-b border-gray-200 shadow-sm flex">
-                <button @click="mobileMenu = true" type="button" class="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden" x-transition>
+            <div class="relative z-10 shrink-0 h-16 bg-white border-b border-gray-200 shadow-xs flex">
+                <button @click="mobileMenu = true" type="button" class="border-r border-gray-200 px-4 text-gray-500 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden" x-transition>
                     <span class="sr-only">Open sidebar</span>
                     <!-- Heroicon name: outline/menu-alt-2 -->
                     <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
@@ -182,7 +181,7 @@
                 </button>
                 <div class="flex-1 flex justify-between px-4 sm:px-6">
                     <div class="ml-2 flex items-center">
-                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 pr-3 rounded-2xl items-center justify-center text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 pr-3 rounded-2xl items-center justify-center text-white hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <x-heroicon-o-plus-small class="h-6 w-6"/>
                             <span>Neues Projekt</span>
                         </a>
@@ -193,21 +192,21 @@
                             <label for="search-field" class="sr-only">Search all files</label>
                             <div class="relative w-full text-gray-400 focus-within:text-gray-600">
                                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center">
-                                    <x-heroicon-s-magnifying-glass class="flex-shrink-0 h-5 w-5"/>
+                                    <x-heroicon-s-magnifying-glass class="shrink-0 h-5 w-5"/>
                                 </div>
-                                <input name="search-field" id="search-field" class="h-full w-full border-transparent py-2 pl-8 pr-3 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-400" placeholder="Search" type="search">
+                                <input name="search-field" id="search-field" class="h-full w-full border-transparent py-2 pl-8 pr-3 text-base text-gray-900 placeholder-gray-500 focus:outline-hidden focus:ring-0 focus:border-transparent focus:placeholder-gray-400" placeholder="Search" type="search">
 
                             </div>
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
-                        <a href="{{ config('app.docs_url') }}" class="text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ config('stufis.docs_url') }}" class="text-indigo-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <x-fas-book-open />
                         </a>
                         <!-- Profile dropdown -->
-                        <div x-data="{ profile: false }" class="relative flex-shrink-0" >
+                        <div x-data="{ profile: false }" class="relative shrink-0" >
                             <div>
-                                <button x-on:click="profile = ! profile" type="button" class="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                <button x-on:click="profile = ! profile" type="button" class="bg-white rounded-full flex text-sm focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                                     <span class="sr-only">Open user menu</span>
                                     <x-profile-pic class="h-8 w-8 rounded-full text-indigo-600"/>
                                 </button>
@@ -221,7 +220,7 @@
                                  x-transform:leave-start="transform opacity-100 scale-100"
                                  x-transform:leave-end="transform opacity-0 scale-95"
 
-                                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu"
+                                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-hidden " role="menu"
                                  aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
                                 <a class="block px-4 py-2 text-black">{{ Auth::user()->name }}</a>
                                 @foreach($profileSkeleton as $idx => $item)
@@ -238,14 +237,14 @@
         </header>
 
         <div class="relative z-0 flex flex-1 overflow-hidden">
-            <main class="relative z-0 flex-1 overflow-y-auto focus:outline-none">
+            <main class="relative z-0 flex-1 overflow-y-auto focus:outline-hidden">
                 <x-message/>
                 <!-- Start main area-->
                 {{ $slot }}
                 <!-- End main area -->
             </main>
             @isset($sideColumn)
-                <aside class="relative hidden w-1/3 flex-shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
+                <aside class="relative hidden w-1/3 shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
                     <!-- Start secondary column (hidden on smaller screens) -->
                     <div class="absolute inset-0 py-6 px-4 sm:px-6 lg:px-8">
                         <div class="h-full rounded-lg border-2 border-dashed border-gray-200"></div>
@@ -256,6 +255,7 @@
         </div>
     </div>
 </div>
+@livewireScripts
 @fluxScripts
 </body>
 </html>

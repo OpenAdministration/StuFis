@@ -5,19 +5,19 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "autoprefixer": "^10.4.7",
-        "axios": "^1.8.4",
-        "laravel-vite-plugin": "^1.2.0",
-        "tailwindcss": "^3.0.24",
         "@tailwindcss/aspect-ratio": "^0.4.2",
         "@tailwindcss/forms": "^0.5.10",
+        "@tailwindcss/postcss": "^4.1.4",
         "@tailwindcss/typography": "^0.5.16",
+        "axios": "^1.8.4",
+        "laravel-vite-plugin": "^1.2.0",
+        "tailwindcss": "^4.1.4",
         "vite": "^6.0.0"
     },
     "dependencies": {
         "alpinejs": "^3.13.8"
     },
     "engines": {
-        "node" : ">=16"
+        "node": ">=16"
     }
 }
