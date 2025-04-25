@@ -15,7 +15,7 @@
         "guzzlehttp/guzzle": "^7.8",
         "intervention/validation": "^4.4",
         "jumbojett/openid-connect-php": "^1.0",
-        "laravel/framework": "^11.41",
+        "laravel/framework": "^11.44",
         "livewire/flux": "^2.1",
         "livewire/flux-pro": "^2.1",
         "livewire/livewire": "^v3.5",
