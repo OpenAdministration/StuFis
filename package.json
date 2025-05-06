@@ -15,6 +15,7 @@
         "vite": "^6.0.0"
     },
     "dependencies": {
+        "@alpinejs/sort": "^3.14.9",
         "alpinejs": "^3.13.8"
     },
     "engines": {

@@ -255,7 +255,7 @@
         </div>
     </div>
 </div>
-@livewireScripts
+@livewireScriptConfig
 @fluxScripts
 </body>
 </html>
