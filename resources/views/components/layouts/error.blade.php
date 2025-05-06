@@ -9,7 +9,7 @@
             <h2 class="sr-only">Popular pages</h2>
             <ul role="list" class="-mt-6 divide-y divide-gray-900/5 border-y border-gray-900/5">
                 <li class="relative flex gap-x-6 py-6">
-                    <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg shadow-sm ring-1 ring-gray-900/10">
+                    <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg shadow-xs ring-1 ring-gray-900/10">
                         <x-heroicon-c-book-open class="h-6 w-6 text-indigo-600" fill="currentColor" aria-hidden="true"/>
                     </div>
                     <div class="flex-auto">
@@ -28,7 +28,7 @@
                     </div>
                 </li>
                 <li class="relative flex gap-x-6 py-6">
-                    <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg shadow-sm ring-1 ring-gray-900/10">
+                    <div class="flex h-10 w-10 flex-none items-center justify-center rounded-lg shadow-xs ring-1 ring-gray-900/10">
                         <svg class="h-6 w-6 text-indigo-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M3.75 4.5a.75.75 0 01.75-.75h.75c8.284 0 15 6.716 15 15v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75C18 11.708 12.292 6 5.25 6H4.5a.75.75 0 01-.75-.75V4.5zm0 6.75a.75.75 0 01.75-.75h.75a8.25 8.25 0 018.25 8.25v.75a.75.75 0 01-.75.75H12a.75.75 0 01-.75-.75v-.75a6 6 0 00-6-6H4.5a.75.75 0 01-.75-.75v-.75zm0 7.5a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clip-rule="evenodd" />
                         </svg>

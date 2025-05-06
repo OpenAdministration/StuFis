@@ -5,7 +5,7 @@
     <button
         type="button" {{ $attributes->thatStartWith('wire:click') }}
     @class([
-        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
         "bg-indigo-600" => $active,
         "bg-gray-200" => !$active
     ])
@@ -14,7 +14,7 @@
     >
         <span class="sr-only">Use setting</span>
         <!-- Enabled: "translate-x-5", Not Enabled: "translate-x-0" -->
-        <span @class([ "pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+        <span @class([ "pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
                    "translate-x-5" => $active,
                    "translate-x-0" => !$active])
         >

@@ -18,9 +18,6 @@ Route::middleware(['auth'])->group(function (): void {
     // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::redirect('/', 'menu/mygremium')->name('home');
 
-    Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
-    // Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
-
     Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
 
 });

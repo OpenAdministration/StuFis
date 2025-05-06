@@ -27,9 +27,9 @@ git fetch
 if [ -n "$1" ]
 then
     git checkout "$1"
-else
-    git pull
 fi
+
+git pull
 # install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci

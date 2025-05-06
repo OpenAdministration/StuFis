@@ -68,7 +68,7 @@
                         <x-antrag.table.cell><b class="pl-1">StuRa-Förderung</b></x-antrag.table.cell>
                         <x-antrag.table.cell/>
                         <x-antrag.table.cell>
-                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                         </x-antrag.table.cell>
                     </x-antrag.table.row>
 
@@ -85,7 +85,7 @@
                         <x-antrag.table.cell><b class="pl-1">Studis</b></x-antrag.table.cell>
                         <x-antrag.table.cell/>
                         <x-antrag.table.cell>
-                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                         </x-antrag.table.cell>
                     </x-antrag.table.row>
 
@@ -94,7 +94,7 @@
                         <x-antrag.table.cell><b class="pl-1">Vollzahler</b></x-antrag.table.cell>
                         <x-antrag.table.cell/>
                         <x-antrag.table.cell>
-                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            <input type="number" min="0.00" step=".01" name="einnahmen-1-betrag" id="einnahmen-1-betrag" class="inline-block w-16 sm:w-24 md:w-32 lg:w-64 rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                         </x-antrag.table.cell>
                     </x-antrag.table.row>
 

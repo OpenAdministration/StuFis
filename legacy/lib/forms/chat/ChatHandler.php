@@ -568,10 +568,12 @@ class ChatHandler
     /**
      * create crypto keys
      * RSA @ 4096
+     *
+     * @deprecated
      */
     private function createKeys(): void
     {
-        if (! config('app.chat.private_key') && ! config('app.chat.public_key')) {
+        if (! config('stufis.chat.private_key') && ! config('stufis.chat.public_key')) {
             $config = [
                 'digest_alg' => 'sha512',
                 'private_key_bits' => 4096,
@@ -592,12 +594,14 @@ class ChatHandler
 
     /**
      * get text/key by key
+     *
+     * @deprecated
      */
     private function getKey(string $type = 'public'): string
     {
         return match ($type) {
-            'public' => config('app.chat.public_key'),
-            'private' => config('app.chat.private_key'),
+            'public' => config('stufis.chat.public_key'),
+            'private' => config('stufis.chat.private_key'),
             default => ''
         };
     }
