@@ -1,7 +1,8 @@
 {
     "name": "openadministration/stufis",
+    "type": "project",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "4.2.3",
+    "version": "4.2.4",
     "license": "AGPL",
     "require": {
         "php": "^8.2",
