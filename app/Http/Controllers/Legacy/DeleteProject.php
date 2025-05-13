@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Legacy;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legacy\Project;
+use framework\auth\AuthHandler;
 
 class DeleteProject extends Controller
 {
@@ -12,7 +13,7 @@ class DeleteProject extends Controller
         $project = Project::findOrFail($project_id);
 
         // authorize
-        $userPerm = \Auth::user()->getGroups()->contains('ref-finanzen-hv')
+        $userPerm = AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
             || $project->creator->id === \Auth::user()->id;
         $dataPerm = $project->expenses()->count() === 0;
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Legacy\Expenses;
 use App\Models\Legacy\ExpensesReceipt;
 use App\Models\Legacy\FileInfo;
+use framework\auth\AuthHandler;
 use Illuminate\Support\Facades\DB;
 
 class DeleteExpenses extends Controller
@@ -17,7 +18,7 @@ class DeleteExpenses extends Controller
 
         // authorize user
         $userPerm =
-            \Auth::user()->getGroups()->contains('ref-finanzen-hv')
+            AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
             || $project->creator->id === \Auth::user()->id
             || explode(';', $expense->created)[1] === \Auth::user()->username;
         // authorize state
@@ -35,10 +36,11 @@ class DeleteExpenses extends Controller
             // delete all files db entries (storage later)
             $file_id = $receipt->file_id;
             $fileInfo = FileInfo::find($file_id);
-            $fileData = $fileInfo->fileData;
-
-            $fileInfo->delete();
-            $fileData->delete();
+            if ($fileInfo) {
+                $fileData = $fileInfo->fileData;
+                $fileInfo->delete();
+                $fileData->delete();
+            }
             // delete receipt itself
             $receipt->delete();
         });
