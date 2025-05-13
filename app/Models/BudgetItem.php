@@ -38,15 +38,25 @@ class BudgetItem extends Model
     /**
      * @var array
      */
-    protected $fillable = ['hhpgruppen_id', 'titel_name', 'titel_nr', 'value'];
+    protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
 
     public function bookings(): HasMany
     {
-        return $this->hasMany('App\Models\Booking', 'titel_id');
+        return $this->hasMany('tbd', 'titel_id');
     }
 
     public function budgetPlan(): BelongsTo
     {
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(__CLASS__, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(__CLASS__, 'parent_id');
     }
 }

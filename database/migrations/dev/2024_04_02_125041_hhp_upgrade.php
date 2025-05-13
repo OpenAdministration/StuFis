@@ -16,8 +16,8 @@ return new class extends Migration
 
         Schema::create('budget_plan', static function (Blueprint $table) {
             $table->id();
-            $table->string('organisation', 64);
-            $table->unsignedBigInteger('fiscal_year_id');
+            $table->string('organisation', 64)->nullable();
+            $table->unsignedBigInteger('fiscal_year_id')->nullable();
             $table->date('resolution_date')->nullable();
             $table->date('approval_date')->nullable();
             $table->string('state', 32);
@@ -31,11 +31,13 @@ return new class extends Migration
         Schema::create('budget_item', static function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('budget_plan_id');
-            $table->string('short_name', 16);
-            $table->string('name');
-            $table->integer('value');
+            $table->string('short_name', 16)->nullable();
+            $table->string('name')->nullable();
+            $table->decimal('value', 10, 2)->nullable();
             $table->integer('budget_type');
+            $table->boolean('is_group');
             $table->text('description');
+            $table->integer('position')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();
 
             $table->unique(['budget_plan_id', 'short_name']);
