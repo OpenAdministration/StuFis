@@ -9,10 +9,9 @@ Route::middleware(['auth'])->group(function (): void {
 
     // Feature Budget Plans
     Route::get('plan', [\App\Http\Controllers\BudgetPlanController::class, 'index'])->name('budget-plan.index');
-    Route::get('plan/create', \App\Livewire\Budgetplan\Create::class)->name('budget-plan.create');
+    Route::get('plan/create', [\App\Http\Controllers\BudgetPlanController::class, 'create'])->name('budget-plan.create');
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.show');
+    Route::get('plan/{plan_id}/edit', \App\Livewire\Budgetplan\BudgetPlanEdit::class)->name('budget-plan.edit');
     // Route::get('plan/{plan_id}/edit', \App\Http\Livewire\BudgetPlanLivewire::class)->name('budget-plan.edit');
 
-    // Debugging
-    Route::get('dev/groups', [\App\Http\Controllers\Dev::class, 'groups']);
 });
