@@ -35,7 +35,7 @@ The installation process is pretty simple and straight forward. The configuratio
 * OAuth2 Identity Provider (IdP) or StuMV
 * commandline access to your server, ftp only could work, but is more work / not officially supported
 * basic knowledge how to admin a (linux) server
-* since v4.2.0 a fluxui.dev licence, [more infos](https://www.stufis.de/warum-flux)
+* since v4.2.0 a fluxui.dev licence, [more infos](https://www.stufis.de/blog/2025/warum-flux)
 
 There might be an unsupported docker image in the future, but right now it has no priority. PRs appreciated.
 
