@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3978249917cad0d886f21ddbcd161f8e",
+    "content-hash": "0493537214c6d961e8f8bd2acd0477cf",
     "packages": [
         {
             "name": "blade-ui-kit/blade-heroicons",
@@ -3296,25 +3296,26 @@
         },
         {
             "name": "meyfa/php-svg",
-            "version": "v0.11.3",
+            "version": "v0.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/meyfa/php-svg.git",
-                "reference": "a3588b16a65258c95b49b054ef143d0e7ddb44fe"
+                "reference": "a62c2b9842826e83ea51f9b9e6ed28d2bdb1033c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/meyfa/php-svg/zipball/a3588b16a65258c95b49b054ef143d0e7ddb44fe",
-                "reference": "a3588b16a65258c95b49b054ef143d0e7ddb44fe",
+                "url": "https://api.github.com/repos/meyfa/php-svg/zipball/a62c2b9842826e83ea51f9b9e6ed28d2bdb1033c",
+                "reference": "a62c2b9842826e83ea51f9b9e6ed28d2bdb1033c",
                 "shasum": ""
             },
             "require": {
-                "php": ">=5.3.3"
+                "php": ">=7.4.0"
             },
             "require-dev": {
-                "meyfa/phpunit-assert-gd": "^1.2",
-                "phpmd/phpmd": "@stable",
-                "phpunit/phpunit": "^4.8"
+                "meyfa/phpunit-assert-gd": "^v3.0.0",
+                "phpmd/phpmd": "^2.15.0",
+                "phpunit/phpunit": "^9.6.16",
+                "rector/rector": "^1.0"
             },
             "suggest": {
                 "ext-gd": "Needed to rasterize images",
@@ -3333,7 +3334,7 @@
             "authors": [
                 {
                     "name": "Fabian Meyer",
-                    "homepage": "http://meyfa.net"
+                    "homepage": "https://meyfa.net"
                 }
             ],
             "description": "Read, edit, write, and render SVG files with PHP",
@@ -3343,9 +3344,9 @@
             ],
             "support": {
                 "issues": "https://github.com/meyfa/php-svg/issues",
-                "source": "https://github.com/meyfa/php-svg/tree/v0.11.3"
+                "source": "https://github.com/meyfa/php-svg/tree/v0.16.1"
             },
-            "time": "2022-02-18T11:53:57+00:00"
+            "time": "2025-03-10T22:28:37+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -10420,16 +10421,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.25",
+            "version": "1.12.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "e310849a19e02b8bfcbb63147f495d8f872dd96f"
+                "reference": "84cbf8f018e01834b9b1ac3dacf3b9780e209e53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/e310849a19e02b8bfcbb63147f495d8f872dd96f",
-                "reference": "e310849a19e02b8bfcbb63147f495d8f872dd96f",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/84cbf8f018e01834b9b1ac3dacf3b9780e209e53",
+                "reference": "84cbf8f018e01834b9b1ac3dacf3b9780e209e53",
                 "shasum": ""
             },
             "require": {
@@ -10474,7 +10475,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-04-27T12:20:45+00:00"
+            "time": "2025-05-14T11:08:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -11042,12 +11043,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "1027d9bda31e8db3234e2cb9ca75e97b63b74bf0"
+                "reference": "98ed8a7be061968455a548ceb0ba2790b11b119f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/1027d9bda31e8db3234e2cb9ca75e97b63b74bf0",
-                "reference": "1027d9bda31e8db3234e2cb9ca75e97b63b74bf0",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/98ed8a7be061968455a548ceb0ba2790b11b119f",
+                "reference": "98ed8a7be061968455a548ceb0ba2790b11b119f",
                 "shasum": ""
             },
             "conflict": {
@@ -11310,8 +11311,8 @@
                 "geshi/geshi": "<1.0.8.11-dev",
                 "getformwork/formwork": "<1.13.1|>=2.0.0.0-beta1,<2.0.0.0-beta4",
                 "getgrav/grav": "<1.7.46",
-                "getkirby/cms": "<=3.6.6.5|>=3.7,<=3.7.5.4|>=3.8,<=3.8.4.3|>=3.9,<=3.9.8.1|>=3.10,<=3.10.1|>=4,<=4.3",
-                "getkirby/kirby": "<=2.5.12",
+                "getkirby/cms": "<3.9.8.3-dev|>=3.10,<3.10.1.2-dev|>=4,<4.7.1",
+                "getkirby/kirby": "<3.9.8.3-dev|>=3.10,<3.10.1.2-dev|>=4,<4.7.1",
                 "getkirby/panel": "<2.5.14",
                 "getkirby/starterkit": "<=3.7.0.2",
                 "gilacms/gila": "<=1.15.4",
@@ -11542,7 +11543,7 @@
                 "oro/customer-portal": ">=4.1,<=4.1.13|>=4.2,<=4.2.10|>=5,<=5.0.11|>=5.1,<=5.1.3",
                 "oro/platform": ">=1.7,<1.7.4|>=3.1,<3.1.29|>=4.1,<4.1.17|>=4.2,<=4.2.10|>=5,<=5.0.12|>=5.1,<=5.1.3",
                 "oveleon/contao-cookiebar": "<1.16.3|>=2,<2.1.3",
-                "oxid-esales/oxideshop-ce": "<4.5",
+                "oxid-esales/oxideshop-ce": "<=7.0.5",
                 "oxid-esales/paymorrow-module": ">=1,<1.0.2|>=2,<2.0.1",
                 "packbackbooks/lti-1-3-php-library": "<5",
                 "padraic/humbug_get_contents": "<1.1.2",
@@ -11715,7 +11716,7 @@
                 "subhh/libconnect": "<7.0.8|>=8,<8.1",
                 "sukohi/surpass": "<1",
                 "sulu/form-bundle": ">=2,<2.5.3",
-                "sulu/sulu": "<1.6.44|>=2,<2.5.21|>=2.6,<2.6.5",
+                "sulu/sulu": "<1.6.44|>=2,<2.5.25|>=2.6,<2.6.9|>=3.0.0.0-alpha1,<3.0.0.0-alpha3",
                 "sumocoders/framework-user-bundle": "<1.4",
                 "superbig/craft-audit": "<3.0.2",
                 "svewap/a21glossary": "<=0.4.10",
@@ -11965,7 +11966,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-05-12T23:05:17+00:00"
+            "time": "2025-05-15T17:04:55+00:00"
         },
         {
             "name": "sebastian/cli-parser",
