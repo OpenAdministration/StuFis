@@ -463,7 +463,7 @@ return [
                 'AreYouOkay Stud Pro FH Erfurt (Awareness)',
                 'Betonkanu',
                 'Café Aquarium',
-                'Selbsthilfefahrradwerkstatt',
+                'Fahrradwerkstatt',
                 'FairTeiler',
                 'NAG NAG',
                 'Film-AG',
