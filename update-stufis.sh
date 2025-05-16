@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 
 # puts StuFis in Maintenance Mode
-php artisan down
+php artisan down --with-secret
 
 php artisan clear-compiled
 php artisan optimize:clear
