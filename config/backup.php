@@ -8,7 +8,7 @@ return [
          * The name of this application. You can use this name to monitor
          * the backups.
          */
-        'name' => env('APP_NAME', 'laravel-backup').'-'.config('stufis.version'),
+        'name' => env('APP_NAME', 'laravel-app').'-backup',
 
         'source' => [
 
@@ -81,7 +81,7 @@ return [
              * For a complete list of available customization options, see https://github.com/spatie/db-dumper
              */
             'databases' => [
-                'mysql',
+                'mariadb',
             ],
         ],
 
@@ -141,7 +141,7 @@ return [
             /*
              * The filename prefix used for the backup zip file.
              */
-            'filename_prefix' => env('AUTH_REALM').'-',
+            'filename_prefix' => env('AUTH_REALM').'-v'.config('stufis.version').'-',
 
             /*
              * The disk names on which the backups will be stored.
@@ -237,7 +237,7 @@ return [
     */
     'monitor_backups' => [
         [
-            'name' => env('APP_NAME').'-'.config('stufis.version'),
+            'name' => env('APP_NAME', 'laravel-app').'-backup',
             'disks' => ['backups'],
             'health_checks' => [
                 \Spatie\Backup\Tasks\Monitor\HealthChecks\MaximumAgeInDays::class => 1,
@@ -245,5 +245,23 @@ return [
             ],
         ],
     ],
-    // a bit of config was deleted here because unused (notifications)
+    'notifications' => [
+
+        'notifications' => [
+            \Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\UnhealthyBackupWasFoundNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\HealthyBackupWasFoundNotification::class => [],
+            \Spatie\Backup\Notifications\Notifications\CleanupWasSuccessfulNotification::class => [],
+        ],
+
+        /*
+         * Here you can specify the notifiable to which the notifications should be sent. The default
+         * notifiable will use the variables specified in this config file.
+         */
+        'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
+
+        // a bit of config was deleted here because unused
+    ],
 ];
