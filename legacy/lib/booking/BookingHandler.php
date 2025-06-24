@@ -14,13 +14,6 @@ use ZipArchive;
 
 class BookingHandler extends Renderer
 {
-    protected $routeInfo;
-
-    public function __construct($routeInfo)
-    {
-        $this->routeInfo = $routeInfo;
-    }
-
     public function render(): void
     {
         switch ($this->routeInfo['action']) {
@@ -405,6 +398,7 @@ class BookingHandler extends Renderer
             $icon = $id > 0 ? 'fa-credit-card' : 'fa-money';
             $tabs[$id] = "<i class='fa fa-fw $icon'></i> $kontoName";
         }
+        $tabs['new'] = "<i class='fa fa-fw fa-plus'></i>";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
 
@@ -433,7 +427,7 @@ class BookingHandler extends Renderer
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY]
         );
         $this->setKontoTabs($kontoId, $selected_id, $kontos);
-        $this->renderFintsButton();
+        $this->renderFintsButton($kontoId);
 
         $konto = DBConnector::getInstance()->dbFetchAll('konto_type', where: ['id' => $kontoId]);
         $editable = $konto[0]['manually_enterable'] ?? null; // ?? for non existing konto with id 0
@@ -553,7 +547,7 @@ class BookingHandler extends Renderer
         <?php
     }
 
-    private function renderFintsButton(): void
+    private function renderFintsButton(int $konto_id = 0): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
         echo 'Kontoauszüge importieren: ';
@@ -566,7 +560,7 @@ class BookingHandler extends Renderer
             ->body('mit Bankzugang');
         echo '&nbsp;';
         echo HtmlButton::make()
-            ->asLink(URIBASE.'konto/import/manual')
+            ->asLink(URIBASE.'konto/import/manual?account_id='.$konto_id)
             ->style('primary')
             ->icon('upload')
             ->disable(! $isKv)

@@ -9,6 +9,7 @@ use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
+use Flux\Flux;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Collection;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Spatie\Regex\Regex;
 
@@ -23,46 +25,58 @@ class TransactionImportWire extends Component
 {
     use WithFileUploads;
 
+    /**
+     * @var TemporaryUploadedFile the content of the csv file
+     */
     public $csv;
 
+    /**
+     * @var string which separator to use to parse the csv file
+     */
     public $separator;
 
-    public $csvFileEncoding;
-
+    /**
+     * @var int the id of the bank account to import into
+     */
     #[Url]
-    public $account_id;
+    public $account_id = 1;
 
-    public $latestTransaction;
-
-    /** @var Collection */
+    /**
+     * @var Collection the mapping between the int number csv columns and the database column
+     */
     public $mapping;
 
     public $db_col_types;
 
-    /** @var Collection */
+    /**
+     * @var Collection<Collection<string>> normalized and ordered csv data
+     */
     public $data;
 
     public $header;
 
-    // CSV entries in order = -1, in reverse order = 1
-    public $csvOrder = -1;
+    /**
+     * @var bool CSV entries in order, or not
+     */
+    public $csvOrderReversed = false;
 
     public function mount()
     {
         $this->authorize('cashOfficer', User::class);
-
-        $this->mapping = $this->createMapping();
         $this->data = collect();
-        $this->account_id = '';
 
-        $foo = new BankTransaction;
+        $this->updatedAccountId();
+
+        // researches for each db_column name (keys of the mapping) the db_col_type
         foreach ($this->mapping as $db_column => $csv_colum) {
-            $this->db_col_types[$db_column] = DB::getSchemaBuilder()->getColumnType($foo->getTable(), $db_column);
+            $this->db_col_types[$db_column] = DB::getSchemaBuilder()->getColumnType((new BankTransaction)->getTable(), $db_column);
         }
     }
 
     public function rules(): array
     {
+        $latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->first();
+
         // mapping has only the csv column numbers as values, so we need to work around a bit,
         // we only check if a matching column was given, the values of this columns only in special cases
         return [
@@ -89,7 +103,7 @@ class TransactionImportWire extends Component
                 new BalanceColumnRule(
                     $this->data->pluck($this->mapping->get('value')),
                     $this->data->pluck($this->mapping->get('saldo')),
-                    $this->latestTransaction?->saldo
+                    $latestTransaction?->saldo
                 ),
             ],
             'mapping.empf_name' => 'required|int',
@@ -102,28 +116,11 @@ class TransactionImportWire extends Component
         ];
     }
 
-    /**
-     * Fills up the mapping array with missing column keys (and empty values)
-     */
-    private function createMapping(array $merger = []): Collection
-    {
-        $foo = new BankTransaction;
-        $emptyMapping = collect(array_flip(array_keys($foo->getLabels())));
-
-        return $emptyMapping->map(fn ($value, $key) => $merger[$key] ?? '');
-    }
-
-    public function parseCSV(): void
+    private function parseCSV(): void
     {
         // temp save uploaded file
         $this->csv->store();
-        $content = $this->csv->get();
-
-        // check for windows excel file encoding, transform to utf-8
-        $enc = mb_detect_encoding((string) $content, ['Windows-1252', 'UTF-8']);
-        if ($enc !== 'UTF-8') {
-            $content = mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
-        }
+        $content = utf8Content($this->csv);
         // explode content in lines
         $content = str($content);
         $lines = $content->explode(PHP_EOL);
@@ -146,12 +143,14 @@ class TransactionImportWire extends Component
                     $dateTest = Regex::match('/^([0-3]?[0-9])\.([01]?[0-9])\.((20)?[0-9]{2})$/', $cell);
                     // conversions
                     if ($moneyTest->hasMatch()) {
+                        // normalize money
                         $g = $moneyTest->groups();
                         $lineArray[$key] = $g[1] // sign
                             .Str::padRight($g[2] ?? '', 1, '0') //  money before delimiter (at least 1 digit)
                             .'.' // delimiter (3rd group, with the rest together)
                             .Str::padRight($g[4] ?? '', 2, '0'); // cents after delimiter (at least 2 digits)
                     } elseif ($dateTest->hasMatch()) {
+                        // normalize dates
                         $g = $dateTest->groups();
                         $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
                             .'-'.Str::padLeft($g[2], 2, '0')
@@ -162,8 +161,8 @@ class TransactionImportWire extends Component
                 return $lineArray;
             });
 
-        if ($this->isCsvOrderReversed()) {
-            $this->data->reverse();
+        if ($this->csvOrderReversed) {
+            $this->data = $this->data->reverse();
         }
 
         // check if mapping has some presets, if then do an initial validation, no preset, no validation
@@ -189,7 +188,7 @@ class TransactionImportWire extends Component
         $account = BankAccount::findOrFail($this->account_id);
         $account->csv_import_settings = [
             'csv_import_mapping' => $this->mapping,
-            'csv_order' => $this->csvOrder,
+            'csv_order_reversed' => $this->csvOrderReversed,
         ];
         $account->save();
         $last_id = BankTransaction::where('konto_id', $this->account_id)
@@ -230,7 +229,20 @@ class TransactionImportWire extends Component
         $newBalance = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->limit(1)->first()->saldo;
 
-        return redirect()->route('konto.import.manual')
+        /*
+         * Flux toast is gone after redirect. That's not a nice thing to do...
+        Flux::toast(
+            text: __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()]),
+            heading: __('Success'),
+            duration: 0,
+            variant: 'success',
+
+        );
+        */
+
+        // $this->redirectRoute('legacy.konto', ['account_id' => $this->account_id]);
+        // return redirect()->route('konto.import.manual', ['account_id' => $this->account_id])
+        return redirect()->route('legacy.konto', ['konto' => $this->account_id])
             ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
     }
 
@@ -239,27 +251,47 @@ class TransactionImportWire extends Component
         $accounts = BankAccount::all();
         $labels = (new BankTransaction)->getLabels();
 
+        $latestTransaction = BankTransaction::where('konto_id', $this->account_id)
+            ->orderBy('id', 'desc')->first();
+
         return view('livewire.bank.csv-import', [
             'accounts' => $accounts,
             'firstNewTransaction' => $this->data->first(),
             'lastNewTransaction' => $this->data->last(),
+            'latestTransaction' => $latestTransaction,
             'labels' => $labels,
         ]);
     }
 
+    /**
+     * Generates a mapping array with
+     *
+     * @var array<string> The given csv row numbers to prefill as string
+     *
+     * @return Collection<string> keys: the db column names / fillables of BankTransaction,
+     *                            values: empty string or the prefills from
+     */
+    private function createMapping(array $prefill = []): Collection
+    {
+        $foo = new BankTransaction;
+        $emptyMapping = collect(array_flip($foo->getFillable()));
+
+        return $emptyMapping->map(fn ($value, $key) => $prefill[$key] ?? '');
+    }
+
+    /**
+     * @return void gets called if Account Id changes
+     */
     public function updatedAccountId(): void
     {
-        $account = BankAccount::find($this->account_id);
-        if ($account) {
-            $this->latestTransaction = BankTransaction::where('konto_id', $this->account_id)
-                ->orderBy('id', 'desc')->limit(1)->first();
-            $this->mapping = $this->createMapping($account->csv_import_settings['csv_import_mapping'] ?? []);
-            $this->csvOrder = (int) ($account->csv_import_settings['csv_order'] ?? -1);
-        } else {
-            $this->latestTransaction = null;
-            $this->mapping = null;
-            $this->csvOrder = null;
+        $account = BankAccount::findOrFail($this->account_id);
+        $this->mapping = $this->createMapping($account->csv_import_settings['csv_import_mapping'] ?? []);
+        $old_Order = $this->csvOrderReversed;
+        $new_Order = (bool) ($account->csv_import_settings['csv_order_reversed'] ?? false);
+        if ($old_Order !== $new_Order) {
+            $this->data = $this->data->reverse();
         }
+        $this->csvOrderReversed = $new_Order;
         $this->resetValidation();
     }
 
@@ -309,13 +341,8 @@ class TransactionImportWire extends Component
     public function reverseCsvOrder(): void
     {
         $this->data = $this->data->reverse();
-        $this->csvOrder *= -1;
+        $this->csvOrderReversed = ! $this->csvOrderReversed;
         $this->resetValidation();
         $this->validate();
-    }
-
-    public function isCsvOrderReversed(): bool
-    {
-        return $this->csvOrder === -1;
     }
 }

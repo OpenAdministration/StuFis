@@ -37,9 +37,6 @@ class MenuRenderer extends Renderer
             case 'open-projects':
                 $this->renderProjekte($this->pathinfo['action']);
                 break;
-            case 'mykonto':
-                $this->renderMyProfile();
-                break;
             case 'stura':
                 $this->renderStuRaView();
                 break;
@@ -545,51 +542,6 @@ class MenuRenderer extends Renderer
         }
         // $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
-    }
-
-    private function renderSearch(): void
-    {
-        $this->renderAlert('Hinweis', 'Dieser Bereich befindet sich noch im Aufbau', 'info'); ?>
-        <div class="input-group">
-            <div class="input-group-addon"><i class="fa fa-fw fa-search"></i></div>
-            <input class="form-control" placeholder="Suche ...">
-        </div>
-        <?php
-    }
-
-    public function renderMyProfile(): void
-    {
-        $user = DBConnector::getInstance()->getUser();
-        $iban = $user['iban'] ?? ''; ?>
-
-        <form id="editantrag" role="form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST"
-              enctype="multipart/form-data" class="ajax">
-            <?php $this->renderAlert('Hinweis', 'Dieses Formular funktioniert noch nicht :(', 'info'); ?>
-            <div class="panel panel-default">
-                <div class="panel-heading">Meine Daten aktualisieren</div>
-                <div class="panel-body">
-                    <input type="hidden" name="action" value="mykonto.update"/>
-                    <?php $this->renderNonce(); ?>
-                    <div class="form-group">
-                        <label for="my-iban">Meine IBAN</label>
-                        <input class="form-control" type="text" name="my-iban">
-                    </div>
-                    <div class="form-group">
-                        <label for="my-adress">Meine Adresse</label>
-                        <textarea class="form-control" name="my-adress"
-                                  placeholder="Straße Nr&#10;98693 Ilmenau"></textarea>
-                    </div>
-                </div>
-                <div class="panel-footer">
-                    <a href="javascript:false;" class='btn btn-success submit-form validate pull-right'
-                       data-name="iban"
-                       data-value="" disabled="">Speichern</a>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </form>
-
-        <?php
     }
 
     private function renderStuRaView(): void

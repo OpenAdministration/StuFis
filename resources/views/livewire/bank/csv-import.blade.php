@@ -6,14 +6,11 @@
             <label for="account_id" class="block text-sm font-medium leading-6 text-gray-900">
                 {{ __('konto.csv-label-choose-konto') }}
             </label>
-            <select wire:model.live="account_id"
-                    class="my-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            >
-                <option value=""></option>
+            <flux:select wire:model.change="account_id">
                 @foreach($accounts as $account)
-                    <option value="{{ $account->id }}">{{ $account->name }}</option>
+                    <option wire:key="account-{{$account->id}}" value="{{ $account->id }}">{{ $account->name }}</option>
                 @endforeach
-            </select>
+            </flux:select>
             @if($account_id !== "")
                 <dl class="-my-3 divide-y divide-gray-100 py-4 text-sm leading-6" wire:transition.scale.origin.top>
                     @isset($latestTransaction)
@@ -56,10 +53,10 @@
         </div>
 
         @if(isset($csv) && !$errors->has('csv'))
-            <div wire:transition.scale.origin.top>
+            <div>
                 <x-headline :headline="__('konto.transaction.headline')" :sub-text="__('konto.transaction.headline-sub')"/>
                 <div class="my-5">
-                    <x-toggle wire:click="reverseCsvOrder" :active="$csvOrder === 1">
+                    <x-toggle wire:click="reverseCsvOrder" :active="$this->csvOrderReversed">
                         <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
                         <span class="text-sm text-gray-500 ml-1">{{ __('konto.manual-button-reverse-csv-order-sub') }}</span>
                     </x-toggle>
@@ -68,7 +65,7 @@
         @endif
     </div>
     @if(isset($csv) && !$errors->has('csv'))
-        <x-grid-list wire:transition.scale.origin.top>
+        <x-grid-list>
             @foreach($labels as $attr => $label)
                 <x-grid-list.item-card wire:key="{{ $attr }}">
                     <div>
@@ -79,14 +76,13 @@
                             <span class="text-sm leading-6 text-gray-500" id="email-optional">{{ __("konto.hint.transaction.$attr") }}</span>
                         </div>
                         <div class="mt-2">
-                            <select wire:model.live="mapping.{{ $attr }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                    aria-describedby="email-optional">
-                                <option value=""></option>
+                            <flux:select wire:model.change="mapping.{{ $attr }}" placeholder="">
+                                <option value="">---Kein Import---</option>
                                 @foreach($header as $csv_column_id => $value)
                                     <option value="{{ $csv_column_id }}">{{ $value }}</option>
                                 @endforeach
-                            </select>
-                            @error("mapping.$attr")<span class="text-red-500"> {{ $message }}</span> @enderror
+                            </flux:select>
+                            <flux:error name="mapping.{{ $attr }}"/>
                         </div>
                     </div>
                     <x-slot:rows>
@@ -104,14 +100,10 @@
                 </x-grid-list.item-card>
             @endforeach
         </x-grid-list>
-        <div class="py-4">
-            <button wire:click="save" wire:loading.class="disabled opacity-50" wire:target="save"
-                    class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-xs hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto"
-                    id="submit-assign">
-                <x-fas-floppy-disk class="w-4 h-4 mr-2"/>
-                <span>{{ __('konto.manual-button-assign') }}</span>
-                <x-fas-spinner class="animate-spin fill-white hidden ml-3" wire:loading.class.remove="hidden" wire:target="save"/>
-            </button>
+        <div class="py-4 flex items-center">
+            <flux:button variant="primary" icon="inbox-arrow-down" wire:click="save()">
+                {{ __('konto.manual-button-assign') }}
+            </flux:button>
         </div>
     @endif
 </div>

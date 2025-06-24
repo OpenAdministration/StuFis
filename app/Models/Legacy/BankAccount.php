@@ -60,7 +60,14 @@ class BankAccount extends Model
     /**
      * @var array
      */
-    protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_settings'];
+    protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_settings', 'manually_enterable'];
+
+    public function casts(): array
+    {
+        return [
+            'manually_enterable' => 'boolean',
+        ];
+    }
 
     public function csvImportSettings(): Attribute
     {
