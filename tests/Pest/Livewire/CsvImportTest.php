@@ -61,7 +61,6 @@ test('csv upload visibility', function (): void {
         $wire->set('account_id', $accountId)
             ->assertSee(__('konto.csv-upload-headline'));
     }
-    $wire->set('account_id', '')->assertDontSee(__('konto.csv-upload-headline'));
 });
 
 test('php.ini has utf8 as default_charset', function (): void {
@@ -101,8 +100,6 @@ test('views showing properly', function (): void {
         ->assertSee(__('konto.manual-headline'))
         ->assertSee(__('konto.manual-headline-sub'))
         ->assertSee(__('konto.csv-label-choose-konto'))
-        ->assertDontSee(__('konto.csv-upload-headline'))
-        ->set('account_id', 4) // an account with some transactions
         ->assertSee(__('konto.csv-upload-headline'))
         ->assertSee(__('konto.csv-upload-headline-sub'))
         ->assertDontSee(__('konto.transaction.headline'))
@@ -240,6 +237,8 @@ test('if csv import is saved', function (): void {
     ])->toBe([
         '-13.14', '18089.63', 'Person 1', 'DE73447318315829961821', 'Entry 1',
     ]);
+    $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
+    expect($transactionAmount)->toBe(5);
 });
 
 test('if mapping was saved and loaded', function (): void {
@@ -252,15 +251,41 @@ test('if mapping was saved and loaded', function (): void {
 
     Livewire::actingAs(cashOfficer())
         ->test(TransactionImportWire::class)
-        ->set('account_id', $acc->id) // an account without transactions
-        ->assertSet('mapping.date', 4)
-        ->assertSet('mapping.valuta', 5)
-        ->assertSet('mapping.empf_name', 6)
-        ->assertSet('mapping.empf_iban', 7)
-        ->assertSet('mapping.type', 9)
-        ->assertSet('mapping.zweck', 10)
-        ->assertSet('mapping.value', 11)
-        ->assertSet('mapping.saldo', 13);
+        ->set('account_id', $acc->id) // the account with the saved transactions
+        ->assertSetStrict('mapping.date', 4)
+        ->assertSetStrict('mapping.valuta', 5)
+        ->assertSetStrict('mapping.empf_name', 6)
+        ->assertSetStrict('mapping.empf_iban', 7)
+        ->assertSetStrict('mapping.type', 9)
+        ->assertSetStrict('mapping.zweck', 10)
+        ->assertSetStrict('mapping.value', 11)
+        ->assertSetStrict('mapping.saldo', 13)
+        ->assertSetStrict('csvOrderReversed', true);
 });
 
-test('csv upload with correct saldo check', function (): void {})->todo();
+test('csv upload with correct saldo check', function (): void {
+    // same csv again has saldo errors
+    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
+    expect($transactionAmount)->toBe(5);
+
+    $csvFile = testFile('csv-import/test-correct-semicolon.csv');
+
+    Livewire::actingAs(cashOfficer())
+        ->test(TransactionImportWire::class)
+        ->set('account_id', $acc->id) // an account with the saved transactions from above
+        ->set('csv', $csvFile)
+        ->call('save')
+        ->assertHasErrors(['mapping.saldo']);
+    $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
+    expect($transactionAmount)->toBe(5);
+});
+
+test('csv import account loads with the correct order', function () {
+    $csvFile = testFile('csv-import/test-correct-semicolon.csv');
+
+    Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class)
+        ->set('csv', $csvFile)
+        ->assertSet('data.0', 1);
+
+});

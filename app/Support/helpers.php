@@ -2,6 +2,8 @@
 
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
+use Illuminate\Http\UploadedFile;
+use Spatie\Regex\Regex;
 
 if (! function_exists('guessCarbon')) {
     /**
@@ -24,5 +26,22 @@ if (! function_exists('guessCarbon')) {
             return $ret;
         }
         throw new InvalidFormatException("$dateString is not a valid date");
+    }
+
+    function guessEncoding($path_to_file): string
+    {
+        $finfo = finfo_open(FILEINFO_MIME);
+        $fileinfo = finfo_file($finfo, $path_to_file);
+        $encoding = Regex::match("/charset=(\S+)/", $fileinfo)->group(1);
+        finfo_close($finfo);
+
+        return $encoding;
+    }
+
+    function utf8Content(UploadedFile $file): string
+    {
+        $enc = guessEncoding($file->getPathname());
+
+        return iconv($enc, 'UTF-8', $file->getContent());
     }
 }
