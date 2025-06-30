@@ -216,7 +216,7 @@ class BudgetPlanEdit extends Component
 
     public function copyItem(int $item_id)
     {
-        $item = BudgetItem::findOrFail($this->item_id);
+        $item = BudgetItem::findOrFail($item_id);
         $this->copyItemModel($item, $item->parent_id);
     }
 
@@ -239,9 +239,9 @@ class BudgetPlanEdit extends Component
 
     }
 
-    public function delete()
+    public function delete(int $item_id)
     {
-        $item = BudgetItem::findOrFail($this->item_id);
+        $item = BudgetItem::findOrFail($item_id);
 
         if ($item->children()->count() > 0) {
             $this->addError('name', 'You cannot delete more than one item.');
