@@ -12,7 +12,7 @@ class BankAccountFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'name' => fake()->randomElement(['Sparbuch', 'Konto', 'Tagesgeld', 'Kasse', 'Sonstiges']),
             'short' => fake()->randomLetter(),
             // 'sync_from' => fake()->date(),
             // 'sync_until' => fake()->date(),
