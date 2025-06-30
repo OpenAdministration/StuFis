@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Enums\BudgetType;
 use Database\Factories\BudgetItemFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,6 +41,11 @@ class BudgetItem extends Model
      */
     protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
 
+    protected $casts = [
+        'is_group' => 'boolean',
+        'budget_type' => BudgetType::class,
+    ];
+
     public function bookings(): HasMany
     {
         return $this->hasMany('tbd', 'titel_id');
@@ -58,5 +64,10 @@ class BudgetItem extends Model
     public function children(): HasMany
     {
         return $this->hasMany(__CLASS__, 'parent_id');
+    }
+
+    public function orderedChildren(): HasMany
+    {
+        return $this->hasMany(__CLASS__, 'parent_id')->orderBy('position', 'asc');
     }
 }
