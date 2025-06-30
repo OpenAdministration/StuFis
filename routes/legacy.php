@@ -26,13 +26,16 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
         [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
 
+    // short link
+    Route::redirect('p/{project_id}', '/projekt/{project_id}');
+    Route::redirect('a/{auslage_id}', '/auslagen/{auslage_id}');
     Route::get('auslagen/{auslage_id}', static function ($auslage_id) {
-        $auslage = \App\Models\Legacy\Expenses::find($auslage_id);
+        $auslage = \App\Models\Legacy\Expenses::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     });
 
-    // "new" stuff
+    // "new" adapted stuff
     Route::get('download/hhp/{hhp_id}/{filetype}', [\App\Http\Controllers\Legacy\ExportController::class, 'budgetPlan']);
     Route::post('project/{project_id}/delete', \App\Http\Controllers\Legacy\DeleteProject::class)->name('project.delete');
     Route::post('expenses/{expenses_id}/delete', \App\Http\Controllers\Legacy\DeleteExpenses::class)->name('expenses.delete');

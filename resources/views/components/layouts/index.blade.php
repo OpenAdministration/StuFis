@@ -258,7 +258,7 @@
 @livewireScriptConfig
 @fluxScripts
 @persist('toast')
-    <flux:toast />
+    <flux:toast position="top right"/>
 @endpersist
 </body>
 </html>
