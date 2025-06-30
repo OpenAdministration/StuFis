@@ -26,8 +26,7 @@ class LocalAuthService extends AuthService
     {
         return match (\Auth::user()->username) {
             'user' => collect(['Students Council']),
-            'hhv' => collect(['Financial Department']),
-            'kv' => collect(['Financial Department']),
+            'hhv', 'kv' => collect(['Financial Department']),
             'revision' => collect(),
             'external' => collect(),
             default => collect(),

@@ -35,5 +35,10 @@ class DatabaseSeeder extends Seeder
             $this->call(ProductionSeeder::class);
 
         }
+
+        if (config('stufis.features') === 'dev') {
+            $this->call(DevFeatureSeeder::class);
+        }
+
     }
 }

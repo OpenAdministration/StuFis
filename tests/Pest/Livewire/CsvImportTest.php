@@ -265,7 +265,7 @@ test('if mapping was saved and loaded', function (): void {
 
 test('csv upload with correct saldo check', function (): void {
     // same csv again has saldo errors
-    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $acc = BankAccount::orderBy('id', 'desc')->firstOrFail();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(5);
 
