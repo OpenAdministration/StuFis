@@ -6,6 +6,7 @@ use App\Services\Auth\AuthService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->bootRoute();
+
+        // Carbon::setLocale(config('app.locale'));
     }
 
     public function bootRoute()
