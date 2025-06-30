@@ -141,6 +141,7 @@ return [
     'url' => 'Das :attribute muss eine gültige URL sein.',
     'uuid' => 'Das :attribute muss eine gültige UUID sein.',
     'disabled' => 'Kann nicht verändert werden.',
+    'uppercase' => 'Das :attribute darf nur aus Großbuchstaben bestehen',
 
     /*
     |--------------------------------------------------------------------------
@@ -190,6 +191,10 @@ return [
         'mapping.zweck' => 'Verwendungszweck',
         'mapping.comment' => 'Kommentar',
         'mapping.customer_ref' => 'Kundenreferenz',
+        'sync_from' => 'Verwenden ab',
+        'sync_until' => 'Verwenden bis',
+        'iban' => 'IBAN',
+        'short' => 'Kürzel',
     ],
 
 ];

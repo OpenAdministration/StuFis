@@ -9,6 +9,8 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');
     Route::get('menu/stura', [LegacyController::class, 'render'])->name('sitzung');
     Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
+    // legacy hhp-picker needs that url schema as a easy forward
+    Route::redirect('konto/{hhp_id}/new', '/konto/new');
     Route::get('konto/{hhp?}/{konto?}', [LegacyController::class, 'render'])->name('konto');
     Route::get('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');

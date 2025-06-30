@@ -53,4 +53,18 @@ return [
     'csv-verify-balance-error' => 'Validierungsfehler: Es besteht keine lückenlose Transaktionshistorie in Zeile :error-in-row der CSV. Berechnetes Saldo :calc-saldo ≠ CSV-Saldo :csv-saldo',
     'csv-verify-date-error' => 'Validierungsfehler: Falscher Datentyp',
     'csv-verify-date-order-error' => 'Validierungsfehler: Die Datei scheint nicht korrekt sortiert zu sein. Bitte nutze die Option "Reihenfolge der Einträge umkehren".',
+    'new.headline' => 'Neues Konto bzw. neue Kasse anlegen',
+    'new.headline-sub' => 'HINWEIS: Die hier eingetragenen Informationen können nach dem Speichern zum jetzigen Zeitpunkt ausschließlich durch den Support angepasst oder gelöscht werden. Weitere Informationen findest du oben rechts auf dem Buch.',
+    'new.prefix-headline' => 'Konto-Kürzel',
+    'new.prefix-headline-sub' => 'Gib hier ein eineindeutiges Kürzel (max. 2 Zeichen) an. Dieses wird später zur schnelleren Identifizierung von Zahlungs-IDs verwendet. Standardsmäßig wird K bereits für die Kasse und Z für das Konto verwendet.',
+    'new.name-headline' => 'Name des Kontos/ der Kasse',
+    'new.name-headline-sub' => 'Gib hier einen beschreibenden Namen an, der im Menü angezeigt wird.',
+    'new.date-start-headline' => 'Verwendet ab',
+    'new.date-start-headline-sub' => 'Wann wurde das Konto/ die Kasse eröffnet bzw. ab wann soll das Konto/ die Kasse in StuFiS geführt werden? Frühere Verwendung nicht möglich.',
+    'new.date-end-headline' => 'Verwendet bis',
+    'new.date-end-headline-sub' => 'Wann wurde das Konto/ die Kasse geschlossen bzw. nicht mehr in StuFiS geführt? Spätere Verwendung/ Eintragungen sind nicht mehr möglich.',
+    'new.iban' => 'Konto IBAN',
+    'new.manual-headline' => 'Manuelles Eintragen möglich',
+    'new.manual-headline-sub' => 'Empfohlen für Bar-Kassen. Bei Aktivierung ist es nicht mehr möglich eine automatische Kontosynchronisation einzurichten, stattdessen können Eintragungen direkt vorgenommen werden. Der csv-Import ist in beiden Fällen möglich.',
+
 ];
