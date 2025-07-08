@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@alpinejs/sort": "^3.14.9",
+        "@fontsource/inter": "^5.2.6",
         "alpinejs": "^3.13.8"
     },
     "engines": {

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import "@fontsource/inter";
 
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
@@ -10,7 +11,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {    --font-sans: Inter, sans-serif;}
+@theme {--font-sans: Inter, sans-serif;}
 
 
 
