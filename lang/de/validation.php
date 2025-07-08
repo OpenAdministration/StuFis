@@ -195,6 +195,6 @@ return [
         'sync_until' => 'Verwenden bis',
         'iban' => 'IBAN',
         'short' => 'Kürzel',
+        'name' => 'Name',
     ],
-
 ];
