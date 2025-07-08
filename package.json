@@ -5,10 +5,8 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@tailwindcss/aspect-ratio": "^0.4.2",
         "@tailwindcss/forms": "^0.5.10",
         "@tailwindcss/postcss": "^4.1.4",
-        "@tailwindcss/typography": "^0.5.16",
         "axios": "^1.8.4",
         "laravel-vite-plugin": "^1.2.0",
         "tailwindcss": "^4.1.4",
@@ -16,7 +14,7 @@
     },
     "dependencies": {
         "@alpinejs/sort": "^3.14.9",
-        "@fontsource/inter": "^5.2.6",
+        "@fontsource-variable/inter": "^5.2.6",
         "alpinejs": "^3.13.8"
     },
     "engines": {

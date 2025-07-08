@@ -1,17 +1,17 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
-@import "@fontsource/inter";
+@import '@fontsource-variable/inter';
 
 @plugin '@tailwindcss/forms';
-@plugin '@tailwindcss/typography';
-@plugin '@tailwindcss/aspect-ratio';
+/*@plugin '@tailwindcss/typography';*/
+/*@plugin '@tailwindcss/aspect-ratio';*/
 
 @source '../../storage/framework/views/*.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {--font-sans: Inter, sans-serif;}
+@theme {--font-sans: 'Inter Variable', sans-serif;}
 
 
 
@@ -23,7 +23,7 @@
 [x-cloak] { display: none !important; }
 
 
-/* Re-assign Flux's gray of choice... */
+/* Re-assign Flux's colors */
 @theme {
     --color-zinc-50: var(--color-slate-50);
     --color-zinc-100: var(--color-slate-100);
