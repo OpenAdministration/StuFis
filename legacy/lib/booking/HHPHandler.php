@@ -450,7 +450,9 @@ class HHPHandler extends Renderer
             'booking',
             [DBConnector::FETCH_ASSOC],
             [
+                'konto_type.short',
                 'booking.zahlung_id',
+                'booking.zahlung_type',
                 'auslagen.projekt_id',
                 'auslagen.id',
                 'auslagen.name_suffix',
@@ -470,7 +472,11 @@ class HHPHandler extends Renderer
             [$booked],
             [],
             [
-                null,
+                function ($z_short, $z_id, $z_type_id) {
+                    return generateLinkFromRoute($z_short.$z_id, route('bank-account.transaction', [
+                        'transaction_id' => $z_id, 'account_id' => $z_type_id,
+                    ]));
+                },
                 [$this, 'auslagenLinkEscapeFunction'],
                 null,
                 [$this, 'moneyEscapeFunction'],
