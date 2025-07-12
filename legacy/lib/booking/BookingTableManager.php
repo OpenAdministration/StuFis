@@ -507,7 +507,7 @@ class BookingTableManager extends Renderer
         } else {
             throw new LegacyDieException(500, "Konto Type $zahlungIdType nicht bekannt.");
         }
-        $newValue = $prefix.$zahlungId;
+        $newValue = generateLinkFromRoute($prefix.$zahlungId, route('bank-account.transaction', ['transaction_id' => $zahlungId, 'account_id' => $zahlungIdType]));
         if ($this->zahlung_lastValue === $newValue) {
             $this->extendLastZahlung();
         } else {

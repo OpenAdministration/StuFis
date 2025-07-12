@@ -336,9 +336,9 @@ class BookingHandler extends Renderer
 
                         <td class="no-wrap"
                             title="<?php echo 'DATUM: '.$row['zahlung_date'].PHP_EOL.'WERT: '.$row['zahlung_value']; ?>">
-							<?php echo generateLinkFromID(
+							<?php echo generateLinkFromRoute(
 							    $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'],
-							    '',
+							    route('bank-account.transaction', ['account_id' => $row['zahlung_type'], 'transaction_id' => $row['zahlung_id']]),
 							    TextStyle::BLACK
 							); ?>
                         </td>
@@ -527,12 +527,13 @@ class BookingHandler extends Renderer
                 <tr title="<?php echo htmlspecialchars(
                     $zahlung['type'].' - IBAN: '.$zahlung['empf_iban'].' - BIC: '.$zahlung['empf_bic'].PHP_EOL.$zahlung['zweck']
                 ); ?>">
-                    <td><?php echo htmlspecialchars($prefix.$zahlung['id']); ?></td>
+                    <td><?php echo generateLinkFromRoute($prefix.$zahlung['id'],
+                        route('bank-account.transaction', ['account_id' => $zahlung['konto_id'], 'transaction_id' => $zahlung['id']])); ?></td>
                     <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
                     <td><?php echo htmlspecialchars($zahlung['valuta']); ?></td>
                     <td><?php echo htmlspecialchars($zahlung['empf_name']); ?></td>
                     <td class="visible-md visible-lg"><?php echo $this->makeProjektsClickable($vzweck); ?></td>
-                    <td class="visible-md visible-lg"><?php echo htmlspecialchars($zahlung['empf_iban']); ?></td>
+                    <td class="visible-md visible-lg"><?php echo htmlspecialchars(iban_to_human_format($zahlung['empf_iban'])); ?></td>
                     <td class="money">
                         <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['value'], 'money'); ?>
                     </td>
@@ -547,7 +548,7 @@ class BookingHandler extends Renderer
         <?php
     }
 
-    private function renderFintsButton(int $konto_id = 0): void
+    private function renderFintsButton(int $konto_id = 1): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
         echo 'Kontoauszüge importieren: ';
@@ -560,7 +561,7 @@ class BookingHandler extends Renderer
             ->body('mit Bankzugang');
         echo '&nbsp;';
         echo HtmlButton::make()
-            ->asLink(URIBASE.'konto/import/manual?account_id='.$konto_id)
+            ->asLink(route('bank-account.import.csv', ['account_id' => $konto_id]))
             ->style('primary')
             ->icon('upload')
             ->disable(! $isKv)
@@ -730,6 +731,7 @@ class BookingHandler extends Renderer
 
                 // print_r($alZahlung[$idxZahlung]);
                 if ((int) $alZahlung[$idxZahlung]['konto_id'] === 0) {
+                    // Konto_id = 0 does not exist anymore...
                     $caption = "K{$alZahlung[$idxZahlung]['id']} - {$alZahlung[$idxZahlung]['type']} - {$alZahlung[$idxZahlung]['zweck']}";
                     $title = "BELEG: {$alZahlung[$idxZahlung]['comment']}".PHP_EOL."DATUM: {$alZahlung[$idxZahlung]['date']}";
                 } else {
@@ -747,13 +749,12 @@ class BookingHandler extends Renderer
                     $caption .= $alZahlung[$idxZahlung]['empf_name'].' - '.
                             explode('DATUM', $alZahlung[$idxZahlung]['zweck'])[0];
                 }
-
-                $url = str_replace('//', '/', URIBASE.'/zahlung/'.$alZahlung[$idxZahlung]['id']);
+                $url = route('bank-account.transaction', ['transaction_id' => $alZahlung[$idxZahlung]['id'], 'account_id' => $alZahlung[$idxZahlung]['konto_id']]);
                 echo "<a href='".htmlspecialchars($url)."' title='".htmlspecialchars(
                     $title
                 )."'>".htmlspecialchars($caption).'</a>';
                 $idxZahlung++;
-                echo '<br>';
+                echo '</br>';
             }
             echo "</td><td class='money'>";
             echo DBConnector::getInstance()->convertDBValueToUserValue($value, 'money');
