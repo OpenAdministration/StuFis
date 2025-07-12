@@ -456,19 +456,18 @@ class HHPHandler extends Renderer
                 'auslagen.projekt_id',
                 'auslagen.id',
                 'auslagen.name_suffix',
-                'booking.beleg_id',
-                // "booking.beleg_type",
                 'booking.value',
             ],
             ['titel_id' => $titel_id, 'booking.canceled' => 0],
             [
-                ['type' => 'left', 'table' => 'beleg_posten', 'on' => ['beleg_posten.id', 'booking.belegposten_id']],
+                ['type' => 'left', 'table' => 'beleg_posten', 'on' => ['beleg_posten.id', 'booking.beleg_id']],
                 ['type' => 'left', 'table' => 'belege', 'on' => ['beleg_posten.beleg_id', 'belege.id']],
                 ['type' => 'left', 'table' => 'auslagen', 'on' => ['belege.auslagen_id', 'auslagen.id']],
+                ['type' => 'left', 'table' => 'konto_type', 'on' => ['booking.zahlung_type', 'konto_type.id']],
             ]
         );
         $this->renderTable(
-            ['Zahlung', 'Auslage', 'Belegposten', 'Betrag'],
+            ['Zahlung', 'Auslage', 'Betrag'],
             [$booked],
             [],
             [
@@ -478,7 +477,6 @@ class HHPHandler extends Renderer
                     ]));
                 },
                 [$this, 'auslagenLinkEscapeFunction'],
-                null,
                 [$this, 'moneyEscapeFunction'],
             ]
         );
