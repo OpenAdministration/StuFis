@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
-@import '@fontsource-variable/inter';
 
 @plugin '@tailwindcss/forms';
 /*@plugin '@tailwindcss/typography';*/
@@ -11,8 +10,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {--font-sans: 'Inter Variable', sans-serif;}
-
+@theme {--font-sans: 'Inter Variable', Inter, sans-serif;}
 
 
 .sidebar:hover {
