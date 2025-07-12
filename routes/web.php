@@ -18,10 +18,10 @@ Route::middleware(['auth'])->group(function (): void {
     // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::redirect('/', 'menu/mygremium')->name('home');
 
-    Route::get('konto/new', \App\Livewire\NewBankingAccount::class)->name('konto.new');
+    Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
 
-    Route::get('konto/import/manual', \App\Livewire\TransactionImportWire::class)->name('konto.import.manual');
-
+    Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
+    Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
 });
 
 // login routes
