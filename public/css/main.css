@@ -491,7 +491,7 @@ tbody > tr > td.money::after {
 }
 
 tbody > tr > td.money {
-
+    white-space: nowrap; /* prevents line break */
 }
 
 tbody > tr > td.money.table-sum-hhpgroup::before {
