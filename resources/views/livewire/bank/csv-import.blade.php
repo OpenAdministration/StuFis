@@ -54,7 +54,7 @@
 
         @if(isset($csv) && !$errors->has('csv'))
             <div>
-                <x-headline :headline="__('konto.transaction.headline')" :sub-text="__('konto.transaction.headline-sub')"/>
+                <x-headline :headline="__('konto.csv.transaction.headline')" :sub-text="__('konto.csv.transaction.headline-sub')"/>
                 <div class="my-5">
                     <x-toggle wire:click="reverseCsvOrder" :active="$this->csvOrderReversed">
                         <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>

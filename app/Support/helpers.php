@@ -44,4 +44,9 @@ if (! function_exists('guessCarbon')) {
 
         return iconv($enc, 'UTF-8', $file->getContent());
     }
+
+    function money_format(float|int|string $value): string
+    {
+        return number_format($value, 2, ',', '.').'€';
+    }
 }
