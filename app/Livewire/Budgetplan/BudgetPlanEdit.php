@@ -146,7 +146,7 @@ class BudgetPlanEdit extends Component
         Flux::toast('Dragging and dropping', variant: 'success');
     }
 
-    public function save(): void
+    public function save()
     {
         // check if saveable
         // $this->validate();
@@ -155,8 +155,10 @@ class BudgetPlanEdit extends Component
         $plan->update([
             'resolution_date' => $this->resolution_date,
             'approval_date' => $this->approval_date,
-            'organisation' => $this->organization,
+            'organization' => $this->organization,
         ]);
+
+        return $this->redirect(route('budget-plan.index'));
     }
 
     public function addGroup(BudgetType $budget_type): void
