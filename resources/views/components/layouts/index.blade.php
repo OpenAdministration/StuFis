@@ -225,7 +225,7 @@
                                 <a class="block px-4 py-2 text-black">{{ Auth::user()->name }}</a>
                                 @foreach($profileSkeleton as $idx => $item)
                                     <!-- Active: "bg-gray-100", Not Active: "" -->
-                                    <a href="{{ $item['link'] ?? route(...$item['route']) }}" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-{{ $idx }}">
+                                    <a href="{{ route(...$item['route']) ?? '' }}" class="block px-4 py-2 text-sm text-gray-700" role="menuitem" tabindex="-1" id="user-menu-item-{{ $idx }}">
                                         {{ $item['text'] }}
                                     </a>
                                 @endforeach

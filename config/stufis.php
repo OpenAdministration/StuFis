@@ -18,6 +18,9 @@ return [
 
     'admin_mail' => env('HELP_CONTACT_MAIL', 'stufis@open-administration.de'), // unused?
 
+    'profile_name' => env('PROFILE_NAME', 'StuMV Profil'),
+    'profile_url' => env('PROFILE_URL', 'https://stumv.open-administration.de/profile'),
+
     'about_url' => env('ABOUT_URL', 'https://open-administration.de/index.php/kontakt-und-impressum/'),
     'privacy_url' => env('PRIVACY_URL', 'https://open-administration.de/index.php/datenschutz/'),
     'terms_url' => env('TERMS_URL', 'https://open-administration.de/index.php/nutzungsbedingungen/'),
