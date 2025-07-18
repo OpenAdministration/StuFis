@@ -271,11 +271,14 @@ class HHPHandler extends Renderer
         $activeGroupId = '';
         $groups = [];
         $titel = [];
-        foreach ($rows as $row) {
+        foreach ($rows as $row_nr => $row) {
             $cells = explode(';', str_replace('"', '', $row));
             // new group
             if (! empty($cells[0])) {
                 $groupString = $cells[0];
+                if (! str_contains($groupString, ' ')) {
+                    \Illuminate\Log\log('CSV Import - wrong group format in Line '.($row_nr + 1));
+                }
                 [$activeGroupId, $groupName] = explode(' ', $groupString, 2);
                 $groupType = explode('.', $activeGroupId)[0] === '1' ? 0 /* Einnahme */ : 1 /* Ausgabe */;
                 $groups[$activeGroupId] = [
