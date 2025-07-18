@@ -1,4 +1,10 @@
-<svg {{ $attributes->class([]) }} viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+@props([
+    'col1' => '#00c9ab',
+    'col2' => '#007f8b',
+    'idPrefix' => \Str::random(10)
+])
+
+<svg {{ $attributes->class([]) }} viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
     <title>StuFis Logo</title>
     <defs>
         <!-- fill color hexagon -->
