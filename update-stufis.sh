@@ -33,14 +33,16 @@ git pull
 # install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci
-# compile tailwind css
-npm run build
+
 # update db
 php artisan migrate --force
 
-# not usable yet. needs testing
-#php artisan config:cache
-#php artisan view:cache
-#php artisan route:cache
+# performance optimization
+php artisan config:cache
+php artisan view:cache
+php artisan route:cache
+
+# compile tailwind css after view cache
+npm run build
 
 php artisan up
