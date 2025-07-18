@@ -5,6 +5,7 @@ namespace App\Models\Legacy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\ExpensesReceiptPost
@@ -50,5 +51,10 @@ class ExpensesReceiptPost extends Model
     public function expensesReceipt(): BelongsTo
     {
         return $this->belongsTo(ExpensesReceipt::class, 'beleg_id');
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'beleg_id')->where('beleg_type', 'belegposten');
     }
 }

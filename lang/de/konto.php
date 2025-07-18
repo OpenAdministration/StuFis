@@ -68,4 +68,6 @@ return [
     'new.manual-headline-sub' => 'Empfohlen für Bar-Kassen. Bei Aktivierung ist es nicht mehr möglich eine automatische Kontosynchronisation einzurichten, stattdessen können Eintragungen direkt vorgenommen werden. Der CSV-Import ist in beiden Fällen möglich.',
     'transaction.headline' => 'Umsatzdetails',
     'transaction.id' => 'StuFiS-interne ID',
+    'transaction.bookings' => 'Buchungen zu diesem Umsatz',
+    'transaction.bookings.empty' => 'Keine Buchungen vorhanden',
 ];

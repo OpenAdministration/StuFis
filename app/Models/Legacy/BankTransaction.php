@@ -3,9 +3,11 @@
 namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\KontoTransaction
@@ -80,6 +82,19 @@ class BankTransaction extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(BankAccount::class, 'konto_id');
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'zahlung_id')->where('zahlung_type', $this->konto_id);
+    }
+
+    public function name(): Attribute
+    {
+        $account_name = $this->account->short;
+        $id = $this->id;
+
+        return new Attribute(get: fn () => "$account_name$id");
     }
 
     public function getLabels(): array

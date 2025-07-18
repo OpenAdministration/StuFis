@@ -58,7 +58,7 @@ class ExpensesReceipt extends Model
         return $this->hasMany(\App\Models\Legacy\ExpensesReceiptPost::class, 'beleg_id');
     }
 
-    public function expenses(): BelongsTo
+    public function expense(): BelongsTo
     {
         return $this->belongsTo(Expenses::class);
     }

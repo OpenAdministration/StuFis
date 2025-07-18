@@ -2,10 +2,11 @@
 
 namespace App\Models\Legacy;
 
-use App\Models\BudgetItem;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 /**
  * App\Models\Legacy\Booking
@@ -22,25 +23,25 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $comment
  * @property float $value
  * @property int $canceled
- * @property BudgetItem $haushaltstitel
+ * @property LegacyBudgetItem $haushaltstitel
  * @property User $user
- * @property-read BudgetItem $budgetItem
+ * @property-read LegacyBudgetItem $budgetItem
  *
- * @method static \Illuminate\Database\Eloquent\Builder|Booking newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Booking newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Booking query()
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBelegId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereBelegType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereCanceled($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereComment($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereKostenstelle($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereTimestamp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereTitelId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereValue($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Booking whereZahlungType($value)
+ * @method static Builder|Booking newModelQuery()
+ * @method static Builder|Booking newQuery()
+ * @method static Builder|Booking query()
+ * @method static Builder|Booking whereBelegId($value)
+ * @method static Builder|Booking whereBelegType($value)
+ * @method static Builder|Booking whereCanceled($value)
+ * @method static Builder|Booking whereComment($value)
+ * @method static Builder|Booking whereId($value)
+ * @method static Builder|Booking whereKostenstelle($value)
+ * @method static Builder|Booking whereTimestamp($value)
+ * @method static Builder|Booking whereTitelId($value)
+ * @method static Builder|Booking whereUserId($value)
+ * @method static Builder|Booking whereValue($value)
+ * @method static Builder|Booking whereZahlungId($value)
+ * @method static Builder|Booking whereZahlungType($value)
  *
  * @mixin \Eloquent
  */
@@ -62,11 +63,32 @@ class Booking extends Model
 
     public function budgetItem(): BelongsTo
     {
-        return $this->belongsTo(BudgetItem::class, 'titel_id');
+        return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+    public function expensesReceiptPost(): BelongsTo
+    {
+        return $this->belongsTo(ExpensesReceiptPost::class, 'beleg_id');
+    }
+
+    public function expenseReceipt(): HasOneThrough
+    {
+        return $this->hasOneThrough(ExpensesReceipt::class, ExpensesReceiptPost::class, 'beleg_id', 'id');
+    }
+
+    public function expense(): BelongsTo
+    {
+        // this is probably not very performant...
+        return $this->expensesReceiptPost->expensesReceipt->expense();
+    }
+
+    public function bankTransaction(): BelongsTo
+    {
+        return $this->belongsTo(BankTransaction::class, 'zahlung_id')->where('konto_id', $this->zahlung_type);
     }
 }
