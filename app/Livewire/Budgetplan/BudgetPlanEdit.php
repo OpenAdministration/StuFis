@@ -214,7 +214,7 @@ class BudgetPlanEdit extends Component
         }
     }
 
-    public function copyItem(int $item_id)
+    public function copyItem(int $item_id): void
     {
         $item = BudgetItem::findOrFail($item_id);
         $this->copyItemModel($item, $item->parent_id);
@@ -239,7 +239,7 @@ class BudgetPlanEdit extends Component
 
     }
 
-    public function delete(int $item_id)
+    public function delete(int $item_id): void
     {
         $item = BudgetItem::findOrFail($item_id);
 

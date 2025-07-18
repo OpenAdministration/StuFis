@@ -1,4 +1,4 @@
-<flux:main class="max-w-4xl">
+<div class="p-8 max-w-4xl">
     <div class="space-y-2">
         <flux:heading level="1" size="xl">{{ __('konto.new.headline') }}</flux:heading>
         <flux:text>{{ __('konto.new.headline-sub') }}</flux:text>
@@ -32,4 +32,4 @@
             <flux:button type="submit" variant="primary" wire:click="store">Speichern</flux:button>
         </div>
     </flux:fieldset>
-</flux:main>
+</div>

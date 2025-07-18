@@ -482,19 +482,16 @@ class BookingHandler extends Renderer
                 <?php
                 foreach ($alZahlung as $row) {
                     $prefix = $kontos[$row['konto_id']]['short'];
+                    $url = route('bank-account.transaction', ['account_id' => $row['konto_id'], 'transaction_id' => $row['id']]);
                     echo '<tr>';
-                    echo "<td>{$prefix}{$row['id']}</td>";
+                    echo "<td><a href='$url'>{$prefix}{$row['id']}</a></td>";
                     echo '<td>'.date_create($row['date'])->format('d.m.Y').'</td>';
                     echo "<td>{$row['type']} - {$row['zweck']}</td>";
                     echo "<td class='money'>".DBConnector::getInstance()->convertDBValueToUserValue(
-                        $row['value'],
-                        'money'
-                    ).'</td>';
+                        $row['value'], 'money').'</td>';
                     echo "<td class='money'>".DBConnector::getInstance()->convertDBValueToUserValue(
-                        $row['saldo'],
-                        'money'
-                    ).'</td>';
-                    echo '<td>FIXME</td>';
+                        $row['saldo'], 'money').'</td>';
+                    echo '<td></td>'; // storno actions here ;
                     echo '</tr>';
                 } ?>
                 </tbody>

@@ -12,12 +12,16 @@ class TransactionView extends Controller
     {
         $transaction = BankTransaction::where(['id' => $transaction_id, 'konto_id' => $account_id])->firstOrFail();
         $account = BankAccount::where(['id' => $account_id])->firstOrFail();
-        $bookings = $transaction->bookings();
+        $bookings = $transaction->bookings()->with('expensesReceiptPost.expensesReceipt')->get();
+        $receiptsFromBookings = $bookings->keyBy('id')->map(function ($booking) {
+            return $booking->expensesReceiptPost->expensesReceipt;
+        });
 
         return view('legacy.transaction.view', [
             'transaction' => $transaction,
             'account' => $account,
             'bookings' => $bookings,
+            'receiptsFromBookings' => $receiptsFromBookings,
         ]);
     }
 }

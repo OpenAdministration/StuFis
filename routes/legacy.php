@@ -17,7 +17,8 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('booking/{hhp_id}/instruct', [LegacyController::class, 'render'])->name('booking.instruct');
     Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');
     Route::get('booking/{hhp_id}/history', [LegacyController::class, 'render'])->name('booking.history');
-    Route::get('hhp/{id?}', [LegacyController::class, 'render'])->name('hhp');
+    Route::get('hhp/{hhp_id?}', [LegacyController::class, 'render'])->name('hhp');
+    Route::get('hhp/{hhp_id}/titel/{titel_id}', [LegacyController::class, 'render']);
     Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-project');
 
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
@@ -35,7 +36,13 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
         $auslage = \App\Models\Legacy\Expenses::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
-    });
+    })->name('expense');
+    Route::get('titel/{titel_id}', static function ($titel_id) {
+        $item = \App\Models\Legacy\LegacyBudgetItem::findOrFail($titel_id);
+        $group = $item->budgetGroup;
+
+        return redirect()->to("hhp/$group->hhp_id/titel/$item->id");
+    })->name('budget-item');
 
     // "new" adapted stuff
     Route::get('download/hhp/{hhp_id}/{filetype}', [\App\Http\Controllers\Legacy\ExportController::class, 'budgetPlan']);

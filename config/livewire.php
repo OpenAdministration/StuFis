@@ -38,7 +38,7 @@ return [
     |
     */
 
-    'layout' => \App\View\Components\Layout::class,
+    'layout' => 'components.layouts.index',
 
     /*
     |---------------------------------------------------------------------------
