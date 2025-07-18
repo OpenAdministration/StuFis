@@ -8,7 +8,7 @@ use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class LegacyBudgetGroupShiftCommand extends Command
+class LegacyBudgetGroupShift extends Command
 {
     protected $signature = 'legacy:budget-group-shift
         {new_group_id : The new Group ID}';
