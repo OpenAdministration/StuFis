@@ -1,3 +1,19 @@
+@props([
+    'version' => config('stufis.version'),
+    'title' => 'StuFiS - Finanzen',
+])
+
+@php
+    $profileSkeleton = [
+     [
+         'text' => config('stufis.profile_name'),
+         'route' => ['name' => 'profile'],
+     ], [
+         'text' => 'Logout',
+         'route' => ['name' => 'logout'],
+     ],
+ ];
+@endphp
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale())}}" class="h-full bg-gray-50">
@@ -237,7 +253,7 @@
         </header>
 
         <div class="relative z-0 flex flex-1 overflow-hidden">
-            <main class="relative z-0 flex-1 overflow-y-auto focus:outline-hidden">
+            <main {{ $attributes->merge(['class' => "relative z-0 flex-1 overflow-y-auto focus:outline-hidden"]) }}>
                 <x-message/>
                 <!-- Start main area-->
                 {{ $slot }}
