@@ -104,8 +104,8 @@ test('views showing properly', function (): void {
         ->assertSee(__('konto.csv-upload-headline-sub'))
         ->assertDontSee(__('konto.transaction.headline'))
         ->set('csv', $csvFile)
-        ->assertSee(__('konto.transaction.headline'))
-        ->assertSee(__('konto.transaction.headline-sub'))
+        ->assertSee(__('konto.manual-headline'))
+        ->assertSee(__('konto.manual-headline-sub'))
         ->assertSee(__('konto.manual-button-reverse-csv-order'))
         ->assertSee(__('konto.manual-button-reverse-csv-order-sub'));
     foreach ([
