@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $creator
  * @property string $creator_alias
  * @property string $text
- * @property bool $type
+ * @property int $type
  *
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newQuery()
