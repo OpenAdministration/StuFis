@@ -132,7 +132,7 @@ class BudgetPlanEdit extends Component
             max($current_position, $new_position),
         ]);
 
-        DB::transaction(static function () use ($block, $item, $current_position, $new_position) {
+        DB::transaction(static function () use ($block, $item, $current_position, $new_position): void {
             if ($current_position < $new_position) {
                 // if item is shifted down then shift everything up
                 $block->decrement('position');

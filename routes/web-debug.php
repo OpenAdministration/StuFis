@@ -12,6 +12,4 @@ Route::get('/session/destroy', function (): void {
     echo 'Session destroyed';
 });
 
-Route::get('/font-weight', function () {
-    return view('debug.font-weight', ['text' => 'Sphinx of black quartz, judge my vow.']);
-});
+Route::get('/font-weight', fn () => view('debug.font-weight', ['text' => 'Sphinx of black quartz, judge my vow.']));

@@ -12,7 +12,7 @@
                 </a>
             </div>
         </div>
-        @if($years->isEmpty() && $orphaned_plans->empty())
+        @if($years->isEmpty() && $orphaned_plans->isEmpty())
             <a href="{{ route('budget-plan.create') }}" class="group mt-8 relative block w-full rounded-lg border-2 border-dashed border-gray-300
             p-12 text-center hover:border-gray-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <x-heroicon-o-table-cells stroke-width="1" class="mx-auto h-12 w-12 text-gray-400 group-hover:text-gray-600" />

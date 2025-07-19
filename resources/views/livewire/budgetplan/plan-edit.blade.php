@@ -1,4 +1,4 @@
-<flux:main class="space-y-10">
+<div class="space-y-10 p-8">
     <div>
         <flux:heading size="lg">New Budget Plan</flux:heading>
         <flux:text class="mt-2">Some explanatory Text</flux:text>
@@ -79,4 +79,4 @@
     </div>
     @dump($all_items)
     @dump($items)
-</flux:main>
+</div>

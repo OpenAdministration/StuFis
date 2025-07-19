@@ -32,7 +32,7 @@ class LegacyBudgetItemShift extends Command
      */
     public function handle()
     {
-        \DB::transaction(function () {
+        \DB::transaction(function (): void {
             $old_id = $this->argument('old_id');
             $new_id = $this->argument('new_id');
 

@@ -41,7 +41,7 @@ class LegacyBudgetItemBatchShift extends Command
 
         $this->info('Transforming '.count($switch).' Legacy Titles');
 
-        \DB::transaction(function () use ($switch) {
+        \DB::transaction(function () use ($switch): void {
             foreach ($switch as [$oldId, $newId]) {
                 $this->call('legacy:budget-item-shift', [
                     'old_id' => $oldId,
