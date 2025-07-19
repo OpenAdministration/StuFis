@@ -26,7 +26,12 @@
         <div x-sort:handle @class([
                 "cursor-grab flex items-center justify-end"
             ])>
-            <x-fas-grip-vertical  class="fill-zinc-400"/>
+            <x-fas-grip-vertical  class="fill-zinc-400 h-5 w-5"/>
+            @if($item->is_group)
+                <x-fas-wallet class="fill-zinc-500 w-5 h-5 ml-3"/>
+            @else
+                <x-fas-money-bill class="fill-zinc-500 w-5 h-5 ml-3"/>
+            @endif
         </div>
         <div class="col-span-2">
             <flux:input wire:model.blur="items.{{$item->id}}.short_name"/>
@@ -49,8 +54,12 @@
             </flux:input.group>
         </div>
         <div>
+            @if($item->is_group)
+                <flux:button icon="plus-wallet" variant="ghost"/> {{-- subtle or ghost --}}
+                <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
+            @endif
             <flux:dropdown>
-                <flux:button variant="subtle" icon:trailing="ellipsis-vertical"></flux:button>
+                <flux:button variant="ghost" icon:trailing="ellipsis-vertical"></flux:button>
                 <flux:menu>
                     <flux:menu.item>Debug: L{{ $level }} id{{$item->id}} P{{$item->position}}</flux:menu.item>
                     @if($item->is_group)
@@ -65,6 +74,7 @@
                     <flux:menu.item wire:click="delete({{ $item->id }})" variant="danger" icon="trash">Delete</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
+
         </div>
     </div>
     @if($item->is_group)
@@ -80,13 +90,6 @@
             @foreach($item->orderedChildren as $child)
                 <x-item-group :item="$child" :wire:key="$child->id" :level="$level +1" />
             @endforeach
-            <div @class([ 'col-start-2 col-span-8 grid grid-cols-subgrid gap-4',
-                    //'ml-10' => $level === 1,
-                    //'ml-20' => $level === 2,
-                    //'ml-30' => $level === 3,
-                ])>
-                <flux:button wire:click="addBudget({{ $item->id }})" variant="subtle" size="sm">+ New Budget</flux:button>
-            </div>
         </div>
     @endif
 </div>
