@@ -1,20 +1,20 @@
 <div class="space-y-10 p-8">
     <div>
-        <flux:heading size="lg">New Budget Plan</flux:heading>
-        <flux:text class="mt-2">Some explanatory Text</flux:text>
+        <flux:heading size="lg">{{ __('budget-plan.edit.headline') }}</flux:heading>
+        <flux:text class="mt-2">{{ __('budget-plan.edit.sub') }}</flux:text>
     </div>
 
     <flux:fieldset class="max-w-3xl">
         <div class="grid grid-cols-2 gap-x-16 gap-y-6">
-            <flux:input wire:model.blur="organization" label="Organisation" type="text" description="Just type Stura"/>
-            <flux:select wire:model.change="fiscal_year_id" label="Fiscal Year" description="Add it somewhere else">
+            <flux:input wire:model.blur="organization" :label="__('budget-plan.edit.organization')" type="text" :description="__('budget-plan.edit.organization-sub')"/>
+            <flux:select wire:model.change="fiscal_year_id" :label="__('budget-plan.edit.fiscal-year')" :description="__('budget-plan.edit.fiscal-year-sub')">
                 <flux:select.option wire:key="fiscal-0">None</flux:select.option>
                 @foreach($fiscal_years as $fiscal_year)
                     <flux:select.option wire:key="fiscal-{{$fiscal_year->id}}" value="{{$fiscal_year->id}}">{{ $fiscal_year->start_date->format('d.m.y') }} - {{ $fiscal_year->end_date->format('d.m.y') }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:input wire:model.blur="resolution_date" badge="Optional" label="Resolution Date" type="date"/>
-            <flux:input wire:model.blur="approval_date" badge="Optional" label="Approval Date" type="date"/>
+            <flux:input wire:model.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
+            <flux:input wire:model.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
         </div>
         <div>SUM IN</div>
         <div>SUM OUT</div>
@@ -23,6 +23,12 @@
         <flux:tabs >
             <flux:tab name="in">Einnahmen</flux:tab>
             <flux:tab name="out">Ausgaben</flux:tab>
+            <flux:tab name="in">
+                {{ __('budget-plan.edit.tab-headline.in') }}
+            </flux:tab>
+            <flux:tab name="out">
+                {{ __('budget-plan.edit.tab-headline.out') }}
+            </flux:tab>
         </flux:tabs>
         @foreach(\App\Models\Enums\BudgetType::cases() as $budgetType)
             <flux:tab.panel :name="$budgetType->slug()">
@@ -30,29 +36,29 @@
                     <div class="grid grid-cols-8">
                         <div class="col-span-8 grid grid-cols-subgrid gap-4">
                             <div class="col-start-2 flex items-center gap-2">
-                                Label
+                                {{ __('budget-plan.edit.table.headline.shortname') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                                        Very nice content
+                                        {{ __('budget-plan.edit.table.headline.shortname-hint') }}
                                     </flux:tooltip.content>
                                 </flux:tooltip>
                             </div>
                             <div class="col-start-4 flex items-center gap-2">
-                                Label
+                                {{ __('budget-plan.edit.table.headline.name') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                                        Very nice content
+                                        {{ __('budget-plan.edit.table.headline.name-hint') }}
                                     </flux:tooltip.content>
                                 </flux:tooltip>
                             </div>
                             <div class="col-start-6 flex items-center gap-2">
-                                Label
+                                {{ __('budget-plan.edit.table.headline.value') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                                        Very nice content
+                                        {{ __('budget-plan.edit.table.headline.value-hint') }}
                                     </flux:tooltip.content>
                                 </flux:tooltip>
                             </div>
@@ -72,7 +78,7 @@
         @endforeach
     </flux:tab.group>
     <div>
-        <flux:button wire:click="save" variant="primary">Save</flux:button>
+        <flux:button wire:click="save" variant="primary">{{ __('budget-plan.edit.save') }}</flux:button>
         <flux:text variant="subtle">
             Last saved yesterday
         </flux:text>

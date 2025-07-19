@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'index.button.new-plan' => 'Neu anlegen',
+    'index.headline' => 'Haushaltspläne',
+    'index.headline.sub' => '',
+    'index.no-plans' => 'keine Haushaltspläne vorhanden',
+    'index.orphaned-plans' => 'Nicht zugeordnete Haushaltspläne',
+    'index.no-entries' => 'Keine Einträge',
+    'edit.headline' => 'Haushaltsplan bearbeiten',
+    'edit.sub' => 'Bearbeite oder erstelle einen Haushaltsplan.',
+    'edit.organization' => 'Organisation',
+    'edit.organization-sub' => 'Wähle die Organisation aus, zu welcher der Haushaltsplan gehören soll.',
+    'edit.fiscal-year' => 'Haushaltsjahr',
+    'edit.fiscal-year-sub' => 'Wähle das Haushaltsjahr aus, zu welchem der Haushaltsplan gehören soll.',
+    'edit.resolution-date' => 'Beschlussdatum',
+    'edit.approval-date' => 'Genehmigungsdatum',
+    'edit.tab-headline.in' => 'Einnahmen',
+    'edit.tab-headline.out' => 'Ausgaben',
+    'edit.table.headline.shortname' => 'Titelnummer',
+    'edit.table.headline.shortname-hint' => 'Die Titelnummer dient der schnellen Identifikation von Haushaltstiteln und sollte eineindeutig sein. Sie darf aus Zahlen und Nummern bestehen. Sonderzeichen',
+    'edit.table.headline.name' => 'Titelname',
+    'edit.table.headline.name-hint' => 'Der Titelname soll kurz aber beschreibend sein. Er sollte die Verwendung der Mittel widerspiegeln und beim Bearbeiten nicht zu weit abgewandelt werden, um eine Nachvollziehbarkeit über mehrere Haushaltsjahre hinweg gewährleisten zu können.',
+    'edit.table.headline.value' => 'Wert',
+    'edit.table.headline.value-hint' => 'Der Wert eines Haushaltstitels sollte angemessen festgelegt werden. Beachte, ob du dich im "Einnahmen"- oder "Ausgaben"-Tab befindest. In der Regel sollen die Werte nach den Landeshaushaltsordnungen auf volle 10 EUR gerundet sein. Titelgruppen summieren sich immer automatisch aus den darunterliegenden Titeln und Titelgruppen. In Titelgruppen kann nicht direkt gebucht werden.',
+    'edit.save' => 'Speichern und zum nächsten Schritt',
+    '' => '',
+];
