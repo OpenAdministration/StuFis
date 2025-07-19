@@ -8,6 +8,7 @@ use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\DB;
 
 class LegacyMigrateEncryption extends Command
@@ -45,12 +46,14 @@ class LegacyMigrateEncryption extends Command
                     $text = $message->text;
                     if (! empty($text)) {
                         if (str_starts_with($message->text, '$enc$')) {
+                            // old prefix
                             $text = substr($text, strlen('$enc$'));
                             $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
                             $message->text = \Crypt::encryptString($text);
                             $message->save();
                             $count++;
-                        } elseif ($message->type == -1) {
+                        } elseif ($message->type === -1) {
+                            // not used productive anymore, was "private message"
                             $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
                             $message->text = \Crypt::encryptString($text);
                             $message->save();
@@ -65,15 +68,15 @@ class LegacyMigrateEncryption extends Command
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count): void {
+                $cryptIban = $expense->getAttribute('zahlung-iban');
                 try {
-                    $cryptIban = $expense->getAttribute('zahlung-iban');
+                    \Crypt::decryptString($cryptIban);
+                } catch (DecryptException $d) {
                     $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
                     $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
                     $expense->etag = \Str::random(32);
                     $expense->save();
                     $count++;
-                } catch (WrongKeyOrModifiedCiphertextException $e) {
-                    // Do nothing
                 }
             });
 
