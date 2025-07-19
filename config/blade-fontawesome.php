@@ -38,7 +38,7 @@ return [
 
         'fallback' => '',
 
-        'class' => 'h-5 w-5',
+        'class' => '',
 
         'attributes' => [
             // 'width' => 50,
