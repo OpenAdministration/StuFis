@@ -65,9 +65,9 @@ class LegacyMigrateEncryption extends Command
 
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count): void {
-                $cryptIban = $expense->getAttribute('zahlung-iban');
                 try {
-                    $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
+                    $cryptIban = $expense->getAttribute('zahlung-iban');
+                    $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
                     $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
                     $expense->etag = \Str::random(32);
                     $expense->save();
