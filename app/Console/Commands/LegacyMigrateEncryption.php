@@ -47,13 +47,16 @@ class LegacyMigrateEncryption extends Command
                         if (str_starts_with($message->text, '$enc$')) {
                             $text = substr($text, strlen('$enc$'));
                             $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
+                            $message->text = \Crypt::encryptString($text);
+                            $message->save();
+                            $count++;
                         } elseif ($message->type == -1) {
                             $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
+                            $message->text = \Crypt::encryptString($text);
+                            $message->save();
+                            $count++;
                         }
                     }
-                    $message->text = \Crypt::encryptString($text);
-                    $message->save();
-                    $count++;
                 } catch (WrongKeyOrModifiedCiphertextException $e) {
                     // do nothing
                 }
