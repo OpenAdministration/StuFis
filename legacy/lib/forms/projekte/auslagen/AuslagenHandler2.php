@@ -1689,6 +1689,9 @@ class AuslagenHandler2 extends FormHandlerInterface
      */
     protected static function decryptedStr(string $str): string
     {
+        if (! $str) {
+            return '';
+        }
 
         return Crypt::decryptString($str);
     }

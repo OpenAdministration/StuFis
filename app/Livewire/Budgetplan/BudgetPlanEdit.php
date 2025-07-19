@@ -11,7 +11,6 @@ use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Spatie\Regex\Regex;
 
 class BudgetPlanEdit extends Component
 {
@@ -41,14 +40,16 @@ class BudgetPlanEdit extends Component
         $this->resolution_date = $plan->resolution_date;
         $this->approval_date = $plan->approval_date;
 
-        // we don't want to have the models as public properties
+        // we don't want to have the models as public properties, therfore we build a array of Livewire Forms
         $this->items = [];
 
-        $all_items = $this->query()
-            ->orderBy('parent_id')
-            ->orderBy('position')
+        // query for all items as a flat array.
+        $all_items = $this->query()->without('children')
             ->get()->keyBy('id');
+
         foreach ($all_items as $item) {
+            // registers new Livewire ItemForms, there is not yet a native way
+            // to generate a dynamic amount of ItemForms, or even multiple
             $form = new ItemForm($this, 'items.'.$item->id);
             $form->setItem($item);
             $this->items[$item->id] = $form;
@@ -87,22 +88,34 @@ class BudgetPlanEdit extends Component
         ]);
     }
 
-    public function updated($property): void
+    public function updatedItems($value, $property): void
     {
-        $item_regex = Regex::match('/^items\.(\d+)\.([a-z_]+)$/', $property);
-        if ($item_regex->hasMatch()) {
-            $item_id = $item_regex->group(1);
-            $item_prop = $item_regex->group(2);
-            $value = $this->items[$item_id]->$item_prop;
+        [$item_id, $item_prop] = explode('.', $property, 2);
+        if (in_array($item_prop, ['short_name', 'name', 'value'])) {
             $item = BudgetItem::findOrFail($item_id);
             $item->update([$item_prop => $value]);
             if ($item_prop === 'value') {
-                $this->dispatch('value-updated', $item->id);
+                $this->reSumItemValues($item);
             }
             Flux::toast('Your changes have been saved.', variant: 'success');
-
-            return;
         }
+    }
+
+    public function reSumItemValues(BudgetItem $leafItem): void
+    {
+        $item = $leafItem;
+        while (($item = $item->parent) !== null) {
+            $value = $item->children()->sum('value');
+            // update db model
+            $item->value = $value;
+            $item->save();
+            // update frontend
+            $this->items[$item->id]->value = $value;
+        }
+    }
+
+    public function updated($property): void
+    {
         if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
             $value = $this->$property;
             $item = BudgetPlan::findOrFail($this->plan_id);
@@ -110,10 +123,7 @@ class BudgetPlanEdit extends Component
                 $property => $value,
             ]);
             Flux::toast(text: "$property -> $value", heading: 'Your changes have been saved.', variant: 'success');
-
-            return;
         }
-
     }
 
     public function sort($item_id, $new_position): void
