@@ -16,18 +16,16 @@
             <flux:input wire:model.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
             <flux:input wire:model.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
         </div>
-        <div>SUM IN</div>
-        <div>SUM OUT</div>
     </flux:fieldset>
     <flux:tab.group class="max-w-7xl">
         <flux:tabs >
-            <flux:tab name="in">Einnahmen</flux:tab>
-            <flux:tab name="out">Ausgaben</flux:tab>
             <flux:tab name="in">
                 {{ __('budget-plan.edit.tab-headline.in') }}
+                <flux:badge color="indigo" size="sm">100.000,01€</flux:badge>
             </flux:tab>
             <flux:tab name="out">
                 {{ __('budget-plan.edit.tab-headline.out') }}
+                <flux:badge color="indigo" size="sm">100.400,01€</flux:badge>
             </flux:tab>
         </flux:tabs>
         @foreach(\App\Models\Enums\BudgetType::cases() as $budgetType)
