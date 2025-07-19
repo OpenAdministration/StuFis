@@ -22,11 +22,9 @@ class DemoDataSeeder extends Seeder
 
         $sqlContent = str(Storage::disk('demo')->get('stufis-demo-data.sql'));
         $today = Carbon::today();
-        $biggerYear = $today->year;
-        if ($today->month < 4) {
-            $biggerYear--;
-        }
+        $biggerYear = $today->year - 1;
         $smallerYear = $biggerYear - 1;
+
         $sqlContent = $sqlContent
             ->replace('2024', $biggerYear)
             ->replace('2023', $smallerYear);
