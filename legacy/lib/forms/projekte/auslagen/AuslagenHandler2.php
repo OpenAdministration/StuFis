@@ -3,8 +3,6 @@
 namespace forms\projekte\auslagen;
 
 use App\Exceptions\LegacyDieException;
-use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
-use Defuse\Crypto\Key;
 use Exception;
 use forms\chat\ChatHandler;
 use forms\FormHandlerInterface;
@@ -16,7 +14,6 @@ use framework\auth\AuthHandler;
 use framework\CryptoHandler;
 use framework\DBConnector;
 use framework\file\FileHandler;
-use framework\helper\EnvSetter;
 use framework\LatexGenerator;
 use framework\render\html\BT;
 use framework\render\HTMLPageRenderer;
@@ -26,7 +23,6 @@ use framework\svg\SvgDiagramAddingBeam;
 use framework\svg\SvgDiagramPie;
 use framework\svg\SvgDiagramRaw;
 use framework\svg\SvgDiagramState;
-use GuzzleHttp\Exception\InvalidArgumentException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 
@@ -1306,19 +1302,6 @@ class AuslagenHandler2 extends FormHandlerInterface
         return Crypt::encryptString($str);
     }
 
-    private static function getKey(): string
-    {
-        if (isset($_ENV['IBAN_SECRET_KEY'])) {
-            return $_ENV['IBAN_SECRET_KEY'];
-        }
-
-        $env = new EnvSetter(base_path('/.env'));
-        $key = Key::createNewRandomKey()->saveToAsciiSafeString();
-        $env->setEnvVar('IBAN_SECRET_KEY', $key);
-
-        return $key;
-    }
-
     private function post_filedelete(): void
     {
         if ($this->auslagen_data['etag'] !== $this->routeInfo['validated']['etag']) {
@@ -1712,6 +1695,8 @@ class AuslagenHandler2 extends FormHandlerInterface
 
     /**
      * @deprecated only used by migration command
+     *
+     * @throws
      */
     public static function legacyDecryptStr(string $str): string
     {
@@ -1719,13 +1704,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         if (! $p) {
             return '';
         }
-        try {
-            $p = CryptoHandler::decrypt_by_key($p, self::getKey());
-        } catch (WrongKeyOrModifiedCiphertextException $e) {
-            throw new InvalidArgumentException(
-                'Beim entschlüsseln der IBAN ist ein Fehler aufgetreten'
-            );
-        }
+        $p = CryptoHandler::decrypt_by_key($p, $_ENV['IBAN_SECRET_KEY']);
         $p = CryptoHandler::unpad_string($p);
 
         return $p;

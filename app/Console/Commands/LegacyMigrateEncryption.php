@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Expenses;
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Console\Command;
@@ -44,10 +45,10 @@ class LegacyMigrateEncryption extends Command
                 if (! empty($text)) {
                     if (str_starts_with($message->text, '$enc$')) {
                         $text = substr($text, strlen('$enc$'));
-                        $text = ChatHandler::legacyDecryptMessage($text, config('stufis.chat.private_key'));
+                        $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
                     } elseif ($message->type == -1) {
                         try {
-                            $text = ChatHandler::legacyDecryptMessage($text, config('stufis.chat.private_key'));
+                            $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
                         } catch (\Exception) {
                         }
                     }
@@ -61,11 +62,15 @@ class LegacyMigrateEncryption extends Command
             $count = 0;
             Expenses::all()->each(function ($expense) use (&$count): void {
                 $cryptIban = $expense->getAttribute('zahlung-iban');
-                $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
-                $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
-                $expense->etag = \Str::random(32);
-                $expense->save();
-                $count++;
+                try {
+                    $iban = AuslagenHandler2::legacyDecryptStr($cryptIban ?? '');
+                    $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
+                    $expense->etag = \Str::random(32);
+                    $expense->save();
+                    $count++;
+                } catch (WrongKeyOrModifiedCiphertextException $e) {
+                    // Do nothing
+                }
             });
 
             $this->info("Migrated $count IBANs from legacy encryption to laravel integrated");
