@@ -656,8 +656,12 @@ class ChatHandler
             return '';
         }
 
-        openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
+        $success = openssl_private_decrypt(base64_decode($encrypted), $decrypted, $key);
 
-        return $decrypted ?? throw new \Exception('Corrupted Message: '.$encrypted);
+        if ($success) {
+            return $decrypted;
+        }
+
+        throw new \Exception('Corrupted Message: '.$encrypted);
     }
 }

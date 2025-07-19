@@ -41,21 +41,22 @@ class LegacyMigrateEncryption extends Command
             $messages = ChatMessage::all();
             $count = 0;
             $messages->each(function ($message) use (&$count): void {
-                $text = $message->text;
-                if (! empty($text)) {
-                    if (str_starts_with($message->text, '$enc$')) {
-                        $text = substr($text, strlen('$enc$'));
-                        $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
-                    } elseif ($message->type == -1) {
-                        try {
+                try {
+                    $text = $message->text;
+                    if (! empty($text)) {
+                        if (str_starts_with($message->text, '$enc$')) {
+                            $text = substr($text, strlen('$enc$'));
                             $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
-                        } catch (\Exception) {
+                        } elseif ($message->type == -1) {
+                            $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
                         }
                     }
+                    $message->text = \Crypt::encryptString($text);
+                    $message->save();
+                    $count++;
+                } catch (WrongKeyOrModifiedCiphertextException $e) {
+                    // do nothing
                 }
-                $message->text = \Crypt::encryptString($text);
-                $message->save();
-                $count++;
             });
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
