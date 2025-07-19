@@ -41,11 +41,6 @@ class BudgetItem extends Model
      */
     protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
 
-    protected $casts = [
-        'is_group' => 'boolean',
-        'budget_type' => BudgetType::class,
-    ];
-
     public function bookings(): HasMany
     {
         return $this->hasMany('tbd', 'titel_id');
@@ -58,16 +53,24 @@ class BudgetItem extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(__CLASS__, 'parent_id');
+        return $this->belongsTo(self::class, 'parent_id');
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'parent_id');
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function orderedChildren(): HasMany
     {
-        return $this->hasMany(__CLASS__, 'parent_id')->orderBy('position', 'asc');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('position', 'asc');
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'is_group' => 'boolean',
+            'budget_type' => BudgetType::class,
+        ];
     }
 }

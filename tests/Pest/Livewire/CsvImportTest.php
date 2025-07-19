@@ -281,7 +281,7 @@ test('csv upload with correct saldo check', function (): void {
     expect($transactionAmount)->toBe(5);
 });
 
-test('csv import account loads with the correct order', function () {
+test('csv import account loads with the correct order', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())->test(TransactionImportWire::class)

@@ -133,7 +133,7 @@ class TransactionImportWire extends Component
         // extract header and data, explode data with csv separator guesses above
         $this->header = str_getcsv((string) $lines->first(), $this->separator);
         $this->data = $lines->except(0)
-            ->filter(fn ($line) => ! (empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch()))
+            ->reject(fn ($line): bool => empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch())
             ->map(fn ($line) => str_getcsv((string) $line, $this->separator))
             ->map(function ($lineArray) {
                 // normalize data

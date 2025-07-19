@@ -31,7 +31,7 @@ class BudgetPlanController extends Controller
             ['is_group' => 1, 'budget_type' => BudgetType::INCOME, 'position' => 0, 'short_name' => 'E1'],
             ['is_group' => 1, 'budget_type' => BudgetType::EXPENSE, 'position' => 0, 'short_name' => 'A1'],
         ]);
-        $groups->each(function ($group) use ($plan) {
+        $groups->each(function ($group) use ($plan): void {
             $group->children()->createMany([
                 [
                     'budget_plan_id' => $plan->id,
