@@ -37,7 +37,8 @@ class LegacyMigrateEncryption extends Command
 
             return self::FAILURE;
         }
-        DB::transaction(function (): void {
+
+        return DB::transaction(function (): int {
 
             $messages = ChatMessage::all();
             $count = 0;
@@ -81,11 +82,9 @@ class LegacyMigrateEncryption extends Command
             });
 
             $this->info("Migrated $count IBANs from legacy encryption to laravel integrated");
+            $this->info('You can now delete / comment CHAT_PRIVATE_KEY, CHAT_PUBLIC_KEY in your environment file');
 
+            return self::SUCCESS;
         });
-
-        $this->info('You can now delete / comment CHAT_PRIVATE_KEY, CHAT_PUBLIC_KEY in your environment file');
-
-        return self::SUCCESS;
     }
 }

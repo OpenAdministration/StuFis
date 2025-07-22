@@ -15,9 +15,9 @@ class LegacyBudgetGroupShift extends Command
 
     protected $description = 'Insert an new budget group with the given id in the newest BudgetPlan';
 
-    public function handle(): void
+    public function handle(): int
     {
-        \DB::transaction(function (): void {
+        return \DB::transaction(function (): int {
             $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->sole();
             $budgetGroups = LegacyBudgetGroup::where('hhp_id', $latestPlan->id)
                 ->where('id', '>=', $this->argument('new_group_id'));
@@ -38,6 +38,7 @@ class LegacyBudgetGroupShift extends Command
             $newGroup->save();
             \Schema::enableForeignKeyConstraints();
 
+            return self::SUCCESS;
         });
     }
 }

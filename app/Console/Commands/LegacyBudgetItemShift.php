@@ -30,9 +30,9 @@ class LegacyBudgetItemShift extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
-        \DB::transaction(function (): void {
+        return \DB::transaction(function (): int {
             $old_id = $this->argument('old_id');
             $new_id = $this->argument('new_id');
 
@@ -50,12 +50,15 @@ class LegacyBudgetItemShift extends Command
             $this->info($bookings->count().' Bookings will be shifted');
 
             if (! $this->option('non-interactive')) {
-                $this->confirm('Continue?');
+                if ($this->confirm('Continue?')) {
+                    return self::FAILURE;
+                }
             }
 
             $projectPosts->update(['titel_id' => $new_id]);
             $bookings->update(['titel_id' => $new_id]);
 
+            return self::SUCCESS;
         });
     }
 }
