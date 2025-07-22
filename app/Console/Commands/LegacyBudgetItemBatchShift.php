@@ -26,7 +26,7 @@ class LegacyBudgetItemBatchShift extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $rawInputs = $this->argument('inputs');
         $switch = [];
@@ -41,7 +41,7 @@ class LegacyBudgetItemBatchShift extends Command
 
         $this->info('Transforming '.count($switch).' Legacy Titles');
 
-        \DB::transaction(function () use ($switch): void {
+        \DB::transaction(function () use ($switch): int {
             foreach ($switch as [$oldId, $newId]) {
                 $this->call('legacy:budget-item-shift', [
                     'old_id' => $oldId,
@@ -50,6 +50,8 @@ class LegacyBudgetItemBatchShift extends Command
                     '--bypass-validation' => $this->option('bypass-validation'),
                 ]);
             }
+
+            return self::SUCCESS;
         });
 
     }
