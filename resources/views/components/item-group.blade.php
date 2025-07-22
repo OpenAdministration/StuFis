@@ -11,7 +11,7 @@
         //'ml-5' => $level === 1,
         //'ml-10' => $level === 2,
         //'ml-16' => $level === 3,
-        "border-zinc-300 ",
+        //"border-zinc-300 ",
         //"border-l-1" => $level === 0 && $item->is_group,
         //"border-l-2" => $level === 1 && $item->is_group,
         //"border-l-3" => $level === 2 && $item->is_group,
@@ -20,8 +20,8 @@
     ]) x-sort:item="{{ $item->id }}">
     <div @class(["col-span-8 grid grid-cols-subgrid",
             "py-2" => $item->is_group,
-            "rounded-r" => $item->is_group,
-            "bg-zinc-300" => $item->is_group,
+            "rounded" => $item->is_group,
+            "bg-zinc-300 my-2" => $item->is_group,
         ])>
         <div x-sort:handle @class([
                 "cursor-grab flex items-center justify-end"
@@ -49,13 +49,13 @@
                         <span>Σ</span>
                     </flux:input.group.prefix>
                 @endif
-                <x-money-input wire:model="items.{{$item->id}}.value" :value="$item->value" />
+                <x-money-input wire:model="items.{{$item->id}}.value" :value="$item->value" :disabled="$item->is_group"/>
                 <flux:input.group.suffix>€</flux:input.group.suffix>
             </flux:input.group>
         </div>
-        <div>
+        <div>{{-- Action Buttons --}}
             @if($item->is_group)
-                <flux:button icon="plus-wallet" variant="ghost"/> {{-- subtle or ghost --}}
+                <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})" variant="ghost"/> {{-- subtle or ghost --}}
                 <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
             @endif
             <flux:dropdown>
@@ -67,14 +67,15 @@
                     @else
                         <flux:menu.item wire:click="convertToGroup({{$item->id}})" icon="arrows-right-left"  >to group</flux:menu.item>
                     @endif
-                    <flux:menu.item wire:click="itemUp({{$item->id}})" icon="arrow-up"  >item up</flux:menu.item>
-                    <flux:menu.item wire:click="itemDown({{$item->id}})" icon="arrow-down"  >item down</flux:menu.item>
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})" icon="arrow-up"  >item up</flux:menu.item>
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})" icon="arrow-down"  >item down</flux:menu.item>
                     <flux:menu.item wire:click="copyItem({{ $item->id }})" icon="clipboard">copy</flux:menu.item>
-                    <flux:menu.item wire:click="copyInverse({{ $item->id }})" icon="clipboard">copy zur anderen seite</flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})" variant="danger" icon="trash">Delete</flux:menu.item>
+                    <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)" icon="clipboard">
+                        copy zur anderen seite
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren()->count() !== 0" variant="danger" icon="trash">Delete</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
-
         </div>
     </div>
     @if($item->is_group)
