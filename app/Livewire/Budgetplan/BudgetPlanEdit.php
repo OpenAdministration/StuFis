@@ -25,6 +25,8 @@ class BudgetPlanEdit extends Component
 
     public $approval_date;
 
+    public $refresh = false;
+
     /**
      * @var array an array which holds Livewire ItemForm objects.
      *            $items[]
@@ -98,12 +100,14 @@ class BudgetPlanEdit extends Component
                 $this->reSumItemValues($item);
             }
             Flux::toast('Your changes have been saved.', variant: 'success');
+            $this->refresh();
         }
     }
 
     public function reSumItemValues(BudgetItem $leafItem): void
     {
         $item = $leafItem;
+        // iterate upwards until there is no parent left
         while (($item = $item->parent) !== null) {
             $value = $item->children()->sum('value');
             // update db model
@@ -118,8 +122,8 @@ class BudgetPlanEdit extends Component
     {
         if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
             $value = $this->$property;
-            $item = BudgetPlan::findOrFail($this->plan_id);
-            $item->update([
+            $plan = BudgetPlan::findOrFail($this->plan_id);
+            $plan->update([
                 $property => $value,
             ]);
             Flux::toast(text: "$property -> $value", heading: 'Your changes have been saved.', variant: 'success');
@@ -184,9 +188,21 @@ class BudgetPlanEdit extends Component
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
         $this->items[$new_item->id] = $form;
+
+        $this->addBudget($new_item->id);
     }
 
-    public function addBudget($parent_id): void
+    public function addBudget(int $parent_id): void
+    {
+        $this->addItem($parent_id, false);
+    }
+
+    public function addSubGroup(int $parent_id): void
+    {
+        $this->addItem($parent_id, true);
+    }
+
+    private function addItem(int $parent_id, bool $is_group): void
     {
         $parent = BudgetItem::findOrFail($parent_id);
         if ($parent->is_group === 0) {
@@ -198,12 +214,13 @@ class BudgetPlanEdit extends Component
             'parent_id' => $parent_id,
             'budget_plan_id' => $parent->budget_plan_id,
             'budget_type' => $parent->budget_type,
-            'is_group' => false,
+            'is_group' => $is_group,
             'position' => $pos + 1,
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
         $this->items[$new_item->id] = $form;
+        $this->refresh();
     }
 
     public function convertToGroup(int $item_id): void
@@ -226,7 +243,7 @@ class BudgetPlanEdit extends Component
         }
     }
 
-    public function copyItem(int $item_id): void
+    public function copyItem(int $item_id, bool $inverse = false): void
     {
         $item = BudgetItem::findOrFail($item_id);
         $this->copyItemModel($item, $item->parent_id);
@@ -261,5 +278,10 @@ class BudgetPlanEdit extends Component
             return;
         }
         $item->delete();
+    }
+
+    public function refresh(): void
+    {
+        $this->refresh = ! $this->refresh;
     }
 }

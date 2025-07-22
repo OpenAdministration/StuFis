@@ -1,5 +1,5 @@
 <x-layout>
-    <div class="sm:mx-8 mt-8">
+    <div class="sm:mx-8 mt-8 max-w-3xl">
         <div class="sm:flex sm:items-center">
             <div class="sm:flex-auto">
                 <h1 class="text-xl font-semibold text-gray-900">{{ __('budget-plan.index.headline') }}</h1>
@@ -21,7 +21,7 @@
                 </span>
             </a>
         @else
-            <div class="mt-8 flex flex-col overflow-hidden bg-white shadow-sm sm:rounded-md max-w-3xl">
+            <div class="mt-8 flex flex-col overflow-hidden bg-white shadow-sm sm:rounded-md">
                 <ul role="list" class="divide-y divide-gray-200">
                     @foreach($years as $year)
                         <div class="px-6 py-2">
@@ -34,7 +34,7 @@
                                         <div class="px-4 py-4 sm:px-6">
                                             <div class="flex items-center">
                                                 <p class="truncate text-sm font-medium text-indigo-600">
-                                                    {{ $plan->organisation }}
+                                                    {{ $plan->organization }}
                                                 </p>
                                                 <div class="ml-2 flex shrink-0">
                                                     <p class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
@@ -45,10 +45,8 @@
                                             <div class="mt-2 sm:flex sm:justify-between">
                                                 <div class="sm:flex">
                                                     <p class="flex items-center text-sm text-gray-500">
-                                                        <x-heroicon-m-calendar class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
-                                                        <x-date :date="$plan->start_date" format="M y"/>
-                                                        <span class="px-1">-</span>
-                                                        <x-date :date="$plan->end_date" format="M y"/>
+                                                        <x-fas-money-bill class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
+                                                        {{ money_format(100000 + $plan->id * 3807.85) }}
                                                     </p>
                                                     <!-- follows: class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6" -->
                                                 </div>
@@ -78,7 +76,7 @@
                 </ul>
             </div>
         @endif
-        @if(empty($orphaned_plans))
+        @if($orphaned_plans->isNotEmpty())
             <div class="mt-8 flex flex-col overflow-hidden bg-white shadow-sm sm:rounded-md max-w-3xl">
                 <ul role="list" class="divide-y divide-gray-200">
                     <div class="px-6 py-2">
@@ -91,7 +89,7 @@
                                     <div class="px-4 py-4 sm:px-6">
                                         <div class="flex items-center">
                                             <p class="truncate text-sm font-medium text-indigo-600">
-                                                {{ $plan->organisation }}
+                                                {{ $plan->organization }}
                                             </p>
                                             <div class="ml-2 flex shrink-0">
                                                 <p class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
@@ -102,10 +100,8 @@
                                         <div class="mt-2 sm:flex sm:justify-between">
                                             <div class="sm:flex">
                                                 <p class="flex items-center text-sm text-gray-500">
-                                                    <x-heroicon-m-calendar class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
-                                                    <x-date :date="$plan->start_date" format="M y"/>
-                                                    <span class="px-1">-</span>
-                                                    <x-date :date="$plan->end_date" format="M y"/>
+                                                    <x-fas-money-bill class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
+                                                    {{ money_format(100000 + $plan->id * 3807.85) }}
                                                 </p>
                                                 <!-- follows: class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6" -->
                                             </div>

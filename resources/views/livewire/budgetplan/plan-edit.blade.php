@@ -90,6 +90,4 @@
             Last saved yesterday
         </flux:text>
     </div>
-    @dump($all_items)
-    @dump($items)
 </div>
