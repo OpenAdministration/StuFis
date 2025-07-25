@@ -43,7 +43,7 @@ class LegacyBudgetItemBatchShift extends Command
 
         return \DB::transaction(function () use ($switch): int {
             foreach ($switch as [$oldId, $newId]) {
-                $this->call('legacy:budget-item-shift', [
+                $this->call('legacy:budget-id-shift', [
                     'old_id' => $oldId,
                     'new_id' => $newId,
                     '--non-interactive' => true,
