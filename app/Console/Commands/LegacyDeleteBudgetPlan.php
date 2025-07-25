@@ -29,7 +29,7 @@ class LegacyDeleteBudgetPlan extends Command
     {
         $hhp = LegacyBudgetPlan::findOrFail($this->argument('id'));
         $groups = $hhp->budgetGroups();
-        $title = LegacyBudgetItem::whereIn('hhpgruppen_id', $groups->pluck('id'))->keyBy('id');
+        $title = LegacyBudgetItem::whereIn('hhpgruppen_id', $groups->pluck('id'))->get()->keyBy('id');
         $this->info("Found {$title->count()} titles");
         $this->warn('This operation cannot be rolled back and will be done without checking corresponding foreign keys');
         if (! $this->confirm("Are you sure you want to delete HHP from {$hhp->von} to {$hhp->bis} in state {$hhp->state}?")) {
