@@ -42,6 +42,7 @@ class LegacyBudgetItemBatchShift extends Command
         $this->info('Transforming '.count($switch).' Legacy Titles');
 
         return \DB::transaction(function () use ($switch): int {
+            \Schema::disableForeignKeyConstraints();
             foreach ($switch as [$oldId, $newId]) {
                 $res = $this->call('legacy:budget-id-shift', [
                     'old_id' => $oldId,
@@ -53,6 +54,7 @@ class LegacyBudgetItemBatchShift extends Command
                     $this->fail("Failed subprocess $oldId->$newId. Aborting...");
                 }
             }
+            \Schema::enableForeignKeyConstraints();
 
             return self::SUCCESS;
         });
