@@ -13,21 +13,21 @@ class LegacyDeleteBudgetPlan extends Command
      *
      * @var string
      */
-    protected $signature = 'legacy:refactor-hhp {{--transformation : space seperated list of x->y title ids or x-y }}';
+    protected $signature = 'legacy:delete-hhp {id}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Deletes a given HHP - DANGER - deletes old one, upload over ui in the meantime and enter a transformation ';
+    protected $description = 'Deletes a given HHP - DANGER - deletes old one without looking out for foreign keys - Potentially corrupting datas ';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $hhp = LegacyBudgetPlan::orderBy('id', 'desc')->firstOrFail();
+        $hhp = LegacyBudgetPlan::findOrFail($this->argument('id'));
         $groups = $hhp->budgetGroups();
         $title = LegacyBudgetItem::whereIn('hhpgruppen_id', $groups->pluck('id'))->keyBy('id');
         $this->info("Found {$title->count()} titles");
