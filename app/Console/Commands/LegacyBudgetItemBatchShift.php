@@ -51,7 +51,7 @@ class LegacyBudgetItemBatchShift extends Command
                     '--bypass-validation' => $this->option('bypass-validation'),
                 ]);
                 if ($res === self::FAILURE) {
-                    $this->fail("Failed subprocess $oldId->$newId. Aborting...");
+                    $this->fail("Failed subprocess $oldId->$newId. Aborting & Roling back...");
                 }
             }
             \Schema::enableForeignKeyConstraints();
