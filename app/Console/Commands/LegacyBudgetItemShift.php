@@ -50,7 +50,7 @@ class LegacyBudgetItemShift extends Command
             $this->info($bookings->count().' Bookings will be shifted');
 
             if (! $this->option('non-interactive')) {
-                if ($this->confirm('Continue?')) {
+                if (! $this->confirm('Continue?')) {
                     return self::FAILURE;
                 }
             }
