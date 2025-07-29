@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d992ff61e5538fb36498a37afed892ca",
+    "content-hash": "e7191b6be1db68c30ededa50e222b1a0",
     "packages": [
         {
             "name": "archtechx/helpers",
@@ -13241,7 +13241,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2",
+        "php": "^8.4",
         "ext-bcmath": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
