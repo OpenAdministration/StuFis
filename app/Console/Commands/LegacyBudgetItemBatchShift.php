@@ -32,7 +32,7 @@ class LegacyBudgetItemBatchShift extends Command
         $switch = [];
         // input validation
         foreach ($rawInputs as $input) {
-            $reg = Regex::match('/^(\d)+->?(\d)+$/', $input);
+            $reg = Regex::match('/^(\d+)->?(\d+)$/', $input);
             if (! $reg->hasMatch()) {
                 $this->fail("$input is malformed");
             }
