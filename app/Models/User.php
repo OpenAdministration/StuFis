@@ -30,6 +30,7 @@ use Illuminate\Support\Collection;
  * @property string $picture_url
  * @property string $iban
  * @property string $address
+ * @property string $version the last seen stufis version number
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -90,6 +91,7 @@ class User extends Authenticatable
         'picture_url',
         'iban',
         'address',
+        'version',
     ];
 
     /**
