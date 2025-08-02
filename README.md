@@ -27,7 +27,7 @@ Als Open-Source-Software finanziert sich die Weiterentwicklung aktuell aus dem H
 The installation process is pretty simple and straight forward. The configuration can be a bit more challenging. See our [User-Guide](https://doku.stufis.de) as reference. 
 
 ## Requirements: 
-* php8.2
+* php8.4
 * composer
 * nodeJS / npm
 * MariaDB / Mysql
