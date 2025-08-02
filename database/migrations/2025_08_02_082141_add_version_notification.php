@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('version')->after('address');
         });
         // give all existing users a value, so they get the update message
-        User::update(['version' => '4.2.6']);
+        User::query()->update(['version' => '4.2.6']);
     }
 
     /**
