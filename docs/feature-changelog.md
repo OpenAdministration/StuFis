@@ -7,7 +7,7 @@
 
 ### Änderungsprotokoll im StuFis
 * Links unten bei der Versionsnummer ist dieses Dokument zu finden
-* Information für Nutzer:innen über 
+* Hinweis für Nutzer:innen über neue Updates
 
 ### Allgemeine Verbesserungen und Fehlerbehebungen
 * **Neue Standardschriftart (Inter):** Die Standardschriftart der Anwendung wurde von Open Sans zu Inter geändert, mit verbesserten Schriftstärken und variabler Schriftverwendung für ein moderneres Erscheinungsbild.
