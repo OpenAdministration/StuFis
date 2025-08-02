@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Providers\AppServiceProvider;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +27,7 @@ class AuthController
             Auth::login($user);
         }
 
-        return redirect()->intended(AppServiceProvider::HOME);
+        return redirect()->intended(route('home'));
     }
 
     public function logout()
