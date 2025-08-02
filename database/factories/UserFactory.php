@@ -20,9 +20,10 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'username' => fake()->userName(),
+            'email' => fake()->unique()->safeEmail(),
             'provider' => 'local',
             'provider_uid' => fake()->uuid(),
-            'email' => fake()->unique()->safeEmail(),
+            'version' => config('stufis.version'),
             'remember_token' => Str::random(10),
         ];
     }
