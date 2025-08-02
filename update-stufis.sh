@@ -8,6 +8,16 @@ set -x
 # change to the directory where this script lives
 cd "$(dirname "$0")"
 
+alias php="php8.4"
+alias composer="php composer.phar"
+
+if [ ! -f "composer.phar" ]; then
+    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+    php composer-setup.php
+    php -r "unlink('composer-setup.php');"
+fi
+
+
 
 # puts StuFis in Maintenance Mode
 php artisan down --with-secret
@@ -38,7 +48,7 @@ npm ci
 php artisan migrate --force
 
 # performance optimization
-php artisan config:cache
+#php artisan config:cache
 php artisan view:cache
 php artisan route:cache
 
