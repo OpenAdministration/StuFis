@@ -18,4 +18,22 @@ class Dev extends Controller
             'groups' => $groups,
         ]]);
     }
+
+    public function markdown()
+    {
+        return view('debug.markdown')->layout('components.layouts.index');
+    }
+
+    public function fontWeight()
+    {
+        return view('debug.font-weight', ['text' => 'Sphinx of black quartz, judge my vow.']);
+    }
+
+    public function showMiddleware()
+    {
+        $route = request()->route();
+        $middlewares = $route->gatherMiddleware();
+
+        return view('components.dump', ['dump' => [$middlewares]]);
+    }
 }
