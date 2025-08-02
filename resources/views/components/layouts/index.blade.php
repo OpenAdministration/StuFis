@@ -79,7 +79,7 @@
                 <a href="{{ route('terms') }}" target="_blank">ToS</a>
                 <a href="{{ route('privacy') }}" target="_blank">Datenschutz</a>
                 <a href="{{ route('about') }}" target="_blank">Impressum</a>
-                <a href="{{ route('git-repo') }}" target="_blank">Version {{ $version }}</a>
+                <a href="{{ route('changelog') }}">Version {{ $version }}</a>
             </div>
         </div>
     </div>
@@ -254,7 +254,7 @@
 
         <div class="relative z-0 flex flex-1 overflow-hidden">
             <main {{ $attributes->merge(['class' => "relative z-0 flex-1 overflow-y-auto focus:outline-hidden"]) }}>
-                <x-message/>
+                <livewire:message/>
                 <!-- Start main area-->
                 {{ $slot }}
                 <!-- End main area -->
