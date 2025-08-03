@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Str;
 
 abstract class AuthService
 {
@@ -55,6 +56,22 @@ abstract class AuthService
         })->keys();
 
         return $groups;
+    }
+
+    /**
+     * @param  string  $url  can be base64 encoded
+     * @return string|null returns the decoded string or null if there is no valid url found
+     */
+    protected function normalizeUrl(string $url): ?string
+    {
+        $url_dec = base64_decode($url);
+
+        return match (true) {
+            Str::isUrl($url, ['https']) => $url,
+            Str::isUrl($url_dec, ['https']) => $url_dec,
+            default => null,
+        };
+
     }
 
     abstract public function afterLogout();
