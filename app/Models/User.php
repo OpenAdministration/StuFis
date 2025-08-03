@@ -27,7 +27,7 @@ use Illuminate\Support\Collection;
  * @property string $provider_token_expiration
  * @property string $provider_refresh_token
  * @property string $provider_refresh_token_expiration
- * @property string $picture_url
+ * @property string|null $picture_url
  * @property string $iban
  * @property string $address
  * @property string $version the last seen stufis version number

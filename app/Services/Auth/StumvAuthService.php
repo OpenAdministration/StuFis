@@ -57,7 +57,7 @@ class StumvAuthService extends AuthService
             // 'provider_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
             // 'provider_refresh_token' => $user->refreshToken,
             // 'provider_refresh_token_expiration' => now()->addSeconds($tokenResponse['expires_in']),
-            'picture_url' => $attributes['avatar'] ?? '',
+            'picture_url' => $this->normalizeUrl($attributes['avatar'] ?? ''),
             'iban' => $attributes['iban'] ?? '',
             'address' => $attributes['address'] ?? '',
         ];

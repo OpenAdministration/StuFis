@@ -57,7 +57,7 @@ class OidcAuthService extends AuthService
             'name' => $attributes->{$attributeMapping['name']},
             'username' => $attributes->{$attributeMapping['username']},
             'email' => $attributes->{$attributeMapping['email']},
-            'picture_url' => $attributes->{$attributeMapping['picture_url']} ?? '',
+            'picture_url' => $this->normalizeUrl($attributes->{$attributeMapping['picture_url']} ?? ''),
             'iban' => $attributes->{$attributeMapping['iban']} ?? '',
             'address' => $attributes->{$attributeMapping['address']} ?? '',
         ];
