@@ -1,4 +1,9 @@
 
+# v4.3.1
+* Profilbilder können aus dem SSO übernommen werden
+* Routen wurden repariert, die zuvor dazu geführt haben, dass der automatische Bankeinzug auf die falsche Seite weitergeleitet hat.
+* Ältere nicht genutzte Dienste wurden entfernt.
+
 # v4.3.0
 
 ### Bankgeschäfte und Transaktionen
