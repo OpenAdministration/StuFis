@@ -51,9 +51,9 @@ class AppServiceProvider extends ServiceProvider
     public function bootRoute()
     {
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
-        
-        # Make sure, this vars cannot be matched with strings
-        # preventing missrou
+
+        // Make sure, this vars cannot be matched with strings
+        // preventing missrouting
         Route::pattern('hhp_id', '[0-9]+');
         Route::pattern('konto_id', '[0-9]+');
         Route::pattern('titel_id', '[0-9]+');
