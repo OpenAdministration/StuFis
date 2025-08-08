@@ -36,7 +36,7 @@ class LegacyController extends Controller
         } catch (LegacyRedirectException $e) {
             return $e->redirect;
         } catch (LegacyJsonException $e) {
-            ob_get_clean();
+            ob_get_clean(); // throw away all output
 
             return response()->json($e->content);
         } catch (\Exception $exception) {

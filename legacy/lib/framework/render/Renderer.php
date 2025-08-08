@@ -32,6 +32,7 @@ abstract class Renderer extends EscFunc
     {
         $action = $this->routeInfo['action'];
         $methodName = 'action'.str_replace('-', '', ucwords($action, '-'));
+        // dd($methodName);
         if (method_exists($this, $methodName)) {
             echo $this->$methodName();
         } else {

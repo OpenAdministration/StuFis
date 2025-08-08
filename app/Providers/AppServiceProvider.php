@@ -8,6 +8,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
@@ -51,6 +52,11 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
 
+        Route::pattern('hhp_id', '[0-9]+');
+        Route::pattern('konto_id', '[0-9]+');
+        Route::pattern('titel_id', '[0-9]+');
+        Route::pattern('projekt_id', '[0-9]+');
+        Route::pattern('auslagen_id', '[0-9]+');
     }
 
     public function registerAuth(): void
