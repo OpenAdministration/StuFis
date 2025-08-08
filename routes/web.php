@@ -20,9 +20,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::redirect('/', 'menu/mygremium')->name('home');
 
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
-
     Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
     Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
+
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
 });

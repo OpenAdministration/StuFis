@@ -11,8 +11,9 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
     // legacy hhp-picker needs that url schema as a easy forward - route names are here not usable :(
     Route::redirect('konto/{hhp_id}/new', '/bank-account/new');
-    Route::get('konto/{hhp?}/{konto?}', [LegacyController::class, 'render'])->name('konto');
+    Route::get('konto/{hhp_id?}/{konto_id?}', [LegacyController::class, 'render'])->name('konto');
     Route::get('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
+    Route::get('konto/credentials/new', [LegacyController::class, 'render'])->name('konto.credentials.new');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');
     Route::get('booking/{hhp_id}/instruct', [LegacyController::class, 'render'])->name('booking.instruct');
     Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');
@@ -24,15 +25,15 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
     Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
 
-    Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/belege-pdf/{file_name?}',
+    Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/belege-pdf/{file_name?}',
         [LegacyController::class, 'belegePdf'])->name('belege-pdf');
-    Route::get('projekt/{project_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
+    Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
         [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
 
     // short link
-    Route::redirect('p/{project_id}', '/projekt/{project_id}');
-    Route::redirect('a/{auslage_id}', '/auslagen/{auslage_id}');
-    Route::get('auslagen/{auslage_id}', static function ($auslage_id) {
+    Route::redirect('p/{projekt_id}', '/projekt/{projekt_id}');
+    Route::redirect('a/{auslagen_id}', '/auslagen/{auslagen_id}');
+    Route::get('auslagen/{auslagen_id}', static function ($auslage_id) {
         $auslage = \App\Models\Legacy\Expenses::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
