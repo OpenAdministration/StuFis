@@ -73,7 +73,7 @@ class LegacyController extends Controller
         ]);
         $ah->generate_belege_pdf();
         $path = route('legacy.belege-pdf', [
-            'project_id' => $project_id,
+            'projekt_id' => $project_id,
             'auslagen_id' => $auslagen_id,
             'version' => $version,
             'file_name' => "Belege-IP$project_id-A$auslagen_id.pdf",
@@ -100,7 +100,7 @@ class LegacyController extends Controller
         ]);
         $ah->generate_zahlungsanweisung_pdf();
         $path = route('legacy.zahlungsanweisung-pdf', [
-            'project_id' => $project_id,
+            'projekt_id' => $project_id,
             'auslagen_id' => $auslagen_id,
             'version' => $version,
             'file_name' => "Zahlungsanweisung-IP$project_id-A$auslagen_id.pdf",

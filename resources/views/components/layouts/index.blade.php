@@ -216,15 +216,15 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
-                        <a href="{{ config('stufis.docs_url') }}" class="text-indigo-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <x-fas-book-open />
+                        <a href="{{ config('stufis.docs_url') }}" class="focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <x-fas-book-open-reader class="size-5 text-indigo-500"/>
                         </a>
                         <!-- Profile dropdown -->
                         <div x-data="{ profile: false }" class="relative shrink-0" >
                             <div>
                                 <button x-on:click="profile = ! profile" type="button" class="bg-white rounded-full flex text-sm focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
                                     <span class="sr-only">Open user menu</span>
-                                    <x-profile-pic class="h-8 w-8 rounded-full text-indigo-600"/>
+                                    <x-profile-pic/>
                                 </button>
                             </div>
 

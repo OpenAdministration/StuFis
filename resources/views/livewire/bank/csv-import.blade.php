@@ -1,5 +1,5 @@
 <div class="mt-8 sm:mx-8">
-    <x-headline :headline="__('konto.manual-headline')" :sub-text="__('konto.manual-headline-sub')"/>
+    <x-intro :headline="__('konto.manual-headline')" :sub-headline="__('konto.manual-headline-sub')"/>
 
     <div class="max-w-(--breakpoint-lg)">
         <div class="py-3">
@@ -43,10 +43,10 @@
         <div wire:key="csv-upload-block">
             @if($account_id !== "")
                 <div>
-                    <x-headline :headline="__('konto.csv-upload-headline')" :sub-text="__('konto.csv-upload-headline-sub')"/>
+                    <x-intro level="2" :headline="__('konto.csv-upload-headline')" :sub-headline="__('konto.csv-upload-headline-sub')"/>
                     <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
                         <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-headline') }}</p>
                     </x-drop-area>
                 </div>
             @endif
@@ -54,7 +54,7 @@
 
         @if(isset($csv) && !$errors->has('csv'))
             <div>
-                <x-headline :headline="__('konto.csv.transaction.headline')" :sub-text="__('konto.csv.transaction.headline-sub')"/>
+                <x-intro level="2" :headline="__('konto.csv.transaction.headline')" :sub-headline="__('konto.csv.transaction.headline-sub')"/>
                 <div class="my-5">
                     <x-toggle wire:click="reverseCsvOrder" :active="$this->csvOrderReversed">
                         <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
