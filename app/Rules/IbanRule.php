@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class IbanRule implements ValidationRule
 {
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! verify_iban($value)) {

@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\Request;
 
 class LocalAuthService extends AuthService
 {
+    #[\Override]
     public function prepareLogin(): Response|RedirectResponse
     {
         return redirect()->route('login.callback');
     }
 
+    #[\Override]
     public function userFromCallback(Request $request): array
     {
         return [
@@ -22,6 +24,7 @@ class LocalAuthService extends AuthService
         ];
     }
 
+    #[\Override]
     public function userCommittees(): Collection
     {
         return match (\Auth::user()->username) {
@@ -33,6 +36,7 @@ class LocalAuthService extends AuthService
         };
     }
 
+    #[\Override]
     public function allCommittees(): Collection
     {
         return collect([
@@ -41,6 +45,7 @@ class LocalAuthService extends AuthService
         );
     }
 
+    #[\Override]
     public function userGroupsRaw(): Collection
     {
         return match (\Auth::user()->username) {
@@ -53,6 +58,7 @@ class LocalAuthService extends AuthService
         };
     }
 
+    #[\Override]
     public function afterLogout()
     {
         return redirect()->route('login.callback');

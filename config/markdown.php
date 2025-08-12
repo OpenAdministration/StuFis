@@ -172,16 +172,14 @@ return [
 
     'default_attributes' => [
         Heading::class => [
-            'class' => static function (Heading $node) {
-                return match ($node->getLevel()) {
-                    1 => 'text-xl font-semibold text-gray-900 dark:text-white mb-6 mt-8 first:mt-0',
-                    2 => 'text-lg font-semibold text-gray-900 dark:text-white mb-4 mt-6',
-                    3 => 'text-lg font-medium text-gray-900 dark:text-white mb-3 mt-5',
-                    4 => 'text-base font-medium text-gray-900 dark:text-white mb-2 mt-4',
-                    5 => 'text-base font-medium text-gray-900 dark:text-white mb-2 mt-3',
-                    6 => 'text-base font-medium text-gray-700 dark:text-gray-300 mb-2 mt-3',
-                    default => 'font-medium text-gray-900 dark:text-white mb-2 mt-3',
-                };
+            'class' => static fn (Heading $node) => match ($node->getLevel()) {
+                1 => 'text-xl font-semibold text-gray-900 dark:text-white mb-6 mt-8 first:mt-0',
+                2 => 'text-lg font-semibold text-gray-900 dark:text-white mb-4 mt-6',
+                3 => 'text-lg font-medium text-gray-900 dark:text-white mb-3 mt-5',
+                4 => 'text-base font-medium text-gray-900 dark:text-white mb-2 mt-4',
+                5 => 'text-base font-medium text-gray-900 dark:text-white mb-2 mt-3',
+                6 => 'text-base font-medium text-gray-700 dark:text-gray-300 mb-2 mt-3',
+                default => 'font-medium text-gray-900 dark:text-white mb-2 mt-3',
             },
         ],
         // Paragraphs with proper spacing

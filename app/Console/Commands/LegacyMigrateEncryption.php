@@ -61,7 +61,7 @@ class LegacyMigrateEncryption extends Command
                             $count++;
                         }
                     }
-                } catch (WrongKeyOrModifiedCiphertextException $e) {
+                } catch (WrongKeyOrModifiedCiphertextException) {
                     // do nothing
                 }
             });
@@ -72,7 +72,7 @@ class LegacyMigrateEncryption extends Command
                 $cryptIban = $expense->getAttribute('zahlung-iban');
                 try {
                     \Crypt::decryptString($cryptIban);
-                } catch (DecryptException $d) {
+                } catch (DecryptException) {
                     $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
                     $expense->setAttribute('zahlung-iban', \Crypt::encryptString($iban));
                     $expense->etag = \Str::random(32);

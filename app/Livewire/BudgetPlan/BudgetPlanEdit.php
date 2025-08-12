@@ -92,7 +92,7 @@ class BudgetPlanEdit extends Component
 
     public function updatedItems($value, $property): void
     {
-        [$item_id, $item_prop] = explode('.', $property, 2);
+        [$item_id, $item_prop] = explode('.', (string) $property, 2);
         if (in_array($item_prop, ['short_name', 'name', 'value'])) {
             $item = BudgetItem::findOrFail($item_id);
             $item->update([$item_prop => $value]);

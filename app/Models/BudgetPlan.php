@@ -49,6 +49,7 @@ class BudgetPlan extends Model
      */
     protected $fillable = ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan'];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

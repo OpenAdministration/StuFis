@@ -66,6 +66,7 @@ class BudgetItem extends Model
         return $this->hasMany(self::class, 'parent_id')->orderBy('position', 'asc');
     }
 
+    #[\Override]
     protected function casts(): array
     {
         return [

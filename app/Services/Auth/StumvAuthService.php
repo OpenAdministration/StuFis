@@ -19,6 +19,7 @@ class StumvAuthService extends AuthService
             ->acceptJson();
     }
 
+    #[\Override]
     public function prepareLogin(): Response|RedirectResponse
     {
         $driver = Socialite::driver('stumv')
@@ -27,6 +28,7 @@ class StumvAuthService extends AuthService
         return $driver->redirect();
     }
 
+    #[\Override]
     public function userFromCallback(Request $request): array
     {
         $driver = Socialite::driver('stumv');
@@ -65,21 +67,25 @@ class StumvAuthService extends AuthService
         return [$identifiers, $userAttributes];
     }
 
+    #[\Override]
     public function userCommittees(): Collection
     {
         return \Session::remember('stumv.comittees', fn () => $this->api()->get('/api/my/committees')->collect());
     }
 
+    #[\Override]
     public function userGroupsRaw(): Collection
     {
         return \Session::remember('stumv.groups', fn () => $this->api()->get('/api/my/groups')->collect());
     }
 
+    #[\Override]
     public function groupMapping(): Collection
     {
         return collect(config('services.stumv.mapping', []));
     }
 
+    #[\Override]
     public function afterLogout()
     {
         \Session::flush();
@@ -89,6 +95,7 @@ class StumvAuthService extends AuthService
         );
     }
 
+    #[\Override]
     public function allCommittees(): Collection
     {
         $community_uid = config('stufis.community_uid');

@@ -62,6 +62,7 @@ class BankAccount extends Model
      */
     protected $fillable = ['name', 'short', 'sync_from', 'sync_until', 'iban', 'last_sync', 'csv_import_settings', 'manually_enterable'];
 
+    #[\Override]
     public function casts(): array
     {
         return [

@@ -71,6 +71,7 @@ class BankTransaction extends Model
      */
     protected $fillable = ['date', 'valuta', 'type', 'empf_iban', 'empf_bic', 'empf_name', 'primanota', 'value', 'saldo', 'zweck', 'comment', 'customer_ref'];
 
+    #[\Override]
     protected function casts(): array
     {
         return [
