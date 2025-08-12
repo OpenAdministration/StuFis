@@ -981,7 +981,7 @@ class ProjektHandler extends FormHandlerInterface
         $permissionIcon = $hasPermission ? 'fa-check' : 'fa-ban';
         $abrechnungIcon = $hasNoAbrechnungen ? 'fa-check' : 'fa-ban';
         ?>
-        <form action="<?= route('legacy.project.delete', ['project_id' => $this->id]) ?>" method="POST">
+        <form action="<?= route('legacy.projekt.delete', ['projekt_id' => $this->id]) ?>" method="POST">
             <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
             <?php
             HTMLPageRenderer::injectModal(

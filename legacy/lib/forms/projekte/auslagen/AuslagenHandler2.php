@@ -2666,7 +2666,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             <?php if (isset($this->auslagen_data['id'], $this->auslagen_data['belege']) && $this->routeInfo['action'] !== 'edit' && count($this->auslagen_data['belege']) > 0) { ?>
                 <div class="col-xs-12 form-group">
                     <a href="<?= route('legacy.belege-pdf', [
-                        'project_id' => $this->projekt_id,
+                        'projekt_id' => $this->projekt_id,
                         'auslagen_id' => $this->auslagen_id,
                         'version' => $this->auslagen_data['version'],
                     ]) ?>"
@@ -2683,7 +2683,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             ) { ?>
                 <div class="col-xs-12 form-group">
                     <a href="<?= route('legacy.zahlungsanweisung-pdf', [
-                        'project_id' => $this->projekt_id,
+                        'projekt_id' => $this->projekt_id,
                         'auslagen_id' => $this->auslagen_id,
                         'version' => $this->auslagen_data['version'],
                     ]) ?>"

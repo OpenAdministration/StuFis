@@ -14,6 +14,7 @@
         "archtechx/money": "^0.5.3",
         "blade-ui-kit/blade-heroicons": "^2.6",
         "defuse/php-encryption": "^2.4",
+        "diglactic/laravel-breadcrumbs": "^10.0",
         "globalcitizen/php-iban": "^4.2",
         "graham-campbell/markdown": "^16.0",
         "guzzlehttp/guzzle": "^7.9",
