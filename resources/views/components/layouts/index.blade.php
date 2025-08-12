@@ -196,11 +196,8 @@
                     </svg>
                 </button>
                 <div class="flex-1 flex justify-between px-4 sm:px-6">
-                    <div class="ml-2 flex items-center">
-                        <a href="{{ route('legacy.new-project') }}" id='new-project-button' alt="{{ __('New Project') }}" class="flex bg-indigo-600 p-1 pr-3 rounded-2xl items-center justify-center text-white hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <x-heroicon-o-plus-small class="h-6 w-6"/>
-                            <span>Neues Projekt</span>
-                        </a>
+                    <div class="flex items-center">
+                        {{ Breadcrumbs::render() }}
                     </div>
                     <div class="flex-1 flex">
                         <!--
@@ -214,6 +211,9 @@
 
                             </div>
                         </form>-->
+                    </div>
+                    <div class="ml-2 flex items-center">
+                        <flux:button icon="plus" variant="primary">{{ __('general.new-project-button') }}</flux:button>
                     </div>
                     <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
                         <a href="{{ config('stufis.docs_url') }}" class="focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

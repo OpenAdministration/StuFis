@@ -1,13 +1,4 @@
 <div class="space-y-10 p-8">
-
-    <flux:breadcrumbs>
-        <flux:breadcrumbs.item :href="route('budget-plan.index')" separator="slash">Haushaltspläne</flux:breadcrumbs.item>
-        <flux:breadcrumbs.item :href="route('budget-plan.show', $plan_id)" separator="slash">2025</flux:breadcrumbs.item>
-        <flux:breadcrumbs.item separator="slash">Edit</flux:breadcrumbs.item>
-    </flux:breadcrumbs>
-
-    <flux:separator variant="subtle" />
-
     <div>
         <flux:heading size="lg">{{ __('budget-plan.edit.headline') }}</flux:heading>
         <flux:text class="mt-2">{{ __('budget-plan.edit.sub') }}</flux:text>
