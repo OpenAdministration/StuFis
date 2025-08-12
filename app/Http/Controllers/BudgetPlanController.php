@@ -21,7 +21,7 @@ class BudgetPlanController extends Controller
     {
         $plan = BudgetPlan::findOrFail($plan_id);
 
-        return view('budget-plan.show', ['plan' => $plan]);
+        return view('budget-plan.view', ['plan' => $plan]);
     }
 
     public function create()
