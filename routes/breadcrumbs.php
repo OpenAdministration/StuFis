@@ -47,7 +47,7 @@ Breadcrumbs::for('legacy.booking', static function (BreadcrumbTrail $trail): voi
 
 Breadcrumbs::for('legacy.booking.instruct', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.booking.text'), route('legacy.booking'));
+    $trail->push(__('general.breadcrumb.booking'), route('legacy.booking'));
 });
 
 Breadcrumbs::for('legacy.booking.text', static function (BreadcrumbTrail $trail): void {
