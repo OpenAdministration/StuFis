@@ -15,7 +15,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('konto/{hhp_id?}/{konto_id?}', [LegacyController::class, 'render'])->name('konto');
     Route::get('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
     Route::get('konto/credentials/new', [LegacyController::class, 'render'])->name('konto.credentials.new');
-    Route::get('konto/credentials/{credential_id}/login', [LegacyController::class, 'render'])->name('konto.credentials.login');
+    Route::any('konto/credentials/{credential_id}/login', [LegacyController::class, 'render'])->name('konto.credentials.login');
     Route::get('konto/credentials/{credential_id}/tan-mode', [LegacyController::class, 'render'])->name('konto.credentials.tan-mode');
     Route::get('konto/credentials/{credential_id}/sepa', [LegacyController::class, 'render'])->name('konto.credentials.sepa');
     Route::get('konto/credentials/{credential_id}/{short_iban}', [LegacyController::class, 'render'])->name('konto.credentials.import-transactions');
@@ -25,6 +25,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');
     Route::get('booking/{hhp_id}/history', [LegacyController::class, 'render'])->name('booking.history');
     Route::get('hhp', [LegacyController::class, 'render'])->name('hhp');
+    Route::get('hhp/import', [LegacyController::class, 'render'])->name('hhp.import');
     Route::get('hhp/{hhp_id}', [LegacyController::class, 'render'])->name('hhp.view');
     Route::get('hhp/{hhp_id}/titel/{titel_id}', [LegacyController::class, 'render'])->name('hhp.titel.view');
     Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-project');
