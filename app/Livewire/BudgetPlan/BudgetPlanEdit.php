@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Budgetplan;
+namespace App\Livewire\BudgetPlan;
 
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
@@ -80,7 +80,7 @@ class BudgetPlanEdit extends Component
         $in_ids = $this->query(1)->whereNull('parent_id')->pluck('id');
         $out_ids = $this->query(-1)->whereNull('parent_id')->pluck('id');
 
-        return view('livewire.budgetplan.plan-edit', [
+        return view('livewire.budget-plan.plan-edit', [
             'fiscal_years' => $fiscal_years,
             'all_items' => $item_models,
             'root_items' => [

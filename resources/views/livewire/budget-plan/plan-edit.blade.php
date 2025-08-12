@@ -16,7 +16,7 @@
     <flux:fieldset class="max-w-3xl">
         <div class="grid grid-cols-2 gap-x-16 gap-y-6">
             <flux:input wire:model.blur="organization" :label="__('budget-plan.edit.organization')" type="text" :description="__('budget-plan.edit.organization-sub')"/>
-            <flux:select wire:model.change="fiscal_year_id" :label="__('budget-plan.edit.fiscal-year')" :description="__('budget-plan.edit.fiscal-year-sub')">
+            <flux:select wire:model.change="fiscal_year_id" :label="__('budget-plan.fiscal-year')" :description="__('budget-plan.edit.fiscal-year-sub')">
                 <flux:select.option wire:key="fiscal-0">None</flux:select.option>
                 @foreach($fiscal_years as $fiscal_year)
                     <flux:select.option wire:key="fiscal-{{$fiscal_year->id}}" value="{{$fiscal_year->id}}">{{ $fiscal_year->start_date->format('d.m.y') }} - {{ $fiscal_year->end_date->format('d.m.y') }}</flux:select.option>
@@ -43,7 +43,7 @@
                     <div class="grid grid-cols-8">
                         <div class="col-span-8 grid grid-cols-subgrid gap-4">
                             <div class="col-start-2 flex items-center gap-2">
-                                {{ __('budget-plan.edit.table.headline.shortname') }}
+                                {{ __('budget-plan.budget-shortname') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
@@ -52,7 +52,7 @@
                                 </flux:tooltip>
                             </div>
                             <div class="col-start-4 flex items-center gap-2">
-                                {{ __('budget-plan.edit.table.headline.name') }}
+                                {{ __('budget-plan.budget-longname') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
@@ -61,7 +61,7 @@
                                 </flux:tooltip>
                             </div>
                             <div class="col-start-6 flex items-center gap-2">
-                                {{ __('budget-plan.edit.table.headline.value') }}
+                                {{ __('budget-plan.budget-value') }}
                                 <flux:tooltip toggleable>
                                     <flux:button icon="information-circle" size="sm" variant="subtle" />
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
