@@ -121,7 +121,7 @@ Breadcrumbs::for('legacy.sitzung', static function (BreadcrumbTrail $trail): voi
 });
 
 // Home > HHP
-Breadcrumbs::for('legacy.hhp', static function (BreadcrumbTrail $trail): void {
+Breadcrumbs::for('legacy.hhp', static function (BreadcrumbTrail $trail) {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.budget-plan'), route('legacy.hhp'));
 });
