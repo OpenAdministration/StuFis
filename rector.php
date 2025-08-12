@@ -2,11 +2,19 @@
 
 declare(strict_types=1);
 
+use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\Config\RectorConfig;
 use RectorLaravel\Set\LaravelLevelSetList;
 use RectorLaravel\Set\LaravelSetList;
 
 return RectorConfig::configure()
+    ->withCache(
+        // specify a path that works locally as well as on CI job runners
+        cacheDirectory: '/tmp/rector',
+
+        // ensure file system caching is used instead of in-memory
+        cacheClass: FileCacheStorage::class
+    )
     ->withSets([
         LaravelLevelSetList::UP_TO_LARAVEL_110,
         LaravelSetList::LARAVEL_CODE_QUALITY,
