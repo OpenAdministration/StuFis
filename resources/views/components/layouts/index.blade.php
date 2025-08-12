@@ -213,7 +213,9 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center">
-                        <flux:button icon="plus" variant="primary">{{ __('general.new-project-button') }}</flux:button>
+                        <flux:button :href="route('legacy.new-project')" icon="plus" variant="primary">
+                            {{ __('general.new-project-button') }}
+                        </flux:button>
                     </div>
                     <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
                         <a href="{{ config('stufis.docs_url') }}" class="focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
