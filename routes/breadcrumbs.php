@@ -144,6 +144,13 @@ Breadcrumbs::for('legacy.hhp.titel.view', static function (BreadcrumbTrail $trai
     $trail->push(__('general.breadcrumb.hhp-title-details'), route('legacy.hhp.titel.view', [$hhp_id, $title_id]));
 });
 
+// Home > Projekt > New
+Breadcrumbs::for('legacy.new-projekt', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.dashboard');
+    $trail->push(__('general.breadcrumb.projekt'));
+    $trail->push(__('general.breadcrumb.projekt-new'), route('legacy.new-projekt'));
+});
+
 // Home > Projekt > PID
 Breadcrumbs::for('legacy.projekt', static function (BreadcrumbTrail $trail, $projekt_id): void {
     $trail->parent('legacy.dashboard');

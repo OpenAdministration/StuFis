@@ -28,7 +28,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('hhp/import', [LegacyController::class, 'render'])->name('hhp.import');
     Route::get('hhp/{hhp_id}', [LegacyController::class, 'render'])->name('hhp.view');
     Route::get('hhp/{hhp_id}/titel/{titel_id}', [LegacyController::class, 'render'])->name('hhp.titel.view');
-    Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-project');
+    Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-projekt');
     Route::get('projekt/{projekt_id}', [LegacyController::class, 'render'])->name('projekt');
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
 

@@ -213,7 +213,7 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center">
-                        <flux:button :href="route('legacy.new-project')" icon="plus" variant="primary">
+                        <flux:button :href="route('legacy.new-projekt')" icon="plus" variant="primary">
                             {{ __('general.new-project-button') }}
                         </flux:button>
                     </div>
