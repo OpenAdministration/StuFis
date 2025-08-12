@@ -29,6 +29,7 @@ class OidcAuthService extends AuthService
         }
     }
 
+    #[\Override]
     public function prepareLogin(): Response|RedirectResponse
     {
         // redirect to IdP if unauthenticated
@@ -38,6 +39,7 @@ class OidcAuthService extends AuthService
         return redirect()->to('/auth/callback');
     }
 
+    #[\Override]
     public function userFromCallback(Request $request): array
     {
         // check response
@@ -71,21 +73,25 @@ class OidcAuthService extends AuthService
         return [$identifiers, $userAttributes];
     }
 
+    #[\Override]
     public function userCommittees(): Collection
     {
         return collect(session('oidc.committees'));
     }
 
+    #[\Override]
     public function userGroupsRaw(): Collection
     {
         return collect(session('oidc.groups-raw'));
     }
 
+    #[\Override]
     public function groupMapping(): Collection
     {
         return collect(config('services.oidc.group-mapping'));
     }
 
+    #[\Override]
     public function afterLogout(): RedirectResponse
     {
         \Session::flush();
@@ -93,6 +99,7 @@ class OidcAuthService extends AuthService
         return redirect()->to(config('services.oidc.logout_url'));
     }
 
+    #[\Override]
     public function allCommittees(): Collection
     {
         return collect(session('oidc.all-committees'));

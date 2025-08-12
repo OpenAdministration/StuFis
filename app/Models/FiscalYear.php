@@ -23,6 +23,7 @@ class FiscalYear extends Model
      */
     protected $fillable = ['start_date', 'end_date'];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

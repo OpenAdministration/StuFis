@@ -18,6 +18,7 @@ class BicColumnRule implements ValidationRule
      *
      * @param  Closure(string): PotentiallyTranslatedString  $fail
      */
+    #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         foreach ($this->bics as $bic) {

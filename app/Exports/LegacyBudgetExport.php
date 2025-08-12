@@ -18,6 +18,7 @@ class LegacyBudgetExport implements FromView, WithColumnFormatting, WithColumnWi
 
     public function __construct(public LegacyBudgetPlan $plan) {}
 
+    #[\Override]
     public function view(): View
     {
 
@@ -29,6 +30,7 @@ class LegacyBudgetExport implements FromView, WithColumnFormatting, WithColumnWi
         ]);
     }
 
+    #[\Override]
     public function columnFormats(): array
     {
         return [
@@ -46,6 +48,7 @@ class LegacyBudgetExport implements FromView, WithColumnFormatting, WithColumnWi
         return '=SUM('.$fields.')';
     }
 
+    #[\Override]
     public function columnWidths(): array
     {
         return [

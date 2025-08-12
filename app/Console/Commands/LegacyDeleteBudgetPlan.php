@@ -36,7 +36,7 @@ class LegacyDeleteBudgetPlan extends Command
             return;
         }
 
-        \DB::transaction(function () use ($hhp, $groups, $title) {
+        \DB::transaction(function () use ($hhp, $groups, $title): void {
             \Schema::disableForeignKeyConstraints();
             $title->delete();
             $groups->delete();

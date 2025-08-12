@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class Authenticate extends Middleware
 {
+    #[\Override]
     public function handle($request, Closure $next, ...$guards): Response
     {
         // do it like in the parent
@@ -27,6 +28,7 @@ class Authenticate extends Middleware
     /**
      * Get the path the user should be redirected to when they are not authenticated.
      */
+    #[\Override]
     protected function redirectTo(Request $request)
     {
         if (! $request->expectsJson()) {
