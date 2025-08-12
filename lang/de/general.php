@@ -21,6 +21,7 @@ return [
     'breadcrumb.budget-plan-import' => 'Importieren',
     'breadcrumb.hhp-title-details' => 'Haushaltstitel Details',
     'breadcrumb.projekt' => 'Projekt',
+    'breadcrumb.projekt-new' => 'Neu',
     'breadcrumb.abrechnung' => 'Abrechnung',
     'breadcrumb.belege-pdf' => 'Belege-PDF',
     'breadcrumb.zahlungsanweisung-pdf' => 'Zahlungsanweisung-PDF',
