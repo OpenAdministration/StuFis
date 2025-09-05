@@ -64,6 +64,11 @@ class BudgetPlan extends Model
         return $this->hasMany(BudgetItem::class);
     }
 
+    public function rootBudgetItems()
+    {
+        return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
+    }
+
     public function fiscalYear(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);

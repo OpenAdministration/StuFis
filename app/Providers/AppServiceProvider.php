@@ -61,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
         Route::pattern('projekt_id', '[0-9]+');
         Route::pattern('auslagen_id', '[0-9]+');
         Route::pattern('credential_id', '[0-9]+');
+        Route::pattern('year_id', '[0-9]+');
     }
 
     public function registerAuth(): void

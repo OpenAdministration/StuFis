@@ -9,8 +9,6 @@ class FiscalYear extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
-
     /**
      * The table associated with the model.
      *
@@ -21,7 +19,11 @@ class FiscalYear extends Model
     /**
      * @var array
      */
-    protected $fillable = ['start_date', 'end_date'];
+    protected $fillable = [
+        'id',
+        'start_date',
+        'end_date',
+    ];
 
     #[\Override]
     protected function casts(): array
