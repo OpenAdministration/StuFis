@@ -14,13 +14,16 @@ php artisan down --with-secret
 
 php artisan clear-compiled
 php artisan optimize:clear
+php artisan view:clear
+php artisan route:clear
+php artisan config:clear
 
 # install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci
 
 # performance optimization
-php artisan config:cache
+#php artisan config:cache
 php artisan view:cache
 php artisan route:cache
 

@@ -90,20 +90,36 @@ class BudgetPlanEdit extends Component
         ]);
     }
 
-    public function updatedItems($value, $property): void
+    /**
+     * Handle the updated event for an item's property.
+     * This method processes changes to item properties and updates the corresponding record in the database.
+     * If the updated property is `value`, it triggers a recalculation of the item's and its parents values.
+     * After the update, the method refreshes the component state.
+     *
+     * @param  mixed  $value  The new value for the item's property.
+     * @param  string  $property  The property identifier in the format "item_id.property_name".
+     */
+    public function updatedItems(mixed $value, string $property): void
     {
-        [$item_id, $item_prop] = explode('.', (string) $property, 2);
+        [$item_id, $item_prop] = explode('.', $property, 2);
         if (in_array($item_prop, ['short_name', 'name', 'value'])) {
             $item = BudgetItem::findOrFail($item_id);
             $item->update([$item_prop => $value]);
             if ($item_prop === 'value') {
                 $this->reSumItemValues($item);
             }
-            Flux::toast('Your changes have been saved.', variant: 'success');
+            Flux::toast('FIXME: Your changes have been saved.', variant: 'success');
             $this->refresh();
         }
     }
 
+    /**
+     * Recalculate and update the values of parent budget items by summing the values of their child items.
+     * This method propagates updates upwards through the hierarchy of budget items, starting from a given leaf item.
+     * Each parent's value is recalculated based on the sum of its direct children's values, and the changes are saved to the database.
+     *
+     * @param  BudgetItem  $leafItem  The leaf budget item from which the upward recalculation begins.
+     */
     public function reSumItemValues(BudgetItem $leafItem): void
     {
         $item = $leafItem;
@@ -118,7 +134,15 @@ class BudgetPlanEdit extends Component
         }
     }
 
-    public function updated($property): void
+    /**
+     * Handle the updated event for the specified property.
+     * This method is called whenever a property is updated.
+     * It updates the corresponding property in the model and saves the changes.
+     * Only the meta-data directly in the BudgetPlan Model is updated here.
+     *
+     * @param  string  $property  The property name that has been updated.
+     */
+    public function updated(string $property): void
     {
         if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
             $value = $this->$property;
@@ -126,7 +150,7 @@ class BudgetPlanEdit extends Component
             $plan->update([
                 $property => $value,
             ]);
-            Flux::toast(text: "$property -> $value", heading: 'Your changes have been saved.', variant: 'success');
+            Flux::toast(text: "$property -> $value", heading: 'FIXME: Your changes have been saved.', variant: 'success');
         }
     }
 
@@ -172,7 +196,7 @@ class BudgetPlanEdit extends Component
             'organization' => $this->organization,
         ]);
 
-        return $this->redirect(route('budget-plan.index'));
+        $this->redirect(route('budget-plan.view', $this->plan_id));
     }
 
     public function addGroup(BudgetType $budget_type): void

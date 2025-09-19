@@ -21,7 +21,14 @@ class BudgetPlanController extends Controller
     {
         $plan = BudgetPlan::findOrFail($plan_id);
 
-        return view('budget-plan.view', ['plan' => $plan]);
+        $items = [
+            BudgetType::EXPENSE->slug() => $plan->rootBudgetItems()->with('children')
+                ->where('budget_type', BudgetType::EXPENSE)->get(),
+            BudgetType::INCOME->slug() => $plan->rootBudgetItems()->with('children')
+                ->where('budget_type', BudgetType::INCOME)->get(),
+        ];
+
+        return view('budget-plan.view', ['plan' => $plan, 'items' => $items]);
     }
 
     public function create()

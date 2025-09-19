@@ -64,7 +64,7 @@ class BudgetPlan extends Model
         return $this->hasMany(BudgetItem::class);
     }
 
-    public function rootBudgetItems()
+    public function rootBudgetItems(): Builder|\Illuminate\Database\Eloquent\Relations\HasMany|BudgetPlan
     {
         return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
     }
