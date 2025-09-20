@@ -34,7 +34,7 @@ return new class extends Migration
             $table->unsignedBigInteger('budget_plan_id');
             $table->string('short_name', 16)->nullable();
             $table->string('name')->nullable();
-            $table->decimal('value', 10, 2)->nullable();
+            $table->decimal('value', 10, 2)->default(0);
             $table->integer('budget_type');
             $table->boolean('is_group');
             $table->text('description');

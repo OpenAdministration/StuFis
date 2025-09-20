@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Enums\BudgetType;
+use Cknow\Money\Casts\MoneyDecimalCast;
 use Database\Factories\BudgetItemFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -70,6 +71,7 @@ class BudgetItem extends Model
         return [
             'is_group' => 'boolean',
             'budget_type' => BudgetType::class,
+            'value' => MoneyDecimalCast::class,
         ];
     }
 }

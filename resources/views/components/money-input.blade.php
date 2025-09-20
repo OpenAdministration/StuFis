@@ -1,15 +1,8 @@
 @props([
-    'model',
-    'value' => 0,
+    'disabled' => false,
 ])
-
-<flux:input x-data="{ money : new Intl.NumberFormat('de-DE', {minimumFractionDigits:2}).format({{ $value }} / 100) }"
-    class:input="text-right" x-model="money" x-mask:dynamic="$money($input, ',')"
-    x-on:blur="$wire.set('{{ $attributes->wire('model')->value() }}', money.replace(',','.') * 100)"
-    {{ $attributes->whereDoesntStartWith('wire:model') }}
-/>
-
-
-
-
-
+@if(!$disabled)
+    <flux:input {{ $attributes->merge(['class:input' => 'text-right']) }} />
+@else
+    <flux:input disabled readonly variant="filled" {{ $attributes->merge(['class:input' => 'text-right text-black!']) }}/>
+@endif

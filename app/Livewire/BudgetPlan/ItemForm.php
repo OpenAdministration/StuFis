@@ -3,6 +3,7 @@
 namespace App\Livewire\BudgetPlan;
 
 use App\Models\BudgetItem;
+use Cknow\Money\Money;
 use Livewire\Component;
 use Livewire\Form;
 
@@ -14,9 +15,9 @@ class ItemForm extends Form
 
     public $name = '';
 
-    public int $value = 0;
+    public Money $value;
 
-    public $postion = 0;
+    public $position = 0;
 
     public $is_group = false;
 
@@ -31,10 +32,11 @@ class ItemForm extends Form
     public function setItem(BudgetItem $item): void
     {
         $this->id = $item->id;
-        $this->postion = $item->postion;
+        $this->position = $item->position;
         $this->is_group = $item->is_group;
         $this->name = $item->name;
         $this->short_name = $item->short_name;
-        $this->value = $item->value ?? 0;
+        // $this->value = ($item->value?->getAmount() ?? 0) / 100 ;
+        $this->value = $item->value;
     }
 }

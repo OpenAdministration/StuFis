@@ -6,6 +6,7 @@ use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use Cknow\Money\Money;
 use DB;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
@@ -50,7 +51,7 @@ class BudgetPlanEdit extends Component
             ->get()->keyBy('id');
 
         foreach ($all_items as $item) {
-            // registers new Livewire ItemForms, there is not yet a native way
+            // registers new Livewire ItemForms; there is not yet a native way
             // to generate a dynamic amount of ItemForms, or even multiple
             $form = new ItemForm($this, 'items.'.$item->id);
             $form->setItem($item);
@@ -125,12 +126,13 @@ class BudgetPlanEdit extends Component
         $item = $leafItem;
         // iterate upwards until there is no parent left
         while (($item = $item->parent) !== null) {
-            $value = $item->children()->sum('value');
+            $amount = $item->children()->sum('value');
+            $money = Money::EUR($amount, true);
             // update db model
-            $item->value = $value;
+            $item->value = $money;
             $item->save();
             // update frontend
-            $this->items[$item->id]->value = $value;
+            $this->items[$item->id]->value = $money;
         }
     }
 
@@ -181,7 +183,7 @@ class BudgetPlanEdit extends Component
             $item->update(['position' => $new_position]);
         });
 
-        Flux::toast('Dragging and dropping', variant: 'success');
+        Flux::toast('FIXME: Dragging and dropping', variant: 'success');
     }
 
     public function save()
@@ -208,6 +210,7 @@ class BudgetPlanEdit extends Component
             'budget_type' => $budget_type,
             'is_group' => true,
             'position' => $newPos,
+            'value' => Money::EUR(100),
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
@@ -240,6 +243,7 @@ class BudgetPlanEdit extends Component
             'budget_type' => $parent->budget_type,
             'is_group' => $is_group,
             'position' => $pos + 1,
+            'value' => Money::EUR(0),
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);

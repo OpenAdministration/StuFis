@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Auth\AuthService;
+use App\Support\Money\MoneySynth;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
@@ -46,6 +48,8 @@ class AppServiceProvider extends ServiceProvider
 
         $this->bootRoute();
 
+        $this->bootLivewire();
+
         // Carbon::setLocale(config('app.locale'));
     }
 
@@ -76,5 +80,10 @@ class AppServiceProvider extends ServiceProvider
 
             abort(500, 'Config Error. Wrong Auth provider given in Environment. Fitting AuthService Class not found');
         });
+    }
+
+    private function bootLivewire(): void
+    {
+        Livewire::propertySynthesizer(MoneySynth::class);
     }
 }

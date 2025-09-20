@@ -51,10 +51,10 @@
                                     </flux:tooltip.content>
                                 </flux:tooltip>
                             </div>
-                            <div class="col-start-6 flex items-center gap-2">
+                            <div class="col-start-6 col-span-2 flex justify-end items-center gap-2">
                                 {{ __('budget-plan.budget-value') }}
                                 <flux:tooltip toggleable>
-                                    <flux:button icon="information-circle" size="sm" variant="subtle" />
+                                    <flux:button icon="information-circle" size="sm" variant="subtle"/>
                                     <flux:tooltip.content class="max-w-[20rem] space-y-2">
                                         {{ __('budget-plan.edit.table.headline.value-hint') }}
                                     </flux:tooltip.content>
@@ -64,7 +64,7 @@
                         <div class="col-span-8 grid grid-cols-subgrid gap-x-4"
                              x-sort="$wire.sort($item, $position)">
                             @foreach($root_items[$budgetType->slug()] as $id)
-                                <x-item-group :item="$all_items[$id]" :wire:key="$id" :category="$budgetType->slug()"/>
+                                <x-budgetplan.item-group-edit :item="$all_items[$id]" :wire:key="$id" :category="$budgetType->slug()"/>
                             @endforeach
                         </div>
                         <div class="col-start-1 col-span-4 grid grid-cols-subgrid gap-4">
