@@ -28,8 +28,8 @@ class DefaultMoneyFormater implements \Money\MoneyFormatter
         // Remove currency symbol and trim
         $formatted = str_replace('€', '', trim($formatted));
 
-        // Convert comma to decimal point and remove spaces
-        $amount = (float) str_replace([',', ' '], ['.', ''], $formatted);
+        // Convert remove the thousand separators, comma to decimal point and remove spaces
+        $amount = (float) str_replace(['.', ',', ' '], ['', '.', ''], $formatted);
 
         // Convert to cents
         $cents = (int) round($amount * 100);
