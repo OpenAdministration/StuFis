@@ -219,9 +219,9 @@ class BudgetPlanEdit extends Component
         $this->addBudget($new_item->id);
     }
 
-    public function addBudget(int $parent_id): void
+    public function addBudget(int $parent_id, float $value = 0.0): void
     {
-        $this->addItem($parent_id, false);
+        $this->addItem($parent_id, false, $value);
     }
 
     public function addSubGroup(int $parent_id): void
@@ -229,7 +229,7 @@ class BudgetPlanEdit extends Component
         $this->addItem($parent_id, true);
     }
 
-    private function addItem(int $parent_id, bool $is_group): void
+    private function addItem(int $parent_id, bool $is_group, $value = 0.0): void
     {
         $parent = BudgetItem::findOrFail($parent_id);
         if ($parent->is_group === 0) {
@@ -243,7 +243,7 @@ class BudgetPlanEdit extends Component
             'budget_type' => $parent->budget_type,
             'is_group' => $is_group,
             'position' => $pos + 1,
-            'value' => Money::EUR(0),
+            'value' => Money::EUR($value, true),
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
@@ -258,6 +258,7 @@ class BudgetPlanEdit extends Component
             return;
         }
         $item->update(['is_group' => true]);
+        $this->addBudget($item->id, $item->value->getAmount() / 100);
     }
 
     public function convertToBudget(int $item_id): void
@@ -306,6 +307,7 @@ class BudgetPlanEdit extends Component
             return;
         }
         $item->delete();
+        $this->resumItemValues($item);
     }
 
     public function refresh(): void

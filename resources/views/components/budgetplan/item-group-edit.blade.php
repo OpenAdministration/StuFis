@@ -1,23 +1,12 @@
 @props([
     'level' => 0,
     'item',
+    /* @var bool array of booleans, one for each level, indicating if the item is the last one on that level  */
     'lastItem' => [],
 ])
 
 <div @class([
         "col-span-8 grid grid-cols-subgrid",
-        //'col-start-2' => $level === 1,
-        //'col-start-3' => $level === 2,
-        //'col-start-4' => $level === 3,
-        //'ml-5' => $level === 1,
-        //'ml-10' => $level === 2,
-        //'ml-16' => $level === 3,
-        //"border-zinc-300 ",
-        //"border-l-1" => $level === 0 && $item->is_group,
-        //"border-l-2" => $level === 1 && $item->is_group,
-        //"border-l-3" => $level === 2 && $item->is_group,
-        //"border-l-4" => $level === 3 && $item->is_group,
-
     ]) x-sort:item="{{ $item->id }}">
     <div @class(["col-span-8 grid grid-cols-subgrid",
             //"py-2" => $item->is_group,
@@ -35,17 +24,17 @@
                 <x-fas-money-bill class="fill-zinc-400 w-5 h-5 ml-3"/>
             @endif
         </div>
-        <div class="col-span-2 my-2">
+        <div class="col-span-1 my-2">
             <flux:input wire:model.blur="items.{{$item->id}}.short_name"/>
         </div>
-        <div class="col-span-2 my-2">
+        <div class="col-span-3 my-2">
             <flux:input wire:model.blur="items.{{$item->id}}.name"/>
         </div>
         <div class="col-span-2 flex items-center">
             @if($level > 0)
                 <div class="flex items-top h-full">
                     @for($i = 1; $i <= $level; $i++)
-                        <!-- vertical line -->
+                        <!-- half or full vertical line, depending if last item -->
                         <div @class([
                             "ml-5",
                             "mr-4" => $i < $level,
@@ -68,7 +57,7 @@
                         <span>Σ</span>
                     </flux:input.group.prefix>
                 @endif
-                <x-money-input wire:model.blur="items.{{$item->id}}.value" :disabled="$item->is_group"/>
+                <x-money-input wire:model.blur="items.{{$item->id}}.value" :disabled="$item->is_group" />
             </flux:input.group>
         </div>
         <div class="my-2">{{-- Action Buttons --}}
@@ -80,7 +69,6 @@
                 <flux:button variant="ghost" icon:trailing="ellipsis-vertical"></flux:button>
                 <flux:menu>
                     <flux:menu.item>Debug: L{{ $level }} id{{$item->id}} P{{$item->position}}</flux:menu.item>
-                    <flux:menu.item>@dump($lastItem)</flux:menu.item>
                     @if($item->is_group)
                         <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->children->count() > 0" icon="arrows-right-left">to budget</flux:menu.item>
                     @else
