@@ -1989,6 +1989,10 @@ class AuslagenHandler2 extends FormHandlerInterface
             if ($k === 'revocation') {
                 continue;
             }
+            // Skip 'booked' state - make it unclickable
+            if ($k === 'booked') {
+                continue;
+            }
             if (! $this->state_change_possible($k)) {
                 continue;
             }
