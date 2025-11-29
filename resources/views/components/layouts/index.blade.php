@@ -35,7 +35,7 @@
                 <x-logo class="h-16 w-auto mx-auto"/>
                 <div class="text-white center text-2xl text-bold mb-5 mt-1.5 text-center tracking-wider">{{ config('app.name') }}</div>
                 <div class="w-full px-2 space-y-1">
-                    <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
+                    <x-nav-item :href="route('home')"
                                 :active="Route::is('legacy.dashboard')"
                                 icon="heroicon-o-home"
                     >
@@ -195,8 +195,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
                     </svg>
                 </button>
-                <div class="flex-1 flex justify-between px-4 sm:px-6">
-                    <div class="flex items-center">
+                <div class="flex-1 flex justify-between px-4 sm:px-6 ">
+                    <div class="sm:flex items-center hidden">
                         {{ Breadcrumbs::render() }}
                     </div>
                     <div class="flex-1 flex">
@@ -217,8 +217,8 @@
                             {{ __('general.new-project-button') }}
                         </flux:button>
                     </div>
-                    <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
-                        <a href="{{ config('stufis.docs_url') }}" class="focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <div class="flex items-center sm:space-x-6">
+                        <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <x-fas-book-open-reader class="size-5 text-indigo-500"/>
                         </a>
                         <!-- Profile dropdown -->

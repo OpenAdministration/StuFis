@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * App\Models\Legacy\LegacyBudgetPlan
@@ -50,5 +51,9 @@ class LegacyBudgetPlan extends Model
     public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
         return $this->hasManyThrough(LegacyBudgetItem::class, LegacyBudgetGroup::class);
+    }
+
+    public static function latest() : LegacyBudgetPlan {
+        return self::orderBy('id', 'desc')->first();
     }
 }

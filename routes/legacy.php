@@ -4,12 +4,13 @@ use App\Http\Controllers\Legacy\LegacyController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->name('legacy.')->group(function (): void {
+
     Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
     Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');
     Route::get('menu/kv/exportBank', [LegacyController::class, 'render'])->name('todo.kv.bank');
     Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');
     Route::get('menu/stura', [LegacyController::class, 'render'])->name('sitzung');
-    Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
+    Route::get('menu/{hhp_id?}/{sub}', [LegacyController::class, 'render'])->name('dashboard');
     // legacy hhp-picker needs that url schema as a easy forward - route names are here not usable :(
     Route::redirect('konto/{hhp_id}/new', '/bank-account/new');
     Route::get('konto/{hhp_id?}/{konto_id?}', [LegacyController::class, 'render'])->name('konto');

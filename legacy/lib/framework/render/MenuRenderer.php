@@ -60,7 +60,7 @@ class MenuRenderer extends Renderer
 
     public function renderProjekte($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE."menu/$active/");
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE."menu/", "/$active" );
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
@@ -81,7 +81,7 @@ class MenuRenderer extends Renderer
                 break;
             case 'mygremium':
                 if (empty($userGremien)) {
-                    $this->setOverviewTabs($active);
+                    $this->setOverviewTabs($active, $hhp_id);
                     $this->renderAlert(
                         'Schade!',
                         $this->makeClickableMails(
@@ -175,7 +175,7 @@ class MenuRenderer extends Renderer
         }
 
         // var_dump(end(end($projekte)));
-        $this->setOverviewTabs($active); ?>
+        $this->setOverviewTabs($active, $hhp_id); ?>
 
         <div class="panel-group" id="accordion">
             <?php $i = 0;
@@ -514,17 +514,14 @@ class MenuRenderer extends Renderer
         // $this->renderTable($header,[$extern],array_keys($header));
     }
 
-    public function setOverviewTabs($active): void
+    public function setOverviewTabs($active, $hhp_id): void
     {
-        $linkbase = URIBASE.'menu/';
+        $linkbase = URIBASE. "menu/$hhp_id/";
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
             'open-projects' => "<i class='fa fa-fw fa-file-text'></i> Offene Projekte",
         ];
-        if (AuthHandler::getInstance()->hasGroup('ref-finanzen')) {
-            // $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
-        }
         // $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }

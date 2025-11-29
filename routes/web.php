@@ -12,12 +12,18 @@
 */
 
 use App\Http\Controllers\ViewChangelog;
+use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
     // legacy is register later, so we cannot route(legacy.dashboard) there
-    Route::redirect('/', 'menu/mygremium')->name('home');
+    Route::get('/', function (){
+        $latestPlan = LegacyBudgetPlan::latest();
+        return redirect()->route(
+            'legacy.dashboard', ['sub' => 'mygremium', 'hhp_id' => $latestPlan->id]
+        );
+    })->name('home');
 
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
     Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
