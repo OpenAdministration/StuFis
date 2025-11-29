@@ -123,8 +123,8 @@ class ProjektHandler extends FormHandlerInterface
             'draft' => ['Entwurf'],
             'wip' => ['Beantragt', 'beantragen'],
             'ok-by-hv' => ['Genehmigt durch HV (nicht verkündet)'],
-            'need-stura' => ['Warte auf StuRa-Beschluss'],
-            'ok-by-stura' => ['Genehmigt durch StuRa-Beschluss'],
+            'need-stura' => ['Warte auf Gremien-Beschluss'],
+            'ok-by-stura' => ['Genehmigt durch Gremien-Beschluss'],
             'done-hv' => ['verkündet durch HV'],
             'done-other' => ['Genehmigt'],
             'revoked' => [

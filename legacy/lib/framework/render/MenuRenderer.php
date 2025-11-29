@@ -550,10 +550,10 @@ class MenuRenderer extends Renderer
         [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState('need-stura');
         [, $internContentHV] = $this->fetchProjectsWithState('ok-by-hv');
         $groups = [
-            'Vom StuRa abzustimmen' => $internContent,
-            'zur Verkündung (genehmigt von HV)' => $internContentHV,
+            'Vom Gremium abzustimmen' => $internContent,
+            'zur Verkündung' => $internContentHV,
         ];
-        $this->renderHeadline('Projekte für die nächste StuRa Sitzung');
+        $this->renderHeadline('Projekte für die nächste Sitzung');
         $this->renderTable($header, $groups, [], $escapeFunctions);
     }
 

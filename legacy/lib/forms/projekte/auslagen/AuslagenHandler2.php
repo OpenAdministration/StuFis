@@ -1892,7 +1892,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
                 <?php
                 $tmplabel = ($this->routeInfo['action'] === 'edit' || $this->routeInfo['action'] === 'create') ?
-                    'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
+                    'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Die Studierendenschaften in Thüringen sind nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
                     'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
         $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
             || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
