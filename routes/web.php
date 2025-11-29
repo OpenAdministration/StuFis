@@ -17,11 +17,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
-    // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::get('/', function (){
+        $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
         $latestPlan = LegacyBudgetPlan::latest();
         return redirect()->route(
-            'legacy.dashboard', ['sub' => 'mygremium', 'hhp_id' => $latestPlan->id]
+            'legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]
         );
     })->name('home');
 
