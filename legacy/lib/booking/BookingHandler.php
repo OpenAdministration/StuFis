@@ -274,7 +274,6 @@ class BookingHandler extends Renderer
                     <th>Beleg</th>
                     <th>Buchungs-Datum</th>
                     <th>Zahlung</th>
-                    <th>Stornieren</th>
                     <th>Buchungstext</th>
                 </tr>
                 </thead>
@@ -342,25 +341,6 @@ class BookingHandler extends Renderer
 							    TextStyle::BLACK
 							); ?>
                         </td>
-						<?php if ($row['canceled'] === 0) { ?>
-                            <td class="no-wrap">
-                                <form id="cancel" role="form" action="<?php echo URIBASE; ?>rest/booking/cancel"
-                                      method="POST"
-                                      enctype="multipart/form-data" class="ajax">
-                                    <input type="hidden" name="action" value="cancel-booking"/>
-									<?php $this->renderNonce(); ?>
-                                    <input type="hidden" name="booking.id" value="<?php echo $row['id']; ?>"/>
-                                    <input type="hidden" name="hhp.id" value="<?php echo $hhp_id; ?>"/>
-
-                                    <a href="javascript:false;"
-                                       class='submit-form <?php echo TextStyle::DANGER; ?>'>
-                                        <i class='fa fa-fw fa-ban'></i>&nbsp;Stornieren
-                                    </a>
-                                </form>
-                            </td>
-						<?php } else { ?>
-                            <td>Durch <a href='#<?php echo $row['canceled']; ?>'>B-Nr: <?php echo $row['canceled']; ?></a></td>
-						<?php } ?>
                         <td class="col-xs-4 <?php echo TextStyle::SECONDARY; ?>"><?php echo htmlspecialchars(
                             $row['comment']
                         ); ?></td>
