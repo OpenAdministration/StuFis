@@ -6,6 +6,7 @@
 * fix: removed not working storno button
 * fix: last projekt posten is undeletable 
 * lang: changed Auslagen to Abrechnung
+* fix: projektposten keep their internal id when deleted. so you should be able to delete other unused posten. Deleting used posten is still possible and will result in an error.
 
 # v4.3.2
 * **Brotkrumen wurden hinzugefügt:** Es ist nun links oben ersichtlich, wo du dich innerhalb StuFiS befindest und kannst schneller innerhalb der Struktur die Seite wechseln. Der Projekt-Button ist nun nach rechts oben gewandert.

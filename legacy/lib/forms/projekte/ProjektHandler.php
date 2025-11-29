@@ -3,6 +3,7 @@
 namespace forms\projekte;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\Legacy\ProjectPost;
 use App\Models\User;
 use forms\chat\ChatHandler;
 use forms\FormHandlerInterface;
@@ -14,6 +15,7 @@ use forms\projekte\exceptions\WrongVersionException;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\HTMLPageRenderer;
+use Illuminate\Support\Facades\DB;
 use PDOException;
 
 class ProjektHandler extends FormHandlerInterface
@@ -81,13 +83,13 @@ class ProjektHandler extends FormHandlerInterface
                 [],
                 ['projekt_id' => $this->id]
             );
-            foreach ($tmp as $row) {
-                $idx = $row['id'];
-                $this->data['posten-name'][$idx] = $row['name'];
-                $this->data['posten-bemerkung'][$idx] = $row['bemerkung'];
-                $this->data['posten-einnahmen'][$idx] = $row['einnahmen'];
-                $this->data['posten-ausgaben'][$idx] = $row['ausgaben'];
-                $this->data['posten-titel'][$idx] = $row['titel_id'];
+            foreach ($tmp as $idx => $row) {
+                $this->data['posten-id'][$idx+1] = $row['id'];
+                $this->data['posten-name'][$idx+1] = $row['name'];
+                $this->data['posten-bemerkung'][$idx+1] = $row['bemerkung'];
+                $this->data['posten-einnahmen'][$idx+1] = $row['einnahmen'];
+                $this->data['posten-ausgaben'][$idx+1] = $row['ausgaben'];
+                $this->data['posten-titel'][$idx+1] = $row['titel_id'];
             }
             $stateNow = $this->data['state'];
         }
@@ -193,6 +195,7 @@ class ProjektHandler extends FormHandlerInterface
             'beschreibung' => '',
             'recht' => '',
             'recht-additional' => '',
+            'posten-id' => [1 => ''],
             'posten-name' => [1 => ''],
             'posten-bemerkung' => [1 => ''],
             'posten-titel' => [1 => ''],
@@ -336,6 +339,7 @@ class ProjektHandler extends FormHandlerInterface
      */
     public function updateSavedData($data): bool
     {
+        DB::beginTransaction();
         $data = array_intersect_key($data, self::$emptyData);
         $version = (int) $data['version'];
 
@@ -350,13 +354,15 @@ class ProjektHandler extends FormHandlerInterface
                 count($data['posten-name']),
                 count($data['posten-bemerkung']),
                 count($data['posten-einnahmen']),
-                count($data['posten-ausgaben'])
+                count($data['posten-ausgaben']),
+                count($data['posten-id'])
             );
             $minRows = min(
                 count($data['posten-name']),
                 count($data['posten-bemerkung']),
                 count($data['posten-einnahmen']),
-                count($data['posten-ausgaben'])
+                count($data['posten-ausgaben']),
+                count($data['posten-id'])
             );
         }
         // wenn posten-titel nicht mit übertragen setze dummy an seine stelle
@@ -374,10 +380,13 @@ class ProjektHandler extends FormHandlerInterface
             'lastupdated' => date('Y-m-d H:i:s'),
             'version' => ($this->data['version'] + 1),
         ];
-        // extract some fields for other db destination
-        $extractFields = ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben', 'posten-titel'];
+        // extract the posten fields, which go to a different table
+        $extractFields = ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben', 'posten-titel', 'posten-id'];
         $extractFields = array_intersect_key($data, array_flip($extractFields));
+
+        // remove the generated and extracted fields from the data array
         $data = array_diff_key($data, $generatedFields, $extractFields);
+
         $recht_unset = false;
         if (isset($data['recht-additional'])) {
             if (! isset($data['recht']) && isset($this->data['recht'])) {
@@ -421,72 +430,31 @@ class ProjektHandler extends FormHandlerInterface
             'and'
         )) {
             // update old posten, create new, delete old
-            $oldRows = count($this->data['posten-name']);
 
             // update old posten (last minrow is empty all the time
-            $retUpdate = true;
-            for ($i = 0; $i < $minRows - 1 && $i < $oldRows; $i++) {
-                // would throw exception if not working
-                $rowsUpdated = DBConnector::getInstance()->dbUpdate(
-                    'projektposten',
-                    [
-                        'id' => $i + 1,
-                        'projekt_id' => $this->id,
-                    ],
-                    [
-                        'titel_id' => $extractFields['posten-titel'][$i] === '' ? null : $extractFields['posten-titel'][$i],
-                        'einnahmen' => DBConnector::getInstance()->convertUserValueToDBValue(
-                            $extractFields['posten-einnahmen'][$i],
-                            'money'
-                        ),
-                        'ausgaben' => DBConnector::getInstance()->convertUserValueToDBValue(
-                            $extractFields['posten-ausgaben'][$i],
-                            'money'
-                        ),
-                        'name' => $extractFields['posten-name'][$i],
-                        'bemerkung' => $extractFields['posten-bemerkung'][$i],
-                    ],
-                );
-                // could return row count = 0 (if no changes happened)
-                $retUpdate = $retUpdate && ($rowsUpdated <= 1);
-            }
+            $nextFreeId = max($extractFields['posten-id']);
 
-            // add new posten
-            $retInsert = true;
-            for ($i = $oldRows; $i < $minRows - 1; $i++) {
-                $retInsert = $retInsert && (DBConnector::getInstance()->dbInsert(
-                    'projektposten',
-                    [
-                        'id' => $i + 1,
-                        'projekt_id' => $this->id,
-                        'titel_id' => $extractFields['posten-titel'][$i] === '' ? null : $extractFields['posten-titel'][$i],
-                        'einnahmen' => DBConnector::getInstance()->convertUserValueToDBValue(
-                            $extractFields['posten-einnahmen'][$i],
-                            'money'
-                        ),
-                        'ausgaben' => DBConnector::getInstance()->convertUserValueToDBValue(
-                            $extractFields['posten-ausgaben'][$i],
-                            'money'
-                        ),
-                        'name' => $extractFields['posten-name'][$i],
-                        'bemerkung' => $extractFields['posten-bemerkung'][$i],
-                    ]
-                )) === '0'; // lastInsertedId returns "0" due to auto increment is not used (multikey)
-            }
-            // delete old ones
-            $retDelete = true;
-            if ($minRows - 1 < $oldRows) {
-                $retDelete = DBConnector::getInstance()->dbDelete(
-                    'projektposten',
-                    [
-                        'id' => ['>', $minRows - 1],
-                        'projekt_id' => $this->id,
-                    ]
-                );
-                $retDelete = $retDelete > 0;
-            }
+            // protocol which ids got used, so we can delete everything else afterwards
+            $used_ids = [];
 
-            return $retMetaUpdate && $retDelete && $retInsert && $retUpdate;
+            for ($i = 0; $i < $minRows - 1; $i++) {
+                $id = ((int)$extractFields['posten-id'][$i]);
+                if ($id === 0) {
+                    $id = ++$nextFreeId;
+                }
+                $used_ids[] = $id;
+                ProjectPost::updateOrInsert(['id' =>  $id , 'projekt_id' => $this->id], [
+                    'name' => $extractFields['posten-name'][$i],
+                    'bemerkung' => $extractFields['posten-bemerkung'][$i],
+                    'einnahmen' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-einnahmen'][$i], 'money'),
+                    'ausgaben' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-ausgaben'][$i], 'money'),
+                    'titel_id' => $extractFields['posten-titel'][$i],
+                ]);
+            }
+            ProjectPost::whereNotIn('id', $used_ids)->delete();
+
+            DB::commit();
+            return true;
         }
 
         return $retMetaUpdate;
@@ -727,6 +695,7 @@ class ProjektHandler extends FormHandlerInterface
                 <table class="table table-striped summing-table <?php echo $tablePartialEditable ? 'dynamic-table' : 'dynamic-table-readonly'; ?>">
                     <thead>
                     <tr>
+                        <th></th><!-- Id  -->
                         <th></th><!-- Nr.       -->
                         <th></th><!-- Trashbin  -->
                         <th class="">Ein/Ausgabengruppe</th>
@@ -736,11 +705,8 @@ class ProjektHandler extends FormHandlerInterface
                         <th class="col-xs-2">Ausgaben</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <?php
-
-                    $this->data['posten-name'][] = '';
-
+                    <tbody><?php
+        $this->data['posten-name'][] = '';
         foreach ($this->data['posten-name'] as $row_nr => $null) {
             $new_row = ($row_nr) === count($this->data['posten-name']);
             if ($new_row && ! $tablePartialEditable) {
@@ -751,7 +717,10 @@ class ProjektHandler extends FormHandlerInterface
                 $sel_titel['values'] = $this->data['posten-titel'][$row_nr];
             } ?>
                         <tr class="<?php echo $new_row ? 'new-table-row' : 'dynamic-table-row'; ?>">
-                            <td class="row-number"> <?php echo $row_nr; ?>.</td>
+                            <td><input type="hidden" name="posten-id[]" value="<?php echo $this->data['posten-id'][$row_nr] ?? ''; ?>"></td>
+                            <td class="row-number">
+                                <?php echo $row_nr; ?>.
+                            </td>
                             <?php if ($tablePartialEditable) { ?>
                                 <td class='delete-row'><a href='' class='delete-row'><i
                                             class='fa fa-fw fa-trash'></i></a></td>
@@ -807,6 +776,7 @@ class ProjektHandler extends FormHandlerInterface
                     </tbody>
                     <tfoot>
                     <tr>
+                        <th></th><!-- hidden id -->
                         <th></th><!-- Nr.       -->
                         <th></th><!-- Trashbin  -->
                         <th></th><!-- Name      -->

@@ -45,7 +45,9 @@ class ProjectPost extends Model
     /**
      * @var array
      */
-    protected $fillable = ['titel_id', 'einnahmen', 'ausgaben', 'name', 'bemerkung'];
+    protected $fillable = ['titel_id', 'einnahmen', 'ausgaben', 'name', 'bemerkung',
+        'id'
+    ];
 
     public function project(): BelongsTo
     {
