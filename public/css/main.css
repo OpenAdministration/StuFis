@@ -42,6 +42,11 @@ pre {
     display: none;
 }
 
+.dynamic-table > tbody > tr:only-child > td.delete-row a.delete-row,
+.dynamic-table > tbody > tr:nth-child(1):nth-last-child(2) > td.delete-row a.delete-row {
+    display: none;
+}
+
 .dynamic-table-readonly.dynamic-table > tbody > tr > td.delete-row a.delete-row {
     display: none;
 }
