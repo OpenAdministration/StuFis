@@ -687,6 +687,7 @@ button.btn.btn-arrow-left {
 
 .textarea_readonly {
     white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .bt-dark {
