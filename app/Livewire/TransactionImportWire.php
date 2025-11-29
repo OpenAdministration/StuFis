@@ -10,6 +10,7 @@ use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
 use Flux\Flux;
+use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Collection;
@@ -214,7 +215,7 @@ class TransactionImportWire extends Component
                     $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                 }
             }
-
+            AuslagenHandler2::hookZahlung($transaction->zweck);
             $transaction->save();
         }
         try {
