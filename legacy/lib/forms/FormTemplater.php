@@ -64,7 +64,6 @@ class FormTemplater
         $userGremien = AuthHandler::getInstance()->getUserGremien();
         $showAll = AuthHandler::getInstance()->hasGroup('ref-finanzen');
 
-        $selectable = [];
         foreach (GREMIEN as $groupName => $gremien) {
             $group = [];
             $group['label'] = $groupName;
@@ -79,6 +78,8 @@ class FormTemplater
             $group['options'] = $options;
             $selectable['groups'][] = $group;
         }
+
+        $selectable['groups'][] = ['label' => 'Sonstige / Keine', 'options' => [['label' => 'Sonstige / Keine Organisation']]];
 
         return $selectable;
     }
