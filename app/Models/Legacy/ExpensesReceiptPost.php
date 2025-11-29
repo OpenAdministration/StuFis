@@ -50,7 +50,7 @@ class ExpensesReceiptPost extends Model
 
     public function expensesReceipt(): BelongsTo
     {
-        return $this->belongsTo(ExpensesReceipt::class, 'beleg_id');
+        return $this->belongsTo(ExpensesReceipt::class, 'beleg_id', 'id');
     }
 
     public function bookings(): HasMany

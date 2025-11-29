@@ -3,6 +3,9 @@
 namespace forms\projekte;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\Legacy\Expenses;
+use App\Models\Legacy\ExpensesReceipt;
+use App\Models\Legacy\ExpensesReceiptPost;
 use App\Models\Legacy\ProjectPost;
 use App\Models\User;
 use forms\chat\ChatHandler;
@@ -451,6 +454,16 @@ class ProjektHandler extends FormHandlerInterface
                     'titel_id' => $extractFields['posten-titel'][$i],
                 ]);
             }
+            $project_id = $this->id;
+            $used_posten_deleted = ExpensesReceiptPost::whereNotIn('projekt_posten_id', $used_ids)
+                ->whereHas('expensesReceipt.expense', function ($query) use ($project_id) {
+                    $query->where('projekt_id', $project_id);
+                })->exists();
+
+            if ($used_posten_deleted) {
+                throw new InvalidDataException('Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden');
+            }
+
             ProjectPost::whereNotIn('id', $used_ids)->delete();
 
             DB::commit();

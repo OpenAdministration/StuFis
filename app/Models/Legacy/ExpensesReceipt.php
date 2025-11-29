@@ -60,6 +60,6 @@ class ExpensesReceipt extends Model
 
     public function expense(): BelongsTo
     {
-        return $this->belongsTo(Expenses::class);
+        return $this->belongsTo(Expenses::class, 'auslagen_id');
     }
 }
