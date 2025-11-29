@@ -9,6 +9,7 @@
 * fix: projektposten keep their internal id when deleted. so you should be able to delete other unused posten. Deleting used posten is still possible and will result in an error.
 * fix: added a default "sonstige" organisation
 * fix: csv imports now set expenses to payed if they are mentioned in the verwendungszweck field
+* fix bug OP#406 & ok-belege resets now as well 
 
 # v4.3.2
 * **Brotkrumen wurden hinzugefügt:** Es ist nun links oben ersichtlich, wo du dich innerhalb StuFiS befindest und kannst schneller innerhalb der Struktur die Seite wechseln. Der Projekt-Button ist nun nach rechts oben gewandert.

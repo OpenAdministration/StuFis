@@ -1476,6 +1476,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                     case 'wip':
                         $set['ok-hv'] = '';
                         $set['ok-kv'] = '';
+                        $set['ok-belege'] = '';
+                        $set['payed'] = '';
                         break;
 
                     case 'draft':
