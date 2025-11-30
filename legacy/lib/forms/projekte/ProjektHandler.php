@@ -3,9 +3,9 @@
 namespace forms\projekte;
 
 use App\Exceptions\LegacyDieException;
-use App\Models\Legacy\Expenses;
-use App\Models\Legacy\ExpensesReceipt;
-use App\Models\Legacy\ExpensesReceiptPost;
+use App\Models\Legacy\Expense;
+use App\Models\Legacy\ExpenseReceipt;
+use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\ProjectPost;
 use App\Models\User;
 use forms\chat\ChatHandler;
@@ -455,7 +455,7 @@ class ProjektHandler extends FormHandlerInterface
                 ]);
             }
             $project_id = $this->id;
-            $used_posten_deleted = ExpensesReceiptPost::whereNotIn('projekt_posten_id', $used_ids)
+            $used_posten_deleted = ExpenseReceiptPost::whereNotIn('projekt_posten_id', $used_ids)
                 ->whereHas('expensesReceipt.expense', function ($query) use ($project_id) {
                     $query->where('projekt_id', $project_id);
                 })->exists();

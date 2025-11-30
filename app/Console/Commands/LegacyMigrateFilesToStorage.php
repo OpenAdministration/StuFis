@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Legacy\ExpensesReceipt;
+use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\FileInfo;
 use Illuminate\Console\Command;
 
@@ -30,7 +30,7 @@ class LegacyMigrateFilesToStorage extends Command
         FileInfo::lazy(20)->each(function (FileInfo $fileInfo): void {
             $data = $fileInfo->fileData;
             $link = $fileInfo->link;
-            $beleg = ExpensesReceipt::find($link);
+            $beleg = ExpenseReceipt::find($link);
             $expenses_id = $beleg?->auslagen_id;
             $pdfData = $data?->data;
             $hash = $fileInfo->hashname;

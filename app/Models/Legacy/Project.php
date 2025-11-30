@@ -30,7 +30,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $date_start
  * @property string $date_end
  * @property string $beschreibung
- * @property Expenses[] $expenses
+ * @property Expense[] $expenses
  * @property User $user
  * @property ProjectPost[] $posts
  * @property-read User $creator
@@ -86,7 +86,7 @@ class Project extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(\App\Models\Legacy\Expenses::class, 'projekt_id');
+        return $this->hasMany(\App\Models\Legacy\Expense::class, 'projekt_id');
     }
 
     public function creator(): BelongsTo

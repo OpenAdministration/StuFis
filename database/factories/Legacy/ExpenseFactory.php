@@ -2,12 +2,12 @@
 
 namespace Database\Factories\Legacy;
 
-use App\Models\Legacy\Expenses;
+use App\Models\Legacy\Expense;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class ExpensesFactory extends Factory
+class ExpenseFactory extends Factory
 {
-    protected $model = Expenses::class;
+    protected $model = Expense::class;
 
     public function definition(): array
     {

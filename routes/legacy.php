@@ -45,7 +45,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::redirect('p/{projekt_id}', '/projekt/{projekt_id}');
     Route::redirect('a/{auslagen_id}', '/auslagen/{auslagen_id}');
     Route::get('auslagen/{auslagen_id}', static function ($auslage_id) {
-        $auslage = \App\Models\Legacy\Expenses::findOrFail($auslage_id);
+        $auslage = \App\Models\Legacy\Expense::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     })->name('expense');

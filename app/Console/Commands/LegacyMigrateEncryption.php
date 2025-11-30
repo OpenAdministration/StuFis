@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Legacy\ChatMessage;
-use App\Models\Legacy\Expenses;
+use App\Models\Legacy\Expense;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
@@ -68,7 +68,7 @@ class LegacyMigrateEncryption extends Command
             $this->info("Migrated $count chat messages from legacy encryption to laravel integrated");
 
             $count = 0;
-            Expenses::all()->each(function ($expense) use (&$count): void {
+            Expense::all()->each(function ($expense) use (&$count): void {
                 $cryptIban = $expense->getAttribute('zahlung-iban');
                 try {
                     \Crypt::decryptString($cryptIban);

@@ -2,12 +2,12 @@
 
 namespace Database\Factories\Legacy;
 
-use App\Models\Legacy\ExpensesReceiptPost;
+use App\Models\Legacy\ExpenseReceiptPost;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class ExpensesReceiptPostFactory extends Factory
+class ExpenseReceiptPostFactory extends Factory
 {
-    protected $model = ExpensesReceiptPost::class;
+    protected $model = ExpenseReceiptPost::class;
 
     public function definition(): array
     {

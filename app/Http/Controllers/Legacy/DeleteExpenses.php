@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Legacy;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legacy\Expenses;
-use App\Models\Legacy\ExpensesReceipt;
+use App\Models\Legacy\Expense;
+use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\FileInfo;
 use framework\auth\AuthHandler;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +13,7 @@ class DeleteExpenses extends Controller
 {
     public function __invoke(int $expense_id)
     {
-        $expense = Expenses::findOrFail($expense_id);
+        $expense = Expense::findOrFail($expense_id);
         $project = $expense->project;
 
         // authorize user
@@ -30,7 +30,7 @@ class DeleteExpenses extends Controller
         // to make sure to delete everything and not only parts
         \DB::beginTransaction();
         $reciepts = $expense->receipts;
-        $reciepts->each(function (ExpensesReceipt $receipt): void {
+        $reciepts->each(function (ExpenseReceipt $receipt): void {
             // delete all posts
             $receipt->posts()->delete();
             // delete all files db entries (storage later)
