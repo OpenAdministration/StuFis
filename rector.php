@@ -22,7 +22,8 @@ return RectorConfig::configure()
     ])
     ->withPaths([
         __DIR__.'/app',
-        __DIR__.'/bootstrap',
+        __DIR__.'/bootstrap/app.php',
+        __DIR__.'/bootstrap/providers.php',
         __DIR__.'/config',
         __DIR__.'/lang',
         // __DIR__.'/legacy',
