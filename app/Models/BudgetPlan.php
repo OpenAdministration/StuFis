@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Enums\BudgetPlanState;
+use App\Models\Enums\BudgetType;
 use Carbon\Carbon;
 use Database\Factories\BudgetPlanFactory;
 use Eloquent;
@@ -59,9 +60,20 @@ class BudgetPlan extends Model
         ];
     }
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
+    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany{
         return $this->hasMany(BudgetItem::class);
+    }
+    public function budgetItemsTree(BudgetType $budgetType)
+    {
+        // this is not accessible from the closure scope
+        $plan_id = $this->id;
+
+        $constraint =  static fn($query) =>
+            $query->whereNull('parent_id')
+                ->where('budget_plan_id', $plan_id)
+                ->where('budget_type', $budgetType);
+        // the full tree flattened out, the position path is a custom-built path
+        return BudgetItem::treeOf($constraint)->orderBy('position_path')->get();
     }
 
     public function rootBudgetItems(): Builder|\Illuminate\Database\Eloquent\Relations\HasMany|BudgetPlan
@@ -72,5 +84,20 @@ class BudgetPlan extends Model
     public function fiscalYear(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
+    }
+
+    /**
+     * Resets the position values of all children to be sequential starting from 0
+     * Use in case of buggyness in the position values
+     * @return void
+     */
+    public function normalizePositions() : void
+    {
+        $items = $this->rootBudgetItems()->get();
+        while ($items->isNotEmpty()) {
+            $item = $items->pop();
+            $item->normalizeChildPositionValues();
+            $items = $items->merge($item->children);
+        }
     }
 }

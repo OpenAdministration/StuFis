@@ -1,96 +1,112 @@
 @props([
     'level' => 0,
     'item',
+    'lastItem' => [],
 ])
 
-<div @class([
-        "col-span-8 grid grid-cols-subgrid gap-y-0",
-        //'col-start-2' => $level === 1,
-        //'col-start-3' => $level === 2,
-        //'col-start-4' => $level === 3,
-        //'ml-5' => $level === 1,
-        //'ml-10' => $level === 2,
-        //'ml-16' => $level === 3,
-        //"border-zinc-300 ",
-        //"border-l-1" => $level === 0 && $item->is_group,
-        //"border-l-2" => $level === 1 && $item->is_group,
-        //"border-l-3" => $level === 2 && $item->is_group,
-        //"border-l-4" => $level === 3 && $item->is_group,
-
-    ]) x-sort:item="{{ $item->id }}">
-    <div @class(["col-span-8 grid grid-cols-subgrid",
-            "py-2" => $item->is_group,
-            "rounded" => $item->is_group,
-            "bg-zinc-300 my-2" => $item->is_group,
-        ])>
-        <div x-sort:handle @class([
-                "cursor-grab flex items-center justify-end"
-            ])>
-            <x-fas-grip-vertical  class="fill-zinc-400 h-5 w-5"/>
-            @if($item->is_group)
-                <x-fas-wallet class="fill-zinc-500 w-5 h-5 ml-3"/>
-            @else
-                <x-fas-money-bill class="fill-zinc-500 w-5 h-5 ml-3"/>
-            @endif
-        </div>
-        <div class="col-span-2">
-            <flux:input wire:model.blur="items.{{$item->id}}.short_name"/>
-        </div>
-        <div class="col-span-2">
-            <flux:input wire:model.blur="items.{{$item->id}}.name"/>
-        </div>
-        <div class="col-span-2">
-            <flux:input.group @class([
-                    //'pl-10' => $level === 3,
-                    //'pl-5' => $level === 2,
-                ])>
-                @if($item->is_group)
-                    <flux:input.group.prefix>
-                        <span>Σ</span>
-                    </flux:input.group.prefix>
+{{-- children inside --}}
+<div @class(["col-span-9 grid grid-cols-subgrid gap-x-4 ",
+        //"bg-gray-400" => $level === 0,
+        //"bg-gray-300" => $level === 1,
+        //"bg-gray-200" => $level === 2,
+        //"bg-gray-100" => $level === 3,
+])>
+    {{-- only this row --}}
+    <div class="col-span-9 grid grid-cols-subgrid gap-x-4">
+        {{-- Hieracy column --}}
+        <div class="col-span-1">
+            <div class="flex items-top h-full">
+                @for($i = 1; $i <= $level; $i++)
+                    <!-- vertical line or spacing -->
+                    <div @class([
+                        'ml-2',
+                        'mr-2' => $i < $level,
+                        'h-full border-l-2 border-zinc-300 dark:border-zinc-600' => !($lastItem[$i-1] ?? false),
+                        'h-1/2 border-l-2 border-zinc-300 dark:border-zinc-600' => ($lastItem[$i-1] ?? false) && $i === $level,
+                    ])></div>
+                @endfor
+                <!-- horizontal line -->
+                @if($level > 0)
+                    <div class="h-1/2 w-2 border-b-2 border-zinc-300 dark:border-zinc-600"></div>
                 @endif
-                <x-money-input wire:model="items.{{$item->id}}.value" :value="$item->value" :disabled="$item->is_group"/>
-                <flux:input.group.suffix>€</flux:input.group.suffix>
-            </flux:input.group>
-        </div>
-        <div>{{-- Action Buttons --}}
-            @if($item->is_group)
-                <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})" variant="ghost"/> {{-- subtle or ghost --}}
-                <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
-            @endif
-            <flux:dropdown>
-                <flux:button variant="ghost" icon:trailing="ellipsis-vertical"></flux:button>
-                <flux:menu>
-                    <flux:menu.item>Debug: L{{ $level }} id{{$item->id}} P{{$item->position}}</flux:menu.item>
-                    @if($item->is_group)
-                        <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->children->count() > 0" icon="arrows-right-left">to budget</flux:menu.item>
-                    @else
-                        <flux:menu.item wire:click="convertToGroup({{$item->id}})" icon="arrows-right-left"  >to group</flux:menu.item>
-                    @endif
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})" icon="arrow-up"  >item up</flux:menu.item>
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})" icon="arrow-down"  >item down</flux:menu.item>
-                    <flux:menu.item wire:click="copyItem({{ $item->id }})" icon="clipboard">copy</flux:menu.item>
-                    <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)" icon="clipboard">
-                        copy zur anderen seite
-                    </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren()->count() !== 0" variant="danger" icon="trash">Delete</flux:menu.item>
-                </flux:menu>
-            </flux:dropdown>
-        </div>
-    </div>
-    @if($item->is_group)
-        <div @class([
-                    "col-span-8 grid grid-cols-subgrid gap-y-4",
-                    "border-zinc-300 ",
-                    "border-l-12" => $level === 0 && $item->is_group,
-                    "border-l-16" => $level === 1 && $item->is_group,
-                    "border-l-24" => $level === 2 && $item->is_group,
-                    "border-l-28" => $level === 3 && $item->is_group,
 
-                ]) x-sort="$wire.sort($item,$position)">
-            @foreach($item->orderedChildren as $child)
-                <x-item-group :item="$child" :wire:key="$child->id" :level="$level +1" />
-            @endforeach
+                @if($item->is_group)
+                    <x-fas-wallet @class([
+                        'w-5 h-5',
+                        'fill-zinc-600 dark:fill-zinc-400' => $level === 0,
+                        'fill-zinc-500 dark:fill-zinc-500' => $level > 0,
+                    ])/>
+                @else
+                    <x-fas-money-bill class="w-5 h-5 fill-zinc-400 dark:fill-zinc-600"/>
+                @endif
+            </div>
         </div>
+
+        {{-- Icon and short title column --}}
+        <div class="col-span-1 flex items-center h-full">
+
+            {{-- Short Name Column --}}
+            <span @class([
+                'font-semibold text-zinc-900 dark:text-zinc-100' => $item->is_group,
+                'text-zinc-700 dark:text-zinc-300' => !$item->is_group,
+            ])>
+                {{ $item->short_name }}
+            </span>
+        </div>
+
+        {{-- Long Name Column --}}
+        <div class="col-span-4 flex items-center">
+            <span @class([
+                'font-semibold text-zinc-900 dark:text-zinc-100' => $item->is_group,
+                'text-zinc-700 dark:text-zinc-300' => !$item->is_group,
+            ])>
+                {{ $item->name }}
+            </span>
+        </div>
+
+
+
+        {{-- Value Column --}}
+        <div class="flex justify-end items-center">
+            @if($item->is_group)
+                <span class="font-mono font-semibold text-zinc-900 dark:text-zinc-100">
+                    {{ $item->value->format() }}
+                </span>
+            @else
+                <span class="font-mono text-zinc-700 dark:text-zinc-300">
+                    {{ $item->value->format() }}
+                </span>
+            @endif
+        </div>
+
+        {{-- Booked Column --}}
+        <div class="flex justify-end items-center">
+            <span class="font-mono text-zinc-500 dark:text-zinc-500">
+                {{-- TODO: Implement booked amount calculation --}}
+                -
+            </span>
+        </div>
+
+        {{-- Available Column --}}
+        <div class="flex justify-end items-center">
+            <span class="font-mono text-zinc-500 dark:text-zinc-500">
+                {{-- TODO: Implement available amount calculation --}}
+                -
+            </span>
+        </div>
+
+        {{-- Empty column for alignment --}}
+        <div></div>
+    </div>
+
+    {{-- Recursively render children with hierarchy tracking --}}
+    @if($item->is_group && $item->orderedChildren->isNotEmpty())
+        @foreach($item->orderedChildren as $child)
+            <x-budgetplan.item-group-view
+                :item="$child"
+                :level="$level + 1"
+                :last-item="[...$lastItem, $loop->last]"
+            />
+        @endforeach
     @endif
 </div>

@@ -167,7 +167,7 @@ class BudgetPlanEdit extends Component
         }
 
         // pickup all items between old and new position
-        $block = BudgetItem::whereBetween('position', [
+        $block = $item->siblings()->whereBetween('position', [
             min($current_position, $new_position),
             max($current_position, $new_position),
         ]);
@@ -181,6 +181,7 @@ class BudgetPlanEdit extends Component
             }
 
             $item->update(['position' => $new_position]);
+
         });
 
         Flux::toast('FIXME: Dragging and dropping', variant: 'success');
@@ -308,6 +309,13 @@ class BudgetPlanEdit extends Component
         }
         $item->delete();
         $this->resumItemValues($item);
+    }
+
+    public function resetPositions(): void
+    {
+        $plan = BudgetPlan::findOrFail($this->plan_id);
+        $plan->normalizePositions();
+        $this->refresh();
     }
 
     public function refresh(): void

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
 /**
  * App\Models\BudgetItem
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class BudgetItem extends Model
 {
     use HasFactory;
+    use HasRecursiveRelationships;
 
     /**
      * The table associated with the model.
@@ -40,6 +42,7 @@ class BudgetItem extends Model
      */
     protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
 
+
     public function bookings(): HasMany
     {
         return $this->hasMany('tbd', 'titel_id');
@@ -48,16 +51,6 @@ class BudgetItem extends Model
     public function budgetPlan(): BelongsTo
     {
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
-    }
-
-    public function parent(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'parent_id');
-    }
-
-    public function children(): HasMany
-    {
-        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function orderedChildren(): HasMany
@@ -74,4 +67,31 @@ class BudgetItem extends Model
             'value' => MoneyDecimalCast::class,
         ];
     }
+
+    /**
+     * Get the custom paths for the model.
+     * @see https://github.com/staudenmeir/laravel-adjacency-list#custom-paths
+     * Usable to sort the whole tree by position
+     */
+    public function getCustomPaths(): array
+    {
+        return [
+            [
+                'name' => 'position_path',
+                'column' => 'position',
+                'separator' => '.',
+            ],
+        ];
+    }
+
+    public function normalizeChildPositionValues(): void
+    {
+        $idx = 0;
+        $this->orderedChildren()
+            ->each(function($child) use (&$idx) {
+                $child->update(['position' => $idx++]);
+            });
+    }
+
+
 }

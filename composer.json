@@ -32,7 +32,8 @@
         "propaganistas/laravel-phone": "^5.3",
         "socialiteproviders/laravelpassport": "^4.3",
         "spatie/laravel-backup": "^8.6",
-        "spatie/regex": "*"
+        "spatie/regex": "*",
+        "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",

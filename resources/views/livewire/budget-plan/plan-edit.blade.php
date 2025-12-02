@@ -77,6 +77,9 @@
     </flux:tab.group>
     <div>
         <flux:button wire:click="save" variant="primary">{{ __('budget-plan.edit.save') }}</flux:button>
+        <flux:button wire:click="resetPositions" variant="subtle">
+            DEV: Reset Positions
+        </flux:button>
         <flux:text variant="subtle">
             Last saved yesterday
         </flux:text>
