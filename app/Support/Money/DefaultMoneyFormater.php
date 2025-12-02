@@ -6,6 +6,7 @@ use Money\Money;
 
 class DefaultMoneyFormater implements \Money\MoneyFormatter
 {
+    #[\Override]
     public function format(Money $money): string
     {
         $amount = $money->getAmount() / 100;

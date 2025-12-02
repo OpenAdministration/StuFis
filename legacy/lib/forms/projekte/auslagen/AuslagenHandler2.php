@@ -137,7 +137,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             'revocation' => true,
         ],
         'instructed' => [
-            'booked' => ['groups' => ['ref-finanzen-kv']],
+            'booked' => ['groups' => ['ref-finanzen-belege']],
             'revocation' => ['groups' => ['ref-finanzen-belege']],
         ],
         'booked' => [

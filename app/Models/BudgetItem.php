@@ -88,7 +88,7 @@ class BudgetItem extends Model
     {
         $idx = 0;
         $this->orderedChildren()
-            ->each(function($child) use (&$idx) {
+            ->each(function($child) use (&$idx): void {
                 $child->update(['position' => $idx++]);
             });
     }

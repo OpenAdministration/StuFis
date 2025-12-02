@@ -109,7 +109,7 @@ class ConvertLegacyBudgetPlans extends Command
         $maxId = 0;
 
         foreach ($legacyPlans as $plan) {
-            $planMaxId = LegacyBudgetItem::whereHas('budgetGroup', function ($query) use ($plan) {
+            $planMaxId = LegacyBudgetItem::whereHas('budgetGroup', function ($query) use ($plan): void {
                 $query->where('hhp_id', $plan->id);
             })->max('id');
 
