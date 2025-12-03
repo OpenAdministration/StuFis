@@ -1,0 +1,17 @@
+<?php
+
+namespace App\States\Project;
+
+use App\States\Project\ProjectState;
+
+class ApprovedByFinance extends ProjectState
+{
+
+    public static string $name = 'done-hv';
+
+    public function expensable(): bool
+    {
+        return true;
+    }
+
+}

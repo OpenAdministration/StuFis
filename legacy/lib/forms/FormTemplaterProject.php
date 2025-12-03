@@ -2,29 +2,33 @@
 
 namespace forms;
 
-use forms\projekte\PermissionHandler;
+use App\Models\Legacy\Project;
+use App\States\Project\Draft;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\Helper;
+use Illuminate\Support\Facades\Auth;
 
-class FormTemplater
+class FormTemplaterProject
 {
     private static $ID_DELIMITER = '__';
 
-    /**
-     * @var PermissionHandler
-     */
-    private $permissionHandler;
-
     private $noValueStringInReadOnly;
+
+    private $editAction = false;
 
     /**
      * FormTemplater constructor.
      */
-    public function __construct(PermissionHandler $permissionHandler, string $noValue = 'keine Angabe')
+    public function __construct(private Project $p, string $noValue = 'keine Angabe')
     {
-        $this->permissionHandler = $permissionHandler;
+        $this->project = $p;
         $this->noValueStringInReadOnly = $noValue;
+    }
+
+    public function wantToEdit(): void
+    {
+        $this->editAction = true;
     }
 
     public static function generateTitelSelectable($hhp_id): array
@@ -37,7 +41,8 @@ class FormTemplater
             [
                 ['type' => 'left', 'table' => 'haushaltstitel', 'on' => ['haushaltsgruppen.id', 'haushaltstitel.hhpgruppen_id']],
             ],
-            ['type' => false, 'haushaltsgruppen.id' => true, 'titel_nr' => true]);
+            ['type' => false, 'haushaltsgruppen.id' => true, 'titel_nr' => true]
+        );
         $selectable = [];
         foreach ($all_titels as /* $g_id => */ $group) {
             $ret_group = [
@@ -149,43 +154,6 @@ class FormTemplater
         return $out.(($linebreak) ? '<br>' : '');
     }
 
-    /**
-     * @param  string  $key  current    editable key
-     * @param  string  $function  editable function
-     * @param  string  $type  editable type
-     * @param  string  $value  current value
-     * @param  array  $values  value list
-     * @param  null  $values_out  value - html map
-     * @param  string  $title  hover title
-     * @param  array  $additional_params
-     * @param  string  $additional_class  class
-     * @param  string  $target_prefix  target uri prefix
-     * @param  string  $target  target uri
-     */
-    public static function jsonEditable(string $key, $function = 'edit', $type = '', $value = '', $values = ['value'], $values_out = null, $title = 'Ändern', $additional_params = [], $additional_class = '', $target_prefix = '/', $target = 'rest/forms/editable'): string
-    {
-        $opt = '';
-        if (isset($additional_params) && is_array($additional_params)) {
-            foreach ($additional_params as $k => $v) {
-                $opt .= ' data-'."{$k}=\"{$v}\"";
-            }
-        }
-        if ($type !== 'disabled') {
-            return '<div	class="editable '.$additional_class.
-                '" title="'.$title.
-                '" data-key="'.$key.
-                '" data-mfunction="'.$function.
-                '" data-type="'.$type.
-                '" data-value="'.$value.
-                '" data-target="'.$target_prefix.$target.'" '.
-                $opt.'>'.
-                (($values_out) ? $values_out[$value] : $value).
-                '</div>';
-        }
-
-        return '<div class="editable-disabled'.$additional_class.'">'.(($values_out) ? $values_out[$value] : $value).'</div>';
-    }
-
     private function getUniqueIdFromName($name): string
     {
         return htmlspecialchars(explode('[', $name)[0].self::$ID_DELIMITER.uniqid('', true));
@@ -193,11 +161,7 @@ class FormTemplater
 
     private function checkWritePermission($name): bool
     {
-        if ($this->permissionHandler->checkWritePermission() === true) {
-            return true;
-        }
-
-        return $this->permissionHandler->checkWritePermissionField($name);
+        return $this->editAction && \Auth::user()->can('update-field', [$this->project, $name]);
     }
 
     private function constructValidatorStrings($validatorArray): array
@@ -266,7 +230,11 @@ class FormTemplater
 
     private function checkVisibility($name): bool
     {
-        return $this->permissionHandler->isVisibleField($name);
+        $state = $this->project->state;
+        return match ($state::class) {
+            Draft::class => !($name === "recht" || $name === "recht-additional" || $name === "posten-titel"),
+            default => true
+        };
     }
 
     private function constructWidthClasses($width): array
@@ -533,7 +501,7 @@ class FormTemplater
         }
         $out = '';
 
-        $editable = ((count($names) === 0 || (count($names) === 1 && ! $names[0])) ? true : $this->permissionHandler->isEditable($names, 'and'));
+        $editable = $this->editAction && Auth::user()->can('update', $this->project);
         $unique_id0 = $this->getUniqueIdFromName($names[0]);
 
         if ($editable) {
@@ -581,5 +549,43 @@ class FormTemplater
     public function getHiddenActionInput($actionName): string
     {
         return "<input type='hidden' name='action' value='$actionName'>";
+    }
+
+    public function getWikiLinkForm($name, $value = '', $width = 12, $placeholder = '', $label_text = '', $validator = [], $linkPrefix = ''): string
+    {
+        $unique_id = htmlspecialchars($this->getUniqueIdFromName($name));
+        $editable = $this->checkWritePermission($name);
+        $out = '';
+
+        if ($editable) {
+            $additonal_array = $this->constructValidatorStrings($validator);
+            $type = 'text';
+            if (isset($validator['email'])) {
+                $type = 'email';
+            }
+            $additonal_str = implode(' ', $additonal_array);
+
+            $value = htmlspecialchars($value);
+            if (isset($linkPrefix) && ! empty($linkPrefix)) {
+                $out .= "<div class='input-group'>";
+                $out .= "<div class='input-group-addon form-field-to-replace'>".$linkPrefix.'</div>';
+            }
+            $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
+            if (isset($linkPrefix) && ! empty($linkPrefix)) {
+                $out .= '</div>';
+            }
+        } else {
+            if (! empty($linkPrefix) && ! empty($value)) {
+                $out .= "<div id='$unique_id'>
+                            <a target='_blank' href='".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value)."'>".
+                    "<i class='fa fa-fw fa-wikipedia-w'></i> ".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value).
+                    '</a>
+                         </div>';
+            } else {
+                $out .= "<div id='$unique_id'>".$this->getReadOnlyValue($value).'</div>';
+            }
+        }
+
+        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 }

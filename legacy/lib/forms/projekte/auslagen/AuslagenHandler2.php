@@ -18,6 +18,7 @@ use framework\LatexGenerator;
 use framework\render\html\BT;
 use framework\render\HTMLPageRenderer;
 use framework\render\JsonController;
+use framework\render\Renderer;
 use framework\svg\SvgDiagram;
 use framework\svg\SvgDiagramAddingBeam;
 use framework\svg\SvgDiagramPie;
@@ -38,7 +39,7 @@ use Illuminate\Support\Facades\File;
  *
  * @copyright         Copyright Referat IT (C) 2018 - All rights reserved
  */
-class AuslagenHandler2 extends FormHandlerInterface
+class AuslagenHandler2 extends Renderer
 {
     // ---------------------------------------------------------
     /* ------- MEMBER VARIABLES -------- */

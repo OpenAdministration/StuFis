@@ -31,6 +31,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('hhp/{hhp_id}/titel/{titel_id}', [LegacyController::class, 'render'])->name('hhp.titel.view');
     Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-projekt');
     Route::get('projekt/{projekt_id}', [LegacyController::class, 'render'])->name('projekt');
+    Route::get('projekt/{projekt_id}/edit', [LegacyController::class, 'render'])->name('projekt.edit');
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
 
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');

@@ -1,0 +1,96 @@
+<?php
+
+namespace App\States\Project;
+
+use Spatie\ModelStates\Exceptions\InvalidConfig;
+use Spatie\ModelStates\State;
+use Spatie\ModelStates\StateConfig;
+
+abstract class ProjectState extends State
+{
+    public static string $name;
+    public function color() : string {
+        return "bg-indigo-500";
+    }
+    public function label() : string {
+        return __('project.stateNames.' . static::$name);
+    }
+    public function actionLabel() : string {
+        return __('project.stateActions.' . static::$name);
+    }
+
+    public function expensable() : bool {
+        return false;
+    }
+
+    /**
+     * @return StateConfig
+     * @throws InvalidConfig
+     */
+    public static function config(): StateConfig
+    {
+        $config = parent::config()
+            ->default(Draft::class)
+            ->allowTransition(Draft::class, Applied::class)
+            ->allowTransition([ApprovedByOrg::class, ApprovedByFinance::class, ApprovedByOther::class], Terminated::class)
+            ->allowTransition([NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
+            ->allowTransition([Revoked::class], Draft::class)
+        ;
+
+        // here would be some dynamic logic from config possible
+
+        $config = $config->allowTransition([
+            Applied::class,
+            NeedFinanceApproval::class,
+            ApprovedByFinance::class,
+            //NeedOrgApproval::class,
+            ApprovedByOrg::class,
+            ApprovedByOther::class,
+            Terminated::class
+        ], NeedOrgApproval::class);
+
+        $config = $config->allowTransition([
+            Applied::class,
+            NeedFinanceApproval::class,
+            ApprovedByFinance::class,
+            NeedOrgApproval::class,
+            //ApprovedByOrg::class,
+            ApprovedByOther::class,
+            Terminated::class
+        ], ApprovedByOrg::class);
+
+
+        $config = $config->allowTransition([
+            Applied::class,
+            //NeedFinanceApproval::class,
+            ApprovedByFinance::class,
+            NeedOrgApproval::class,
+            ApprovedByOrg::class,
+            ApprovedByOther::class,
+            Terminated::class
+        ], NeedFinanceApproval::class);
+
+        $config = $config->allowTransition([
+            Applied::class,
+            NeedFinanceApproval::class,
+            //ApprovedByFinance::class,
+            NeedOrgApproval::class,
+            ApprovedByOrg::class,
+            ApprovedByOther::class,
+            Terminated::class
+        ], ApprovedByOrg::class);
+
+        $config = $config->allowTransition([
+            Applied::class,
+            NeedFinanceApproval::class,
+            ApprovedByFinance::class,
+            NeedOrgApproval::class,
+            ApprovedByOrg::class,
+            //ApprovedByOther::class,
+            Terminated::class
+        ], ApprovedByOrg::class);
+
+        return $config;
+    }
+
+}

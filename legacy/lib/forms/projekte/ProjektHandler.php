@@ -3,14 +3,14 @@
 namespace forms\projekte;
 
 use App\Exceptions\LegacyDieException;
-use App\Models\Legacy\Expense;
-use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\ExpenseReceiptPost;
+use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectPost;
 use App\Models\User;
+use App\States\Project\Draft;
+use App\States\Project\ProjectState;
 use forms\chat\ChatHandler;
-use forms\FormHandlerInterface;
-use forms\FormTemplater;
+use forms\FormTemplaterProject;
 use forms\projekte\auslagen\AuslagenHandler2;
 use forms\projekte\exceptions\IllegalStateException;
 use forms\projekte\exceptions\InvalidDataException;
@@ -18,18 +18,16 @@ use forms\projekte\exceptions\WrongVersionException;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\HTMLPageRenderer;
+use framework\render\Renderer;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use PDOException;
 
-class ProjektHandler extends FormHandlerInterface
+class ProjektHandler extends Renderer
 {
+
     private static $emptyData;
-
-    private static $states;
-
-    private static $stateChanges;
-
-    private static $printModes;
 
     private static $visibleFields;
 
@@ -44,7 +42,6 @@ class ProjektHandler extends FormHandlerInterface
     /**
      * @var PermissionHandler
      */
-    private $permissionHandler;
 
     private $id;
 
@@ -62,9 +59,10 @@ class ProjektHandler extends FormHandlerInterface
         $this->action = $pathInfo['action'];
         if ($this->action === 'create' || ! isset($pathInfo['pid'])) {
             $this->data = self::$emptyData;
-            $stateNow = 'draft';
+            $this->templater = new FormTemplaterProject(new Project());
         } else {
             $this->id = $pathInfo['pid'];
+            $project = Project::findOrFail($this->id);
             $res = DBConnector::getInstance()->dbFetchAll(
                 'projekte',
                 [DBConnector::FETCH_ASSOC],
@@ -94,93 +92,13 @@ class ProjektHandler extends FormHandlerInterface
                 $this->data['posten-ausgaben'][$idx+1] = $row['ausgaben'];
                 $this->data['posten-titel'][$idx+1] = $row['titel_id'];
             }
-            $stateNow = $this->data['state'];
+            $this->templater = new FormTemplaterProject($project);
         }
 
-        $editMode = $this->action === 'create' || $this->action === 'edit';
-        $owners = [
-            'gremien' => $this->data['org'],
-            'mail' => $this->data['responsible'].'@'.ORG_DATA['mail-domain'],
-        ];
-        $this->stateHandler = new StateHandler('projekte', self::$states, self::$stateChanges, [], [], $stateNow, $owners);
-        $this->permissionHandler = new PermissionHandler(
-            self::$emptyData,
-            $this->stateHandler,
-            self::$writePermissionAll,
-            self::$writePermissionFields,
-            self::$visibleFields,
-            $editMode
-        );
-        $this->templater = new FormTemplater($this->permissionHandler);
     }
 
     public static function initStaticVars(): bool
     {
-        if (isset(self::$states)) {
-            return false;
-        }
-        self::$states = [
-            'draft' => ['Entwurf'],
-            'wip' => ['Beantragt', 'beantragen'],
-            'ok-by-hv' => ['Genehmigt durch HV (nicht verkündet)'],
-            'need-stura' => ['Warte auf Gremien-Beschluss'],
-            'ok-by-stura' => ['Genehmigt durch Gremien-Beschluss'],
-            'done-hv' => ['verkündet durch HV'],
-            'done-other' => ['Genehmigt'],
-            'revoked' => [
-                'Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)',
-                'zurückziehen / ablehnen',
-            ],
-            'terminated' => ['Abgeschlossen (keine weiteren Ausgaben)', 'beenden'],
-        ];
-        self::$stateChanges = [
-            'draft' => [
-                'wip' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
-            ],
-            'wip' => [
-                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
-                'need-stura' => ['groups' => ['ref-finanzen-hv']],
-                'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
-                'done-other' => ['groups' => ['ref-finanzen-hv']],
-                'revoked' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
-            ],
-            'ok-by-hv' => [
-                'done-hv' => ['groups' => ['ref-finanzen-hv']],
-                'need-stura' => ['groups' => ['ref-finanzen-hv']],
-            ],
-            'need-stura' => [
-                'ok-by-stura' => ['groups' => ['ref-finanzen-hv']],
-                'ok-by-hv' => ['groups' => ['ref-finanzen-hv']],
-                'revoked' => ['groups' => ['ref-finanzen-hv']],
-            ],
-            'done-hv' => [
-                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-            ],
-            'done-other' => [
-                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-            ],
-            'ok-by-stura' => [
-                'terminated' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-            ],
-            'revoked' => [
-                'wip' => ['groups' => ['ref-finanzen-belege']],
-                'draft' => ['owner' => true, 'groups' => ['ref-finanzen-belege']],
-            ],
-            'terminated' => [
-                'done-hv' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-                'done-other' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-                'ok-by-stura' => ['owner' => true, 'groups' => ['ref-finanzen-hv']],
-            ],
-        ];
-        self::$printModes = [
-            'zahlungsanweisung' => [
-                'title' => 'Titelseite drucken',
-                'condition' => [
-                    ['state' => 'draft', 'group' => 'ref-finanzen'],
-                    ['state' => 'ok-by-stura', 'group' => 'ref-finanzen'],
-                ],
-            ],
-        ];
 
         self::$emptyData = [
             'id' => '',
@@ -328,21 +246,20 @@ class ProjektHandler extends FormHandlerInterface
         return new ProjektHandler(['pid' => $projekt_id, 'action' => 'none']);
     }
 
-    public static function getStateStringFromName($statename)
+    public static function getStateStringFromName(string $statename)
     {
-        self::initStaticVars();
-
-        return self::$states[$statename][0];
+        $state = ProjectState::make($statename, new Project());
+        return $state->label();
     }
 
     /**
      * @throws PDOException
      * @throws WrongVersionException
-     * @throws InvalidDataException
      */
     public function updateSavedData($data): bool
     {
         DB::beginTransaction();
+        $project = Project::findOrFail($this->id);
         $data = array_intersect_key($data, self::$emptyData);
         $version = (int) $data['version'];
 
@@ -412,7 +329,7 @@ class ProjektHandler extends FormHandlerInterface
         // check if fields editable
         $fields = $generatedFields;
         foreach ($data as $name => $content) {
-            if ($this->permissionHandler->isEditable($name) && $this->permissionHandler->isVisibleField($name)) {
+            if (Auth::user()->can('update-field', [$project, $name])) {
                 if (! empty($content)) {
                     $fields[$name] = $content;
                 } else {
@@ -423,52 +340,49 @@ class ProjektHandler extends FormHandlerInterface
             }
         }
         $retMetaUpdate = DBConnector::getInstance()->dbUpdate(
-            'projekte',
-            ['id' => $this->id, 'version' => $version],
-            $fields
-        ) === 1;
+                'projekte',
+                ['id' => $this->id, 'version' => $version],
+                $fields
+            ) === 1;
 
-        if ($this->permissionHandler->isEditable(
-            ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
-            'and'
-        )) {
-            // update old posten, create new, delete old
 
-            // update old posten (last minrow is empty all the time
-            $nextFreeId = max($extractFields['posten-id']);
+        // update old posten, create new, delete old
 
-            // protocol which ids got used, so we can delete everything else afterwards
-            $used_ids = [];
+        // update old posten (last minrow is empty all the time
+        $nextFreeId = max($extractFields['posten-id']);
 
-            for ($i = 0; $i < $minRows - 1; $i++) {
-                $id = ((int)$extractFields['posten-id'][$i]);
-                if ($id === 0) {
-                    $id = ++$nextFreeId;
-                }
-                $used_ids[] = $id;
-                ProjectPost::updateOrInsert(['id' =>  $id , 'projekt_id' => $this->id], [
-                    'name' => $extractFields['posten-name'][$i],
-                    'bemerkung' => $extractFields['posten-bemerkung'][$i],
-                    'einnahmen' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-einnahmen'][$i], 'money'),
-                    'ausgaben' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-ausgaben'][$i], 'money'),
-                    'titel_id' => $extractFields['posten-titel'][$i],
-                ]);
+        // protocol which ids got used, so we can delete everything else afterwards
+        $used_ids = [];
+
+        for ($i = 0; $i < $minRows - 1; $i++) {
+            $id = ((int)$extractFields['posten-id'][$i]);
+            if ($id === 0) {
+                $id = ++$nextFreeId;
             }
-            $project_id = $this->id;
-            $used_posten_deleted = ExpenseReceiptPost::whereNotIn('projekt_posten_id', $used_ids)
-                ->whereHas('expensesReceipt.expense', function ($query) use ($project_id) {
-                    $query->where('projekt_id', $project_id);
-                })->exists();
-
-            if ($used_posten_deleted) {
-                throw new InvalidDataException('Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden');
-            }
-
-            ProjectPost::whereNotIn('id', $used_ids)->delete();
-
-            DB::commit();
-            return true;
+            $used_ids[] = $id;
+            ProjectPost::updateOrInsert(['id' =>  $id , 'projekt_id' => $this->id], [
+                'name' => $extractFields['posten-name'][$i],
+                'bemerkung' => $extractFields['posten-bemerkung'][$i],
+                // FIXME: use new money type
+                'einnahmen' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-einnahmen'][$i], 'money'),
+                'ausgaben' => DBConnector::getInstance()->convertUserValueToDBValue($extractFields['posten-ausgaben'][$i], 'money'),
+                'titel_id' => $extractFields['posten-titel'][$i],
+            ]);
         }
+        $project_id = $this->id;
+        $used_posten_deleted = ExpenseReceiptPost::whereNotIn('projekt_posten_id', $used_ids)
+            ->whereHas('expensesReceipt.expense', function ($query) use ($project_id) {
+                $query->where('projekt_id', $project_id);
+            })->exists();
+
+        if ($used_posten_deleted) {
+            throw new InvalidDataException(__('project.error.posten_illegal_deleted'));
+        }
+
+        ProjectPost::whereNotIn('id', $used_ids)->delete();
+
+        DB::commit();
+
 
         return $retMetaUpdate;
     }
@@ -478,34 +392,37 @@ class ProjektHandler extends FormHandlerInterface
      */
     public function setState($stateName): bool
     {
-        if (! in_array($stateName, $this->getNextPossibleStates(), true)) {
-            throw new IllegalStateException("In den Status $stateName kann nicht gewechselt werden");
-        }
+        $project = Project::findOrFail($this->id);
+        $newState = ProjectState::make($stateName, $project);
 
-        $user_id = DBConnector::getInstance()->getUser()['id'];
-        DBConnector::getInstance()->dbUpdate(
-            'projekte',
-            ['id' => $this->id, 'version' => $this->data['version']],
-            [
+        // Check if transtion is possible and user is authorized to make this transition
+        Gate::authorize('transition-to', [$project, $newState]);
+
+        // Start database transaction
+        return DB::transaction(function () use ($project, $stateName, $newState) {
+
+            // Create chat message for state transition
+            $chat = new ChatHandler('projekt', $this->id);
+            $chat->_createComment(
+                'projekt',
+                $this->id,
+                now()->format('Y-m-d H:i:s'),
+                'system',
+                '',
+                $project->state->label() . ' -> ' . $newState->label(),
+                1
+            );
+
+            // Update project state
+            $project->update([
                 'state' => $stateName,
-                'stateCreator_id' => $user_id,
-                'lastupdated' => date('Y-m-d H:i:s'),
-                'version' => ($this->data['version'] + 1),
-            ]
-        );
-        $chat = new ChatHandler('projekt', $this->id);
-        $chat->_createComment(
-            'projekt',
-            $this->id,
-            date_create()->format('Y-m-d H:i:s'),
-            'system',
-            '',
-            self::$states[$this->data['state']][0].' -> '.self::$states[$stateName][0],
-            1
-        );
-        $this->stateHandler->transitionTo($stateName);
+                'stateCreator_id' => Auth::id(),
+                'lastupdated' => now(),
+                'version' => $project->version + 1
+            ]);
 
-        return true;
+            return true;
+        });
     }
 
     public function getNextPossibleStates(): array
@@ -516,20 +433,19 @@ class ProjektHandler extends FormHandlerInterface
     public function render(): void
     {
         if ($this->action === 'create' || ! isset($this->id)) {
-            $this->renderProjekt('neues Projekt anlegen');
+            $this->renderProjekt('neues Projekt anlegen', true);
 
             return;
         }
-
         switch ($this->action) {
             case 'edit':
                 $this->renderBackButton();
-                $this->renderProjekt('Projekt bearbeiten');
+                $this->renderProjekt('Projekt bearbeiten', true);
                 break;
             case 'view':
                 $this->renderInteractionPanel();
                 // echo $this->templater->getStateChooser($this->stateHandler);
-                $this->renderProjekt('Projekt '.$this->id);
+                $this->renderProjekt('Projekt '.$this->id, false);
                 $this->render_chat_box();
                 $this->renderProjektSizeGrafic();
                 $this->renderAuslagenList();
@@ -540,20 +456,21 @@ class ProjektHandler extends FormHandlerInterface
         }
     }
 
-    private function renderProjekt($title): void
+    private function renderProjekt($title, bool $edit): void
     {
+        if($edit) $this->templater->wantToEdit();
         $auth = AuthHandler::getInstance();
+        $model = Project::find($this->id) ?? new Project();
         $validateMe = false;
-        $editable = $this->permissionHandler->isAnyDataEditable();
+        $editable = $edit && Auth::user()->can('update', $model);
         // build dropdowns
-        $selectable_gremien = FormTemplater::generateGremienSelectable();
+        $selectable_gremien = FormTemplaterProject::generateGremienSelectable();
         $selectable_gremien['values'] = $this->data['org'];
 
         $mailingLists = $auth->hasGroup('ref-finanzen') ? MAILINGLISTS : AuthHandler::getInstance()->getUserMailinglists();
-        $selectable_mail = FormTemplater::generateSelectable($mailingLists);
+        $selectable_mail = FormTemplaterProject::generateSelectable($mailingLists);
         $selectable_mail['values'] = $this->data['org-mail'];
-
-        $sel_recht = FormTemplater::generateSelectable(array_combine(
+        $sel_recht = FormTemplaterProject::generateSelectable(array_combine(
             array_keys(ORG_DATA['rechtsgrundlagen']),
             array_map(static function ($val) {
                 return $val['label'];
@@ -578,11 +495,12 @@ class ProjektHandler extends FormHandlerInterface
             throw new LegacyDieException(400, 'HHP-id kann nicht ermittelt werden. Bitte benachrichtigen sie den Administrator');
         }
         $hhpId = $hhpId[0]['id'];
-        $selectable_titel = FormTemplater::generateTitelSelectable($hhpId); ?>
+        $selectable_titel = FormTemplaterProject::generateTitelSelectable($hhpId);
+        ?>
         <div class='col-xs-12 col-md-10'>
             <?php
             if ($editable) { ?>
-            <form role="form" action="<?php echo URIBASE.'rest/forms/projekt'; ?>" method="POST"
+            <form role="form" action="<?= URIBASE.'rest/forms/projekt' ?>" method="POST"
                   enctype="multipart/form-data" class="ajax">
                 <?php echo $this->templater->getHiddenActionInput(isset($this->id) ? 'update' : 'create'); ?>
                 <input type="hidden" name="nonce" value="<?= csrf_token() ?>">
@@ -591,12 +509,12 @@ class ProjektHandler extends FormHandlerInterface
                     <input type="hidden" name="id" value="<?php echo $this->id; ?>">
                 <?php } ?>
                 <?php } // endif editable?>
-                <?php if ($this->permissionHandler->isVisibleField('recht')) { ?>
+                <?php if (!$model->state->equals(Draft::class)) { ?>
                     <h2>Genehmigung</h2>
                     <div class="well">
                         <div class="hide-wrapper">
                             <div class="hide-picker">
-                                <?php echo $this->templater->getDropdownForm(
+                                <?= $this->templater->getDropdownForm(
                                     'recht',
                                     $sel_recht,
                                     6,
@@ -623,15 +541,15 @@ class ProjektHandler extends FormHandlerInterface
                                     </div>
                                     <?php
                                 }
-                    ?>
+                                ?>
                             </div>
                         </div>
                         <div class='clearfix'></div>
                     </div>
                 <?php } ?>
-                <h2><?php echo $title; ?></h2>
+                <h2><?= $title ?></h2>
                 <div class="well">
-                    <?php echo $this->templater->getTextForm(
+                    <?= $this->templater->getTextForm(
                         'name',
                         $this->data['name'],
                         6,
@@ -639,7 +557,7 @@ class ProjektHandler extends FormHandlerInterface
                         'Projektname',
                         ['required']
                     ); ?>
-                    <?php echo $this->templater->getMailForm(
+                    <?= $this->templater->getMailForm(
                         'responsible',
                         $this->data['responsible'],
                         6,
@@ -649,7 +567,7 @@ class ProjektHandler extends FormHandlerInterface
                         '@'.ORG_DATA['mail-domain']
                     ); ?>
                     <div class="clearfix"></div>
-                    <?php echo $this->templater->getDropdownForm(
+                    <?= $this->templater->getDropdownForm(
                         'org',
                         $selectable_gremien,
                         6,
@@ -681,7 +599,7 @@ class ProjektHandler extends FormHandlerInterface
                             ORG_DATA['projekt-form']['protokoll-prefix'] ?? ''
                         );
                     } ?>
-                    <?php echo $this->templater->getDatePickerForm(
+                    <?= $this->templater->getDatePickerForm(
                         ['date-start', 'date-end'],
                         [$this->data['date-start'], $this->data['date-end']],
                         12,
@@ -691,7 +609,7 @@ class ProjektHandler extends FormHandlerInterface
                         true,
                         'today'
                     ); ?>
-                    <?php echo $this->templater->getDatePickerForm(
+                    <?= $this->templater->getDatePickerForm(
                         'createdat',
                         $this->data['createdat'],
                         12,
@@ -701,11 +619,11 @@ class ProjektHandler extends FormHandlerInterface
 
                     <div class='clearfix'></div>
                 </div>
-                <?php $tablePartialEditable = $this->permissionHandler->isEditable(
+                <?php $tablePartialEditable = Auth::user()->can('update', $model) /*$this->permissionHandler->isEditable(
                     ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
                     'and'
-                ); ?>
-                <table class="table table-striped summing-table <?php echo $tablePartialEditable ? 'dynamic-table' : 'dynamic-table-readonly'; ?>">
+                );*/ ?>
+                <table class="table table-striped summing-table <?= $tablePartialEditable ? 'dynamic-table' : 'dynamic-table-readonly'; ?>">
                     <thead>
                     <tr>
                         <th></th><!-- Id  -->
@@ -713,26 +631,26 @@ class ProjektHandler extends FormHandlerInterface
                         <th></th><!-- Trashbin  -->
                         <th class="">Ein/Ausgabengruppe</th>
                         <th class="">Bemerkung</th>
-                        <th class=""><?php echo $this->permissionHandler->isVisibleField('posten-titel') ? 'Titel' : ''; ?></th>
+                        <th class=""><?= $model->state->equals(Draft::class) ? '' : 'Titel'; ?></th>
                         <th class="col-xs-2">Einnahmen</th>
                         <th class="col-xs-2">Ausgaben</th>
                     </tr>
                     </thead>
                     <tbody><?php
-        $this->data['posten-name'][] = '';
-        foreach ($this->data['posten-name'] as $row_nr => $null) {
-            $new_row = ($row_nr) === count($this->data['posten-name']);
-            if ($new_row && ! $tablePartialEditable) {
-                continue;
-            }
-            $sel_titel = $selectable_titel;
-            if (isset($this->data['posten-titel'][$row_nr])) {
-                $sel_titel['values'] = $this->data['posten-titel'][$row_nr];
-            } ?>
-                        <tr class="<?php echo $new_row ? 'new-table-row' : 'dynamic-table-row'; ?>">
-                            <td><input type="hidden" name="posten-id[]" value="<?php echo $this->data['posten-id'][$row_nr] ?? ''; ?>"></td>
+                    $this->data['posten-name'][] = '';
+                    foreach ($this->data['posten-name'] as $row_nr => $null) {
+                        $new_row = ($row_nr) === count($this->data['posten-name']);
+                        if ($new_row && ! $tablePartialEditable) {
+                            continue;
+                        }
+                        $sel_titel = $selectable_titel;
+                        if (isset($this->data['posten-titel'][$row_nr])) {
+                            $sel_titel['values'] = $this->data['posten-titel'][$row_nr];
+                        } ?>
+                        <tr class="<?= $new_row ? 'new-table-row' : 'dynamic-table-row'; ?>">
+                            <td><input type="hidden" name="posten-id[]" value="<?= $this->data['posten-id'][$row_nr] ?? ''; ?>"></td>
                             <td class="row-number">
-                                <?php echo $row_nr; ?>.
+                                <?= $row_nr; ?>.
                             </td>
                             <?php if ($tablePartialEditable) { ?>
                                 <td class='delete-row'><a href='' class='delete-row'><i
@@ -740,52 +658,52 @@ class ProjektHandler extends FormHandlerInterface
                             <?php } else {
                                 echo '<td></td>';
                             } ?>
-                            <td><?php echo $this->templater->getTextForm(
-                                'posten-name[]',
-                                ! $new_row ? $this->data['posten-name'][$row_nr] : '',
-                                null,
-                                'Name des Postens',
-                                '',
-                                ['required']
-                            ); ?></td>
-                            <td><?php echo $this->templater->getTextForm(
-                                'posten-bemerkung[]',
-                                ! $new_row ? $this->data['posten-bemerkung'][$row_nr] : '',
-                                null,
-                                'optional',
-                                '',
-                                []
-                            ); ?></td>
-                            <td><?php echo $this->templater->getDropdownForm(
-                                'posten-titel[]',
-                                $sel_titel,
-                                null,
-                                'HH-Titel',
-                                '',
-                                [],
-                                true
-                            ); ?></td>
-                            <td><?php echo $this->templater->getMoneyForm(
-                                'posten-einnahmen[]',
-                                ! $new_row ? $this->data['posten-einnahmen'][$row_nr] : 0,
-                                null,
-                                '',
-                                '',
-                                ['required'],
-                                'einnahmen'
-                            ); ?></td>
-                            <td><?php echo $this->templater->getMoneyForm(
-                                'posten-ausgaben[]',
-                                ! $new_row ? $this->data['posten-ausgaben'][$row_nr] : 0,
-                                null,
-                                '',
-                                '',
-                                ['required'],
-                                'ausgaben'
-                            ); ?></td>
+                            <td><?= $this->templater->getTextForm(
+                                    'posten-name[]',
+                                    ! $new_row ? $this->data['posten-name'][$row_nr] : '',
+                                    null,
+                                    'Name des Postens',
+                                    '',
+                                    ['required']
+                                ); ?></td>
+                            <td><?= $this->templater->getTextForm(
+                                    'posten-bemerkung[]',
+                                    ! $new_row ? $this->data['posten-bemerkung'][$row_nr] : '',
+                                    null,
+                                    'optional',
+                                    '',
+                                    []
+                                ); ?></td>
+                            <td><?= $this->templater->getDropdownForm(
+                                    'posten-titel[]',
+                                    $sel_titel,
+                                    null,
+                                    'HH-Titel',
+                                    '',
+                                    [],
+                                    true
+                                ); ?></td>
+                            <td><?= $this->templater->getMoneyForm(
+                                    'posten-einnahmen[]',
+                                    ! $new_row ? $this->data['posten-einnahmen'][$row_nr] : 0,
+                                    null,
+                                    '',
+                                    '',
+                                    ['required'],
+                                    'einnahmen'
+                                ); ?></td>
+                            <td><?= $this->templater->getMoneyForm(
+                                    'posten-ausgaben[]',
+                                    ! $new_row ? $this->data['posten-ausgaben'][$row_nr] : 0,
+                                    null,
+                                    '',
+                                    '',
+                                    ['required'],
+                                    'ausgaben'
+                                ); ?></td>
                         </tr>
                         <?php
-        } ?>
+                    } ?>
                     </tbody>
                     <tfoot>
                     <tr>
@@ -820,7 +738,7 @@ class ProjektHandler extends FormHandlerInterface
                     </tr>
                     </tfoot>
                 </table>
-                <?php echo $this->templater->getTextareaForm(
+                <?= $this->templater->getTextareaForm(
                     'beschreibung',
                     $this->data['beschreibung'],
                     12,
@@ -834,19 +752,11 @@ class ProjektHandler extends FormHandlerInterface
                 <?php if ($editable) { ?>
                 <!-- do not name it "submit": http://stackoverflow.com/questions/3569072/jquery-cancel-form-submit-using-return-false -->
                 <div class="pull-right">
-                    <?php
-
-                    // foreach ($proposeNewState as $state){
-                    // $isEditable = hasPermission($form, ["state" => $state], "canEdit");
-                    // $stateTxt = "Entwurf";
-                    // $state = "draft";
-
-                    ?>
                     <button type="submit"
                             class='btn btn-success submit-form <?php echo ! $validateMe ? 'no-validate' : 'validate'; ?>'
-                            data-name="state" data-value="<?php echo htmlspecialchars($this->stateHandler->getActualState()); ?>"
-                            id="state-<?php echo htmlspecialchars($this->stateHandler->getActualState()); ?>">Speichern
-                        als <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?></button>
+                            data-name="state" data-value="<?php echo htmlspecialchars($model->state); ?>"
+                            id="state-<?php echo htmlspecialchars($model->state); ?>">Speichern
+                        als <?php echo htmlspecialchars($model->state->label()); ?></button>
                 </div>
             </form>
         <?php } ?>
@@ -868,31 +778,41 @@ class ProjektHandler extends FormHandlerInterface
     private function renderInteractionPanel(): void
     {
         $url = str_replace('//', '/', URIBASE.'projekt/'.$this->id.'/');
-        $nextValidStates = $this->stateHandler->getNextStates(true);
-        $disabledStates = array_diff($this->stateHandler->getAllAllowedTransitionableStates(), $nextValidStates); ?>
+
+        $project = Project::findOrFail($this->id);
+        $nextStates = $project->state->transitionableStateInstances();
+        $nextValidStates = [];
+        $disabledStates = [];
+        foreach ($nextStates as $nextState) {
+            if(Auth::user()->can('transition-to', [$project, $nextState])){
+                $nextValidStates[] = $nextState;
+            } else {
+                $disabledStates[] = $nextState;
+            }
+        }
+        ?>
         <div>
             <ul class="nav nav-pills nav-stacked navbar-right navbar-fixed-right">
                 <li class="label-info">
-                    <?php echo htmlspecialchars($this->stateHandler->getFullStateName()); ?>
+                    <?php echo htmlspecialchars($project->state->label()); ?>
                 </li>
-
                 <?php if (count($nextValidStates) > 0) { ?>
-                    <li><a href="#" data-toggle="modal" data-target="#editStateModal">Status ändern <i
-                                class="fa fa-fw fa-refresh"></i></a></li>
+                    <li><a href="#" data-toggle="modal" data-target="#editStateModal">
+                            Status ändern <i class="fa fa-fw fa-refresh"></i></a>
+                    </li>
                 <?php } ?>
-                <?php if (in_array($this->stateHandler->getActualState(), ['ok-by-stura', 'done-hv', 'done-other'])) { ?>
-                    <li><a href="<?php echo $url; ?>auslagen" title="Neue Abrechnung/Rechnung">neue Abrechnung&nbsp;<i
-                                class="fa fa-fw fa-plus" aria-hidden="true"></i></a></li>
+                <?php if (Auth::user()->can('create-expense', $project)) { ?>
+                    <li><a href="<?php echo $url; ?>auslagen" title="Neue Abrechnung/Rechnung">
+                            neue Abrechnung&nbsp;<i class="fa fa-fw fa-plus" aria-hidden="true"></i>
+                        </a></li>
                 <?php } ?>
-                <?php if ($this->permissionHandler->isAnyDataEditable(true) !== false) { ?>
-                    <li><a href="<?php echo $url; ?>edit" title="Bearbeiten">Bearbeiten&nbsp;<i
-                                class="fa fa-fw fa-pencil" aria-hidden="true"></i></a></li>
+                <?php if (Auth::user()->can('update', $project)) { ?>
+                    <li><a href="<?php echo $url; ?>edit" title="Bearbeiten">
+                            Bearbeiten&nbsp;<i class="fa fa-fw fa-pencil" aria-hidden="true"></i>
+                        </a></li>
                 <?php } ?>
                 <li><a href="#" data-toggle="modal" data-target="#projekt-delete-dlg">Projekt löschen&nbsp;<i
                             class="fa fa-fw fa-trash"></i></a></li>
-
-                <!--<li><a href="<?php echo ''; ?>" title="Drucken"><i class="fa fa-fw fa-print" aria-hidden="true"></i></a></li> -->
-                <!--<li><a href="<?php echo ''; ?>" title="Exportieren"><i class="fa fa-fw fa-download" aria-hidden="true"></i></a></li>-->
 
                 <!-- FIXME LIVE COMMENT ONLY
                 <li><a href="<?php echo $url; ?>history" title="Verlauf">Historie <i class="fa fa-fw fa-history"
@@ -928,22 +848,17 @@ class ProjektHandler extends FormHandlerInterface
                                         <?php
                                         foreach ($nextValidStates as $state) {
                                             echo '<option value="'.htmlspecialchars(
-                                                $state
-                                            ).'">'.htmlspecialchars(
-                                                $this->stateHandler->getFullStateNameFrom($state)
-                                            ).'</option>'.PHP_EOL;
+                                                    $state
+                                                ).'">'.htmlspecialchars($state->label()).'</option>'.PHP_EOL;
                                         }
-            ?>
+                                        ?>
                                     </optgroup>
                                     <optgroup label="Daten unvollständig">
                                         <?php
-
-            foreach ($disabledStates as $state) {
-                echo '<option disabled>'.$this->stateHandler->getFullStateNameFrom(
-                    $state
-                ).'</option>'.PHP_EOL;
-            }
-            ?>
+                                        foreach ($disabledStates as $state) {
+                                            echo '<option disabled>'. $state->label() .'</option>'.PHP_EOL;
+                                        }
+                                        ?>
                                     </optgroup>
                                 </select>
                                 <div class="help-block with-errors"></div>
@@ -958,7 +873,7 @@ class ProjektHandler extends FormHandlerInterface
                 </div>
             </div>
         </form>
-        <?php }
+    <?php }
         $hasPermission = $this->isOwner() || AuthHandler::getInstance()->hasGroup('ref-finanzen-hv');
         $hasNoAbrechnungen = $this->hasAuslagen() === false;
         $permissionIcon = $hasPermission ? 'fa-check' : 'fa-ban';
@@ -985,7 +900,7 @@ class ProjektHandler extends FormHandlerInterface
                 },
                 actionButtonType: 'submit'
             );
-        ?>
+            ?>
         </form>
         <?php
     }
@@ -1010,37 +925,37 @@ class ProjektHandler extends FormHandlerInterface
         <div class='clearfix'></div>
         <div class="col-xs-12 col-md-10" id="projektchat">
             <?php
-        $auth = AuthHandler::getInstance();
-        $btns = [];
-        $pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
-        $pdate->modify('+1 year');
-        $now = date_create();
-        // allow chat only 90 days into next year
-        if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
-            $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
-            /*
-            if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() === $this->data['username']) {
-                $btns[] = [
-                    'label' => 'Private Nachricht',
-                    'color' => 'warning',
-                    'type' => '-1',
-                    'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
-                ];
+            $auth = AuthHandler::getInstance();
+            $btns = [];
+            $pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
+            $pdate->modify('+1 year');
+            $now = date_create();
+            // allow chat only 90 days into next year
+            if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
+                $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+                /*
+                if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() === $this->data['username']) {
+                    $btns[] = [
+                        'label' => 'Private Nachricht',
+                        'color' => 'warning',
+                        'type' => '-1',
+                        'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
+                    ];
+                }
+                */
+                if ($auth->hasGroup('ref-finanzen')) {
+                    $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+                }
+                if ($auth->hasGroup('admin')) {
+                    $btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
+                }
             }
-            */
-            if ($auth->hasGroup('ref-finanzen')) {
-                $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
-            }
-            if ($auth->hasGroup('admin')) {
-                $btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
-            }
-        }
-        ChatHandler::renderChatPanel(
-            'projekt',
-            $this->id,
-            $auth->getUserFullName().' ('.$auth->getUsername().')',
-            $btns
-        ); ?>
+            ChatHandler::renderChatPanel(
+                'projekt',
+                $this->id,
+                $auth->getUserFullName().' ('.$auth->getUsername().')',
+                $btns
+            ); ?>
         </div>
         <?php
     }
@@ -1059,7 +974,7 @@ class ProjektHandler extends FormHandlerInterface
         <div id='projekt-well' class="well col-xs-12 col-md-10">
             <?php
             $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
-        $ah->render_project_auslagen(true); ?>
+            $ah->render_project_auslagen(true); ?>
         </div>
         <?php
     }

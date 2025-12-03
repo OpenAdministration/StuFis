@@ -4,11 +4,13 @@ namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
 use App\Models\User;
+use App\States\Project\ProjectState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\ModelStates\HasStates;
 
 /**
  * App\Models\Legacy\Project
@@ -18,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $createdat
  * @property string $lastupdated
  * @property int $version
- * @property string $state
+ * @property ProjectState $state
  * @property int $stateCreator_id
  * @property string $name
  * @property string $responsible
@@ -65,6 +67,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Project extends Model
 {
     use HasFactory;
+    use HasStates;
 
     /**
      * The table associated with the model.
@@ -74,6 +77,14 @@ class Project extends Model
     protected $table = 'projekte';
 
     public $timestamps = false;
+
+    public $casts = [
+        'state' => ProjectState::class,
+        'createdat' => 'datetime',
+        'lastupdated' => 'datetime',
+        'date_start' => 'date',
+        'date_end' => 'date',
+    ];
 
     /**
      * @var array
@@ -86,7 +97,7 @@ class Project extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(\App\Models\Legacy\Expense::class, 'projekt_id');
+        return $this->hasMany(\App\Models\Legacy\Expense::class, 'projekt_id', 'id');
     }
 
     public function creator(): BelongsTo
@@ -103,4 +114,5 @@ class Project extends Model
     {
         return $this->hasMany(ProjectPost::class, 'projekt_id');
     }
+
 }
