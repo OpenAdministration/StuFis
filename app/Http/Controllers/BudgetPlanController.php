@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use Illuminate\Http\RedirectResponse;
 
 class BudgetPlanController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', BudgetPlan::class);
+
         $years = FiscalYear::orderByDesc('start_date')->get();
 
         $orphaned_plans = BudgetPlan::doesntHave('fiscalYear')->get();
@@ -20,19 +23,18 @@ class BudgetPlanController extends Controller
     public function show(int $plan_id)
     {
         $plan = BudgetPlan::findOrFail($plan_id);
-
+        $this->authorize('view', $plan);
         $items = [
-            BudgetType::EXPENSE->slug() => $plan->rootBudgetItems()->with('children')
-                ->where('budget_type', BudgetType::EXPENSE)->get(),
-            BudgetType::INCOME->slug() => $plan->rootBudgetItems()->with('children')
-                ->where('budget_type', BudgetType::INCOME)->get(),
+            BudgetType::INCOME->slug() => $plan->budgetItemsTree(BudgetType::INCOME),
+            BudgetType::EXPENSE->slug() => $plan->budgetItemsTree(BudgetType::EXPENSE),
         ];
 
         return view('budget-plan.view', ['plan' => $plan, 'items' => $items]);
     }
 
-    public function create()
+    public function create(): RedirectResponse
     {
+        $this->authorize('create', BudgetPlan::class);
         $plan = BudgetPlan::create(['state' => 'draft']);
         $groups = $plan->budgetItems()->createMany([
             ['is_group' => 1, 'budget_type' => BudgetType::INCOME, 'position' => 0, 'short_name' => 'E1'],
@@ -52,3 +54,5 @@ class BudgetPlanController extends Controller
         return redirect()->route('budget-plan.edit', ['plan_id' => $plan->id]);
     }
 }
+
+
