@@ -45,12 +45,20 @@ class ProjectPost extends Model
     /**
      * @var array
      */
-    protected $fillable = ['titel_id', 'einnahmen', 'ausgaben', 'name', 'bemerkung',
-        'id'
-    ];
+    protected $fillable = ['titel_id', 'einnahmen', 'ausgaben', 'name', 'bemerkung', 'id'];
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'projekt_id');
+        return $this->belongsTo(Project::class, 'projekt_id', 'id');
     }
+
+    public function expensePosts() : \Illuminate\Database\Eloquent\Builder
+    {
+        $expenses_id = $this->project->expenses()->get('id');
+        return ExpenseReceiptPost::where('projekt_posten_id', $this->id)
+            ->whereHas('expensesReceipt', function ($query) use ($expenses_id) {
+                $query->whereIn('auslagen_id', $expenses_id);
+            });
+    }
+
 }
