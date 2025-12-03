@@ -2,7 +2,11 @@
 
 namespace App\Models\Legacy;
 
+use App\Models\Enums\ChatMessageType;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * App\Models\Legacy\ChatMessage
@@ -16,17 +20,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $text
  * @property int $type
  *
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage query()
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereCreator($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereCreatorAlias($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereTarget($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereTargetId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereText($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereTimestamp($value)
- * @method static \Illuminate\Database\Eloquent\Builder|ChatMessage whereType($value)
+ * @method static Builder|ChatMessage newModelQuery()
+ * @method static Builder|ChatMessage newQuery()
+ * @method static Builder|ChatMessage query()
+ * @method static Builder|ChatMessage whereCreator($value)
+ * @method static Builder|ChatMessage whereCreatorAlias($value)
+ * @method static Builder|ChatMessage whereId($value)
+ * @method static Builder|ChatMessage whereTarget($value)
+ * @method static Builder|ChatMessage whereTargetId($value)
+ * @method static Builder|ChatMessage whereText($value)
+ * @method static Builder|ChatMessage whereTimestamp($value)
+ * @method static Builder|ChatMessage whereType($value)
  *
  * @mixin \Eloquent
  */
@@ -44,5 +48,18 @@ class ChatMessage extends Model
     /**
      * @var array
      */
-    protected $fillable = ['target_id', 'target', 'timestamp', 'creator', 'creator_alias', 'text', 'type'];
+    protected $fillable = ['target_id', 'target', 'timestamp', 'creator', 'creator_alias', 'text', 'type',
+        'content'
+    ];
+
+    protected $casts = [
+        'timestamp' => 'datetime',
+        'type' => ChatMessageType::class,
+        'text' => 'encrypted',
+    ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'creator', 'username');
+    }
 }

@@ -85,13 +85,12 @@ class User extends Authenticatable
         'name',
         'username',
         'email',
-        'password',
         'provider',
         'provider_uid',
         'picture_url',
         'iban',
         'address',
-        'version',
+        'version', // last seen application version
     ];
 
     /**
