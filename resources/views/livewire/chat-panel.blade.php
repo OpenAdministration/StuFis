@@ -32,13 +32,11 @@
                             </div>
                             <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">{{ $message->timestamp->diffForHumans() }}</time>
                         </div>
-                        <p class="text-sm/6 text-gray-500">{{ $message->text }}</p>
+                        <p class="text-sm/6 text-gray-500">{!! $message->text !!}</p>
                     </div>
                 </li>
             @elseif($message->type === ChatMessageType::SUPPORT)
-                tbd
             @elseif($message->type === ChatMessageType::FINANCE)
-                tbd
             @endif
         @endforeach
 

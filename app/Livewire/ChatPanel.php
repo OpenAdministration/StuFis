@@ -32,10 +32,12 @@ class ChatPanel extends Component
 
     public function save() {
 
-        $this->validate(['content' => 'required|min:1|']);
+        $this->validate(['content' => 'required|min:1']);
+
+        $cleanContent = strip_tags($this->content, '<p><br><strong><em><ul><ol><li><a><h1><h2><h3>');
 
         ChatMessage::create([
-            'text' => $this->content,
+            'text' => $cleanContent,
             'type' => ChatMessageType::PUBLIC,
             'target' => $this->targetType,
             'target_id' => $this->targetId,
