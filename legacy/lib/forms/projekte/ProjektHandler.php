@@ -63,34 +63,15 @@ class ProjektHandler extends Renderer
         } else {
             $this->id = $pathInfo['pid'];
             $project = Project::findOrFail($this->id);
-            $res = DBConnector::getInstance()->dbFetchAll(
-                'projekte',
-                [DBConnector::FETCH_ASSOC],
-                ['projekte.*'],
-                ['projekte.id' => $this->id],
-                [
-                    ['type' => 'left', 'table' => 'user', 'on' => [['user.id', 'projekte.creator_id']]],
-                ],
-                ['version' => true]
-            );
-            if (! empty($res)) {
-                $this->data = $res[0];
-            } else {
-                abort(404);
-            }
-            $tmp = DBConnector::getInstance()->dbFetchAll(
-                'projektposten',
-                [DBConnector::FETCH_ASSOC],
-                [],
-                ['projekt_id' => $this->id]
-            );
-            foreach ($tmp as $idx => $row) {
-                $this->data['posten-id'][$idx+1] = $row['id'];
-                $this->data['posten-name'][$idx+1] = $row['name'];
-                $this->data['posten-bemerkung'][$idx+1] = $row['bemerkung'];
-                $this->data['posten-einnahmen'][$idx+1] = $row['einnahmen'];
-                $this->data['posten-ausgaben'][$idx+1] = $row['ausgaben'];
-                $this->data['posten-titel'][$idx+1] = $row['titel_id'];
+            $this->data = $project->getAttributes();
+
+            foreach ($project->posts as $idx => $post) {
+                $this->data['posten-id'][$idx+1] = $post->id;
+                $this->data['posten-name'][$idx+1] = $post->name;
+                $this->data['posten-bemerkung'][$idx+1] = $post->bemerkung;
+                $this->data['posten-einnahmen'][$idx+1] = $post->einnahmen->getAmount()/100;
+                $this->data['posten-ausgaben'][$idx+1] = $post->ausgaben->getAmount()/100;
+                $this->data['posten-titel'][$idx+1] = $post->titel_id;
             }
             $this->templater = new FormTemplaterProject($project);
         }
@@ -339,12 +320,7 @@ class ProjektHandler extends Renderer
                 throw new LegacyDieException(403, "Du hast keine Berechtigung '$name' zu schreiben.");
             }
         }
-        $retMetaUpdate = DBConnector::getInstance()->dbUpdate(
-                'projekte',
-                ['id' => $this->id, 'version' => $version],
-                $fields
-            ) === 1;
-
+        $project->update($fields);
 
         // update old posten, create new, delete old
 
@@ -382,9 +358,7 @@ class ProjektHandler extends Renderer
         ProjectPost::whereNotIn('id', $used_ids)->delete();
 
         DB::commit();
-
-
-        return $retMetaUpdate;
+        return true;
     }
 
     /**
@@ -619,7 +593,7 @@ class ProjektHandler extends Renderer
 
                     <div class='clearfix'></div>
                 </div>
-                <?php $tablePartialEditable = Auth::user()->can('update', $model) /*$this->permissionHandler->isEditable(
+                <?php $tablePartialEditable = $editable && Auth::user()->can('update', $model) /*$this->permissionHandler->isEditable(
                     ['posten-name', 'posten-bemerkung', 'posten-einnahmen', 'posten-ausgaben'],
                     'and'
                 );*/ ?>
