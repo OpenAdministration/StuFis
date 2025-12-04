@@ -94,7 +94,7 @@ abstract class ProjectState extends State
             ApprovedByOrg::class,
             //ApprovedByOther::class,
             Terminated::class
-        ], ApprovedByOrg::class);
+        ], ApprovedByOther::class);
 
         return $config;
     }

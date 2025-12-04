@@ -78,6 +78,8 @@ return [
         'expenses' => [
             'heading' => 'Im Projekt vorhandene Abrechnungen',
             'none' => 'Keine',
+            'total_in' => 'Einnahmen',
+            'total_out' => 'Ausgaben',
         ],
         'state-modal' => [
             'heading' => 'Status wechseln',

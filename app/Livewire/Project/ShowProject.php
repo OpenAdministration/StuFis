@@ -6,6 +6,7 @@ use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Project;
 use App\States\Project\ProjectState;
+use Cknow\Money\Money;
 use Flux\Flux;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -22,7 +23,29 @@ class ShowProject extends Component
     public function render()
     {
         $project = Project::findOrFail($this->project_id);
-        return view('livewire.project.show', compact('project'));
+        $postTable = [
+            'footer' => ['used' => Money::EUR(0), 'ration' => null],
+        ];
+        foreach ($project->posts as $post){
+
+            $in  = Money::EUR($post->expensePosts()->sum('einnahmen'));
+            $out = Money::EUR($post->expensePosts()->sum('ausgaben'));
+            $used = $out->subtract($in);
+
+            $postTable[$post->id]['used'] = $used;
+            $postTable[$post->id]['ration'] = !$used->isZero() ? $post->ausgaben->ratioOf($used) : 0;
+
+            $postTable['footer']['used'] = $postTable['footer']['used']->add($used);
+        }
+        $postTable['footer']['in'] = Money::EUR($project->posts()->sum('einnahmen'));
+        $postTable['footer']['out'] = Money::EUR($project->posts()->sum('ausgaben'));
+        if ($postTable['footer']['out']->isZero()) {
+            $postTable['footer']['ratio'] = 0;
+        }else{
+            $postTable['footer']['ratio'] = (int) $postTable['footer']['used']->multiply(100)->ratioOf($postTable['footer']['out']);
+        }
+
+        return view('livewire.project.show', compact('project', 'postTable'));
     }
 
     public function changeState(): void

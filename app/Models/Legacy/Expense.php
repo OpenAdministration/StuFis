@@ -2,6 +2,9 @@
 
 namespace App\Models\Legacy;
 
+use Cknow\Money\Money;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,27 +38,27 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ExpenseReceipt> $receipts
  * @property-read int|null $receipts_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|Expense newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Expense newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Expense query()
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereAddress($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereCreated($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereEtag($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereLastChange($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereLastChangeBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereNameSuffix($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereOkBelege($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereOkHv($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereOkKv($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense wherePayed($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereProjektId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereRejected($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereVersion($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereZahlungIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereZahlungName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Expense whereZahlungVwzk($value)
+ * @method static Builder|Expense newModelQuery()
+ * @method static Builder|Expense newQuery()
+ * @method static Builder|Expense query()
+ * @method static Builder|Expense whereAddress($value)
+ * @method static Builder|Expense whereCreated($value)
+ * @method static Builder|Expense whereEtag($value)
+ * @method static Builder|Expense whereId($value)
+ * @method static Builder|Expense whereLastChange($value)
+ * @method static Builder|Expense whereLastChangeBy($value)
+ * @method static Builder|Expense whereNameSuffix($value)
+ * @method static Builder|Expense whereOkBelege($value)
+ * @method static Builder|Expense whereOkHv($value)
+ * @method static Builder|Expense whereOkKv($value)
+ * @method static Builder|Expense wherePayed($value)
+ * @method static Builder|Expense whereProjektId($value)
+ * @method static Builder|Expense whereRejected($value)
+ * @method static Builder|Expense whereState($value)
+ * @method static Builder|Expense whereVersion($value)
+ * @method static Builder|Expense whereZahlungIban($value)
+ * @method static Builder|Expense whereZahlungName($value)
+ * @method static Builder|Expense whereZahlungVwzk($value)
  *
  * @mixin \Eloquent
  */
@@ -85,5 +88,70 @@ class Expense extends Model
     public function receipts(): HasMany
     {
         return $this->hasMany(ExpenseReceipt::class, 'auslagen_id');
+    }
+
+    public function totalIn() : Money
+    {
+        return Money::parseByDecimal($this->throughReceipts()->has('posts')->sum('einnahmen'), 'EUR');
+    }
+
+    public function totalOut() : Money
+    {
+        return Money::parseByDecimal($this->throughReceipts()->has('posts')->sum('ausgaben'), 'EUR');
+    }
+
+
+
+
+    protected function okKv(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+    protected function okHv(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+    protected function okBelege(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+    protected function payed(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+    protected function rejected(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+    protected function state(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => explode(';', $value)[0],
+        );
+    }
+
+
+    protected function casts(): array
+    {
+        return [
+            'zahlung_iban' => 'encrypted',
+            'last_change' => 'datetime',
+            'state' => 'string'
+        ];
     }
 }

@@ -11,23 +11,57 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
+                    {{-- Button Row --}}
                     <flux:modal.trigger name="state-modal">
-                        <flux:button icon="arrow-path">{{ __('project.view.header.change_status') }}</flux:button>
+                        <flux:button icon="arrow-path">
+                            {{ __('project.view.header.change_status') }}
+                        </flux:button>
                     </flux:modal.trigger>
+                    @can('update', $project)
+                        <flux:button href="{{ route('legacy.projekt.edit', $project->id) }}" variant="primary"
+                                     icon="pencil-square" color="indigo"
+                        >
+                            {{ __('project.view.header.edit') }}
+                        </flux:button>
+                    @else
+                        <flux:tooltip content="{{ __('project.view.header.edit-not-possible_tooltip') }}">
+                            <div><flux:button variant="outline" icon="pencil-square" disabled variant="primary">
+                                {{ __('project.view.header.edit') }}
+                            </flux:button></div>
+                        </flux:tooltip>
+                    @endcan
+                    @can('create-expense', $project)
+                        <flux:button href="{{ route('legacy.expense.create', $project->id) }}" variant="primary"
+                                     icon="plus" color="green"
+                        >
+                            {{ __('project.view.header.new-expense') }}
+                        </flux:button>
+                    @else
+                        <flux:tooltip content="{{ __('project.view.header.new-expense-not-possible_tooltip') }}">
+                            <div><flux:button variant="primary" icon="plus" color="green" disabled>
+                                {{ __('project.view.header.new-expense') }}
+                            </flux:button></div>
+                        </flux:tooltip>
+                    @endcan
 
-                    <flux:button href="{{ route('project.history', $project->id) }}" icon="inbox-stack">
-                       Secret New Feature :)
-                    </flux:button>
+                    <flux:dropdown position="bottom" align="end">
+                        <flux:button icon="chevron-down"></flux:button>
 
-                    <flux:button href="{{ route('legacy.projekt.edit', $project->id) }}" variant="primary"
-                                 icon="pencil-square" color="indigo">
-                        {{ __('project.view.header.edit') }}
-                    </flux:button>
-
-                    <flux:modal.trigger name="delete-modal">
-                        <flux:button icon="trash"
-                                     variant="danger">{{ __('project.view.header.delete') }}</flux:button>
-                    </flux:modal.trigger>
+                        <flux:menu>
+                            <flux:menu.item  href="{{ route('project.history', $project->id) }}" icon="inbox-stack">
+                                Secret New Feature :)
+                            </flux:menu.item>
+                            <flux:menu.item icon="document-duplicate">
+                                Duplicate (WIP)
+                            </flux:menu.item>
+                            <flux:menu.item icon="clock" href="{{ route('legacy.projekt', $project->id) }}">
+                                {{ __('project.view.header.old-view') }}
+                            </flux:menu.item>
+                            <flux:menu.item icon="trash" variant="danger" x-on:click="$flux.modal('delete-modal').show()">
+                                {{ __('project.view.header.delete') }}
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
                 </div>
             </div>
 
@@ -71,7 +105,9 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.total') }}</p>
-                            <p class="text-2xl font-bold text-gray-900 mt-1">{{ Money::parseByDecimal($project->posts()->sum('ausgaben'), 'EUR') }}</p>
+                            <p class="text-2xl font-bold text-gray-900 mt-1">
+                                {{ $postTable['footer']['out'] }}
+                            </p>
                         </div>
                         <div class="p-3 bg-indigo-100 rounded-lg">
                             <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor"
@@ -85,18 +121,28 @@
 
                 <div class="bg-white rounded-lg p-4 border border-gray-200">
                     <div class="flex items-center justify-between">
+                        @php
+                            $totalRemaining = $postTable['footer']['out']->subtract($postTable['footer']['used'])->getAmount()
+                        @endphp
                         <div>
                             <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.available') }}</p>
-                            <p class="text-2xl font-bold mt-1"
-                               :class="totalRemaining > 0 ? 'text-green-600' : 'text-red-600'"
-                            >
-                                Ähmm??
+                            <p @class([ "text-2xl font-bold mt-1",
+                                    'text-green-600' => $totalRemaining > 0,
+                                    'text-red-600' => $totalRemaining <= 0
+                                ])>
+                                {{ $postTable['footer']['out']->subtract($postTable['footer']['used']) }}
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg"
-                             :class="totalRemaining > 0 ? 'bg-green-100' : 'bg-red-100'">
-                            <svg class="w-6 h-6"
-                                 :class="totalRemaining > 0 ? 'text-green-600' : 'text-red-600'"
+                        <div @class([
+                                "p-3 rounded-lg",
+                                'bg-green-100' => $totalRemaining > 0,
+                                'bg-red-100' => $totalRemaining <= 0
+                            ])>
+                            <svg @class([
+                                     "w-6 h-6",
+                                     'text-green-600' => $totalRemaining > 0,
+                                     'text-red-600' => $totalRemaining <= 0
+                                 ])
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -109,27 +155,27 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.usage') }}</p>
-                            <p class="text-2xl font-bold mt-1"
-                               :class="{
-                                   'text-green-600': overallPercentUsed <= 50,
-                                   'text-yellow-600': overallPercentUsed > 50 && overallPercentUsed <= 90,
-                                   'text-red-600': overallPercentUsed > 90
-                               }">
-                                drölf %
+                            <p @class([
+                                "text-2xl font-bold mt-1",
+                                "text-green-600" => $postTable['footer']['ratio'] <= 50,
+                                "text-yellow-600" => $postTable['footer']['ratio'] > 50 && $postTable['footer']['ratio'] <= 90,
+                                "text-red-600" => $postTable['footer']['ratio'] > 90
+                            ])>
+                                {{ $postTable['footer']['ratio'] }} %
                             </p>
                         </div>
-                        <div class="p-3 rounded-lg"
-                             :class="{
-                                 'bg-green-100': overallPercentUsed <= 50,
-                                 'bg-yellow-100': overallPercentUsed > 50 && overallPercentUsed <= 90,
-                                 'bg-red-100': overallPercentUsed > 90
-                             }">
-                            <svg class="w-6 h-6"
-                                 :class="{
-                                     'text-green-600': overallPercentUsed <= 50,
-                                     'text-yellow-600': overallPercentUsed > 50 && overallPercentUsed <= 90,
-                                     'text-red-600': overallPercentUsed > 90
-                                 }"
+                        <div @class([
+                            "p-3 rounded-lg",
+                            "bg-green-100" => $postTable['footer']['ratio'] <= 50,
+                            "bg-yellow-100" => $postTable['footer']['ratio'] > 50 && $postTable['footer']['ratio'] <= 90,
+                            "bg-red-100" => $postTable['footer']['ratio'] > 90
+                        ])>
+                            <svg @class([
+                                "w-6 h-6",
+                                "text-green-600" => $postTable['footer']['ratio'] <= 50,
+                                "text-yellow-600" => $postTable['footer']['ratio'] > 50 && $postTable['footer']['ratio'] <= 90,
+                                "text-red-600" => $postTable['footer']['ratio'] > 90
+                            ])
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -164,7 +210,7 @@
                         @endif
                     @endif
                 </div>
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-2 mt-2">
                     <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
                 </div>
             </div>
@@ -195,14 +241,16 @@
                 </div>
 
                 <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.org') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('project.view.details.org') }}
+                    </label>
                     <p class="text-gray-900">{{ $project->org }}</p>
                 </div>
 
                 <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.period') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('project.view.details.period') }}
+                    </label>
                     <p class="text-gray-900">
                             <span
                                 class="font-medium">{{ __('project.view.details.from') }}</span> {{ $project->date_start->format('d.m.Y') }}
@@ -261,11 +309,15 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                     @foreach($project->posts as $post)
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loop->iteration }}.
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $loop->iteration }}.
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">{{ $post->name }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500 italic">{{ $post->bemerkung }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500 italic">{{ $post->titel_id }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                @if($post->budgetItem)
+                                    {{ $post->budgetItem->titel_name  }} ({{ $post->budgetItem->titel_nr  }})
+                                @endif
+                            </td>
                             <td @class(["px-6 py-4 whitespace-nowrap text-sm text-right font-medium",
                                         "text-green-600" => $post->einnahmen->greaterThan(Money::EUR(0)),
                                         "text-gray-400" => $post->einnahmen->equals(Money::EUR(0)),
@@ -277,68 +329,63 @@
                                 {{ $post->ausgaben }}
                             </td>
                             <td @class(["px-6 py-4 whitespace-nowrap text-sm text-right font-medium", "text-gray-400"])>
-                                {{ $post->expensePosts()->get() }}
+                                {{ Money::parseByDecimal($post->expensePosts()->sum('ausgaben'), 'EUR') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 @if($post->expensePosts()->exists())
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            N/A
-                                        </span>
+                                    @php $ratio = (int) Money::parseByDecimal($post->expensePosts()->sum('ausgaben') * 100, 'EUR')->ratioOf($post->ausgaben) @endphp
                                 @else
-                                    <div class="flex flex-col items-center gap-1">
-                                        <div class="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
-                                            <div class="h-2 rounded-full transition-all duration-300"
-                                                 :class="{
-                                                         'bg-green-500': row.percentUsed <= 50,
-                                                         'bg-yellow-500': row.percentUsed > 50 && row.percentUsed <= 90,
-                                                         'bg-red-500': row.percentUsed > 90
-                                                     }"
-                                                 :style="`width: ${Math.min(row.percentUsed, 100)}%`"></div>
-                                        </div>
-                                        <span class="text-xs font-medium"
-                                              :class="{
-                                                      'text-green-600': row.percentUsed <= 50,
-                                                      'text-yellow-600': row.percentUsed > 50 && row.percentUsed <= 90,
-                                                      'text-red-600': row.percentUsed > 90
-                                                  }"
-                                              x-text="Math.round(row.percentUsed) + '%'"></span>
-                                    </div>
+                                    @php $ratio = 0 @endphp
                                 @endif
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
+                                        <div @class(["h-2 rounded-full transition-all duration-300",
+                                                     'bg-green-500' => $ratio <= 50,
+                                                     'bg-yellow-500' => $ratio > 50 && $ratio <= 90,
+                                                     'bg-red-500' => $ratio > 90 ])
+                                             style="width: {{ min($ratio,100) }}%"></div>
+                                    </div>
+                                    <span @class(["text-xs font-medium",
+                                                  'text-green-600' => $ratio <= 50,
+                                                  'text-yellow-600'=>  $ratio > 50 && $ratio <= 90,
+                                                  'text-red-600' =>  $ratio > 90
+                                    ])>
+                                        {{ $ratio }}%
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
                     </tbody>
-                    <tfoot class="bg-gray-50 border-t-2 border-gray-300">
+                    <tfoot class="bg-white border-t-2 border-gray-200">
                     <tr>
                         <td colspan="4" class="px-6 py-4 text-right text-sm font-bold text-gray-900">Summe</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-green-600">
-                            {{ Money::parseByDecimal($project->posts()->sum('einnahmen'), 'EUR') }}
+                            {{ $postTable['footer']['in'] }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
-                            {{ Money::parseByDecimal($project->posts()->sum('ausgaben'), 'EUR') }}
+                            {{ $postTable['footer']['out'] }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-orange-600">
-                            ???
+                            {{ $postTable['footer']['used'] }}
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex flex-col items-center gap-1">
+                                @php $ratio = $postTable['footer']['ratio'] @endphp
                                 <div class="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
-                                    <div class="h-2 rounded-full transition-all duration-300"
-                                         :class="{
-                                                 'bg-green-500': overallPercentUsed <= 50,
-                                                 'bg-yellow-500': overallPercentUsed > 50 && overallPercentUsed <= 90,
-                                                 'bg-red-500': overallPercentUsed > 90
-                                             }"
-                                         :style="`width: ${Math.min(overallPercentUsed, 100)}%`"></div>
+                                    <div @class(["h-2 rounded-full transition-all duration-300",
+                                                     'bg-green-500' => $ratio <= 50,
+                                                     'bg-yellow-500' => $ratio > 50 && $ratio <= 90,
+                                                     'bg-red-500' => $ratio > 90 ])
+                                         style="width: {{ min($ratio,100) }}%"></div>
                                 </div>
-                                <span class="text-xs font-bold"
-                                      :class="{
-                                              'text-green-600': overallPercentUsed <= 50,
-                                              'text-yellow-600': overallPercentUsed > 50 && overallPercentUsed <= 90,
-                                              'text-red-600': overallPercentUsed > 90
-                                          }"
-                                      x-text="Math.round(overallPercentUsed) + '%'"></span>
+                                <span @class(["text-xs font-medium",
+                                                  'text-green-600' => $ratio <= 50,
+                                                  'text-yellow-600'=>  $ratio > 50 && $ratio <= 90,
+                                                  'text-red-600' =>  $ratio > 90
+                                    ])>
+                                        {{ $ratio }}%
+                                    </span>
                             </div>
                         </td>
                     </tr>
@@ -350,13 +397,53 @@
         <!-- Project Description -->
         <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h2>
-            <p class="text-gray-700 whitespace-pre-wrap">{{ $project->beschreibung }}</p>
+            @empty($project->beschreibung)
+                <p class="text-gray-500 italic">{{ __('project.view.description.none') }}</p>
+            @else
+                <p class="text-gray-900 whitespace-pre-line">
+                    {!! Str::markdown($project->beschreibung) !!}
+                </p>
+            @endempty
+
         </div>
 
         <!-- Expenses Section -->
         <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.expenses.heading') }}</h2>
-            @if($project->expenses_count > 0)
+            @if($project->expenses()->count() > 0)
+                <div class="space-y-3">
+                    @foreach($project->expenses as $expense)
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:bg-gray-100 transition-colors">
+                            <a class="flex items-center justify-between gap-5" href="{{ route('legacy.expense', $expense->id) }}">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3">
+                                        <h3 class="text-lg font-semibold text-gray-900">
+                                            {{ $expense->name_suffix }}
+                                        </h3>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            {{ $expense->state }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        {{ $expense->zahlung_name }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_in') }}</p>
+                                    <p class="text-lg font-bold text-gray-900">
+                                        {{ $expense->totalIn() }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_out') }}</p>
+                                    <p class="text-lg font-bold text-gray-900">
+                                        {{ $expense->totalOut() }}
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
             @else
                 <div class="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
                     {{ __('project.view.expenses.none') }}
@@ -376,7 +463,7 @@
             <flux:select wire:model="newState" variant="listbox"
                          placeholder="{{ __('project.view.state-modal.placeholder') }}">
                 @foreach($project->state->transitionableStateInstances() as $state)
-                    <flux:select.option :value="$state">
+                    <flux:select.option :value="$state" :disabled="Auth::user()->cannot('transition-to', [$project, $state])">
                         <div class="flex items-center gap-2">
                             <x-dynamic-component :component="$state->iconName()" @class([
                                     "size-4",
