@@ -9,6 +9,12 @@ use Spatie\ModelStates\StateConfig;
 abstract class ProjectState extends State
 {
     public static string $name;
+
+    public function iconName() : string
+    {
+        return 'file-pen';
+
+    }
     public function color() : string {
         return "bg-indigo-500";
     }
@@ -33,7 +39,7 @@ abstract class ProjectState extends State
             ->default(Draft::class)
             ->allowTransition(Draft::class, Applied::class)
             ->allowTransition([ApprovedByOrg::class, ApprovedByFinance::class, ApprovedByOther::class], Terminated::class)
-            ->allowTransition([NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
+            ->allowTransition([Applied::class, NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
             ->allowTransition([Revoked::class], Draft::class)
         ;
 

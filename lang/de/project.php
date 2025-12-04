@@ -5,21 +5,21 @@ return [
         'draft' => 'Entwurf',
         'wip' => 'Beantragt',
         'ok-by-hv' => 'Genehmigt durch HV (nicht verkündet)',
+        'done-hv' => 'verkündet durch HV',
         'need-stura' => 'Warte auf Gremien-Beschluss',
         'ok-by-stura' => 'Genehmigt durch Gremien-Beschluss',
-        'done-hv' => 'verkündet durch HV',
         'done-other' => 'Genehmigt',
-        'revoked' => 'Abgelehnt / Zurückgezogen (KEINE Genehmigung oder Antragsteller verzichtet)',
-        'terminated' => 'Abgeschlossen (keine weiteren Ausgaben)',
+        'revoked' => 'Abgelehnt / Zurückgezogen',
+        'terminated' => 'Abgeschlossen',
     ],
     'stateActions' => [
-        'draft' => '',
+        'draft' => 'bearbeiten',
         'wip' => 'beantragen',
-        'ok-by-hv' => '',
-        'need-stura' => '',
-        'ok-by-stura' => '',
-        'done-hv' => '',
-        'done-other' => '',
+        'ok-by-hv' => 'geprüft',
+        'done-hv' => 'genehmigen',
+        'need-stura' => 'geprüft',
+        'ok-by-stura' => 'genehmigen',
+        'done-other' => 'genehmigen',
         'revoked' => 'zurückziehen / ablehnen',
         'terminated' => 'beenden',
     ],
@@ -27,6 +27,9 @@ return [
         'posten_illegal_deleted' => 'Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden!'
     ],
     'view' => [
+        'summary_cards' => [
+            'state' => 'Status'
+        ],
         'header' => [
             'title' => 'Projekt',
             'created_at' => 'Erstellt am',
@@ -76,7 +79,7 @@ return [
             'heading' => 'Im Projekt vorhandene Abrechnungen',
             'none' => 'Keine',
         ],
-        'status_modal' => [
+        'state-modal' => [
             'heading' => 'Status wechseln',
             'placeholder' => 'Neuen Status auswählen',
             'cancel' => 'Abbrechen',

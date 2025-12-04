@@ -2,6 +2,8 @@
 
 namespace App\Models\Legacy;
 
+use Cknow\Money\Casts\MoneyDecimalCast;
+use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -11,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $projekt_id
  * @property int $titel_id
- * @property float $einnahmen
- * @property float $ausgaben
+ * @property Money $einnahmen
+ * @property Money $ausgaben
  * @property string $name
  * @property string $bemerkung
  * @property Project $projekte
@@ -41,6 +43,11 @@ class ProjectPost extends Model
     protected $table = 'projektposten';
 
     public $timestamps = false;
+
+    protected $casts = [
+        'einnahmen' => MoneyDecimalCast::class,
+        'ausgaben' => MoneyDecimalCast::class,
+    ];
 
     /**
      * @var array

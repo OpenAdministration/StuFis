@@ -14,4 +14,13 @@ class ApprovedByFinance extends ProjectState
         return true;
     }
 
+    public function iconName() : string
+    {
+        return 'fas-scroll';
+
+    }
+    public function color() : string {
+        return 'green';
+    }
+
 }

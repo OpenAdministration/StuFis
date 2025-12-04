@@ -65,7 +65,7 @@ class BudgetPlan extends Model
     }
     public function budgetItemsTree(BudgetType $budgetType)
     {
-        // this is not accessible from the closure scope
+        // $this is not accessible from the closure scope
         $plan_id = $this->id;
 
         $constraint =  static fn($query) =>

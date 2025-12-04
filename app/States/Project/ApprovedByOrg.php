@@ -13,4 +13,13 @@ class ApprovedByOrg extends ProjectState
     {
         return true;
     }
+
+    public function iconName() : string
+    {
+        return 'fas-check';
+
+    }
+    public function color() : string {
+        return 'green';
+    }
 }
