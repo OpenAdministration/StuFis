@@ -6,6 +6,7 @@ use App\Events\UpdatingModel;
 use App\Models\User;
 use App\States\Project\ProjectState;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,6 @@ use Spatie\ModelStates\HasStates;
  * @property ProjectState $state
  * @property int $stateCreator_id
  * @property string $name
- * @property string $responsible
  * @property string $org
  * @property string $org_mail
  * @property string $protokoll
@@ -63,6 +63,8 @@ use Spatie\ModelStates\HasStates;
  * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
+ *
+ * @property string $responsible The responsible person's email (domain will be automatically appended if missing)
  */
 class Project extends Model
 {
@@ -90,6 +92,19 @@ class Project extends Model
      * @var array
      */
     protected $fillable = ['creator_id', 'createdat', 'lastupdated', 'version', 'state', 'stateCreator_id', 'name', 'responsible', 'org', 'org_mail', 'protokoll', 'recht', 'recht_additional', 'date_start', 'date_end', 'beschreibung'];
+
+    protected function responsible(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value) => str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
+            set: fn(string $value) => str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
+        );
+    }
+
+    public function getLegal() : array
+    {
+        return config("stufis.project_legal.$this->recht", []);
+    }
 
     protected $dispatchesEvents = [
         'updating' => UpdatingModel::class,

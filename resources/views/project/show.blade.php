@@ -1,13 +1,13 @@
 <x-layout>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8" x-data="projectView()">
+    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <!-- Header with Status and Actions -->
-            <div class="mb-6">
+            <div class="mb-12">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div class="pl-4">
-                        <h1 class="text-3xl font-bold text-gray-900">Projekt {{ $project->id }}</h1>
-                        <p class="text-sm text-gray-500 mt-1">Erstellt am {{ $project->createdat->format('d.m.Y') }}</p>
+                        <h1 class="text-3xl font-bold text-gray-900">{{ __('project.view.header.title') }} {{ $project->id }}</h1>
+                        <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.created_at') }} {{ $project->createdat->format('d.m.Y') }}</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
@@ -15,15 +15,15 @@
                             {{ $project->state->label() }}
                         </span>
                         <flux:modal.trigger name="status-modal">
-                            <flux:button icon="arrow-path">Status ändern</flux:button>
+                            <flux:button icon="arrow-path">{{ __('project.view.header.change_status') }}</flux:button>
                         </flux:modal.trigger>
 
                         <flux:button href="{{ route('legacy.projekt.edit', $project->id) }}" variant="primary" icon="pencil-square" color="indigo">
-                            Bearbeiten
+                            {{ __('project.view.header.edit') }}
                         </flux:button>
 
                         <flux:modal.trigger name="delete-modal">
-                            <flux:button icon="trash" variant="danger">Löschen</flux:button>
+                            <flux:button icon="trash" variant="danger">{{ __('project.view.header.delete') }}</flux:button>
                         </flux:modal.trigger>
                     </div>
                 </div>
@@ -33,7 +33,7 @@
                     <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase">Gesamtbudget</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.total') }}</p>
                                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ $project->posts()->sum('ausgaben') }}</p>
                             </div>
                             <div class="p-3 bg-indigo-100 rounded-lg">
@@ -47,7 +47,7 @@
                     <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase">Ausgegeben</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.spent') }}</p>
                                 <p class="text-2xl font-bold text-orange-600 mt-1">
                                     ???
                                 </p>
@@ -63,7 +63,7 @@
                     <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase">Verfügbar</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.available') }}</p>
                                 <p class="text-2xl font-bold mt-1"
                                    :class="totalRemaining > 0 ? 'text-green-600' : 'text-red-600'"
                                 >
@@ -84,7 +84,7 @@
                     <div class="bg-white rounded-lg p-4 border border-gray-200">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-xs font-medium text-gray-500 uppercase">Auslastung</p>
+                                <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.budget_summary.usage') }}</p>
                                 <p class="text-2xl font-bold mt-1"
                                    :class="{
                                    'text-green-600': overallPercentUsed <= 50,
@@ -117,32 +117,44 @@
 
             <!-- Approval Section -->
             <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Genehmigung</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Rechtsgrundlage</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.approval.legal_basis') }}</label>
                         @isset($project->recht)
-                            <p class="text-gray-900">{{ $project->legal_basis }}</p>
+                            <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
                         @else
-                            <p class="text-gray-500 italic">Keine Angabe</p>
+                            <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
                         @endisset
                     </div>
-                    TODO: Recht additional + Hintweistexte
+                    <div>
+                        @if($project->getLegal())
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $project->getLegal()['label-additional'] }}</label>
+                            @if($project->recht_additional)
+                                <p class="text-gray-900">{{ $project->recht_additional }}</p>
+                            @else
+                                <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
+                            @endif
+                        @endif
+                    </div>
+                    <div class="lg:col-span-2">
+                        <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] }}</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Project Details -->
             <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Projektdetails</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.details.heading') }}</h2>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Projektname</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.name') }}</label>
                         <p class="text-gray-900 font-medium">{{ $project->name }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Projektverantwortlich</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible') }}</label>
                         <a href="mailto:{{ $project->responsible }}"
                            class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,21 +165,21 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Organisation</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.org') }}</label>
                         <p class="text-gray-900">{{ $project->org }}</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Projektzeitraum</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.period') }}</label>
                         <p class="text-gray-900">
-                            <span class="font-medium">von</span> {{ $project->date_start->format('d.m.Y') }}
-                            <span class="font-medium mx-2">bis</span> {{ $project->date_end->format('d.m.Y') }}
+                            <span class="font-medium">{{ __('project.view.details.from') }}</span> {{ $project->date_start->format('d.m.Y') }}
+                            <span class="font-medium mx-2">{{ __('project.view.details.to') }}</span> {{ $project->date_end->format('d.m.Y') }}
                         </p>
                     </div>
 
                     <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Ergänzender Link</label>
-                        <p class="text-gray-500 italic">Keine Angabe</p>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.link') }}</label>
+                        <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
                     </div>
 
                 </div>
@@ -176,8 +188,8 @@
             <!-- Budget Table -->
             <div class="bg-white rounded-2xl shadow-accent border border-gray-200 overflow-hidden mb-6" x-data="budgetTable()">
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-bold text-gray-900">Budget & Posten</h2>
-                    <p class="text-sm text-gray-500 mt-1">Budgetplanung mit Ausgabenverfolgung</p>
+                    <h2 class="text-xl font-bold text-gray-900">{{ __('project.view.budget_table.heading') }}</h2>
+                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.budget_table.subheading') }}</p>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -185,28 +197,28 @@
                         <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Nr.
+                                {{ __('project.view.budget_table.nr') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Ein/Ausgabengruppe
+                                {{ __('project.view.budget_table.group') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Bemerkung
+                                {{ __('project.view.budget_table.remark') }}
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Titel
+                                {{ __('project.view.budget_table.title') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Einnahmen (Soll)
+                                {{ __('project.view.budget_table.income') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Ausgaben (Soll)
+                                {{ __('project.view.budget_table.expenses') }}
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Claimed (Ist)
+                                {{ __('project.view.budget_table.claimed') }}
                             </th>
                             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                                {{ __('project.view.budget_table.status') }}
                             </th>
                         </tr>
                         </thead>
@@ -299,17 +311,17 @@
 
             <!-- Project Description -->
             <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Projektbeschreibung</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h2>
                 <p class="text-gray-700 whitespace-pre-wrap">{{ $project->beschreibung }}</p>
             </div>
 
             <!-- Expenses Section -->
             <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Im Projekt vorhandene Abrechnungen</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.expenses.heading') }}</h2>
                 @if($project->expenses_count > 0)
                 @else
                     <div class="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
-                        Keine
+                        {{ __('project.view.expenses.none') }}
                     </div>
                 @endif
             </div>
@@ -323,8 +335,8 @@
         <!-- Status Change Modal -->
         <flux:modal name="status-modal" class="min-w-96">
             <div>
-                <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4">Status wechseln</h3>
-                <flux:select variant="listbox" placeholder="Neuen Status auswählen">
+                <h3 class="text-lg leading-6 font-bold text-gray-900 mb-4">{{ __('project.view.status_modal.heading') }}</h3>
+                <flux:select variant="listbox" placeholder="{{ __('project.view.status_modal.placeholder') }}">
                     @foreach($project->state->transitionableStateInstances() as $state)
                         <flux:select.option>{{ $state->label() }}</flux:select.option>
                     @endforeach
@@ -334,11 +346,11 @@
                 <button @click="showStatusModal = false"
                         type="button"
                         class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-accent px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-1 sm:text-sm">
-                    Abbrechen
+                    {{ __('project.view.status_modal.cancel') }}
                 </button>
                 <button type="button"
                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-accent px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
-                    Speichern
+                    {{ __('project.view.status_modal.save') }}
                 </button>
             </div>
         </flux:modal>
@@ -353,14 +365,14 @@
                         </svg>
                     </div>
                     <div class="mt-3 text-center sm:mt-5">
-                        <h3 class="text-lg leading-6 font-bold text-gray-900">Wirklich Löschen?</h3>
+                        <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('project.view.delete_modal.heading') }}</h3>
                         <div class="mt-2">
-                            <p class="text-sm text-gray-500">Dieses Projekt kann endgültig gelöscht werden wenn:</p>
+                            <p class="text-sm text-gray-500">{{ __('project.view.delete_modal.intro') }}</p>
                             <ul class="mt-2 text-sm text-gray-500 text-left list-disc list-inside">
-                                <li>du Projektersteller*in oder Haushaltsverantwortliche*r bist</li>
-                                <li>im Projekt keine Abrechnungen (mehr) vorhanden sind</li>
+                                <li>{{ __('project.view.delete_modal.conditions.owner') }}</li>
+                                <li>{{ __('project.view.delete_modal.conditions.no_expenses') }}</li>
                             </ul>
-                            <p class="mt-2 text-sm text-gray-500">Wenn das Projekt gelöscht wird, werden alle Daten dazu entfernt und können nicht wieder hergestellt werden.</p>
+                            <p class="mt-2 text-sm text-gray-500">{{ __('project.view.delete_modal.warning') }}</p>
                         </div>
                     </div>
                 </div>
@@ -368,11 +380,11 @@
                     <button @click="showDeleteModal = false"
                             type="button"
                             class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-accent px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-1 sm:text-sm">
-                        Abbrechen
+                        {{ __('project.view.delete_modal.cancel') }}
                     </button>
                     <button type="button"
                             class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-accent px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:col-start-2 sm:text-sm">
-                        Unwiderruflich Löschen
+                        {{ __('project.view.delete_modal.confirm') }}
                     </button>
                 </div>
             </div>
