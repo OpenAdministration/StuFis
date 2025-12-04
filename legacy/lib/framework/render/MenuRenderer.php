@@ -205,7 +205,7 @@ class MenuRenderer extends Renderer
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
                                                 "IP-$year-$id",
-                                                'projekt/'.$id
+                                                substr(route('legacy.projekt', $id, false),1),
                                             ); ?>
                                             </div>
                                             <div class="panel-heading collapsed <?php echo (! isset($auslagen[$id]) || count(
@@ -329,7 +329,7 @@ class MenuRenderer extends Renderer
             } else {
                 $this->renderAlert(
                     'Warnung',
-                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".route('legacy.new-projekt')."'>Neues Projekt erstellen</a>",
                     'warning'
                 );
             }

@@ -33,6 +33,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('projekt/{projekt_id}', [LegacyController::class, 'render'])->name('projekt');
     Route::get('projekt/{projekt_id}/edit', [LegacyController::class, 'render'])->name('projekt.edit');
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
+    Route::get('projekt/{projekt_id}/auslagen', [LegacyController::class, 'render'])->name('expense.create');
 
     Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
     Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
@@ -42,7 +43,7 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
         [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
 
-    // short link
+    // short links
     Route::redirect('p/{projekt_id}', '/projekt/{projekt_id}');
     Route::redirect('a/{auslagen_id}', '/auslagen/{auslagen_id}');
     Route::get('auslagen/{auslagen_id}', static function ($auslage_id) {
