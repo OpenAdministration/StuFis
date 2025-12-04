@@ -14,7 +14,9 @@
                     </div>
                     <p class="flex-auto py-0.5 text-xs/5 text-gray-500">
                         <span class="font-medium text-gray-900">Statuswechsel</span> {{ $message->text }}</p>
-                    <time datetime="2023-01-23T10:32" class="flex-none py-0.5 text-xs/5 text-gray-500">7d ago</time>
+                    <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">
+                        {{ $message->timestamp->diffForHumans() }}
+                    </time>
                 </li>
             @elseif($message->type === ChatMessageType::PUBLIC)
                 <li class="relative flex gap-x-4">
@@ -28,7 +30,7 @@
                     <div class="flex-auto rounded-md p-3 ring-1 ring-gray-200 ring-inset">
                         <div class="flex justify-between gap-x-4">
                             <div class="py-0.5 text-xs/5 text-gray-500"><span
-                                    class="font-medium text-gray-900">{{ $message->user->name }}</span> commented
+                                    class="font-medium text-gray-900">{{ $message->user->name ?? $message->creator_alias ?? "Unknown" }}</span> commented
                             </div>
                             <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">{{ $message->timestamp->diffForHumans() }}</time>
                         </div>
