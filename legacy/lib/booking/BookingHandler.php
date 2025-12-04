@@ -68,7 +68,7 @@ class BookingHandler extends Renderer
             'beleg_name' => 'Beleg',
             'datum' => 'Buchungsdatum',
             'user' => 'Buchender Nutzer',
-            'zahlung-name' => 'Zahlungsnummer',
+            'zahlung_name' => 'Zahlungsnummer',
             'zahlung-datum' => 'Zahlungsdatum',
             'comment' => 'Buchungstext',
         ];
@@ -95,7 +95,7 @@ class BookingHandler extends Renderer
                 'beleg_name' => $belegStr,
                 'datum' => $row['timestamp'],
                 'user' => $userStr,
-                'zahlung-name' => $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'],
+                'zahlung_name' => $kontoTypes[$row['zahlung_type']]['short'].$row['zahlung_id'],
                 'zahlung-datum' => $row['zahlung_date'],
                 'comment' => $row['comment'],
             ];

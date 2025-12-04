@@ -353,19 +353,19 @@ class RestHandler extends EscFunc
                         'minlength' => '2',
                         'error' => 'Ungültiger oder leerer Abrechnungsname.',
                     ],
-                    'zahlung-name' => [
+                    'zahlung_name' => [
                         'regex',
                         'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'maxlength' => '127',
                         'empty',
                         'error' => 'Ungültiger Zahlungsempfänger.',
                     ],
-                    'zahlung-iban' => [
+                    'zahlung_iban' => [
                         'iban',
                         'empty',
                         'error' => 'Ungültige Iban.',
                     ],
-                    'zahlung-vwzk' => [
+                    'zahlung_vwzk' => [
                         'regex',
                         'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& \.\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'empty',
@@ -484,7 +484,7 @@ class RestHandler extends EscFunc
                     ],
                     'state' => [
                         'regex',
-                        'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok-hv|ok-kv|ok-belege|revoked|rejected)$/',
+                        'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok_hv|ok_kv|ok_belege|revoked|rejected)$/',
                         'error' => 'Ungültiger Status.',
                     ],
                 ];
@@ -545,9 +545,9 @@ class RestHandler extends EscFunc
             $empty = strtolower($validated['auslagen-id'] === 'new');
             $auslagen_test_empty = [
                 'auslagen-name',
-                'zahlung-name',
-                'zahlung-iban',
-                'zahlung-vwzk',
+                'zahlung_name',
+                'zahlung_iban',
+                'zahlung_vwzk',
                 'belege',
                 'address',
             ];

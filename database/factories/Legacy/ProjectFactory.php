@@ -29,12 +29,12 @@ class ProjectFactory extends Factory
             'name' => fake()->text(30),
             'responsible' => fake()->userName(),
             'org' => fake()->company(),
-            'org-mail' => fake()->companyEmail(),
+            'org_mail' => fake()->companyEmail(),
             'protokoll' => fake()->url(),
             'recht' => 'stura',
-            'recht-additional' => fake()->text(10),
-            'date-start' => fake()->date(),
-            'date-end' => fake()->date(),
+            'recht_additional' => fake()->text(10),
+            'date_start' => fake()->date(),
+            'date_end' => fake()->date(),
             'beschreibung' => fake()->text(500),
         ];
     }

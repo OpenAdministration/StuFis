@@ -232,7 +232,7 @@ class FormTemplaterProject
     {
         $state = $this->project->state;
         return match ($state::class) {
-            Draft::class => !($name === "recht" || $name === "recht-additional" || $name === "posten-titel"),
+            Draft::class => !($name === "recht" || $name === "recht_additional" || $name === "posten-titel"),
             default => true
         };
     }

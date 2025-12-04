@@ -111,19 +111,19 @@ class ProjektHandler extends Renderer
             'name' => '',
             'responsible' => '',
             'org' => '',
-            'org-mail' => '',
+            'org_mail' => '',
             'protokoll' => '',
             'beschreibung' => '',
             'recht' => '',
-            'recht-additional' => '',
+            'recht_additional' => '',
             'posten-id' => [1 => ''],
             'posten-name' => [1 => ''],
             'posten-bemerkung' => [1 => ''],
             'posten-titel' => [1 => ''],
             'posten-einnahmen' => [1 => 0],
             'posten-ausgaben' => [1 => 0],
-            'date-start' => '',
-            'date-end' => '',
+            'date_start' => '',
+            'date_end' => '',
         ];
         self::$visibleFields = [
             'recht' => [
@@ -167,7 +167,7 @@ class ProjektHandler extends Renderer
         ];
         self::$writePermissionFields = [
             'ok-by-hv' => [
-                'recht-additional' => ['groups' => ['ref-finanzen-hv']],
+                'recht_additional' => ['groups' => ['ref-finanzen-hv']],
             ],
         ];
 
@@ -210,11 +210,11 @@ class ProjektHandler extends Renderer
                 'name' => $data['name'],
                 'responsible' => $data['responsible'],
                 'org' => $data['org'],
-                'org-mail' => $data['org-mail'] ?? '',
+                'org_mail' => $data['org_mail'] ?? '',
                 'protokoll' => $data['protokoll'] ?? '',
                 'beschreibung' => $data['beschreibung'],
-                'date-start' => $data['date-start'],
-                'date-end' => $data['date-end'],
+                'date_start' => $data['date_start'],
+                'date_end' => $data['date_end'],
             ]
         );
 
@@ -308,17 +308,17 @@ class ProjektHandler extends Renderer
         $data = array_diff_key($data, $generatedFields, $extractFields);
 
         $recht_unset = false;
-        if (isset($data['recht-additional'])) {
+        if (isset($data['recht_additional'])) {
             if (! isset($data['recht']) && isset($this->data['recht'])) {
                 $data['recht'] = $this->data['recht'];
                 $recht_unset = true;
             }
             if (! isset($data['recht'])) {
-                $data['recht-additional'] = '';
-            } elseif (isset($data['recht-additional'][$data['recht']])) {
-                $data['recht-additional'] = $data['recht-additional'][$data['recht']];
+                $data['recht_additional'] = '';
+            } elseif (isset($data['recht_additional'][$data['recht']])) {
+                $data['recht_additional'] = $data['recht_additional'][$data['recht']];
             } else {
-                $data['recht-additional'] = '';
+                $data['recht_additional'] = '';
             }
         }
 
@@ -469,7 +469,7 @@ class ProjektHandler extends Renderer
 
         $mailingLists = $auth->hasGroup('ref-finanzen') ? MAILINGLISTS : AuthHandler::getInstance()->getUserMailinglists();
         $selectable_mail = FormTemplaterProject::generateSelectable($mailingLists);
-        $selectable_mail['values'] = $this->data['org-mail'];
+        $selectable_mail['values'] = $this->data['org_mail'];
         $sel_recht = FormTemplaterProject::generateSelectable(array_combine(
             array_keys(ORG_DATA['rechtsgrundlagen']),
             array_map(static function ($val) {
@@ -529,8 +529,8 @@ class ProjektHandler extends Renderer
                                     <div id="<?php echo $shortName; ?>" class="form-group" style="display: none;">
                                         <?php if (isset($def['placeholder'], $def['label-additional'])) {
                                             echo $this->templater->getTextForm(
-                                                "recht-additional[$shortName]",
-                                                $this->data['recht-additional'],
+                                                "recht_additional[$shortName]",
+                                                $this->data['recht_additional'],
                                                 4,
                                                 $def['placeholder'] ?? '',
                                                 $def['label-additional'] ?? 'Zusatzinformationen',
@@ -578,7 +578,7 @@ class ProjektHandler extends Renderer
                     ); ?>
                     <?php if (count(ORG_DATA['mailinglists']) > 0) {
                         echo $this->templater->getDropdownForm(
-                            'org-mail',
+                            'org_mail',
                             $selectable_mail,
                             6,
                             'Wähle Mailingliste ...',
@@ -600,8 +600,8 @@ class ProjektHandler extends Renderer
                         );
                     } ?>
                     <?= $this->templater->getDatePickerForm(
-                        ['date-start', 'date-end'],
-                        [$this->data['date-start'], $this->data['date-end']],
+                        ['date_start', 'date_end'],
+                        [$this->data['date_start'], $this->data['date_end']],
                         12,
                         ['Projekt-Start', 'Projekt-Ende'],
                         'Projektzeitraum',

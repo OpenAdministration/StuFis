@@ -110,9 +110,9 @@ class AuslagenHandler2 extends Renderer
      * @var array
      */
     private static $subStates = [
-        'ok-hv' => ['wip', true, 'OK HV', 'als Haushaltsverantwortlicher genehmigen'],
-        'ok-kv' => ['wip', true, 'OK KV', 'als Kassenverantwortlicher genehmigen'],
-        'ok-belege' => ['wip', true, 'Belege vorhanden', 'Original Belege vorliegend'],
+        'ok_hv' => ['wip', true, 'OK HV', 'als Haushaltsverantwortlicher genehmigen'],
+        'ok_kv' => ['wip', true, 'OK KV', 'als Kassenverantwortlicher genehmigen'],
+        'ok_belege' => ['wip', true, 'Belege vorhanden', 'Original Belege vorliegend'],
         'revoked' => ['revocation', false, 'Zurückgezogen', 'Zurückziehen'],
         'rejected' => ['revocation', false, 'Abgelehnt', 'Ablehnen'],
         'payed' => ['instructed', true, 'Bezahlt', 'Bezahlt (lt. Kontoauszug)'],
@@ -149,13 +149,13 @@ class AuslagenHandler2 extends Renderer
         // sub state changes
         // turnes map around:
         // target => current state => permission
-        'ok-hv' => [
+        'ok_hv' => [
             'wip' => ['groups' => ['ref-finanzen-hv']],
         ],
-        'ok-kv' => [
+        'ok_kv' => [
             'wip' => ['groups' => ['ref-finanzen-kv']],
         ],
-        'ok-belege' => [
+        'ok_belege' => [
             'wip' => ['groups' => ['ref-finanzen-belege']],
         ],
         'payed' => [
@@ -188,9 +188,9 @@ class AuslagenHandler2 extends Renderer
         'belege' => '',
         'files' => '',
         'auslagen-name' => '',
-        'zahlung-iban' => '',
-        'zahlung-name' => '',
-        'zahlung-vwzk' => '',
+        'zahlung_iban' => '',
+        'zahlung_name' => '',
+        'zahlung_vwzk' => '',
         'address' => '',
         'kv-ok' => '',
         'hv-ok' => '',
@@ -209,18 +209,18 @@ class AuslagenHandler2 extends Renderer
     private static $writePermissionFields = [
         'draft' => [
             'auslagen-name' => ['groups' => ['login']],
-            'zahlung-name' => ['groups' => ['login']],
-            'zahlung-iban' => ['groups' => ['login']],
-            'zahlung-vwzk' => ['groups' => ['login']],
+            'zahlung_name' => ['groups' => ['login']],
+            'zahlung_iban' => ['groups' => ['login']],
+            'zahlung_vwzk' => ['groups' => ['login']],
             'address' => ['groups' => ['login']],
             'belege' => ['groups' => ['login']],
             'files' => ['groups' => ['login']],
         ],
         'wip' => [
             'auslagen-name' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-name' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-iban' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-vwzk' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_name' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_iban' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_vwzk' => ['groups' => ['ref-finanzen-belege']],
             'address' => ['groups' => ['ref-finanzen-belege']],
             'belege' => ['groups' => ['ref-finanzen-belege']],
             'files' => ['groups' => ['ref-finanzen-belege']],
@@ -659,19 +659,19 @@ class AuslagenHandler2 extends Renderer
         // sub states - wip - ok_*
         if ($this->stateInfo['state'] === 'wip') {
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-belege'] ?
+                ($this->auslagen_data['ok_belege'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-belege'
+                    .'ok_belege'
                     : '');
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-hv'] ?
+                ($this->auslagen_data['ok_hv'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-hv'
+                    .'ok_hv'
                     : '');
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-kv'] ?
+                ($this->auslagen_data['ok_kv'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-kv'
+                    .'ok_kv'
                     : '');
         }
         // sub state - instructed
@@ -1076,19 +1076,19 @@ class AuslagenHandler2 extends Renderer
             'created' => $this->auslagen_data['created'],
             'name_suffix' => $this->routeInfo['validated']['auslagen-name'],
             'state' => $this->auslagen_data['state'],
-            'ok-belege' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-belege'],
-            'ok-hv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-hv'],
-            'ok-kv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-kv'],
+            'ok_belege' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_belege'],
+            'ok_hv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_hv'],
+            'ok_kv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_kv'],
             'payed' => $this->auslagen_data['payed'],
             'rejected' => $this->auslagen_data['rejected'],
-            'zahlung-iban' => strpos(
-                str_replace(' ', '', $this->routeInfo['validated']['zahlung-iban']),
+            'zahlung_iban' => strpos(
+                str_replace(' ', '', $this->routeInfo['validated']['zahlung_iban']),
                 '......'
-            ) ? $this->auslagen_data['zahlung-iban'] : self::encryptedStr(
-                $this->routeInfo['validated']['zahlung-iban']
+            ) ? $this->auslagen_data['zahlung_iban'] : self::encryptedStr(
+                $this->routeInfo['validated']['zahlung_iban']
             ),
-            'zahlung-name' => $this->routeInfo['validated']['zahlung-name'],
-            'zahlung-vwzk' => $this->routeInfo['validated']['zahlung-vwzk'],
+            'zahlung_name' => $this->routeInfo['validated']['zahlung_name'],
+            'zahlung_vwzk' => $this->routeInfo['validated']['zahlung_vwzk'],
             'address' => ((preg_match('/(\s*)versteckt(\s*)/i', $this->routeInfo['validated']['address']) === 1) ?
                 ($this->auslagen_data['address']) : $this->routeInfo['validated']['address']),
             'last_change' => (string) ($newInfo['date']),
@@ -1267,14 +1267,14 @@ class AuslagenHandler2 extends Renderer
             'created' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
             'name_suffix' => '',
             'state' => "{$newInfo['state']};{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
-            'ok-belege' => '',
-            'ok-hv' => '',
-            'ok-kv' => '',
+            'ok_belege' => '',
+            'ok_hv' => '',
+            'ok_kv' => '',
             'payed' => '',
             'rejected' => '',
-            'zahlung-iban' => '',
-            'zahlung-name' => '',
-            'zahlung-vwzk' => '',
+            'zahlung_iban' => '',
+            'zahlung_name' => '',
+            'zahlung_vwzk' => '',
             'address' => '',
             'last_change' => $newInfo['date'],
             'last_change_by' => '',
@@ -1378,7 +1378,7 @@ class AuslagenHandler2 extends Renderer
                 'headline' => 'Erfolgreich',
                 'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
             ];
-            if ($newState === 'wip' && ! $this->auslagen_data['ok-belege']) {
+            if ($newState === 'wip' && ! $this->auslagen_data['ok_belege']) {
                 $this->json_result['reload'] = 5000;
                 $this->json_result['msg'] .= '<br><strong>Bitte beachte, dass gegebenenfalls noch Belege eingereicht werden müssen.<br><i>(Vorlage: "Belege PDF")</i></strong>';
             }
@@ -1475,9 +1475,9 @@ class AuslagenHandler2 extends Renderer
             if (isset(self::$states[$newState])) {
                 switch ($newState) {
                     case 'wip':
-                        $set['ok-hv'] = '';
-                        $set['ok-kv'] = '';
-                        $set['ok-belege'] = '';
+                        $set['ok_hv'] = '';
+                        $set['ok_kv'] = '';
+                        $set['ok_belege'] = '';
                         $set['payed'] = '';
                         break;
 
@@ -1496,24 +1496,24 @@ class AuslagenHandler2 extends Renderer
             }
             if (isset(self::$subStates[$newState])) {
                 $set[$newState] = match ($newState) {
-                    'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'revoked' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
+                    'ok_belege', 'ok_hv', 'ok_kv', 'payed', 'rejected', 'revoked' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
                 };
             }
             $this->db->dbUpdate('auslagen', $where, $set);
             // automagic -> all ok -> set state ok -> auto genehmigt
-            if ($newState === 'ok-belege' || $newState === 'ok-hv' || $newState === 'ok-kv') {
+            if ($newState === 'ok_belege' || $newState === 'ok_hv' || $newState === 'ok_kv') {
                 $tmp_auslage = $this->db->dbFetchAll(
                     tables: 'auslagen',
                     where: ['id' => $this->auslagen_data['id']]
                 );
                 if (
                     $tmp_auslage
-                    && isset($tmp_auslage[0]['ok-belege'])
-                    && $tmp_auslage[0]['ok-belege']
-                    && isset($tmp_auslage[0]['ok-hv'])
-                    && $tmp_auslage[0]['ok-hv']
-                    && isset($tmp_auslage[0]['ok-kv'])
-                    && $tmp_auslage[0]['ok-kv']
+                    && isset($tmp_auslage[0]['ok_belege'])
+                    && $tmp_auslage[0]['ok_belege']
+                    && isset($tmp_auslage[0]['ok_hv'])
+                    && $tmp_auslage[0]['ok_hv']
+                    && isset($tmp_auslage[0]['ok_kv'])
+                    && $tmp_auslage[0]['ok_kv']
                     && str_starts_with($tmp_auslage[0]['state'], 'wip')
                 ) {
                     $this->db->dbUpdate(
@@ -1578,9 +1578,9 @@ class AuslagenHandler2 extends Renderer
                 'Eingereicht von' => $info['realname'],
                 // commented because of visibility issues
                 // 'Adresse' => str_replace(PHP_EOL, ' / ', $this->auslagen_data['address']),
-                'Zahlung an' => $this->auslagen_data['zahlung-name'],
+                'Zahlung an' => $this->auslagen_data['zahlung_name'],
             ],
-            'owner' => $this->auslagen_data['zahlung-name'],
+            'owner' => $this->auslagen_data['zahlung_name'],
             'belegeTable' => [
                 'orientation' => 'rlX',
                 'header' => [
@@ -1638,11 +1638,11 @@ class AuslagenHandler2 extends Renderer
         // label + zusatzfreitext
         $recht_array = ORG_DATA['rechtsgrundlagen'][$this->projekt_data['recht']] ?? [];
         $recht = $recht_array['label'] ?? $this->projekt_data['recht'];
-        if (! empty($this->projekt_data['recht-additional'])) {
-            $recht .= ': '.$this->projekt_data['recht-additional'];
+        if (! empty($this->projekt_data['recht_additional'])) {
+            $recht .= ': '.$this->projekt_data['recht_additional'];
         }
-        $hv = explode(';', $this->auslagen_data['ok-hv']);
-        $kv = explode(';', $this->auslagen_data['ok-kv']);
+        $hv = explode(';', $this->auslagen_data['ok_hv']);
+        $kv = explode(';', $this->auslagen_data['ok_kv']);
         // datetime;username;fullname
         $hvString = $hv[2]; // . ' ('. date_create($hv[0])->format('d.m.y') .')';
         $kvString = $kv[2]; // . ' ('. date_create($kv[0])->format('d.m.y') .')';
@@ -1660,9 +1660,9 @@ class AuslagenHandler2 extends Renderer
                 'Abrechnungsname' => $this->auslagen_data['name_suffix'],
             ],
             'zahlungsMeta' => [
-                'Name' => $this->auslagen_data['zahlung-name'],
+                'Name' => $this->auslagen_data['zahlung_name'],
                 'Adresse' => $this->auslagen_data['address'],
-                'IBAN' => chunk_split(self::decryptedStr($this->auslagen_data['zahlung-iban']), 4, ' '),
+                'IBAN' => chunk_split(self::decryptedStr($this->auslagen_data['zahlung_iban']), 4, ' '),
                 'Betrag' => number_format($summed_value, 2, ',', '').' EUR',
                 'Datum der Zahlung' => '___.___.______',
             ],
@@ -1789,8 +1789,8 @@ class AuslagenHandler2 extends Renderer
             <label for="genehmigung">Genehmigung</label>
             <br>
             <?php
-            if ($this->auslagen_data['ok-belege']) {
-                $be_ok = $this->auslagen_data['ok-belege'];
+            if ($this->auslagen_data['ok_belege']) {
+                $be_ok = $this->auslagen_data['ok_belege'];
                 $be_ok = explode(';', $be_ok);
                 $be_ok = "{$be_ok[0]} {$be_ok[2]}";
             } else {
@@ -1805,8 +1805,8 @@ class AuslagenHandler2 extends Renderer
                 []
             ); ?>
             <?php
-            if ($this->auslagen_data['ok-hv']) {
-                $hv_ok = $this->auslagen_data['ok-hv'];
+            if ($this->auslagen_data['ok_hv']) {
+                $hv_ok = $this->auslagen_data['ok_hv'];
                 $hv_ok = explode(';', $hv_ok);
                 $hv_ok = "{$hv_ok[0]} {$hv_ok[2]}";
             } else {
@@ -1814,8 +1814,8 @@ class AuslagenHandler2 extends Renderer
             }
             echo $this->templater->getTextForm('hv-ok', $hv_ok, [12, 12, 4], 'HV', 'HV', []); ?>
             <?php
-            if ($this->auslagen_data['ok-kv']) {
-                $kv_ok = $this->auslagen_data['ok-kv'];
+            if ($this->auslagen_data['ok_kv']) {
+                $kv_ok = $this->auslagen_data['ok_kv'];
                 $kv_ok = explode(';', $kv_ok);
                 $kv_ok = "{$kv_ok[0]} {$kv_ok[2]}";
             } else {
@@ -1854,8 +1854,8 @@ class AuslagenHandler2 extends Renderer
                 <div class="clearfix"></div>
                 <label for="zahlung">Zahlungsinformationen</label><br>
                 <?php echo $this->templater->getTextForm(
-                    'zahlung-name',
-                    $this->auslagen_data['zahlung-name'] ?? null,
+                    'zahlung_name',
+                    $this->auslagen_data['zahlung_name'] ?? null,
                     [12, 12, 6],
                     'Name Zahlungsempfänger',
                     'Zahlungsempfänger Name',
@@ -1864,7 +1864,7 @@ class AuslagenHandler2 extends Renderer
                 ); ?>
 
                 <?php // iban only show trimmed if not hv/kv important!
-                $iban_text = $this->auslagen_data['zahlung-iban'] ?? null;
+                $iban_text = $this->auslagen_data['zahlung_iban'] ?? null;
         if ($iban_text) {
             $iban_text = self::decryptedStr($iban_text);
         }
@@ -1874,7 +1874,7 @@ class AuslagenHandler2 extends Renderer
             $iban_text = chunk_split($iban_text, 4, ' ');
         }
         echo $this->templater->getTextForm(
-            'zahlung-iban',
+            'zahlung_iban',
             $iban_text,
             [12, 12, 6],
             'DE ...',
@@ -1882,8 +1882,8 @@ class AuslagenHandler2 extends Renderer
         ); ?>
                 <div class='clearfix'></div>
                 <?php echo $this->templater->getTextForm(
-                    'zahlung-vwzk',
-                    $this->auslagen_data['zahlung-vwzk'] ?? null,
+                    'zahlung_vwzk',
+                    $this->auslagen_data['zahlung_vwzk'] ?? null,
                     12,
                     'z.B. Rechnungsnr. o.Ä.',
                     'Verwendungszweck (verpflichtend bei Firmen)',
@@ -2011,11 +2011,11 @@ class AuslagenHandler2 extends Renderer
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
             $set[$s['l']][$s['k']]['target'] = [['draft', 6, ['y' => 20]]];
             $set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -20];
-            $s = $keymap['ok-hv'];
+            $s = $keymap['ok_hv'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
-            $s = $keymap['ok-kv'];
+            $s = $keymap['ok_kv'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
-            $s = $keymap['ok-belege'];
+            $s = $keymap['ok_belege'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
         }
         // handle childs
@@ -2073,21 +2073,21 @@ class AuslagenHandler2 extends Renderer
                     'target' => ['ok', 'revocation'],
                     'children' => [
                         [
-                            'state' => 'ok-hv',
-                            'title' => self::$subStates['ok-hv'][2],
-                            'hovertitle' => self::$subStates['ok-hv'][3],
+                            'state' => 'ok_hv',
+                            'title' => self::$subStates['ok_hv'][2],
+                            'hovertitle' => self::$subStates['ok_hv'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                         [
-                            'state' => 'ok-kv',
-                            'title' => self::$subStates['ok-kv'][2],
-                            'hovertitle' => self::$subStates['ok-kv'][3],
+                            'state' => 'ok_kv',
+                            'title' => self::$subStates['ok_kv'][2],
+                            'hovertitle' => self::$subStates['ok_kv'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                         [
-                            'state' => 'ok-belege',
-                            'title' => self::$subStates['ok-belege'][2],
-                            'hovertitle' => self::$subStates['ok-belege'][3],
+                            'state' => 'ok_belege',
+                            'title' => self::$subStates['ok_belege'][2],
+                            'hovertitle' => self::$subStates['ok_belege'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                     ],
@@ -2797,12 +2797,12 @@ class AuslagenHandler2 extends Renderer
          'name' => '',
          'responsible' => '',
          'org' => '',
-         'org-mail' => '',
+         'org_mail' => '',
          'protokoll' => '',
          'recht' => '',
-         'recht-additional' => '',
-         'date-start' => '',
-         'date-end' => '',
+         'recht_additional' => '',
+         'date_start' => '',
+         'date_end' => '',
          'beschreibung' => '',
          'posten' => []
          'auslagen' => [

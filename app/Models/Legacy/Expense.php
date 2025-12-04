@@ -75,7 +75,7 @@ class Expense extends Model
     /**
      * @var array
      */
-    protected $fillable = ['projekt_id', 'name_suffix', 'state', 'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'zahlung-iban', 'zahlung-name', 'zahlung-vwzk', 'address', 'last_change', 'last_change_by', 'etag', 'version', 'created'];
+    protected $fillable = ['projekt_id', 'name_suffix', 'state', 'ok_belege', 'ok_hv', 'ok_kv', 'payed', 'rejected', 'zahlung_iban', 'zahlung_name', 'zahlung_vwzk', 'address', 'last_change', 'last_change_by', 'etag', 'version', 'created'];
 
     public function project(): BelongsTo
     {

@@ -159,7 +159,7 @@ class MenuRenderer extends Renderer
                     'projekt_id',
                     'auslagen.id',
                     'name_suffix', // auslagen Link
-                    'zahlung-name', // Empf. Name
+                    'zahlung_name', // Empf. Name
                     'einnahmen' => ['einnahmen', DBConnector::GROUP_SUM_ROUND2],
                     'ausgaben' => ['ausgaben', DBConnector::GROUP_SUM_ROUND2],
                     'state',
@@ -403,8 +403,8 @@ class MenuRenderer extends Renderer
               'by_user' => NULL,
               'value' => '9000.00',
               'description' => NULL,
-              'ok-hv' => 'Haushaltsverantwortliche/r',
-              'ok-kv' => 'Kassenverantwortliche/r',
+              'ok_hv' => 'Haushaltsverantwortliche/r',
+              'ok_kv' => 'Kassenverantwortliche/r',
               'frist' => NULL,
               'flag_vorkasse' => '1',
               'flag_bewilligungsbescheid' => '0',
@@ -577,7 +577,7 @@ class MenuRenderer extends Renderer
             ],
             ['state' => $statestring],
             [['type' => 'inner', 'table' => 'projektposten', 'on' => ['projektposten.projekt_id', 'projekte.id']]],
-            ['date-start' => true],
+            ['date_start' => true],
             ['projekte.id']
         );
         $escapeFunctionsIntern = [
@@ -690,12 +690,12 @@ class MenuRenderer extends Renderer
                 'projekte.id',
                 'auslagen.id',
                 'auslagen.name_suffix', // Auslagenlink
-                'auslagen.zahlung-name',
-                'auslagen.zahlung-iban',
+                'auslagen.zahlung_name',
+                'auslagen.zahlung_iban',
                 'projekte.id',
                 'projekte.createdat',
                 'auslagen.id',
-                'auslagen.zahlung-vwzk',
+                'auslagen.zahlung_vwzk',
                 'auslagen.name_suffix',
                 'projekte.name', // verwendungszweck
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],

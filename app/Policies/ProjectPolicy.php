@@ -113,7 +113,7 @@ class ProjectPolicy
             return false;
         }
 
-        if($field === 'recht' || $field === 'recht-additional' || $field === 'posten-titel') {
+        if($field === 'recht' || $field === 'recht_additional' || $field === 'posten-titel') {
             return match ($project->state::class) {
                 Draft::class => false,
                 default => true

@@ -89,7 +89,7 @@ class Project extends Model
     /**
      * @var array
      */
-    protected $fillable = ['creator_id', 'createdat', 'lastupdated', 'version', 'state', 'stateCreator_id', 'name', 'responsible', 'org', 'org-mail', 'protokoll', 'recht', 'recht-additional', 'date-start', 'date-end', 'beschreibung'];
+    protected $fillable = ['creator_id', 'createdat', 'lastupdated', 'version', 'state', 'stateCreator_id', 'name', 'responsible', 'org', 'org_mail', 'protokoll', 'recht', 'recht_additional', 'date_start', 'date_end', 'beschreibung'];
 
     protected $dispatchesEvents = [
         'updating' => UpdatingModel::class,
