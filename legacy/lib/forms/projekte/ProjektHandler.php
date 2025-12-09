@@ -787,6 +787,7 @@ class ProjektHandler extends Renderer
                 <?php } ?>
                 <li><a href="#" data-toggle="modal" data-target="#projekt-delete-dlg">Projekt löschen&nbsp;<i
                             class="fa fa-fw fa-trash"></i></a></li>
+                <li><a href="<?= route('project.show', $this->id) ?>">Zur neuen Ansicht&nbsp;<i class="fa fa-fw fa-arrow-circle-o-right"></i></a></li>
 
                 <!-- FIXME LIVE COMMENT ONLY
                 <li><a href="<?php echo $url; ?>history" title="Verlauf">Historie <i class="fa fa-fw fa-history"
