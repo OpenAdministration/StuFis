@@ -28,7 +28,14 @@ return [
     ],
     'view' => [
         'summary_cards' => [
-            'state' => 'Status'
+            'state' => 'Status',
+            'budgetplan' => 'Haushaltsplan',
+            'out_total' => 'Geplante Ausgaben',
+            'in_total' => 'Geplante Einnahmen',
+            'out_available' => 'Noch Verfügbar',
+            'in_available' => 'Noch Verfügbar',
+            'out_ratio' => 'Auslastung',
+            'in_ratio' => 'Auslastung',
         ],
         'header' => [
             'title' => 'Projekt',
@@ -36,12 +43,7 @@ return [
             'change_status' => 'Status ändern',
             'edit' => 'Bearbeiten',
             'delete' => 'Löschen',
-        ],
-        'budget_summary' => [
-            'total' => 'Gesamtbudget',
-            'spent' => 'Ausgegeben',
-            'available' => 'Verfügbar',
-            'usage' => 'Auslastung',
+            'new-expense' => 'Abrechnung erstellen'
         ],
         'approval' => [
             'heading' => 'Genehmigung',
@@ -72,6 +74,7 @@ return [
             'status' => 'Status',
             'sum' => 'Summe',
         ],
+
         'description' => [
             'heading' => 'Projektbeschreibung',
         ],
