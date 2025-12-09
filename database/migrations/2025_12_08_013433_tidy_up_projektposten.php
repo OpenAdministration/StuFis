@@ -12,30 +12,31 @@ return new class extends Migration
      */
     public function up(): void
     {
+        $db_prefix = config('database.connections.mariadb.prefix');
         Schema::table('projektposten', function (Blueprint $table) {
             $table->unsignedBigInteger('id')->change();
         });
 
         // Store old and new IDs mapping
-        DB::statement('
+        DB::statement("
             CREATE TEMPORARY TABLE id_mapping AS
             SELECT pp.id as old_id, t.new_id, pp.projekt_id
-            FROM projektposten pp
+            FROM $db_prefixprojektposten pp
             JOIN (
-                SELECT id, projekt_id, ROW_NUMBER() OVER (ORDER BY projekt_id, id) as new_id FROM projektposten
+                SELECT id, projekt_id, ROW_NUMBER() OVER (ORDER BY projekt_id, id) as new_id FROM $db_prefixprojektposten
             ) as t ON pp.id = t.id AND pp.projekt_id = t.projekt_id
-        ');
+        ");
 
         // Update projektposten IDs
         DB::statement('
-            UPDATE projektposten pp
+            UPDATE $db_prefixprojektposten pp
             JOIN id_mapping im ON pp.id = im.old_id and pp.projekt_id = im.projekt_id
             SET pp.id = im.new_id
         ');
 
         // Update beleg_posten foreign keys
         DB::statement('
-            UPDATE beleg_posten bp
+            UPDATE $db_prefixbeleg_posten bp
             JOIN belege b ON b.id = bp.beleg_id
             JOIN auslagen a ON a.id = b.auslagen_id
             JOIN id_mapping im ON bp.projekt_posten_id = im.old_id AND a.projekt_id = im.projekt_id
