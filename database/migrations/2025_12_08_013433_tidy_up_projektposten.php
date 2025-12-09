@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $db_prefix = config('database.connections.mariadb.prefix');
+        $db_prefix = config('database.connections.mariadb.prefix', '');
         Schema::table('projektposten', function (Blueprint $table) {
             $table->unsignedBigInteger('id')->change();
         });
@@ -28,20 +28,20 @@ return new class extends Migration
         ");
 
         // Update projektposten IDs
-        DB::statement('
+        DB::statement("
             UPDATE {$db_prefix}projektposten pp
             JOIN id_mapping im ON pp.id = im.old_id and pp.projekt_id = im.projekt_id
             SET pp.id = im.new_id
-        ');
+        ");
 
         // Update beleg_posten foreign keys
-        DB::statement('
+        DB::statement("
             UPDATE {$db_prefix}beleg_posten bp
-            JOIN belege b ON b.id = bp.beleg_id
-            JOIN auslagen a ON a.id = b.auslagen_id
+            JOIN {$db_prefix}belege b ON b.id = bp.beleg_id
+            JOIN {$db_prefix}auslagen a ON a.id = b.auslagen_id
             JOIN id_mapping im ON bp.projekt_posten_id = im.old_id AND a.projekt_id = im.projekt_id
             SET bp.projekt_posten_id = im.new_id
-        ');
+        ");
 
         Schema::table('projektposten', function (Blueprint $table) {
             $table->dropPrimary(['id', 'projekt_id']);
@@ -73,6 +73,7 @@ return new class extends Migration
             $table->dropPrimary();
             $table->dropForeign(['titel_id']);
             $table->primary(['id', 'projekt_id']);
+            $table->dropColumn('position');
         });
     }
 };
