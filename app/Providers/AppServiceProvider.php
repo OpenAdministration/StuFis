@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Services\Auth\AuthService;
 use App\Support\Money\MoneySynth;
+use Cknow\Money\Money;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
@@ -48,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->bootRoute();
 
-        $this->bootLivewire();
+        $this->bootMoney();
 
         // Carbon::setLocale(config('app.locale'));
     }
@@ -82,8 +84,11 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    private function bootLivewire(): void
+    private function bootMoney(): void
     {
         Livewire::propertySynthesizer(MoneySynth::class);
+        Builder::macro('sumMoney', function (string $column): Money {
+            return Money::EUR($this->sum($column));
+        });
     }
 }

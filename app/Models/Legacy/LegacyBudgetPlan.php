@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -50,10 +51,35 @@ class LegacyBudgetPlan extends Model
 
     public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasManyThrough(LegacyBudgetItem::class, LegacyBudgetGroup::class);
+        return $this->throughBudgetGroups()->hasBudgetItems();
     }
 
-    public static function latest() : LegacyBudgetPlan {
+    public static function latest() : \Eloquent|static {
         return self::orderBy('id', 'desc')->first();
     }
+
+    public static function findByDate(Carbon $date) : static
+    {
+        return self::query()->where('von', '<=', $date)
+            ->where(fn ($query) =>
+                $query->where('bis', '>=', $date)
+                      ->orWhereNull('bis'))
+            ->first();
+    }
+
+    public function label() : string {
+        $format = "M y";
+        if ($this->bis === null){
+            return "HPP$this->id ab {$this->von->format($format)}";
+        }else{
+            return "HHP$this->id {$this->von->format($format)} - {$this->bis->format($format)}";
+        }
+    }
+
+    protected $casts = [
+        'von' => 'date',
+        'bis' => 'date',
+    ];
+
+
 }

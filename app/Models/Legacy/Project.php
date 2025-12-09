@@ -3,14 +3,19 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\BudgetPlan;
 use App\Models\User;
 use App\States\Project\ProjectState;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Collection;
+use Cknow\Money\Money;
 use Spatie\ModelStates\HasStates;
 
 /**
@@ -18,8 +23,8 @@ use Spatie\ModelStates\HasStates;
  *
  * @property int $id
  * @property int $creator_id
- * @property string $createdat
- * @property string $lastupdated
+ * @property Carbon $createdat
+ * @property Carbon $lastupdated
  * @property int $version
  * @property ProjectState $state
  * @property int $stateCreator_id
@@ -29,15 +34,15 @@ use Spatie\ModelStates\HasStates;
  * @property string $protokoll
  * @property string $recht
  * @property string $recht_additional
- * @property string $date_start
- * @property string $date_end
+ * @property Carbon $date_start
+ * @property Carbon $date_end
  * @property string $beschreibung
- * @property Expense[] $expenses
+ * @property Collection<Expense> $expenses
  * @property User $user
- * @property ProjectPost[] $posts
+ * @property-read Collection<ProjectPost> $posts
+ * @property-read int|null $posts_count
  * @property-read User $creator
  * @property-read int|null $expenses_count
- * @property-read int|null $posts_count
  * @property-read User $stateCreator
  *
  * @method static Builder|Project newModelQuery()
@@ -78,7 +83,8 @@ class Project extends Model
      */
     protected $table = 'projekte';
 
-    public $timestamps = false;
+    const CREATED_AT = 'createdat';
+    const UPDATED_AT = 'lastupdated';
 
     public $casts = [
         'state' => ProjectState::class,
@@ -125,9 +131,64 @@ class Project extends Model
         return $this->belongsTo(\App\Models\User::class, 'stateCreator_id');
     }
 
+    public function relatedBudgetPlan() : LegacyBudgetPlan
+    {
+        return LegacyBudgetPlan::findByDate($this->createdat);
+    }
+
+    /**
+     * Get the ordered posts associated with the project.
+     *
+     * @return HasMany
+     */
     public function posts(): HasMany
     {
-        return $this->hasMany(ProjectPost::class, 'projekt_id');
+        return $this->hasMany(ProjectPost::class, 'projekt_id')->orderBy('position');
+    }
+
+    public function expensePosts() : HasManyThrough
+    {
+        return $this->throughPosts()->hasExpensePosts();
+    }
+
+    public function totalAusgaben() : Money
+    {
+        return $this->posts()->sumMoney('ausgaben');
+    }
+
+    public function totalUsedAusgaben() : Money
+    {
+        return $this->expensePosts()->sumMoney('beleg_posten.ausgaben');
+    }
+
+    public function totalRemainingAusgaben(): Money
+    {
+        return $this->posts()->sumMoney('ausgaben')->subtract($this->totalUsedAusgaben());
+    }
+
+    public function totalRatioAusgaben() : int
+    {
+        return (int) ($this->totalUsedAusgaben()->ratioOf($this->totalAusgaben()) * 100);
+    }
+
+    public function totalEinnahmen() : Money
+    {
+        return $this->posts()->sumMoney('einnahmen');
+    }
+
+    public function totalUsedEinnahmen() : Money
+    {
+        return $this->expensePosts()->sumMoney('beleg_posten.einnahmen');
+    }
+
+    public function totalRemainingEinnahmen(): Money
+    {
+        return $this->posts()->sumMoney('einnahmen')->subtract($this->totalUsedEinnahmen());
+    }
+
+    public function totalRatioEinnahmen() : int
+    {
+        return (int) ($this->totalUsedEinnahmen()->ratioOf($this->totalEinnahmen()) * 100);
     }
 
 }

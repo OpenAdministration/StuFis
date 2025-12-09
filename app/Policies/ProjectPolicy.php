@@ -15,7 +15,6 @@ use App\States\Project\ProjectState;
 use App\States\Project\Revoked;
 use App\States\Project\Terminated;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use function PHPUnit\Framework\matches;
 
 class ProjectPolicy
 {
@@ -121,7 +120,5 @@ class ProjectPolicy
         }
         return true;
     }
-
-
 
 }

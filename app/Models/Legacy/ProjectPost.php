@@ -8,6 +8,7 @@ use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\ProjectPost
@@ -56,10 +57,7 @@ class ProjectPost extends Model
         'updating' => UpdatingModel::class,
     ];
 
-    /**
-     * @var array
-     */
-    protected $fillable = ['titel_id', 'einnahmen', 'ausgaben', 'name', 'bemerkung', 'id'];
+    protected $guarded = ['id', 'projekt_id'];
 
     public function project(): BelongsTo
     {
@@ -73,18 +71,39 @@ class ProjectPost extends Model
      * For not this stays, it should/could be changed as soon as the legacy code is removed.
      * Disadvantages: no good eager loading, no good aggregation and so on.
      */
-    public function expensePosts() : Builder
+    public function expensePosts() : HasMany
     {
+        return $this->hasMany(ExpenseReceiptPost::class, 'projekt_posten_id');
+        /* old version before key fixing
         $expenses_id = $this->project->expenses()->get('id');
         return ExpenseReceiptPost::where('projekt_posten_id', $this->id)
             ->whereHas('expensesReceipt', function ($query) use ($expenses_id) {
                 $query->whereIn('auslagen_id', $expenses_id);
             });
+        */
     }
 
     public function budgetItem() : BelongsTo
     {
         return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
+    }
+
+    public function expendedSum() : Money
+    {
+        if($this->ausgaben->isZero()){
+            return Money::EUR($this->expensePosts()->sum('einnahmen'), true);
+        }
+        return Money::EUR($this->expensePosts()->sum('ausgaben'), true);
+    }
+
+    public function expendedRatio() : int {
+        if($this->expensePosts()->exists() && !$this->ausgaben->isZero()){
+            return (int) ($this->expendedSum()->ratioOf($this->ausgaben) * 100);
+        }
+        if($this->expensePosts()->exists() && !$this->einnahmen->isZero()){
+            return (int) ($this->expendedSum()->ratioOf($this->einnahmen) * 100);
+        }
+        return -1;
     }
 
 }

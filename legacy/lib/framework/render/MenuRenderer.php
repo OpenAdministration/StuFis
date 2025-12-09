@@ -629,11 +629,11 @@ class MenuRenderer extends Renderer
                 'projekte.org', // Org
                 'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
-                'last_change',  // letzte änderung
+                'last_change',  // letzte Änderung
             ],
             [
                 'auslagen.state' => ['LIKE', "$stateString%"],
-                "auslagen.ok-$missingColumn" => '',
+                "auslagen.ok_$missingColumn" => '',
             ],
             [
                 ['table' => 'projekte', 'type' => 'inner', 'on' => ['projekte.id', 'auslagen.projekt_id']],

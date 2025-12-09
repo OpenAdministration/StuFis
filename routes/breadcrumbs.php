@@ -15,7 +15,7 @@ use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
 // Home
 Breadcrumbs::for('legacy.dashboard', static function (BreadcrumbTrail $trail): void {
-    $trail->push('Home', route('legacy.dashboard', ['sub' => 'mygremium']));
+    $trail->push('Home', route('home'));
 });
 
 // Home > TODOS

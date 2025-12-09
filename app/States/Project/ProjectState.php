@@ -2,11 +2,13 @@
 
 namespace App\States\Project;
 
+use App\Models\Legacy\Project;
+use Livewire\Wireable;
 use Spatie\ModelStates\Exceptions\InvalidConfig;
 use Spatie\ModelStates\State;
 use Spatie\ModelStates\StateConfig;
 
-abstract class ProjectState extends State
+abstract class ProjectState extends State implements Wireable
 {
     public static string $name;
 
@@ -84,7 +86,7 @@ abstract class ProjectState extends State
             ApprovedByOrg::class,
             ApprovedByOther::class,
             Terminated::class
-        ], ApprovedByOrg::class);
+        ], ApprovedByFinance::class);
 
         $config = $config->allowTransition([
             Applied::class,
@@ -97,6 +99,17 @@ abstract class ProjectState extends State
         ], ApprovedByOther::class);
 
         return $config;
+    }
+
+    public function toLivewire(): array
+    {
+        return [$this->getValue(), $this->getModel()->getKey()];
+    }
+
+    public static function fromLivewire($value){
+        [$name, $id] = $value;
+        $model = Project::find($id);
+        return ProjectState::make($name, $model);
     }
 
 }
