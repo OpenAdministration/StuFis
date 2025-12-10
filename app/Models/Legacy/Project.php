@@ -86,14 +86,6 @@ class Project extends Model
 
     const UPDATED_AT = 'lastupdated';
 
-    public $casts = [
-        'state' => ProjectState::class,
-        'createdat' => 'datetime',
-        'lastupdated' => 'datetime',
-        'date_start' => 'date',
-        'date_end' => 'date',
-    ];
-
     /**
      * @var array
      */
@@ -115,6 +107,17 @@ class Project extends Model
     protected $dispatchesEvents = [
         'updating' => UpdatingModel::class,
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'state' => ProjectState::class,
+            'createdat' => 'datetime',
+            'lastupdated' => 'datetime',
+            'date_start' => 'date',
+            'date_end' => 'date',
+        ];
+    }
 
     public function expenses(): HasMany
     {

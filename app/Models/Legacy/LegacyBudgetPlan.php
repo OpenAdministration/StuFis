@@ -76,8 +76,11 @@ class LegacyBudgetPlan extends Model
         }
     }
 
-    protected $casts = [
-        'von' => 'date',
-        'bis' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'von' => 'date',
+            'bis' => 'date',
+        ];
+    }
 }

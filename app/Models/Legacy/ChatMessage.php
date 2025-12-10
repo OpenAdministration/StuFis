@@ -52,11 +52,14 @@ class ChatMessage extends Model
         'content',
     ];
 
-    protected $casts = [
-        'timestamp' => 'datetime',
-        'type' => ChatMessageType::class,
-        'text' => 'encrypted',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'timestamp' => 'datetime',
+            'type' => ChatMessageType::class,
+            'text' => 'encrypted',
+        ];
+    }
 
     public function user(): BelongsTo
     {

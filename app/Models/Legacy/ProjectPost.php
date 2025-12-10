@@ -48,16 +48,19 @@ class ProjectPost extends Model
 
     public $timestamps = false;
 
-    protected $casts = [
-        'einnahmen' => MoneyDecimalCast::class,
-        'ausgaben' => MoneyDecimalCast::class,
-    ];
-
     protected $dispatchesEvents = [
         'updating' => UpdatingModel::class,
     ];
 
     protected $guarded = ['id', 'projekt_id'];
+
+    protected function casts(): array
+    {
+        return [
+            'einnahmen' => MoneyDecimalCast::class,
+            'ausgaben' => MoneyDecimalCast::class,
+        ];
+    }
 
     public function project(): BelongsTo
     {
