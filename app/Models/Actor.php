@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Database\Factories\ActorFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -55,12 +56,14 @@ class Actor extends Model
 {
     use HasFactory;
 
-    public function scopeOrganisation(Builder $builder): void
+    #[Scope]
+    protected function organisation(Builder $builder): void
     {
         $builder->where('is_organisation', '=', true);
     }
 
-    public function scopeUser(Builder $builder): void
+    #[Scope]
+    protected function user(Builder $builder): void
     {
         $builder->where('is_organisation', '=', false);
     }
