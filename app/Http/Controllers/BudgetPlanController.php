@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Gate;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class BudgetPlanController extends Controller
 {
