@@ -39,7 +39,7 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
         "barryvdh/laravel-ide-helper": "^3.5",
-        "driftingly/rector-laravel": "^1.2",
+        "driftingly/rector-laravel": "^2.1",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.1",
         "laravel/pint": "^1.20",
@@ -49,10 +49,10 @@
         "magentron/laravel-blade-lint": "^2.0",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-laravel": "^3.1",
-        "pestphp/pest-plugin-livewire": "^2.1",
-        "rector/rector": "^1.2",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-livewire": "^v4.0",
+        "rector/rector": "^2.2",
         "roave/security-advisories": "dev-latest",
         "laravel/pail": "^1.2.2"
     },

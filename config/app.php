@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'Europe/Berlin'),
+    'timezone' => 'Europe/Berlin',
 
     /*
     |--------------------------------------------------------------------------
