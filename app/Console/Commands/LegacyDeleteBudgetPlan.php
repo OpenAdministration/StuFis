@@ -25,7 +25,7 @@ class LegacyDeleteBudgetPlan extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $hhp = LegacyBudgetPlan::findOrFail($this->argument('id'));
         $groups = $hhp->budgetGroups();
