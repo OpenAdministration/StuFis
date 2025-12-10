@@ -16,7 +16,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div class="pl-4">
                     <h1 class="text-3xl font-bold text-gray-900">{{ __('project.view.header.title') }} {{ $project->id }}</h1>
-                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.created_at') }} {{ $project->createdat->format('d.m.Y') }}</p>
+                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -131,7 +131,7 @@
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_available') }}</p>
                         <p @class([ "text-2xl font-bold mt-1",
                                     'text-green-600' => $totalRatioAusgaben <  75,
-                                    'text-yellos-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                                    'text-yellow-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
                                     'text-red-600' => $totalRatioAusgaben >  100,
                         ])>
                             {{ $totalRemainingAusgaben }}
@@ -273,10 +273,10 @@
                 <div>
                     <label
                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.approval.legal_basis') }}</label>
-                    @isset($project->recht)
-                        <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
-                    @else
+                    @empty($project->recht)
                         <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
+                    @else
+                        <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
                     @endisset
                 </div>
                 <div>
@@ -304,47 +304,65 @@
                 <div>
                     <label
                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.name') }}</label>
-                    <p class="text-gray-900 font-medium">{{ $project->name }}</p>
+                    <p class="text-gray-900 font-medium">
+                        @empty($project->name)
+                            <x-no-content/>
+                        @else
+                            {{ $project->name }}
+                        @endisset
+                    </p>
                 </div>
 
                 <div>
                     <label
                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible') }}</label>
-                    <a href="mailto:{{ $project->responsible }}"
-                       class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                        {{ $project->responsible }}
-                    </a>
+                @if(empty($project->responsible))
+                        <x-no-content/>
+                    @else
+                        <a href="mailto:{{ $project->responsible }}"
+                           class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+                            <x-fas-envelope  class="size-3.5 mr-2"/>
+                            {{ $project->responsible }}
+                        </a>
+                    @endisset
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         {{ __('project.view.details.org') }}
                     </label>
-                    <p class="text-gray-900">{{ $project->org }}</p>
+                    <p class="text-gray-900">
+                        @empty($project->org)
+                            <x-no-content/>
+                        @else
+                            {{ $project->org }}
+                        @endisset
+                    </p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
                         {{ __('project.view.details.period') }}
                     </label>
+
                     <p class="text-gray-900">
-                            <span
-                                class="font-medium">{{ __('project.view.details.from') }}</span> {{ $project->date_start->format('d.m.Y') }}
-                        <span
-                            class="font-medium mx-2">{{ __('project.view.details.to') }}</span> {{ $project->date_end->format('d.m.Y') }}
+                        @empty($project->date_start)
+                            <x-no-content/>
+                        @else
+                            <span class="font-medium">{{ __('project.view.details.from') }} </span>
+                            {{ $project->date_start?->format('d.m.Y') }}
+                            <span class="font-medium mx-2">{{ __('project.view.details.to') }} </span>
+                            {{ $project->date_end?->format('d.m.Y') }}
+                        @endif
                     </p>
                 </div>
 
                 <div class="lg:col-span-2">
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.link') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('project.view.details.link') }}
+                    </label>
                     <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
                 </div>
-
             </div>
         </div>
 
@@ -411,23 +429,24 @@
                             @php $ratio = $post->expendedRatio() @endphp
                             <td @class([
                                 "px-6 py-4 whitespace-nowrap text-sm text-right font-medium",
-                                "text-green-600" => $ratio >= 75 && $ratio <= 100,
                                 "text-yellow-600" =>  $ratio < 75,
+                                "text-green-600" => $ratio >= 75 && $ratio <= 100,
                                 "text-red-600" =>  $ratio > 100
                             ])>
                                 {{ $post->expendedSum() }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="flex flex-col items-center gap-1">
-                                    <div class="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
-                                        <div @class([
+                                @if($ratio !== 0)
+                                    <div class="flex flex-col items-center gap-1">
+                                        <div class="w-full bg-gray-200 rounded-full h-2 max-w-[100px]">
+                                            <div @class([
                                             "h-2 rounded-full transition-all duration-300",
                                             "bg-green-500" => $ratio >= 75 && $ratio <= 100,
                                             "bg-yellow-500"=>  $ratio < 75,
                                             "bg-red-500" =>  $ratio > 100
                                         ]) style="width: {{ min($ratio,100) }}%"></div>
-                                    </div>
-                                    <span @class([
+                                        </div>
+                                        <span @class([
                                         "text-xs font-medium",
                                         "text-green-600" => $ratio >= 75 && $ratio <= 100,
                                         "text-yellow-600"=>  $ratio < 75,
@@ -435,7 +454,8 @@
                                     ])>
                                         {{ $ratio }}%
                                     </span>
-                                </div>
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -481,7 +501,7 @@
                                 <div class="flex-1">
                                     <div class="flex items-center gap-3">
                                         <h3 class="text-lg font-semibold text-gray-900">
-                                            {{ $expense->name_suffix }}
+                                            A{{ $expense->id }} - {{ $expense->name_suffix }}
                                         </h3>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                             {{ $expense->state }}

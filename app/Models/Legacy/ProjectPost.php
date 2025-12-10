@@ -103,7 +103,7 @@ class ProjectPost extends Model
         if($this->expensePosts()->exists() && !$this->einnahmen->isZero()){
             return (int) ($this->expendedSum()->ratioOf($this->einnahmen) * 100);
         }
-        return -1;
+        return 0;
     }
 
 }

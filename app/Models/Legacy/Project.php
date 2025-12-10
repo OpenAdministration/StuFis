@@ -102,8 +102,8 @@ class Project extends Model
     protected function responsible(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
-            set: fn(string $value) => str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
+            get: fn(string $value) => empty($value) || str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
+            set: fn(string $value) => empty($value) || str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
         );
     }
 
@@ -118,17 +118,17 @@ class Project extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(\App\Models\Legacy\Expense::class, 'projekt_id', 'id');
+        return $this->hasMany(Expense::class, 'projekt_id', 'id');
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function stateCreator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'stateCreator_id');
+        return $this->belongsTo(User::class, 'stateCreator_id');
     }
 
     public function relatedBudgetPlan() : LegacyBudgetPlan
@@ -168,7 +168,11 @@ class Project extends Model
 
     public function totalRatioAusgaben() : int
     {
-        return (int) ($this->totalUsedAusgaben()->ratioOf($this->totalAusgaben()) * 100);
+        $out = $this->totalAusgaben();
+        if($out->isZero()){
+            return 0;
+        }
+        return (int) ($this->totalUsedAusgaben()->ratioOf($out) * 100);
     }
 
     public function totalEinnahmen() : Money
@@ -188,7 +192,11 @@ class Project extends Model
 
     public function totalRatioEinnahmen() : int
     {
-        return (int) ($this->totalUsedEinnahmen()->ratioOf($this->totalEinnahmen()) * 100);
+        $in = $this->totalEinnahmen();
+        if($in->isZero()){
+            return 0;
+        }
+        return (int) ($this->totalUsedEinnahmen()->ratioOf($in) * 100);
     }
 
 }

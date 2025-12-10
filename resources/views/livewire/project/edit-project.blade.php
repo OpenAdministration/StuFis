@@ -34,7 +34,7 @@
     </div>
 
     {{-- Approval Section (only visible for non-draft projects) --}}
-    @if(true)
+    @if($state_name !== 'draft')
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6">
                 <div class="sm:col-span-2 flex justify-between items-start">
@@ -59,16 +59,16 @@
 
                     {{-- Dynamic Additional Fields per Rechtsgrundlage --}}
                     <div>
-                        @if ($rechtsgrundlagen[$form->recht]['has_additional'])
+                        @isset ($rechtsgrundlagen[$form->recht]['has_additional'])
                             <flux:input wire:model="form.recht_additional"
                                         :label="$rechtsgrundlagen[$form->recht]['label_additional']"
-                                        placeholder="{{ $rechtsgrundlagen[$form->recht]['placeholder'] }}"/>
-                        @endif
+                                        placeholder="{{ $rechtsgrundlagen[$form->recht]['placeholder'] ?? '' }}"/>
+                        @endisset
                     </div>
                     <div class="sm:col-span-2">
-                        @if (!empty($rechtsgrundlagen[$form->recht]['hint']))
+                        @if (isset($rechtsgrundlagen[$form->recht]['hint']))
                             <p class="mt-2 text-sm text-gray-500">{{ $rechtsgrundlagen[$form->recht]['hint'] }}</p>
-                        @endif
+                        @endisset
                     </div>
                 </div>
             </div>

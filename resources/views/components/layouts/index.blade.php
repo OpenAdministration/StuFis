@@ -216,6 +216,9 @@
                         <flux:button :href="route('legacy.new-projekt')" icon="plus" variant="primary">
                             {{ __('general.new-project-button') }}
                         </flux:button>
+                        <flux:button :href="route('project.create')" icon="plus" variant="primary">
+                            {{ __('general.new-project-button') }}
+                        </flux:button>
                     </div>
                     <div class="flex items-center sm:space-x-6">
                         <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">

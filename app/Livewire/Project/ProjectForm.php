@@ -95,8 +95,8 @@ class ProjectForm extends Form
             'recht' => $this->recht,
             'recht_additional' => $this->recht_additional,
             // make compatible with legacy database
-            'date_start' => $this->dateRange["start"],
-            'date_end' => $this->dateRange["end"],
+            'date_start' => $this->dateRange["start"] ?? null,
+            'date_end' => $this->dateRange["end"] ?? null,
             'version' => $this->version,
             'createdat' => Carbon::parse(LegacyBudgetPlan::find($this->hhp_id)->von)
         ];
