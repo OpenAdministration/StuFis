@@ -312,7 +312,7 @@ class TransactionImportWire extends Component
         // if($type === 'decimal') dd([$value, (float) $value,$db_col_name]);
         return match ($type) {
             'integer' => (int) $value,
-            'date' => guessCarbon($value, 'Y-m-d'),
+            'date' => guessDate($value, 'Y-m-d'),
             'decimal' => $value, // no casting needed, string is expected
             default => $value,
         };
@@ -329,7 +329,7 @@ class TransactionImportWire extends Component
         }
 
         return match ($type) {
-            'date' => guessCarbon($value, 'd.m.Y'),
+            'date' => guessDate($value, 'd.m.Y'),
             'decimal' => number_format((float) $value, 2, ',', '.').' €',
             'iban' => iban_to_human_format($value),
             default => $value
