@@ -145,17 +145,23 @@ Breadcrumbs::for('legacy.hhp.titel.view', static function (BreadcrumbTrail $trai
 });
 
 // Home > Projekt > New
-Breadcrumbs::for('legacy.new-projekt', static function (BreadcrumbTrail $trail): void {
+Breadcrumbs::for('project.create', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.projekt'));
     $trail->push(__('general.breadcrumb.projekt-new'), route('legacy.new-projekt'));
 });
 
 // Home > Projekt > PID
-Breadcrumbs::for('legacy.projekt', static function (BreadcrumbTrail $trail, $projekt_id): void {
+Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $projekt_id): void {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push($projekt_id, route('legacy.projekt', $projekt_id));
+    $trail->push($projekt_id, route('project.show', $projekt_id));
+});
+
+// Home > Projekt > PID > Edit
+Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $projekt_id): void {
+    $trail->parent('project.show', $projekt_id);;
+    $trail->push(__('general.breadcrumb.projekt-edit'), route('project.edit', $projekt_id));
 });
 
 // Home > Projekt > PID > Abrechnung > AID

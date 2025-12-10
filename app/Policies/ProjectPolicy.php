@@ -30,10 +30,9 @@ class ProjectPolicy
         return true;
     }
 
-    public function create(User $user, Project $project): bool
+    public function create(User $user): bool
     {
-        // depends on the project
-        return false;
+        return true;
     }
 
     public function update(User $user, Project $project): bool

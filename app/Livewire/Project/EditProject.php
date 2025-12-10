@@ -27,7 +27,7 @@ class EditProject extends Component
     public ProjectForm $form;
 
     #[Url]
-    public ?int $project_id;
+    public ?int $project_id = null;
     public bool $isNew;
 
     public Collection $posts;
@@ -44,8 +44,11 @@ class EditProject extends Component
         if ($this->isNew) {
             Gate::authorize('create', Project::class);
             $this->form->initializeNew();
-            $this->addEmptyPost();
+            $this->posts = collect();
             $this->attachments = [];
+            $this->state_name = 'draft';
+
+            $this->addEmptyPost();
         } else {
             $project = Project::findOrFail($this->project_id);
             Gate::authorize('update', $project);

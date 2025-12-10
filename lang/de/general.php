@@ -22,6 +22,7 @@ return [
     'breadcrumb.hhp-title-details' => 'Haushaltstitel Details',
     'breadcrumb.projekt' => 'Projekt',
     'breadcrumb.projekt-new' => 'Neu',
+    'breadcrumb.projekt-edit' => 'Ändern',
     'breadcrumb.abrechnung' => 'Abrechnung',
     'breadcrumb.belege-pdf' => 'Belege-PDF',
     'breadcrumb.zahlungsanweisung-pdf' => 'Zahlungsanweisung-PDF',
