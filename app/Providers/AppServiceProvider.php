@@ -87,6 +87,6 @@ class AppServiceProvider extends ServiceProvider
     private function bootMoney(): void
     {
         Livewire::propertySynthesizer(MoneySynth::class);
-        Builder::macro('sumMoney', fn(string $column): Money => Money::EUR($this->sum($column)));
+        Builder::macro('sumMoney', fn (string $column): Money => Money::EUR($this->sum($column)));
     }
 }

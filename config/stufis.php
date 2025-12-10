@@ -1,6 +1,10 @@
 <?php
 
-$org_data = (include base_path('legacy/config/config.orgs.php'))[env('AUTH_REALM')];
+if (env('APP_ENV') === 'testing') {
+    $org_data = (include base_path('legacy/config/config.orgs.testing.php'))[env('AUTH_REALM')];
+} else {
+    $org_data = (include base_path('legacy/config/config.orgs.php'))[env('AUTH_REALM')];
+}
 
 return [
     /**

@@ -25,7 +25,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereVon($value)
- *
  * @method HasOneOrManyThrough throughBudgetGroups()
  *
  * @mixin \Eloquent

@@ -33,7 +33,4 @@ use Illuminate\Support\Carbon;
  *
  * @mixin Eloquent
  */
-class ProjectAttachment extends Model
-{
-
-}
+class ProjectAttachment extends Model {}

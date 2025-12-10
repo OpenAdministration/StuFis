@@ -55,7 +55,7 @@ class EditProject extends Component
             Gate::authorize('update', $project);
             $this->form->setProject($project);
             $this->state_name = $project->state->getValue();
-            $this->posts = $project->posts->map(fn(ProjectPost $post) => [
+            $this->posts = $project->posts->map(fn (ProjectPost $post) => [
                 'id' => $post->id,
                 'name' => $post->name,
                 'bemerkung' => $post->bemerkung ?? '',
@@ -174,7 +174,7 @@ class EditProject extends Component
      */
     public function getTotalIncome(): Money
     {
-        return $this->posts->reduce(fn(?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
+        return $this->posts->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
     }
 
     /**
@@ -182,7 +182,7 @@ class EditProject extends Component
      */
     public function getTotalExpenses(): Money
     {
-        return $this->posts->reduce(fn(?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
+        return $this->posts->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
     }
 
     public function removeAttachment(int $index): void
@@ -210,7 +210,7 @@ class EditProject extends Component
     {
         $rechtsgrundlagen = config('stufis.project_legal', []);
 
-        return collect($rechtsgrundlagen)->map(fn($def, $key) => [
+        return collect($rechtsgrundlagen)->map(fn ($def, $key) => [
             'key' => $key,
             'label' => $def['label'] ?? $key,
             'placeholder' => $def['placeholder'] ?? '',

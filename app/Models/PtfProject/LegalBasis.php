@@ -30,7 +30,4 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-class LegalBasis extends Model
-{
-
-}
+class LegalBasis extends Model {}

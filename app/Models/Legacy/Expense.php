@@ -60,7 +60,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
  * @method static Builder|Expense whereZahlungIban($value)
  * @method static Builder|Expense whereZahlungName($value)
  * @method static Builder|Expense whereZahlungVwzk($value)
- *
  * @method HasOneOrManyThrough|ExpenseReceipt throughReceipts()
  *
  * @mixin \Eloquent

@@ -66,7 +66,6 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
  * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
- *
  * @method HasOneOrManyThrough throughPosts()
  *
  * @mixin \Eloquent

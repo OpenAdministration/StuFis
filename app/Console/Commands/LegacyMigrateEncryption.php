@@ -33,7 +33,7 @@ class LegacyMigrateEncryption extends Command
      */
     public function handle(): int
     {
-        if (!Env::get('CHAT_PRIVATE_KEY') !== null && Env::get('CHAT_PUBLIC_KEY') !== null && Env::get('IBAN_SECRET_KEY') !== null) {
+        if (! Env::get('CHAT_PRIVATE_KEY') !== null && Env::get('CHAT_PUBLIC_KEY') !== null && Env::get('IBAN_SECRET_KEY') !== null) {
             $this->error('Please set chat private key and public key / IBAN_SECRET_KEY');
 
             return self::FAILURE;
