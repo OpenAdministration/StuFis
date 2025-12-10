@@ -42,7 +42,7 @@ class ProjectOverview extends Component
     #[Computed]
     public function userCommittees(): array
     {
-        return app(AuthService::class)->userCommittees()->toArray();
+        return resolve(AuthService::class)->userCommittees()->toArray();
     }
 
     #[Computed]
@@ -70,7 +70,7 @@ class ProjectOverview extends Component
                 if (empty($committees)) {
                     return [];
                 }
-                $query->where(function ($q) use ($committees) {
+                $query->where(function ($q) use ($committees): void {
                     $q->whereIn('org', $committees)
                         ->orWhereNull('org')
                         ->orWhere('org', '');
