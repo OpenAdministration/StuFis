@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Gate;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
@@ -11,7 +12,7 @@ class BudgetPlanController extends Controller
 {
     public function index()
     {
-        $this->authorize('viewAny', BudgetPlan::class);
+        Gate::authorize('viewAny', BudgetPlan::class);
 
         $years = FiscalYear::orderByDesc('start_date')->get();
 
@@ -23,7 +24,7 @@ class BudgetPlanController extends Controller
     public function show(int $plan_id)
     {
         $plan = BudgetPlan::findOrFail($plan_id);
-        $this->authorize('view', $plan);
+        Gate::authorize('view', $plan);
         $items = [
             BudgetType::INCOME->slug() => $plan->budgetItemsTree(BudgetType::INCOME),
             BudgetType::EXPENSE->slug() => $plan->budgetItemsTree(BudgetType::EXPENSE),
@@ -34,7 +35,7 @@ class BudgetPlanController extends Controller
 
     public function create(): RedirectResponse
     {
-        $this->authorize('create', BudgetPlan::class);
+        Gate::authorize('create', BudgetPlan::class);
         $plan = BudgetPlan::create(['state' => 'draft']);
         $groups = $plan->budgetItems()->createMany([
             ['is_group' => 1, 'budget_type' => BudgetType::INCOME, 'position' => 0, 'short_name' => 'E1'],

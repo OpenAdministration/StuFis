@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Gate;
 use App\Models\Legacy\Project;
 use Illuminate\Http\Request;
 
@@ -36,7 +37,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $this->authorize('view', $project);
+        Gate::authorize('view', $project);
 
         return view('project.show', compact('project'));
     }
