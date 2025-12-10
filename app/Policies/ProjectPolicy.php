@@ -43,7 +43,7 @@ class ProjectPolicy
         $approveOrg = $userGroups->contains('ref-finanzen-hv');
         $approveOther = $userGroups->contains('ref-finanzen-hv');
 
-        return match($project->state::class)  {
+        return match ($project->state::class) {
             Draft::class => true,
             Applied::class => $financeAll,
             NeedOrgApproval::class => $approveOrg,
@@ -74,7 +74,7 @@ class ProjectPolicy
         $currentState = $project->state;
 
         // check if transition is possible
-        if(!$currentState->canTransitionTo($newState)) {
+        if (! $currentState->canTransitionTo($newState)) {
             return false;
         }
 
@@ -90,7 +90,7 @@ class ProjectPolicy
 
         // there are some minor exceptions for certain states, but most of the time the needed permission is only
         // defined by the new state, not the current one
-        return match($newState::class)  {
+        return match ($newState::class) {
             Draft::class => $isOwner || $isOrg || $financeAll,
             Applied::class => $isOwner || $isOrg || $financeAll,
             NeedOrgApproval::class => $financeAll,
@@ -107,17 +107,17 @@ class ProjectPolicy
 
     public function updateField(User $user, Project $project, string $field)
     {
-        if($this->update($user, $project) === false){
+        if ($this->update($user, $project) === false) {
             return false;
         }
 
-        if($field === 'recht' || $field === 'recht_additional' || $field === 'posten-titel') {
+        if ($field === 'recht' || $field === 'recht_additional' || $field === 'posten-titel') {
             return match ($project->state::class) {
                 Draft::class => false,
                 default => true
             };
         }
+
         return true;
     }
-
 }

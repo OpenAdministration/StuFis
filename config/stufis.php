@@ -2,7 +2,6 @@
 
 $org_data = (include base_path('legacy/config/config.orgs.php'))[env('AUTH_REALM')];
 
-
 return [
     /**
      * stable - only stable stuff

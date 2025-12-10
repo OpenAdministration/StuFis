@@ -5,7 +5,6 @@ namespace forms\projekte\auslagen;
 use App\Exceptions\LegacyDieException;
 use Exception;
 use forms\chat\ChatHandler;
-use forms\FormHandlerInterface;
 use forms\FormTemplater;
 use forms\projekte\PermissionHandler;
 use forms\projekte\ProjektHandler;

@@ -37,6 +37,7 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $this->authorize('view', $project);
+
         return view('project.show', compact('project'));
     }
 

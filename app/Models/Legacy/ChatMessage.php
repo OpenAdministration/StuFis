@@ -49,7 +49,7 @@ class ChatMessage extends Model
      * @var array
      */
     protected $fillable = ['target_id', 'target', 'timestamp', 'creator', 'creator_alias', 'text', 'type',
-        'content'
+        'content',
     ];
 
     protected $casts = [

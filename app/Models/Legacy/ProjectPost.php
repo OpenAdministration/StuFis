@@ -71,7 +71,7 @@ class ProjectPost extends Model
      * For not this stays, it should/could be changed as soon as the legacy code is removed.
      * Disadvantages: no good eager loading, no good aggregation and so on.
      */
-    public function expensePosts() : HasMany
+    public function expensePosts(): HasMany
     {
         return $this->hasMany(ExpenseReceiptPost::class, 'projekt_posten_id');
         /* old version before key fixing
@@ -83,27 +83,29 @@ class ProjectPost extends Model
         */
     }
 
-    public function budgetItem() : BelongsTo
+    public function budgetItem(): BelongsTo
     {
         return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
     }
 
-    public function expendedSum() : Money
+    public function expendedSum(): Money
     {
-        if($this->ausgaben->isZero()){
+        if ($this->ausgaben->isZero()) {
             return Money::EUR($this->expensePosts()->sum('einnahmen'), true);
         }
+
         return Money::EUR($this->expensePosts()->sum('ausgaben'), true);
     }
 
-    public function expendedRatio() : int {
-        if($this->expensePosts()->exists() && !$this->ausgaben->isZero()){
+    public function expendedRatio(): int
+    {
+        if ($this->expensePosts()->exists() && ! $this->ausgaben->isZero()) {
             return (int) ($this->expendedSum()->ratioOf($this->ausgaben) * 100);
         }
-        if($this->expensePosts()->exists() && !$this->einnahmen->isZero()){
+        if ($this->expensePosts()->exists() && ! $this->einnahmen->isZero()) {
             return (int) ($this->expendedSum()->ratioOf($this->einnahmen) * 100);
         }
+
         return 0;
     }
-
 }

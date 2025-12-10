@@ -24,7 +24,7 @@ return [
         'terminated' => 'beenden',
     ],
     'error' => [
-        'posten_illegal_deleted' => 'Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden!'
+        'posten_illegal_deleted' => 'Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden!',
     ],
     'view' => [
         'summary_cards' => [
@@ -43,7 +43,7 @@ return [
             'change_status' => 'Status ändern',
             'edit' => 'Bearbeiten',
             'delete' => 'Löschen',
-            'new-expense' => 'Abrechnung erstellen'
+            'new-expense' => 'Abrechnung erstellen',
         ],
         'approval' => [
             'heading' => 'Genehmigung',

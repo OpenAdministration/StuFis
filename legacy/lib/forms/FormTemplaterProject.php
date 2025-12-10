@@ -231,8 +231,9 @@ class FormTemplaterProject
     private function checkVisibility($name): bool
     {
         $state = $this->project->state;
+
         return match ($state::class) {
-            Draft::class => !($name === "recht" || $name === "recht_additional" || $name === "posten-titel"),
+            Draft::class => ! ($name === 'recht' || $name === 'recht_additional' || $name === 'posten-titel'),
             default => true
         };
     }

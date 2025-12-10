@@ -90,68 +90,64 @@ class Expense extends Model
         return $this->hasMany(ExpenseReceipt::class, 'auslagen_id');
     }
 
-    public function totalIn() : Money
+    public function totalIn(): Money
     {
         return Money::parseByDecimal($this->throughReceipts()->has('posts')->sum('einnahmen'), 'EUR');
     }
 
-    public function totalOut() : Money
+    public function totalOut(): Money
     {
         return Money::parseByDecimal($this->throughReceipts()->has('posts')->sum('ausgaben'), 'EUR');
     }
 
-
-
-
     protected function okKv(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
 
     protected function okHv(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
 
     protected function okBelege(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
 
     protected function payed(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
 
     protected function rejected(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
 
     protected function state(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => explode(';', $value)[0],
+            get: fn (string $value) => explode(';', $value)[0],
         );
     }
-
 
     protected function casts(): array
     {
         return [
             'zahlung_iban' => 'encrypted',
             'last_change' => 'datetime',
-            'state' => 'string'
+            'state' => 'string',
         ];
     }
 }

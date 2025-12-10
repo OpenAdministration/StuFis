@@ -2,11 +2,8 @@
 
 namespace App\States\Project;
 
-use App\States\Project\ProjectState;
-
 class ApprovedByOther extends ProjectState
 {
-
     public static string $name = 'done-other';
 
     public function expensable(): bool
@@ -14,14 +11,14 @@ class ApprovedByOther extends ProjectState
         return true;
     }
 
-    public function iconName() : string
+    public function iconName(): string
     {
         return 'fas-check';
 
     }
-    public function color() : string {
+
+    public function color(): string
+    {
         return 'green';
     }
-
-
 }

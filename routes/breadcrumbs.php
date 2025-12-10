@@ -160,7 +160,7 @@ Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $proje
 
 // Home > Projekt > PID > Edit
 Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $projekt_id): void {
-    $trail->parent('project.show', $projekt_id);;
+    $trail->parent('project.show', $projekt_id);
     $trail->push(__('general.breadcrumb.projekt-edit'), route('project.edit', $projekt_id));
 });
 

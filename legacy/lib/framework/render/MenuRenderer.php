@@ -60,7 +60,7 @@ class MenuRenderer extends Renderer
 
     public function renderProjekte($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE."menu/", "/$active" );
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE.'menu/', "/$active");
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
@@ -205,7 +205,7 @@ class MenuRenderer extends Renderer
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
                                                 "IP-$year-$id",
-                                                substr(route('legacy.projekt', $id, false),1),
+                                                substr(route('legacy.projekt', $id, false), 1),
                                             ); ?>
                                             </div>
                                             <div class="panel-heading collapsed <?php echo (! isset($auslagen[$id]) || count(
@@ -516,7 +516,7 @@ class MenuRenderer extends Renderer
 
     public function setOverviewTabs($active, $hhp_id): void
     {
-        $linkbase = URIBASE. "menu/$hhp_id/";
+        $linkbase = URIBASE."menu/$hhp_id/";
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",

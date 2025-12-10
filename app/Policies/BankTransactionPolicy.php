@@ -16,7 +16,8 @@ class BankTransactionPolicy
         return $user->getGroups()->contains('ref-finanzen-kv');
     }
 
-    public function useCsvUpload(User $user, BankAccount $bankAccount): bool {
+    public function useCsvUpload(User $user, BankAccount $bankAccount): bool
+    {
         return $user->getGroups()->contains('ref-finanzen-kv');
     }
 
@@ -39,5 +40,4 @@ class BankTransactionPolicy
     {
         return $user->getGroups()->contains('ref-finanzen-kv');
     }
-
 }

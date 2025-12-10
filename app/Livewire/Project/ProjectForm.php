@@ -4,16 +4,11 @@ namespace App\Livewire\Project;
 
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
-use App\Models\Legacy\ProjectPost;
-use App\States\Project\Draft;
-use App\States\Project\ProjectState;
 use Carbon\Carbon;
-use Livewire\Attributes\Locked;
 use Livewire\Form;
 
 class ProjectForm extends Form
 {
-
     public string $name = '';
 
     public string $responsible = '';
@@ -47,7 +42,7 @@ class ProjectForm extends Form
             'recht_additional' => 'nullable|string',
             'dateRange' => 'required|array|size:2',
             'dateRange.*' => 'required|date',
-            'createdat' => 'nullable|date'
+            'createdat' => 'nullable|date',
         ];
     }
 
@@ -66,7 +61,7 @@ class ProjectForm extends Form
         $this->beschreibung = $project->beschreibung ?? '';
         $this->recht = $project->recht ?? '';
         $this->recht_additional = $project->recht_additional ?? '';
-        $this->dateRange = ["start" => $project->date_start, "end" => $project->date_end];
+        $this->dateRange = ['start' => $project->date_start, 'end' => $project->date_end];
         $this->version = $project->version;
         $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)->id;
     }
@@ -95,11 +90,10 @@ class ProjectForm extends Form
             'recht' => $this->recht,
             'recht_additional' => $this->recht_additional,
             // make compatible with legacy database
-            'date_start' => $this->dateRange["start"] ?? null,
-            'date_end' => $this->dateRange["end"] ?? null,
+            'date_start' => $this->dateRange['start'] ?? null,
+            'date_end' => $this->dateRange['end'] ?? null,
             'version' => $this->version,
-            'createdat' => Carbon::parse(LegacyBudgetPlan::find($this->hhp_id)->von)
+            'createdat' => Carbon::parse(LegacyBudgetPlan::find($this->hhp_id)->von),
         ];
     }
-
 }

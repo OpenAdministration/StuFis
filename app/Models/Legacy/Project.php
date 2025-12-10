@@ -3,10 +3,10 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
-use App\Models\BudgetPlan;
 use App\Models\User;
 use App\States\Project\ProjectState;
 use Carbon\Carbon;
+use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Collection;
-use Cknow\Money\Money;
 use Spatie\ModelStates\HasStates;
 
 /**
@@ -84,6 +83,7 @@ class Project extends Model
     protected $table = 'projekte';
 
     const CREATED_AT = 'createdat';
+
     const UPDATED_AT = 'lastupdated';
 
     public $casts = [
@@ -102,12 +102,12 @@ class Project extends Model
     protected function responsible(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value) => empty($value) || str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
-            set: fn(string $value) => empty($value) || str_contains($value, '@') ? $value : $value . '@' . config('stufis.mail_domain'),
+            get: fn (string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.config('stufis.mail_domain'),
+            set: fn (string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.config('stufis.mail_domain'),
         );
     }
 
-    public function getLegal() : array
+    public function getLegal(): array
     {
         return config("stufis.project_legal.$this->recht", []);
     }
@@ -131,32 +131,30 @@ class Project extends Model
         return $this->belongsTo(User::class, 'stateCreator_id');
     }
 
-    public function relatedBudgetPlan() : LegacyBudgetPlan
+    public function relatedBudgetPlan(): LegacyBudgetPlan
     {
         return LegacyBudgetPlan::findByDate($this->createdat);
     }
 
     /**
      * Get the ordered posts associated with the project.
-     *
-     * @return HasMany
      */
     public function posts(): HasMany
     {
         return $this->hasMany(ProjectPost::class, 'projekt_id')->orderBy('position');
     }
 
-    public function expensePosts() : HasManyThrough
+    public function expensePosts(): HasManyThrough
     {
         return $this->throughPosts()->hasExpensePosts();
     }
 
-    public function totalAusgaben() : Money
+    public function totalAusgaben(): Money
     {
         return $this->posts()->sumMoney('ausgaben');
     }
 
-    public function totalUsedAusgaben() : Money
+    public function totalUsedAusgaben(): Money
     {
         return $this->expensePosts()->sumMoney('beleg_posten.ausgaben');
     }
@@ -166,21 +164,22 @@ class Project extends Model
         return $this->posts()->sumMoney('ausgaben')->subtract($this->totalUsedAusgaben());
     }
 
-    public function totalRatioAusgaben() : int
+    public function totalRatioAusgaben(): int
     {
         $out = $this->totalAusgaben();
-        if($out->isZero()){
+        if ($out->isZero()) {
             return 0;
         }
+
         return (int) ($this->totalUsedAusgaben()->ratioOf($out) * 100);
     }
 
-    public function totalEinnahmen() : Money
+    public function totalEinnahmen(): Money
     {
         return $this->posts()->sumMoney('einnahmen');
     }
 
-    public function totalUsedEinnahmen() : Money
+    public function totalUsedEinnahmen(): Money
     {
         return $this->expensePosts()->sumMoney('beleg_posten.einnahmen');
     }
@@ -190,13 +189,13 @@ class Project extends Model
         return $this->posts()->sumMoney('einnahmen')->subtract($this->totalUsedEinnahmen());
     }
 
-    public function totalRatioEinnahmen() : int
+    public function totalRatioEinnahmen(): int
     {
         $in = $this->totalEinnahmen();
-        if($in->isZero()){
+        if ($in->isZero()) {
             return 0;
         }
+
         return (int) ($this->totalUsedEinnahmen()->ratioOf($in) * 100);
     }
-
 }

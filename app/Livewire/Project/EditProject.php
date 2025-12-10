@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Project;
 
+use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
-use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\ProjectPost;
 use App\States\Project\ProjectState;
 use Cknow\Money\Money;
@@ -28,6 +28,7 @@ class EditProject extends Component
 
     #[Url]
     public ?int $project_id = null;
+
     public bool $isNew;
 
     public Collection $posts;
@@ -68,12 +69,12 @@ class EditProject extends Component
         }
     }
 
-    public function isPostDeletable(int $index) : bool {
+    public function isPostDeletable(int $index): bool
+    {
         return
             $this->posts->count() > 1 && (
-            (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
-            || !isset($this->posts[$index]['id']) )
-        ;
+                (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
+                || ! isset($this->posts[$index]['id']));
     }
 
     /**
@@ -91,21 +92,22 @@ class EditProject extends Component
      */
     public function save()
     {
-        //$this->validate();
-        //$this->form->validate();
+        // $this->validate();
+        // $this->form->validate();
         try {
             DB::beginTransaction();
-            if($this->isNew){
+            if ($this->isNew) {
                 $project = Project::create([
                     'creator_id' => Auth::id(),
                     'stateCreator_id' => Auth::id(),
-                    ...($this->form->getValues())
+                    ...($this->form->getValues()),
                 ]);
-            }else{
+            } else {
                 $project = Project::findOrFail($this->project_id);
                 // Check if the project has been modified since the last load
                 if ($project->version != $this->form->version) {
                     $this->addError('save', 'Das Projekt wurde zwischenzeitlich von jemand anderem bearbeitet. Bitte laden Sie die Seite neu.');
+
                     return;
                 }
                 $project->update([
@@ -114,17 +116,18 @@ class EditProject extends Component
                 ]);
             }
             foreach ($this->posts as $post) {
-                if(isset($post['id'])){
+                if (isset($post['id'])) {
                     $project->posts()->findOrFail($post['id'])->update($post);
-                }else{
+                } else {
                     $project->posts()->create($post);
                 }
             }
             DB::commit();
+
             return redirect()->route('project.show', $project->id);
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->addError('save', 'Fehler beim Speichern: ' . $e->getMessage());
+            $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
         }
     }
 
@@ -202,6 +205,7 @@ class EditProject extends Component
     protected function getBudgetTitleOptions(): \Illuminate\Database\Eloquent\Collection
     {
         $plan = LegacyBudgetPlan::findOrFail($this->form->hhp_id);
+
         return $plan->budgetItems;
     }
 
@@ -234,6 +238,7 @@ class EditProject extends Component
         if ($hasFinanceGroup) {
             return config('org_data.mailinglists', []);
         }
+
         // Return only user's mailing lists
         return Auth::user()->mailinglists ?? [];
     }
@@ -244,8 +249,9 @@ class EditProject extends Component
         $mailingLists = [];
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $budgetTitles = $this->getBudgetTitleOptions();
-        $state = ProjectState::make($this->state_name, new Project());
+        $state = ProjectState::make($this->state_name, new Project);
         $budgetPlans = LegacyBudgetPlan::all();
+
         return view('livewire.project.edit-project', compact(
             'gremien', 'mailingLists', 'budgetTitles', 'rechtsgrundlagen', 'state', 'budgetPlans'
         ));

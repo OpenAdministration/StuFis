@@ -2,11 +2,8 @@
 
 namespace App\States\Project;
 
-use App\States\Project\ProjectState;
-
 class ApprovedByOrg extends ProjectState
 {
-
     public static string $name = 'ok-by-stura';
 
     public function expensable(): bool
@@ -14,12 +11,14 @@ class ApprovedByOrg extends ProjectState
         return true;
     }
 
-    public function iconName() : string
+    public function iconName(): string
     {
         return 'fas-check';
 
     }
-    public function color() : string {
+
+    public function color(): string
+    {
         return 'green';
     }
 }

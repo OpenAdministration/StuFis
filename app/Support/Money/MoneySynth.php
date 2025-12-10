@@ -2,9 +2,9 @@
 
 namespace App\Support\Money;
 
+use Cknow\Money\Money;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Money\Currency;
-use Cknow\Money\Money;
 
 /**
  *  Synthesizes a Money object for Livewire usage
@@ -15,7 +15,7 @@ class MoneySynth extends Synth
     public static $key = 'money';
 
     #[\Override]
-    static function match($target): bool
+    public static function match($target): bool
     {
         return $target instanceof Money || $target instanceof \Money\Money;
     }
@@ -27,7 +27,6 @@ class MoneySynth extends Synth
 
     public function hydrate($value): Money
     {
-        return Money::fromMoney((new DefaultMoneyFormater())->inverse($value));
+        return Money::fromMoney((new DefaultMoneyFormater)->inverse($value));
     }
-
 }

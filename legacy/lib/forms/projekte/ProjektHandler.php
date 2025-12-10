@@ -26,7 +26,6 @@ use PDOException;
 
 class ProjektHandler extends Renderer
 {
-
     private static $emptyData;
 
     private static $visibleFields;
@@ -42,7 +41,6 @@ class ProjektHandler extends Renderer
     /**
      * @var PermissionHandler
      */
-
     private $id;
 
     private $action;
@@ -59,19 +57,19 @@ class ProjektHandler extends Renderer
         $this->action = $pathInfo['action'];
         if ($this->action === 'create' || ! isset($pathInfo['pid'])) {
             $this->data = self::$emptyData;
-            $this->templater = new FormTemplaterProject(new Project());
+            $this->templater = new FormTemplaterProject(new Project);
         } else {
             $this->id = $pathInfo['pid'];
             $project = Project::findOrFail($this->id);
             $this->data = $project->getAttributes();
 
             foreach ($project->posts as $idx => $post) {
-                $this->data['posten-id'][$idx+1] = $post->id;
-                $this->data['posten-name'][$idx+1] = $post->name;
-                $this->data['posten-bemerkung'][$idx+1] = $post->bemerkung;
-                $this->data['posten-einnahmen'][$idx+1] = $post->einnahmen->getAmount()/100;
-                $this->data['posten-ausgaben'][$idx+1] = $post->ausgaben->getAmount()/100;
-                $this->data['posten-titel'][$idx+1] = $post->titel_id;
+                $this->data['posten-id'][$idx + 1] = $post->id;
+                $this->data['posten-name'][$idx + 1] = $post->name;
+                $this->data['posten-bemerkung'][$idx + 1] = $post->bemerkung;
+                $this->data['posten-einnahmen'][$idx + 1] = $post->einnahmen->getAmount() / 100;
+                $this->data['posten-ausgaben'][$idx + 1] = $post->ausgaben->getAmount() / 100;
+                $this->data['posten-titel'][$idx + 1] = $post->titel_id;
             }
             $this->templater = new FormTemplaterProject($project);
         }
@@ -229,7 +227,8 @@ class ProjektHandler extends Renderer
 
     public static function getStateStringFromName(string $statename)
     {
-        $state = ProjectState::make($statename, new Project());
+        $state = ProjectState::make($statename, new Project);
+
         return $state->label();
     }
 
@@ -331,12 +330,12 @@ class ProjektHandler extends Renderer
         $used_ids = [];
 
         for ($i = 0; $i < $minRows - 1; $i++) {
-            $id = ((int)$extractFields['posten-id'][$i]);
+            $id = ((int) $extractFields['posten-id'][$i]);
             if ($id === 0) {
                 $id = ++$nextFreeId;
             }
             $used_ids[] = $id;
-            ProjectPost::updateOrInsert(['id' =>  $id , 'projekt_id' => $this->id], [
+            ProjectPost::updateOrInsert(['id' => $id, 'projekt_id' => $this->id], [
                 'name' => $extractFields['posten-name'][$i],
                 'bemerkung' => $extractFields['posten-bemerkung'][$i],
                 // FIXME: use new money type
@@ -358,6 +357,7 @@ class ProjektHandler extends Renderer
         ProjectPost::whereNotIn('id', $used_ids)->delete();
 
         DB::commit();
+
         return true;
     }
 
@@ -383,7 +383,7 @@ class ProjektHandler extends Renderer
                 now()->format('Y-m-d H:i:s'),
                 'system',
                 '',
-                $project->state->label() . ' -> ' . $newState->label(),
+                $project->state->label().' -> '.$newState->label(),
                 1
             );
 
@@ -392,7 +392,7 @@ class ProjektHandler extends Renderer
                 'state' => $stateName,
                 'stateCreator_id' => Auth::id(),
                 'lastupdated' => now(),
-                'version' => $project->version + 1
+                'version' => $project->version + 1,
             ]);
 
             return true;
@@ -432,9 +432,11 @@ class ProjektHandler extends Renderer
 
     private function renderProjekt($title, bool $edit): void
     {
-        if($edit) $this->templater->wantToEdit();
+        if ($edit) {
+            $this->templater->wantToEdit();
+        }
         $auth = AuthHandler::getInstance();
-        $model = Project::find($this->id) ?? new Project();
+        $model = Project::find($this->id) ?? new Project;
         $validateMe = false;
         $editable = $edit && Auth::user()->can('update', $model);
         // build dropdowns
@@ -483,7 +485,7 @@ class ProjektHandler extends Renderer
                     <input type="hidden" name="id" value="<?php echo $this->id; ?>">
                 <?php } ?>
                 <?php } // endif editable?>
-                <?php if (!$model->state->equals(Draft::class)) { ?>
+                <?php if (! $model->state->equals(Draft::class)) { ?>
                     <h2>Genehmigung</h2>
                     <div class="well">
                         <div class="hide-wrapper">
@@ -515,7 +517,7 @@ class ProjektHandler extends Renderer
                                     </div>
                                     <?php
                                 }
-                                ?>
+                    ?>
                             </div>
                         </div>
                         <div class='clearfix'></div>
@@ -612,15 +614,15 @@ class ProjektHandler extends Renderer
                     </thead>
                     <tbody><?php
                     $this->data['posten-name'][] = '';
-                    foreach ($this->data['posten-name'] as $row_nr => $null) {
-                        $new_row = ($row_nr) === count($this->data['posten-name']);
-                        if ($new_row && ! $tablePartialEditable) {
-                            continue;
-                        }
-                        $sel_titel = $selectable_titel;
-                        if (isset($this->data['posten-titel'][$row_nr])) {
-                            $sel_titel['values'] = $this->data['posten-titel'][$row_nr];
-                        } ?>
+        foreach ($this->data['posten-name'] as $row_nr => $null) {
+            $new_row = ($row_nr) === count($this->data['posten-name']);
+            if ($new_row && ! $tablePartialEditable) {
+                continue;
+            }
+            $sel_titel = $selectable_titel;
+            if (isset($this->data['posten-titel'][$row_nr])) {
+                $sel_titel['values'] = $this->data['posten-titel'][$row_nr];
+            } ?>
                         <tr class="<?= $new_row ? 'new-table-row' : 'dynamic-table-row'; ?>">
                             <td><input type="hidden" name="posten-id[]" value="<?= $this->data['posten-id'][$row_nr] ?? ''; ?>"></td>
                             <td class="row-number">
@@ -633,51 +635,51 @@ class ProjektHandler extends Renderer
                                 echo '<td></td>';
                             } ?>
                             <td><?= $this->templater->getTextForm(
-                                    'posten-name[]',
-                                    ! $new_row ? $this->data['posten-name'][$row_nr] : '',
-                                    null,
-                                    'Name des Postens',
-                                    '',
-                                    ['required']
-                                ); ?></td>
+                                'posten-name[]',
+                                ! $new_row ? $this->data['posten-name'][$row_nr] : '',
+                                null,
+                                'Name des Postens',
+                                '',
+                                ['required']
+                            ); ?></td>
                             <td><?= $this->templater->getTextForm(
-                                    'posten-bemerkung[]',
-                                    ! $new_row ? $this->data['posten-bemerkung'][$row_nr] : '',
-                                    null,
-                                    'optional',
-                                    '',
-                                    []
-                                ); ?></td>
+                                'posten-bemerkung[]',
+                                ! $new_row ? $this->data['posten-bemerkung'][$row_nr] : '',
+                                null,
+                                'optional',
+                                '',
+                                []
+                            ); ?></td>
                             <td><?= $this->templater->getDropdownForm(
-                                    'posten-titel[]',
-                                    $sel_titel,
-                                    null,
-                                    'HH-Titel',
-                                    '',
-                                    [],
-                                    true
-                                ); ?></td>
+                                'posten-titel[]',
+                                $sel_titel,
+                                null,
+                                'HH-Titel',
+                                '',
+                                [],
+                                true
+                            ); ?></td>
                             <td><?= $this->templater->getMoneyForm(
-                                    'posten-einnahmen[]',
-                                    ! $new_row ? $this->data['posten-einnahmen'][$row_nr] : 0,
-                                    null,
-                                    '',
-                                    '',
-                                    ['required'],
-                                    'einnahmen'
-                                ); ?></td>
+                                'posten-einnahmen[]',
+                                ! $new_row ? $this->data['posten-einnahmen'][$row_nr] : 0,
+                                null,
+                                '',
+                                '',
+                                ['required'],
+                                'einnahmen'
+                            ); ?></td>
                             <td><?= $this->templater->getMoneyForm(
-                                    'posten-ausgaben[]',
-                                    ! $new_row ? $this->data['posten-ausgaben'][$row_nr] : 0,
-                                    null,
-                                    '',
-                                    '',
-                                    ['required'],
-                                    'ausgaben'
-                                ); ?></td>
+                                'posten-ausgaben[]',
+                                ! $new_row ? $this->data['posten-ausgaben'][$row_nr] : 0,
+                                null,
+                                '',
+                                '',
+                                ['required'],
+                                'ausgaben'
+                            ); ?></td>
                         </tr>
                         <?php
-                    } ?>
+        } ?>
                     </tbody>
                     <tfoot>
                     <tr>
@@ -758,7 +760,7 @@ class ProjektHandler extends Renderer
         $nextValidStates = [];
         $disabledStates = [];
         foreach ($nextStates as $nextState) {
-            if(Auth::user()->can('transition-to', [$project, $nextState])){
+            if (Auth::user()->can('transition-to', [$project, $nextState])) {
                 $nextValidStates[] = $nextState;
             } else {
                 $disabledStates[] = $nextState;
@@ -823,17 +825,17 @@ class ProjektHandler extends Renderer
                                         <?php
                                         foreach ($nextValidStates as $state) {
                                             echo '<option value="'.htmlspecialchars(
-                                                    $state
-                                                ).'">'.htmlspecialchars($state->label()).'</option>'.PHP_EOL;
+                                                $state
+                                            ).'">'.htmlspecialchars($state->label()).'</option>'.PHP_EOL;
                                         }
-                                        ?>
+            ?>
                                     </optgroup>
                                     <optgroup label="Daten unvollständig">
                                         <?php
-                                        foreach ($disabledStates as $state) {
-                                            echo '<option disabled>'. $state->label() .'</option>'.PHP_EOL;
-                                        }
-                                        ?>
+            foreach ($disabledStates as $state) {
+                echo '<option disabled>'.$state->label().'</option>'.PHP_EOL;
+            }
+            ?>
                                     </optgroup>
                                 </select>
                                 <div class="help-block with-errors"></div>
@@ -875,7 +877,7 @@ class ProjektHandler extends Renderer
                 },
                 actionButtonType: 'submit'
             );
-            ?>
+        ?>
         </form>
         <?php
     }
@@ -901,36 +903,36 @@ class ProjektHandler extends Renderer
         <div class="col-xs-12 col-md-10" id="projektchat">
             <?php
             $auth = AuthHandler::getInstance();
-            $btns = [];
-            $pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
-            $pdate->modify('+1 year');
-            $now = date_create();
-            // allow chat only 90 days into next year
-            if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
-                $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
-                /*
-                if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() === $this->data['username']) {
-                    $btns[] = [
-                        'label' => 'Private Nachricht',
-                        'color' => 'warning',
-                        'type' => '-1',
-                        'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
-                    ];
-                }
-                */
-                if ($auth->hasGroup('ref-finanzen')) {
-                    $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
-                }
-                if ($auth->hasGroup('admin')) {
-                    $btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
-                }
+        $btns = [];
+        $pdate = date_create(substr($this->data['createdat'], 0, 4).'-01-01 00:00:00');
+        $pdate->modify('+1 year');
+        $now = date_create();
+        // allow chat only 90 days into next year
+        if ($now->getTimestamp() - $pdate->getTimestamp() <= 86400 * 90) {
+            $btns[] = ['label' => 'Senden', 'color' => 'success', 'type' => '0'];
+            /*
+            if ($auth->hasGroup('ref-finanzen') || $auth->getUsername() === $this->data['username']) {
+                $btns[] = [
+                    'label' => 'Private Nachricht',
+                    'color' => 'warning',
+                    'type' => '-1',
+                    'hover-title' => 'Private Nachricht zwischen Ref-Finanzen und dem Projekt-Ersteller'
+                ];
             }
-            ChatHandler::renderChatPanel(
-                'projekt',
-                $this->id,
-                $auth->getUserFullName().' ('.$auth->getUsername().')',
-                $btns
-            ); ?>
+            */
+            if ($auth->hasGroup('ref-finanzen')) {
+                $btns[] = ['label' => 'Finanz Nachricht', 'color' => 'primary', 'type' => '3'];
+            }
+            if ($auth->hasGroup('admin')) {
+                $btns[] = ['label' => 'Admin Nachricht', 'color' => 'danger', 'type' => '2'];
+            }
+        }
+        ChatHandler::renderChatPanel(
+            'projekt',
+            $this->id,
+            $auth->getUserFullName().' ('.$auth->getUsername().')',
+            $btns
+        ); ?>
         </div>
         <?php
     }
@@ -949,7 +951,7 @@ class ProjektHandler extends Renderer
         <div id='projekt-well' class="well col-xs-12 col-md-10">
             <?php
             $ah = new AuslagenHandler2(['pid' => $this->id, 'action' => 'view']);
-            $ah->render_project_auslagen(true); ?>
+        $ah->render_project_auslagen(true); ?>
         </div>
         <?php
     }

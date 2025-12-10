@@ -16,7 +16,7 @@ class ExpensesPolicy
         return false;
     }
 
-    public function viewZahlungsanweisungPdf(User $user, Expense $expenses) : bool
+    public function viewZahlungsanweisungPdf(User $user, Expense $expenses): bool
     {
         return false;
     }
@@ -47,7 +47,7 @@ class ExpensesPolicy
         return false;
     }
 
-    public function stateChange(User $user, Expense $expense, $newState) : bool
+    public function stateChange(User $user, Expense $expense, $newState): bool
     {
         return false;
     }

@@ -42,7 +42,6 @@ class BudgetItem extends Model
      */
     protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
 
-
     public function bookings(): HasMany
     {
         return $this->hasMany('tbd', 'titel_id');
@@ -70,6 +69,7 @@ class BudgetItem extends Model
 
     /**
      * Get the custom paths for the model.
+     *
      * @see https://github.com/staudenmeir/laravel-adjacency-list#custom-paths
      * Usable to sort the whole tree by position
      */
@@ -88,10 +88,8 @@ class BudgetItem extends Model
     {
         $idx = 0;
         $this->orderedChildren()
-            ->each(function($child) use (&$idx): void {
+            ->each(function ($child) use (&$idx): void {
                 $child->update(['position' => $idx++]);
             });
     }
-
-
 }

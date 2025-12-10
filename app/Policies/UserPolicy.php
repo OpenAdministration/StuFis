@@ -39,7 +39,8 @@ class UserPolicy
         return $user->getGroups()->contains('admin');
     }
 
-    public function seeExtendedMenu(User $user): bool {
+    public function seeExtendedMenu(User $user): bool
+    {
         return $user->getGroups()->contains('ref-finanzen');
     }
 }

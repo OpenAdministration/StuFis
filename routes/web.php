@@ -17,9 +17,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
-    Route::get('/', function (){
+    Route::get('/', function () {
         $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
         $latestPlan = LegacyBudgetPlan::latest();
+
         return redirect()->route(
             'legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]
         );
@@ -31,10 +32,10 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
-    Route::get('project/create' , \App\Livewire\Project\EditProject::class)->name('project.create');
-    Route::get('project/{project_id}' , \App\Livewire\Project\ShowProject::class)->name('project.show');
-    Route::get('project/{project_id}/history' , \App\Livewire\Project\ShowProject::class)->name('project.history');
-    Route::get('project/{project_id}/edit' , \App\Livewire\Project\EditProject::class)->name('project.edit');
+    Route::get('project/create', \App\Livewire\Project\EditProject::class)->name('project.create');
+    Route::get('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
+    Route::get('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');
+    Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
 
 });
 

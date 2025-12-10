@@ -6,7 +6,6 @@ use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Project;
 use App\States\Project\ProjectState;
-use Cknow\Money\Money;
 use Flux\Flux;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -23,6 +22,7 @@ class ShowProject extends Component
     public function render()
     {
         $project = Project::findOrFail($this->project_id);
+
         return view('livewire.project.show-project', compact('project'));
     }
 
