@@ -13,9 +13,6 @@ return new class extends Migration
     public function up(): void
     {
         $db_prefix = config('database.connections.mariadb.prefix', '');
-        Schema::table('projektposten', function (Blueprint $table) {
-            $table->unsignedBigInteger('id')->change();
-        });
 
         // Store old and new IDs mapping
         DB::statement("
@@ -34,6 +31,14 @@ return new class extends Migration
             SET pp.id = im.new_id
         ");
 
+        Schema::table('projektposten', function (Blueprint $table) {
+            $table->dropPrimary(['id', 'projekt_id']);
+            $table->unsignedBigInteger('id')->primary()->autoIncrement()->change();
+            $table->foreign('titel_id')->references('id')->on('haushaltstitel');
+            $table->unsignedInteger('position')->default(1); // for better legacy support with stupid default
+        });
+
+
         // Update beleg_posten foreign keys
         DB::statement("
             UPDATE {$db_prefix}beleg_posten bp
@@ -42,13 +47,6 @@ return new class extends Migration
             JOIN id_mapping im ON bp.projekt_posten_id = im.old_id AND a.projekt_id = im.projekt_id
             SET bp.projekt_posten_id = im.new_id
         ");
-
-        Schema::table('projektposten', function (Blueprint $table) {
-            $table->dropPrimary(['id', 'projekt_id']);
-            $table->primary('id')->autoIncrement();
-            $table->foreign('titel_id')->references('id')->on('haushaltstitel');
-            $table->unsignedInteger('position')->default(1); // for better legacy support with stupid default
-        });
 
         // add missing foreign key
         Schema::table('beleg_posten', function (Blueprint $table) {
@@ -69,6 +67,7 @@ return new class extends Migration
         Schema::table('beleg_posten', function (Blueprint $table) {
             $table->dropForeign(['projekt_posten_id']);
         });
+
         Schema::table('projektposten', function (Blueprint $table) {
             $table->dropPrimary();
             $table->dropForeign(['titel_id']);
