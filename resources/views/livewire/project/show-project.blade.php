@@ -9,7 +9,7 @@
 @php $totalRatioEinnahmen = $project->totalRatioEinnahmen(); @endphp
 
 <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
         <!-- Header with Status and Actions -->
         <div>
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-9">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
             <!-- State Card -->
             <div class="bg-white rounded-lg p-4 border border-gray-200">
                 <div class="flex items-center justify-between">
@@ -290,9 +290,11 @@
                         @endif
                     @endif
                 </div>
-                <div class="lg:col-span-2 mt-2">
-                    <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
-                </div>
+                @if(!empty($project->getLegal()['hint-text']))
+                    <div class="lg:col-span-2 mt-2">
+                        <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -429,7 +431,8 @@
                             @php $ratio = $post->expendedRatio() @endphp
                             <td @class([
                                 "px-6 py-4 whitespace-nowrap text-sm text-right font-medium",
-                                "text-yellow-600" =>  $ratio < 75,
+                                "text-grey-200" => $ratio <= 0,
+                                "text-yellow-600" =>  0 < $ratio && $ratio < 75,
                                 "text-green-600" => $ratio >= 75 && $ratio <= 100,
                                 "text-red-600" =>  $ratio > 100
                             ])>
@@ -481,7 +484,7 @@
         <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h2>
             @empty($project->beschreibung)
-                <p class="text-gray-500 italic">{{ __('project.view.description.none') }}</p>
+                <x-no-content/>
             @else
                 <p class="text-gray-900 whitespace-pre-line">
                     {!! Str::markdown($project->beschreibung) !!}
