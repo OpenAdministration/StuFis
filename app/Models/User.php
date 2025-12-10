@@ -118,11 +118,11 @@ class User extends Authenticatable
 
     public function getGroups(): Collection
     {
-        return app(AuthService::class)->userGroups();
+        return resolve(AuthService::class)->userGroups();
     }
 
     public function getCommittees(): Collection
     {
-        return app(AuthService::class)->userCommittees();
+        return resolve(AuthService::class)->userCommittees();
     }
 }

@@ -12,7 +12,7 @@ class LocalAuthService extends AuthService
     #[\Override]
     public function prepareLogin(): Response|RedirectResponse
     {
-        return redirect()->route('login.callback');
+        return to_route('login.callback');
     }
 
     #[\Override]
@@ -61,6 +61,6 @@ class LocalAuthService extends AuthService
     #[\Override]
     public function afterLogout()
     {
-        return redirect()->route('login.callback');
+        return to_route('login.callback');
     }
 }

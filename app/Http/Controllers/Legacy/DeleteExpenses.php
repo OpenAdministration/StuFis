@@ -20,9 +20,9 @@ class DeleteExpenses extends Controller
         $userPerm =
             AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
             || $project->creator->id === \Auth::user()->id
-            || explode(';', $expense->created)[1] === \Auth::user()->username;
+            || explode(';', (string) $expense->created)[1] === \Auth::user()->username;
         // authorize state
-        $deletableState = ! in_array(explode(';', $expense->state)[0], ['instructed', 'booked'], true);
+        $deletableState = ! in_array(explode(';', (string) $expense->state)[0], ['instructed', 'booked'], true);
 
         if ($userPerm === false || $deletableState === false) {
             abort(403);
@@ -53,6 +53,6 @@ class DeleteExpenses extends Controller
         });
         \DB::commit();
 
-        return redirect()->route('legacy.dashboard', ['sub' => 'mygremium']);
+        return to_route('legacy.dashboard', ['sub' => 'mygremium']);
     }
 }

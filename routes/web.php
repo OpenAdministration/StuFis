@@ -21,9 +21,7 @@ Route::middleware(['auth'])->group(function (): void {
         $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
         $latestPlan = LegacyBudgetPlan::latest();
 
-        return redirect()->route(
-            'legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]
-        );
+        return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
 
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');

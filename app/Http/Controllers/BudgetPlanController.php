@@ -52,6 +52,6 @@ class BudgetPlanController extends Controller
             ]);
         });
 
-        return redirect()->route('budget-plan.edit', ['plan_id' => $plan->id]);
+        return to_route('budget-plan.edit', ['plan_id' => $plan->id]);
     }
 }

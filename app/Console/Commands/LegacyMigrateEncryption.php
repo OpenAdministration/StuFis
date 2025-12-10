@@ -9,6 +9,7 @@ use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Env;
 use Illuminate\Support\Facades\DB;
 
 class LegacyMigrateEncryption extends Command
@@ -32,7 +33,7 @@ class LegacyMigrateEncryption extends Command
      */
     public function handle(): int
     {
-        if (! isset($_ENV['CHAT_PRIVATE_KEY'], $_ENV['CHAT_PUBLIC_KEY'], $_ENV['IBAN_SECRET_KEY'])) {
+        if (!Env::get('CHAT_PRIVATE_KEY') !== null && Env::get('CHAT_PUBLIC_KEY') !== null && Env::get('IBAN_SECRET_KEY') !== null) {
             $this->error('Please set chat private key and public key / IBAN_SECRET_KEY');
 
             return self::FAILURE;
@@ -49,13 +50,13 @@ class LegacyMigrateEncryption extends Command
                         if (str_starts_with($message->text, '$enc$')) {
                             // old prefix
                             $text = substr($text, strlen('$enc$'));
-                            $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
+                            $text = ChatHandler::legacyDecryptMessage($text, Env::get('CHAT_PRIVATE_KEY'));
                             $message->text = \Crypt::encryptString($text);
                             $message->save();
                             $count++;
                         } elseif ($message->type === -1) {
                             // not used productive anymore, was "private message"
-                            $text = ChatHandler::legacyDecryptMessage($text, $_ENV['CHAT_PRIVATE_KEY']);
+                            $text = ChatHandler::legacyDecryptMessage($text, Env::get('CHAT_PRIVATE_KEY'));
                             $message->text = \Crypt::encryptString($text);
                             $message->save();
                             $count++;

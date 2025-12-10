@@ -55,16 +55,14 @@ class EditProject extends Component
             Gate::authorize('update', $project);
             $this->form->setProject($project);
             $this->state_name = $project->state->getValue();
-            $this->posts = $project->posts->map(function (ProjectPost $post) {
-                return [
-                    'id' => $post->id,
-                    'name' => $post->name,
-                    'bemerkung' => $post->bemerkung ?? '',
-                    'einnahmen' => $post->einnahmen,
-                    'ausgaben' => $post->ausgaben,
-                    'titel_id' => $post->titel_id,
-                ];
-            });
+            $this->posts = $project->posts->map(fn(ProjectPost $post) => [
+                'id' => $post->id,
+                'name' => $post->name,
+                'bemerkung' => $post->bemerkung ?? '',
+                'einnahmen' => $post->einnahmen,
+                'ausgaben' => $post->ausgaben,
+                'titel_id' => $post->titel_id,
+            ]);
             $this->attachments = []; // FIXME: load Attachments
         }
     }
@@ -124,7 +122,7 @@ class EditProject extends Component
             }
             DB::commit();
 
-            return redirect()->route('project.show', $project->id);
+            return to_route('project.show', $project->id);
         } catch (\Exception $e) {
             DB::rollBack();
             $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
@@ -176,9 +174,7 @@ class EditProject extends Component
      */
     public function getTotalIncome(): Money
     {
-        return $this->posts->reduce(function (?Money $carry, array $post) {
-            return $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'];
-        }, Money::EUR(0));
+        return $this->posts->reduce(fn(?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
     }
 
     /**
@@ -186,9 +182,7 @@ class EditProject extends Component
      */
     public function getTotalExpenses(): Money
     {
-        return $this->posts->reduce(function (?Money $carry, array $post) {
-            return $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'];
-        }, Money::EUR(0));
+        return $this->posts->reduce(fn(?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
     }
 
     public function removeAttachment(int $index): void
@@ -216,16 +210,14 @@ class EditProject extends Component
     {
         $rechtsgrundlagen = config('stufis.project_legal', []);
 
-        return collect($rechtsgrundlagen)->map(function ($def, $key) {
-            return [
-                'key' => $key,
-                'label' => $def['label'] ?? $key,
-                'placeholder' => $def['placeholder'] ?? '',
-                'label_additional' => $def['label-additional'] ?? 'Zusatzinformationen',
-                'hint' => $def['hint-text'] ?? '',
-                'has_additional' => isset($def['placeholder'], $def['label-additional']),
-            ];
-        })->toArray();
+        return collect($rechtsgrundlagen)->map(fn($def, $key) => [
+            'key' => $key,
+            'label' => $def['label'] ?? $key,
+            'placeholder' => $def['placeholder'] ?? '',
+            'label_additional' => $def['label-additional'] ?? 'Zusatzinformationen',
+            'hint' => $def['hint-text'] ?? '',
+            'has_additional' => isset($def['placeholder'], $def['label-additional']),
+        ])->all();
     }
 
     /**

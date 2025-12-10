@@ -132,10 +132,10 @@ class TransactionImportWire extends Component
         $this->separator = $amountSemicolon > $amountComma ? ';' : ',';
 
         // extract header and data, explode data with csv separator guesses above
-        $this->header = str_getcsv((string) $lines->first(), $this->separator);
+        $this->header = str_getcsv((string) $lines->first(), $this->separator, escape: '\\');
         $this->data = $lines->except(0)
             ->reject(fn ($line): bool => empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch())
-            ->map(fn ($line) => str_getcsv((string) $line, $this->separator))
+            ->map(fn ($line) => str_getcsv((string) $line, $this->separator, escape: '\\'))
             ->map(function ($lineArray) {
                 // normalize data
                 foreach ($lineArray as $key => $cell) {
@@ -211,7 +211,7 @@ class TransactionImportWire extends Component
                     $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
                 } elseif ($db_col_name === 'saldo') {
                     $currentValue = str($row[$this->mapping['value']])->replace(',', '.');
-                    $currentBalance = bcadd($currentBalance, (string) $currentValue, 2);
+                    $currentBalance = bcadd((string) $currentBalance, (string) $currentValue, 2);
                     $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                 }
             }
@@ -243,7 +243,7 @@ class TransactionImportWire extends Component
 
         // $this->redirectRoute('legacy.konto', ['account_id' => $this->account_id]);
         // return redirect()->route('konto.import.manual', ['account_id' => $this->account_id])
-        return redirect()->route('legacy.konto', ['konto' => $this->account_id])
+        return to_route('legacy.konto', ['konto' => $this->account_id])
             ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
     }
 

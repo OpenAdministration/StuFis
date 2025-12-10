@@ -25,6 +25,6 @@ class DeleteProject extends Controller
         $project->posts()->delete();
         $project->delete();
 
-        return redirect()->route('legacy.dashboard', ['sub' => 'mygremium']);
+        return to_route('legacy.dashboard', ['sub' => 'mygremium']);
     }
 }

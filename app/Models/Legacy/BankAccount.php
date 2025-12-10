@@ -70,7 +70,7 @@ class BankAccount extends Model
         ];
     }
 
-    public function csvImportSettings(): Attribute
+    protected function csvImportSettings(): Attribute
     {
         return Attribute::make(
             get: static function (?string $value) {

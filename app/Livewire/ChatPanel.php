@@ -35,7 +35,7 @@ class ChatPanel extends Component
 
         $this->validate(['content' => 'required|min:1']);
 
-        $cleanContent = strip_tags($this->content, '<p><br><strong><em><ul><ol><li><a><h1><h2><h3>');
+        $cleanContent = strip_tags((string) $this->content, '<p><br><strong><em><ul><ol><li><a><h1><h2><h3>');
 
         ChatMessage::create([
             'text' => $cleanContent,

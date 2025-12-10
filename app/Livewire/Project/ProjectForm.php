@@ -5,6 +5,7 @@ namespace App\Livewire\Project;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Date;
 use Livewire\Form;
 
 class ProjectForm extends Form
@@ -93,7 +94,7 @@ class ProjectForm extends Form
             'date_start' => $this->dateRange['start'] ?? null,
             'date_end' => $this->dateRange['end'] ?? null,
             'version' => $this->version,
-            'createdat' => Carbon::parse(LegacyBudgetPlan::find($this->hhp_id)->von),
+            'createdat' => Date::parse(LegacyBudgetPlan::find($this->hhp_id)->von),
         ];
     }
 }

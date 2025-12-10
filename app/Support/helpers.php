@@ -1,6 +1,5 @@
 <?php
 
-use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\UploadedFile;
 use Spatie\Regex\Regex;
@@ -13,7 +12,7 @@ function guessCarbon(string $dateString, ?string $newFormat = null): Carbon|stri
     $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
     foreach ($formats as $format) {
         try {
-            $ret = Carbon::rawCreateFromFormat($format, $dateString);
+            $ret = \Illuminate\Support\Facades\Date::rawCreateFromFormat($format, $dateString);
         } catch (InvalidFormatException) {
             continue;
         }

@@ -41,6 +41,7 @@ abstract class ProjectState extends State implements Wireable
     /**
      * @throws InvalidConfig
      */
+    #[\Override]
     public static function config(): StateConfig
     {
         $config = parent::config()
