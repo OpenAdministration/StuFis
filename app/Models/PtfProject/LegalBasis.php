@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\PtfProject;
 
 use Database\Factories\LegalBasisFactory;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -34,10 +32,5 @@ use Illuminate\Support\Carbon;
  */
 class LegalBasis extends Model
 {
-    use HasFactory;
 
-    public function applications(): BelongsToMany
-    {
-        return $this->belongsToMany(Application::class);
-    }
 }

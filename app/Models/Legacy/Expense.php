@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 
 /**
  * App\Models\Legacy\Expense
@@ -59,6 +60,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|Expense whereZahlungIban($value)
  * @method static Builder|Expense whereZahlungName($value)
  * @method static Builder|Expense whereZahlungVwzk($value)
+ *
+ * @method HasOneOrManyThrough|ExpenseReceipt throughReceipts()
  *
  * @mixin \Eloquent
  */

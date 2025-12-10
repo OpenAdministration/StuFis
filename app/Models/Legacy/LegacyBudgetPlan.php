@@ -4,6 +4,7 @@ namespace App\Models\Legacy;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 
 /**
  * App\Models\Legacy\LegacyBudgetPlan
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereState($value)
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereVon($value)
+ *
+ * @method HasOneOrManyThrough throughBudgetGroups()
  *
  * @mixin \Eloquent
  */

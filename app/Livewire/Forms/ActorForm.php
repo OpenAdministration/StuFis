@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Forms;
 
-use App\Models\Actor;
+use App\Models\PtfProject\Actor;
 use Intervention\Validation\Rules\Bic;
 use Intervention\Validation\Rules\Iban;
 use Intervention\Validation\Rules\Postalcode;

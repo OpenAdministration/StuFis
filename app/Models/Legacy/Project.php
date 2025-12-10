@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 use Illuminate\Support\Collection;
 use Spatie\ModelStates\HasStates;
 
@@ -65,6 +66,8 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
  * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
+ *
+ * @method HasOneOrManyThrough throughPosts()
  *
  * @mixin \Eloquent
  *

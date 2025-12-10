@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\FormDefinition;
+use App\Models\PtfProject\FormDefinition;
 
 test('application factory', function (): void {
     $p_form = FormDefinition::factory()->forProject()->create();

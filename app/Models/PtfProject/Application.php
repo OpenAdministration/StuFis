@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\PtfProject;
 
+use App\Models\FinancePlanItem;
+use App\Models\FinancePlanTopic;
+use App\Models\Project;
 use Database\Factories\ApplicationFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
