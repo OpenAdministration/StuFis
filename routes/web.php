@@ -31,6 +31,11 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
+    Route::get('project/create' , \App\Livewire\Project\EditProject::class)->name('project.create');
+    Route::get('project/{project_id}' , \App\Livewire\Project\ShowProject::class)->name('project.show');
+    Route::get('project/{project_id}/history' , \App\Livewire\Project\ShowProject::class)->name('project.history');
+    Route::get('project/{project_id}/edit' , \App\Livewire\Project\EditProject::class)->name('project.edit');
+
 });
 
 // login routes
