@@ -47,20 +47,22 @@
 
     <!-- New comment form -->
     <div class="mt-6 flex gap-x-3">
-
         <div class="-ml-1 mt-3">
             <x-profile-pic/>
         </div>
-        <form action="#" class="relative flex-auto">
+        <div class="relative flex-auto">
             <div class="overflow-hidden">
                 <flux:editor wire:model="content"/>
-            </div>
 
+            </div>
             <div class="py-2 pr-2 pl-3 bottom-0 absolute right-0">
                 <flux:button wire:click="save" variant="primary" color="indigo" icon="paper-airplane"></flux:button>
             </div>
-        </form>
+        </div>
     </div>
+    @error('content')
+    <div class="ml-14 mt-2 text-sm text-red-600">{{ $message }}</div>
+    @enderror
 
 
 </div>

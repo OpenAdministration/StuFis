@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
+use App\Rules\FluxEditorRule;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
@@ -33,9 +34,7 @@ class ChatPanel extends Component
     public function save()
     {
 
-        $this->validate(['content' => 'required|min:1']);
-
-        $cleanContent = strip_tags((string) $this->content, '<p><br><strong><em><ul><ol><li><a><h1><h2><h3>');
+        $cleanContent = $this->validate(['content' => ['required', 'min:1', new FluxEditorRule()]])['content'];
 
         ChatMessage::create([
             'text' => $cleanContent,
