@@ -17,4 +17,11 @@ class Revoked extends ProjectState
     {
         return 'rose';
     }
+
+    #[\Override]
+    public function rules(): array
+    {
+        return [];
+    }
+
 }

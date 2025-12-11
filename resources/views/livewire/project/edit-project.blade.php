@@ -51,7 +51,7 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {{-- Rechtsgrundlage Dropdown --}}
-                    <flux:select wire:model.live="form.recht" label="Rechtsgrundlage" variant="listbox">
+                    <flux:select wire:model.live="recht" label="Rechtsgrundlage" variant="listbox">
                         @foreach ($rechtsgrundlagen as $rg)
                             <flux:select.option value="{{ $rg['key'] }}">{{ $rg['label'] }}</flux:select.option>
                         @endforeach
@@ -59,15 +59,15 @@
 
                     {{-- Dynamic Additional Fields per Rechtsgrundlage --}}
                     <div>
-                        @isset ($rechtsgrundlagen[$form->recht]['has_additional'])
-                            <flux:input wire:model="form.recht_additional"
-                                        :label="$rechtsgrundlagen[$form->recht]['label_additional']"
-                                        placeholder="{{ $rechtsgrundlagen[$form->recht]['placeholder'] ?? '' }}"/>
+                        @isset ($rechtsgrundlagen[$recht]['has_additional'])
+                            <flux:input wire:model="recht_additional"
+                                        :label="$rechtsgrundlagen[$recht]['label_additional']"
+                                        placeholder="{{ $rechtsgrundlagen[$recht]['placeholder'] ?? '' }}"/>
                         @endisset
                     </div>
                     <div class="sm:col-span-2">
-                        @if (isset($rechtsgrundlagen[$form->recht]['hint']))
-                            <p class="mt-2 text-sm text-gray-500">{{ $rechtsgrundlagen[$form->recht]['hint'] }}</p>
+                        @if (isset($rechtsgrundlagen[$recht]['hint']))
+                            <p class="mt-2 text-sm text-gray-500">{{ $rechtsgrundlagen[$recht]['hint'] }}</p>
                         @endisset
                     </div>
                 </div>
@@ -93,7 +93,7 @@
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {{-- Project Name --}}
                 <div class="">
-                    <flux:input type="text" label="Projektname" wire:model="form.name" />
+                    <flux:input type="text" label="Projektname" wire:model="name" />
                 </div>
 
                 {{-- Responsible Person --}}
@@ -101,7 +101,7 @@
                     <flux:field>
                         <flux:label>Projektveratantwortlich (E-Mail)</flux:label>
                         <flux:input.group>
-                            <flux:input type="email" wire:model="form.responsible" />
+                            <flux:input type="email" wire:model="responsible" />
                             {{-- <flux:input.group.suffix>@domain.com</flux:input.group.suffix> --}}
                         </flux:input.group>
                     </flux:field>
@@ -109,7 +109,7 @@
 
                 {{-- Organization --}}
                 <div>
-                    <flux:select wire:model="form.org" label="Organisation" variant="listbox" searchable>
+                    <flux:select wire:model="org" label="Organisation" variant="listbox" searchable>
                         @foreach ($gremien as $label)
                             <flux:select.option>{{ $label }}</flux:select.option>
                         @endforeach
@@ -119,7 +119,7 @@
                 {{-- Organization Mail --}}
                 @if (false)
                     <div>
-                        <flux:select type="email" label="Org (E-Mail)" wire:model="form.org_mail">
+                        <flux:select type="email" label="Org (E-Mail)" wire:model="org_mail">
                             @foreach($mailingLists as $mailingLists)
                                 <flux:select.option value="{{ $mailingLists }}">{{ $mailingLists }}</flux:select.option>
                             @endforeach
@@ -129,19 +129,26 @@
 
                 {{-- Project Duration --}}
                 <div>
-                    <flux:date-picker mode="range" wire:model="form.dateRange" label="Projektzeitraum" selectable-header/>
+                    <flux:field>
+                        <flux:date-picker mode="range" wire:model="dateRange"
+                                          label="Projektzeitraum" selectable-header
+                                          :invalid="$this->getErrorBag()->hasAny(['date_end'])"
+                        />
+                        <flux:error name="dateRange" />
+                        <flux:error name="date_end" />
+                    </flux:field>
                 </div>
 
                 {{-- Protocol Link (optional based on config) --}}
                 @if (!in_array('hide-protokoll', config('stufis.project.show-link', [])))
                     <div class="sm:col-span-2">
-                        <flux:input type="text" :label="config('stufis.project.link-label', 'Ergänzender-Link')" wire:model="form.protokoll" />
+                        <flux:input type="text" :label="config('stufis.project.link-label', 'Ergänzender-Link')" wire:model="protokoll" />
                     </div>
                 @endif
 
                 {{-- Creation Date --}}
                 <div class="">
-                    <flux:select variant="listbox" label="Projekt gehört zu HHP" wire:model="form.hhp_id">
+                    <flux:select variant="listbox" label="Projekt gehört zu HHP" wire:model="hhp_id">
                         @foreach ($budgetPlans as $plan)
                             <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
                         @endforeach
@@ -209,12 +216,14 @@
                                             wire:key="post-{{ $index }}-name"
                                             value="{{ $post['name'] }}"
                                 />
+                                <flux:error name="posts.{{ $index }}.name" />
                             </td>
 
                             {{-- Remarks --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
                                 <flux:input wire:model="posts.{{ $index }}.bemerkung"
-                                            placeholder="optional"></flux:input>
+                                            placeholder="optional"/>
+                                <flux:error name="posts.{{ $index }}.bemerkung" />
                             </td>
 
                             {{-- Budget Title --}}
@@ -229,6 +238,7 @@
                                                 </flux:select.option>
                                             @endforeach
                                         </flux:select>
+                                        <flux:error name="posts.{{ $index }}.titel_id" />
                                     @else
                                         <span class="text-gray-500">-</span>
                                     @endif
@@ -299,7 +309,7 @@
             </div>
             <div>
                 <flux:editor
-                    wire:model="form.beschreibung"
+                    wire:model="beschreibung"
                     placeholder="In unserem Projekt geht es um ...&#10;Hat einen Nutzen für die Studierendenschaft weil ...&#10;Findet dort und dort statt...&#10;usw."
                 />
             </div>
@@ -310,7 +320,7 @@
         <div class="px-4 py-5 sm:p-6">
 
 
-            <flux:file-upload wire:model="form.attachments" multiple label="Upload files">
+            <flux:file-upload wire:model="attachments" multiple label="Upload files">
                 <flux:file-upload.dropzone
                     heading="Drop files here or click to browse"
                     text="PDF up to 10MB"
@@ -348,4 +358,5 @@
             @enderror
         </div>
     </div>
+    @dump($this->getErrorBag()->keys())
 </div>

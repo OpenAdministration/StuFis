@@ -15,4 +15,6 @@ return [
     'doc-link.subtitle' => 'Lies unser Benutzer*innen Handbuch für mehr Infos',
     'blog-link.title' => 'Blog und News',
     'blog-link.subtitle' => 'Lies den StuFis-Blog mit den neusten Updates',
+    'flux-editor-malicious-html' => 'Fehlerhafte HTML-Tags',
+    'one-money-has-to-be-zero' => 'Eines der beiden muss 0 sein.'
 ];

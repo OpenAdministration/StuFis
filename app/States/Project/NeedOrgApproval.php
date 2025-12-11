@@ -18,4 +18,9 @@ class NeedOrgApproval extends ProjectState
     {
         return 'yellow';
     }
+    #[\Override]
+    public function rules(): array
+    {
+        return parent::rules();
+    }
 }

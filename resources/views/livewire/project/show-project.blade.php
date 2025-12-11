@@ -431,9 +431,9 @@
                             @php $ratio = $post->expendedRatio() @endphp
                             <td @class([
                                 "px-6 py-4 whitespace-nowrap text-sm text-right font-medium",
-                                "text-grey-200" => $ratio <= 0,
+                                "text-gray-400" => $ratio === 0,
                                 "text-yellow-600" =>  0 < $ratio && $ratio < 75,
-                                "text-green-600" => $ratio >= 75 && $ratio <= 100,
+                                "text-green-600" => 75 <= $ratio && $ratio <= 100,
                                 "text-red-600" =>  $ratio > 100
                             ])>
                                 {{ $post->expendedSum() }}
@@ -564,6 +564,15 @@
                 @endforeach
             </flux:select>
         </div>
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+                <ul class="list-disc list-inside text-red-600 text-sm space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
             <flux:button x-on:click="$flux.modal('state-modal').close()" class="w-full">
                 {{ __('project.view.state-modal.cancel') }}

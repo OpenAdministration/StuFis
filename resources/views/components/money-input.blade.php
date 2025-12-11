@@ -4,6 +4,7 @@
 
 @if(!$disabled)
     <flux:input {{ $attributes->merge(['class:input' => 'text-right']) }} />
+    <flux:error :name="$attributes->thatStartWith('wire:model')->first()" />
 @else
     <flux:input disabled readonly variant="filled" {{ $attributes->merge(['class:input' => 'text-right text-black!']) }}/>
 @endif

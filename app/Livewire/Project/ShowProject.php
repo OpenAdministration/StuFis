@@ -28,9 +28,13 @@ class ShowProject extends Component
 
     public function changeState(): void
     {
+        // check if given state string a valid state for this project
         $project = Project::findOrFail($this->project_id);
         $filtered = $this->validate(['newState' => ['required', new ValidStateRule(ProjectState::class)]]);
         $newState = ProjectState::make($filtered['newState'], $project);
+        // Business Logic check: are some values missing for the new state
+        $newState->validate();
+        // Authorization check: can the user transition to this state
         $this->authorize('transition-to', [$project, $newState]);
 
         try {
@@ -46,6 +50,7 @@ class ShowProject extends Component
                 'timestamp' => now(),
             ]);
             Flux::modal('state-modal')->close();
+            $this->reset('newState');
         } catch (CouldNotPerformTransition $e) {
             $this->addError('newState', $e->getMessage());
         }

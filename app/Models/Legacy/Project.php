@@ -48,6 +48,8 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project newModelQuery()
  * @method static Builder|Project newQuery()
  * @method static Builder|Project query()
+ * @method static Builder|Project whereState($field, ProjectState|array<ProjectState> $states)
+ * @method static Builder|Project whereNotState($field, ProjectState|array<ProjectState> $states)
  * @method static Builder|Project whereBeschreibung($value)
  * @method static Builder|Project whereCreatedat($value)
  * @method static Builder|Project whereCreatorId($value)
@@ -62,7 +64,6 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project whereRecht($value)
  * @method static Builder|Project whereRechtAdditional($value)
  * @method static Builder|Project whereResponsible($value)
- * @method static Builder|Project whereState($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
  * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
@@ -84,14 +85,16 @@ class Project extends Model
      */
     protected $table = 'projekte';
 
-    const CREATED_AT = 'createdat';
+    const string CREATED_AT = 'createdat';
 
-    const UPDATED_AT = 'lastupdated';
+    const string UPDATED_AT = 'lastupdated';
 
     /**
-     * @var array
+     * The attributes that aren't mass-assignable.
+     *
+     * @var array<string>
      */
-    protected $fillable = ['creator_id', 'createdat', 'lastupdated', 'version', 'state', 'stateCreator_id', 'name', 'responsible', 'org', 'org_mail', 'protokoll', 'recht', 'recht_additional', 'date_start', 'date_end', 'beschreibung'];
+    protected $guarded = ['id'];
 
     protected function responsible(): Attribute
     {

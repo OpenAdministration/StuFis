@@ -18,4 +18,12 @@ class Draft extends ProjectState
     {
         return 'zinc';
     }
+
+    #[\Override]
+    public function rules() : array{
+        return [
+            'name' => 'required|string|max:128',
+        ];
+    }
+
 }

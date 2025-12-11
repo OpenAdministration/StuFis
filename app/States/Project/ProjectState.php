@@ -3,6 +3,9 @@
 namespace App\States\Project;
 
 use App\Models\Legacy\Project;
+use App\Rules\ExactlyOneZeroMoneyRule;
+use App\Rules\FluxEditorRule;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Wireable;
 use Spatie\ModelStates\Exceptions\InvalidConfig;
 use Spatie\ModelStates\State;
@@ -104,6 +107,41 @@ abstract class ProjectState extends State implements Wireable
         ], ApprovedByOther::class);
 
         return $config;
+    }
+
+    public function rules() : array {
+        // some sensible default i dont want to copy paste around
+        return [
+            'name' => 'required|string|max:128',
+            'responsible' => 'required|string|max:128|email',
+            'org' => 'required|string|max:64',
+            'protocol' => 'sometimes|nullable|string|url',
+            //'recht' => 'required|string|in:...',
+            //'recht-additional' => 'sometimes|nullable|string',
+            'date_start' => 'required|date',
+            'date_end' => 'required|date|after:date_start',
+            'beschreibung' => ['required', 'string', new FluxEditorRule],
+            'posts' => 'required|array|min:1',
+            'posts.*.id' => 'sometimes|integer',
+            //'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+            'posts.*.name' => 'required|string|max:128|min:1',
+            'posts.*.einnahmen' => 'required|money:EUR',
+            'posts.*.ausgaben' => ['required','money:EUR', new ExactlyOneZeroMoneyRule('posts.*.einnahmen')],
+            'posts.*.position' => 'sometimes|integer',
+            'posts.*.bemerkung' => 'sometimes|string|max:256',
+        ];
+    }
+
+    public function getValidator() : \Illuminate\Validation\Validator
+    {
+        $model = $this->getModel();
+        $data = [...$model->getAttributes(), 'posts' => $model->posts->all()];
+        return Validator::make($data, static::rules());
+    }
+
+    public function validate() : array
+    {
+        return $this->getValidator()->validate();
     }
 
     public function toLivewire(): array

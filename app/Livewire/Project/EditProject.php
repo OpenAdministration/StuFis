@@ -10,8 +10,11 @@ use App\States\Project\ProjectState;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Validator;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -21,20 +24,28 @@ class EditProject extends Component
 {
     use WithFileUploads;
 
+    #[Url]
+    public ?int $project_id = null;
     #[Locked]
     public string $state_name;
 
-    public ProjectForm $form;
-
-    #[Url]
-    public ?int $project_id = null;
-
+    #[Locked]
     public bool $isNew;
 
-    public Collection $posts;
+    // Form data
+    public string $name = '';
+    public string $responsible = '';
+    public string $org = '';
+    public string $org_mail = '';
+    public string $protokoll = '';
+    public string $beschreibung = '';
+    public string $recht = '';
+    public string $recht_additional = '';
+    public array $dateRange = [];
+    public int $hhp_id;
+    public int $version = 1;
 
-    // UI state
-    public string $selectedRechtKey = '';
+    public Collection $posts;
 
     public array $attachments = [];
 
@@ -44,27 +55,59 @@ class EditProject extends Component
 
         if ($this->isNew) {
             Gate::authorize('create', Project::class);
-            $this->form->initializeNew();
-            $this->posts = collect();
-            $this->attachments = [];
-            $this->state_name = 'draft';
-
+            $project = new Project();
+            $this->populateData($project);
             $this->addEmptyPost();
         } else {
             $project = Project::findOrFail($this->project_id);
             Gate::authorize('update', $project);
-            $this->form->setProject($project);
-            $this->state_name = $project->state->getValue();
-            $this->posts = $project->posts->map(fn (ProjectPost $post) => [
-                'id' => $post->id,
-                'name' => $post->name,
-                'bemerkung' => $post->bemerkung ?? '',
-                'einnahmen' => $post->einnahmen,
-                'ausgaben' => $post->ausgaben,
-                'titel_id' => $post->titel_id,
-            ]);
-            $this->attachments = []; // FIXME: load Attachments
+            $this->populateData($project);
         }
+    }
+
+    private function populateData(Project $project): void
+    {
+        $this->name = $project->name ?? '';
+        $this->responsible = $project->responsible ?? '';
+        $this->org = $project->org ?? '';
+        $this->org_mail = $project->org_mail ?? '';
+        $this->protokoll = $project->protokoll ?? '';
+        $this->beschreibung = $project->beschreibung ?? '';
+        $this->recht = $project->recht ?? '';
+        $this->recht_additional = $project->recht_additional ?? '';
+        $this->dateRange = ['start' => $project->date_start, 'end' => $project->date_end];
+        $this->version = $project->version;
+        $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)->id;
+        $this->state_name = $project->state->getValue();
+        $this->posts = $project->posts->map(fn (ProjectPost $post) => [
+            'id' => $post->id,
+            'name' => $post->name,
+            'bemerkung' => $post->bemerkung ?? '',
+            'einnahmen' => $post->einnahmen,
+            'ausgaben' => $post->ausgaben,
+            'titel_id' => $post->titel_id,
+        ]);
+        $this->attachments = []; // FIXME: load Attachments
+    }
+
+    private function getValues(): array
+    {
+        return [
+            'name' => $this->name,
+            'responsible' => $this->responsible,
+            'org' => $this->org,
+            'org_mail' => $this->org_mail,
+            'protokoll' => $this->protokoll,
+            'beschreibung' => $this->beschreibung,
+            'recht' => $this->recht,
+            'recht_additional' => $this->recht_additional,
+            // make compatible with legacy database
+            'date_start' => $this->dateRange['start'] ?? null,
+            'date_end' => $this->dateRange['end'] ?? null,
+            'version' => $this->version,
+            'createdat' => Date::parse(LegacyBudgetPlan::find($this->hhp_id)->von)->addDays(7),
+            'posts' => $this->posts->toArray(),
+        ];
     }
 
     public function isPostDeletable(int $index): bool
@@ -85,35 +128,44 @@ class EditProject extends Component
         }
     }
 
+    public function rules() : array
+    {
+        return $this->getState()->rules();
+    }
+
     /**
      * Save the project
      */
     public function save()
     {
-        // $this->validate();
-        // $this->form->validate();
+        $validator = Validator::make($this->getValues(), $this->rules());
+        $filtered = collect($validator->validate());
+        $filteredMeta = $filtered->except('posts')->toArray();
+        $filteredPosts = $filtered->get('posts');
+
+
         try {
             DB::beginTransaction();
             if ($this->isNew) {
                 $project = Project::create([
                     'creator_id' => Auth::id(),
                     'stateCreator_id' => Auth::id(),
-                    ...($this->form->getValues()),
+                    ...$filteredMeta,
                 ]);
             } else {
                 $project = Project::findOrFail($this->project_id);
                 // Check if the project has been modified since the last load
-                if ($project->version != $this->form->version) {
+                if ($project->version !== $this->version) {
                     $this->addError('save', 'Das Projekt wurde zwischenzeitlich von jemand anderem bearbeitet. Bitte laden Sie die Seite neu.');
 
                     return;
                 }
                 $project->update([
-                    ...$this->form->getValues(),
+                    ...$filteredMeta,
                     'version' => $project->version + 1,
                 ]);
             }
-            foreach ($this->posts as $post) {
+            foreach ($filteredPosts as $post) {
                 if (isset($post['id'])) {
                     $project->posts()->findOrFail($post['id'])->update($post);
                 } else {
@@ -127,32 +179,6 @@ class EditProject extends Component
             DB::rollBack();
             $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
         }
-    }
-
-    /**
-     * Update existing project
-     */
-    protected function updateProject()
-    {
-        $project = Project::findOrFail($this->project_id);
-
-        $updateData = [
-            'lastupdated' => now(),
-            'version' => $project->version + 1,
-        ];
-
-        // Only update fields that the user has permission to edit
-        foreach ($this->form->toArray() as $field => $value) {
-            if (Gate::allows('update-field', [$project, $field])) {
-                $updateData[$field] = $value ?: null;
-            }
-        }
-
-        // FIXME: increment version
-        // FIXME: save posts
-        $project->update($updateData);
-        $this->form->version = $project->version;
-
     }
 
     /**
@@ -198,7 +224,7 @@ class EditProject extends Component
      */
     protected function getBudgetTitleOptions(): \Illuminate\Database\Eloquent\Collection
     {
-        $plan = LegacyBudgetPlan::findOrFail($this->form->hhp_id);
+        $plan = LegacyBudgetPlan::findOrFail($this->hhp_id);
 
         return $plan->budgetItems;
     }
@@ -241,11 +267,22 @@ class EditProject extends Component
         $mailingLists = [];
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $budgetTitles = $this->getBudgetTitleOptions();
-        $state = ProjectState::make($this->state_name, new Project);
+        $state = $this->getState();
         $budgetPlans = LegacyBudgetPlan::all();
 
         return view('livewire.project.edit-project', compact(
             'gremien', 'mailingLists', 'budgetTitles', 'rechtsgrundlagen', 'state', 'budgetPlans'
         ));
     }
+
+    #[Computed]
+    public function getState(): ProjectState {
+        return ProjectState::make($this->state_name, $this->getProject());
+    }
+
+    #[Computed]
+    public function getProject(): Project {
+        return Project::findOrFail($this->project_id);
+    }
+
 }
