@@ -25,6 +25,7 @@ class ApprovedByOrg extends ProjectState
         return 'green';
     }
 
+    #[\Override]
     public function rules(): array
     {
         return parent::rules() + [
@@ -33,5 +34,4 @@ class ApprovedByOrg extends ProjectState
             'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];
     }
-
 }

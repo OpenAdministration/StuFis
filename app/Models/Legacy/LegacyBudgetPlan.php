@@ -60,8 +60,10 @@ class LegacyBudgetPlan extends Model
         return self::orderBy('id', 'desc')->first();
     }
 
-    public static function findByDate(Carbon $date): static
+    public static function findByDate(?Carbon $date = null): static
     {
+        $date ??= \Illuminate\Support\Facades\Date::now();
+
         return self::query()->where('von', '<=', $date)
             ->where(fn ($query) => $query->where('bis', '>=', $date)
                 ->orWhereNull('bis'))

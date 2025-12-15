@@ -23,9 +23,9 @@ class Terminated extends ProjectState
     public function rules(): array
     {
         return parent::rules() + [
-                'recht' => 'required|string',
-                'recht-additional' => 'sometimes|nullable|string',
-                'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
-            ];
+            'recht' => 'required|string',
+            'recht-additional' => 'sometimes|nullable|string',
+            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+        ];
     }
 }

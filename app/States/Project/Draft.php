@@ -20,10 +20,10 @@ class Draft extends ProjectState
     }
 
     #[\Override]
-    public function rules() : array{
+    public function rules(): array
+    {
         return [
             'name' => 'required|string|max:128',
         ];
     }
-
 }

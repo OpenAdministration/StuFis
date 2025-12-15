@@ -7,7 +7,6 @@ use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Services\Auth\AuthService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -49,7 +48,7 @@ class ProjectOverview extends Component
     public function projectsByCommittee(): Collection
     {
         $budgetPlan = $this->currentBudgetPlan();
-        if (!$budgetPlan) {
+        if (! $budgetPlan) {
             return [];
         }
 
@@ -91,7 +90,7 @@ class ProjectOverview extends Component
         $projects = $query->orderBy('org')->orderBy('id', 'desc')->get();
 
         // Group by committee
-        return $projects->groupBy(fn($project) => $project->org ?: '');
+        return $projects->groupBy(fn ($project) => $project->org ?: '');
     }
 
     #[Computed]

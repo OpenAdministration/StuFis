@@ -25,6 +25,7 @@ class ApprovedByFinance extends ProjectState
         return 'green';
     }
 
+    #[\Override]
     public function rules(): array
     {
         return parent::rules() + [

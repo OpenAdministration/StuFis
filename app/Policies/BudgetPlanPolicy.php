@@ -12,22 +12,22 @@ class BudgetPlanPolicy
 
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     public function view(User $user, BudgetPlan $budgetPlan): bool
     {
-        return false;
+        return true;
     }
 
     public function create(User $user): bool
     {
-        return false;
+        return $user->getGroups()->contains('ref-finanzen-hv');
     }
 
     public function update(User $user, BudgetPlan $budgetPlan): bool
     {
-        return false;
+        return $user->getGroups()->contains('ref-finanzen-hv');
     }
 
     public function delete(User $user, BudgetPlan $budgetPlan): bool

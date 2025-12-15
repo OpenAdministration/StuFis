@@ -23,5 +23,4 @@ class Revoked extends ProjectState
     {
         return [];
     }
-
 }

@@ -34,7 +34,7 @@ class ChatPanel extends Component
     public function save()
     {
 
-        $cleanContent = $this->validate(['content' => ['required', 'min:1', new FluxEditorRule()]])['content'];
+        $cleanContent = $this->validate(['content' => ['required', 'min:1', new FluxEditorRule]])['content'];
 
         ChatMessage::create([
             'text' => $cleanContent,

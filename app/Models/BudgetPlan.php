@@ -10,6 +10,8 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\BudgetPlan
@@ -33,6 +35,22 @@ use Illuminate\Database\Eloquent\Model;
  * @method static Builder|BudgetPlan query()
  *
  * @mixin Eloquent
+ *
+ * @property string|null $organization
+ * @property int|null $fiscal_year_id
+ * @property-read \App\Models\FiscalYear|null $fiscalYear
+ * @property-read \Staudenmeir\LaravelAdjacencyList\Eloquent\Collection<int, \App\Models\BudgetItem> $rootBudgetItems
+ * @property-read int|null $root_budget_items_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereApprovalDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereFiscalYearId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereOrganization($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereParentPlanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereResolutionDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereState($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereUpdatedAt($value)
  */
 class BudgetPlan extends Model
 {
@@ -60,7 +78,7 @@ class BudgetPlan extends Model
         ];
     }
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function budgetItems(): HasMany
     {
         return $this->hasMany(BudgetItem::class);
     }
@@ -78,12 +96,12 @@ class BudgetPlan extends Model
         return BudgetItem::treeOf($constraint)->orderBy('position_path')->get();
     }
 
-    public function rootBudgetItems(): Builder|\Illuminate\Database\Eloquent\Relations\HasMany|BudgetPlan
+    public function rootBudgetItems(): Builder|HasMany|BudgetPlan
     {
         return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
     }
 
-    public function fiscalYear(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fiscalYear(): BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
     }

@@ -16,7 +16,7 @@ class FluxEditorRule implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $cleanContent = strip_tags((string) $value, '<p><s><br><strong><em><ul><ol><li><a><h1><h2><h3>');
-        if($cleanContent !== $value) {
+        if ($cleanContent !== $value) {
             $fail(__('errors.flux-editor-malicious-html'));
         }
     }

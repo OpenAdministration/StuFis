@@ -147,9 +147,8 @@ class ConvertLegacyBudgetPlans extends Command
             'organization' => $organization,
             'fiscal_year_id' => $fiscalYear->id,
             'state' => $state,
-            'resolution_date' => $legacyPlan->von,
+            'resolution_date' => null, // Legacy doesn't have this
             'approval_date' => null, // Legacy doesn't have this
-            'parent_plan' => null,
         ]);
 
         // Force the ID to match the legacy plan
@@ -300,7 +299,7 @@ class ConvertLegacyBudgetPlans extends Command
             // Create a new fiscal year
             $fiscalYear = new FiscalYear([
                 'start_date' => $legacyPlan->von,
-                'end_date' => $legacyPlan->bis,
+                'end_date' => $legacyPlan->bis ?? $legacyPlan->von->addYear()->subDay(),
             ]);
 
             if (! $dryRun) {
@@ -310,7 +309,7 @@ class ConvertLegacyBudgetPlans extends Command
                 $fiscalYear->id = 9999;
             }
 
-            $this->line("  ✓ Created Fiscal Year: {$legacyPlan->von} to {$legacyPlan->bis}");
+            $this->line("  ✓ Created Fiscal Year: {$fiscalYear->start_date} to {$fiscalYear->end_date}");
         }
 
         return $fiscalYear;

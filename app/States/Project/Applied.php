@@ -2,12 +2,8 @@
 
 namespace App\States\Project;
 
-use App\Rules\ExactlyOneZeroMoneyRule;
-use App\Rules\FluxEditorRule;
-
 class Applied extends ProjectState
 {
-
     public static string $name = 'wip';
 
     #[\Override]
@@ -24,7 +20,8 @@ class Applied extends ProjectState
     }
 
     #[\Override]
-    public function rules() : array{
+    public function rules(): array
+    {
         return parent::rules();
     }
 }
