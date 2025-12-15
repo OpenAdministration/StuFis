@@ -119,7 +119,7 @@ class EditProject extends Component
             'date_end' => $this->dateRange['end'] ?? null,
             'version' => $this->version,
             'createdat' => Date::parse(LegacyBudgetPlan::find($this->hhp_id)->von)->addDays(7),
-            'posts' => $this->posts->toArray(),
+            'posts' => $this->posts,
         ];
     }
 
