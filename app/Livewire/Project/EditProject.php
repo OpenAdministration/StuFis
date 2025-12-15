@@ -154,7 +154,7 @@ class EditProject extends Component
         $validator = Validator::make($this->getValues(), $this->rules());
         $filtered = collect($validator->validate());
         $filteredMeta = $filtered->except('posts')->toArray();
-        $filteredPosts = $filtered->get('posts');
+        $filteredPosts = $filtered->get('posts') ?? [];
 
         try {
             DB::beginTransaction();
