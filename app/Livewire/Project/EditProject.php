@@ -141,21 +141,16 @@ class EditProject extends Component
         }
     }
 
-    public function rules(): array
-    {
-        return $this->getState()->rules();
-    }
-
     /**
      * Save the project
      */
-    public function save()
+    public function saveAs($stateName)
     {
-        $validator = Validator::make($this->getValues(), $this->rules());
+        $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
+        $validator = Validator::make($this->getValues(), $state->rules());
         $filtered = collect($validator->validate());
         $filteredMeta = $filtered->except('posts')->toArray();
         $filteredPosts = $filtered->get('posts') ?? [];
-
         try {
             DB::beginTransaction();
             if ($this->isNew) {

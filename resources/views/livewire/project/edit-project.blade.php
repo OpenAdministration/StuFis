@@ -22,7 +22,7 @@
             <div class="flex flex-col items-end space-y-4">
                 <div class="flex items-center space-x-4">
                     <flux:button :href="url()->previous()" variant="outline" icon="arrow-left">Zurück</flux:button>
-                    <flux:button wire:click="save" variant="primary">
+                    <flux:button wire:click="saveAs('{{ $state_name }}')" variant="primary">
                         Speichern
                     </flux:button>
                 </div>
@@ -349,9 +349,14 @@
         <div class="flex flex-col items-end space-y-4">
             <div class="flex items-center space-x-4">
                 <flux:button :href="url()->previous()" variant="outline" icon="arrow-left">Zurück</flux:button>
-                <flux:button wire:click="save" variant="primary">
+                <flux:button wire:click="saveAs({{ $state_name }})" variant="primary">
                     Speichern
                 </flux:button>
+                @if($this->getState()->equals(\App\States\Project\Draft::class))
+                    <flux:button wire:click="saveAs('wip')" variant="primary">
+                        Speichern als beantragt
+                    </flux:button>
+                @endif
             </div>
             @error('save')
             <p class="text-red-600 text-sm">{{ $message }}</p>
