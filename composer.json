@@ -110,8 +110,11 @@
         "rector": "@php vendor/bin/rector process",
         "rector-dry": "@php vendor/bin/rector process --dry-run",
         "lint": "@php vendor/bin/phpstan",
-        "lint-fix": "@php vendor/bin/phpstan --fix",
-        "pint": "@php vendor/bin/pint"
+        "pint": "@php vendor/bin/pint",
+        "fix" : [
+            "@php vendor/bin/rector process",
+            "@php vendor/bin/pint"
+        ]
     },
     "extra": {
         "laravel": {

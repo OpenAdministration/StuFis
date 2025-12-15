@@ -8,7 +8,6 @@ use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectPost;
 use App\States\Project\ProjectState;
 use Cknow\Money\Money;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +25,7 @@ class EditProject extends Component
 
     #[Url]
     public ?int $project_id = null;
+
     #[Locked]
     public string $state_name;
 
@@ -34,18 +34,28 @@ class EditProject extends Component
 
     // Form data
     public string $name = '';
+
     public string $responsible = '';
+
     public string $org = '';
+
     public string $org_mail = '';
+
     public string $protokoll = '';
+
     public string $beschreibung = '';
+
     public string $recht = '';
+
     public string $recht_additional = '';
+
     public array $dateRange = [];
+
     public int $hhp_id;
+
     public int $version = 1;
 
-    public Collection $posts;
+    public array $posts;
 
     public array $attachments = [];
 
@@ -55,7 +65,7 @@ class EditProject extends Component
 
         if ($this->isNew) {
             Gate::authorize('create', Project::class);
-            $project = new Project();
+            $project = new Project;
             $this->populateData($project);
             $this->addEmptyPost();
         } else {
@@ -75,9 +85,12 @@ class EditProject extends Component
         $this->beschreibung = $project->beschreibung ?? '';
         $this->recht = $project->recht ?? '';
         $this->recht_additional = $project->recht_additional ?? '';
-        $this->dateRange = ['start' => $project->date_start, 'end' => $project->date_end];
-        $this->version = $project->version;
-        $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)->id;
+        $this->dateRange = [
+            'start' => $project->date_start ?? null,
+            'end' => $project->date_end ?? null,
+        ];
+        $this->version = $project->version ?? 1;
+        $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)?->id;
         $this->state_name = $project->state->getValue();
         $this->posts = $project->posts->map(fn (ProjectPost $post) => [
             'id' => $post->id,
@@ -86,7 +99,7 @@ class EditProject extends Component
             'einnahmen' => $post->einnahmen,
             'ausgaben' => $post->ausgaben,
             'titel_id' => $post->titel_id,
-        ]);
+        ])->all();
         $this->attachments = []; // FIXME: load Attachments
     }
 
@@ -113,7 +126,7 @@ class EditProject extends Component
     public function isPostDeletable(int $index): bool
     {
         return
-            $this->posts->count() > 1 && (
+            count($this->posts) > 1 && (
                 (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
                 || ! isset($this->posts[$index]['id']));
     }
@@ -128,7 +141,7 @@ class EditProject extends Component
         }
     }
 
-    public function rules() : array
+    public function rules(): array
     {
         return $this->getState()->rules();
     }
@@ -142,7 +155,6 @@ class EditProject extends Component
         $filtered = collect($validator->validate());
         $filteredMeta = $filtered->except('posts')->toArray();
         $filteredPosts = $filtered->get('posts');
-
 
         try {
             DB::beginTransaction();
@@ -186,7 +198,7 @@ class EditProject extends Component
      */
     public function addEmptyPost(): void
     {
-        $this->posts->add([
+        $this->posts[] = ([
             'name' => '',
             'bemerkung' => '',
             'einnahmen' => Money::EUR(0),
@@ -200,7 +212,7 @@ class EditProject extends Component
      */
     public function getTotalIncome(): Money
     {
-        return $this->posts->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
+        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
     }
 
     /**
@@ -208,7 +220,7 @@ class EditProject extends Component
      */
     public function getTotalExpenses(): Money
     {
-        return $this->posts->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
+        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
     }
 
     public function removeAttachment(int $index): void
@@ -276,13 +288,14 @@ class EditProject extends Component
     }
 
     #[Computed]
-    public function getState(): ProjectState {
-        return ProjectState::make($this->state_name, $this->getProject());
+    public function getState(): ProjectState
+    {
+        return ProjectState::make($this->state_name, $this->getProject() ?? new Project);
     }
 
     #[Computed]
-    public function getProject(): Project {
-        return Project::findOrFail($this->project_id);
+    public function getProject(): ?Project
+    {
+        return Project::find($this->project_id);
     }
-
 }
