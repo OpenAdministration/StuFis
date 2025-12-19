@@ -57,7 +57,9 @@ class EditProject extends Component
 
     public array $posts;
 
-    public array $attachments = [];
+    public array $existingAttachments = [];
+    public array $newAttachments = [];
+    public array $deletedAttachmentIds = [];
 
     public function mount(): void
     {
@@ -100,9 +102,15 @@ class EditProject extends Component
             'ausgaben' => $post->ausgaben,
             'titel_id' => $post->titel_id,
         ])->all();
-        $this->attachments = []; // FIXME: load Attachments
+        $this->existingAttachments = $project->attachments->map(
+            fn($attachment) => $attachment->only('id', 'path', 'name', 'mime_type', 'size')
+        )->all();
     }
 
+    /**
+     * Translates the livewire properties into the ones expected by the validator and the project model.
+     * @return array<string, mixed>
+     */
     private function getValues(): array
     {
         return [
@@ -137,7 +145,7 @@ class EditProject extends Component
     public function removePost(int $index): void
     {
         if ($this->isPostDeletable($index)) {
-            $this->posts->forget($index);
+            unset($this->posts[$index]);
         }
     }
 
@@ -146,11 +154,25 @@ class EditProject extends Component
      */
     public function saveAs($stateName)
     {
+        $this->authorize('update', $this->getProject());
         $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
-        $validator = Validator::make($this->getValues(), $state->rules());
+        $validator = Validator::make(
+            $this->getValues() + [
+                'uploads' => $this->newAttachments,
+                'deletedAttachments' => $this->deletedAttachmentIds
+            ],
+            $state->rules() + ['uploads.*' =>
+                File::types(['pdf', 'xlsx', 'ods'])->extensions(['pdf', 'xlsx', 'ods'])->max("5 Mb"),
+                'deletedAttachments' => 'array',
+                'deletedAttachments.*' => 'integer',
+            ]
+        );
         $filtered = collect($validator->validate());
-        $filteredMeta = $filtered->except('posts')->toArray();
-        $filteredPosts = $filtered->get('posts') ?? [];
+        $filteredPosts = $filtered->pull('posts') ?? [];
+        $newAttachments = $filtered->pull('uploads') ?? [];
+        $deletedAttachmentIds = $filtered->pull('deletedAttachments') ?? [];
+        $filteredMeta = $filtered->all();
+
         try {
             DB::beginTransaction();
             if ($this->isNew) {
@@ -172,6 +194,11 @@ class EditProject extends Component
                     'version' => $project->version + 1,
                 ]);
             }
+
+            if(!$project->state->equals($state)){
+                $project->state->transitionTo($state);
+            }
+
             foreach ($filteredPosts as $post) {
                 if (isset($post['id'])) {
                     $project->posts()->findOrFail($post['id'])->update($post);
@@ -179,6 +206,23 @@ class EditProject extends Component
                     $project->posts()->create($post);
                 }
             }
+
+            foreach ($newAttachments as $attachment){
+                $attachment->store('projects/'.$project->id);
+                $project->attachments()->create([
+                    'path' => "projects/$project->id/{$attachment->hashName()}",
+                    'name' => $attachment->getClientOriginalName(),
+                    'mime_type' => $attachment->getMimeType(),
+                    'size' => $attachment->getSize(),
+                ]);
+            }
+
+            foreach ($deletedAttachmentIds as $id){
+                $pa = ProjectAttachment::where('id', $id)->where('projekt_id', $this->project_id)->findOrFail();
+                \Storage::delete($pa->path);
+                $pa->delete();
+            }
+
             DB::commit();
 
             return to_route('project.show', $project->id);
@@ -218,12 +262,20 @@ class EditProject extends Component
         return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
     }
 
-    public function removeAttachment(int $index): void
+    public function removeExistingAttachment(int $id): void
     {
-        $photo = $this->attachments[$index];
-        $photo->delete();
-        unset($this->attachments[$index]);
-        $this->attachments = array_values($this->attachments);
+        $this->deletedAttachmentIds[] = $id;
+        $this->existingAttachments = array_filter(
+            $this->existingAttachments,
+            fn($a) => $a['id'] !== $id
+        );
+    }
+
+    public function removeNewAttachment(int|string $index): void
+    {
+        $this->newAttachments[$index]->delete();
+        unset($this->newAttachments[$index]);
+        $this->newAttachments = array_values($this->newAttachments);
     }
 
     /**

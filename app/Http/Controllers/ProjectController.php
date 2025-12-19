@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Legacy\Project;
+use App\Models\Legacy\ProjectAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -64,5 +66,10 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         //
+    }
+
+    public function showAttachment(ProjectAttachment $attachment, string $filename)
+    {
+        return response()->file(Storage::path($attachment->path));
     }
 }

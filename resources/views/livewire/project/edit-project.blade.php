@@ -320,26 +320,38 @@
         <div class="px-4 py-5 sm:p-6">
 
 
-            <flux:file-upload wire:model="attachments" multiple label="Upload files">
+            <flux:file-upload wire:model="newAttachments" multiple label="Upload files">
                 <flux:file-upload.dropzone
                     heading="Drop files here or click to browse"
-                    text="PDF up to 10MB"
+                    text=".pdf, .xlsx or .ods up to 5MB"
                     with-progress
                 />
             </flux:file-upload>
             <div class="mt-4 flex flex-col gap-2">
-                @foreach($attachments as $attachment)
-                    @dump($attachments)
-                    <flux:file-item
-                        heading=""
-                        icon="paper-clip"
-                        size="{{ $attachment->size }}"
-                    >
-                        <x-slot name="actions">
-                            <flux:file-item.remove wire:click="removeAttachment({{ $loop->index }})" />
-                        </x-slot>
-                    </flux:file-item>
-                @endforeach
+                <div class="mt-2 flex flex-col gap-2">
+                    @foreach($newAttachments as $attachment)
+                        <x-file-card
+                            :heading="$attachment->getClientOriginalName()"
+                            :size="$attachment->getSize()"
+                            icon="arrow-up-tray"
+                        >
+                            <x-slot name="actions">
+                                <flux:file-item.remove wire:click="removeNewAttachment({{ $loop->index }})"/>
+                            </x-slot>
+                        </x-file-card>
+                    @endforeach
+                    @foreach($existingAttachments as $attachment)
+                        <x-file-card
+                            :heading="$attachment['name']"
+                            :size="$attachment['size']"
+                            :icon="$attachment['mime_type']"
+                        >
+                            <x-slot name="actions">
+                                <flux:file-item.remove wire:click="removeExistingAttachment({{ $attachment['id'] }})"/>
+                            </x-slot>
+                        </x-file-card>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
