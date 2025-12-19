@@ -18,7 +18,6 @@ abstract class ProjectState extends State implements Wireable
     public function iconName(): string
     {
         return 'file-pen';
-
     }
 
     public function color(): string
@@ -52,7 +51,7 @@ abstract class ProjectState extends State implements Wireable
             ->allowTransition(Draft::class, Applied::class)
             ->allowTransition([ApprovedByOrg::class, ApprovedByFinance::class, ApprovedByOther::class], Terminated::class)
             ->allowTransition([Applied::class, NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
-            ->allowTransition([Revoked::class], Draft::class);
+            ->allowTransition([Applied::class, Revoked::class], Draft::class);
 
         // here would be some dynamic logic from config possible
 
@@ -130,20 +129,33 @@ abstract class ProjectState extends State implements Wireable
             'posts.*.ausgaben' => ['required', 'money:EUR', new ExactlyOneZeroMoneyRule('posts.*.einnahmen')],
             'posts.*.position' => 'sometimes|integer',
             'posts.*.bemerkung' => 'sometimes|string|max:256',
+
         ];
     }
 
-    public function getValidator(): \Illuminate\Contracts\Validation\Validator
+    /**
+     * Create and return a validator instance for the provided data or the model's attributes.
+     *
+     * If the provided data is empty, it retrieves the model's attributes and populates additional
+     * data such as related posts and attachments.
+     *
+     * @param array $data An optional array of data to validate. If empty, the model's attributes will be used.
+     *
+     * @return \Illuminate\Contracts\Validation\Validator The validator instance for the given data.
+     */
+    public function getValidator(array $data = []): \Illuminate\Contracts\Validation\Validator
     {
-        $model = $this->getModel();
-        $data = [...$model->getAttributes(), 'posts' => $model->posts->all()];
-
+        if(empty($data)){
+            $model = $this->getModel();
+            $data = $this->getModel()->getAttributes();
+            $data['posts'] = $model->posts->all();
+        }
         return Validator::make($data, static::rules());
     }
 
-    public function validate(): array
+    public function validate(array $data = []): array
     {
-        return $this->getValidator()->validate();
+        return $this->getValidator($data)->validate();
     }
 
     public function toLivewire(): array

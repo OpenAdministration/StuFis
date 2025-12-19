@@ -34,6 +34,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
     Route::get('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');
     Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
+    Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
 
 });
 

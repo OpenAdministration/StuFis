@@ -5,6 +5,7 @@ namespace App\Livewire\Project;
 use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
+use App\Models\Legacy\ProjectAttachment;
 use App\Models\Legacy\ProjectPost;
 use App\States\Project\ProjectState;
 use Cknow\Money\Money;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\File;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
@@ -131,12 +133,26 @@ class EditProject extends Component
         ];
     }
 
+    /**
+     * Add an empty post row
+     */
+    public function addEmptyPost(): void
+    {
+        $this->posts[] = ([
+            'name' => '',
+            'bemerkung' => '',
+            'einnahmen' => Money::EUR(0),
+            'ausgaben' => Money::EUR(0),
+            'titel_id' => null,
+        ]);
+    }
+
     public function isPostDeletable(int $index): bool
     {
-        return
-            count($this->posts) > 1 && (
+        return count($this->posts) > 1 && (
                 (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
-                || ! isset($this->posts[$index]['id']));
+                || ! isset($this->posts[$index]['id'])
+            );
     }
 
     /**
@@ -230,20 +246,6 @@ class EditProject extends Component
             DB::rollBack();
             $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
         }
-    }
-
-    /**
-     * Add an empty post row
-     */
-    public function addEmptyPost(): void
-    {
-        $this->posts[] = ([
-            'name' => '',
-            'bemerkung' => '',
-            'einnahmen' => Money::EUR(0),
-            'ausgaben' => Money::EUR(0),
-            'titel_id' => null,
-        ]);
     }
 
     /**

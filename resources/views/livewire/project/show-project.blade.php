@@ -8,7 +8,7 @@
 @php $totalRemainingEinnahmen = $project->totalRemainingEinnahmen() @endphp
 @php $totalRatioEinnahmen = $project->totalRatioEinnahmen(); @endphp
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+<div class="min-h-screen py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
         <!-- Header with Status and Actions -->
@@ -57,12 +57,6 @@
                         <flux:button icon="ellipsis-vertical"/>
 
                         <flux:menu>
-                            <flux:menu.item  href="{{ route('project.history', $project->id) }}" icon="inbox-stack">
-                                Secret New Feature :)
-                            </flux:menu.item>
-                            <flux:menu.item icon="document-duplicate">
-                                Duplicate (WIP)
-                            </flux:menu.item>
                             <flux:menu.item icon="clock" href="{{ route('legacy.projekt', $project->id) }}">
                                 {{ __('project.view.header.old-view') }}
                             </flux:menu.item>
@@ -83,13 +77,13 @@
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.state') }}</p>
                         <p @class([
-                                    "font-bold mt-1",
-                                    "text-zinc-600" => $project->state->color() === "zinc",
-                                    "text-sky-600" => $project->state->color() === "sky",
-                                    "text-yellow-600" => $project->state->color() === "yellow",
-                                    "text-green-600" => $project->state->color() === "green",
-                                    "text-rose-600" => $project->state->color() === "rose",
-                                ])>
+                            "font-bold mt-1",
+                            "text-zinc-600" => $project->state->color() === "zinc",
+                            "text-sky-600" => $project->state->color() === "sky",
+                            "text-yellow-600" => $project->state->color() === "yellow",
+                            "text-green-600" => $project->state->color() === "green",
+                            "text-rose-600" => $project->state->color() === "rose",
+                        ])>
                             {{ $project->state->label() }}
                         </p>
                     </div>
@@ -266,37 +260,39 @@
 
         </div>
 
-        <!-- Approval Section -->
-        <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.approval.legal_basis') }}</label>
-                    @empty($project->recht)
-                        <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
-                    @else
-                        <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
-                    @endisset
-                </div>
-                <div>
-                    @if($project->getLegal())
+        @if($showApproval)
+            <!-- Approval Section -->
+            <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
                         <label
-                            class="block text-sm font-medium text-gray-700 mb-1">{{ $project->getLegal()['label-additional'] }}</label>
-                        @if($project->recht_additional)
-                            <p class="text-gray-900">{{ $project->recht_additional }}</p>
-                        @else
+                            class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.approval.legal_basis') }}</label>
+                        @empty($project->recht)
                             <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
+                        @else
+                            <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
+                        @endisset
+                    </div>
+                    <div>
+                        @if($project->getLegal())
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1">{{ $project->getLegal()['label-additional'] }}</label>
+                            @if($project->recht_additional)
+                                <p class="text-gray-900">{{ $project->recht_additional }}</p>
+                            @else
+                                <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
+                            @endif
                         @endif
+                    </div>
+                    @if(!empty($project->getLegal()['hint-text']))
+                        <div class="lg:col-span-2 mt-2">
+                            <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
+                        </div>
                     @endif
                 </div>
-                @if(!empty($project->getLegal()['hint-text']))
-                    <div class="lg:col-span-2 mt-2">
-                        <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
-                    </div>
-                @endif
             </div>
-        </div>
+        @endif
 
         <!-- Project Details -->
         <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
@@ -318,7 +314,7 @@
                 <div>
                     <label
                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible') }}</label>
-                @if(empty($project->responsible))
+                    @if(empty($project->responsible))
                         <x-no-content/>
                     @else
                         <a href="mailto:{{ $project->responsible }}"
@@ -490,7 +486,17 @@
                     {!! Str::markdown($project->beschreibung) !!}
                 </p>
             @endempty
-
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                @foreach($project->attachments as $attachment)
+                    <x-file-card
+                        :href="route('project.attachment', [$attachment->id, $attachment->name])"
+                        :heading="$attachment->name"
+                        :size="$attachment->size"
+                        :url="$attachment->url"
+                        :icon="$attachment->mime_type"
+                    />
+                @endforeach
+            </div>
         </div>
 
         <!-- Expenses Section -->

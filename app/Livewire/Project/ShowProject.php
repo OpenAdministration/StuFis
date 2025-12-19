@@ -5,6 +5,7 @@ namespace App\Livewire\Project;
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Project;
+use App\States\Project\Draft;
 use App\States\Project\ProjectState;
 use Flux\Flux;
 use Livewire\Attributes\Url;
@@ -19,11 +20,16 @@ class ShowProject extends Component
 
     public $newState;
 
+    public $fileUrl;
+
     public function render()
     {
         $project = Project::findOrFail($this->project_id);
+        $state = $project->state;
 
-        return view('livewire.project.show-project', compact('project'));
+        $showApproval = \Auth::user()->getGroups()->has('ref-finanzen-hv') || !$state->equals(Draft::class);
+
+        return view('livewire.project.show-project', compact('project', 'showApproval'));
     }
 
     public function changeState(): void
@@ -33,7 +39,8 @@ class ShowProject extends Component
         $filtered = $this->validate(['newState' => ['required', new ValidStateRule(ProjectState::class)]]);
         $newState = ProjectState::make($filtered['newState'], $project);
         // Business Logic check: are some values missing for the new state
-        $newState->validate();
+        $v = $newState->getValidator();
+        $v->validate();
         // Authorization check: can the user transition to this state
         $this->authorize('transition-to', [$project, $newState]);
 
