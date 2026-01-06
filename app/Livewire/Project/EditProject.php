@@ -170,7 +170,11 @@ class EditProject extends Component
      */
     public function saveAs($stateName)
     {
-        $this->authorize('update', $this->getProject());
+        if($this->isNew){
+            $this->authorize('create', Project::class);
+        }else{
+            $this->authorize('update', $this->getProject());
+        }
         $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
         $validator = Validator::make(
             $this->getValues() + [
