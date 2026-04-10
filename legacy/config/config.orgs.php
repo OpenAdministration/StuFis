@@ -641,6 +641,8 @@ return [
         'help-url' => 'mailto:service@open-administration.de',
         'mail-domain' => 'hs-harz.de',
         'finanzen-mail' => 'lukas.staab@open-administration.de',
-        'projekt-form' => [],
+        'projekt-form' => [
+            'min-description-length' => 0,
+        ],
     ],
 ];
