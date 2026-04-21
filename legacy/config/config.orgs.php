@@ -645,4 +645,53 @@ return [
             'min-description-length' => 0,
         ],
     ],
+    'hs-nb' => [
+        'gremien' => [
+            'Zentral' => [
+                'Allgemeiner Studierendenausschuss (AStA)',
+            ],
+            'Referate' => [
+                'Referat Marketing',
+                'Referat Sport',
+                'Referat Politische Bildung',
+                'Referat Hochschulpolitik',
+                'Referat Soziales',
+                'Referat Kultur',
+                'Referat Club',
+                'Referat Radio',
+                'Referat Kino',
+                'Referat Ökologie',
+                'Referat Internationales',
+            ],
+            'Fachschaftsräte' => [
+                'Fachschaftsrat SBE',
+                'Fachschaftsrat GPM',
+                'Fachschaftsrat AL',
+                'Fachschaftsrat LG',
+            ],
+        ],
+        'rechtsgrundlagen' => [
+            'asta' => [
+                'label' => 'AStA-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => '',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+                'placeholder' => '',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => 'https://open-administration.de/index.php/kontakt-und-impressum/',
+        'datenschutz-url' => 'https://open-administration.de/index.php/datenschutz/',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'hs-nb.de',
+        'finanzen-mail' => 'asta.finanzen@hs-nb.de',
+        'projekt-form' => [
+        ],
+    ],
 ];
