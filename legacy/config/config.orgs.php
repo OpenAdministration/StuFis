@@ -604,4 +604,45 @@ return [
             'min-description-length' => 10,
         ],
     ],
+    'hs-harz' => [
+        'gremien' => [
+            'Zentral' => [
+                'Studierendenrat (StuRa)',
+                'Vorstand',
+            ],
+            'Referate' => [
+                'Referat Finanzen',
+                'Referat Veranstaltungen',
+                'Referat Initiativen und Hochschulsport',
+                'Referat Studentische Angelegenheiten und Internationales',
+                'Referat Kommunikation mit dem Standort Halberstadt',
+                'Referat Marketing',
+                'Referat Digitales',
+            ],
+        ],
+        'rechtsgrundlagen' => [
+            'stura' => [
+                'label' => 'StuRa-Beschluss',
+                'label-additional' => 'Beschluss-Nr',
+                'placeholder' => '',
+                'hint-text' => 'Für FSR-Titel ist zusätzlich zum StuRa Beschluss zusätzlich ein FSR Beschluss notwendig.',
+            ],
+            'andere' => [
+                'label' => 'Andere Rechtsgrundlage',
+                'label-additional' => 'Andere Rechtsgrundlage angeben',
+                'hint-text' => '',
+                'placeholder' => '',
+            ],
+        ],
+        'mailinglists' => [],
+        'impressum-url' => 'https://open-administration.de/index.php/kontakt-und-impressum/',
+        'datenschutz-url' => 'https://open-administration.de/index.php/datenschutz/',
+        'issues-url' => '',
+        'help-url' => 'mailto:service@open-administration.de',
+        'mail-domain' => 'hs-harz.de',
+        'finanzen-mail' => 'lukas.staab@open-administration.de',
+        'projekt-form' => [
+            'min-description-length' => 0,
+        ],
+    ],
 ];
