@@ -46,3 +46,5 @@ edit default php in hs-admin to `
 
 
 then import your Budgetplan and everything should work :) 
+
+optional: add bank for bank-import
