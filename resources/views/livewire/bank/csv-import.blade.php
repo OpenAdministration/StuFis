@@ -46,7 +46,7 @@
                     <x-intro level="2" :headline="__('konto.csv-upload-headline')" :sub-headline="__('konto.csv-upload-headline-sub')"/>
                     <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
                         <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-headline') }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
                     </x-drop-area>
                 </div>
             @endif

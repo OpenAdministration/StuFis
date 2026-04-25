@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 
 /**
@@ -90,6 +91,10 @@ class Expense extends Model
     public function receipts(): HasMany
     {
         return $this->hasMany(ExpenseReceipt::class, 'auslagen_id');
+    }
+
+    public function posts() : HasManyThrough{
+        return $this->throughReceipts()->has('posts');
     }
 
     public function totalIn(): Money

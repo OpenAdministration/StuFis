@@ -68,22 +68,11 @@ class ProjectPost extends Model
     }
 
     /**
-     * This query is not optimal. It would be much better to join the expense receipts directly.
-     * To do that, we first have to untangle the composite key of the project post table.
-     * Laravel does not support composite keys well anyway.
-     * For not this stays, it should/could be changed as soon as the legacy code is removed.
-     * Disadvantages: no good eager loading, no good aggregation and so on.
+     * @return HasMany all expense receipt posts for this project post
      */
     public function expensePosts(): HasMany
     {
         return $this->hasMany(ExpenseReceiptPost::class, 'projekt_posten_id');
-        /* old version before key fixing
-        $expenses_id = $this->project->expenses()->get('id');
-        return ExpenseReceiptPost::where('projekt_posten_id', $this->id)
-            ->whereHas('expensesReceipt', function ($query) use ($expenses_id) {
-                $query->whereIn('auslagen_id', $expenses_id);
-            });
-        */
     }
 
     public function budgetItem(): BelongsTo

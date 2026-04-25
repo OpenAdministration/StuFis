@@ -132,6 +132,7 @@
                     <flux:field>
                         <flux:date-picker mode="range" wire:model="dateRange"
                                           label="Projektzeitraum" selectable-header
+                                          placeholder="Projektzeitraum auswählen"
                                           :invalid="$this->getErrorBag()->hasAny(['date_end'])"
                         />
                         <flux:error name="dateRange" />
@@ -148,11 +149,16 @@
 
                 {{-- Creation Date --}}
                 <div class="">
-                    <flux:select variant="listbox" label="Projekt gehört zu HHP" wire:model="hhp_id">
-                        @foreach ($budgetPlans as $plan)
-                            <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
-                        @endforeach
-                    </flux:select>
+                    @if($canUpdateBudgetPlan)
+                        <flux:select variant="listbox" label="Projekt gehört zu HHP" wire:model="hhp_id">
+                            @foreach ($budgetPlans as $plan)
+                                <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    @else
+                        <flux:label>Projekt gehört zu HHP</flux:label>
+                        <span class="text-gray-500">{{ $budgetPlans->find($hhp_id)->label() }}</span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -186,7 +192,7 @@
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                             Bemerkung
                         </th>
-                        @if (true)
+                        @if($canUpdateBudget)
                             <th scope="col" class="min-w-48 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                 Titel
                             </th>
@@ -227,20 +233,21 @@
                             </td>
 
                             {{-- Budget Title --}}
-                            @if (true)
+                            @if($canUpdateBudget)
                                 <td class="px-3 py-4 text-sm text-gray-900">
-                                    @if (true)
-                                        <flux:select variant="listbox" wire:model="posts.{{ $index }}.titel_id">
-                                            @foreach ($budgetTitles as $title)
-                                                <flux:select.option value="{{ $title->id }}">
-                                                    {{ $title->titel_name }}
-                                                    <span class="text-gray-500 ml-2">({{ $title->titel_nr }})</span>
-                                                </flux:select.option>
-                                            @endforeach
+                                    @if ($post["readonly"] === true)
+                                        @php $title = $budgetTitles->find($post['titel_id']) @endphp
+                                        <span class="text-gray-500">{{ $title->titel_name }} ({{ $title->titel_nr }})</span>
+                                    @else
+                                        <flux:select variant="listbox" wire:model="posts.{{ $index }}.titel_id" searchable>
+                                        @foreach ($budgetTitles as $title)
+                                            <flux:select.option value="{{ $title->id }}">
+                                                {{ $title->titel_name }}
+                                                <span class="text-gray-500 ml-2">{{ $title->titel_nr }}</span>
+                                            </flux:select.option>
+                                        @endforeach
                                         </flux:select>
                                         <flux:error name="posts.{{ $index }}.titel_id" />
-                                    @else
-                                        <span class="text-gray-500">-</span>
                                     @endif
                                 </td>
                             @endif
@@ -269,7 +276,7 @@
                     <tfoot class="bg-gray-50">
                     <tr>
                         <td></td>
-                        <td colspan="{{ true ? '2' : '1' }}" class="px-3 py-3.5">
+                        <td colspan="{{ $canUpdateBudget ? '2' : '1' }}" class="px-3 py-3.5">
                             <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">Posten hinzufügen</flux:button>
                         </td>
                         <td class="py-3.5 pl-4 pr-3 text-right text-sm font-semibold text-gray-900 sm:pl-6">
