@@ -22,8 +22,8 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'createdat' => fake()->dateTime(),
-            'lastupdated' => fake()->dateTime(),
+            'createdat' => fake()->dateTimeThisYear(),
+            'lastupdated' => fake()->dateTimeThisYear(),
             'version' => 1,
             'state' => 'draft',
             'name' => fake()->text(30),
@@ -33,8 +33,8 @@ class ProjectFactory extends Factory
             'protokoll' => fake()->url(),
             'recht' => 'stura',
             'recht_additional' => fake()->text(10),
-            'date_start' => fake()->date(),
-            'date_end' => fake()->date(),
+            'date_start' => fake()->dateTimeThisYear(),
+            'date_end' => fake()->dateTimeThisYear(),
             'beschreibung' => fake()->text(500),
         ];
     }

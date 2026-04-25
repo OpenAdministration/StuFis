@@ -60,7 +60,7 @@ class LegacyBudgetPlan extends Model
         return self::orderBy('id', 'desc')->first();
     }
 
-    public static function findByDate(?Carbon $date = null): static
+    public static function findByDate(?Carbon $date = null): ?static
     {
         $date ??= \Illuminate\Support\Facades\Date::now();
 

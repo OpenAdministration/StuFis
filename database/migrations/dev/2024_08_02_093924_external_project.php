@@ -228,29 +228,30 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('form_definitions');
-        Schema::dropIfExists('form_fields');
-        Schema::dropIfExists('form_field_options');
-        Schema::dropIfExists('form_field_validations');
-        Schema::dropIfExists('form_field_data');
-        Schema::dropIfExists('form_field_id');
-
-        Schema::dropIfExists('student_body_duties');
-        Schema::dropIfExists('projects');
-        Schema::dropIfExists('project_attachments');
-        Schema::dropIfExists('project_to_student_body_duties');
-
-        Schema::dropIfExists('legal_bases');
-
-        Schema::dropIfExists('applications');
-        Schema::dropIfExists('applications_attachments');
-
-        Schema::dropIfExists('finance_plan_topics');
-        Schema::dropIfExists('finance_plan_items');
-
-        Schema::dropIfExists('actors');
         Schema::dropIfExists('actor_mails');
         Schema::dropIfExists('actor_phones');
         Schema::dropIfExists('actor_socials');
+        Schema::dropIfExists('actors');
+
+        Schema::dropIfExists('application_attachments');
+        Schema::dropIfExists('applications');
+
+        Schema::dropIfExists('finance_plan_items');
+        Schema::dropIfExists('finance_plan_topics');
+
+        Schema::dropIfExists('form_field_data');
+        Schema::dropIfExists('form_field_id');
+        Schema::dropIfExists('form_field_options');
+        Schema::dropIfExists('form_field_validations');
+        Schema::dropIfExists('form_fields');
+        Schema::dropIfExists('form_definitions');
+
+        Schema::dropIfExists('legal_bases');
+
+        Schema::dropIfExists('project_attachments');
+        Schema::dropIfExists('projects_to_student_body_duties');
+        Schema::dropIfExists('projects');
+
+        Schema::dropIfExists('student_body_duties');
     }
 };
