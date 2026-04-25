@@ -89,7 +89,7 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-3">
                                                 <flux:link
-                                                    href="{{ route('legacy.projekt', $projectId) }}"
+                                                    href="{{ route('project.show', $projectId) }}"
                                                     class="shrink-0 font-mono text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
                                                 >
                                                     IP-{{ $year }}-{{ $projectId }}

@@ -3,6 +3,7 @@
 namespace forms\projekte\auslagen;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\LegalBasis;
 use Exception;
 use forms\chat\ChatHandler;
 use forms\FormTemplater;
@@ -1635,8 +1636,8 @@ class AuslagenHandler2 extends Renderer
         }
 
         // label + zusatzfreitext
-        $recht_array = ORG_DATA['rechtsgrundlagen'][$this->projekt_data['recht']] ?? [];
-        $recht = $recht_array['label'] ?? $this->projekt_data['recht'];
+        $recht_data = LegalBasis::find($this->projekt_data['recht']);
+        $recht = $recht_data->label ?? $this->projekt_data['recht'];
         if (! empty($this->projekt_data['recht_additional'])) {
             $recht .= ': '.$this->projekt_data['recht_additional'];
         }

@@ -11,6 +11,7 @@
 |
 */
 
+use App\Http\Controllers\AdminConfigPage;
 use App\Http\Controllers\ViewChangelog;
 use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,8 @@ Route::middleware(['auth'])->group(function (): void {
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
 
+    Route::get('config', [AdminConfigPage::class, 'render'] )->name('app-config');
+
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
     Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
     Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
@@ -36,6 +39,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
     Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
 
+    Route::redirect('projekt/create', 'project/create', 301);
+    Route::redirect('projekt/{project_id}', 'project/{project_id}', 301);
+    Route::redirect('projekt/{project_id}/edit', 'project/{project_id}/edit', 301);
 });
 
 // login routes

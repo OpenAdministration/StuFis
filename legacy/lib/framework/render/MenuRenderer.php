@@ -205,7 +205,7 @@ class MenuRenderer extends Renderer
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
                                                 "IP-$year-$id",
-                                                substr(route('legacy.projekt', $id, false), 1),
+                                                substr(route('project.show', $id, false), 1),
                                             ); ?>
                                             </div>
                                             <div class="panel-heading collapsed <?php echo (! isset($auslagen[$id]) || count(

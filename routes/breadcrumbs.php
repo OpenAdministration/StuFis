@@ -148,7 +148,7 @@ Breadcrumbs::for('legacy.hhp.titel.view', static function (BreadcrumbTrail $trai
 Breadcrumbs::for('project.create', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push(__('general.breadcrumb.projekt-new'), route('legacy.new-projekt'));
+    $trail->push(__('general.breadcrumb.projekt-new'), route('projekt.create'));
 });
 
 // Home > Projekt > PID
@@ -166,7 +166,7 @@ Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $proje
 
 // Home > Projekt > PID > Abrechnung > AID
 Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id): void {
-    $trail->parent('legacy.projekt', $projekt_id);
+    $trail->parent('project', $projekt_id);
     $trail->push(__('general.breadcrumb.abrechnung'));
     $trail->push($auslagen_id, route('legacy.expense', $auslagen_id));
 });

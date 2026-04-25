@@ -213,17 +213,21 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center">
-                        <flux:button :href="route('legacy.new-projekt')" icon="plus" variant="primary">
-                            {{ __('general.new-project-button') }}
-                        </flux:button>
                         <flux:button :href="route('project.create')" icon="plus" variant="primary">
                             {{ __('general.new-project-button') }}
                         </flux:button>
                     </div>
                     <div class="flex items-center sm:space-x-6">
-                        <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                           aria-label="{{ __('general.docs-button') }}">
                             <x-fas-book-open-reader class="size-5 text-indigo-500"/>
                         </a>
+                        @can('access-app-configuration', Auth::user())
+                            <a href="" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                aria-label="{{ __('general.app-config-button') }}">
+                                <x-fas-cog class="size-5 text-indigo-500"/>
+                            </a>
+                        @endcan
                         <!-- Profile dropdown -->
                         <div x-data="{ profile: false }" class="relative shrink-0" >
                             <div>
