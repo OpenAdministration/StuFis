@@ -144,42 +144,42 @@ Breadcrumbs::for('legacy.hhp.titel.view', static function (BreadcrumbTrail $trai
     $trail->push(__('general.breadcrumb.hhp-title-details'), route('legacy.hhp.titel.view', [$hhp_id, $title_id]));
 });
 
-// Home > Projekt > New
+// Home > project > New
 Breadcrumbs::for('project.create', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push(__('general.breadcrumb.projekt-new'), route('projekt.create'));
+    $trail->push(__('general.breadcrumb.project'));
+    $trail->push(__('general.breadcrumb.project-new'), route('project.create'));
 });
 
-// Home > Projekt > PID
-Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $projekt_id): void {
+// Home > project > PID
+Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $project_id): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push($projekt_id, route('project.show', $projekt_id));
+    $trail->push(__('general.breadcrumb.project'));
+    $trail->push($project_id, route('project.show', $project_id));
 });
 
-// Home > Projekt > PID > Edit
-Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $projekt_id): void {
-    $trail->parent('project.show', $projekt_id);
-    $trail->push(__('general.breadcrumb.projekt-edit'), route('project.edit', $projekt_id));
+// Home > project > PID > Edit
+Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $project_id): void {
+    $trail->parent('project.show', $project_id);
+    $trail->push(__('general.breadcrumb.project-edit'), route('project.edit', $project_id));
 });
 
-// Home > Projekt > PID > Abrechnung > AID
-Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id): void {
-    $trail->parent('project', $projekt_id);
+// Home > project > PID > Abrechnung > AID
+Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id): void {
+    $trail->parent('project.show', $project_id);
     $trail->push(__('general.breadcrumb.abrechnung'));
     $trail->push($auslagen_id, route('legacy.expense', $auslagen_id));
 });
 
-// Home > Projekt > PID > Abrechnung > AID > BelegePDF
-Breadcrumbs::for('legacy.belege-pdf', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id, $version): void {
-    $trail->parent('legacy.expense-long', $projekt_id, $auslagen_id);
+// Home > project > PID > Abrechnung > AID > BelegePDF
+Breadcrumbs::for('legacy.belege-pdf', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
     $trail->push(__('general.breadcrumb.belege-pdf'));
 });
 
-// Home > Projekt > PID > Abrechnung > AID > Zahlungsanweisung
-Breadcrumbs::for('legacy.zahlungsanweisung-pdf', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id, $version): void {
-    $trail->parent('legacy.expense-long', $projekt_id, $auslagen_id);
+// Home > project > PID > Abrechnung > AID > Zahlungsanweisung
+Breadcrumbs::for('legacy.zahlungsanweisung-pdf', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
     $trail->push(__('general.breadcrumb.zahlungsanweisung-pdf'));
 });
 

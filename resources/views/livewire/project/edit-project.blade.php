@@ -4,15 +4,15 @@
     <div class="mb-6 flex items-center justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">
-                {{ $isNew ? 'Neues Projekt anlegen' : 'Projekt bearbeiten' }}
+                {{ $isNew ? __('project.view.edit.title_new') : __('project.view.edit.title_existing') }}
             </h1>
             @if (!$isNew)
                 <p class="mt-1 text-sm text-gray-500">
-                    Projekt #{{ $project_id }} - {{ $state->label() }}
+                    {{ __('project.view.edit.subtitle_existing', ['id' => $project_id, 'state' => $state->label()]) }}
                 </p>
             @else
                 <p class="mt-1 text-sm text-gray-500">
-                    Neues Projekt
+                    {{ __('project.view.edit.subtitle_new') }}
                 </p>
             @endif
         </div>
@@ -21,9 +21,9 @@
         <div class="flex flex-col space-y-4 mt-6">
             <div class="flex flex-col items-end space-y-4">
                 <div class="flex items-center space-x-4">
-                    <flux:button :href="$isNew ? url()->previous() : route('project.show', $project_id)" variant="outline" icon="arrow-left">Zurück</flux:button>
+                    <flux:button :href="$isNew ? url()->previous() : route('project.show', $project_id)" variant="outline" icon="arrow-left">{{ __('project.view.edit.back') }}</flux:button>
                     <flux:button wire:click="saveAs('{{ $state_name }}')" variant="primary">
-                        Speichern als {{ $this->getState()->label() }}
+                        {{ __('project.view.edit.save_as', ['state' => $this->getState()->label()]) }}
                     </flux:button>
                 </div>
                 @error('save')
@@ -38,7 +38,7 @@
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6">
                 <div class="sm:col-span-2 flex justify-between items-start">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Genehmigung</h3>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h3>
                     <flux:tooltip toggleable class="-mt-0 -mr-0">
                         <flux:button size="sm" variant="ghost" square>
                             <x-fas-info-circle class="text-gray-500 size-4"/>
@@ -51,7 +51,7 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {{-- Rechtsgrundlage Dropdown --}}
-                    <flux:select wire:model.live="recht" label="Rechtsgrundlage" variant="listbox">
+                    <flux:select wire:model.live="recht" :label="__('project.view.approval.legal_basis')" variant="listbox">
                         @foreach ($rechtsgrundlagen as $rg)
                             <flux:select.option value="{{ $rg['key'] }}">{{ $rg['label'] }}</flux:select.option>
                         @endforeach
@@ -79,7 +79,7 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <div class="sm:col-span-2 flex justify-between items-start">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Projektinformationen</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.details.heading_edit') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
                     <flux:button size="sm" variant="ghost" square>
                         <x-fas-info-circle class="text-gray-500 size-4"/>
@@ -93,13 +93,13 @@
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {{-- Project Name --}}
                 <div class="">
-                    <flux:input type="text" label="Projektname" wire:model="name" />
+                    <flux:input type="text" :label="__('project.view.details.name')" wire:model="name" />
                 </div>
 
                 {{-- Responsible Person --}}
                 <div class="">
                     <flux:field>
-                        <flux:label>Projektveratantwortlich (E-Mail)</flux:label>
+                        <flux:label>{{ __('project.view.details.responsible_email') }}</flux:label>
                         <flux:input.group>
                             <flux:input type="email" wire:model="responsible" />
                             {{-- <flux:input.group.suffix>@domain.com</flux:input.group.suffix> --}}
@@ -109,7 +109,7 @@
 
                 {{-- Organization --}}
                 <div>
-                    <flux:select wire:model="org" label="Organisation" variant="listbox" searchable>
+                    <flux:select wire:model="org" :label="__('project.view.details.org')" variant="listbox" searchable>
                         @foreach ($gremien as $label)
                             <flux:select.option>{{ $label }}</flux:select.option>
                         @endforeach
@@ -119,7 +119,7 @@
                 {{-- Organization Mail --}}
                 @if (false)
                     <div>
-                        <flux:select type="email" label="Org (E-Mail)" wire:model="org_mail">
+                        <flux:select type="email" :label="__('project.view.details.org_email')" wire:model="org_mail">
                             @foreach($mailingLists as $mailingLists)
                                 <flux:select.option value="{{ $mailingLists }}">{{ $mailingLists }}</flux:select.option>
                             @endforeach
@@ -131,8 +131,8 @@
                 <div>
                     <flux:field>
                         <flux:date-picker mode="range" wire:model="dateRange"
-                                          label="Projektzeitraum" selectable-header
-                                          placeholder="Projektzeitraum auswählen"
+                                          :label="__('project.view.details.period')" selectable-header
+                                          :placeholder="__('project.view.details.period_placeholder')"
                                           :invalid="$this->getErrorBag()->hasAny(['date_end'])"
                         />
                         <flux:error name="dateRange" />
@@ -141,22 +141,22 @@
                 </div>
 
                 {{-- Protocol Link (optional based on config) --}}
-                @if (!in_array('hide-protokoll', config('stufis.project.show-link', [])))
+                @if ($protocolLinkSetting->active)
                     <div class="sm:col-span-2">
-                        <flux:input type="text" :label="config('stufis.project.link-label', 'Ergänzender-Link')" wire:model="protokoll" />
+                        <flux:input type="text" :label="config('stufis.project.link-label', __('project.view.details.fallback_link'))" wire:model="protokoll" />
                     </div>
                 @endif
 
                 {{-- Creation Date --}}
                 <div class="">
                     @if($canUpdateBudgetPlan)
-                        <flux:select variant="listbox" label="Projekt gehört zu HHP" wire:model="hhp_id">
+                        <flux:select variant="listbox" :label="__('project.view.edit.project_belongs_to_budget_plan')" wire:model="hhp_id">
                             @foreach ($budgetPlans as $plan)
                                 <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
                             @endforeach
                         </flux:select>
                     @else
-                        <flux:label>Projekt gehört zu HHP</flux:label>
+                        <flux:label>{{ __('project.view.edit.project_belongs_to_budget_plan') }}</flux:label>
                         <span class="text-gray-500">{{ $budgetPlans->find($hhp_id)->label() }}</span>
                     @endif
                 </div>
@@ -168,7 +168,7 @@
     <div class="bg-white shadow sm:rounded-lg overflow-hidden">
         <div>
             <div class="flex items-center justify-between mb-4 px-4 py-5 sm:p-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Budget-Posten</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">{{ __('project.view.budget_table.heading') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
                     <flux:button size="sm" variant="ghost" square>
                         <x-fas-info-circle class="text-gray-500 size-4"/>
@@ -184,27 +184,27 @@
                     <thead class="bg-gray-50">
                     <tr>
                         <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
-                            Nr.
+                            {{ __('project.view.budget_table.nr') }}
                         </th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Ein/Ausgabengruppe
+                            {{ __('project.view.budget_table.group') }}
                         </th>
                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Bemerkung
+                            {{ __('project.view.budget_table.remark') }}
                         </th>
                         @if($canUpdateBudget)
                             <th scope="col" class="min-w-48 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                Titel
+                                {{ __('project.view.budget_table.title') }}
                             </th>
                         @endif
                         <th scope="col" class="w-36 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Einnahmen
+                            {{ __('project.view.budget_table.income_edit') }}
                         </th>
                         <th scope="col" class="w-36 px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                            Ausgaben
+                            {{ __('project.view.budget_table.expenses_edit') }}
                         </th>
                         <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                            <span class="sr-only">Aktionen</span>
+                            <span class="sr-only">{{ __('project.view.edit.actions') }}</span>
                         </th>
                     </tr>
                     </thead>
@@ -228,7 +228,7 @@
                             {{-- Remarks --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
                                 <flux:input wire:model="posts.{{ $index }}.bemerkung"
-                                            placeholder="optional"/>
+                                            :placeholder="__('project.view.budget_table.remark_placeholder')"/>
                                 <flux:error name="posts.{{ $index }}.bemerkung" />
                             </td>
 
@@ -277,10 +277,10 @@
                     <tr>
                         <td></td>
                         <td colspan="{{ $canUpdateBudget ? '2' : '1' }}" class="px-3 py-3.5">
-                            <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">Posten hinzufügen</flux:button>
+                            <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">{{ __('project.view.edit.add_post') }}</flux:button>
                         </td>
                         <td class="py-3.5 pl-4 pr-3 text-right text-sm font-semibold text-gray-900 sm:pl-6">
-                            Summen:
+                            {{ __('project.view.budget_table.sums') }}
                         </td>
                         <td class="px-3 py-3.5 text-sm font-semibold text-gray-900">
                             <div class="flex items-center justify-between">
@@ -304,7 +304,7 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6 ">
             <div class="flex justify-between">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Projektbeschreibung</h3>
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
                     <flux:button size="sm" variant="ghost" square>
                         <x-fas-info-circle class="text-gray-500 size-4"/>
@@ -317,7 +317,7 @@
             <div>
                 <flux:editor
                     wire:model="beschreibung"
-                    placeholder="In unserem Projekt geht es um ...&#10;Hat einen Nutzen für die Studierendenschaft weil ...&#10;Findet dort und dort statt...&#10;usw."
+                    :placeholder="__('project.view.description.placeholder')"
                 />
             </div>
         </div>
@@ -327,10 +327,10 @@
         <div class="px-4 py-5 sm:p-6">
 
 
-            <flux:file-upload wire:model="newAttachments" multiple label="Upload files">
+            <flux:file-upload wire:model="newAttachments" multiple :label="__('project.view.attachments.upload_label')">
                 <flux:file-upload.dropzone
-                    heading="Drop files here or click to browse"
-                    text=".pdf, .xlsx or .ods up to 5MB"
+                    :heading="__('project.view.attachments.dropzone_heading')"
+                    :text="__('project.view.attachments.dropzone_text')"
                     with-progress
                 />
             </flux:file-upload>
@@ -367,13 +367,13 @@
     <div class="flex flex-col space-y-4 mt-6">
         <div class="flex flex-col items-end space-y-4">
             <div class="flex items-center space-x-4">
-                <flux:button :href="$isNew ? url()->previous() : route('project.show', $project_id)" variant="outline" icon="arrow-left">Zurück</flux:button>
+                <flux:button :href="$isNew ? url()->previous() : route('project.show', $project_id)" variant="outline" icon="arrow-left">{{ __('project.view.edit.back') }}</flux:button>
                 <flux:button wire:click="saveAs('{{ $state_name }}')" variant="primary">
-                    Speichern als {{ $this->getState()->label() }}
+                    {{ __('project.view.edit.save_as', ['state' => $this->getState()->label()]) }}
                 </flux:button>
                 @if($this->getState()->equals(\App\States\Project\Draft::class))
                     <flux:button wire:click="saveAs('wip')" variant="primary">
-                        Speichern als beantragt
+                        {{ __('project.view.edit.save_as_requested') }}
                     </flux:button>
                 @endif
             </div>
