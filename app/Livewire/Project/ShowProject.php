@@ -5,6 +5,7 @@ namespace App\Livewire\Project;
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Project;
+use App\Models\Setting;
 use App\States\Project\Draft;
 use App\States\Project\ProjectState;
 use Flux\Flux;
@@ -28,8 +29,9 @@ class ShowProject extends Component
         $state = $project->state;
 
         $showApproval = \Auth::user()->getGroups()->has('ref-finanzen-hv') || !$state->equals(Draft::class);
+        $showLink = Setting::get('project.protocol_url.active');
 
-        return view('livewire.project.show-project', compact('project', 'showApproval'));
+        return view('livewire.project.show-project', compact('project', 'showApproval', 'showLink'));
     }
 
     public function changeState(): void

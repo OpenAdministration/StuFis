@@ -313,7 +313,7 @@
 
                 <div>
                     <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible') }}</label>
+                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible_email') }}</label>
                     @if(empty($project->responsible))
                         <x-no-content/>
                     @else
@@ -354,13 +354,14 @@
                         @endif
                     </p>
                 </div>
-
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        {{ __('project.view.details.link') }}
-                    </label>
-                    <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
-                </div>
+                @if($showLink)
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ __('project.view.details.link') }}
+                        </label>
+                        <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -482,9 +483,9 @@
             @empty($project->beschreibung)
                 <x-no-content/>
             @else
-                <p class="text-gray-900 whitespace-pre-line">
+                <div class="text-gray-900 whitespace-pre-wrap wrap-break-word">
                     {!! Str::markdown($project->beschreibung) !!}
-                </p>
+                </div>
             @endempty
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                 @foreach($project->attachments as $attachment)
