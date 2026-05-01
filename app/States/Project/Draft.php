@@ -28,7 +28,7 @@ class Draft extends ProjectState
         // default but nothing is required but the name
         return [
             'name' => 'required|string|max:128',
-            'responsible' => 'sometimes|string|max:128|email',
+            'responsible' => 'sometimes|string|max:128|email:rfc,dns',
             'org' => 'sometimes|string|max:64',
             'protocol' => 'sometimes|nullable|string|url',
             // 'recht' => 'required|string|in:...',
