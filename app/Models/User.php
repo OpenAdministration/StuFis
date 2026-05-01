@@ -123,6 +123,10 @@ class User extends Authenticatable
 
     public function getCommittees(): Collection
     {
-        return resolve(AuthService::class)->userCommittees();
+        $configMode = Setting::get('user.committees.mode');
+        return match ($configMode) {
+            'filter' => resolve(AuthService::class)->userCommittees(),
+            'all' => collect(Setting::get('user.committees.data')),
+        };
     }
 }
