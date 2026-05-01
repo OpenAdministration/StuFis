@@ -210,3 +210,9 @@ Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $p
     $trail->parent('budget-plan.view', $plan_id);
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
 });
+
+// Home > Admin Interface
+Breadcrumbs::for('config', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.dashboard');
+    $trail->push(__('general.breadcrumb.config'), route('config'));
+});

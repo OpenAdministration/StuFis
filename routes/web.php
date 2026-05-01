@@ -25,7 +25,7 @@ Route::middleware(['auth'])->group(function (): void {
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
 
-    Route::get('config', [AdminConfigPage::class, 'render'] )->name('app-config');
+    Route::get('config', [AdminConfigPage::class, 'render'] )->name('config');
 
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
     Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');

@@ -223,7 +223,7 @@
                             <x-fas-book-open-reader class="size-5 text-indigo-500"/>
                         </a>
                         @can('access-app-configuration', Auth::user())
-                            <a href="" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            <a href="{{ route('config') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 aria-label="{{ __('general.app-config-button') }}">
                                 <x-fas-cog class="size-5 text-indigo-500"/>
                             </a>

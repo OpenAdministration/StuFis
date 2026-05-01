@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\SettingsBag;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 
@@ -45,16 +46,20 @@ class Setting extends Model
 
     /**
      * Get a setting value by key, with fallback to default.
+     *
+     * Returns a SettingBag for nested associative arrays, allowing
+     * fluent access: Setting::get('project')->description->min_length
      */
     public static function get(string $key, mixed $default = null): mixed
     {
         $setting = static::find($key);
+        $value = $setting?->value ?? $default ?? data_get(static::defaults(), $key);
 
-        if ($setting) {
-            return $setting->value;
+        if (is_array($value) && ! array_is_list($value)) {
+            return new SettingsBag($value);
         }
 
-        return $default ?? data_get(static::defaults(), $key);
+        return $value;
     }
 
     /**

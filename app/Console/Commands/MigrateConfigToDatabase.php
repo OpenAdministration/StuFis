@@ -91,7 +91,8 @@ class MigrateConfigToDatabase extends Command
         $flat = Arr::flatten($gremien);
 
         $this->components->task('Migrating visible gremien (' . count($flat) . ')', function () use ($flat) {
-            Setting::set('project.committees', $flat);
+            Setting::set('user.committees.data', $flat);
+            Setting::set('user.committees.mode', "filter");
         });
     }
 
