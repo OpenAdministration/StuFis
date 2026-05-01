@@ -183,6 +183,12 @@ Breadcrumbs::for('legacy.zahlungsanweisung-pdf', static function (BreadcrumbTrai
     $trail->push(__('general.breadcrumb.zahlungsanweisung-pdf'));
 });
 
+// Home > project > PID > Abrechnung > AID > Beleg
+Breadcrumbs::for('legacy.get-file', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
+    $trail->push(__('general.breadcrumb.belege-file'));
+});
+
 /**
  * not legacy
  */

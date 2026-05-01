@@ -33,8 +33,8 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
     Route::get('projekt/{projekt_id}/auslagen', [LegacyController::class, 'render'])->name('expense.create');
 
-    Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
-    Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
+    Route::get('files/get/{auslagen_id}/{beleg_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
+    Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}', [LegacyController::class, 'deliverFile']);
 
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/belege-pdf/{file_name?}',
         [LegacyController::class, 'belegePdf'])->name('belege-pdf');

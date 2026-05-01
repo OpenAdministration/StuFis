@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Legacy;
 use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
 use App\Http\Controllers\Controller;
+use App\Models\Legacy\FileInfo;
 use forms\projekte\auslagen\AuslagenHandler2;
 use framework\DBConnector;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
@@ -46,10 +47,10 @@ class LegacyController extends Controller
         }
     }
 
-    public function renderFile($auslagen_id, $hash)
+    public function renderFile($auslagen_id, $beleg_id, $hash)
     {
-        $db = DBConnector::getInstance()->dbFetchAll('fileinfo', where: ['hashname' => $hash, 'link' => $auslagen_id]);
-        $name = $db[0]['filename'] ?? 'error';
+        $finfo = FileInfo::where(['hashname' => $hash, 'link' => $beleg_id])->firstOrFail();
+        $name = $finfo->filename ?? 'error';
         $path = "/auslagen/$auslagen_id/$hash/$name.pdf";
 
         return view('components.inlineFile', ['src' => $path]);
