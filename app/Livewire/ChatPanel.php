@@ -26,12 +26,14 @@ class ChatPanel extends Component
     {
         /** @var Collection<ChatMessage> $messages */
         $messages = ChatMessage::where('target', $this->targetType)
-            ->where('target_id', $this->targetId)->get();
+            ->where('target_id', $this->targetId)
+            //->orderBy('timestamp', 'desc')
+            ->get();
 
         return view('livewire.chat-panel', ['messages' => $messages]);
     }
 
-    public function save()
+    public function save(): void
     {
 
         $cleanContent = $this->validate(['content' => ['required', 'min:1', new FluxEditorRule]])['content'];
