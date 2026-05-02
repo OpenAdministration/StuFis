@@ -50,6 +50,7 @@ return [
         'approval' => [
             'heading' => 'Genehmigung',
             'legal_basis' => 'Rechtsgrundlage',
+            'legal_basis_placeholder' => 'Auf welcher Basis wird das Projekt genehmigt?',
             'info_toggle' => 'Wähle hier die Rechtsgrundlage für die Genehmigung des Projekts aus.',
             'none' => 'Keine Angabe',
         ],
@@ -72,6 +73,7 @@ return [
             'name' => 'Projektname',
             'responsible_email' => 'Projektverantwortlich (Email)',
             'org' => 'Organisation',
+            'org.no-org' => 'Kein zugeordnetes Gremium',
             'period' => 'Projektzeitraum',
             'period_placeholder' => 'Wähle einen Zeitraum aus',
             'from' => 'von',
@@ -101,7 +103,7 @@ return [
         'description' => [
             'heading' => 'Projektbeschreibung',
             'info_toggle' => 'Beschreibe hier bitte, was genau du planst und warum die Studierendenschaft dieses Projekt bezahlen sollte. Deine Erklärung ist sehr wichtig, da sie auch Jahre später noch bei offiziellen Prüfungen (z. B. durch das Finanzamt oder den Rechnungshof) standhalten muss. Erkläre am besten kurz, welchen Nutzen die Studierenden davon haben und wie es zu den Aufgaben der Studierendenschaft nach dem Hochschulgesetz passt. Achte dabei auch auf die Tipps deiner Finanzverantwortlichen.',
-            'placeholder' => 'In unserem Projekt geht es um ...&#10;Hat einen Nutzen für die Studierendenschaft weil ...&#10;Findet dort und dort statt...&#10;usw.',
+            'placeholder' => 'Um was geht es in deinem Projekt und welchen Nutzen hat es für die Studierendenschaft?',
         ],
         'attachments' => [
             'upload_label' => 'Ergänzende Dateien hinzufügen',

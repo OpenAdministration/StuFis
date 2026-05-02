@@ -211,6 +211,7 @@ return [
             'max' => 'Die Bemerkung von Posten :position darf maximal :max Zeichen lang sein.',
         ],
         'uploads.*' => [
+            'uploaded' => 'Der Anhang konnte nicht hochgeladen werden. Bitte versuche es erneut.',
             'extensions' => 'Anhänge müssen im Format PDF, XLSX oder ODS sein.',
             'max' => 'Ein Anhang darf maximal 5 MB groß sein.',
         ],
@@ -244,6 +245,10 @@ return [
         'posts.*.einnahmen' => 'Einnahmen',
         'posts.*.ausgaben' => 'Ausgaben',
         'posts.*.bemerkung' => 'Bemerkung',
+        'newAttachments' => 'Anhang',
+        'newAttachments.*' => 'Anhang',
+        'uploads' => 'Anhang',
+        'uploads.*' => 'Anhang',
         // unknown
         'email' => 'E-Mail-Adresse',
         'mail' => 'E-Mail-Adresse',
