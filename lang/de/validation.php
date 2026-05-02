@@ -156,8 +156,58 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'name' => [
+            'required' => 'Bitte gib einen Namen für das Projekt an.',
+            'max' => 'Der Name darf maximal :max Zeichen lang sein.',
+        ],
+        'responsible' => [
+            'required' => 'Bitte gib eine verantwortliche Person an.',
+            'email' => 'Die verantwortliche Person muss eine gültige E-Mail-Adresse haben.',
+            'max' => 'Die E-Mail-Adresse darf maximal :max Zeichen lang sein.',
+        ],
+        'org' => [
+            'required' => 'Bitte gib die zuständige Organisation an.',
+            'max' => 'Die Organisation darf maximal :max Zeichen lang sein.',
+        ],
+        'protocol' => [
+            'url' => 'Der Link muss eine gültige URL sein.',
+        ],
+        'recht' => [
+            'required' => 'Bitte wähle eine Rechtsgrundlage aus.',
+            'exists' => 'Die gewählte Rechtsgrundlage ist ungültig.',
+        ],
+        'date_start' => [
+            'required' => 'Bitte gib ein Startdatum an.',
+            'date' => 'Das Startdatum muss ein gültiges Datum sein.',
+        ],
+        'date_end' => [
+            'required' => 'Bitte gib ein Enddatum an.',
+            'date' => 'Das Enddatum muss ein gültiges Datum sein.',
+            'after' => 'Das Enddatum muss nach dem Startdatum liegen.',
+        ],
+        'beschreibung' => [
+            'required' => 'Bitte gib eine Beschreibung an.',
+        ],
+        'posts' => [
+            'required' => 'Es muss mindestens ein Posten angelegt werden.',
+            'min' => 'Es muss mindestens ein Posten angelegt werden.',
+        ],
+        'posts.*.titel_id' => [
+            'required' => 'Bitte wähle einen Haushaltstitel für Posten :position aus.',
+            'exists' => 'Der gewählte Haushaltstitel für Posten :position ist ungültig.',
+        ],
+        'posts.*.name' => [
+            'required' => 'Bitte gib eine Bezeichnung für Posten :position an.',
+            'max' => 'Die Bezeichnung von Posten :position darf maximal :max Zeichen lang sein.',
+        ],
+        'posts.*.einnahmen' => [
+            'required' => 'Bitte gib die Einnahmen für Posten :position an.',
+        ],
+        'posts.*.ausgaben' => [
+            'required' => 'Bitte gib die Ausgaben für Posten :position an.',
+        ],
+        'posts.*.bemerkung' => [
+            'max' => 'Die Bemerkung von Posten :position darf maximal :max Zeichen lang sein.',
         ],
     ],
 
@@ -173,12 +223,30 @@ return [
     */
 
     'attributes' => [
+        // project
+        'name' => 'Name',
+        'responsible' => 'Verantwortliche Person',
+        'org' => 'Organisation',
+        'protocol' => 'Protokoll-Link',
+        'recht' => 'Rechtsgrundlage',
+        'recht-additional' => 'Zusätzliche Rechtsgrundlage',
+        'date_start' => 'Startdatum',
+        'date_end' => 'Enddatum',
+        'beschreibung' => 'Beschreibung',
+        'posts' => 'Posten',
+        'posts.*.titel_id' => 'Haushaltstitel',
+        'posts.*.name' => 'Postenbezeichnung',
+        'posts.*.einnahmen' => 'Einnahmen',
+        'posts.*.ausgaben' => 'Ausgaben',
+        'posts.*.bemerkung' => 'Bemerkung',
+        // unknown
         'email' => 'E-Mail-Adresse',
         'mail' => 'E-Mail-Adresse',
         'start_date' => 'Start Datum',
         'end_date' => 'End Datum',
         'decision_date' => 'Beschluss Datum',
         'username' => 'Nutzer:innenname',
+        // CSV Upload
         'mapping.date' => 'Ausführungsdatum',
         'mapping.valuta' => 'Valuta-/Wertstellungsdatum',
         'mapping.type' => 'Transaktionstyp',
@@ -195,6 +263,5 @@ return [
         'sync_until' => 'Verwenden bis',
         'iban' => 'IBAN',
         'short' => 'Kürzel',
-        'name' => 'Name',
     ],
 ];
