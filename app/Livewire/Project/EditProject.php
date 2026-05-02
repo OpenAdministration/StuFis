@@ -297,33 +297,9 @@ class EditProject extends Component
     /**
      * Get Rechtsgrundlagen options
      */
-    protected function getRechtsgrundlagenOptions(): array
+    protected function getRechtsgrundlagenOptions(): Collection
     {
-        $rechtsgrundlagen = config('stufis.project_legal', []);
-
-        return collect($rechtsgrundlagen)->map(fn ($def, $key) => [
-            'key' => $key,
-            'label' => $def['label'] ?? $key,
-            'placeholder' => $def['placeholder'] ?? '',
-            'label_additional' => $def['label-additional'] ?? 'Zusatzinformationen',
-            'hint' => $def['hint-text'] ?? '',
-            'has_additional' => isset($def['placeholder'], $def['label-additional']),
-        ])->all();
-    }
-
-    /**
-     * Get mailing list options
-     */
-    protected function getMailingListOptions(): array
-    {
-        $hasFinanceGroup = Auth::user()->getGroups()->contains('ref-finanzen');
-
-        if ($hasFinanceGroup) {
-            return config('org_data.mailinglists', []);
-        }
-
-        // Return only user's mailing lists
-        return Auth::user()->mailinglists ?? [];
+        return LegalBasis::ordered()->active()->get()->keyBy('slug');
     }
 
     public function render()

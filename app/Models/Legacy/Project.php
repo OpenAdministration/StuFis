@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\LegalBasis;
 use App\Models\User;
 use App\States\Project\ProjectState;
 use Carbon\Carbon;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 use Illuminate\Support\Collection;
 use Spatie\ModelStates\HasStates;
@@ -104,9 +106,9 @@ class Project extends Model
         );
     }
 
-    public function getLegal(): array
+    public function legalBasis(): HasOne|Builder
     {
-        return config("stufis.project_legal.$this->recht", []);
+        return $this->hasOne(LegalBasis::class, 'slug', 'recht');
     }
 
     protected $dispatchesEvents = [

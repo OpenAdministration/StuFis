@@ -263,18 +263,20 @@
                 <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.approval.legal_basis') }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            {{ __('project.view.approval.legal_basis') }}
+                        </label>
                         @empty($project->recht)
                             <p class="text-gray-500 italic">{{ __('project.view.approval.none') }}</p>
                         @else
-                            <p class="text-gray-900">{{ $project->getLegal()['label'] }}</p>
+                            <p class="text-gray-900">{{ $project->legalBasis->label }}</p>
                         @endisset
                     </div>
                     <div>
-                        @if($project->getLegal())
-                            <label
-                                class="block text-sm font-medium text-gray-700 mb-1">{{ $project->getLegal()['label-additional'] }}</label>
+                        @if(!empty($project->recht))
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ $project->legalBasis->label_additional }}
+                            </label>
                             @if($project->recht_additional)
                                 <p class="text-gray-900">{{ $project->recht_additional }}</p>
                             @else
@@ -282,9 +284,9 @@
                             @endif
                         @endif
                     </div>
-                    @if(!empty($project->getLegal()['hint-text']))
+                    @if(!empty($project->legalBasis->hint_text))
                         <div class="lg:col-span-2 mt-2">
-                            <p class="text-sm text-gray-500 mt-1">{{ $project->getLegal()['hint-text'] ?? '' }}</p>
+                            <p class="text-sm text-gray-500 mt-1">{{ $project->legalBasis->hint_text }}</p>
                         </div>
                     @endif
                 </div>
@@ -309,13 +311,15 @@
                 </div>
 
                 <div>
-                    <label
-                        class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.responsible_email') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ __('project.view.details.responsible_email') }}
+                    </label>
                     @if(empty($project->responsible))
                         <x-no-content/>
                     @else
                         <a href="mailto:{{ $project->responsible }}"
-                           class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors">
+                           class="inline-flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
                             <x-fas-envelope  class="size-3.5 mr-2"/>
                             {{ $project->responsible }}
                         </a>

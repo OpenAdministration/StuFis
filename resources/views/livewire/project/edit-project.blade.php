@@ -51,25 +51,31 @@
 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {{-- Rechtsgrundlage Dropdown --}}
-                    <flux:select wire:model.live="recht" :label="__('project.view.approval.legal_basis')" variant="listbox">
+                    <flux:select wire:model.live="recht" :label="__('project.view.approval.legal_basis')"
+                                 searchable :placeholder="__('project.view.approval.legal_basis_placeholder')"
+                                 variant="listbox">
                         @foreach ($rechtsgrundlagen as $rg)
-                            <flux:select.option value="{{ $rg['key'] }}">{{ $rg['label'] }}</flux:select.option>
+                            <flux:select.option value="{{ $rg->slug }}">{{ $rg->label }}</flux:select.option>
                         @endforeach
                     </flux:select>
-
                     {{-- Dynamic Additional Fields per Rechtsgrundlage --}}
-                    <div>
-                        @isset ($rechtsgrundlagen[$recht]['has_additional'])
-                            <flux:input wire:model="recht_additional"
-                                        :label="$rechtsgrundlagen[$recht]['label_additional']"
-                                        placeholder="{{ $rechtsgrundlagen[$recht]['placeholder'] ?? '' }}"/>
-                        @endisset
-                    </div>
-                    <div class="sm:col-span-2">
-                        @if (isset($rechtsgrundlagen[$recht]['hint']))
-                            <p class="mt-2 text-sm text-gray-500">{{ $rechtsgrundlagen[$recht]['hint'] }}</p>
-                        @endisset
-                    </div>
+                    @if($recht)
+                        @php $select_legal = $rechtsgrundlagen[$recht]; @endphp
+                        <div>
+                            @if($select_legal->hasAdditionalField())
+                                <flux:input wire:model="recht_additional"
+                                        :label="$select_legal->label_additional"
+                                        placeholder="{{ $select_legal->placeholder ?? '' }}"/>
+                            @endif
+                        </div>
+                        <div class="sm:col-span-2">
+                            @if ($select_legal->hasHintText())
+                                <p class="mt-2 text-sm text-gray-500">{{ $select_legal->hint_text }}</p>
+                            @endif
+                        </div>
+                    @else
+                        <div></div>
+                    @endif
                 </div>
             </div>
         </div>
