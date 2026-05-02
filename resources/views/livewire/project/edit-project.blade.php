@@ -116,7 +116,7 @@
                 {{-- Organization --}}
                 <div>
                     <flux:select wire:model="org" :label="__('project.view.details.org')" variant="listbox" searchable>
-                        <flux:select.option>{{ __('project.view.details.org.no-org') }}</flux:select.option>
+                        <flux:select.option value="no-org">{{ __('project.view.details.org.no-org') }}</flux:select.option>
                         @foreach ($gremien as $label)
                             <flux:select.option>{{ $label }}</flux:select.option>
                         @endforeach

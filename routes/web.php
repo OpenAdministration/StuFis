@@ -39,9 +39,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
     Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
 
-    Route::redirect('projekt/create', 'project/create', 301);
-    Route::redirect('projekt/{project_id}', 'project/{project_id}', 301);
-    Route::redirect('projekt/{project_id}/edit', 'project/{project_id}/edit', 301);
+    Route::permanentRedirect('projekt/create', '/project/create');
+    Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');
+    Route::permanentRedirect('projekt/{project_id}/edit', '/project/{project_id}/edit');
 });
 
 // login routes
