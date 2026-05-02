@@ -52,7 +52,8 @@ abstract class ProjectState extends State implements Wireable
             ->allowTransition(Draft::class, Applied::class)
             ->allowTransition([ApprovedByOrg::class, ApprovedByFinance::class, ApprovedByOther::class], Terminated::class)
             ->allowTransition([Applied::class, NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
-            ->allowTransition([Applied::class, Revoked::class], Draft::class);
+            ->allowTransition([Applied::class, Revoked::class], Draft::class)
+        ;
 
         // here would be some dynamic logic from config possible
 

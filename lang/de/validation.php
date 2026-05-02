@@ -142,6 +142,7 @@ return [
     'uuid' => 'Das :attribute muss eine gültige UUID sein.',
     'disabled' => 'Kann nicht verändert werden.',
     'uppercase' => 'Das :attribute darf nur aus Großbuchstaben bestehen',
+    'and_x_more' => 'und :count weiterer Fehler|und :count weitere Fehler',
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +170,7 @@ return [
             'required' => 'Bitte gib die zuständige Organisation an.',
             'max' => 'Die Organisation darf maximal :max Zeichen lang sein.',
         ],
-        'protocol' => [
+        'protokoll' => [
             'url' => 'Der Link muss eine gültige URL sein.',
         ],
         'recht' => [
@@ -208,6 +209,10 @@ return [
         ],
         'posts.*.bemerkung' => [
             'max' => 'Die Bemerkung von Posten :position darf maximal :max Zeichen lang sein.',
+        ],
+        'uploads.*' => [
+            'extensions' => 'Anhänge müssen im Format PDF, XLSX oder ODS sein.',
+            'max' => 'Ein Anhang darf maximal 5 MB groß sein.',
         ],
     ],
 

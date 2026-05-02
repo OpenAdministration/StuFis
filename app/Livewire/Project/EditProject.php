@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Project;
 
+use App\Models\Enums\ChatMessageType;
+use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
@@ -233,6 +235,15 @@ class EditProject extends Component
             }
 
             if(!$project->state->equals($state)){
+                ChatMessage::create([
+                    'text' => "{$project->state->label()} -> {$state->label()}",
+                    'type' => ChatMessageType::SYSTEM,
+                    'target' => 'projekt',
+                    'target_id' => $project->id,
+                    'creator' => \Auth::user()->username,
+                    'creator_alias' => \Auth::user()->name,
+                    'timestamp' => now(),
+                ]);
                 $project->state->transitionTo($state);
             }
 
