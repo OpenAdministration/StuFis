@@ -7,8 +7,11 @@ use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectAttachment;
 use App\Models\Legacy\ProjectPost;
+use App\Models\LegalBasis;
+use App\Models\Setting;
 use App\States\Project\ProjectState;
 use Cknow\Money\Money;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -96,6 +99,9 @@ class EditProject extends Component
         $this->version = $project->version ?? 1;
         $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)?->id;
         $this->state_name = $project->state->getValue();
+
+        $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
+        $readOnlyPosts = $bookedExpenses->flatMap->posts->pluck('projekt_posten_id')->unique();
         $this->posts = $project->posts->map(fn (ProjectPost $post) => [
             'id' => $post->id,
             'name' => $post->name,
@@ -103,6 +109,7 @@ class EditProject extends Component
             'einnahmen' => $post->einnahmen,
             'ausgaben' => $post->ausgaben,
             'titel_id' => $post->titel_id,
+            'readonly' => $readOnlyPosts->contains($post->id),
         ])->all();
         $this->existingAttachments = $project->attachments->map(
             fn($attachment) => $attachment->only('id', 'path', 'name', 'mime_type', 'size')
@@ -144,6 +151,7 @@ class EditProject extends Component
             'einnahmen' => Money::EUR(0),
             'ausgaben' => Money::EUR(0),
             'titel_id' => null,
+            'readonly' => false,
         ]);
     }
 
@@ -170,30 +178,37 @@ class EditProject extends Component
      */
     public function saveAs($stateName)
     {
-        if($this->isNew){
-            $this->authorize('create', Project::class);
-        }else{
-            $this->authorize('update', $this->getProject());
-        }
-        $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
-        $validator = Validator::make(
-            $this->getValues() + [
-                'uploads' => $this->newAttachments,
-                'deletedAttachments' => $this->deletedAttachmentIds
-            ],
-            $state->rules() + ['uploads.*' =>
-                File::types(['pdf', 'xlsx', 'ods'])->extensions(['pdf', 'xlsx', 'ods'])->max("5 Mb"),
-                'deletedAttachments' => 'array',
-                'deletedAttachments.*' => 'integer',
-            ]
-        );
-        $filtered = collect($validator->validate());
+        try { // rollback on failure
+            if ($this->isNew) {
+                $this->authorize('create', Project::class);
+            } else {
+                $this->authorize('update', $this->getProject());
+                // Check optimistic locking before validation
+                if ($this->getProject()->version !== $this->version) {
+                    $this->addError('save', __('project.error.version-mismatch'));
+                    return;
+                }
+            }
+
+            $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
+            $validator = Validator::make(
+                $this->getValues() + [
+                    'uploads' => $this->newAttachments,
+                    'deletedAttachments' => $this->deletedAttachmentIds
+                ],
+                $state->rules() + [
+                    'uploads.*' => File::types(['pdf', 'xlsx', 'ods'])
+                        ->extensions(['pdf', 'xlsx', 'ods'])->max("5 Mb"),
+                    'deletedAttachments' => 'array',
+                    'deletedAttachments.*' => 'integer',
+                ]
+            );
+            $filtered = collect($validator->validate());
         $filteredPosts = $filtered->pull('posts') ?? [];
         $newAttachments = $filtered->pull('uploads') ?? [];
         $deletedAttachmentIds = $filtered->pull('deletedAttachments') ?? [];
         $filteredMeta = $filtered->all();
 
-        try {
             DB::beginTransaction();
             if ($this->isNew) {
                 $project = Project::create([
@@ -203,12 +218,6 @@ class EditProject extends Component
                 ]);
             } else {
                 $project = Project::findOrFail($this->project_id);
-                // Check if the project has been modified since the last load
-                if ($project->version !== $this->version) {
-                    $this->addError('save', 'Das Projekt wurde zwischenzeitlich von jemand anderem bearbeitet. Bitte laden Sie die Seite neu.');
-
-                    return;
-                }
                 $project->update([
                     ...$filteredMeta,
                     'version' => $project->version + 1,
@@ -247,7 +256,9 @@ class EditProject extends Component
 
             return to_route('project.show', $project->id);
         } catch (\Exception $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
         }
     }
@@ -305,14 +316,20 @@ class EditProject extends Component
     public function render()
     {
         $gremien = Auth::user()->getCommittees();
-        $mailingLists = [];
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $budgetTitles = $this->getBudgetTitleOptions();
         $state = $this->getState();
         $budgetPlans = LegacyBudgetPlan::all();
 
+        $canUpdateBudget = Auth::user()->can('update-budget', $this->getProject());
+        $canUpdateBudgetPlan = $canUpdateBudget
+            && collect($this->posts)->filter(fn($post) => $post['readonly'])->isEmpty();
+        $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
+        $protocolLinkSetting = Setting::get('project.protocol_url');
+
         return view('livewire.project.edit-project', compact(
-            'gremien', 'mailingLists', 'budgetTitles', 'rechtsgrundlagen', 'state', 'budgetPlans'
+            'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',
+            'budgetPlans', 'canUpdateBudget', 'canUpdateApproval', 'canUpdateBudgetPlan', 'protocolLinkSetting',
         ));
     }
 

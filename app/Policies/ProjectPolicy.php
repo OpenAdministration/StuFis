@@ -66,7 +66,7 @@ class ProjectPolicy
 
     public function createExpense(User $user, Project $project): bool
     {
-        return $project->state->expensable();
+        return $project->state->expensable(); // we could check if user has the correct committee (optionaly) here
     }
 
     public function transitionTo(User $user, Project $project, ProjectState $newState): bool
@@ -105,19 +105,21 @@ class ProjectPolicy
         };
     }
 
-    public function updateField(User $user, Project $project, string $field)
+    public function updateBudget(User $user, Project $project): bool
     {
         if ($this->update($user, $project) === false) {
             return false;
         }
 
-        if ($field === 'recht' || $field === 'recht_additional' || $field === 'posten-titel') {
-            return match ($project->state::class) {
-                Draft::class => false,
-                default => true
-            };
+        return \Auth::user()->can('budget-officer', $user);
+    }
+
+    public function updateApproval(User $user, Project $project): bool
+    {
+        if ($this->update($user, $project) === false) {
+            return false;
         }
 
-        return true;
+        return \Auth::user()->can('budget-officer', $user);
     }
 }

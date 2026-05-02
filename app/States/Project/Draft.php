@@ -22,23 +22,19 @@ class Draft extends ProjectState
         return 'zinc';
     }
 
-    #[\Override]
-    public function rules(): array
+
+    public function basicRules(): array
     {
-        // default but nothing is required but the name
         return [
             'name' => 'required|string|max:128',
             'responsible' => 'sometimes|string|max:128|email:rfc,dns',
             'org' => 'sometimes|string|max:64',
             'protocol' => 'sometimes|nullable|string|url',
-            // 'recht' => 'required|string|in:...',
-            // 'recht-additional' => 'sometimes|nullable|string',
             'date_start' => 'sometimes|nullable|date',
             'date_end' => 'sometimes|nullable|date',
             'beschreibung' => ['sometimes', 'string', new FluxEditorRule],
             'posts' => 'sometimes|array|min:1',
             'posts.*.id' => 'sometimes|integer',
-            // 'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
             'posts.*.name' => 'sometimes|string|max:128|min:1',
             'posts.*.einnahmen' => 'sometimes|money:EUR',
             'posts.*.ausgaben' => 'sometimes|money:EUR',
@@ -46,4 +42,18 @@ class Draft extends ProjectState
             'posts.*.bemerkung' => 'sometimes|string|max:256',
         ];
     }
+
+    public function budgetRules() : array {
+        return [
+            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+        ];
+    }
+
+    public function approvalRules() : array {
+        return [
+            'recht' => 'sometimes|nullable|string|exists:App\Models\Legacy\LegalBase,slug',
+            'recht-additional' => 'sometimes|nullable|string',
+        ];
+    }
+
 }

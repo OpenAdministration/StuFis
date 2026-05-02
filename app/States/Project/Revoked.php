@@ -18,8 +18,17 @@ class Revoked extends ProjectState
         return 'rose';
     }
 
-    #[\Override]
-    public function rules(): array
+    public function approvalRules() : array
+    {
+        return [];
+    }
+
+    public function budgetRules() : array
+    {
+        return [];
+    }
+
+    public function basicRules(): array
     {
         return [];
     }

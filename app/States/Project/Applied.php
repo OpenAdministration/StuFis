@@ -19,9 +19,4 @@ class Applied extends ProjectState
         return 'sky';
     }
 
-    #[\Override]
-    public function rules(): array
-    {
-        return parent::rules();
-    }
 }

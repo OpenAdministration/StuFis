@@ -25,13 +25,17 @@ class ApprovedByOrg extends ProjectState
         return 'green';
     }
 
-    #[\Override]
-    public function rules(): array
+    public function approvalRules() : array
     {
-        return parent::rules() + [
+        return [
             'recht' => 'required|string',
             'recht-additional' => 'sometimes|nullable|string',
-            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+        ];
+    }
+
+    public function budgetRules() : array {
+        return [
+            'posts.*.titel_id' => 'required|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];
     }
 }

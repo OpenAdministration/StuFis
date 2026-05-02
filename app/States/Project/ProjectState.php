@@ -3,6 +3,7 @@
 namespace App\States\Project;
 
 use App\Models\Legacy\Project;
+use App\Models\User;
 use App\Rules\ExactlyOneZeroMoneyRule;
 use App\Rules\FluxEditorRule;
 use Illuminate\Support\Facades\Validator;
@@ -108,29 +109,57 @@ abstract class ProjectState extends State implements Wireable
         return $config;
     }
 
-    public function rules(): array
-    {
-        // some sensible default i dont want to copy paste around
+    public function basicRules() : array {
         return [
             'name' => 'required|string|max:128',
             'responsible' => 'required|string|max:128|email',
             'org' => 'required|string|max:64',
             'protocol' => 'sometimes|nullable|string|url',
-            // 'recht' => 'required|string|in:...',
-            // 'recht-additional' => 'sometimes|nullable|string',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after:date_start',
             'beschreibung' => ['required', 'string', new FluxEditorRule],
             'posts' => 'required|array|min:1',
             'posts.*.id' => 'sometimes|integer',
-            // 'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
             'posts.*.name' => 'required|string|max:128|min:1',
             'posts.*.einnahmen' => 'required|money:EUR',
             'posts.*.ausgaben' => ['required', 'money:EUR', new ExactlyOneZeroMoneyRule('posts.*.einnahmen')],
             'posts.*.position' => 'sometimes|integer',
             'posts.*.bemerkung' => 'sometimes|string|max:256',
-
         ];
+    }
+
+    public function budgetRules() : array {
+        return [
+            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+        ];
+    }
+
+    public function approvalRules() : array {
+        return [
+            'recht' => 'sometimes|nullable|string|exists:App\Models\LegalBasis,slug',
+            'recht-additional' => 'sometimes|nullable|string',
+        ];
+    }
+
+    public function rules(): array {
+        // merge all rules
+        return $this->basicRules() + $this->budgetRules() + $this->approvalRules();
+    }
+
+    public function approvalFields() : array {
+        return array_values($this->approvalRules());
+    }
+
+    public function budgetFields() : array {
+        return array_values($this->budgetRules());
+    }
+
+    public function basicFields() : array {
+        return array_values($this->basicRules());
+    }
+
+    public function fields() : array {
+        return array_values($this->rules());
     }
 
     /**
@@ -143,7 +172,7 @@ abstract class ProjectState extends State implements Wireable
      *
      * @return \Illuminate\Contracts\Validation\Validator The validator instance for the given data.
      */
-    public function getValidator(array $data = []): \Illuminate\Contracts\Validation\Validator
+    public function getValidator(array $data = [], ?User $user = null): \Illuminate\Contracts\Validation\Validator
     {
         if(empty($data)){
             $model = $this->getModel();
