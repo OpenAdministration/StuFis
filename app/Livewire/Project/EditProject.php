@@ -179,6 +179,7 @@ class EditProject extends Component
     public function saveAs($stateName)
     {
         try { // rollback on failure
+            // check if user is allowed to save
             if ($this->isNew) {
                 $this->authorize('create', Project::class);
             } else {
@@ -189,26 +190,33 @@ class EditProject extends Component
                     return;
                 }
             }
-
-            $state = ProjectState::make($stateName, $this->getProject() ?? new Project);
-            $validator = Validator::make(
-                $this->getValues() + [
+            $project = $this->getProject() ?? new Project;
+            $canUpdateBudget = Auth::user()->can('update-budget', $project);
+            $canUpdateApproval = Auth::user()->can('update-approval', $project);
+            // prepare data and rules
+            $state = ProjectState::make($stateName, $project);
+            $data = $this->getValues() + [
                     'uploads' => $this->newAttachments,
                     'deletedAttachments' => $this->deletedAttachmentIds
-                ],
-                $state->rules() + [
+                ];
+            $rules = $state->basicRules() + [
                     'uploads.*' => File::types(['pdf', 'xlsx', 'ods'])
                         ->extensions(['pdf', 'xlsx', 'ods'])->max("5 Mb"),
                     'deletedAttachments' => 'array',
                     'deletedAttachments.*' => 'integer',
-                ]
-            );
-            $filtered = collect($validator->validate());
-        $filteredPosts = $filtered->pull('posts') ?? [];
-        $newAttachments = $filtered->pull('uploads') ?? [];
-        $deletedAttachmentIds = $filtered->pull('deletedAttachments') ?? [];
-        $filteredMeta = $filtered->all();
+                ];
+            $rules += $canUpdateBudget ? $state->budgetRules() : [];
+            $rules += $canUpdateApproval ? $state->approvalRules() : [];
 
+            // validate data and prepare filtered data to be saved
+            $validator = Validator::make($data, $rules);
+            $filteredData = collect($validator->validate());
+            $filteredPosts = $filteredData->pull('posts') ?? [];
+            $newAttachments = $filteredData->pull('uploads') ?? [];
+            $deletedAttachmentIds = $filteredData->pull('deletedAttachments') ?? [];
+            $filteredMeta = $filteredData->all();
+
+            // save data
             DB::beginTransaction();
             if ($this->isNew) {
                 $project = Project::create([
@@ -315,17 +323,19 @@ class EditProject extends Component
 
     public function render()
     {
+        // variables
         $gremien = Auth::user()->getCommittees();
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
-        $budgetTitles = $this->getBudgetTitleOptions();
         $state = $this->getState();
+        $budgetTitles = $this->getBudgetTitleOptions();
         $budgetPlans = LegacyBudgetPlan::all();
-
+        // settings
+        $protocolLinkSetting = Setting::get('project.protocol_url');
+        // permissions
         $canUpdateBudget = Auth::user()->can('update-budget', $this->getProject());
         $canUpdateBudgetPlan = $canUpdateBudget
             && collect($this->posts)->filter(fn($post) => $post['readonly'])->isEmpty();
         $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
-        $protocolLinkSetting = Setting::get('project.protocol_url');
 
         return view('livewire.project.edit-project', compact(
             'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',

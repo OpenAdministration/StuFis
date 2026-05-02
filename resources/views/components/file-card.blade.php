@@ -73,7 +73,7 @@
             <?php endif; ?>
         </div>
 
-        <div class="flex-1 overflow-hidden py-[calc(0.75rem-3px)] me-3 flex flex-col justify-center gap-1"
+        <div class="flex-1 overflow-hidden py-2.25 me-3 flex flex-col justify-center gap-1"
              data-slot="content">
             <?php if ($heading): ?>
             <div

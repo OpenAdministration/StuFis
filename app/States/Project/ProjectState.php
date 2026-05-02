@@ -151,15 +151,15 @@ abstract class ProjectState extends State implements Wireable
     }
 
     public function budgetFields() : array {
-        return array_values($this->budgetRules());
+        return array_keys($this->budgetRules());
     }
 
     public function basicFields() : array {
-        return array_values($this->basicRules());
+        return array_keys($this->basicRules());
     }
 
     public function fields() : array {
-        return array_values($this->rules());
+        return array_keys($this->rules());
     }
 
     /**
