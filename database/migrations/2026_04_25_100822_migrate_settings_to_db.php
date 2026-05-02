@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('hint_text')->nullable();
             $table->string('placeholder')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

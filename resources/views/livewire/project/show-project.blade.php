@@ -57,9 +57,6 @@
                         <flux:button icon="ellipsis-vertical"/>
 
                         <flux:menu>
-                            <flux:menu.item icon="clock" href="{{ route('project.show', $project->id) }}">
-                                {{ __('project.view.header.old-view') }}
-                            </flux:menu.item>
                             <flux:menu.item icon="trash" variant="danger" x-on:click="$flux.modal('delete-modal').show()">
                                 {{ __('project.view.header.delete') }}
                             </flux:menu.item>

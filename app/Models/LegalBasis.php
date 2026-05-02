@@ -13,17 +13,34 @@ class LegalBasis extends Model
         'hint_text',
         'placeholder',
         'sort_order',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'sort_order' => 'integer',
+            'is_active' => 'boolean',
         ];
     }
 
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function hasAdditionalField(): bool
+    {
+        return !empty($this->label_additional);
+    }
+
+    public function hasHintText(): bool
+    {
+        return !empty($this->hint_text);
     }
 }

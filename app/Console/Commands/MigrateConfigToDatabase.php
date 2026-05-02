@@ -72,6 +72,7 @@ class MigrateConfigToDatabase extends Command
                         'hint_text' => $entry['hint-text'] ?? null,
                         'placeholder' => $entry['placeholder'] ?? null,
                         'sort_order' => $order++,
+                        'is_active' => true,
                     ]
                 );
             }
