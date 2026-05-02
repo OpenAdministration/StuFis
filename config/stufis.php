@@ -1,11 +1,5 @@
 <?php
 
-if (env('APP_ENV') === 'testing') {
-    $org_data = (include base_path('legacy/config/config.orgs.testing.php'))[env('AUTH_REALM')];
-} else {
-    $org_data = (include base_path('legacy/config/config.orgs.php'))[env('AUTH_REALM')];
-}
-
 return [
     /**
      * stable - only stable stuff
@@ -33,9 +27,5 @@ return [
     'git_url' => env('GIT_URL', 'https://github.com/openadministration/stufis/releases'),
     'blog_url' => env('BLOG_URL', 'https://open-administration.de'),
     'docs_url' => env('DOCS_URL', 'https://doku.stufis.de'),
-
-    'mail_domain' => $org_data['mail-domain'] ?? '',
-
-    'project_legal' => $org_data['rechtsgrundlagen'] ?? [],
 
 ];
