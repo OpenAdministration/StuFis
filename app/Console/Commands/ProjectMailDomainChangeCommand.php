@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Legacy\Project;
+use App\Models\Setting;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Settings;
 
 class ProjectMailDomainChangeCommand extends Command
 {
@@ -14,7 +14,7 @@ class ProjectMailDomainChangeCommand extends Command
 
     public function handle(): void
     {
-        $domain = Settings::get('mail_domain');
+        $domain = Setting::get('mail_domain');
 
         if (empty($domain)) {
             $this->error('Mail domain is not configured in settings.');
@@ -45,7 +45,7 @@ class ProjectMailDomainChangeCommand extends Command
 
             // Update to the new domain
             $project->responsible = $localPart . '@' . $domain;
-            $project->save();
+            $project->saveQuietly();
 
             $bar->advance();
         }
