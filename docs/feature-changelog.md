@@ -1,4 +1,5 @@
-# unreleased
+# v4.4.0-beta
+* feat: new Project-Form and View
 * fix: expenses booking state button not clickable anymore
 * fix: chrome: no double button in expense form
 * fix: linewrap links in project
