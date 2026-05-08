@@ -45,7 +45,7 @@ class Draft extends ProjectState
 
     public function budgetRules() : array {
         return [
-            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+            'posts.*.titel_id' => 'sometimes|nullable|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];
     }
 
