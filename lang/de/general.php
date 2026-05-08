@@ -5,8 +5,8 @@ return [
     'breadcrumb' => [
         'todo' => 'TODO',
         'booking' => 'Buchungen anweisen',
-        'booking.text' => 'Buchungen durchführen',
-        'booking.history' => 'Buchungsliste bzw. Historie',
+        'booking.history' => 'Buchungsliste',
+        'booking.text' => 'Buchungsanweisungen',
         'konto' => 'Konto bzw. Kasse',
         'konto.new' => 'Neu anlegen',
         'konto.import.csv' => 'CSV-Import',
