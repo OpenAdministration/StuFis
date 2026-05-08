@@ -1597,7 +1597,7 @@ class AuslagenHandler2 extends Renderer
 
             return;
         }
-        throw new LegacyDieException('Belege PDF kann nicht generiert werden');
+        throw new LegacyDieException(500,'Belege PDF kann nicht generiert werden');
     }
 
     public function generate_zahlungsanweisung_pdf(): void
