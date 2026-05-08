@@ -285,6 +285,17 @@
                         <td></td>
                         <td colspan="{{ $canUpdateBudget ? '2' : '1' }}" class="px-3 py-3.5">
                             <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">{{ __('project.view.edit.add_post') }}</flux:button>
+                            @if($hasTaxTitels)
+                                <flux:button wire:click="addTaxPosts" icon="plus" :disabled="!$canAddTaxTitles">{{ __('project.view.edit.add_tax_posts') }}</flux:button>
+                                <flux:tooltip toggleable class="-mt-0 -mr-0">
+                                    <flux:button size="sm" variant="ghost" square>
+                                        <x-fas-info-circle class="text-gray-500 size-4"/>
+                                    </flux:button>
+                                    <flux:tooltip.content class="max-w-[20rem] space-y-2">
+                                        {{ __('project.view.edit.tax_posts_info') }}
+                                    </flux:tooltip.content>
+                                </flux:tooltip>
+                            @endif
                         </td>
                         <td class="py-3.5 pl-4 pr-3 text-right text-sm font-semibold text-gray-900 sm:pl-6">
                             {{ __('project.view.budget_table.sums') }}

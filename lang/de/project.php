@@ -64,6 +64,8 @@ return [
             'save_as_requested' => 'Speichern als beantragt',
             'project_belongs_to_budget_plan' => 'Projekt gehört zum Haushaltsjahr/-plan',
             'add_post' => 'Posten hinzufügen',
+            'add_tax_posts' => 'Umsatzsteuer hinzufügen',
+            'tax_posts_info' => 'StuFiS generiert für alle angelegten Steuersätze jeweils Einnahme- und Ausgabepositionen. Passe die Beträge bei Bedarf an, lass die Bezeichnungen jedoch unverändert. Überflüssige Posten, wie etwa Einnahmen bei reinen Ausgabenbelegen, können gelöscht werden.',
             'actions' => 'Aktionen',
         ],
         'details' => [

@@ -25,6 +25,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+
+        Artisan::call('settings:import-from-legacy-config');
     }
 
     public function down(): void

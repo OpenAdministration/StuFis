@@ -38,7 +38,6 @@ class Setting extends Model
                     "label" => "",
                     "prefix" => "",
                 ],
-                "committees" => ["Referat Finanzen"],
             ],
 
         ];
@@ -81,5 +80,9 @@ class Setting extends Model
         $stored = static::pluck('value', 'key')->toArray();
 
         return Arr::undot(array_merge(static::defaults(), $stored));
+    }
+
+    public static function drop(string $key) {
+        return Setting::find($key)?->delete();
     }
 }

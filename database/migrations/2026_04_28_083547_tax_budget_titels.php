@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Setting;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,6 +22,8 @@ return new class extends Migration
             $table->foreign('hhp_id')->references('id')->on('haushaltsplan');
             $table->foreign('titel_id')->references('id')->on('haushaltstitel');
         });
+
+        Setting::set('tax.active' , false);
     }
 
     /**
@@ -29,5 +32,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('tax_budget');
+        Setting::drop('tax.active');
     }
 };

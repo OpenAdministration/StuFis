@@ -11,6 +11,7 @@ use App\Models\Legacy\ProjectAttachment;
 use App\Models\Legacy\ProjectPost;
 use App\Models\LegalBasis;
 use App\Models\Setting;
+use App\Models\TaxBudget;
 use App\States\Project\ProjectState;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
@@ -157,6 +158,29 @@ class EditProject extends Component
         ]);
     }
 
+    public function addTaxPosts() : void
+    {
+        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function(TaxBudget$taxBudget){
+            $budgetTitle = $taxBudget->legacyBudgetTitle;
+            $this->posts[] = ([
+                'name' => $budgetTitle->titel_name . ' - Einnahmen',
+                'bemerkung' => 'Steuer',
+                'einnahmen' => Money::EUR($taxBudget->tax_percent),
+                'ausgaben' => Money::EUR(0),
+                'titel_id' => $budgetTitle->id,
+                'readonly' => false,
+            ]);
+            $this->posts[] = ([
+                'name' => $budgetTitle->titel_name . ' - Ausgaben',
+                'bemerkung' => 'Steuer',
+                'einnahmen' => Money::EUR(0),
+                'ausgaben' => Money::EUR($taxBudget->tax_percent),
+                'titel_id' => $budgetTitle->id,
+                'readonly' => false,
+            ]);
+        });
+    }
+
     public function isPostDeletable(int $index): bool
     {
         return count($this->posts) > 1 && (
@@ -254,6 +278,12 @@ class EditProject extends Component
                     $project->posts()->create($post);
                 }
             }
+            // delete posts that are not in the filtered posts array
+            // TODO: write a test for this edge case (post is not deletable)
+            $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
+            $readOnlyPosts = $bookedExpenses->flatMap->posts->pluck('projekt_posten_id')->unique();
+            $project->posts()->whereNotIn('id', collect($filteredPosts)->pluck('id'))
+                ->whereNotIn('projekt_posten_id', $readOnlyPosts)->delete();
 
             foreach ($newAttachments as $attachment){
                 $attachment->store('projects/'.$project->id);
@@ -348,9 +378,13 @@ class EditProject extends Component
             && collect($this->posts)->filter(fn($post) => $post['readonly'])->isEmpty();
         $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
 
+        $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
+        $canAddTaxTitles = collect($this->posts)->filter(fn($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
+
         return view('livewire.project.edit-project', compact(
             'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',
             'budgetPlans', 'canUpdateBudget', 'canUpdateApproval', 'canUpdateBudgetPlan', 'protocolLinkSetting',
+            'hasTaxTitels', 'canAddTaxTitles',
         ));
     }
 
