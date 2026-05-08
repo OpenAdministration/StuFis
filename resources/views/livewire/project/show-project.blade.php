@@ -595,19 +595,35 @@
     <flux:modal name="delete-modal">
         <div class="flex items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div>
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                </div>
-                <div class="mt-3 text-center sm:mt-5">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('project.view.delete_modal.heading') }}</h3>
-                    <div class="mt-2">
+                <div class="mt-3 sm:mt-5">
+                    <div class="flex items-center gap-3 text-left">
+                        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('project.view.delete_modal.heading') }}</h3>
+                    </div>
+                    <div class="mt-2 text-left">
                         <p class="text-sm text-gray-500">{{ __('project.view.delete_modal.intro') }}</p>
-                        <ul class="mt-2 text-sm text-gray-500 text-left list-disc list-inside">
-                            <li>{{ __('project.view.delete_modal.conditions.owner') }}</li>
-                            <li>{{ __('project.view.delete_modal.conditions.no_expenses') }}</li>
+                        <ul class="mt-2 text-sm text-gray-500 space-y-1">
+                            <li class="flex items-start gap-2">
+                                @if($userCanDelete)
+                                    <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                                @else
+                                    <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                                @endif
+                                <span>{{ __('project.view.delete_modal.conditions.owner') }}</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                @if($deletionAllowed)
+                                    <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                                @else
+                                    <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                                @endif
+                                <span>{{ __('project.view.delete_modal.conditions.no_expenses') }}</span>
+                            </li>
                         </ul>
                         <p class="mt-2 text-sm text-gray-500">{{ __('project.view.delete_modal.warning') }}</p>
                     </div>
@@ -617,7 +633,7 @@
                 <flux:button x-on:click="$flux.modal('delete-modal').close()" class="w-full">
                     {{ __('project.view.delete_modal.cancel') }}
                 </flux:button>
-                <flux:button wire:click="delete()" class="w-full" variant="danger">
+                <flux:button wire:click="delete()" class="w-full" variant="danger" :disabled="!($userCanDelete && $deletionAllowed)">
                     {{ __('project.view.delete_modal.confirm') }}
                 </flux:button>
             </div>

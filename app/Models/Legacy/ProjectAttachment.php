@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * App\Models\ProjectAttachment
@@ -42,7 +43,9 @@ class ProjectAttachment extends Model {
     public $timestamps = true;
 
     protected $fillable = ['name', 'path', 'mime_type', 'size'];
-   public function project(): BelongsTo
+
+
+    public function project(): BelongsTo
    {
        return $this->belongsTo(Project::class, 'projekt_id', 'id');
    }
@@ -53,5 +56,7 @@ class ProjectAttachment extends Model {
           get: fn() =>  $this->attributes['size'] / 1024 . "MB",
        );
 
-    }
+   }
+
+
 }

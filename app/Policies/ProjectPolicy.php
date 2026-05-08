@@ -58,10 +58,9 @@ class ProjectPolicy
         };
     }
 
-    public function delete(User $user, Project $Projects): bool
+    public function delete(User $user, Project $project): bool
     {
-        // depends on the state
-        return false;
+        return $user->id === $project->creator_id || $user->getGroups()->contains('ref-finanzen-hv');
     }
 
     public function createExpense(User $user, Project $project): bool

@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\States\Project\Draft;
 use App\States\Project\ProjectState;
 use Flux\Flux;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
@@ -31,7 +32,13 @@ class ShowProject extends Component
         $showApproval = \Auth::user()->getGroups()->has('ref-finanzen-hv') || !$state->equals(Draft::class);
         $showLink = Setting::get('project.protocol_url.active');
 
-        return view('livewire.project.show-project', compact('project', 'showApproval', 'showLink'));
+        $userCanDelete = \Auth::user()->can('delete', $project);
+        $deletionAllowed = $project->expenses()->count() === 0;
+
+
+        return view('livewire.project.show-project', compact(
+            'project', 'showApproval', 'showLink', 'userCanDelete', 'deletionAllowed'
+        ));
     }
 
     public function changeState(): void
@@ -63,5 +70,21 @@ class ShowProject extends Component
         } catch (CouldNotPerformTransition $e) {
             $this->addError('newState', $e->getMessage());
         }
+    }
+
+    public function delete(): void {
+
+        $project = Project::findOrFail($this->project_id);
+        $this->authorize('delete', $project);
+        if ($project->expenses()->count() > 0) {
+            $this->addError('delete', 'Cannot delete project with expenses');
+            return;
+        }
+
+        $project->posts()->delete();
+        $project->attachments()->delete();
+        Storage::deleteDirectory('projects/'.$project->id);
+        $project->delete();
+        $this->redirect(route('home'));
     }
 }
