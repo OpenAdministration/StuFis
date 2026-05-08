@@ -5,51 +5,51 @@ namespace Database\Factories\Legacy;
 use App\Models\Legacy\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<Model>
+ * @extends Factory<Project>
  */
 class ProjectFactory extends Factory
 {
     protected $model = Project::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            'createdat' => fake()->dateTimeThisYear(),
-            'lastupdated' => fake()->dateTimeThisYear(),
+            'creator_id' => User::factory(),
+            'stateCreator_id' => User::factory(),
             'version' => 1,
             'state' => 'draft',
-            'name' => fake()->text(30),
-            'responsible' => fake()->userName(),
-            'org' => fake()->company(),
-            'org_mail' => fake()->companyEmail(),
-            'protokoll' => fake()->url(),
-            'recht' => 'stura',
-            'recht_additional' => fake()->text(10),
-            'date_start' => fake()->dateTimeThisYear(),
-            'date_end' => fake()->dateTimeThisYear(),
-            'beschreibung' => fake()->text(500),
+            'name' => fake()->sentence(3),
+            'org' => 'Students Council',
+            'org_mail' => fake()->safeEmail(),
+            'responsible' => fake()->safeEmail(),
+            'protokoll' => '',
+            'recht' => '',
+            'recht_additional' => '',
+            'beschreibung' => fake()->paragraph(),
+            'date_start' => now()->addDays(1),
+            'date_end' => now()->addDays(30),
         ];
     }
 
-    public function by(User $user): ProjectFactory|Factory
+    /**
+     * Set the creator of the project.
+     */
+    public function by(User $user): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'creator_id' => $user->id,
             'stateCreator_id' => $user->id,
         ]);
     }
 
-    public function projectState(string $state): ProjectFactory|Factory
+    /**
+     * Set the project state.
+     */
+    public function withState(string $state): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'state' => $state,
         ]);
     }
