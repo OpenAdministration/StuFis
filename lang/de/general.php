@@ -7,6 +7,7 @@ return [
         'booking' => 'Buchungen anweisen',
         'booking.history' => 'Buchungsliste',
         'booking.text' => 'Buchungsanweisungen',
+        'changelog' => 'Änderungshistorie',
         'konto' => 'Konto bzw. Kasse',
         'konto.new' => 'Neu anlegen',
         'konto.import.csv' => 'CSV-Import',
@@ -31,7 +32,8 @@ return [
         'new-expense' => 'Neue Abrechnung erstellen',
         'config' => 'Administration',
     ],
-    'changelog.headline' => 'Changelog',
+    'changelog.headline' => 'Änderungshistorie',
     'changelog.sub-headline' => 'Die wichtigsten Änderungen findet ihr hier in gekürzter Form auf Deutsch. Eine ausführlichere Liste alle Anpassungen an StuFiS findet ihr auf Github in Englisch.',
+    'changelog.github-button' => 'Zur Github-Seite',
     'version_notification.text' => 'StuFiS wurde erfolgreich upgedatet. Mehr Informationen zu den Änderungen findest du unten links, wenn du auf die Versionsnummer klickst.',
 ];

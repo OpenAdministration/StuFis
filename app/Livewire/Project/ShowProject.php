@@ -24,7 +24,7 @@ class ShowProject extends Component
 
     public $fileUrl;
 
-    public function render()
+    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\View\View
     {
         $project = Project::findOrFail($this->project_id);
         $state = $project->state;

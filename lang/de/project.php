@@ -95,7 +95,7 @@ return [
             'income_edit' => 'Einnahmen',
             'expenses' => 'Ausgaben (Soll)',
             'expenses_edit' => 'Ausgaben',
-            'claimed' => 'Claimed (Ist)',
+            'claimed' => 'Genutzt (Ist)',
             'status' => 'Status',
             'sum' => 'Summe',
             'sums' => 'Summen:',

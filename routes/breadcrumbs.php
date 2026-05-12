@@ -224,3 +224,8 @@ Breadcrumbs::for('config', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.config'), route('config'));
 });
+
+Breadcrumbs::for('changelog', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.dashboard');
+    $trail->push(__('general.breadcrumb.changelog'), route('changelog'));
+});
