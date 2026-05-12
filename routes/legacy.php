@@ -4,12 +4,13 @@ use App\Http\Controllers\Legacy\LegacyController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->name('legacy.')->group(function (): void {
+
     Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
     Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');
     Route::get('menu/kv/exportBank', [LegacyController::class, 'render'])->name('todo.kv.bank');
     Route::get('menu/belege', [LegacyController::class, 'render'])->name('todo.belege');
     Route::get('menu/stura', [LegacyController::class, 'render'])->name('sitzung');
-    Route::get('menu/{sub}', [LegacyController::class, 'render'])->name('dashboard');
+    Route::get('menu/{hhp_id?}/{sub}', [LegacyController::class, 'render'])->name('dashboard');
     // legacy hhp-picker needs that url schema as a easy forward - route names are here not usable :(
     Route::redirect('konto/{hhp_id}/new', '/bank-account/new');
     Route::get('konto/{hhp_id?}/{konto_id?}', [LegacyController::class, 'render'])->name('konto');
@@ -28,23 +29,23 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::get('hhp/import', [LegacyController::class, 'render'])->name('hhp.import');
     Route::get('hhp/{hhp_id}', [LegacyController::class, 'render'])->name('hhp.view');
     Route::get('hhp/{hhp_id}/titel/{titel_id}', [LegacyController::class, 'render'])->name('hhp.titel.view');
-    Route::get('projekt/create', [LegacyController::class, 'render'])->name('new-projekt');
-    Route::get('projekt/{projekt_id}', [LegacyController::class, 'render'])->name('projekt');
-    Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
 
-    Route::get('files/get/{auslagen_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
-    Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}.pdf', [LegacyController::class, 'deliverFile']);
+    Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}', [LegacyController::class, 'render'])->name('expense-long');
+    Route::get('projekt/{projekt_id}/auslagen', [LegacyController::class, 'render'])->name('expense.create');
+
+    Route::get('files/get/{auslagen_id}/{beleg_id}/{hash}', [LegacyController::class, 'renderFile'])->name('get-file');
+    Route::get('auslagen/{auslagen_id}/{fileHash}/{filename}', [LegacyController::class, 'deliverFile']);
 
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/belege-pdf/{file_name?}',
         [LegacyController::class, 'belegePdf'])->name('belege-pdf');
     Route::get('projekt/{projekt_id}/auslagen/{auslagen_id}/version/{version}/zahlungsanweisung-pdf/{file_name?}',
         [LegacyController::class, 'zahlungsanweisungPdf'])->name('zahlungsanweisung-pdf');
 
-    // short link
+    // short links
     Route::redirect('p/{projekt_id}', '/projekt/{projekt_id}');
     Route::redirect('a/{auslagen_id}', '/auslagen/{auslagen_id}');
     Route::get('auslagen/{auslagen_id}', static function ($auslage_id) {
-        $auslage = \App\Models\Legacy\Expenses::findOrFail($auslage_id);
+        $auslage = \App\Models\Legacy\Expense::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     })->name('expense');

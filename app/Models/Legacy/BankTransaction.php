@@ -90,7 +90,7 @@ class BankTransaction extends Model
         return $this->hasMany(Booking::class, 'zahlung_id')->where('zahlung_type', $this->konto_id);
     }
 
-    public function name(): Attribute
+    protected function name(): Attribute
     {
         $account_name = $this->account->short;
         $id = $this->id;

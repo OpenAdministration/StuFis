@@ -180,7 +180,7 @@ class HHPHandler extends Renderer
             <div class="input-group form-group input-daterange" data-provide="datepicker" data-date-format="yyyy-mm-dd" data-date-calendar-weeks="true" data-date-language="de">
                 <div class="input-group-addon" style="background-color: transparent; border: none;">von
                 </div><div class="input-group">
-                    <input class="form-control" name="date-start" type="text">
+                    <input class="form-control" name="date_start" type="text">
                     <div class="input-group-addon">
                         <span class="fa fa-fw fa-calendar"></span>
                     </div>
@@ -204,7 +204,7 @@ class HHPHandler extends Renderer
     public function renderImportPreview(): void
     {
         [$groups, $titel] = $this->reverseCSV($_POST['importCSV']);
-        $dateStart = date_create($_POST['date-start'])->format('Y-m-d');
+        $dateStart = date_create($_POST['date_start'])->format('Y-m-d');
         $mergedGroups = [];
         foreach ($groups as $number => $group) {
             $typeName = $group['type'] === 0 ? '[EINNAHME]' : '[AUSGABE]';
@@ -218,7 +218,7 @@ class HHPHandler extends Renderer
         $this->renderHeadline('Speichern'); ?>
         <form action="<?php echo URIBASE; ?>rest/forms/hhp/save-import" method="POST" role="form" class="ajax-form">
             <?php $this->renderHiddenInput('importCSV', htmlspecialchars($_POST['importCSV'])); ?>
-            <?php $this->renderHiddenInput('date-start', htmlspecialchars($_POST['date-start'])); ?>
+            <?php $this->renderHiddenInput('date_start', htmlspecialchars($_POST['date_start'])); ?>
             <?php $this->renderNonce(); ?>
             <button type="submit"
                     class="btn btn-primary  <?php echo AuthHandler::getInstance()->hasGroup(
@@ -234,7 +234,7 @@ class HHPHandler extends Renderer
     public function saveNewHHP(): bool
     {
         [$groups, $titels, $newHHPid] = $this->reverseCSV($_POST['importCSV']);
-        $dateStart = date_create($_POST['date-start'])->format('Y-m-d');
+        $dateStart = date_create($_POST['date_start'])->format('Y-m-d');
         $db = DBConnector::getInstance();
 
         $db->dbInsert('haushaltsplan', [

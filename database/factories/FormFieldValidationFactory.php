@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\FormField;
+use App\Models\PtfProject\FormField;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\FormFieldValidation>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PtfProject\FormFieldValidation>
  */
 class FormFieldValidationFactory extends Factory
 {

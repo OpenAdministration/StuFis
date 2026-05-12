@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\Application;
 use App\Models\FinancePlanItem;
 use App\Models\FinancePlanTopic;
 use App\Models\Project;
+use App\Models\PtfProject\Application;
 
 test('project factory', function (): void {
     $project = Project::factory()->has(

@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Forms;
 
-use App\Models\Application;
-use App\Models\Project;
+use App\Models\Legacy\Project;
+use App\Models\PtfProject\Application;
 use Livewire\Form;
 
 class FundingRequestForm extends Form

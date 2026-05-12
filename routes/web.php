@@ -11,13 +11,21 @@
 |
 */
 
+use App\Http\Controllers\AdminConfigPage;
 use App\Http\Controllers\ViewChangelog;
+use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
-    // legacy is register later, so we cannot route(legacy.dashboard) there
-    Route::redirect('/', 'menu/mygremium')->name('home');
+    Route::get('/', function () {
+        $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
+        $latestPlan = LegacyBudgetPlan::latest();
+
+        return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
+    })->name('home');
+
+    Route::get('config', [AdminConfigPage::class, 'render'] )->name('config');
 
     Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
     Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
@@ -25,6 +33,15 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
+    Route::get('project/create', \App\Livewire\Project\EditProject::class)->name('project.create');
+    Route::get('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
+    Route::get('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');
+    Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
+    Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
+
+    Route::permanentRedirect('projekt/create', '/project/create');
+    Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');
+    Route::permanentRedirect('projekt/{project_id}/edit', '/project/{project_id}/edit');
 });
 
 // login routes

@@ -1,6 +1,5 @@
 <?php
 
-use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\UploadedFile;
 use Spatie\Regex\Regex;
@@ -8,12 +7,12 @@ use Spatie\Regex\Regex;
 /**
  * Guess the format of the input date because banks do not like standards :(
  */
-function guessCarbon(string $dateString, ?string $newFormat = null): Carbon|string
+function guessDate(string $dateString, ?string $newFormat = null): Date|string
 {
     $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
     foreach ($formats as $format) {
         try {
-            $ret = Carbon::rawCreateFromFormat($format, $dateString);
+            $ret = Date::rawCreateFromFormat($format, $dateString);
         } catch (InvalidFormatException) {
             continue;
         }

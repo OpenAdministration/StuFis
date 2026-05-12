@@ -6,6 +6,9 @@ use App\Models\User;
 
 class UserPolicy
 {
+    /**
+     * If admin, allow all.
+     */
     public function before(User $user, string $ability): ?bool
     {
         return $user->getGroups()->contains('admin') ? true : null;
@@ -32,6 +35,16 @@ class UserPolicy
     }
 
     public function admin(User $user): bool
+    {
+        return $user->getGroups()->contains('admin');
+    }
+
+    public function seeExtendedMenu(User $user): bool
+    {
+        return $user->getGroups()->contains('ref-finanzen');
+    }
+
+    public function accessAppConfiguration(User $user): bool
     {
         return $user->getGroups()->contains('admin');
     }

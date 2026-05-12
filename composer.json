@@ -2,7 +2,7 @@
     "name": "openadministration/stufis",
     "type": "project",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "4.3.2",
+    "version": "4.4.0-beta",
     "license": "AGPL",
     "require": {
         "php": "^8.4",
@@ -11,8 +11,8 @@
         "ext-iconv": "*",
         "ext-pdo": "*",
         "ext-zip": "*",
-        "archtechx/money": "^0.5.3",
         "blade-ui-kit/blade-heroicons": "^2.6",
+        "cknow/laravel-money": "^8.4",
         "defuse/php-encryption": "^2.4",
         "diglactic/laravel-breadcrumbs": "^10.0",
         "globalcitizen/php-iban": "^4.2",
@@ -20,7 +20,7 @@
         "guzzlehttp/guzzle": "^7.9",
         "intervention/validation": "^4.5",
         "jumbojett/openid-connect-php": "^1.0",
-        "laravel/framework": "^11.45",
+        "laravel/framework": "^12.42",
         "livewire/flux": "^2.2",
         "livewire/flux-pro": "^2.2",
         "livewire/livewire": "^3.6",
@@ -31,27 +31,30 @@
         "owenvoke/blade-fontawesome": "^2.9",
         "propaganistas/laravel-phone": "^5.3",
         "socialiteproviders/laravelpassport": "^4.3",
-        "spatie/laravel-backup": "^8.6",
-        "spatie/regex": "*"
+        "spatie/laravel-backup": "^9.2",
+        "spatie/laravel-model-states": "^2.12",
+        "spatie/regex": "*",
+        "staudenmeir/laravel-adjacency-list": "^1.24"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.15",
         "barryvdh/laravel-ide-helper": "^3.5",
-        "driftingly/rector-laravel": "^1.2",
+        "driftingly/rector-laravel": "^2.1",
         "fakerphp/faker": "^1.23",
-        "larastan/larastan": "^2.9",
+        "larastan/larastan": "^3.1",
         "laravel/pint": "^1.20",
-        "laravel/sail": "^1.26",
-        "laravel/tinker": "^2.9",
+        "laravel/sail": "^1.41",
+        "laravel/tinker": "^2.10.1",
         "larswiegers/laravel-translations-checker": "^0.9.3",
         "magentron/laravel-blade-lint": "^2.0",
         "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.0",
-        "pestphp/pest": "^2.34",
-        "pestphp/pest-plugin-laravel": "^2.4",
-        "pestphp/pest-plugin-livewire": "^2.1",
-        "rector/rector": "^1.2",
-        "roave/security-advisories": "dev-latest"
+        "nunomaduro/collision": "^8.6",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "pestphp/pest-plugin-livewire": "^v4.0",
+        "rector/rector": "^2.2",
+        "roave/security-advisories": "dev-latest",
+        "laravel/pail": "^1.2.2"
     },
     "autoload": {
         "psr-4": {
@@ -84,6 +87,34 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "setup": [
+            "composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate",
+            "@php artisan migrate --force",
+            "npm install",
+            "npm run build"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test --env=testing"
+        ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "prepare-test": "@php artisan migrate:fresh --seed --env=testing",
+        "rector": "@php vendor/bin/rector process",
+        "rector-dry": "@php vendor/bin/rector process --dry-run",
+        "lint": "@php vendor/bin/phpstan",
+        "pint": "@php vendor/bin/pint",
+        "fix" : [
+            "@php vendor/bin/rector process",
+            "@php vendor/bin/pint"
         ]
     },
     "extra": {

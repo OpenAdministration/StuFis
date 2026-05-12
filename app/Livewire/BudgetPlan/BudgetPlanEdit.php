@@ -6,6 +6,7 @@ use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use Cknow\Money\Money;
 use DB;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
@@ -50,7 +51,7 @@ class BudgetPlanEdit extends Component
             ->get()->keyBy('id');
 
         foreach ($all_items as $item) {
-            // registers new Livewire ItemForms, there is not yet a native way
+            // registers new Livewire ItemForms; there is not yet a native way
             // to generate a dynamic amount of ItemForms, or even multiple
             $form = new ItemForm($this, 'items.'.$item->id);
             $form->setItem($item);
@@ -90,35 +91,60 @@ class BudgetPlanEdit extends Component
         ]);
     }
 
-    public function updatedItems($value, $property): void
+    /**
+     * Handle the updated event for an item's property.
+     * This method processes changes to item properties and updates the corresponding record in the database.
+     * If the updated property is `value`, it triggers a recalculation of the item's and its parents values.
+     * After the update, the method refreshes the component state.
+     *
+     * @param  mixed  $value  The new value for the item's property.
+     * @param  string  $property  The property identifier in the format "item_id.property_name".
+     */
+    public function updatedItems(mixed $value, string $property): void
     {
-        [$item_id, $item_prop] = explode('.', (string) $property, 2);
+        [$item_id, $item_prop] = explode('.', $property, 2);
         if (in_array($item_prop, ['short_name', 'name', 'value'])) {
             $item = BudgetItem::findOrFail($item_id);
             $item->update([$item_prop => $value]);
             if ($item_prop === 'value') {
                 $this->reSumItemValues($item);
             }
-            Flux::toast('Your changes have been saved.', variant: 'success');
+            Flux::toast('FIXME: Your changes have been saved.', variant: 'success');
             $this->refresh();
         }
     }
 
+    /**
+     * Recalculate and update the values of parent budget items by summing the values of their child items.
+     * This method propagates updates upwards through the hierarchy of budget items, starting from a given leaf item.
+     * Each parent's value is recalculated based on the sum of its direct children's values, and the changes are saved to the database.
+     *
+     * @param  BudgetItem  $leafItem  The leaf budget item from which the upward recalculation begins.
+     */
     public function reSumItemValues(BudgetItem $leafItem): void
     {
         $item = $leafItem;
         // iterate upwards until there is no parent left
         while (($item = $item->parent) !== null) {
-            $value = $item->children()->sum('value');
+            $amount = $item->children()->sum('value');
+            $money = Money::EUR($amount, true);
             // update db model
-            $item->value = $value;
+            $item->value = $money;
             $item->save();
             // update frontend
-            $this->items[$item->id]->value = $value;
+            $this->items[$item->id]->value = $money;
         }
     }
 
-    public function updated($property): void
+    /**
+     * Handle the updated event for the specified property.
+     * This method is called whenever a property is updated.
+     * It updates the corresponding property in the model and saves the changes.
+     * Only the meta-data directly in the BudgetPlan Model is updated here.
+     *
+     * @param  string  $property  The property name that has been updated.
+     */
+    public function updated(string $property): void
     {
         if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
             $value = $this->$property;
@@ -126,7 +152,7 @@ class BudgetPlanEdit extends Component
             $plan->update([
                 $property => $value,
             ]);
-            Flux::toast(text: "$property -> $value", heading: 'Your changes have been saved.', variant: 'success');
+            Flux::toast(text: "$property -> $value", heading: 'FIXME: Your changes have been saved.', variant: 'success');
         }
     }
 
@@ -141,7 +167,7 @@ class BudgetPlanEdit extends Component
         }
 
         // pickup all items between old and new position
-        $block = BudgetItem::whereBetween('position', [
+        $block = $item->siblings()->whereBetween('position', [
             min($current_position, $new_position),
             max($current_position, $new_position),
         ]);
@@ -155,9 +181,10 @@ class BudgetPlanEdit extends Component
             }
 
             $item->update(['position' => $new_position]);
+
         });
 
-        Flux::toast('Dragging and dropping', variant: 'success');
+        Flux::toast('FIXME: Dragging and dropping', variant: 'success');
     }
 
     public function save()
@@ -172,7 +199,7 @@ class BudgetPlanEdit extends Component
             'organization' => $this->organization,
         ]);
 
-        return $this->redirect(route('budget-plan.index'));
+        $this->redirect(route('budget-plan.view', $this->plan_id));
     }
 
     public function addGroup(BudgetType $budget_type): void
@@ -184,6 +211,7 @@ class BudgetPlanEdit extends Component
             'budget_type' => $budget_type,
             'is_group' => true,
             'position' => $newPos,
+            'value' => Money::EUR(100),
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
@@ -192,9 +220,9 @@ class BudgetPlanEdit extends Component
         $this->addBudget($new_item->id);
     }
 
-    public function addBudget(int $parent_id): void
+    public function addBudget(int $parent_id, float $value = 0.0): void
     {
-        $this->addItem($parent_id, false);
+        $this->addItem($parent_id, false, $value);
     }
 
     public function addSubGroup(int $parent_id): void
@@ -202,7 +230,7 @@ class BudgetPlanEdit extends Component
         $this->addItem($parent_id, true);
     }
 
-    private function addItem(int $parent_id, bool $is_group): void
+    private function addItem(int $parent_id, bool $is_group, $value = 0.0): void
     {
         $parent = BudgetItem::findOrFail($parent_id);
         if ($parent->is_group === 0) {
@@ -216,6 +244,7 @@ class BudgetPlanEdit extends Component
             'budget_type' => $parent->budget_type,
             'is_group' => $is_group,
             'position' => $pos + 1,
+            'value' => Money::EUR($value, true),
         ]);
         $form = new ItemForm($this, 'items.'.$new_item->budget_type->slug().'.'.$new_item->id);
         $form->setItem($new_item);
@@ -230,6 +259,7 @@ class BudgetPlanEdit extends Component
             return;
         }
         $item->update(['is_group' => true]);
+        $this->addBudget($item->id, $item->value->getAmount() / 100);
     }
 
     public function convertToBudget(int $item_id): void
@@ -278,6 +308,14 @@ class BudgetPlanEdit extends Component
             return;
         }
         $item->delete();
+        $this->resumItemValues($item);
+    }
+
+    public function resetPositions(): void
+    {
+        $plan = BudgetPlan::findOrFail($this->plan_id);
+        $plan->normalizePositions();
+        $this->refresh();
     }
 
     public function refresh(): void

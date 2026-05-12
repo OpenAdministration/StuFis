@@ -25,7 +25,7 @@ class HTMLPageRenderer
         if (isset($this->routeInfo['titel'])) {
             $this->titel = $this->routeInfo['titel'];
         } else {
-            $this->titel = 'StuRa Finanzen';
+            $this->titel = 'UNUSED';
         }
         $this->bodyContent = $bodyContent;
     }

@@ -85,13 +85,12 @@ class User extends Authenticatable
         'name',
         'username',
         'email',
-        'password',
         'provider',
         'provider_uid',
         'picture_url',
         'iban',
         'address',
-        'version',
+        'version', // last seen application version
     ];
 
     /**
@@ -119,11 +118,16 @@ class User extends Authenticatable
 
     public function getGroups(): Collection
     {
-        return app(AuthService::class)->userGroups();
+        return resolve(AuthService::class)->userGroups();
     }
 
     public function getCommittees(): Collection
     {
-        return app(AuthService::class)->userCommittees();
+        $configMode = Setting::get('user.committees.mode');
+        $configSuperSet = collect(Setting::get('user.committees.data'));
+        return match ($configMode) {
+            'filter' => $configSuperSet->intersect(resolve(AuthService::class)->userCommittees()),
+            'all' => $configSuperSet,
+        };
     }
 }

@@ -73,12 +73,12 @@ class Booking extends Model
 
     public function expensesReceiptPost(): BelongsTo
     {
-        return $this->belongsTo(ExpensesReceiptPost::class, 'beleg_id');
+        return $this->belongsTo(ExpenseReceiptPost::class, 'beleg_id');
     }
 
     public function expenseReceipt(): HasOneThrough
     {
-        return $this->hasOneThrough(ExpensesReceipt::class, ExpensesReceiptPost::class, 'beleg_id', 'id');
+        return $this->hasOneThrough(ExpenseReceipt::class, ExpenseReceiptPost::class, 'beleg_id', 'id');
     }
 
     public function expense(): BelongsTo

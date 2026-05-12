@@ -18,7 +18,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale())}}" class="h-full bg-gray-50">
 <head>
-    <title>{{ $title ?? 'StuRa Finanzen' }}</title>
+    <title>{{ $title ?? 'StuFiS Finanzen' }}</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="{{ asset('img/logo.svg') }}">
@@ -35,7 +35,7 @@
                 <x-logo class="h-16 w-auto mx-auto"/>
                 <div class="text-white center text-2xl text-bold mb-5 mt-1.5 text-center tracking-wider">{{ config('app.name') }}</div>
                 <div class="w-full px-2 space-y-1">
-                    <x-nav-item :href="route('legacy.dashboard', ['sub' => 'mygremium'])"
+                    <x-nav-item :href="route('home')"
                                 :active="Route::is('legacy.dashboard')"
                                 icon="heroicon-o-home"
                     >
@@ -195,8 +195,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
                     </svg>
                 </button>
-                <div class="flex-1 flex justify-between px-4 sm:px-6">
-                    <div class="flex items-center">
+                <div class="flex-1 flex justify-between px-4 sm:px-6 ">
+                    <div class="sm:flex items-center hidden">
                         {{ Breadcrumbs::render() }}
                     </div>
                     <div class="flex-1 flex">
@@ -213,14 +213,21 @@
                         </form>-->
                     </div>
                     <div class="ml-2 flex items-center">
-                        <flux:button :href="route('legacy.new-projekt')" icon="plus" variant="primary">
+                        <flux:button :href="route('project.create')" icon="plus" variant="primary">
                             {{ __('general.new-project-button') }}
                         </flux:button>
                     </div>
-                    <div class="ml-2 flex items-center sm:ml-6 sm:space-x-6">
-                        <a href="{{ config('stufis.docs_url') }}" class="focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <div class="flex items-center sm:space-x-6">
+                        <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                           aria-label="{{ __('general.docs-button') }}">
                             <x-fas-book-open-reader class="size-5 text-indigo-500"/>
                         </a>
+                        @can('access-app-configuration', Auth::user())
+                            <a href="{{ route('config') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                aria-label="{{ __('general.app-config-button') }}">
+                                <x-fas-cog class="size-5 text-indigo-500"/>
+                            </a>
+                        @endcan
                         <!-- Profile dropdown -->
                         <div x-data="{ profile: false }" class="relative shrink-0" >
                             <div>

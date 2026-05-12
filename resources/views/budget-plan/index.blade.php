@@ -1,121 +1,77 @@
 <x-layout>
-    <div class="sm:mx-8 mt-8 max-w-3xl">
-        <div class="sm:flex sm:items-center">
-            <div class="sm:flex-auto">
-                <h1 class="text-xl font-semibold text-gray-900">{{ __('budget-plan.index.headline') }}</h1>
-                <p class="mt-2 text-sm text-gray-700">{{ __('budget-plan.index.headline.sub') }}</p>
-            </div>
-            <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-                <a href="{{ route('budget-plan.create') }}" class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
-                    <x-heroicon-o-plus class="-ml-0.5 mr-2 h-4 w-4"/>
-                    {{ __('budget-plan.index.button.new-plan') }}
-                </a>
-            </div>
-        </div>
-        @if($years->isEmpty() && $orphaned_plans->isEmpty())
-            <a href="{{ route('budget-plan.create') }}" class="group mt-8 relative block w-full rounded-lg border-2 border-dashed border-gray-300
-            p-12 text-center hover:border-gray-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <x-heroicon-o-table-cells stroke-width="1" class="mx-auto h-12 w-12 text-gray-400 group-hover:text-gray-600" />
-                <span class="mt-2 block text-sm font-medium text-gray-700 group-hover:text-black">
-                    {{ __('budget-plan.index.no-plans') }}
-                </span>
-            </a>
-        @else
-            <div class="mt-8 flex flex-col overflow-hidden bg-white shadow-sm sm:rounded-md">
-                <ul role="list" class="divide-y divide-gray-200">
-                    @foreach($years as $year)
-                        <div class="px-6 py-2">
-                            {{ $year->start_date->format('F y') }} - {{ $year->end_date->format('F y') }}
-                        </div>
-                        @forelse($year->budgetPlans as $plan)
-                            <li>
-                                <a href="{{ route('budget-plan.show', ['plan_id' => $plan->id]) }}" class="block group hover:bg-gray-100">
-                                    <div class="flex items-center justify-between">
-                                        <div class="px-4 py-4 sm:px-6">
-                                            <div class="flex items-center">
-                                                <p class="truncate text-sm font-medium text-indigo-600">
-                                                    {{ $plan->organization }}
-                                                </p>
-                                                <div class="ml-2 flex shrink-0">
-                                                    <p class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
-                                                        {{ $plan->state }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="mt-2 sm:flex sm:justify-between">
-                                                <div class="sm:flex">
-                                                    <p class="flex items-center text-sm text-gray-500">
-                                                        <x-fas-money-bill class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
-                                                        {{ money_format(100000 + $plan->id * 3807.85) }}
-                                                    </p>
-                                                    <!-- follows: class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6" -->
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="shrink-0 pr-4">
-                                            <x-heroicon-s-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        @empty
-                            <li>
-                                    <div class="flex items-center justify-between">
-                                        <div class="px-4 py-4 sm:px-6">
-                                            <div class="flex items-center">
-                                                <p class="text-gray-500">
-                                                    {{ __('budget-plan.index.no-entries') }}
-                                                </p>
-                                            </div>
-                                        </div>
+    <div class="p-8 max-w-(--breakpoint-lg)">
+        <x-intro>
+            <x-slot:headline>{{ __('budget-plan.index.headline') }}</x-slot:headline>
+            <x-slot:button>
+                <flux:dropdown>
+                    <flux:button icon:trailing="chevron-down" variant="primary">{{ __('budget-plan.index.button.new') }}</flux:button>
+                    <flux:menu>
+                        <flux:menu.item icon="plus" :href="route('budget-plan.create')">{{ __('budget-plan.budget-plan') }}</flux:menu.item>
+                        <flux:menu.item icon="plus" :href="route('fiscal-year.create')">{{ __('budget-plan.fiscal-year') }}</flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            </x-slot:button>
+        </x-intro>
+        <flux:table>
+            <flux:table.columns>
+                <flux:table.column>{{ __('budget-plan.budget-plans') }}</flux:table.column>
+                <flux:table.column>{{ __('budget-plan.index.table.state') }}</flux:table.column>
+                <flux:table.column>{{ __('budget-plan.index.table.actions') }}</flux:table.column>
+            </flux:table.columns>
 
-                                    </div>
-                            </li>
-                        @endforelse
+            <flux:table.rows>
+                @foreach($years as $year)
+                    <flux:table.row-headline>
+                        {{ __('budget-plan.fiscal-year') }} {{ $year->start_date->format('M y')  }} to {{ $year->end_date->format('M y') }}
+                        <flux:link :href="route('fiscal-year.edit', $year->id)"><x-fas-pencil class="size-3 mx-2"/></flux:link>
+                    </flux:table.row-headline>
+                    @foreach($year->budgetPlans as $plan)
+                        <flux:table.row>
+                            <flux:table.cell>
+                                {{ __('budget-plan.fiscal-year') }} {{ $plan->id }}
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:badge color="green" size="sm" inset="top bottom">
+                                    {{ $plan->state }}
+                                </flux:badge>
+                            </flux:table.cell>
+                            <flux:table.cell class="inline-flex space-x-2">
+                                <flux:link :href="route('budget-plan.edit', $plan->id)">
+                                    <x-fas-pencil class="size-3.5"/>
+                                </flux:link>
+                                <flux:link :href="route('budget-plan.view', $plan->id)">
+                                    <x-fas-eye class="size-3.5"/>
+                                </flux:link>
+                            </flux:table.cell>
+                        </flux:table.row>
                     @endforeach
-                </ul>
-            </div>
-        @endif
-        @if($orphaned_plans->isNotEmpty())
-            <div class="mt-8 flex flex-col overflow-hidden bg-white shadow-sm sm:rounded-md max-w-3xl">
-                <ul role="list" class="divide-y divide-gray-200">
-                    <div class="px-6 py-2">
-                        {{ __('budget-plan.index.orphaned-plans') }}
-                    </div>
-                    @foreach($orphaned_plans as $plan)
-                        <li>
-                            <a href="{{ route('budget-plan.show', ['plan_id' => $plan->id]) }}" class="block group hover:bg-gray-100">
-                                <div class="flex items-center justify-between">
-                                    <div class="px-4 py-4 sm:px-6">
-                                        <div class="flex items-center">
-                                            <p class="truncate text-sm font-medium text-indigo-600">
-                                                {{ $plan->organization }}
-                                            </p>
-                                            <div class="ml-2 flex shrink-0">
-                                                <p class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
-                                                    {{ $plan->state }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="mt-2 sm:flex sm:justify-between">
-                                            <div class="sm:flex">
-                                                <p class="flex items-center text-sm text-gray-500">
-                                                    <x-fas-money-bill class="mr-1.5 h-5 w-5 shrink-0 text-gray-400" />
-                                                    {{ money_format(100000 + $plan->id * 3807.85) }}
-                                                </p>
-                                                <!-- follows: class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6" -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="shrink-0 pr-4">
-                                        <x-heroicon-s-chevron-right class="h-5 w-5 text-gray-400 group-hover:text-gray-600" />
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+                @endforeach
+                @if($orphaned_plans->isNotEmpty())
+                    <flux:table.row-headline>
+                        Pläne ohhneee HHHHJ
+                    </flux:table.row-headline>
+                @endif
+                @foreach($orphaned_plans as $plan)
+                    <flux:table.row>
+                        <flux:table.cell>
+                            {{ __('budget-plan.plan?') }} {{ $plan->id }}
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <flux:badge color="green" size="sm" inset="top bottom">
+                                {{ $plan->state }}
+                            </flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell class="inline-flex space-x-2">
+                            <flux:link :href="route('budget-plan.edit', $plan->id)">
+                                <x-fas-pencil class="size-3.5"/>
+                            </flux:link>
+                            <flux:link :href="route('budget-plan.view', $plan->id)">
+                                <x-fas-eye class="size-3.5"/>
+                            </flux:link>
+                        </flux:table.cell>
+                    </flux:table.row>
+                @endforeach
+            </flux:table.rows>
+        </flux:table>
     </div>
 </x-layout>

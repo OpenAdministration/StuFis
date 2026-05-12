@@ -11,14 +11,6 @@ cd "$(dirname "$0")"
 alias php="php8.4"
 alias composer="php composer.phar"
 
-if [ ! -f "composer.phar" ]; then
-    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    php composer-setup.php
-    php -r "unlink('composer-setup.php');"
-fi
-
-
-
 # puts StuFis in Maintenance Mode
 php artisan down --with-secret
 

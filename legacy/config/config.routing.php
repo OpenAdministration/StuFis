@@ -185,28 +185,22 @@ $pathConfig = [
                     'navigation' => 'mykonto',
                 ],
                 [
-                    'path' => '(mygremium|allgremium|open-projects)',
+                    'path' => '\d+',
                     'type' => 'pattern',
-                    'param' => 'action',
+                    'param' => 'hhp-id',
                     'navigation' => 'overview',
                     'load' => [
                         LoadGroups::SELECTPICKER,
                     ],
                     'children' => [
                         [
-                            'path' => '\d+',
+                            'path' => '(mygremium|allgremium|open-projects)',
                             'type' => 'pattern',
-                            'param' => 'hhp-id',
+                            'param' => 'action',
                         ],
                     ],
                 ],
-                [
-                    'path' => 'extern',
-                    'type' => 'path',
-                    'action' => 'extern',
-                    'navigation' => 'overview',
-                    'groups' => 'ref-finanzen',
-                ],
+
                 [
                     'path' => 'hv',
                     'type' => 'path',

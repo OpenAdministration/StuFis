@@ -5,8 +5,7 @@ namespace App\Livewire;
 use App\Livewire\Forms\ActorForm;
 use App\Livewire\Forms\FundingRequestForm;
 use App\Livewire\Forms\ProjectBudgetForm;
-use App\Livewire\Forms\ProjectForm;
-use App\Models\Actor;
+use App\Models\PtfProject\Actor;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -19,7 +18,7 @@ class CreateAntrag extends Component
 
     public ActorForm $organisationForm;
 
-    public ProjectForm $projectForm;
+    public $projectForm; // might have been deleted at the rework of the project view
 
     public ProjectBudgetForm $projectBudgetForm;
 

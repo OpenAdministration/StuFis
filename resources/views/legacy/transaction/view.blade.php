@@ -69,7 +69,7 @@
                                     <div class="ml-4 flex shrink-0 space-x-4">
                                         <span>{{ money_format($booking->value) }}</span>
                                         <span class="text-gray-200" aria-hidden="true">|</span>
-                                        <flux:link :href="route('legacy.expense', ['auslage_id' => $receipt->auslagen_id])">A{{ $receipt->auslagen_id }}</flux:link>
+                                        <flux:link :href="route('legacy.expense', $receipt->auslagen_id)">A{{ $receipt->auslagen_id }}</flux:link>
                                     </div>
                                 </li>
                             @endforeach

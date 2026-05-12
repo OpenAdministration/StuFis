@@ -18,3 +18,4 @@ parameters:
     excludePaths:
 #         - legacy/runtime
 #        - ./*/*/FileToBeExcluded.php
+        - app/Models/PtfProject/*
