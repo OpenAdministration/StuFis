@@ -365,7 +365,11 @@ class EditProject extends Component
     public function render()
     {
         // variables
-        $gremien = Auth::user()->getCommittees();
+        if(Auth::user()->can('pick-any-committee', Project::class)){
+            $gremien = Setting::get('user.committees.data');
+        }else{
+            $gremien = Auth::user()->getCommittees();
+        }
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $state = $this->getState();
         $budgetTitles = $this->getBudgetTitleOptions();

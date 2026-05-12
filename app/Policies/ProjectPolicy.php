@@ -22,7 +22,7 @@ class ProjectPolicy
 
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     public function view(User $user, Project $Projects): bool
@@ -119,6 +119,11 @@ class ProjectPolicy
             return false;
         }
 
+        return \Auth::user()->can('budget-officer', $user);
+    }
+
+    public function pickAnyCommittee(User $user): bool
+    {
         return \Auth::user()->can('budget-officer', $user);
     }
 }
