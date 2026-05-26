@@ -1,21 +1,32 @@
-# v4.4.0-beta
-* feat: new Project-Form and View
-* fix: expenses booking state button not clickable anymore
-* fix: chrome: no double button in expense form
-* fix: linewrap links in project
-* fix: remember changed budget year between tabs
-* fix: removed not working storno button
-* fix: last projekt posten is undeletable 
-* lang: changed Auslagen to Abrechnung
-* fix: projektposten keep their internal id when deleted. so you should be able to delete other unused posten. Deleting used posten is still possible and will result in an error.
-* fix: added a default "sonstige" organisation
-* fix: csv imports now set expenses to payed if they are mentioned in the verwendungszweck field
-* fix bug OP#406 & ok-belege resets now as well 
-* fix: projectposten are not deletable if there is an expense using them
-* lang: OP#273 removed stura Branding 
-* fix: OP#204 fwd to all gremien if user has no gremium
-* fix: csv-upload now possible as ref-finanzen instead of ref-finanzen-kv
-* ux: CSV-Import überarbeitet – modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
+# v4.4.0
+* **Projekt/Antrag**
+    * Vollständige Überarbeitung des Formulars und des Chats
+    * In Projekten können nun Dateien angehangen werden
+    * Wenn ein:e Nutzer:in keine Organisation zugewiesen hat, gibt es nun eine Standardorganisation
+    * Verbesserte Validierung der Formularfelder
+    * Löschung von Projektposten nur noch möglich, wenn keine Abrechnung damit verknüpft ist und es nicht der einzige Posten im Projekt ist
+    * Knopf zum automatischen Hinzufügen der Umsatzsteuer-Posten
+    * Neue Statusanzeigen
+
+* **CSV-Import**
+    * modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
+    * nun für alle Finanzverantwortlichen möglich
+    * Abrechnungen werden automatisch auf bezahlt gesetzt, wenn Sie im Verwendungszweck vom Import erwähnt werden
+    * verschiedene Fixes
+
+* **Buchungen und Haushaltsplan**
+    * Button "Gebucht" in der Abrechnung nicht mehr klickbar, da die Abrechnung dadurch nur im Nirvana verschwunden ist.
+    * Stornieren Knopf wurde aus der Buchungsliste entfernt, da nicht funktionsfähig
+    * Neue Haushaltstitel zu systematischen Erfassung der Umsatzsteuer hinzugefügt
+
+* **Weitere Fixes**
+    * Ausgewähltes Haushaltsjahr wird nun tabübergreifend gespeichert
+    * Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.
+    * Abrechnung kann nun fehlerfrei bearbeitet werden, auch wenn es bereits einmal im Status "Bezahlt" war
+    * Vereinheitlichung von Begriffen und Erweiterung der Lokalisierung
+    * Verschiedene technische und optische Anpassungen, Verbesserungen und Updates
+
+---
 
 # v4.3.2
 * **Brotkrumen wurden hinzugefügt:** Es ist nun links oben ersichtlich, wo du dich innerhalb StuFiS befindest und kannst schneller innerhalb der Struktur die Seite wechseln. Der Projekt-Button ist nun nach rechts oben gewandert.
