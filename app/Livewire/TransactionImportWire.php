@@ -179,12 +179,6 @@ class TransactionImportWire extends Component
             if ($this->csvOrderReversed) {
                 $this->data = $this->data->reverse();
             }
-
-            // check if mapping has some presets, if then do an initial validation, no preset, no validation
-            $hasPreset = $this->mapping->reject(fn ($value) => $value === '')->count() > 0;
-            if ($hasPreset) {
-                $this->validate();
-            }
         } catch (\Throwable) {
             $this->data = collect();
             $this->header = [];
@@ -194,10 +188,18 @@ class TransactionImportWire extends Component
 
     public function updatedCsv(): void
     {
-        // dump($this->csv->getMimeType());
         $this->validateOnly('csv');
         if (in_array($this->csv->getMimeType(), ['text/csv', 'text/plain'])) {
             $this->parseCSV();
+            // Run validation against mapping presets only after a successful parse.
+            // Keeping this outside parseCSV()'s try-catch ensures ValidationException
+            // bubbles to Livewire instead of being swallowed as a parse error.
+            if ($this->data->isNotEmpty()) {
+                $hasPreset = $this->mapping->reject(fn ($value) => $value === '')->count() > 0;
+                if ($hasPreset) {
+                    $this->validate();
+                }
+            }
         }
     }
 
@@ -360,6 +362,16 @@ class TransactionImportWire extends Component
             'iban' => iban_to_human_format($value),
             default => $value
         };
+    }
+
+    /**
+     * Clear the uploaded CSV and all derived state so the user can re-upload.
+     */
+    public function clearCsv(): void
+    {
+        $this->reset(['csv', 'header', 'separator', 'csvOrderReversed']);
+        $this->data = collect();
+        $this->resetValidation('csv');
     }
 
     /**

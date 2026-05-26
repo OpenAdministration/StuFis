@@ -15,6 +15,7 @@
 * lang: OP#273 removed stura Branding 
 * fix: OP#204 fwd to all gremien if user has no gremium
 * fix: csv-upload now possible as ref-finanzen instead of ref-finanzen-kv
+* ux: CSV-Import überarbeitet – modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
 
 # v4.3.2
 * **Brotkrumen wurden hinzugefügt:** Es ist nun links oben ersichtlich, wo du dich innerhalb StuFiS befindest und kannst schneller innerhalb der Struktur die Seite wechseln. Der Projekt-Button ist nun nach rechts oben gewandert.

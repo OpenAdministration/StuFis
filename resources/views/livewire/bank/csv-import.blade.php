@@ -1,18 +1,15 @@
 <div class="mt-8 sm:mx-8">
     <x-intro :headline="__('konto.manual-headline')" :sub-headline="__('konto.manual-headline-sub')"/>
 
-    <div class="max-w-(--breakpoint-lg)">
+    <div class="max-w-(--breakpoint-lg) space-y-6">
         <div class="py-3">
-            <label for="account_id" class="block text-sm font-medium leading-6 text-gray-900">
-                {{ __('konto.csv-label-choose-konto') }}
-            </label>
-            <flux:select wire:model.change="account_id">
+            <flux:select wire:model.change="account_id" :label="__('konto.csv-label-choose-konto')">
                 @foreach($accounts as $account)
                     <option wire:key="account-{{$account->id}}" value="{{ $account->id }}">{{ $account->name }}</option>
                 @endforeach
             </flux:select>
             @if($account_id !== "")
-                <dl class="-my-3 divide-y divide-gray-100 py-4 text-sm leading-6" wire:transition.scale.origin.top>
+                <dl class="-my-3 divide-y divide-gray-100 py-4 text-sm leading-6">
                     @isset($latestTransaction)
                         <div wire:key="last-transaction" class="px-6 border-l-2 border-indigo-600">
                             <div class="flex justify-between gap-x-4 py-3">
@@ -44,49 +41,62 @@
             @if($account_id !== "")
                 <div>
                     <x-intro level="2" :headline="__('konto.csv-upload-headline')" :sub-headline="__('konto.csv-upload-headline-sub')"/>
-                    <x-drop-area wire:model="csv" :upload-done="!empty($csv)">
-                        <p class="mb-3 text-sm text-gray-500 dark:text-gray-400 font-semibold">{{ __('konto.csv-draganddrop-fat-text') }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('konto.csv-draganddrop-sub-text') }}</p>
-                    </x-drop-area>
+                    @if($data->isNotEmpty())
+                        <flux:file-item
+                            icon="document-check"
+                            :heading="$csv->getClientOriginalName()"
+                            :size="$csv->getSize()"
+                        >
+                            <x-slot:actions>
+                                <flux:file-item.remove wire:click="clearCsv"/>
+                            </x-slot:actions>
+                        </flux:file-item>
+                    @else
+                        <flux:file-upload wire:model.live="csv">
+                            <flux:file-upload.dropzone
+                                :heading="__('konto.csv-draganddrop-fat-text')"
+                                :text="__('konto.csv-draganddrop-sub-text')"
+                                with-progress
+                            />
+                        </flux:file-upload>
+                        <flux:error name="csv" />
+                    @endif
                 </div>
             @endif
         </div>
 
-        @if(isset($csv) && !$errors->has('csv'))
+        @if($data->isNotEmpty())
             <div>
                 <x-intro level="2" :headline="__('konto.csv.transaction.headline')" :sub-headline="__('konto.csv.transaction.headline-sub')"/>
                 <div class="my-5">
-                    <x-toggle wire:click="reverseCsvOrder" :active="$this->csvOrderReversed">
-                        <span class="font-medium text-gray-900">{{ __('konto.manual-button-reverse-csv-order') }}</span>
-                        <span class="text-sm text-gray-500 ml-1">{{ __('konto.manual-button-reverse-csv-order-sub') }}</span>
-                    </x-toggle>
+                    <flux:switch
+                        wire:click="reverseCsvOrder"
+                        :checked="$csvOrderReversed"
+                        :label="__('konto.manual-button-reverse-csv-order')"
+                        :description="__('konto.manual-button-reverse-csv-order-sub')"
+                        align="left"
+                    />
                 </div>
             </div>
         @endif
     </div>
-    @if(isset($csv) && !$errors->has('csv'))
+    @if($data->isNotEmpty())
         <x-grid-list>
             @foreach($labels as $attr => $label)
                 <x-grid-list.item-card wire:key="{{ $attr }}">
-                    <div>
-                        <div class="flex justify-between">
-                            <label for="mapping.{{ $attr }}" class="block text-sm font-medium leading-6 text-gray-900">
-                                {{ __($label) }}:
-                            </label>
-                            <span class="text-sm leading-6 text-gray-500" id="email-optional">{{ __("konto.hint.transaction.$attr") }}</span>
-                        </div>
-                        <div class="mt-2">
-                            <flux:select wire:model.change="mapping.{{ $attr }}" placeholder="">
-                                <option value="">---Kein Import---</option>
-                                @foreach($header as $csv_column_id => $value)
-                                    <option value="{{ $csv_column_id }}">
-                                        {{ filled($value) ? $value : __('konto.csv-header-empty-column', ['n' => $csv_column_id + 1]) }}
-                                    </option>
-                                @endforeach
-                            </flux:select>
-                            <flux:error name="mapping.{{ $attr }}"/>
-                        </div>
-                    </div>
+                    <flux:field>
+                        <flux:label>{{ __($label) }}</flux:label>
+                        <flux:description>{{ __("konto.hint.transaction.$attr") }}</flux:description>
+                        <flux:select wire:model.change="mapping.{{ $attr }}" placeholder="">
+                            <option value="">---Kein Import---</option>
+                            @foreach($header as $csv_column_id => $value)
+                                <option value="{{ $csv_column_id }}">
+                                    {{ filled($value) ? $value : __('konto.csv-header-empty-column', ['n' => $csv_column_id + 1]) }}
+                                </option>
+                            @endforeach
+                        </flux:select>
+                        <flux:error name="mapping.{{ $attr }}"/>
+                    </flux:field>
                     <x-slot:rows>
                         @isset($firstNewTransaction[$mapping[$attr]])
                             <x-grid-list.item-card.row label="konto.csv-preview-first">
