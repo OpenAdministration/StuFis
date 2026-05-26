@@ -528,6 +528,7 @@ class BookingHandler extends Renderer
     private function renderFintsButton(int $konto_id = 1): void
     {
         $isKv = AuthHandler::getInstance()->hasGroup('ref-finanzen');
+
         echo 'Kontoauszüge importieren: ';
         echo HtmlButton::make()
             ->asLink(URIBASE.'konto/credentials')

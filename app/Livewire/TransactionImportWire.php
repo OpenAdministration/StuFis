@@ -63,7 +63,7 @@ class TransactionImportWire extends Component
 
     public function mount()
     {
-        $this->authorize('cashOfficer', User::class);
+        $this->authorize('finance', User::class);
         $this->data = collect();
 
         $this->updatedAccountId();
