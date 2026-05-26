@@ -42,12 +42,12 @@ Breadcrumbs::for('legacy.todo.kv.bank', static function (BreadcrumbTrail $trail)
 // Home > Booking
 Breadcrumbs::for('legacy.booking', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.booking'), route('legacy.booking'));
+    $trail->push(__('general.breadcrumb.booking.instruct'), route('legacy.booking'));
 });
 
 Breadcrumbs::for('legacy.booking.instruct', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.booking'), route('legacy.booking'));
+    $trail->push(__('general.breadcrumb.booking.instruct'), route('legacy.booking'));
 });
 
 Breadcrumbs::for('legacy.booking.text', static function (BreadcrumbTrail $trail): void {
@@ -63,7 +63,7 @@ Breadcrumbs::for('legacy.booking.history', static function (BreadcrumbTrail $tra
 // Home > Konto
 Breadcrumbs::for('legacy.konto', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.konto'), route('legacy.konto'));
+    $trail->push(__('general.breadcrumb.konto.index'), route('legacy.konto'));
 });
 
 // Home > Konto > New
@@ -75,7 +75,7 @@ Breadcrumbs::for('bank-account.new', static function (BreadcrumbTrail $trail): v
 // Home > Konto > Import
 Breadcrumbs::for('bank-account.import.csv', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto');
-    $trail->push(__('general.breadcrumb.konto.import.csv'), route('bank-account.import.csv'));
+    $trail->push(__('general.breadcrumb.konto.import-csv'), route('bank-account.import.csv'));
 });
 
 // Home > Konto > Credentials
@@ -87,7 +87,7 @@ Breadcrumbs::for('legacy.konto.credentials', static function (BreadcrumbTrail $t
 // Home > Konto > Credentials
 Breadcrumbs::for('legacy.konto.credentials.new', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto.credentials');
-    $trail->push(__('general.breadcrumb.konto.credentials.new'), route('legacy.konto.credentials.new'));
+    $trail->push(__('general.breadcrumb.konto.credentials-new'), route('legacy.konto.credentials.new'));
 });
 
 // Home > Konto > Credentials > Login
