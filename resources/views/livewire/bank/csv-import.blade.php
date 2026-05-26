@@ -79,7 +79,9 @@
                             <flux:select wire:model.change="mapping.{{ $attr }}" placeholder="">
                                 <option value="">---Kein Import---</option>
                                 @foreach($header as $csv_column_id => $value)
-                                    <option value="{{ $csv_column_id }}">{{ $value }}</option>
+                                    <option value="{{ $csv_column_id }}">
+                                        {{ filled($value) ? $value : __('konto.csv-header-empty-column', ['n' => $csv_column_id + 1]) }}
+                                    </option>
                                 @endforeach
                             </flux:select>
                             <flux:error name="mapping.{{ $attr }}"/>

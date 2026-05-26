@@ -78,100 +78,117 @@ class TransactionImportWire extends Component
     {
         $latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->first();
 
-        // mapping has only the csv column numbers as values, so we need to work around a bit,
-        // we only check if a matching column was given, the values of this columns only in special cases
+        $saldoMapped = filled($this->mapping->get('saldo'));
+        $valueMapped = filled($this->mapping->get('value'));
+
         return [
             'csv' => 'required|file|extensions:csv|mimes:csv,txt',
             'mapping.date' => [
-                'required',
-                'int',
-                new DateColumnRule($this->data->pluck($this->mapping->get('date'))),
+                'bail', 'required', 'int',
+                ...$this->whenMapped('date', fn ($col) => new DateColumnRule($col)),
             ],
             'mapping.valuta' => [
-                'required',
-                'int',
-                new DateColumnRule($this->data->pluck($this->mapping->get('valuta'))),
+                'bail', 'required', 'int',
+                ...$this->whenMapped('valuta', fn ($col) => new DateColumnRule($col)),
             ],
             'mapping.type' => 'required|int',
             'mapping.value' => [
-                'required', 'int',
-                new MoneyColumnRule($this->data->pluck($this->mapping->get('value'))),
+                'bail', 'required', 'int',
+                ...$this->whenMapped('value', fn ($col) => new MoneyColumnRule($col)),
             ],
             'mapping.saldo' => [
                 'int',
-                new MoneyColumnRule($this->data->pluck($this->mapping->get('saldo'))),
-                // new MoneyRule($this->data->pluck($this->mapping->get('value'))),
-                new BalanceColumnRule(
+                ...$this->whenMapped('saldo', fn ($col) => new MoneyColumnRule($col)),
+                ...($saldoMapped && $valueMapped ? [new BalanceColumnRule(
                     $this->data->pluck($this->mapping->get('value')),
                     $this->data->pluck($this->mapping->get('saldo')),
                     $latestTransaction?->saldo
-                ),
+                )] : []),
             ],
             'mapping.empf_name' => 'required|int',
             'mapping.empf_bic' => 'sometimes|int',
             'mapping.empf_iban' => [
-                'required', 'int',
-                new IbanColumnRule($this->data->pluck($this->mapping->get('empf_iban'))),
+                'bail', 'required', 'int',
+                ...$this->whenMapped('empf_iban', fn ($col) => new IbanColumnRule($col)),
             ],
             'mapping.zweck' => 'required|int',
         ];
     }
 
+    /**
+     * Only instantiate a column rule when the field is actually mapped to a CSV column.
+     * Prevents constructing rules with pluck('') garbage when the user hasn't selected a column yet.
+     *
+     * @return array<\Illuminate\Contracts\Validation\ValidationRule>
+     */
+    private function whenMapped(string $field, \Closure $make): array
+    {
+        $index = $this->mapping->get($field);
+
+        return filled($index) ? [$make($this->data->pluck($index))] : [];
+    }
+
     private function parseCSV(): void
     {
-        // temp save uploaded file
-        $this->csv->store();
-        $content = utf8Content($this->csv);
-        // explode content in lines
-        $content = str($content);
-        $lines = $content->explode(PHP_EOL);
+        try {
+            // temp save uploaded file
+            $this->csv->store();
+            $content = utf8Content($this->csv);
+            // explode content in lines
+            $content = str($content);
+            $lines = $content->explode(PHP_EOL);
 
-        // guess csv separator
-        $amountComma = $content->substrCount(',');
-        $amountSemicolon = $content->substrCount(';');
-        $this->separator = $amountSemicolon > $amountComma ? ';' : ',';
+            // guess csv separator
+            $amountComma = $content->substrCount(',');
+            $amountSemicolon = $content->substrCount(';');
+            $this->separator = $amountSemicolon > $amountComma ? ';' : ',';
 
-        // extract header and data, explode data with csv separator guesses above
-        $this->header = str_getcsv((string) $lines->first(), $this->separator, escape: '\\');
-        $this->data = $lines->except(0)
-            // reject fully empty lines and lines with only separators inside
-            ->reject(fn ($line): bool => empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch())
-            // transform csv lines to array
-            ->map(fn ($line) => str_getcsv((string) $line, $this->separator, escape: ''))
-            ->map(function ($lineArray) {
-                // normalize data
-                foreach ($lineArray as $key => $cell) {
-                    // tests
-                    $moneyTest = Regex::match('/^(\-?)([0-9]+)([,\.]([0-9]{1,2}))?$/', $cell);
-                    $dateTest = Regex::match('/^([0-3]?[0-9])\.([01]?[0-9])\.((20)?[0-9]{2})$/', $cell);
-                    // conversions
-                    if ($moneyTest->hasMatch()) {
-                        // normalize money
-                        $g = $moneyTest->groups();
-                        $lineArray[$key] = $g[1] // sign
-                            .Str::padRight($g[2] ?? '', 1, '0') //  money before delimiter (at least 1 digit)
-                            .'.' // delimiter (3rd group, with the rest together)
-                            .Str::padRight($g[4] ?? '', 2, '0'); // cents after delimiter (at least 2 digits)
-                    } elseif ($dateTest->hasMatch()) {
-                        // normalize dates
-                        $g = $dateTest->groups();
-                        $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
-                            .'-'.Str::padLeft($g[2], 2, '0')
-                            .'-'.Str::padLeft($g[1], 2, '0');
+            // extract header and data, explode data with csv separator guesses above
+            $this->header = str_getcsv((string) $lines->first(), $this->separator, escape: '\\');
+            $this->data = $lines->except(0)
+                // reject fully empty lines and lines with only separators inside
+                ->reject(fn ($line): bool => empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch())
+                // transform csv lines to array
+                ->map(fn ($line) => str_getcsv((string) $line, $this->separator, escape: ''))
+                ->map(function ($lineArray) {
+                    // normalize data
+                    foreach ($lineArray as $key => $cell) {
+                        // tests
+                        $moneyTest = Regex::match('/^(\-?)([0-9]+)([,\.]([0-9]{1,2}))?$/', $cell);
+                        $dateTest = Regex::match('/^([0-3]?[0-9])\.([01]?[0-9])\.((20)?[0-9]{2})$/', $cell);
+                        // conversions
+                        if ($moneyTest->hasMatch()) {
+                            // normalize money
+                            $g = $moneyTest->groups();
+                            $lineArray[$key] = $g[1] // sign
+                                .Str::padRight($g[2] ?? '', 1, '0') //  money before delimiter (at least 1 digit)
+                                .'.' // delimiter (3rd group, with the rest together)
+                                .Str::padRight($g[4] ?? '', 2, '0'); // cents after delimiter (at least 2 digits)
+                        } elseif ($dateTest->hasMatch()) {
+                            // normalize dates
+                            $g = $dateTest->groups();
+                            $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
+                                .'-'.Str::padLeft($g[2], 2, '0')
+                                .'-'.Str::padLeft($g[1], 2, '0');
+                        }
                     }
-                }
 
-                return $lineArray;
-            });
+                    return $lineArray;
+                });
 
-        if ($this->csvOrderReversed) {
-            $this->data = $this->data->reverse();
-        }
+            if ($this->csvOrderReversed) {
+                $this->data = $this->data->reverse();
+            }
 
-        // check if mapping has some presets, if then do an initial validation, no preset, no validation
-        $hasPreset = $this->mapping->reject(fn ($value) => $value === '')->count() > 0;
-        if ($hasPreset) {
-            $this->validate();
+            // check if mapping has some presets, if then do an initial validation, no preset, no validation
+            $hasPreset = $this->mapping->reject(fn ($value) => $value === '')->count() > 0;
+            if ($hasPreset) {
+                $this->validate();
+            }
+        } catch (\Throwable) {
+            $this->data = collect();
+            $this->header = [];
+            $this->addError('csv', __('konto.csv-parse-error'));
         }
     }
 
@@ -197,34 +214,35 @@ class TransactionImportWire extends Component
         $last_id = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->limit(1)->first('id')->id ?? 1;
 
-        // In case no saldo is given in CSV, we need to calculate it row by row
+        // In case no saldo is given in CSV, we need to calculate it row by row ourselves
         // first Saldo should be sourced from last entry in DB, if there is no entry, we assume 0
-        $currentBalance = $this->latestTransaction->saldo ?? 0; // alternative to 0: throw error
+        // we decided to set saldo to 0 if it is the first entry in the DB - alternative would have been to throw an error
+        $currentBalance = $account->bankTransactions()->orderBy('id', 'desc')->first()?->saldo ?? 0;
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
-        DB::beginTransaction();
-        foreach ($this->data as $row) {
-            $transaction = new BankTransaction;
-            $transaction->id = ++$last_id;
-            $transaction->konto_id = $this->account_id;
-
-            foreach ($this->mapping as $db_col_name => $csv_col_id) {
-                if (! empty($this->mapping[$db_col_name])) {
-                    $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
-                } elseif ($db_col_name === 'saldo') {
-                    $currentValue = str($row[$this->mapping['value']])->replace(',', '.');
-                    $currentBalance = bcadd((string) $currentBalance, (string) $currentValue, 2);
-                    $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
-                }
-            }
-            AuslagenHandler2::hookZahlung($transaction->zweck);
-            $transaction->save();
-        }
         try {
+            DB::beginTransaction();
+            foreach ($this->data as $row) {
+                $transaction = new BankTransaction;
+                $transaction->id = ++$last_id;
+                $transaction->konto_id = $this->account_id;
+
+                foreach ($this->mapping as $db_col_name => $csv_col_id) {
+                    if (! empty($this->mapping[$db_col_name])) {
+                        $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
+                    } elseif ($db_col_name === 'saldo') {
+                        $currentValue = str($row[$this->mapping['value']])->replace(',', '.');
+                        $currentBalance = bcadd((string) $currentBalance, (string) $currentValue, 2);
+                        $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
+                    }
+                }
+                AuslagenHandler2::hookZahlung($transaction->zweck);
+                $transaction->save();
+            }
             DB::commit();
-        } catch (\Exception) {
+        } catch (\Throwable) {
             DB::rollBack();
-            $this->addError('csv', 'Nope');
+            $this->addError('csv', __('konto.csv-import-error'));
 
             return;
         }
@@ -246,7 +264,10 @@ class TransactionImportWire extends Component
         // $this->redirectRoute('legacy.konto', ['account_id' => $this->account_id]);
         // return redirect()->route('konto.import.manual', ['account_id' => $this->account_id])
         return to_route('legacy.konto', ['konto' => $this->account_id])
-            ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
+            ->with(['message' => [
+                'text' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()]),
+                'type' => 'success',
+            ]]);
     }
 
     public function render(): Application|Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
@@ -301,10 +322,13 @@ class TransactionImportWire extends Component
     /**
      * is called when mapping got updated
      */
-    public function updatedMapping(): void
+    public function updatedMapping(mixed $value, string $key): void
     {
-        $this->validate();
-        // date, value, saldo
+        $this->validateOnly("mapping.$key");
+
+        if (in_array($key, ['value', 'saldo']) && filled($this->mapping->get('saldo'))) {
+            $this->validateOnly('mapping.saldo');
+        }
     }
 
     public function formatDataDb(string|int $value, string $db_col_name): int|string
