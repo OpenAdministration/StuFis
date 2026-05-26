@@ -7,18 +7,15 @@
     * Löschung von Projektposten nur noch möglich, wenn keine Abrechnung damit verknüpft ist und es nicht der einzige Posten im Projekt ist
     * Knopf zum automatischen Hinzufügen der Umsatzsteuer-Posten
     * Neue Statusanzeigen
-
 * **CSV-Import**
     * modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
     * nun für alle Finanzverantwortlichen möglich
     * Abrechnungen werden automatisch auf bezahlt gesetzt, wenn Sie im Verwendungszweck vom Import erwähnt werden
     * verschiedene Fixes
-
 * **Buchungen und Haushaltsplan**
     * Button "Gebucht" in der Abrechnung nicht mehr klickbar, da die Abrechnung dadurch nur im Nirvana verschwunden ist.
     * Stornieren Knopf wurde aus der Buchungsliste entfernt, da nicht funktionsfähig
     * Neue Haushaltstitel zu systematischen Erfassung der Umsatzsteuer hinzugefügt
-
 * **Weitere Fixes**
     * Ausgewähltes Haushaltsjahr wird nun tabübergreifend gespeichert
     * Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.
