@@ -6,15 +6,15 @@
 
     <flux:fieldset class="max-w-3xl">
         <div class="grid grid-cols-2 gap-x-16 gap-y-6">
-            <flux:input wire:model.blur="organization" :label="__('budget-plan.edit.organization')" type="text" :description="__('budget-plan.edit.organization-sub')"/>
-            <flux:select wire:model.change="fiscal_year_id" :label="__('budget-plan.fiscal-year')" :description="__('budget-plan.edit.fiscal-year-sub')">
+            <flux:input wire:model.live.blur="organization" :label="__('budget-plan.edit.organization')" type="text" :description="__('budget-plan.edit.organization-sub')"/>
+            <flux:select wire:model.live.change="fiscal_year_id" :label="__('budget-plan.fiscal-year')" :description="__('budget-plan.edit.fiscal-year-sub')">
                 <flux:select.option wire:key="fiscal-0">None</flux:select.option>
                 @foreach($fiscal_years as $fiscal_year)
                     <flux:select.option wire:key="fiscal-{{$fiscal_year->id}}" value="{{$fiscal_year->id}}">{{ $fiscal_year->start_date->format('d.m.y') }} - {{ $fiscal_year->end_date->format('d.m.y') }}</flux:select.option>
                 @endforeach
             </flux:select>
-            <flux:input wire:model.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
-            <flux:input wire:model.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
+            <flux:input wire:model.live.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
+            <flux:input wire:model.live.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
         </div>
     </flux:fieldset>
     <flux:tab.group class="max-w-7xl">

@@ -1,3 +1,5 @@
+
+
 <div class="mt-8 sm:mx-8 lg:px-8">
     <!-- Fortschrittsanzeige -->
     <x-progressbar>
@@ -34,7 +36,6 @@
 
                     <x-antrag.row>
                         Vorkasse beantragen:
-                        <x-toggle></x-toggle>
                     </x-antrag.row>
 
                     <x-antrag.row>

@@ -23,7 +23,7 @@
         "laravel/framework": "^12.42",
         "livewire/flux": "^2.2",
         "livewire/flux-pro": "^2.2",
-        "livewire/livewire": "^3.6",
+        "livewire/livewire": "^4.0",
         "maatwebsite/excel": "^3.1",
         "meyfa/php-svg": "^0.16",
         "nemiah/php-fints": "dev-master",

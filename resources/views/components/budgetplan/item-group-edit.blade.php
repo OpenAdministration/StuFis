@@ -25,10 +25,10 @@
             @endif
         </div>
         <div class="col-span-1 my-2">
-            <flux:input wire:model.blur="items.{{$item->id}}.short_name"/>
+            <flux:input wire:model.live.blur="items.{{$item->id}}.short_name"/>
         </div>
         <div class="col-span-3 my-2">
-            <flux:input wire:model.blur="items.{{$item->id}}.name"/>
+            <flux:input wire:model.live.blur="items.{{$item->id}}.name"/>
         </div>
         <div class="col-span-2 flex items-center">
             @if($level > 0)
@@ -57,7 +57,7 @@
                         <span>Σ</span>
                     </flux:input.group.prefix>
                 @endif
-                <x-money-input wire:model.blur="items.{{$item->id}}.value" :disabled="$item->is_group" />
+                <x-money-input wire:model.live.blur="items.{{$item->id}}.value" :disabled="$item->is_group" />
             </flux:input.group>
         </div>
         <div class="my-2">{{-- Action Buttons --}}
