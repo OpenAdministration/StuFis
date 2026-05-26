@@ -27,16 +27,16 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('config', [AdminConfigPage::class, 'render'] )->name('config');
 
-    Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
-    Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
+    Route::livewire('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
+    Route::livewire('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
     Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
-    Route::get('project/create', \App\Livewire\Project\EditProject::class)->name('project.create');
-    Route::get('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
-    Route::get('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');
-    Route::get('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
+    Route::livewire('project/create', \App\Livewire\Project\EditProject::class)->name('project.create');
+    Route::livewire('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
+    Route::livewire('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');
+    Route::livewire('project/{project_id}/edit', \App\Livewire\Project\EditProject::class)->name('project.edit');
     Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
 
     Route::permanentRedirect('projekt/create', '/project/create');

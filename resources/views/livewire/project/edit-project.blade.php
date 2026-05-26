@@ -261,12 +261,12 @@
 
                             {{-- Income --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
-                                <x-money-input wire:model.blur="posts.{{ $index }}.einnahmen" :disabled="!$posts[$index]['ausgaben']->isZero()"/>
+                                <x-money-input wire:model.live.blur="posts.{{ $index }}.einnahmen" :disabled="!$posts[$index]['ausgaben']->isZero()"/>
                             </td>
 
                             {{-- Expenses --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
-                                <x-money-input wire:model.blur="posts.{{ $index }}.ausgaben" :disabled="!$posts[$index]['einnahmen']->isZero()"/>
+                                <x-money-input wire:model.live.blur="posts.{{ $index }}.ausgaben" :disabled="!$posts[$index]['einnahmen']->isZero()"/>
                             </td>
 
                             {{-- Actions --}}

@@ -4,16 +4,16 @@
 
 Route::middleware(['auth'])->group(function (): void {
     // Feature External
-    Route::get('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
-    Route::get('antrag/new-org', \App\Livewire\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');
+    Route::livewire('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
+    Route::livewire('antrag/new-org', \App\Livewire\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');
 
     // Feature Budget Plans
     Route::get('plan', [\App\Http\Controllers\BudgetPlanController::class, 'index'])->name('budget-plan.index');
     Route::get('plan/create', [\App\Http\Controllers\BudgetPlanController::class, 'create'])->name('budget-plan.create');
     Route::get('plan/{plan_id}', [\App\Http\Controllers\BudgetPlanController::class, 'show'])->name('budget-plan.view');
-    Route::get('plan/{plan_id}/edit', \App\Livewire\BudgetPlan\BudgetPlanEdit::class)->name('budget-plan.edit');
+    Route::livewire('plan/{plan_id}/edit', \App\Livewire\BudgetPlan\BudgetPlanEdit::class)->name('budget-plan.edit');
 
-    Route::get('year/create', \App\Livewire\FiscalYear\EditFiscalYear::class)->name('fiscal-year.create');
-    Route::get('year/{year_id}', \App\Livewire\FiscalYear\EditFiscalYear::class)->name('fiscal-year.edit');
+    Route::livewire('year/create', \App\Livewire\FiscalYear\EditFiscalYear::class)->name('fiscal-year.create');
+    Route::livewire('year/{year_id}', \App\Livewire\FiscalYear\EditFiscalYear::class)->name('fiscal-year.edit');
 
 });

@@ -3,7 +3,7 @@
 
     <div class="max-w-(--breakpoint-lg) space-y-6">
         <div class="py-3">
-            <flux:select wire:model.change="account_id" :label="__('konto.csv-label-choose-konto')">
+            <flux:select wire:model.live.change="account_id" :label="__('konto.csv-label-choose-konto')">
                 @foreach($accounts as $account)
                     <option wire:key="account-{{$account->id}}" value="{{ $account->id }}">{{ $account->name }}</option>
                 @endforeach
@@ -87,7 +87,7 @@
                     <flux:field>
                         <flux:label>{{ __($label) }}</flux:label>
                         <flux:description>{{ __("konto.hint.transaction.$attr") }}</flux:description>
-                        <flux:select wire:model.change="mapping.{{ $attr }}" placeholder="">
+                        <flux:select wire:model.live.change="mapping.{{ $attr }}" placeholder="">
                             <option value="">---Kein Import---</option>
                             @foreach($header as $csv_column_id => $value)
                                 <option value="{{ $csv_column_id }}">
