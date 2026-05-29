@@ -2,6 +2,9 @@
 
 namespace App\Livewire;
 
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Foundation\Application;
+use Illuminate\View\View;
 use Livewire\Component;
 
 class ArrayInput extends Component
@@ -12,7 +15,7 @@ class ArrayInput extends Component
 
     public $label;
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Foundation\Application|\Illuminate\Contracts\View\View|\Illuminate\View\View|\Illuminate\Contracts\Foundation\Application
+    public function render(): Factory|Application|\Illuminate\Contracts\View\View|View|\Illuminate\Contracts\Foundation\Application
     {
         return view('livewire.array-input');
     }

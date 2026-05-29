@@ -2,6 +2,8 @@
 
 namespace App\Models\Legacy;
 
+use App\Models\Comment;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,9 +32,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $created
  * @property Project $project
  * @property ExpensesReceipt[] $beleges
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read Collection<int, Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExpensesReceipt> $receipts
+ * @property-read Collection<int, ExpensesReceipt> $receipts
  * @property-read int|null $receipts_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Expenses newModelQuery()

@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $comment
  * @property string $customer_ref
  * @property BankAccount $finanzformularKontoType
- * @property-read \App\Models\Legacy\BankAccount $konto
+ * @property-read BankAccount $konto
  *
  * @method static Builder|BankTransaction newModelQuery()
  * @method static Builder|BankTransaction newQuery()
@@ -47,7 +47,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|BankTransaction whereValuta($value)
  * @method static Builder|BankTransaction whereZweck($value)
  *
- * @property-read \App\Models\Legacy\BankAccount $account
+ * @property-read BankAccount $account
  *
  * @method static \Database\Factories\Legacy\BankTransactionFactory factory($count = null, $state = [])
  *

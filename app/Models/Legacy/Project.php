@@ -86,17 +86,17 @@ class Project extends Model
 
     public function expenses(): HasMany
     {
-        return $this->hasMany(\App\Models\Legacy\Expenses::class, 'projekt_id');
+        return $this->hasMany(Expenses::class, 'projekt_id');
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function stateCreator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'stateCreator_id');
+        return $this->belongsTo(User::class, 'stateCreator_id');
     }
 
     public function posts(): HasMany

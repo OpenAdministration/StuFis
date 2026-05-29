@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $mime
  * @property string $encoding
  * @property FileData $filedatum
- * @property-read \App\Models\Legacy\FileData|null $fileData
+ * @property-read FileData|null $fileData
  *
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newQuery()
@@ -55,6 +55,6 @@ class FileInfo extends Model
 
     public function fileData(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Legacy\FileData::class, 'data');
+        return $this->belongsTo(FileData::class, 'data');
     }
 }

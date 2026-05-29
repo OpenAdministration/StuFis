@@ -4,11 +4,12 @@ namespace framework;
 
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use PhpLatexRenderer\LatexRenderer;
 
 /**
  * Wraps lib
  */
-class LatexGenerator extends \PhpLatexRenderer\LatexRenderer
+class LatexGenerator extends LatexRenderer
 {
     public function __construct()
     {

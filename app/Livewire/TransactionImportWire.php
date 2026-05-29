@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -246,7 +247,7 @@ class TransactionImportWire extends Component
             ->with(['message' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()])]);
     }
 
-    public function render(): Application|Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
+    public function render(): Application|Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|View
     {
         $accounts = BankAccount::all();
         $labels = (new BankTransaction)->getLabels();

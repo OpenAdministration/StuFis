@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use GuzzleHttp\Client;
 use Http;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\RedirectResponse;
@@ -34,7 +35,7 @@ class StumvAuthService extends AuthService
         $driver = Socialite::driver('stumv');
         // if we have a local dev instance of stumv there is no need to verify ssl certs
         if (\App::isLocal()) {
-            $driver = $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+            $driver = $driver->setHttpClient(new Client(['verify' => false]));
         }
         $user = $driver->user();
 

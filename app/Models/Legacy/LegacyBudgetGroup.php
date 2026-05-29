@@ -2,7 +2,9 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\Legacy\LegacyBudgetGroup
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $hhp_id
  * @property string $gruppen_name
  * @property int $type
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\LegacyBudgetItem> $budgetItems
+ * @property-read Collection<int, LegacyBudgetItem> $budgetItems
  * @property-read int|null $budget_items_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup newModelQuery()
@@ -40,7 +42,7 @@ class LegacyBudgetGroup extends Model
      */
     protected $fillable = ['hhp_id', 'gruppen_name', 'type'];
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function budgetItems(): HasMany
     {
         return $this->hasMany(LegacyBudgetItem::class, 'hhpgruppen_id');
     }

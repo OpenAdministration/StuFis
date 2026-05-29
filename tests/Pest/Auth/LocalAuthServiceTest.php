@@ -16,7 +16,7 @@ it('all accounts have matching groups', function (): void {
         $user = User::where(['username' => $username, 'provider' => 'local'])->first();
         actingAs($user);
 
-        $groups = match (\Auth::user()->username) {
+        $groups = match (Auth::user()->username) {
             'user-no-login' => collect([]),
             'user' => collect(['login']),
             'hv','hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),

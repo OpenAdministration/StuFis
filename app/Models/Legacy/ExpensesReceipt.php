@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $file_id
  * @property ExpensesReceiptPost[] $posts
  * @property Expenses $auslagen
- * @property-read \App\Models\Legacy\Expenses|null $expenses
+ * @property-read Expenses|null $expenses
  * @property-read int|null $posts_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|ExpensesReceipt newModelQuery()
@@ -55,7 +55,7 @@ class ExpensesReceipt extends Model
 
     public function posts(): HasMany
     {
-        return $this->hasMany(\App\Models\Legacy\ExpensesReceiptPost::class, 'beleg_id');
+        return $this->hasMany(ExpensesReceiptPost::class, 'beleg_id');
     }
 
     public function expense(): BelongsTo
