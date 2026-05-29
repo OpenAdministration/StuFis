@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Http\Testing\File;
+use Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -23,10 +27,6 @@ uses(TestCase::class)->in('Pest');
 | to assert different things. Of course, you may extend the Expectation API at any time.
 |
 */
-
-use App\Models\User;
-use Illuminate\Http\Testing\File;
-use Tests\TestCase;
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
