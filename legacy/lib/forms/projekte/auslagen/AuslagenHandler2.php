@@ -1286,7 +1286,7 @@ class AuslagenHandler2 extends FormHandlerInterface
     /**
      * encrypt string
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected static function encryptedStr(string $str): string
     {

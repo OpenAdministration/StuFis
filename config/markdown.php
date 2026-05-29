@@ -11,6 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\CommonMark\Node\Block\BlockQuote;
 use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
 use League\CommonMark\Extension\CommonMark\Node\Block\Heading;
@@ -22,8 +23,10 @@ use League\CommonMark\Extension\CommonMark\Node\Inline\Emphasis;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Image;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Link;
 use League\CommonMark\Extension\CommonMark\Node\Inline\Strong;
+use League\CommonMark\Extension\DefaultAttributes\DefaultAttributesExtension;
 use League\CommonMark\Extension\Table\Table;
 use League\CommonMark\Extension\Table\TableCell;
+use League\CommonMark\Extension\Table\TableExtension;
 use League\CommonMark\Extension\Table\TableRow;
 use League\CommonMark\Node\Block\Paragraph;
 
@@ -61,9 +64,9 @@ return [
     */
 
     'extensions' => [
-        League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension::class,
-        League\CommonMark\Extension\DefaultAttributes\DefaultAttributesExtension::class,
-        League\CommonMark\Extension\Table\TableExtension::class,
+        CommonMarkCoreExtension::class,
+        DefaultAttributesExtension::class,
+        TableExtension::class,
     ],
 
     /*

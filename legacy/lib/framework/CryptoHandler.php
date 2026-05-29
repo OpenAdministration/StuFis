@@ -22,6 +22,7 @@
 namespace framework;
 
 use Defuse\Crypto\Crypto;
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
 use Defuse\Crypto\KeyProtectedByPassword;
 
@@ -131,7 +132,7 @@ class CryptoHandler
             $key = Key::loadFromAsciiSafeString($keyAscii);
 
             return Crypto::decrypt($ciphertext, $key);
-        } catch (\Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException $e) {
+        } catch (WrongKeyOrModifiedCiphertextException $e) {
             // An attack! Either the wrong key was loaded, or the ciphertext has
             // changed since it was created -- either corrupted in the database or
             // intentionally modified by Eve trying to carry out an attack.
@@ -169,7 +170,7 @@ class CryptoHandler
         $key = $key->unlockKey($password);
         try {
             return Crypto::decrypt($ciphertext, $key);
-        } catch (\Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException $e) {
+        } catch (WrongKeyOrModifiedCiphertextException $e) {
             // An attack! Either the wrong key was loaded, or the ciphertext has
             // changed since it was created -- either corrupted in the database or
             // intentionally modified by Eve trying to carry out an attack.

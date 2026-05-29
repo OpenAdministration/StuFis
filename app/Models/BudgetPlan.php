@@ -9,6 +9,8 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * App\Models\BudgetPlan
@@ -59,12 +61,12 @@ class BudgetPlan extends Model
         ];
     }
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function budgetItems(): HasMany
     {
         return $this->hasMany(BudgetItem::class);
     }
 
-    public function fiscalYear(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fiscalYear(): BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
     }

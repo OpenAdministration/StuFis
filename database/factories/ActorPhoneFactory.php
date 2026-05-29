@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Actor;
+use App\Models\ActorPhone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ActorPhone>
+ * @extends Factory<ActorPhone>
  */
 class ActorPhoneFactory extends Factory
 {

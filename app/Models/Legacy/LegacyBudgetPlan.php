@@ -2,7 +2,10 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * App\Models\Legacy\LegacyBudgetPlan
@@ -13,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $state
  * @property LegacyBudgetGroup[] $budgetGroups
  * @property-read int|null $budget_groups_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\LegacyBudgetItem> $budgetItems
+ * @property-read Collection<int, LegacyBudgetItem> $budgetItems
  * @property-read int|null $budget_items_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan newModelQuery()
@@ -42,12 +45,12 @@ class LegacyBudgetPlan extends Model
      */
     protected $fillable = ['von', 'bis', 'state'];
 
-    public function budgetGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function budgetGroups(): HasMany
     {
         return $this->hasMany(LegacyBudgetGroup::class, 'hhp_id');
     }
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function budgetItems(): HasManyThrough
     {
         return $this->hasManyThrough(LegacyBudgetItem::class, LegacyBudgetGroup::class);
     }

@@ -11,7 +11,7 @@
 |
 */
 
-uses(Tests\TestCase::class)->in('Pest');
+uses(TestCase::class)->in('Pest');
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +25,8 @@ uses(Tests\TestCase::class)->in('Pest');
 */
 
 use App\Models\User;
+use Illuminate\Http\Testing\File;
+use Tests\TestCase;
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 
@@ -80,14 +82,14 @@ function adminUser(): User
 }
 
 /**
- * @return \Illuminate\Http\Testing\File the by livewire expected filetype
+ * @return File the by livewire expected filetype
  */
-function testFile(string $storage_path, ?string $fileName = null): \Illuminate\Http\Testing\File
+function testFile(string $storage_path, ?string $fileName = null): File
 {
     if (empty($fileName)) {
         $fileName = str($storage_path)->explode('/')->last();
     }
     $content = Storage::disk('tests')->get($storage_path);
 
-    return \Illuminate\Http\Testing\File::createWithContent($fileName, $content);
+    return File::createWithContent($fileName, $content);
 }

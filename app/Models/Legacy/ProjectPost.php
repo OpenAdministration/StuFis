@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $name
  * @property string $bemerkung
  * @property Project $projekte
- * @property-read \App\Models\Legacy\Project $project
+ * @property-read Project $project
  *
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|ProjectPost newQuery()

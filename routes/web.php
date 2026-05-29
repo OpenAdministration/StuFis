@@ -11,7 +11,11 @@
 |
 */
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Legacy\TransactionView;
 use App\Http\Controllers\ViewChangelog;
+use App\Livewire\NewBankingAccount;
+use App\Livewire\TransactionImportWire;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
@@ -19,18 +23,18 @@ Route::middleware(['auth'])->group(function (): void {
     // legacy is register later, so we cannot route(legacy.dashboard) there
     Route::redirect('/', 'menu/mygremium')->name('home');
 
-    Route::get('bank-account/new', \App\Livewire\NewBankingAccount::class)->name('bank-account.new');
-    Route::get('bank-account/import/manual', \App\Livewire\TransactionImportWire::class)->name('bank-account.import.csv');
-    Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
+    Route::get('bank-account/new', NewBankingAccount::class)->name('bank-account.new');
+    Route::get('bank-account/import/manual', TransactionImportWire::class)->name('bank-account.import.csv');
+    Route::get('bank-account/{account_id}/transaction/{transaction_id}', [TransactionView::class, 'view'])->name('bank-account.transaction');
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
 });
 
 // login routes
-Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
-Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
-Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+Route::get('auth/login', [AuthController::class, 'login'])->name('login');
+Route::get('auth/callback', [AuthController::class, 'callback'])->name('login.callback');
+Route::get('auth/logout', [AuthController::class, 'logout'])->name('logout');
 
 // guest routes
 Route::get('changelog', ViewChangelog::class)->name('changelog');
