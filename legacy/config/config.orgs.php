@@ -484,6 +484,7 @@ return [
                 'Studierende für Christus',
                 'Evangelische Studierenden Gemeinde',
                 'Studierendengärten',
+                'Erfurter Puffbohnen Gaming',
             ],
         ],
         'mailinglists' => [],
