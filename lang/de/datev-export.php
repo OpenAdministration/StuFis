@@ -15,10 +15,10 @@ return [
 
     'date-field' => [
         'label'       => 'Stichtag',
-        'description' => 'Welches Datum bestimmt, ob eine Auslage in den Zeitraum fällt.',
+        'description' => 'Welches Datum bestimmt, ob eine Abrechnung in den Zeitraum fällt.',
         'options'     => [
             'booking_date'          => 'Buchungsdatum',
-            'expense_created_date'  => 'Erstelldatum der Auslage',
+            'expense_created_date'  => 'Erstelldatum der Abrechnung',
             'earliest_receipt_date' => 'Frühestes Belegdatum',
             'earliest_payment_date' => 'Frühestes Zahlungsdatum',
         ],
@@ -30,7 +30,7 @@ return [
     ],
 
     'summary' => [
-        'incomplete' => 'Bitte Haushaltsplan und Zeitraum wählen, um die Anzahl der Auslagen zu sehen.',
+        'incomplete' => 'Bitte Haushaltsplan und Zeitraum wählen, um die Anzahl der Abrechnungen zu sehen.',
     ],
 
     'preview' => [
@@ -47,7 +47,7 @@ return [
         ],
     ],
 
-    'expenses-found' => 'Auslagen gefunden',
+    'expenses-found' => 'Abrechnungen gefunden',
     'export-button'  => 'DATEV Export herunterladen',
     'exporting'      => 'Export wird erstellt …',
 ];
