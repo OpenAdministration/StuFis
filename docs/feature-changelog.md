@@ -4,6 +4,7 @@
 * In Projekten können nun Dateien angehangen werden
 * Wenn ein:e Nutzer:in keine Organisation zugewiesen hat, gibt es nun eine Standardorganisation
 * Verbesserte Validierung der Formularfelder
+* Das Belegdatum ist bei Belegen in Abrechnungen nun ein Pflichtfeld
 * Löschung von Projektposten nur noch möglich, wenn keine Abrechnung damit verknüpft ist und es nicht der einzige Posten im Projekt ist
 * Knopf zum automatischen Hinzufügen der Umsatzsteuer-Posten
 * Neue Statusanzeigen

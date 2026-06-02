@@ -85,6 +85,15 @@ class BankTransaction extends Model
         return $this->belongsTo(BankAccount::class, 'konto_id');
     }
 
+    /**
+     * konto has a composite primary key (id, konto_id); a booking references it via the
+     * pair (zahlung_id, zahlung_type). The zahlung_type constraint is required to disambiguate.
+     *
+     * WARNING: lazy access only. The constraint reads $this->konto_id, which is null when
+     * Eloquent builds eager-load constraints, so BankTransaction::with('bookings') silently
+     * returns empty results. Use lazy access ($transaction->bookings) until composite-key
+     * relation support (e.g. awobaz/compoships) is added in the overhaul.
+     */
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'zahlung_id')->where('zahlung_type', $this->konto_id);

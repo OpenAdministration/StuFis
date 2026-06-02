@@ -72,6 +72,12 @@ Breadcrumbs::for('bank-account.new', static function (BreadcrumbTrail $trail): v
     $trail->push(__('general.breadcrumb.konto.new'), route('bank-account.new'));
 });
 
+// Home > Konto > Zahlung
+Breadcrumbs::for('bank-account.transaction', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.konto');
+    $trail->push(__('general.breadcrumb.konto.transaction'));
+});
+
 // Home > Konto > Import
 Breadcrumbs::for('bank-account.import.csv', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto');

@@ -392,7 +392,6 @@ class RestHandler extends EscFunc
                             'map' => [
                                 'datum' => [
                                     'date',
-                                    'empty',
                                     'format' => 'Y-m-d',
                                     'parse' => 'Y-m-d',
                                     'error' => 'Ungültiges Beleg Datum.',
