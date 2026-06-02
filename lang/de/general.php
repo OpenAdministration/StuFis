@@ -34,6 +34,7 @@ return [
         'belege-file' => 'Beleg-Datei',
         'zahlungsanweisung-pdf' => 'Zahlungsanweisung-PDF',
         'new-expense' => 'Neue Abrechnung erstellen',
+        'datev-export' => 'DATEV-Export',
         'config' => 'Administration',
     ],
     'changelog.headline' => 'Änderungshistorie',

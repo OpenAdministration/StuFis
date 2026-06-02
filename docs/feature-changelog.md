@@ -20,6 +20,12 @@
 * Stornieren Knopf wurde aus der Buchungsliste entfernt, da nicht funktionsfähig
 * Neue Haushaltstitel zu systematischen Erfassung der Umsatzsteuer hinzugefügt
 
+**DATEV-Export**
+* Neuer DATEV-Export: Buchungen eines Haushaltsplans können als DATEV-Exportdatei heruntergeladen werden
+* Auswahl von Zeitraum und Stichtag (Buchungsdatum, Erstelldatum der Auslage, frühestes Beleg- oder Zahlungsdatum)
+* Optionaler Export der zugehörigen Belege als PDF
+* Vorschau, welche Auslagen exportiert werden
+
 **Weitere Fixes**
 * Ausgewähltes Haushaltsjahr wird nun tabübergreifend gespeichert
 * Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.

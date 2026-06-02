@@ -138,6 +138,12 @@ Breadcrumbs::for('legacy.hhp.import', static function (BreadcrumbTrail $trail): 
     $trail->push(__('general.breadcrumb.budget-plan-import'), route('legacy.hhp.import'));
 });
 
+// Home > HHP > Datev-Export
+Breadcrumbs::for('datev.export', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.hhp');
+    $trail->push(__('general.breadcrumb.datev-export'), route('datev.export'));
+});
+
 // Home > HHP > $hhp_id
 Breadcrumbs::for('legacy.hhp.view', static function (BreadcrumbTrail $trail, $hhp_id): void {
     $trail->parent('legacy.hhp');

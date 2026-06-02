@@ -33,6 +33,8 @@ Route::middleware(['auth'])->group(function (): void {
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
+    Route::livewire('datev/export', 'pages::datev-export')->name('datev.export');
+
     Route::livewire('project/create', \App\Livewire\Project\EditProject::class)->name('project.create');
     Route::livewire('project/{project_id}', \App\Livewire\Project\ShowProject::class)->name('project.show');
     Route::livewire('project/{project_id}/history', \App\Livewire\Project\ShowProject::class)->name('project.history');

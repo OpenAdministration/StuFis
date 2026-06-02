@@ -64,8 +64,11 @@ class LegacyBudgetPlan extends Model
     {
         $date ??= \Illuminate\Support\Facades\Date::now();
 
+        // `bis` is the last day inside the plan and is stored at midnight, so
+        // compare against the start of $date's day to include the whole `bis`
+        // day (a date created at 14:00 on the bis date still belongs to the plan).
         return self::query()->where('von', '<=', $date)
-            ->where(fn ($query) => $query->where('bis', '>=', $date)
+            ->where(fn ($query) => $query->where('bis', '>=', $date->copy()->startOfDay())
                 ->orWhereNull('bis'))
             ->first();
     }
