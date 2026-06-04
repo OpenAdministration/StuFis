@@ -283,7 +283,7 @@ class EditProject extends Component
             $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
             $readOnlyPosts = $bookedExpenses->flatMap->posts->pluck('projekt_posten_id')->unique();
             $project->posts()->whereNotIn('id', collect($filteredPosts)->pluck('id'))
-                ->whereNotIn('projekt_posten_id', $readOnlyPosts)->delete();
+                ->whereNotIn('id', $readOnlyPosts)->delete();
 
             foreach ($newAttachments as $attachment){
                 $attachment->store('projects/'.$project->id);
