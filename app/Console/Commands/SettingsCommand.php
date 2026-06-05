@@ -9,7 +9,7 @@ use Illuminate\Support\Arr;
 
 class SettingsCommand extends Command
 {
-    protected $signature = 'settings
+    protected $signature = 'stufis:settings
         {action : One of: list, get, set, forget}
         {key? : The setting key (dot notation supported for nested values)}
         {value? : The value to set (parsed as JSON when possible, otherwise kept as a string)}
