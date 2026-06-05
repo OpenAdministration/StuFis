@@ -24,7 +24,14 @@ return new class extends Migration
             ) as t ON pp.id = t.id AND pp.projekt_id = t.projekt_id
         ");
 
-        // Update projektposten IDs
+        // Drop the composite PK FIRST, so renumbering in place can't trip the
+        // (id, projekt_id) uniqueness check mid-statement. new_id is globally
+        // unique, so the table is valid again before we re-add a PK below.
+        Schema::table('projektposten', function (Blueprint $table) {
+            $table->dropPrimary(['id', 'projekt_id']);
+        });
+
+        // Update projektposten IDs (now unconstrained)
         DB::statement("
             UPDATE {$db_prefix}projektposten pp
             JOIN id_mapping im ON pp.id = im.old_id and pp.projekt_id = im.projekt_id
@@ -32,7 +39,6 @@ return new class extends Migration
         ");
 
         Schema::table('projektposten', function (Blueprint $table) {
-            $table->dropPrimary(['id', 'projekt_id']);
             $table->unsignedBigInteger('id')->primary()->autoIncrement()->change();
             $table->foreign('titel_id')->references('id')->on('haushaltstitel');
             $table->unsignedInteger('position')->default(1); // for better legacy support with stupid default
