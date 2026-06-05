@@ -22,7 +22,7 @@
 
 **DATEV-Export**
 * Neuer DATEV-Export: Buchungen eines Haushaltsplans können als DATEV-Exportdatei heruntergeladen werden
-* Auswahl von Zeitraum und Stichtag (Buchungsdatum, Erstelldatum der Auslage, frühestes Beleg- oder Zahlungsdatum)
+* Auswahl von Zeitraum und Stichtag (Buchungsdatum, Erstelldatum der Abrechnung, frühestes Beleg- oder Zahlungsdatum)
 * Optionaler Export der zugehörigen Belege als PDF
 * Vorschau, welche Auslagen exportiert werden
 

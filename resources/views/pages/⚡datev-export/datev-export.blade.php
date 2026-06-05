@@ -17,6 +17,17 @@
         {{-- Card 2: Timespan + Date Field + PDF Toggle --}}
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6 space-y-8">
+                <flux:select
+                    wire:model.live="dateField"
+                    :label="__('datev-export.date-field.label')"
+                    :description="__('datev-export.date-field.description')"
+                    variant="listbox"
+                >
+                    @foreach($this->dateFields as $value => $label)
+                        <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+
                 <flux:field>
                     <flux:date-picker
                         mode="range"
@@ -30,17 +41,6 @@
                     <flux:error name="dateRange.start" />
                     <flux:error name="dateRange.end" />
                 </flux:field>
-
-                <flux:select
-                    wire:model.live="dateField"
-                    :label="__('datev-export.date-field.label')"
-                    :description="__('datev-export.date-field.description')"
-                    variant="listbox"
-                >
-                    @foreach($this->dateFields as $value => $label)
-                        <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
-                    @endforeach
-                </flux:select>
 
                 <flux:switch
                     wire:model="exportPdfs"

@@ -2,7 +2,7 @@
 
 return [
     'headline'     => 'DATEV Export',
-    'sub-headline' => 'Buchungen als DATEV-Exportdatei herunterladen',
+    'sub-headline' => 'Gebuchte Abrechnungen als DATEV-Exportdatei für DATEV Belegtransfer herunterladen',
 
     'budget-plan' => [
         'select-label' => 'Haushaltsplan auswählen',
@@ -15,7 +15,7 @@ return [
 
     'date-field' => [
         'label'       => 'Stichtag',
-        'description' => 'Welches Datum bestimmt, ob eine Abrechnung in den Zeitraum fällt.',
+        'description' => 'Die Auswahl des Datums bestimmt, ob die Abrechnung in den Zeitraum fällt.',
         'options'     => [
             'booking_date'          => 'Buchungsdatum',
             'expense_created_date'  => 'Erstelldatum der Abrechnung',
@@ -39,7 +39,7 @@ return [
         'stale'   => 'Filter geändert – Vorschau aktualisieren.',
         'columns' => [
             'invoice'    => 'Abrechnung',
-            'name'       => 'Name',
+            'name'       => 'Zahlungsempfänger',
             'project'    => 'Projekt',
             'beleg-date' => 'Belegdatum',
             'bookings'   => 'Buchungen',

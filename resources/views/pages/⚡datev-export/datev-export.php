@@ -19,7 +19,7 @@ new class extends Component
 
     public array $dateRange = [];
 
-    public bool $exportPdfs = false;
+    public bool $exportPdfs = true;
 
     public string $dateField = DatevExportDateField::BookingDate->value;
 
