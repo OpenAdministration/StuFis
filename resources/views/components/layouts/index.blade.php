@@ -79,7 +79,7 @@
                 <a href="{{ route('terms') }}" target="_blank">ToS</a>
                 <a href="{{ route('privacy') }}" target="_blank">Datenschutz</a>
                 <a href="{{ route('about') }}" target="_blank">Impressum</a>
-                <a href="{{ route('changelog') }}">Version {{ $version }}</a>
+                <a href="{{ route('changelog') }}">v{{ $version }}</a>
             </div>
         </div>
     </div>
