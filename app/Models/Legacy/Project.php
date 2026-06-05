@@ -4,6 +4,7 @@ namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
 use App\Models\LegalBasis;
+use App\Models\Setting;
 use App\Models\User;
 use App\States\Project\ProjectState;
 use Carbon\Carbon;
@@ -101,8 +102,8 @@ class Project extends Model
     protected function responsible(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.config('stufis.mail_domain'),
-            set: fn (string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.config('stufis.mail_domain'),
+            get: fn (?string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
+            set: fn (string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
         );
     }
 
