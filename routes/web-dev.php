@@ -4,8 +4,8 @@
 
 Route::middleware(['auth'])->group(function (): void {
     // Feature External
-    Route::livewire('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
-    Route::livewire('antrag/new-org', \App\Livewire\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');
+    //Route::livewire('antrag/create', \App\Livewire\CreateAntrag::class)->name('antrag.create');
+    //Route::livewire('antrag/new-org', \App\Livewire\PTF15\CreateAntrag\NewOrganisation::class)->name('antrag.new-org');
 
     // Feature Budget Plans
     Route::get('plan', [\App\Http\Controllers\BudgetPlanController::class, 'index'])->name('budget-plan.index');

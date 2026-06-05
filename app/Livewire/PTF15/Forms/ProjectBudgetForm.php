@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Forms;
+namespace App\Livewire\PTF15\Forms;
 
 use Livewire\Form;
 

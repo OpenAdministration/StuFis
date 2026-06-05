@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Livewire\CreateAntrag;
+namespace App\Livewire\PTF15\CreateAntrag;
 
-use App\Livewire\Forms\ActorForm;
+use App\Livewire\PTF15\Forms\ActorForm;
 use Livewire\Component;
 
 class NewOrganisation extends Component
