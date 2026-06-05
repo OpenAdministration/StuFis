@@ -14,6 +14,7 @@
         "ameax/datev-xml": "^2.1",
         "blade-ui-kit/blade-heroicons": "^2.6",
         "cknow/laravel-money": "^8.4",
+        "cweagans/composer-patches": "^1.7",
         "defuse/php-encryption": "^2.4",
         "diglactic/laravel-breadcrumbs": "^10.0",
         "globalcitizen/php-iban": "^4.2",
@@ -121,6 +122,12 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "composer-exit-on-patch-failure": true,
+        "patches": {
+            "ameax/datev-xml": {
+                "Make accountNo nullable to match DATEV XSD (upstream PR pending)": "patches/ameax-datev-xml-nullable-accountNo.patch"
+            }
         }
     },
     "config": {
@@ -128,7 +135,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "cweagans/composer-patches": true
         }
     },
     "minimum-stability": "stable",
