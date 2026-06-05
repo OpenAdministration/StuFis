@@ -3,6 +3,7 @@
 use App\Exports\Datev\DatevExport;
 use App\Exports\Datev\DatevExportDateField;
 use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -31,6 +32,8 @@ new class extends Component
 
     public function mount(): void
     {
+        $this->authorize('finance', User::class);
+
         $this->hhpId = LegacyBudgetPlan::latest()?->id;
     }
 
@@ -51,8 +54,8 @@ new class extends Component
         $fields = [
             DatevExportDateField::BookingDate,
             DatevExportDateField::ExpenseCreatedDate,
-            DatevExportDateField::EarliestReceiptDate,
-            DatevExportDateField::EarliestPaymentDate,
+            //DatevExportDateField::EarliestReceiptDate,
+            //DatevExportDateField::EarliestPaymentDate,
         ];
 
         return collect($fields)

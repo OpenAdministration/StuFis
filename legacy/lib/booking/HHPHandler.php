@@ -3,6 +3,7 @@
 namespace booking;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\Setting;
 use framework\auth\AuthHandler;
 use framework\CSVBuilder;
 use framework\DBConnector;
@@ -406,7 +407,14 @@ class HHPHandler extends Renderer
         <a class="btn btn-primary" target="_blank" href="<?php echo URIBASE; ?>download/hhp/<?php echo $hhp_id; ?>/ods">
             <i class="fa fa-fw fa-download"></i> als ODS
         </a>
-		<?php
+        <?php if(Setting::get('datev', false)){
+            $canFinance = AuthHandler::getInstance()->hasGroup('ref-finanzen'); ?>
+            <a class="btn btn-primary<?php echo $canFinance ? '' : ' disabled'; ?>"
+               href="<?php echo route('datev.export', ['hhpId' => $hhp_id]); ?>"
+                <?php echo $canFinance ? '' : 'aria-disabled="true" tabindex="-1"'; ?>>
+                <i class="fa fa-fw fa-download"></i> DATEV Export
+            </a>
+		<?php }
     }
 
     private function checkTitelBudget(float $should, float $is): string
