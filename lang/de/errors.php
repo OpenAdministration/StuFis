@@ -1,6 +1,9 @@
 <?php
 
 return [
+    '401.title' => 'Nicht freigeschaltet',
+    '401.subtitle' => 'Dein Konto ist nicht für StuFiS freigeschaltet. Bitte melde dich ab und ggf. mit einem berechtigten Konto wieder an.',
+
     '404.title' => 'Diese Seite existiert nicht :(',
     '404.subtitle' => 'Sorry! Wir konnten die Seite leider nicht finden...',
 
@@ -11,6 +14,7 @@ return [
     '500.subtitle' => 'Es ist leider ein Serverfehler aufgetreten.',
 
     'back-link' => 'Zurück',
+    'logout' => 'Abmelden',
     'doc-link.title' => 'Dokumentation',
     'doc-link.subtitle' => 'Lies unser Benutzer*innen Handbuch für mehr Infos',
     'blog-link.title' => 'Blog und News',
