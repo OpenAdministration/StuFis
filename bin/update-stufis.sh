@@ -5,8 +5,8 @@
 set -e
 #prints commands
 set -x
-# change to the directory where this script lives
-cd "$(dirname "$0")"
+# change to the root directory
+cd "$(dirname "$0")/.."
 
 alias php="php8.4"
 alias composer="php composer.phar"

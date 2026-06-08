@@ -6,7 +6,8 @@ readonly NODE_VERSION="22"
 readonly COMPOSER_PHAR="composer.phar"
 readonly NVM_DIR="$HOME/.nvm"
 
-cd "$(dirname "$0")"
+# change to the root directory
+cd "$(dirname "$0")/.."
 
 # Helper to run the specific PHP version
 php_run() {
