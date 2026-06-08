@@ -1,7 +1,7 @@
-<div class="mt-8 sm:mx-8">
+<div>
     <x-intro :headline="__('datev-export.headline')" :sub-headline="__('datev-export.sub-headline')" />
 
-    <div class="max-w-(--breakpoint-lg) space-y-6 mt-6">
+    <div class="space-y-6 mt-6">
 
         {{-- Card 1: Budget Plan --}}
         <div class="bg-white shadow sm:rounded-lg">

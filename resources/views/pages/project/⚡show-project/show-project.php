@@ -8,12 +8,13 @@ use App\States\Project\Draft;
 use App\States\Project\ProjectState;
 use Flux\Flux;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
 use Spatie\ModelStates\Validation\ValidStateRule;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
     #[Url]
     public $project_id;

@@ -3,8 +3,8 @@
     use Cknow\Money\Money;
 @endphp
 
-<x-layout::app>
-    <div class="p-2 sm:p-8 space-y-6">
+<x-layout::app size="lg">
+    <div class="space-y-6">
         <x-intro>
             <x-slot:headline>{{ __('budget-plan.view.headline') }}</x-slot:headline>
             <x-slot:subHeadline>

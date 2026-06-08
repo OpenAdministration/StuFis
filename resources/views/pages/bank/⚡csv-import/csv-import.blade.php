@@ -1,7 +1,7 @@
-<div class="mt-8 sm:mx-8">
+<div>
     <x-intro :headline="__('konto.manual-headline')" :sub-headline="__('konto.manual-headline-sub')"/>
 
-    <div class="max-w-(--breakpoint-lg) space-y-6">
+    <div class="space-y-6">
         <div class="py-3">
             <flux:select wire:model.live.change="account_id" :label="__('konto.csv-label-choose-konto')">
                 @foreach($accounts as $account)

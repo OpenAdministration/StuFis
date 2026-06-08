@@ -1,6 +1,8 @@
 @props([
     'version' => config('stufis.version'),
     'title' => 'StuFiS - Finanzen',
+    'size' => 'md', // xs | sm | md | lg | xl | full — controls content width
+    'flush' => false,    // render the slot edge-to-edge with no container (full-bleed iframes etc.)
 ])
 
 @php
@@ -96,7 +98,7 @@
              x-transition:leave="transition-opacity ease-linear duration-300"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+             class="fixed inset-0 bg-gray-600/75"></div>
 
         <div class="fixed inset-0 z-40 flex">
             <div x-show="mobileMenu"
@@ -238,12 +240,12 @@
                             </div>
 
                             <div x-show="profile" x-on:click.outside="profile = false"
-                                 x-transform:enter="transition ease-out duration-100"
-                                 x-transform:enter-start="transform opacity-0 scale-95"
-                                 x-transform:enter-end="transform opacity-100 scale-100"
-                                 x-transform:leave="transition ease-in duration-75"
-                                 x-transform:leave-start="transform opacity-100 scale-100"
-                                 x-transform:leave-end="transform opacity-0 scale-95"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
 
                                  class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-hidden " role="menu"
                                  aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
@@ -265,18 +267,25 @@
             <main {{ $attributes->merge(['class' => "relative z-0 flex-1 overflow-y-auto focus:outline-hidden"]) }}>
                 <livewire:message/>
                 <!-- Start main area-->
-                {{ $slot }}
+                @if ($flush)
+                    {{ $slot }}
+                @else
+                    <div @class([
+                        'mx-auto w-full px-4 sm:px-6 lg:px-8 py-8',
+                        match ($size) {
+                            'xs' => 'max-w-3xl',                     // 48rem — focused forms
+                            'sm' => 'max-w-4xl',                     // 56rem
+                            'lg' => 'max-w-7xl',                     // 80rem — dashboards
+                            'xl' => 'max-w-(--breakpoint-2xl)',      // 96rem — wide tables
+                            'full' => 'max-w-none',                  // full bleed, no cap
+                            default => 'max-w-5xl',                  // md — 64rem (default)
+                        },
+                    ])>
+                        {{ $slot }}
+                    </div>
+                @endif
                 <!-- End main area -->
             </main>
-            @isset($sideColumn)
-                <aside class="relative hidden w-1/3 shrink-0 overflow-y-auto border-l border-gray-200 xl:flex xl:flex-col">
-                    <!-- Start secondary column (hidden on smaller screens) -->
-                    <div class="absolute inset-0 py-6 px-4 sm:px-6 lg:px-8">
-                        <div class="h-full rounded-lg border-2 border-dashed border-gray-200"></div>
-                    </div>
-                    <!-- End secondary column -->
-                </aside>
-            @endisset
         </div>
     </div>
 </div>

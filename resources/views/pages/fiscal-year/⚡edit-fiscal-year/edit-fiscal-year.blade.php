@@ -1,4 +1,4 @@
-<div class="p-8">
+<div>
     <x-intro>
         Test
         <x-slot:subHeadline>

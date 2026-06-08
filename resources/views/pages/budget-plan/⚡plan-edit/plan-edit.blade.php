@@ -1,4 +1,4 @@
-<div class="space-y-10 p-8">
+<div class="space-y-10">
     <div>
         <flux:heading size="lg">{{ __('budget-plan.edit.headline') }}</flux:heading>
         <flux:text class="mt-2">{{ __('budget-plan.edit.sub') }}</flux:text>

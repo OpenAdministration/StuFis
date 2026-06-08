@@ -1,8 +1,6 @@
-<x-layout::app class="px-16 py-12">
-    <div class="px-4 sm:px-0 max-w-4xl">
-        <flux:heading level="1" size="xl">{{ __('konto.transaction.headline') }}</flux:heading>
-    </div>
-    <div class="mt-6 max-w-4xl">
+<x-layout::app size="xs">
+    <flux:heading level="1" size="xl">{{ __('konto.transaction.headline') }}</flux:heading>
+    <flux:card class="mt-6">
         <dl class="grid grid-cols-1 sm:grid-cols-2">
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __('konto.new.name-headline') }}</dt>
@@ -78,5 +76,5 @@
                 </dd>
             </div>
         </dl>
-    </div>
+    </flux:card>
 </x-layout::app>

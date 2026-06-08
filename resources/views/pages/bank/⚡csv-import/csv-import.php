@@ -12,13 +12,14 @@ use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Spatie\Regex\Regex;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
     use WithFileUploads;
 

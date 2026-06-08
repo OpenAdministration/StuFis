@@ -1,5 +1,5 @@
-<x-layout::app>
-    <div class="p-8 max-w-(--breakpoint-lg)">
+<x-layout::app size="lg">
+    <div>
         <x-intro>
             <x-slot:headline>{{ __('budget-plan.index.headline') }}</x-slot:headline>
             <x-slot:button>

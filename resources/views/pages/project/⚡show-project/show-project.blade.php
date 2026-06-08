@@ -8,8 +8,8 @@
 @php $totalRemainingEinnahmen = $project->totalRemainingEinnahmen() @endphp
 @php $totalRatioEinnahmen = $project->totalRatioEinnahmen(); @endphp
 
-<div class="min-h-screen py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+<div>
+    <div class="space-y-4">
 
         <!-- Header with Status and Actions -->
         <div>

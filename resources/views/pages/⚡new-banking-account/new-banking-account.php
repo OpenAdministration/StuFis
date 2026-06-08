@@ -1,10 +1,11 @@
 <?php
 
 use App\Models\Legacy\BankAccount;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'md'])] class extends Component
 {
     #[Validate]
     public $short;

@@ -1,10 +1,11 @@
 <?php
 
 use App\Models\FiscalYear;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'md'])] class extends Component
 {
     #[Locked]
     public $id;

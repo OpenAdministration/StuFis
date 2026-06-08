@@ -14,10 +14,6 @@
 @theme {--font-sans: 'Inter Variable', Inter, sans-serif;}
 
 
-.sidebar:hover {
-    width: 16rem;
-}
-
 /* for alpinejs */
 [x-cloak] { display: none !important; }
 

@@ -20,12 +20,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\File;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
     use WithFileUploads;
 

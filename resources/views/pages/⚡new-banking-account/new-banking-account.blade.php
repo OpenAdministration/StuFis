@@ -1,4 +1,4 @@
-<div class="p-8 max-w-4xl">
+<div>
     <div class="space-y-2">
         <flux:heading level="1" size="xl">{{ __('konto.new.headline') }}</flux:heading>
         <flux:text>{{ __('konto.new.headline-sub') }}</flux:text>

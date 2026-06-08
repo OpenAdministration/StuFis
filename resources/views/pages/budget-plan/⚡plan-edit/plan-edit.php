@@ -9,10 +9,11 @@ use Cknow\Money\Money;
 use Illuminate\Support\Facades\DB;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'md'])] class extends Component
 {
     public $organization;
 

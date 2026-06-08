@@ -8,10 +8,11 @@ use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new class extends Component
+new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
 
     #[Url]
