@@ -21,7 +21,7 @@ class Dev extends Controller
 
     public function markdown()
     {
-        return view('debug.markdown')->layout('components.layouts.index');
+        return view('debug.markdown')->layout('layout.app');
     }
 
     public function fontWeight()

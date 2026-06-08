@@ -3,7 +3,7 @@
     use Cknow\Money\Money;
 @endphp
 
-<x-layout>
+<x-layout::app>
     <div class="p-2 sm:p-8 space-y-6">
         <x-intro>
             <x-slot:headline>{{ __('budget-plan.view.headline') }}</x-slot:headline>
@@ -157,4 +157,4 @@
         </flux:tab.group>
 
     </div>
-</x-layout>
+</x-layout::app>

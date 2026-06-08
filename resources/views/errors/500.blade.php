@@ -1,1 +1,1 @@
-<x-layouts.error code="500"/>
+<x-layout::error code="500"/>

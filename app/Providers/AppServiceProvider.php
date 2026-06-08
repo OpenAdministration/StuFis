@@ -11,6 +11,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -50,6 +51,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('stumv', \SocialiteProviders\LaravelPassport\Provider::class);
         });
+
+        // Layouts live in resources/views/layout (outside the components dir);
+        // expose them as anonymous components: <x-layout::app>, <x-layout::error>.
+        Blade::anonymousComponentPath(resource_path('views/layout'), 'layout');
 
         $this->bootRoute();
 

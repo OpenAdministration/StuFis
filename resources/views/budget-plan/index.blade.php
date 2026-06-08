@@ -1,4 +1,4 @@
-<x-layout>
+<x-layout::app>
     <div class="p-8 max-w-(--breakpoint-lg)">
         <x-intro>
             <x-slot:headline>{{ __('budget-plan.index.headline') }}</x-slot:headline>
@@ -74,4 +74,4 @@
             </flux:table.rows>
         </flux:table>
     </div>
-</x-layout>
+</x-layout::app>

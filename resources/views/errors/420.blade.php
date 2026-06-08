@@ -1,1 +1,1 @@
-<x-layouts.error code="420"/>
+<x-layout::error code="420"/>

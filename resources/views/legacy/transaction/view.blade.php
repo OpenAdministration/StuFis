@@ -1,4 +1,4 @@
-<x-layout class="px-16 py-12">
+<x-layout::app class="px-16 py-12">
     <div class="px-4 sm:px-0 max-w-4xl">
         <flux:heading level="1" size="xl">{{ __('konto.transaction.headline') }}</flux:heading>
     </div>
@@ -79,4 +79,4 @@
             </div>
         </dl>
     </div>
-</x-layout>
+</x-layout::app>
