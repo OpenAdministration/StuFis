@@ -140,7 +140,7 @@ class DatevExport
                     consolidatedInvoiceId: DatevExportPreviewRow::invoiceIdFor($expense->id),
                     customerName: $expense->zahlung_name,
                     paidAt: $this->earliestPayment($bookings, $payments),
-                    iban: $expense->zahlung_iban,
+                    iban: $this->ledgerIban($expense),
                 );
                 foreach ($bookings as $booking) {
                     $ledger->addAccountsReceivableLedger(
@@ -159,7 +159,7 @@ class DatevExport
                     consolidatedInvoiceId: DatevExportPreviewRow::invoiceIdFor($expense->id),
                     supplierName: $expense->zahlung_name,
                     paidAt: $this->earliestPayment($bookings, $payments),
-                    iban: $expense->zahlung_iban,
+                    iban: $this->ledgerIban($expense),
                 );
                 foreach ($bookings as $booking) {
                     $ledger->addAccountsPayableLedger(
@@ -174,6 +174,18 @@ class DatevExport
         }
 
         return file_get_contents($document->generateZip());
+    }
+
+    /**
+     * The expense IBAN for the DATEV ledger, or null when absent/invalid. The DATEV XSD
+     * rejects an empty <iban> element (pattern [A-Z]{2}\d\d…), and the library only drops
+     * null values, never empty strings — so an unvalidated '' would fail validation.
+     */
+    private function ledgerIban(Expense $expense): ?string
+    {
+        $iban = str_replace(' ', '', (string) $expense->zahlung_iban);
+
+        return verify_iban($iban) ? $iban : null;
     }
 
     private function amount(Booking $booking, Expense $expense, bool $isReceivable): float
