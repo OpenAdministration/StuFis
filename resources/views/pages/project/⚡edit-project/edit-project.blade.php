@@ -1,7 +1,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
     {{-- Header --}}
-    <div class="mb-6 flex items-center justify-between">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">
                 {{ $isNew ? __('project.view.edit.title_new') : __('project.view.edit.title_existing') }}
@@ -18,9 +18,9 @@
         </div>
 
         {{-- Form Actions --}}
-        <div class="flex flex-col space-y-4 mt-6">
-            <div class="flex flex-col items-end space-y-4">
-                <div class="flex items-center space-x-4">
+        <div class="flex flex-col space-y-4">
+            <div class="flex flex-col items-stretch space-y-4 sm:items-end">
+                <div class="flex flex-wrap items-center gap-3">
                     <flux:button :href="$isNew ? url()->previous() : route('project.show', $project_id)" variant="outline" icon="arrow-left">{{ __('project.view.edit.back') }}</flux:button>
                     <flux:button wire:click="saveAs('{{ $state_name }}')" variant="primary">
                         {{ __('project.view.edit.save_as', ['state' => $this->getState()->label()]) }}
@@ -35,8 +35,7 @@
 
     {{-- Approval Section (only visible for non-draft projects) --}}
     @if($state_name !== 'draft')
-        <div class="bg-white shadow sm:rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
+        <flux:card>
                 <div class="sm:col-span-2 flex justify-between items-start">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h3>
                     <flux:tooltip toggleable class="-mt-0 -mr-0">
@@ -77,13 +76,11 @@
                         <div></div>
                     @endif
                 </div>
-            </div>
-        </div>
+        </flux:card>
     @endif
 
     {{-- Main Project Information --}}
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
+    <flux:card>
             <div class="sm:col-span-2 flex justify-between items-start">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.details.heading_edit') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
@@ -168,12 +165,10 @@
                     @endif
                 </div>
             </div>
-        </div>
-    </div>
+        </flux:card>
 
     {{-- Project Posts (Budget Items) Table --}}
-    <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-        <div>
+    <flux:card class="overflow-hidden p-0">
             <div class="flex items-center justify-between mb-4 px-4 py-5 sm:p-6">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">{{ __('project.view.budget_table.heading') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
@@ -284,18 +279,20 @@
                     <tr>
                         <td></td>
                         <td colspan="{{ $canUpdateBudget ? '2' : '1' }}" class="px-3 py-3.5">
-                            <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">{{ __('project.view.edit.add_post') }}</flux:button>
-                            @if($hasTaxTitels)
-                                <flux:button wire:click="addTaxPosts" icon="plus" :disabled="!$canAddTaxTitles">{{ __('project.view.edit.add_tax_posts') }}</flux:button>
-                                <flux:tooltip toggleable class="-mt-0 -mr-0">
-                                    <flux:button size="sm" variant="ghost" square>
-                                        <x-fas-info-circle class="text-gray-500 size-4"/>
-                                    </flux:button>
-                                    <flux:tooltip.content class="max-w-[20rem] space-y-2">
-                                        {{ __('project.view.edit.tax_posts_info') }}
-                                    </flux:tooltip.content>
-                                </flux:tooltip>
-                            @endif
+                            <div class="flex flex-wrap items-center gap-2">
+                                <flux:button wire:click="addEmptyPost" icon="plus" variant="primary">{{ __('project.view.edit.add_post') }}</flux:button>
+                                @if($hasTaxTitels)
+                                    <flux:button wire:click="addTaxPosts" icon="plus" :disabled="!$canAddTaxTitles">{{ __('project.view.edit.add_tax_posts') }}</flux:button>
+                                    <flux:tooltip toggleable>
+                                        <flux:button size="sm" variant="ghost" square>
+                                            <x-fas-info-circle class="text-gray-500 size-4"/>
+                                        </flux:button>
+                                        <flux:tooltip.content class="max-w-[20rem] space-y-2">
+                                            {{ __('project.view.edit.tax_posts_info') }}
+                                        </flux:tooltip.content>
+                                    </flux:tooltip>
+                                @endif
+                            </div>
                         </td>
                         <td class="py-3.5 pl-4 pr-3 text-right text-sm font-semibold text-gray-900 sm:pl-6">
                             {{ __('project.view.budget_table.sums') }}
@@ -315,12 +312,10 @@
                     </tfoot>
                 </table>
             </div>
-        </div>
-    </div>
+        </flux:card>
 
     {{-- Project Description --}}
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6 ">
+    <flux:card>
             <div class="flex justify-between">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h3>
                 <flux:tooltip toggleable class="-mt-0 -mr-0">
@@ -338,13 +333,9 @@
                     :placeholder="__('project.view.description.placeholder')"
                 />
             </div>
-        </div>
-    </div>
+        </flux:card>
 
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-
-
+    <flux:card>
             <flux:file-upload wire:model="newAttachments" multiple :label="__('project.view.attachments.upload_label')">
                 <flux:file-upload.dropzone
                     :heading="__('project.view.attachments.dropzone_heading')"
@@ -378,8 +369,7 @@
                     @endforeach
                 </div>
             </div>
-        </div>
-    </div>
+        </flux:card>
 
     {{-- Form Actions --}}
     <div class="flex flex-col space-y-4 mt-6">

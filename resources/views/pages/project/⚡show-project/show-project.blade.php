@@ -69,7 +69,7 @@
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
             <!-- State Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.state') }}</p>
@@ -100,9 +100,9 @@
                                 ])/>
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Total out Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_total') }}</p>
@@ -114,9 +114,9 @@
                         <x-far-check-circle class="w-6 h-6 text-teal-600" />
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Remaining Expense Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_available') }}</p>
@@ -141,9 +141,9 @@
                         ])/>
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Ratio Out Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_ratio') }}</p>
@@ -169,10 +169,10 @@
                         ])/>
                     </div>
                 </div>
-            </div>
+            </flux:card>
 
             <!-- BudgetPlan Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.budgetplan') }}</p>
@@ -184,9 +184,9 @@
                         <x-fas-bars-staggered class="w-6 h-6 text-indigo-600" />
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Total in Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_total') }}</p>
@@ -198,9 +198,9 @@
                         <x-far-check-circle class="w-6 h-6 text-teal-600" />
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Used In Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_available') }}</p>
@@ -222,9 +222,9 @@
                         ])/>
                     </div>
                 </div>
-            </div>
+            </flux:card>
             <!-- Ratio In Card -->
-            <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_ratio') }}</p>
@@ -247,13 +247,13 @@
                         ])/>
                     </div>
                 </div>
-            </div>
+            </flux:card>
 
         </div>
 
         @if($showApproval)
             <!-- Approval Section -->
-            <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
+            <flux:card>
                 <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.approval.heading') }}</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
@@ -284,11 +284,11 @@
                         </div>
                     @endif
                 </div>
-            </div>
+            </flux:card>
         @endif
 
         <!-- Project Details -->
-        <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
+        <flux:card>
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.details.heading') }}</h2>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -358,11 +358,10 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </flux:card>
 
         <!-- Budget Table -->
-        <div class="bg-white rounded-2xl shadow-accent border border-gray-200 overflow-hidden"
-             x-data="budgetTable()">
+        <flux:card class="overflow-hidden p-0" x-data="budgetTable()">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-bold text-gray-900">{{ __('project.view.budget_table.heading') }}</h2>
                 <p class="text-sm text-gray-500 mt-1">{{ __('project.view.budget_table.subheading') }}</p>
@@ -470,10 +469,10 @@
                     </tfoot>
                 </table>
             </div>
-        </div>
+        </flux:card>
 
         <!-- Project Description -->
-        <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
+        <flux:card>
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.description.heading') }}</h2>
             @empty($project->beschreibung)
                 <x-no-content/>
@@ -493,10 +492,10 @@
                     />
                 @endforeach
             </div>
-        </div>
+        </flux:card>
 
         <!-- Expenses Section -->
-        <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6">
+        <flux:card>
             <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('project.view.expenses.heading') }}</h2>
             @if($project->expenses()->count() > 0)
                 <div class="space-y-3">
@@ -537,7 +536,7 @@
                     {{ __('project.view.expenses.none') }}
                 </div>
             @endif
-        </div>
+        </flux:card>
     </div>
 
     <div class="mt-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -575,59 +574,56 @@
                 </ul>
             </div>
         @endif
-        <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-            <flux:button x-on:click="$flux.modal('state-modal').close()" class="w-full">
+        <div class="mt-6 flex gap-3">
+            <flux:spacer />
+            <flux:button x-on:click="$flux.modal('state-modal').close()" variant="ghost">
                 {{ __('project.view.state-modal.cancel') }}
             </flux:button>
-            <flux:button wire:click="changeState()" class="w-full" variant="primary">
+            <flux:button wire:click="changeState()" variant="primary">
                 {{ __('project.view.state-modal.save') }}
             </flux:button>
         </div>
     </flux:modal>
 
     <!-- Delete Modal -->
-    <flux:modal name="delete-modal">
-        <div class="flex items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div>
-                <div class="mt-3 sm:mt-5">
-                    <div class="flex items-center gap-3 text-left">
-                        <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('project.view.delete_modal.heading') }}</h3>
-                    </div>
-                    <div class="mt-2 text-left">
-                        <p class="text-sm text-gray-500">{{ __('project.view.delete_modal.intro') }}</p>
-                        <ul class="mt-2 text-sm text-gray-500 space-y-1">
-                            <li class="flex items-start gap-2">
-                                @if($userCanDelete)
-                                    <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
-                                @else
-                                    <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
-                                @endif
-                                <span>{{ __('project.view.delete_modal.conditions.owner') }}</span>
-                            </li>
-                            <li class="flex items-start gap-2">
-                                @if($deletionAllowed)
-                                    <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
-                                @else
-                                    <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
-                                @endif
-                                <span>{{ __('project.view.delete_modal.conditions.no_expenses') }}</span>
-                            </li>
-                        </ul>
-                        <p class="mt-2 text-sm text-gray-500">{{ __('project.view.delete_modal.warning') }}</p>
-                    </div>
+    <flux:modal name="delete-modal" class="md:w-96">
+        <div class="space-y-6">
+            <div class="flex items-center gap-3">
+                <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                    <x-fas-triangle-exclamation class="h-6 w-6 text-red-600"/>
                 </div>
+                <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('project.view.delete_modal.heading') }}</h3>
             </div>
-            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                <flux:button x-on:click="$flux.modal('delete-modal').close()" class="w-full">
+
+            <div class="space-y-2">
+                <p class="text-sm text-gray-500">{{ __('project.view.delete_modal.intro') }}</p>
+                <ul class="text-sm text-gray-500 space-y-1">
+                    <li class="flex items-start gap-2">
+                        @if($userCanDelete)
+                            <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                        @else
+                            <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                        @endif
+                        <span>{{ __('project.view.delete_modal.conditions.owner') }}</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        @if($deletionAllowed)
+                            <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                        @else
+                            <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                        @endif
+                        <span>{{ __('project.view.delete_modal.conditions.no_expenses') }}</span>
+                    </li>
+                </ul>
+                <p class="text-sm text-gray-500">{{ __('project.view.delete_modal.warning') }}</p>
+            </div>
+
+            <div class="flex gap-3">
+                <flux:spacer />
+                <flux:button x-on:click="$flux.modal('delete-modal').close()" variant="ghost">
                     {{ __('project.view.delete_modal.cancel') }}
                 </flux:button>
-                <flux:button wire:click="delete()" class="w-full" variant="danger" :disabled="!($userCanDelete && $deletionAllowed)">
+                <flux:button wire:click="delete()" variant="danger" :disabled="!($userCanDelete && $deletionAllowed)">
                     {{ __('project.view.delete_modal.confirm') }}
                 </flux:button>
             </div>
