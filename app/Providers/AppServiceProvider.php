@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Exports\Datev\DatevExport;
+use App\Policies\DatevExportPolicy;
 use App\Services\Auth\AuthService;
 use App\Support\Money\MoneySynth;
 use Cknow\Money\Money;
@@ -10,6 +12,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -51,6 +54,9 @@ class AppServiceProvider extends ServiceProvider
         $this->bootRoute();
 
         $this->bootMoney();
+
+        // DatevExport is not an Eloquent model, so its policy needs registering by hand.
+        Gate::policy(DatevExport::class, DatevExportPolicy::class);
 
         // Carbon::setLocale(config('app.locale'));
     }

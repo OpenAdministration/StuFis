@@ -34,6 +34,9 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
     Route::livewire('datev/export', 'pages::datev-export')->name('datev.export');
+    Route::get('datev/export/download', [\App\Http\Controllers\DatevExportController::class, 'download'])
+        ->middleware('signed')
+        ->name('datev.export.download');
 
     Route::livewire('project/create', 'pages::project.edit-project')->name('project.create');
     Route::livewire('project/{project_id}', 'pages::project.show-project')->name('project.show');

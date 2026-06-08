@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class DatevExport
 {
@@ -113,6 +114,10 @@ class DatevExport
             ->values();
     }
 
+    /**
+     * Build the DATEV export and persist it to the local disk. Returns the disk-relative
+     * path to the generated zip, or false when nothing could be written.
+     */
     public function export(): string|false
     {
         $expenses = $this->query()
@@ -173,7 +178,21 @@ class DatevExport
             }
         }
 
-        return file_get_contents($document->generateZip());
+        // generateZip() writes to a TemporaryDirectory that DatevDocumentData's Zip
+        // deletes the moment $document is garbage-collected (i.e. when this method
+        // returns). Stream it onto the local disk so the download route can serve it
+        // afterwards. writeStream copies at the OS level, so the (PDF-laden) zip is
+        // never held in memory the way reading it into a string would.
+        $path = 'datev-exports/'.Str::uuid().'.zip';
+        $source = fopen($document->generateZip(), 'rb');
+
+        $stored = Storage::disk('local')->writeStream($path, $source);
+
+        if (is_resource($source)) {
+            fclose($source);
+        }
+
+        return $stored ? $path : false;
     }
 
     /**

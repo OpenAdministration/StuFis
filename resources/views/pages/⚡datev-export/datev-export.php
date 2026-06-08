@@ -3,7 +3,6 @@
 use App\Exports\Datev\DatevExport;
 use App\Exports\Datev\DatevExportDateField;
 use App\Models\Legacy\LegacyBudgetPlan;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -32,7 +31,7 @@ new class extends Component
 
     public function mount(): void
     {
-        $this->authorize('finance', User::class);
+        $this->authorize('download', DatevExport::class);
 
         $this->hhpId = LegacyBudgetPlan::latest()?->id;
     }
@@ -139,16 +138,30 @@ new class extends Component
 
     public function export()
     {
+        $this->authorize('download', DatevExport::class);
+
         $this->validate();
 
-        $zipContents = $this->makeExport(withPdfs: $this->exportPdfs)->export();
+        $path = $this->makeExport(withPdfs: $this->exportPdfs)->export();
 
-        return response()->streamDownload(function () use ($zipContents) {
-            echo $zipContents;
-        }, sprintf(
-            'datev-export_%s_%s.zip',
-            Carbon::parse($this->dateRange['start'])->format('Y-m-d'),
-            Carbon::parse($this->dateRange['end'])->format('Y-m-d')
-        ), ['Content-Type' => 'application/zip']);
+        if ($path === false) {
+            $this->addError('export', __('datev-export.export-failed'));
+
+            return null;
+        }
+
+        // Redirect to a plain (non-Livewire) route to stream the file: Livewire
+        // base64-encodes any file returned from a component action in memory, which
+        // exhausts the memory limit for large (PDF-laden) archives. A temporary signed
+        // URL hands the finished zip off statelessly — no session, safe across tabs, and
+        // the link self-expires.
+        return $this->redirect(url()->temporarySignedRoute('datev.export.download', now()->addMinutes(10), [
+            'file' => basename($path),
+            'name' => sprintf(
+                'datev-export_%s_%s.zip',
+                Carbon::parse($this->dateRange['start'])->format('Y-m-d'),
+                Carbon::parse($this->dateRange['end'])->format('Y-m-d')
+            ),
+        ]));
     }
 };

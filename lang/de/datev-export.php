@@ -50,4 +50,5 @@ return [
     'expenses-found' => 'Abrechnungen gefunden',
     'export-button'  => 'DATEV Export herunterladen',
     'exporting'      => 'Export wird erstellt …',
+    'export-failed'  => 'Der DATEV-Export konnte nicht erstellt werden. Bitte erneut versuchen.',
 ];
