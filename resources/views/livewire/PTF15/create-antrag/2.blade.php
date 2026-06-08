@@ -1,12 +1,12 @@
 <div class="mt-8 sm:mx-8 lg:px-8">
     <!-- Fortschrittsanzeige -->
-    <x-progressbar>
-        <x-progressbar.step completed valid>Step 1</x-progressbar.step>
-        <x-progressbar.step active>Step 2</x-progressbar.step>
-        <x-progressbar.step>Step 3</x-progressbar.step>
-        <x-progressbar.step>Step 4</x-progressbar.step>
-        <x-progressbar.step>Step 5</x-progressbar.step>
-    </x-progressbar>
+    <x-PTF15.progressbar>
+        <x-PTF15.progressbar.step completed valid>Step 1</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step active>Step 2</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step>Step 3</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step>Step 4</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step>Step 5</x-PTF15.progressbar.step>
+    </x-PTF15.progressbar>
 
     <!-- Überschrift -->
 
@@ -27,13 +27,13 @@
                 <h2 class="text-base font-semibold leading-7 text-gray-900">Allgemeine Angaben</h2>
 
                 <div class="pb-12 mt-10 space-y-8 border-b border-gray-900/10 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
-                    <x-antrag.row>
-                        <x-antrag.input name="project-name">Projektname</x-antrag.input>
-                    </x-antrag.row>
+                    <x-PTF15.antrag.row>
+                        <x-PTF15.antrag.input name="project-name">Projektname</x-PTF15.antrag.input>
+                    </x-PTF15.antrag.row>
 
                     <!-- Date picker -->
 
-                    <x-antrag.row>
+                    <x-PTF15.antrag.row>
                         <label for="project-start-date" class="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5">Projektstart</label></label>
                         <div class="mt-2 sm:col-span-2 sm:mt-0">
                             <div class="flex -space-x-px">
@@ -53,13 +53,13 @@
                                 </div>
                             </div>
                         </div>
-                    </x-antrag.row>
+                    </x-PTF15.antrag.row>
 
                     <!-- WYSIWYG Editor -->
 
-                    <x-antrag.row>
-                        <x-antrag.textarea name="about">Projektbeschreibung</x-antrag.textarea>
-                    </x-antrag.row>
+                    <x-PTF15.antrag.row>
+                        <x-PTF15.antrag.textarea name="about">Projektbeschreibung</x-PTF15.antrag.textarea>
+                    </x-PTF15.antrag.row>
 
                     <!-- TODO: File Upload -->
 
@@ -71,30 +71,30 @@
                             <div class="text-sm font-semibold leading-6 text-gray-900" aria-hidden="true">Aufgaben der Studierendenschaft</div>
                             <div class="mt-4 sm:col-span-2 sm:mt-0">
                                 <div class="max-w-lg space-y-6">
-                                    <x-antrag.checkbox name="aufgaben-meinungsbildung" label="Meinungsbildung">
+                                    <x-PTF15.antrag.checkbox name="aufgaben-meinungsbildung" label="Meinungsbildung">
                                         die Meinungsbildung in der Gruppe der Studierenden zu ermöglichen
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-gesellschaft" label="Hochschule und Gesellschaft">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-gesellschaft" label="Hochschule und Gesellschaft">
                                         die Belange ihrer Mitglieder in Hochschule und Gesellschaft wahrzunehmen
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-hochschule" label="Erfüllung der Aufgaben der Hochschule">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-hochschule" label="Erfüllung der Aufgaben der Hochschule">
                                         an der Erfüllung der Aufgaben der Hochschule (§§ 3 und 4) insbesondere durch Stellungnahmen zu hochschul- oder wissenschaftspolitischen Fragen mitzuwirken
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-politik" label="politische Bildung">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-politik" label="politische Bildung">
                                         auf der Grundlage der verfassungsmäßigen Ordnung die politische Bildung, das staatsbürgerliche Verantwortungsbewusstsein und die Bereitschaft ihrer Mitglieder zur aktiven Toleranz sowie zum Eintreten für die Grund- und Menschenrechte zu fördern
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-kultur" label="Kultur & Soziales">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-kultur" label="Kultur & Soziales">
                                         kulturelle, fachliche, wirtschaftliche und soziale Belange ihrer Mitglieder wahrzunehmen
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-integration" label="Integration ausländischer Studierender">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-integration" label="Integration ausländischer Studierender">
                                         die Integration ausländischer Studierender zu fördern
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-sport" label="Sport">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-sport" label="Sport">
                                         den Studentensport zu fördern
-                                    </x-antrag.checkbox>
-                                    <x-antrag.checkbox name="aufgaben-internationales" label="Internationales">
+                                    </x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="aufgaben-internationales" label="Internationales">
                                         die überregionalen und internationalen Studierendenbeziehungen zu pflegen
-                                    </x-antrag.checkbox>
+                                    </x-PTF15.antrag.checkbox>
                                 </div>
                             </div>
                         </div>
@@ -102,32 +102,32 @@
 
                     <!-- Sonstige Eingabefelder -->
 
-                    <x-antrag.row>
-                        <x-antrag.input name="target-group">Zielgruppe</x-antrag.input>
-                    </x-antrag.row>
+                    <x-PTF15.antrag.row>
+                        <x-PTF15.antrag.input name="target-group">Zielgruppe</x-PTF15.antrag.input>
+                    </x-PTF15.antrag.row>
 
-                    <x-antrag.row>
-                        <x-antrag.input name="estimated-guests">Erwartete Teilnehmendenzahl</x-antrag.input>
-                        <x-antrag.input name="estimated-students">Davon Studierende</x-antrag.input>
-                    </x-antrag.row>
+                    <x-PTF15.antrag.row>
+                        <x-PTF15.antrag.input name="estimated-guests">Erwartete Teilnehmendenzahl</x-PTF15.antrag.input>
+                        <x-PTF15.antrag.input name="estimated-students">Davon Studierende</x-PTF15.antrag.input>
+                    </x-PTF15.antrag.row>
 
                     <!-- Buttons -->
 
-                    <x-antrag.row>
+                    <x-PTF15.antrag.row>
                         <div></div>
                         <div class="mt-2 sm:col-span-2 sm:mt-0">
-                            <x-antrag.button.light wire:click="previousPage()">Zurück</x-antrag.button.light>
-                            <x-antrag.button.primary wire:click="nextPage()">Weiter</x-antrag.button.primary>
+                            <x-PTF15.antrag.button.light wire:click="previousPage()">Zurück</x-PTF15.antrag.button.light>
+                            <x-PTF15.antrag.button.primary wire:click="nextPage()">Weiter</x-PTF15.antrag.button.primary>
                         </div>
-                    </x-antrag.row>
+                    </x-PTF15.antrag.row>
 
                 </div>
             </div>
         </div>
 
         <div class="flex items-center justify-end mt-6 mb-4 gap-x-6">
-            <x-antrag.button.light>Antrag abbrechen</x-antrag.button.light>
-            <x-antrag.button.primary>Entwurf speichern</x-antrag.button.primary>
+            <x-PTF15.antrag.button.light>Antrag abbrechen</x-PTF15.antrag.button.light>
+            <x-PTF15.antrag.button.primary>Entwurf speichern</x-PTF15.antrag.button.primary>
         </div>
     </form>
 </div>

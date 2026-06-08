@@ -1,12 +1,12 @@
 <div class="mt-8 sm:mx-8 lg:px-8">
     <!-- Fortschrittsanzeige -->
-    <x-progressbar>
-        <x-progressbar.step completed valid>Step 1</x-progressbar.step>
-        <x-progressbar.step completed valid>Step 2</x-progressbar.step>
-        <x-progressbar.step completed valid>Step 3</x-progressbar.step>
-        <x-progressbar.step completed valid>Step 4</x-progressbar.step>
-        <x-progressbar.step active>Step 5</x-progressbar.step>
-    </x-progressbar>
+    <x-PTF15.progressbar>
+        <x-PTF15.progressbar.step completed valid>Step 1</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step completed valid>Step 2</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step completed valid>Step 3</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step completed valid>Step 4</x-PTF15.progressbar.step>
+        <x-PTF15.progressbar.step active>Step 5</x-PTF15.progressbar.step>
+    </x-PTF15.progressbar>
 
     <!-- Überschrift -->
 
@@ -155,9 +155,9 @@
                             <div class="text-sm font-semibold leading-6 text-gray-900" aria-hidden="true"></div>
                             <div class="mt-4 sm:col-span-2 sm:mt-0">
                                 <div class="max-w-lg space-y-6">
-                                    <x-antrag.checkbox name="agb-ckeck" label="Ich habe alles gelesen"></x-antrag.checkbox>
-                                    <x-antrag.checkbox name="privacy-check" label="Ich akzeptiere Dingsbums"></x-antrag.checkbox>
-                                    <x-antrag.checkbox name="notifications-check" label="Ich möchte E-Mails erhalten"></x-antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="agb-ckeck" label="Ich habe alles gelesen"></x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="privacy-check" label="Ich akzeptiere Dingsbums"></x-PTF15.antrag.checkbox>
+                                    <x-PTF15.antrag.checkbox name="notifications-check" label="Ich möchte E-Mails erhalten"></x-PTF15.antrag.checkbox>
                                 </div>
                             </div>
                         </div>
@@ -165,20 +165,20 @@
 
                     <!-- Buttons -->
 
-                    <x-antrag.row>
+                    <x-PTF15.antrag.row>
                         <div></div>
                         <div class="mt-2 sm:col-span-2 sm:mt-0">
-                            <x-antrag.button.light wire:click="previousPage()">Zurück</x-antrag.button.light>
-                            <x-antrag.button.primary>Antrag einreichen</x-antrag.button.primary>
+                            <x-PTF15.antrag.button.light wire:click="previousPage()">Zurück</x-PTF15.antrag.button.light>
+                            <x-PTF15.antrag.button.primary>Antrag einreichen</x-PTF15.antrag.button.primary>
                         </div>
-                    </x-antrag.row>
+                    </x-PTF15.antrag.row>
                 </div>
             </div>
         </div>
 
         <div class="flex items-center justify-end mt-6 mb-4 gap-x-6">
-            <x-antrag.button.light>Antrag abbrechen</x-antrag.button.light>
-            <x-antrag.button.primary>Entwurf speichern</x-antrag.button.primary>
+            <x-PTF15.antrag.button.light>Antrag abbrechen</x-PTF15.antrag.button.light>
+            <x-PTF15.antrag.button.primary>Entwurf speichern</x-PTF15.antrag.button.primary>
         </div>
     </form>
 </div>
