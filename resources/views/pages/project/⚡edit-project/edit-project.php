@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Livewire\Project;
-
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\ExpenseReceiptPost;
@@ -27,7 +25,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-class EditProject extends Component
+new class extends Component
 {
     use WithFileUploads;
 
@@ -362,7 +360,7 @@ class EditProject extends Component
         return LegalBasis::ordered()->active()->get()->keyBy('slug');
     }
 
-    public function render()
+    public function with(): array
     {
         // variables
         if(Auth::user()->can('pick-any-committee', Project::class)){
@@ -385,11 +383,11 @@ class EditProject extends Component
         $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
         $canAddTaxTitles = collect($this->posts)->filter(fn($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
 
-        return view('livewire.project.edit-project', compact(
+        return compact(
             'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',
             'budgetPlans', 'canUpdateBudget', 'canUpdateApproval', 'canUpdateBudgetPlan', 'protocolLinkSetting',
             'hasTaxTitels', 'canAddTaxTitles',
-        ));
+        );
     }
 
     #[Computed]
@@ -403,4 +401,4 @@ class EditProject extends Component
     {
         return Project::find($this->project_id);
     }
-}
+};

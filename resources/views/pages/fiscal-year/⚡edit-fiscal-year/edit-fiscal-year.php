@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Livewire\FiscalYear;
-
 use App\Models\FiscalYear;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
-class EditFiscalYear extends Component
+new class extends Component
 {
     #[Locked]
     public $id;
@@ -52,9 +50,4 @@ class EditFiscalYear extends Component
         ]);
         $this->redirect(route('budget-plan.index'));
     }
-
-    public function render()
-    {
-        return view('livewire.fiscal-year.edit-fiscal-year');
-    }
-}
+};

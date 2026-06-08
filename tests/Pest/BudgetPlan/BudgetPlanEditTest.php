@@ -1,6 +1,5 @@
 <?php
 
-use App\Livewire\BudgetPlan\BudgetPlanEdit;
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetPlanState;
@@ -25,7 +24,7 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     $plan = createEmptyPlan();
 
     // start component
-    $lw = Livewire::test(BudgetPlanEdit::class, ['plan_id' => $plan->id]);
+    $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
     $lw->assertSuccessful();
 
     // add income group -> should add group and one child budget automatically
@@ -63,7 +62,7 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     expect($plan->fiscal_year_id)->toBe($fy->id);
 
     // try to delete a non-empty group (has children) -> should add error and not delete
-    $lw = Livewire::test(BudgetPlanEdit::class, ['plan_id' => $plan->id]);
+    $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
     $lw->call('delete', $incomeRoot->id)
         ->assertHasErrors();
     expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();

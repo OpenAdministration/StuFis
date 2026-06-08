@@ -1,12 +1,10 @@
 <?php
 
-namespace App\Livewire;
-
 use App\Models\Legacy\BankAccount;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-class NewBankingAccount extends Component
+new class extends Component
 {
     #[Validate]
     public $short;
@@ -38,15 +36,10 @@ class NewBankingAccount extends Component
         ];
     }
 
-    public function render()
-    {
-        return view('livewire.new-banking-account');
-    }
-
     public function store(): void
     {
         $data = $this->validate();
         BankAccount::create($data);
         $this->redirectRoute('legacy.konto');
     }
-}
+};

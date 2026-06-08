@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Livewire\BudgetPlan;
-
+use App\Livewire\BudgetPlan\ItemForm;
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
 use Cknow\Money\Money;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
-class BudgetPlanEdit extends Component
+new class extends Component
 {
     public $organization;
 
@@ -71,7 +70,7 @@ class BudgetPlanEdit extends Component
         return $query->orderBy('position');
     }
 
-    public function render()
+    public function with(): array
     {
         $fiscal_years = FiscalYear::all();
         $item_models = $this->query()
@@ -81,14 +80,14 @@ class BudgetPlanEdit extends Component
         $in_ids = $this->query(1)->whereNull('parent_id')->pluck('id');
         $out_ids = $this->query(-1)->whereNull('parent_id')->pluck('id');
 
-        return view('livewire.budget-plan.plan-edit', [
+        return [
             'fiscal_years' => $fiscal_years,
             'all_items' => $item_models,
             'root_items' => [
                 'in' => $in_ids,
                 'out' => $out_ids,
             ],
-        ]);
+        ];
     }
 
     /**
@@ -322,4 +321,4 @@ class BudgetPlanEdit extends Component
     {
         $this->refresh = ! $this->refresh;
     }
-}
+};

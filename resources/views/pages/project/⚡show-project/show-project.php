@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Livewire\Project;
-
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Project;
@@ -15,7 +13,7 @@ use Livewire\Component;
 use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
 use Spatie\ModelStates\Validation\ValidStateRule;
 
-class ShowProject extends Component
+new class extends Component
 {
     #[Url]
     public $project_id;
@@ -24,7 +22,7 @@ class ShowProject extends Component
 
     public $fileUrl;
 
-    public function render(): \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\View\View
+    public function with(): array
     {
         $project = Project::findOrFail($this->project_id);
         $state = $project->state;
@@ -35,10 +33,7 @@ class ShowProject extends Component
         $userCanDelete = \Auth::user()->can('delete', $project);
         $deletionAllowed = $project->expenses()->count() === 0;
 
-
-        return view('livewire.project.show-project', compact(
-            'project', 'showApproval', 'showLink', 'userCanDelete', 'deletionAllowed'
-        ));
+        return compact('project', 'showApproval', 'showLink', 'userCanDelete', 'deletionAllowed');
     }
 
     public function changeState(): void
@@ -72,8 +67,8 @@ class ShowProject extends Component
         }
     }
 
-    public function delete(): void {
-
+    public function delete(): void
+    {
         $project = Project::findOrFail($this->project_id);
         $this->authorize('delete', $project);
         if ($project->expenses()->count() > 0) {
@@ -87,4 +82,4 @@ class ShowProject extends Component
         $project->delete();
         $this->redirect(route('home'));
     }
-}
+};

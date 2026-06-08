@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Livewire;
-
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use App\Models\User;
@@ -11,8 +9,6 @@ use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
 use Flux\Flux;
 use forms\projekte\auslagen\AuslagenHandler2;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -22,7 +18,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Spatie\Regex\Regex;
 
-class TransactionImportWire extends Component
+new class extends Component
 {
     use WithFileUploads;
 
@@ -272,7 +268,7 @@ class TransactionImportWire extends Component
             ]]);
     }
 
-    public function render(): Application|Factory|\Illuminate\Contracts\View\View|\Illuminate\Foundation\Application|\Illuminate\View\View
+    public function with(): array
     {
         $accounts = BankAccount::all();
         $labels = (new BankTransaction)->getLabels();
@@ -280,13 +276,13 @@ class TransactionImportWire extends Component
         $latestTransaction = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->first();
 
-        return view('livewire.bank.csv-import', [
+        return [
             'accounts' => $accounts,
             'firstNewTransaction' => $this->data->first(),
             'lastNewTransaction' => $this->data->last(),
             'latestTransaction' => $latestTransaction,
             'labels' => $labels,
-        ]);
+        ];
     }
 
     /**
@@ -384,4 +380,4 @@ class TransactionImportWire extends Component
         $this->resetValidation();
         $this->validate();
     }
-}
+};

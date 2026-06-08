@@ -2,7 +2,6 @@
 
 namespace Tests\Pest\Project;
 
-use App\Livewire\Project\EditProject;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use Cknow\Money\Money;
@@ -20,7 +19,7 @@ beforeEach(function () {
 });
 
 it('can render the create project page', function () {
-    Livewire::test(EditProject::class)
+    Livewire::test('pages::project.edit-project')
         ->assertStatus(200)
         ->assertSet('isNew', true)
         ->assertCount('posts', 1);
@@ -30,7 +29,7 @@ it('can create a new project', function () {
     Storage::fake('projects');
     $file = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
 
-    Livewire::test(EditProject::class)
+    Livewire::test('pages::project.edit-project')
         ->set('name', 'Test Project')
         ->set('responsible', 'test@example.com')
         ->set('org', 'Test Org')
@@ -63,14 +62,14 @@ it('can load an existing project for editing', function () {
         'bemerkung' => 'This is a description that is long enough for validation.',
     ]);
 
-    Livewire::test(EditProject::class, ['project_id' => $project->id])
+    Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
         ->assertSet('name', 'Existing Project')
         ->assertCount('posts', 1)
         ->assertSet('posts.0.name', 'Existing Post');
 });
 
 it('can add and remove posts', function () {
-    Livewire::test(EditProject::class)
+    Livewire::test('pages::project.edit-project')
         ->assertCount('posts', 1)
         ->call('addEmptyPost')
         ->assertCount('posts', 2)
@@ -81,7 +80,7 @@ it('can add and remove posts', function () {
 it('prevents saving if version has changed (optimistic locking)', function () {
     $project = Project::factory()->by(user())->create(['version' => 1]);
 
-    $component = Livewire::test(EditProject::class, ['project_id' => $project->id]);
+    $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id]);
 
     // Simulate another user updating the project in the background
     $project->increment('version');
@@ -94,7 +93,7 @@ it('prevents saving if version has changed (optimistic locking)', function () {
 });
 
 it('validates required fields based on state rules', function () {
-    Livewire::test(EditProject::class)
+    Livewire::test('pages::project.edit-project')
         ->call('saveAs', 'applied')
         ->errors();
     /*->assertHasErrors([
