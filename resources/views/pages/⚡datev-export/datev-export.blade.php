@@ -87,7 +87,7 @@
 
                                         <div class="max-h-96 overflow-y-auto">
                                             <flux:table>
-                                                <flux:table.columns>
+                                                <flux:table.columns sticky>
                                                     <flux:table.column>{{ __('datev-export.preview.columns.project') }}</flux:table.column>
                                                     <flux:table.column>{{ __('datev-export.preview.columns.invoice') }}</flux:table.column>
                                                     <flux:table.column>{{ __('datev-export.preview.columns.name') }}</flux:table.column>
