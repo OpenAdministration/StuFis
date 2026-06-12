@@ -103,6 +103,14 @@ class MigrateConfigToDatabase extends Command
     private function getLegacyConfig(): array
     {
         $realm = config('stufis.realm');
-        return (include base_path('legacy/config/config.orgs.php'))[$realm];
+
+        // Allow an environment-specific orgs file (e.g. config.orgs.testing.php),
+        if($realm === 'testing'){
+            $file = base_path('legacy/config/config.orgs.testing.php');
+        }else{
+            $file = base_path('legacy/config/config.orgs.php');
+        }
+
+        return (include $file)[$realm];
     }
 }
