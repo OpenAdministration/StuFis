@@ -470,6 +470,7 @@ class FintsConnectionHandler
         if ($action instanceof GetStatementOfAccount) {
             if ($action->isDone()) {
                 $this->saveAction();
+
                 return $action->getStatement();
             }
             throw new NeedsTanException($action);
