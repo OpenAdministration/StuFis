@@ -215,7 +215,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                     return;
                 }
             }
-            $project = $this->getProject() ?? new Project;
+            $project = $this->getProject();
             $canUpdateBudget = Auth::user()->can('update-budget', $project);
             $canUpdateApproval = Auth::user()->can('update-approval', $project);
             // prepare data and rules
@@ -394,12 +394,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     #[Computed]
     public function getState(): ProjectState
     {
-        return ProjectState::make($this->state_name, $this->getProject() ?? new Project);
+        return ProjectState::make($this->state_name, $this->getProject());
     }
 
     #[Computed]
-    public function getProject(): ?Project
+    public function getProject(): Project
     {
-        return Project::find($this->project_id);
+        return Project::find($this->project_id) ?? new Project;
     }
 };
