@@ -14,9 +14,15 @@
         <!-- Header with Status and Actions -->
         <div>
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div class="pl-4">
-                    <h1 class="text-3xl font-bold text-gray-900">{{ __('project.view.header.title') }} {{ $project->id }}</h1>
-                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</p>
+                <div class="pl-4 min-w-0">
+                    <h1 class="text-3xl font-bold text-gray-900 break-words">
+                        @empty($project->name)
+                            {{ __('project.view.header.title') }} {{ $project->id }}
+                        @else
+                            {{ $project->name }}
+                        @endisset
+                    </h1>
+                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.title') }} {{ $project->id }} &middot; {{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -295,7 +301,7 @@
                 <div>
                     <label
                         class="block text-sm font-medium text-gray-700 mb-1">{{ __('project.view.details.name') }}</label>
-                    <p class="text-gray-900 font-medium">
+                    <p class="text-gray-900">
                         @empty($project->name)
                             <x-no-content/>
                         @else
@@ -342,9 +348,9 @@
                         @empty($project->date_start)
                             <x-no-content/>
                         @else
-                            <span class="font-medium">{{ __('project.view.details.from') }} </span>
+                            <span class="text-gray-500">{{ __('project.view.details.from') }}</span>
                             {{ $project->date_start?->format('d.m.Y') }}
-                            <span class="font-medium mx-2">{{ __('project.view.details.to') }} </span>
+                            <span class="text-gray-500">{{ __('project.view.details.to') }}</span>
                             {{ $project->date_end?->format('d.m.Y') }}
                         @endif
                     </p>
@@ -537,9 +543,7 @@
                 </div>
             @endif
         </flux:card>
-    </div>
 
-    <div class="mt-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <livewire:chat-panel target-type="projekt" :target-id="$project->id" :wire:key="$project->state::class"/>
     </div>
 
@@ -586,7 +590,7 @@
     </flux:modal>
 
     <!-- Delete Modal -->
-    <flux:modal name="delete-modal" class="md:w-96">
+    <flux:modal name="delete-modal" class="md:w-[32rem]">
         <div class="space-y-6">
             <div class="flex items-center gap-3">
                 <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">

@@ -32,7 +32,7 @@
 * Abrechnung kann nun fehlerfrei bearbeitet werden, auch wenn es bereits einmal im Status "Bezahlt" war
 * Vereinheitlichung von Begriffen und Erweiterung der Lokalisierung
 * Verschiedene technische und optische Anpassungen, Verbesserungen und Updates
-
+* Update auf Laravel 12 und Livewire 4
 ---
 
 # v4.3.2
