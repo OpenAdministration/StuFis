@@ -415,6 +415,17 @@ class HHPHandler extends Renderer
                 <i class="fa fa-fw fa-download"></i> DATEV Export
             </a>
 		<?php }
+        if(Setting::get('tax.active', false)){
+            $canHv = AuthHandler::getInstance()->hasGroup('ref-finanzen-hv'); ?>
+            <form action="<?php echo URIBASE; ?>rest/forms/hhp/add-tax-budgets/<?php echo $hhp_id; ?>"
+                  method="POST" role="form" class="ajax-form" style="display:inline-block;">
+                <?php $this->renderNonce(); ?>
+                <button type="submit" class="btn btn-primary<?php echo $canHv ? '' : ' disabled'; ?>"
+                    <?php echo $canHv ? '' : 'disabled'; ?>>
+                    <i class="fa fa-fw fa-plus"></i> Umsatzsteuer-Titel hinzufügen
+                </button>
+            </form>
+		<?php }
     }
 
     private function checkTitelBudget(float $should, float $is): string

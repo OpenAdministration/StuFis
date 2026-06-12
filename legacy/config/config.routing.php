@@ -266,6 +266,7 @@ $pathConfig = [
                     'type' => 'pattern',
                     'action' => 'view-hhp',
                     'param' => 'hhp-id',
+                    'load' => [LoadGroups::MODALS],
                     'children' => [
                         [
                             'path' => 'titel',
@@ -462,6 +463,19 @@ $pathConfig = [
                                     'type' => 'path',
                                     'action' => 'save-hhp-import',
                                     'groups' => 'ref-finanzen-hv',
+                                ],
+                                [
+                                    'path' => 'add-tax-budgets',
+                                    'type' => 'path',
+                                    'action' => 'add-tax-budgets',
+                                    'groups' => 'ref-finanzen-hv',
+                                    'children' => [
+                                        [
+                                            'path' => '\d+',
+                                            'type' => 'pattern',
+                                            'param' => 'hhp-id',
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],

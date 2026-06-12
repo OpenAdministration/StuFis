@@ -21,6 +21,7 @@ namespace forms;
 
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\BankTransaction;
+use App\Models\TaxBudget;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
@@ -89,6 +90,9 @@ class RestHandler extends EscFunc
                 break;
             case 'save-hhp-import':
                 $this->saveHhpImport($routeInfo);
+                break;
+            case 'add-tax-budgets':
+                $this->saveTaxBudgets($routeInfo);
                 break;
             case 'save-new-konto-credentials':
                 $this->newKontoCredentials($routeInfo);
@@ -1457,6 +1461,70 @@ class RestHandler extends EscFunc
                 ]
             );
         }
+    }
+
+    private function saveTaxBudgets($routeInfo): void
+    {
+        if (! \App\Models\Setting::get('tax.active', false)) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '403',
+                    'msg' => 'Die Umsatzsteuer-Funktion ist nicht aktiviert',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Nicht aktiviert',
+                ]
+            );
+
+            return;
+        }
+
+        $hhpId = (int) $routeInfo['hhp-id'];
+        if (\App\Models\Legacy\LegacyBudgetPlan::find($hhpId) === null) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '404',
+                    'msg' => 'Der Haushaltsplan existiert nicht',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Nicht gefunden',
+                ]
+            );
+
+            return;
+        }
+
+        try {
+            TaxBudget::addToPlan($hhpId);
+        } catch (Exception $e) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Ein Fehler ist aufgetreten',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+
+            return;
+        }
+
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => 'Umsatzsteuer-Titel wurden hinzugefügt',
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'reload' => 1000,
+                'headline' => 'Daten gespeichert',
+                'redirect' => URIBASE.'hhp/'.$hhpId,
+            ]
+        );
     }
 
     private function saveDefaultTanMode($routeInfo): void

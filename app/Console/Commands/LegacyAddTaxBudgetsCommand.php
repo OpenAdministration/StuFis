@@ -2,8 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Legacy\LegacyBudgetGroup;
-use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\TaxBudget;
 use Illuminate\Console\Command;
@@ -16,64 +14,21 @@ class LegacyAddTaxBudgetsCommand extends Command
 
     public function handle(): int
     {
-        return \DB::transaction(function (): int {
-            $planId = $this->argument('plan_id');
+        $planId = (int) $this->argument('plan_id');
 
-            // Validate that the budget plan exists
-            $plan = LegacyBudgetPlan::find($planId);
-            if ($plan === null) {
-                $this->error("LegacyBudgetPlan with ID {$planId} does not exist.");
-                return self::FAILURE;
-            }
+        // Validate that the budget plan exists
+        if (LegacyBudgetPlan::find($planId) === null) {
+            $this->error("LegacyBudgetPlan with ID {$planId} does not exist.");
 
-            $this->info("Adding tax budgets to LegacyBudgetPlan ID: {$planId}");
+            return self::FAILURE;
+        }
 
-            // Create a new budget group for taxes
-            $taxGroup = new LegacyBudgetGroup([
-                'hhp_id' => $planId,
-                'gruppen_name' => 'Umsatzsteuer',
-                'type' => 1, // 1 for Ausgabe (expenses)
-            ]);
-            $taxGroup->save();
+        $this->info("Adding tax budgets to LegacyBudgetPlan ID: {$planId}");
 
-            $this->info("Created budget group: {$taxGroup->gruppen_name} (ID: {$taxGroup->id})");
+        TaxBudget::addToPlan($planId);
 
-            // Create two budget items for the tax group
-            $budgetItem1 = new LegacyBudgetItem([
-                'hhpgruppen_id' => $taxGroup->id,
-                'titel_name' => '7% Umsatzsteuer',
-                'titel_nr' => 'A.99.1',
-                'value' => 0,
-            ]);
-            $budgetItem1->save();
+        $this->info('Successfully added tax budgets!');
 
-            TaxBudget::create([
-                'hhp_id' => $planId,
-                'titel_id' => $budgetItem1->id,
-                'tax_percent' => 7,
-            ]);
-
-            $this->info("Created budget item: {$budgetItem1->titel_name} (ID: {$budgetItem1->id})");
-
-            $budgetItem2 = new LegacyBudgetItem([
-                'hhpgruppen_id' => $taxGroup->id,
-                'titel_name' => '19% Umsatzsteuer',
-                'titel_nr' => 'A.99.2',
-                'value' => 0,
-            ]);
-            $budgetItem2->save();
-
-            TaxBudget::create([
-                'hhp_id' => $planId,
-                'titel_id' => $budgetItem2->id,
-                'tax_percent' => 19,
-            ]);
-
-            $this->info("Created budget item: {$budgetItem2->titel_name} (ID: {$budgetItem2->id})");
-
-            $this->info('Successfully added tax budgets!');
-
-            return self::SUCCESS;
-        });
+        return self::SUCCESS;
     }
 }
