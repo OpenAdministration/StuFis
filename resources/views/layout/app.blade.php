@@ -263,6 +263,12 @@
             </div>
         </header>
 
+        @isset($tabs)
+            <div class="shrink-0 bg-gray-100 pt-1">
+                {{ $tabs }}
+            </div>
+        @endisset
+
         <div class="relative z-0 flex flex-1 overflow-hidden">
             <main {{ $attributes->merge(['class' => "relative z-0 flex-1 overflow-y-auto focus:outline-hidden"]) }}>
                 <livewire:message/>
