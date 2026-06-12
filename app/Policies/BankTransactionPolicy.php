@@ -13,31 +13,31 @@ class BankTransactionPolicy
 
     public function useFinTs(User $user, BankAccount $bankAccount): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 
     public function useCsvUpload(User $user, BankAccount $bankAccount): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 
     public function useCashJournal(User $user, BankAccount $bankAccount): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 
     public function viewAny(User $user): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 
     public function view(User $user, BankTransaction $bankTransaction): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 
     public function createKonto(User $user): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-kv');
+        return $user->can('cash-officer', User::class);
     }
 }

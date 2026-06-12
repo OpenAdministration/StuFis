@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Legacy\Expense;
 use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\FileInfo;
-use framework\auth\AuthHandler;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DeleteExpenses extends Controller
@@ -18,7 +18,7 @@ class DeleteExpenses extends Controller
 
         // authorize user
         $userPerm =
-            AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
+            \Auth::user()->can('budget-officer', User::class)
             || $project->creator->id === \Auth::user()->id
             || explode(';', (string) $expense->created)[1] === \Auth::user()->username;
         // authorize state

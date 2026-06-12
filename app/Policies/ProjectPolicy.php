@@ -37,11 +37,10 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
-        $userGroups = $user->getGroups();
-        $financeAll = $userGroups->contains('ref-finanzen-belege');
-        $approveFinance = $userGroups->contains('ref-finanzen-hv');
-        $approveOrg = $userGroups->contains('ref-finanzen-hv');
-        $approveOther = $userGroups->contains('ref-finanzen-hv');
+        $financeAll = $user->can('check-receipts', User::class);
+        $approveFinance = $user->can('budget-officer', User::class);
+        $approveOrg = $user->can('budget-officer', User::class);
+        $approveOther = $user->can('budget-officer', User::class);
 
         return match ($project->state::class) {
             Draft::class => true,
@@ -60,7 +59,7 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        return $user->id === $project->creator_id || $user->getGroups()->contains('ref-finanzen-hv');
+        return $user->id === $project->creator_id || $user->can('budget-officer', User::class);
     }
 
     public function createExpense(User $user, Project $project): bool
@@ -79,13 +78,12 @@ class ProjectPolicy
 
         $isOwner = $user->id === $project->creator->id;
         $isOrg = $user->getCommittees()->contains($project->org);
-        $userGroups = $user->getGroups();
 
-        $financeAll = $userGroups->contains('ref-finanzen-belege');
-        $approveFinance = $userGroups->contains('ref-finanzen-hv');
-        $approveOrg = $userGroups->contains('ref-finanzen-hv');
-        $approveOther = $userGroups->contains('ref-finanzen-hv');
-        $terminator = $userGroups->contains('ref-finanzen-hv');
+        $financeAll = $user->can('check-receipts', User::class);
+        $approveFinance = $user->can('budget-officer', User::class);
+        $approveOrg = $user->can('budget-officer', User::class);
+        $approveOther = $user->can('budget-officer', User::class);
+        $terminator = $user->can('budget-officer', User::class);
 
         // there are some minor exceptions for certain states, but most of the time the needed permission is only
         // defined by the new state, not the current one
@@ -110,7 +108,7 @@ class ProjectPolicy
             return false;
         }
 
-        return \Auth::user()->can('budget-officer', $user);
+        return $user->can('budget-officer', User::class);
     }
 
     public function updateApproval(User $user, Project $project): bool
@@ -119,11 +117,11 @@ class ProjectPolicy
             return false;
         }
 
-        return \Auth::user()->can('budget-officer', $user);
+        return $user->can('budget-officer', User::class);
     }
 
     public function pickAnyCommittee(User $user): bool
     {
-        return \Auth::user()->can('budget-officer', $user);
+        return $user->can('budget-officer', User::class);
     }
 }

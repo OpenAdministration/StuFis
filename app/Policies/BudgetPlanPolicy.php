@@ -22,16 +22,16 @@ class BudgetPlanPolicy
 
     public function create(User $user): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-hv');
+        return $user->can('budget-officer', User::class);
     }
 
     public function update(User $user, BudgetPlan $budgetPlan): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-hv');
+        return $user->can('budget-officer', User::class);
     }
 
     public function delete(User $user, BudgetPlan $budgetPlan): bool
     {
-        return $user->getGroups()->contains('ref-finanzen-hv');
+        return $user->can('budget-officer', User::class);
     }
 }

@@ -11,6 +11,6 @@ class TodoPolicy
 
     public function viewTodoLists(User $user): bool
     {
-        return $user->getGroups()->contains('ref-finanzen');
+        return $user->can('finance', User::class);
     }
 }

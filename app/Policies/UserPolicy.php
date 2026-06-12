@@ -34,6 +34,16 @@ class UserPolicy
         return $user->getGroups()->contains('ref-finanzen-hv');
     }
 
+    public function checkReceipts(User $user): bool
+    {
+        return $user->getGroups()->contains('ref-finanzen-belege');
+    }
+
+    public function isOfficer(User $user): bool
+    {
+        return $this->cashOfficer($user) || $this->budgetOfficer($user);
+    }
+
     public function admin(User $user): bool
     {
         return $user->getGroups()->contains('admin');
