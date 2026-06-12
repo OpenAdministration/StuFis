@@ -24,6 +24,7 @@ use framework\render\html\BT;
 use framework\render\HTMLPageRenderer;
 use InvalidArgumentException;
 use Monolog\Handler\RotatingFileHandler;
+use Monolog\Level;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
@@ -53,14 +54,13 @@ class FintsConnectionHandler
         }
 
         $this->logger = new Logger('fints', [
-            new RotatingFileHandler(SYSBASE.'/runtime/logs/fints.log'),
+            new RotatingFileHandler(SYSBASE.'/runtime/logs/fints.log',
+                maxFiles: 7,
+                level: DEV ? Level::Debug : Level::Info,
+            ),
         ]);
-        $this->logger->info('FINTS created', ['credentialId' => $this->credentialId]);
-
-        if (DEV) {
-            // log also more internal stuff
-            $this->finTs->setLogger($this->logger);
-        }
+        $this->finTs->setLogger($this->logger);
+        $this->logger->info('FINTS request for credential', ['credentialId' => $this->credentialId]);
     }
 
     public static function saveCredentials(mixed $bankId, mixed $bankuser, mixed $name): int
@@ -469,7 +469,6 @@ class FintsConnectionHandler
         $action = $this->resumableAction();
         if ($action instanceof GetStatementOfAccount) {
             if ($action->isDone()) {
-                $this->finTs->getLogger()->debug(var_export($action, true));
                 $this->saveAction();
 
                 return $action->getStatement();
