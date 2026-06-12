@@ -64,31 +64,6 @@ class FormTemplaterProject
         return $selectable;
     }
 
-    public static function generateGremienSelectable(): array
-    {
-        $userGremien = AuthHandler::getInstance()->getUserGremien();
-        $showAll = AuthHandler::getInstance()->hasGroup('ref-finanzen');
-
-        foreach (GREMIEN as $groupName => $gremien) {
-            $group = [];
-            $group['label'] = $groupName;
-
-            $options = [];
-            sort($gremien);
-            foreach ($gremien as $gremiumName) {
-                if ($showAll || in_array($gremiumName, $userGremien, true)) {
-                    $options[] = ['label' => $gremiumName];
-                }
-            }
-            $group['options'] = $options;
-            $selectable['groups'][] = $group;
-        }
-
-        $selectable['groups'][] = ['label' => 'Sonstige / Keine', 'options' => [['label' => 'Sonstige / Keine Organisation']]];
-
-        return $selectable;
-    }
-
     public static function generateSelectable(array $list): array
     {
         $selectable = [];

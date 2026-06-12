@@ -6,7 +6,6 @@ define('SYSBASE', base_path('/legacy/'));
 
 define('REALM', config('stufis.realm'));
 
-define("GREMIEN", \App\Models\Setting::get('visible_gremien'));
 const URIBASE = '/';
 define('DEV', config('app.debug'));
 define('BASE_URL', config('app.url'));
