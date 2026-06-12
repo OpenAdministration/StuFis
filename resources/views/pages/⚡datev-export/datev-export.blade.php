@@ -6,7 +6,7 @@
         {{-- Card 1: Budget Plan --}}
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6 space-y-5">
-                <flux:select wire:model.live="hhpId" :label="__('datev-export.budget-plan.select-label')" variant="listbox">
+                <flux:select class="max-w-md" wire:model.live="hhpId" :label="__('datev-export.budget-plan.select-label')" variant="listbox">
                     @foreach($this->budgetPlans() as $plan)
                         <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
                     @endforeach
@@ -18,6 +18,7 @@
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6 space-y-8">
                 <flux:select
+                    class="max-w-md"
                     wire:model.live="dateField"
                     :label="__('datev-export.date-field.label')"
                     :description="__('datev-export.date-field.description')"
@@ -28,7 +29,7 @@
                     @endforeach
                 </flux:select>
 
-                <flux:field>
+                <flux:field class="max-w-md">
                     <flux:date-picker
                         mode="range"
                         wire:model.live="dateRange"
