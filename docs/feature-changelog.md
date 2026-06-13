@@ -12,7 +12,8 @@
 **CSV-Import**
 * modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
 * nun für alle Finanzverantwortlichen möglich
-* Abrechnungen werden automatisch auf bezahlt gesetzt, wenn Sie im Verwendungszweck vom Import erwähnt werden
+* Abrechnungen werden automatisch auf bezahlt gesetzt, wenn Sie im Verwendungszweck vom Import erwähnt werden, 
+    * auch wenn diese noch nicht im Status "angewiesen" sind, sondern nur erst im Status "genehmigt"
 * verschiedene Fixes
 
 **Buchungen und Haushaltsplan**

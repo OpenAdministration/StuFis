@@ -224,10 +224,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // we decided to set saldo to 0 if it is the first entry in the DB - alternative would have been to throw an error
         $currentBalance = $account->bankTransactions()->orderBy('id', 'desc')->first()?->saldo ?? 0;
 
-        // Verwendungszwecke whose referenced Auslage could not be auto-marked "paid".
-        // hookZahlung() is a best-effort side effect (it reaches into legacy code that
-        // can fail for unrelated reasons); it must never roll back the actual import,
-        // which is the source of truth. Failures are reported and surfaced as a warning.
+        // References whose Auslage could not be auto-marked "paid". hookZahlung() is a
+        // best-effort side effect (it reaches into legacy code that can fail for unrelated
+        // reasons); it must never roll back the actual import, which is the source of truth.
+        // We pass flash:false so it reports failures via its return value instead of the
+        // legacy session flash, and surface them ourselves as one warning message.
         $failedHooks = [];
 
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
@@ -251,7 +252,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                     }
                 }
                 try {
-                    AuslagenHandler2::hookZahlung($transaction->zweck);
+                    if (($failedRef = AuslagenHandler2::hookZahlung($transaction->zweck, flash: false)) !== null) {
+                        $failedHooks[] = $failedRef;
+                    }
                 } catch (Throwable $e) {
                     report($e);
                     $failedHooks[] = $transaction->zweck;

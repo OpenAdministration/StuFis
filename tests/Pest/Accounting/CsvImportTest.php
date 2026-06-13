@@ -550,16 +550,24 @@ test('a successful import flashes a success message', function (): void {
 });
 
 test('a row whose auslage cannot be auto-marked paid still imports and warns', function (): void {
-    // Regression: a Verwendungszweck like "IP-24-23-A70" triggers AuslagenHandler2::hookZahlung.
-    // When that auslage can't be transitioned to "paid" the legacy code fataled (undefined DEV
-    // constant via HTMLPageRenderer::addFlash), and save()'s catch swallowed it into a generic
-    // csv error, rolling back the WHOLE import — 0 rows, no visible message ("fails silently").
-    // The Saldo nach Buchung column (index 13) is empty here, so saldo is left unmapped.
+    // A Verwendungszweck like "IP-24-<p>-A<e>" triggers AuslagenHandler2::hookZahlung. These two
+    // auslagen are in state "wip" (submitted, not yet approved), which the hook cannot promote
+    // to paid — only "ok"/"instructed" are eligible. hookZahlung(flash:false) returns the
+    // reference instead of flashing; the import still commits (source of truth) and we surface
+    // one warning message. Historically this rolled the WHOLE import back into a generic,
+    // invisible csv error. The Saldo nach Buchung column (index 13) is empty here, so saldo is
+    // left unmapped.
+    $project = Project::factory()->create();
+    $e1 = Expense::factory()->create(['projekt_id' => $project->id, 'state' => 'wip;2024-01-01 00:00:00;owner;Owner']);
+    $e2 = Expense::factory()->create(['projekt_id' => $project->id, 'state' => 'wip;2024-01-01 00:00:00;owner;Owner']);
+    $ref1 = "IP-24-{$project->id}-A{$e1->id}";
+    $ref2 = "IP-24-{$project->id}-A{$e2->id}";
+
     $acc = BankAccount::factory()->create();
 
     $content = "Bezeichnung Auftragskonto;IBAN Auftragskonto;BIC Auftragskonto;Bankname Auftragskonto;Buchungstag;Valutadatum;Name Zahlungsbeteiligter;IBAN Zahlungsbeteiligter;BIC (SWIFT-Code) Zahlungsbeteiligter;Buchungstext;Verwendungszweck;Betrag;Waehrung;Saldo nach Buchung;Bemerkung;Kategorie;Steuerrelevant;Glaeubiger ID;Mandatsreferenz\n"
-        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;ING-DiBa;DE02500105170137075030;IHHVRZIL;GUTSCHR. UEBERWEISUNG;IP-24-23-A70 - Q4 - Kontoführung;70;EUR;;;Sonstiges;;;\n"
-        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;Hostsharing;DE02500105170137075030;MWFYLYEL;GUTSCHR. UEBERWEISUNG;IP-24-26-A79 - Dezember - Hosting;80;EUR;;;Sonstiges;;;\n";
+        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;ING-DiBa;DE02500105170137075030;IHHVRZIL;GUTSCHR. UEBERWEISUNG;{$ref1} - Q4 - Kontoführung;70;EUR;;;Sonstiges;;;\n"
+        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;Hostsharing;DE02500105170137075030;MWFYLYEL;GUTSCHR. UEBERWEISUNG;{$ref2} - Dezember - Hosting;80;EUR;;;Sonstiges;;;\n";
 
     $wire = Livewire::actingAs(cashOfficer())
         ->test('pages::bank.csv-import')
@@ -583,8 +591,8 @@ test('a row whose auslage cannot be auto-marked paid still imports and warns', f
 
     // The user is warned (not silently dropped) about the references needing manual review.
     expect(session('message.type'))->toBe('warning')
-        ->and(session('message.text'))->toContain('IP-24-23-A70')
-        ->and(session('message.text'))->toContain('IP-24-26-A79');
+        ->and(session('message.text'))->toContain($ref1)
+        ->and(session('message.text'))->toContain($ref2);
 });
 
 test('a referenced auslage in "instructed" is auto-marked paid and the import succeeds', function (): void {
@@ -625,6 +633,45 @@ test('a referenced auslage in "instructed" is auto-marked paid and the import su
 
     // the hook actually transitioned the auslage: the "payed" audit column is now set
     expect($expense->fresh()->payed)->not->toBeEmpty();
+});
+
+test('a referenced auslage still in "ok" is auto-promoted to instructed and marked paid', function (): void {
+    // An approved ("ok") Auslage that was never formally instructed but whose payment shows up
+    // in the statement: hookZahlung auto-promotes ok -> instructed (same ref-finanzen-kv group
+    // as payed) and then flips the "payed" sub-state. The import reports plain success.
+    $project = Project::factory()->create();
+    $expense = Expense::factory()->create([
+        'projekt_id' => $project->id,
+        'state' => 'ok;2024-01-01 00:00:00;hv;Haushalts Wart',
+    ]);
+    expect($expense->fresh()->payed)->toBeEmpty();
+
+    $acc = BankAccount::factory()->create();
+
+    $content = "konto;date;valuta;name;iban;type;zweck;value\n"
+        ."AStA;05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;IP-24-{$project->id}-A{$expense->id} Erstattung;70\n";
+
+    Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.csv-import')
+        ->set('account_id', $acc->id)
+        ->set('csv', File::createWithContent('ok-payed.csv', $content))
+        ->set('mapping.date', 1)
+        ->set('mapping.valuta', 2)
+        ->set('mapping.empf_name', 3)
+        ->set('mapping.empf_iban', 4)
+        ->set('mapping.type', 5)
+        ->set('mapping.zweck', 6)
+        ->set('mapping.value', 7)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(BankTransaction::where('konto_id', $acc->id)->count())->toBe(1)
+        ->and(session('message.type'))->toBe('success');
+
+    // the hook walked ok -> instructed -> payed: main state is now instructed and payed is set
+    $fresh = $expense->fresh();
+    expect($fresh->payed)->not->toBeEmpty()
+        ->and($fresh->state)->toStartWith('instructed');
 });
 
 test('a field mapped to CSV column index 0 is imported', function (): void {

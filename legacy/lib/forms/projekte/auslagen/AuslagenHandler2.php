@@ -786,25 +786,49 @@ class AuslagenHandler2 extends Renderer
     }
 
     /**
+     * Try to flip the Auslage referenced in a bank Verwendungszweck to "gezahlt".
+     *
      * @param  string  $verwendungszweck  will be searched through with regex for fetching project / auslagen id
+     * @param  bool  $flash  whether to push a legacy warning flash on failure. The legacy
+     *                       FinTS sync runs inside the bootstrap and wants the flash; the
+     *                       Livewire CSV import passes false and reports via the return value
+     *                       instead (it has no request-bound session for addFlash to use).
+     * @return string|null the matched reference (e.g. "IP-24-23-A70") when the Auslage could
+     *                     NOT be marked paid, or null when there was nothing to do / it succeeded
      */
-    public static function hookZahlung(string $verwendungszweck): void
+    public static function hookZahlung(string $verwendungszweck, bool $flash = true): ?string
     {
         // pattern which has wide matching for verwendungszweck (?<x>...) is a named capture group with name x
         $ipRegex = '/I?P(?<hhp>-?[0-9]{2}-)?(?<project>[0-9]+)-A(?<auslage>[0-9]+)/';
         $found = preg_match($ipRegex, $verwendungszweck, $matches);
         if ($found !== 1) {
-            return;
+            return null;
         }
         $hhpYear = $matches['hhp']; // could be year or maybe id in the future -> bad to use
         $projectId = $matches['project'];
         $auslagenId = $matches['auslage'];
         $wholeMatch = $matches[0];
         $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
+        // An Auslage that is approved ("ok") but not yet formally instructed can still be paid
+        // out by the bank. Auto-promote ok -> instructed so the "payed" substate (which lives
+        // under "instructed") becomes reachable. ok -> instructed requires the same
+        // ref-finanzen-kv group as payed, so this adds no new permission surface. The
+        // "instructed" audit entry is attributed to whoever runs the import.
+        if ($ah->stateInfo['state'] === 'ok'
+            && $ah->state_change('instructed', $ah->getAuslagenEtag())) {
+            // state_change rotates the etag and leaves $ah's cached data stale; rebuild.
+            $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
+        }
         $stateChanged = $ah->state_change('payed', $ah->getAuslagenEtag());
         if (! $stateChanged) {
-            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status 'gezahlt' überführt werden. Bitte prüfe diesen Eintrag manuell.");
+            if ($flash) {
+                HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status 'gezahlt' überführt werden. Bitte prüfe diesen Eintrag manuell.");
+            }
+
+            return $wholeMatch;
         }
+
+        return null;
     }
 
     public function getStateString(): string
