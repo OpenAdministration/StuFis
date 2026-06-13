@@ -17,7 +17,7 @@ class MigrateConfigToDatabase extends Command
     {
         $config = $this->getLegacyConfig();
 
-        if (empty($config)) {
+        if ($config === []) {
             $this->error('No legacy config found.');
 
             return self::FAILURE;

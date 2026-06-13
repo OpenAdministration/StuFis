@@ -24,7 +24,7 @@ class ItemForm extends Form
     public function __construct(Component $component, $propertyName, ?BudgetItem $item = null)
     {
         parent::__construct($component, $propertyName);
-        if ($item !== null) {
+        if ($item instanceof BudgetItem) {
             $this->setItem($item);
         }
     }

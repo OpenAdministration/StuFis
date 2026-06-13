@@ -181,7 +181,7 @@ abstract class ProjectState extends State implements Wireable
      */
     public function getValidator(array $data = [], ?User $user = null): \Illuminate\Contracts\Validation\Validator
     {
-        if (empty($data)) {
+        if ($data === []) {
             $model = $this->getModel();
             $data = $this->getModel()->getAttributes();
             $data['posts'] = $model->posts->all();

@@ -320,7 +320,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function getTotalIncome(): Money
     {
-        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
+        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry instanceof Money ? $carry->add($post['einnahmen']) : $post['einnahmen'], Money::EUR(0));
     }
 
     /**
@@ -328,7 +328,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function getTotalExpenses(): Money
     {
-        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
+        return collect($this->posts)->reduce(fn (?Money $carry, array $post) => $carry instanceof Money ? $carry->add($post['ausgaben']) : $post['ausgaben'], Money::EUR(0));
     }
 
     public function removeExistingAttachment(int $id): void

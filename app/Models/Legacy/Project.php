@@ -103,8 +103,8 @@ class Project extends Model
     protected function responsible(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
-            set: fn (string $value) => empty($value) || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
+            get: fn (?string $value) => $value === null || $value === '' || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
+            set: fn (string $value) => $value === '' || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
         );
     }
 

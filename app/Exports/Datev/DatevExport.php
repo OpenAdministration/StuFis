@@ -211,7 +211,7 @@ class DatevExport
     private function amount(Booking $booking, Expense $expense, bool $isReceivable): float
     {
         $invers = ($isReceivable === false && $booking->budgetItem->budgetGroup->type === 0) ||
-        ($isReceivable === true && $booking->budgetItem->budgetGroup->type === 1);
+        ($isReceivable && $booking->budgetItem->budgetGroup->type === 1);
 
         return $invers ? -$booking->value : $booking->value;
     }

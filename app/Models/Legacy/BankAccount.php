@@ -76,7 +76,7 @@ class BankAccount extends Model
     {
         return Attribute::make(
             get: static function (?string $value) {
-                if (empty($value)) {
+                if (in_array($value, [null, '', '0'], true)) {
                     return [];
                 }
 

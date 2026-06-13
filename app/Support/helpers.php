@@ -8,7 +8,7 @@ use Spatie\Regex\Regex;
 /**
  * Guess the format of the input date because banks do not like standards :(
  */
-function guessDate(string $dateString, string $newFormat = 'Y-m-d'): string
+function guessDate(string $dateString, ?string $newFormat = 'Y-m-d'): string
 {
     $formats = ['d.m.y', 'd.m.Y', 'y-m-d', 'Y-m-d', 'jmy', 'jmY', 'dmy', 'dmY'];
     foreach ($formats as $format) {
@@ -18,7 +18,7 @@ function guessDate(string $dateString, string $newFormat = 'Y-m-d'): string
             continue;
         }
         // if successfully parsed
-        if ($newFormat) {
+        if ($newFormat !== '' && $newFormat !== null) {
             return $ret->format($newFormat);
         }
 

@@ -171,7 +171,7 @@ class LegacyController extends Controller
     public function belegePdf(int $project_id, int $auslagen_id, int $version, ?string $file_name = null)
     {
         // file was generated and requested by the iframe
-        if (! empty($file_name)) {
+        if ($file_name !== null) {
             return \Storage::response(
                 "auslagen/$auslagen_id/belege-pdf-v$version.pdf",
                 $file_name
@@ -198,7 +198,7 @@ class LegacyController extends Controller
     public function zahlungsanweisungPdf(int $project_id, int $auslagen_id, int $version, ?string $file_name = null)
     {
         // file was generated and requested by the iframe call
-        if (! empty($file_name)) {
+        if ($file_name !== null) {
             return \Storage::response(
                 "/auslagen/$auslagen_id/zahlungsanweisung-v$version.pdf",
                 $file_name

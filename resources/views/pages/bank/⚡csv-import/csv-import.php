@@ -151,8 +151,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                     // normalize data
                     foreach ($lineArray as $key => $cell) {
                         // tests
-                        $moneyTest = Regex::match('/^(\-?)([0-9]+)([,\.]([0-9]{1,2}))?$/', $cell);
-                        $dateTest = Regex::match('/^([0-3]?[0-9])\.([01]?[0-9])\.((20)?[0-9]{2})$/', $cell);
+                        $moneyTest = Regex::match('/^(\-?)(\d+)([,\.](\d{1,2}))?$/', $cell);
+                        $dateTest = Regex::match('/^([0-3]?\d)\.([01]?\d)\.((20)?\d{2})$/', $cell);
                         // conversions
                         if ($moneyTest->hasMatch()) {
                             // normalize money
