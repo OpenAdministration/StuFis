@@ -16,6 +16,7 @@ class Setting extends Model
 
     protected $fillable = ['key', 'value'];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

@@ -19,6 +19,7 @@ class TaxBudget extends Model
         'tax_percent',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

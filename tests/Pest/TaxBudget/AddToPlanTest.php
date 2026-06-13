@@ -7,7 +7,7 @@ use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\TaxBudget;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->plan = LegacyBudgetPlan::create([
         'von' => now()->startOfYear(),
         'bis' => now()->endOfYear(),
@@ -22,7 +22,7 @@ function taxTitleCount(int $planId): int
     return LegacyBudgetItem::whereIn('hhpgruppen_id', $groupIds)->count();
 }
 
-it('adds the Umsatzsteuer group and two tax titles', function () {
+it('adds the Umsatzsteuer group and two tax titles', function (): void {
     TaxBudget::addToPlan($this->plan->id);
 
     expect(LegacyBudgetGroup::where('hhp_id', $this->plan->id)->count())->toBe(1)
@@ -30,7 +30,7 @@ it('adds the Umsatzsteuer group and two tax titles', function () {
         ->and(TaxBudget::where('hhp_id', $this->plan->id)->count())->toBe(2);
 });
 
-it('does not add duplicates when called repeatedly', function () {
+it('does not add duplicates when called repeatedly', function (): void {
     TaxBudget::addToPlan($this->plan->id);
     TaxBudget::addToPlan($this->plan->id);
     TaxBudget::addToPlan($this->plan->id);

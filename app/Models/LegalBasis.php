@@ -16,6 +16,7 @@ class LegalBasis extends Model
         'is_active',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [
@@ -24,12 +25,12 @@ class LegalBasis extends Model
         ];
     }
 
-    public function scopeOrdered($query)
+    protected function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
     }
 
-    public function scopeActive($query)
+    protected function scopeActive($query)
     {
         return $query->where('is_active', true);
     }

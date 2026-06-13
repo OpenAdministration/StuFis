@@ -21,6 +21,7 @@ class Draft extends ProjectState
         return 'zinc';
     }
 
+    #[\Override]
     public function basicRules(): array
     {
         return [
@@ -41,6 +42,7 @@ class Draft extends ProjectState
         ];
     }
 
+    #[\Override]
     public function budgetRules(): array
     {
         return [
@@ -48,6 +50,7 @@ class Draft extends ProjectState
         ];
     }
 
+    #[\Override]
     public function approvalRules(): array
     {
         return [

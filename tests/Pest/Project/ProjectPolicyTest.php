@@ -13,7 +13,7 @@ use App\States\Project\NeedOrgApproval;
 use App\States\Project\Revoked;
 use App\States\Project\Terminated;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->actingAs(user());
 });
 
@@ -21,7 +21,7 @@ beforeEach(function () {
 // update() — full state × role matrix
 // =============================================================================
 
-it('allows/denies update based on state and user role', function (string $stateClass, string $userFn, bool $expected) {
+it('allows/denies update based on state and user role', function (string $stateClass, string $userFn, bool $expected): void {
     $actor = $userFn();
     $project = Project::factory()->by(user())->create(['state' => $stateClass::$name]);
 
@@ -80,7 +80,7 @@ it('allows/denies update based on state and user role', function (string $stateC
 // user() owns the project and is in the org committee ('Students Council')
 // Owner can transition to: Draft, Applied, Revoked, Terminated
 
-it('allows owner to transition to permitted states', function ($fromState, string $toStateClass, bool $expected) {
+it('allows owner to transition to permitted states', function ($fromState, string $toStateClass, bool $expected): void {
     $project = Project::factory()->by(user())->withState($fromState)->create([
 
         'org' => 'Students Council',
@@ -122,7 +122,7 @@ it('allows owner to transition to permitted states', function ($fromState, strin
 // =============================================================================
 // user() is in 'Students Council' but does NOT own the project
 
-it('allows org member (non-owner) to transition to permitted states', function (string $fromState, string $toStateClass, bool $expected) {
+it('allows org member (non-owner) to transition to permitted states', function (string $fromState, string $toStateClass, bool $expected): void {
     // Project created by budgetManager, but org matches user()'s committee
     $project = Project::factory()->by(budgetManager())->create([
         'state' => $fromState,
@@ -148,7 +148,7 @@ it('allows org member (non-owner) to transition to permitted states', function (
 // transitionTo() — non-owner, non-org user has no transition rights
 // =============================================================================
 
-it('denies transitions for user with no ownership or org membership', function (string $fromState, string $toStateClass) {
+it('denies transitions for user with no ownership or org membership', function (string $fromState, string $toStateClass): void {
     // Project not owned by user(), org doesn't match user()'s committees
     $project = Project::factory()->by(budgetManager())->create([
         'state' => $fromState,
@@ -170,7 +170,7 @@ it('denies transitions for user with no ownership or org membership', function (
 // =============================================================================
 // Non-owner, non-org — only group-based permissions
 
-it('allows cashOfficer to transition via ref-finanzen-belege', function (string $fromState, string $toStateClass, bool $expected) {
+it('allows cashOfficer to transition via ref-finanzen-belege', function (string $fromState, string $toStateClass, bool $expected): void {
     $project = Project::factory()->by(user())->create([
         'state' => $fromState,
         'org' => 'Students Council',
@@ -198,7 +198,7 @@ it('allows cashOfficer to transition via ref-finanzen-belege', function (string 
 // transitionTo() — budgetManager (ref-finanzen-hv + ref-finanzen-belege)
 // =============================================================================
 
-it('allows budgetManager to transition via ref-finanzen-hv', function (string $fromState, string $toStateClass, bool $expected) {
+it('allows budgetManager to transition via ref-finanzen-hv', function (string $fromState, string $toStateClass, bool $expected): void {
     $project = Project::factory()->by(user())->create([
         'state' => $fromState,
         'org' => 'Students Council',
@@ -226,7 +226,7 @@ it('allows budgetManager to transition via ref-finanzen-hv', function (string $f
 // transitionTo() — invalid transitions are denied regardless of permissions
 // =============================================================================
 
-it('denies structurally invalid transitions even for budgetManager', function (string $fromState, string $toStateClass) {
+it('denies structurally invalid transitions even for budgetManager', function (string $fromState, string $toStateClass): void {
     $project = Project::factory()->by(budgetManager())->create([
         'state' => $fromState,
     ]);

@@ -35,7 +35,7 @@ class MigrateConfigToDatabase extends Command
 
     private function migrateSettings(array $config): void
     {
-        $this->components->task('Migrating settings', function () use ($config) {
+        $this->components->task('Migrating settings', function () use ($config): void {
             $mapping = [
                 'mail_domain' => $config['mail-domain'] ?? '',
                 'finance_mail' => $config['finance-mail'] ?? '',
@@ -62,7 +62,7 @@ class MigrateConfigToDatabase extends Command
             return;
         }
 
-        $this->components->task('Migrating legal bases ('.count($rechtsgrundlagen).')', function () use ($rechtsgrundlagen) {
+        $this->components->task('Migrating legal bases ('.count($rechtsgrundlagen).')', function () use ($rechtsgrundlagen): void {
             $order = 0;
 
             foreach ($rechtsgrundlagen as $slug => $entry) {
@@ -94,7 +94,7 @@ class MigrateConfigToDatabase extends Command
         // Flatten the categorized structure into a single list
         $flat = Arr::flatten($gremien);
 
-        $this->components->task('Migrating visible gremien ('.count($flat).')', function () use ($flat) {
+        $this->components->task('Migrating visible gremien ('.count($flat).')', function () use ($flat): void {
             Setting::set('user.committees.data', $flat);
             Setting::set('user.committees.mode', 'filter');
         });

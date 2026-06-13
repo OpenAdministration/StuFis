@@ -162,7 +162,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public function addTaxPosts(): void
     {
-        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget) {
+        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget): void {
             $budgetTitle = $taxBudget->legacyBudgetTitle;
             $this->posts[] = ([
                 'name' => $budgetTitle->titel_name.' - Einnahmen',

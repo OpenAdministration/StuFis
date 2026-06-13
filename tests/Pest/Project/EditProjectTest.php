@@ -9,7 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->budgetPlan = LegacyBudgetPlan::create([
         'von' => now()->startOfYear(),
         'bis' => now()->endOfYear(),
@@ -18,14 +18,14 @@ beforeEach(function () {
     $this->actingAs(user());
 });
 
-it('can render the create project page', function () {
+it('can render the create project page', function (): void {
     Livewire::test('pages::project.edit-project')
         ->assertStatus(200)
         ->assertSet('isNew', true)
         ->assertCount('posts', 1);
 });
 
-it('can create a new project', function () {
+it('can create a new project', function (): void {
     Storage::fake('projects');
     $file = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
 
@@ -53,7 +53,7 @@ it('can create a new project', function () {
         ->and($project->attachments)->toHaveCount(1);
 });
 
-it('can load an existing project for editing', function () {
+it('can load an existing project for editing', function (): void {
     $project = Project::factory()->by(user())->create([
         'name' => 'Existing Project',
     ]);
@@ -70,7 +70,7 @@ it('can load an existing project for editing', function () {
         ->assertSet('posts.0.name', 'Existing Post');
 });
 
-it('can add and remove posts', function () {
+it('can add and remove posts', function (): void {
     Livewire::test('pages::project.edit-project')
         ->assertCount('posts', 1)
         ->call('addEmptyPost')
@@ -79,7 +79,7 @@ it('can add and remove posts', function () {
         ->assertCount('posts', 1);
 });
 
-it('prevents saving if version has changed (optimistic locking)', function () {
+it('prevents saving if version has changed (optimistic locking)', function (): void {
     $project = Project::factory()->by(user())->create(['version' => 1]);
 
     $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id]);
@@ -94,7 +94,7 @@ it('prevents saving if version has changed (optimistic locking)', function () {
     expect($project->refresh()->name)->not->toBe('Updated Name');
 });
 
-it('validates required fields based on state rules', function () {
+it('validates required fields based on state rules', function (): void {
     Livewire::test('pages::project.edit-project')
         ->call('saveAs', 'applied')
         ->errors();

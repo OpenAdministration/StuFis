@@ -43,7 +43,7 @@ class ProjectMailDomainChangeCommand extends Command
 
         foreach ($projects as $project) {
             // Extract the local part before @ or use the whole value if no @
-            $localPart = strstr($project->responsible, '@', true) ?: $project->responsible;
+            $localPart = strstr((string) $project->responsible, '@', true) ?: $project->responsible;
 
             // Update to the new domain
             $project->responsible = $localPart.'@'.$domain;

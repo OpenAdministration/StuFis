@@ -48,11 +48,10 @@ class ProjectAttachment extends Model
         return $this->belongsTo(Project::class, 'projekt_id', 'id');
     }
 
-    public function getHumanSizeAttribute(): string
+    protected function humanSize(): Attribute
     {
-        return Attribute::make(
+        return Attribute::make(get: fn () => Attribute::make(
             get: fn () => $this->attributes['size'] / 1024 .'MB',
-        );
-
+        ));
     }
 }

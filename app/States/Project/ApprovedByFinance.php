@@ -25,6 +25,7 @@ class ApprovedByFinance extends ProjectState
         return 'green';
     }
 
+    #[\Override]
     public function approvalRules(): array
     {
         return [
@@ -33,6 +34,7 @@ class ApprovedByFinance extends ProjectState
         ];
     }
 
+    #[\Override]
     public function budgetRules(): array
     {
         return [

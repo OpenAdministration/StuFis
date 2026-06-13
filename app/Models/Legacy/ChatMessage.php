@@ -52,6 +52,7 @@ class ChatMessage extends Model
         'content',
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

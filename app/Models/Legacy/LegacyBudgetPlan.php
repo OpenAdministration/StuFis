@@ -87,6 +87,7 @@ class LegacyBudgetPlan extends Model
         }
     }
 
+    #[\Override]
     protected function casts(): array
     {
         return [

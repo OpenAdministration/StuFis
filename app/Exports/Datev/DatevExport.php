@@ -11,17 +11,18 @@ use App\Models\Legacy\FileInfo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DatevExport
 {
     public function __construct(
-        private int $hhpId,
-        private Carbon $dateRangeStart,
-        private Carbon $dateRangeEnd,
-        private bool $exportPdfs = false,
-        private DatevExportDateField $dateField = DatevExportDateField::BookingDate,
+        private readonly int $hhpId,
+        private readonly Carbon $dateRangeStart,
+        private readonly Carbon $dateRangeEnd,
+        private readonly bool $exportPdfs = false,
+        private readonly DatevExportDateField $dateField = DatevExportDateField::BookingDate,
     ) {}
 
     /**
@@ -232,7 +233,7 @@ class DatevExport
         // a "datetime;user;name" audit string — take the datetime prefix.
         $latestReceiptDate = $expense->receipts->pluck('datum')->filter()->max();
 
-        return Carbon::parse($latestReceiptDate ?? explode(';', (string) $expense->created)[0]);
+        return Date::parse($latestReceiptDate ?? explode(';', (string) $expense->created)[0]);
     }
 
     /** Composite-keyed (id-konto_id) bank transactions for every booking's payment. */

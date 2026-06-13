@@ -54,6 +54,7 @@ class ProjectPost extends Model
 
     protected $guarded = ['id', 'projekt_id'];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

@@ -4,8 +4,8 @@ use App\Exports\Datev\DatevExport;
 use App\Exports\Datev\DatevExportDateField;
 use App\Exports\Datev\DatevExportPreviewRow;
 use App\Models\Legacy\LegacyBudgetPlan;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Exists;
 use Livewire\Attributes\Computed;
@@ -119,8 +119,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         return new DatevExport(
             hhpId: $this->hhpId,
-            dateRangeStart: Carbon::parse($this->dateRange['start']),
-            dateRangeEnd: Carbon::parse($this->dateRange['end']),
+            dateRangeStart: Date::parse($this->dateRange['start']),
+            dateRangeEnd: Date::parse($this->dateRange['end']),
             exportPdfs: $withPdfs,
             dateField: DatevExportDateField::from($this->dateField),
         );
@@ -160,8 +160,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'file' => basename($path),
             'name' => sprintf(
                 'datev-export_%s_%s.zip',
-                Carbon::parse($this->dateRange['start'])->format('Y-m-d'),
-                Carbon::parse($this->dateRange['end'])->format('Y-m-d')
+                Date::parse($this->dateRange['start'])->format('Y-m-d'),
+                Date::parse($this->dateRange['end'])->format('Y-m-d')
             ),
         ]));
     }

@@ -23,7 +23,7 @@ class LegacyUnbookExpensesCommand extends Command
 
         $unbookedReciepts = ExpenseReceipt::query()
             ->whereNotIn('id', $bookedRecieptIds)
-            ->whereHas('expense', function ($query) {
+            ->whereHas('expense', function ($query): void {
                 $query->where('state', 'like', 'booked%');
             })
             ->get();

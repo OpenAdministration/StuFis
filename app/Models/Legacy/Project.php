@@ -116,6 +116,7 @@ class Project extends Model
         'updating' => UpdatingModel::class,
     ];
 
+    #[\Override]
     protected function casts(): array
     {
         return [

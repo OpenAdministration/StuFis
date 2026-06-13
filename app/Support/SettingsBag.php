@@ -10,12 +10,7 @@ use Stringable;
 
 class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Stringable
 {
-    protected array $attributes;
-
-    public function __construct(array $attributes = [])
-    {
-        $this->attributes = $attributes;
-    }
+    public function __construct(protected array $attributes = []) {}
 
     /**
      * Get a value using dot notation or direct key.
