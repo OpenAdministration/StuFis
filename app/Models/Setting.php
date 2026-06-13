@@ -40,7 +40,8 @@ class Setting extends Model
                     'prefix' => '',
                 ],
             ],
-
+            'tax.active' => false,
+            'datev' => false,
         ];
     }
 
@@ -53,7 +54,7 @@ class Setting extends Model
     public static function get(string $key, mixed $default = null): mixed
     {
         $setting = static::find($key);
-        $value = $setting?->value ?? $default ?? data_get(static::defaults(), $key);
+        $value = $setting?->value ?? $default ?? data_get(static::toMap(), $key);
 
         if (is_array($value) && ! array_is_list($value)) {
             return new SettingsBag($value);
