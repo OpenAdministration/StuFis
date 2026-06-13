@@ -31,7 +31,8 @@ it('can create a new project', function () {
 
     Livewire::test('pages::project.edit-project')
         ->set('name', 'Test Project')
-        ->set('responsible', 'test@example.com')
+        // Must resolve under the `email:rfc,dns` rule; example.com (RFC 2606) has no MX.
+        ->set('responsible', 'test@open-administration.de')
         ->set('org', 'Test Org')
         ->set('beschreibung', 'This is a description that is long enough for validation.')
         ->set('dateRange', ['start' => now()->format('Y-m-d'), 'end' => now()->addDays(5)->format('Y-m-d')])
@@ -42,7 +43,8 @@ it('can create a new project', function () {
         ->set('posts.0.ausgaben', Money::EUR(10000)) // 100.00 EUR
 
         ->set('newAttachments', [$file])
-        ->call('saveAs', 'draft');
+        ->call('saveAs', 'draft')
+        ->assertHasNoErrors();
 
     $project = Project::where('name', 'Test Project')->first();
     expect($project)->not->toBeNull()

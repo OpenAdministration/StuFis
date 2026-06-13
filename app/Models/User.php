@@ -128,6 +128,7 @@ class User extends Authenticatable
         return match ($configMode) {
             'filter' => $configSuperSet->intersect(resolve(AuthService::class)->userCommittees()),
             'all' => $configSuperSet,
+            'raw' => resolve(AuthService::class)->userCommittees(),
         };
     }
 }

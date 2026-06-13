@@ -10,9 +10,11 @@ test('csv import is accessible as cash officer', function (): void {
         ->assertSuccessful();
 });
 
-test('csv import is not accessible as budget officer', function (): void {
+test('csv import is accessible as finance member', function (): void {
+    // Access is granted to the whole ref-finanzen (finance) group, which
+    // includes the budget officer (see da09b8dc).
     Livewire::actingAs(budgetManager())->test('pages::bank.csv-import')
-        ->assertForbidden();
+        ->assertSuccessful();
 });
 
 test('csv import is not accessible as normal user', function (): void {
@@ -66,7 +68,7 @@ test('php.ini has utf8 as default_charset', function (): void {
     expect(strtolower(ini_get('default_charset')))->toEqual('utf-8');
 });
 
-test('parse csv utf8 encoding', function ($csvHeader, $csvData): void {
+test('parse csv utf8 encoding', function ($header, $data): void {
     $acc = BankAccount::factory()->create();
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
@@ -75,11 +77,11 @@ test('parse csv utf8 encoding', function ($csvHeader, $csvData): void {
         ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
         // check if file is correctly parsed
-        ->assertSet('header', $csvHeader)
-        ->assertSet('data', collect($csvData));
+        ->assertSet('header', $header)
+        ->assertSet('data', collect($data));
 })->with('csv imports');
 
-test('parse csv win encoding', function ($csvHeader, $csvData): void {
+test('parse csv win encoding', function ($header, $data): void {
     $acc = BankAccount::orderBy('id', 'desc')->first();
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
@@ -87,8 +89,8 @@ test('parse csv win encoding', function ($csvHeader, $csvData): void {
         ->test('pages::bank.csv-import')
         ->set('account_id', $acc->id) // an account without transactions
         ->set('csv', $csvFile)
-        ->assertSet('header', $csvHeader)
-        ->assertSet('data', collect($csvData));
+        ->assertSet('header', $header)
+        ->assertSet('data', collect($data));
 })->with('csv imports');
 
 test('views showing properly', function (): void {

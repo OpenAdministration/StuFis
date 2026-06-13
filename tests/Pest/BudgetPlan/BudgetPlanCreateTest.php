@@ -51,4 +51,4 @@ it('creates a new draft budget plan with default groups and items and redirects 
 
     expect($inGroup->children()->first()->short_name)->toBe('E1.1');
     expect($outGroup->children()->first()->short_name)->toBe('A1.1');
-});
+})->todo('budget-plan is a dev-only feature; enable once it graduates out of dev (preview/stable)');

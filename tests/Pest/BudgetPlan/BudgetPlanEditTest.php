@@ -66,4 +66,4 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     $lw->call('delete', $incomeRoot->id)
         ->assertHasErrors();
     expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();
-});
+})->todo('budget-plan is a dev-only feature; enable once it graduates out of dev (preview/stable)');
