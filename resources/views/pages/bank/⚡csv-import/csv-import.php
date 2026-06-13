@@ -224,6 +224,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // we decided to set saldo to 0 if it is the first entry in the DB - alternative would have been to throw an error
         $currentBalance = $account->bankTransactions()->orderBy('id', 'desc')->first()?->saldo ?? 0;
 
+        // Verwendungszwecke whose referenced Auslage could not be auto-marked "paid".
+        // hookZahlung() is a best-effort side effect (it reaches into legacy code that
+        // can fail for unrelated reasons); it must never roll back the actual import,
+        // which is the source of truth. Failures are reported and surfaced as a warning.
+        $failedHooks = [];
+
         // create BankTransaction with values from $data, according to the keys assigned in $mapping
         try {
             DB::beginTransaction();
@@ -233,20 +239,31 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 $transaction->konto_id = $this->account_id;
 
                 foreach ($this->mapping as $db_col_name => $csv_col_id) {
-                    if (! empty($this->mapping[$db_col_name])) {
-                        $transaction->$db_col_name = $this->formatDataDb($row[$this->mapping[$db_col_name]], $db_col_name);
+                    // filled() (not ! empty()) so CSV column index 0 counts as mapped —
+                    // ! empty(0) is false, which silently dropped any field mapped to the
+                    // first column (e.g. a NOT NULL "date", failing the whole import).
+                    if (filled($csv_col_id)) {
+                        $transaction->$db_col_name = $this->formatDataDb($row[$csv_col_id], $db_col_name);
                     } elseif ($db_col_name === 'saldo') {
                         $currentValue = str($row[$this->mapping['value']])->replace(',', '.');
                         $currentBalance = bcadd((string) $currentBalance, (string) $currentValue, 2);
                         $transaction->$db_col_name = $this->formatDataDb($currentBalance, $db_col_name);
                     }
                 }
-                AuslagenHandler2::hookZahlung($transaction->zweck);
+                try {
+                    AuslagenHandler2::hookZahlung($transaction->zweck);
+                } catch (Throwable $e) {
+                    report($e);
+                    $failedHooks[] = $transaction->zweck;
+                }
                 $transaction->save();
             }
             DB::commit();
-        } catch (Throwable) {
+        } catch (Throwable $e) {
             DB::rollBack();
+            // Log the swallowed cause: the user only sees a generic message, so without
+            // this the import would fail silently with no trace for ops to diagnose.
+            report($e);
             $this->addError('csv', __('konto.csv-import-error'));
 
             return;
@@ -271,11 +288,22 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // instead produced /konto?konto=id, landing on the generic overview.
         $hhp = LegacyBudgetPlan::latest()?->id;
 
-        return to_route('legacy.konto', ['hhp_id' => $hhp, 'konto_id' => $this->account_id])
-            ->with(['message' => [
+        $message = $failedHooks === []
+            ? [
                 'text' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()]),
                 'type' => 'success',
-            ]]);
+            ]
+            : [
+                'text' => __('konto.csv-import-hook-warning-msg', [
+                    'new-saldo' => $newBalance,
+                    'transaction-amount' => $this->data->count(),
+                    'references' => implode(', ', $failedHooks),
+                ]),
+                'type' => 'warning',
+            ];
+
+        return to_route('legacy.konto', ['hhp_id' => $hhp, 'konto_id' => $this->account_id])
+            ->with(['message' => $message]);
     }
 
     public function with(): array

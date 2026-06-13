@@ -2,7 +2,9 @@
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use App\Models\Legacy\Expense;
 use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\Legacy\Project;
 use Illuminate\Http\Testing\File;
 
 $acc = null;
@@ -545,6 +547,112 @@ test('a successful import flashes a success message', function (): void {
         ->and(session('message.text'))->toBe(
             __('konto.csv-import-success-msg', ['new-saldo' => '18474.22', 'transaction-amount' => 5])
         );
+});
+
+test('a row whose auslage cannot be auto-marked paid still imports and warns', function (): void {
+    // Regression: a Verwendungszweck like "IP-24-23-A70" triggers AuslagenHandler2::hookZahlung.
+    // When that auslage can't be transitioned to "paid" the legacy code fataled (undefined DEV
+    // constant via HTMLPageRenderer::addFlash), and save()'s catch swallowed it into a generic
+    // csv error, rolling back the WHOLE import — 0 rows, no visible message ("fails silently").
+    // The Saldo nach Buchung column (index 13) is empty here, so saldo is left unmapped.
+    $acc = BankAccount::factory()->create();
+
+    $content = "Bezeichnung Auftragskonto;IBAN Auftragskonto;BIC Auftragskonto;Bankname Auftragskonto;Buchungstag;Valutadatum;Name Zahlungsbeteiligter;IBAN Zahlungsbeteiligter;BIC (SWIFT-Code) Zahlungsbeteiligter;Buchungstext;Verwendungszweck;Betrag;Waehrung;Saldo nach Buchung;Bemerkung;Kategorie;Steuerrelevant;Glaeubiger ID;Mandatsreferenz\n"
+        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;ING-DiBa;DE02500105170137075030;IHHVRZIL;GUTSCHR. UEBERWEISUNG;IP-24-23-A70 - Q4 - Kontoführung;70;EUR;;;Sonstiges;;;\n"
+        ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;Hostsharing;DE02500105170137075030;MWFYLYEL;GUTSCHR. UEBERWEISUNG;IP-24-26-A79 - Dezember - Hosting;80;EUR;;;Sonstiges;;;\n";
+
+    $wire = Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.csv-import')
+        ->set('account_id', $acc->id)
+        ->set('csv', File::createWithContent('empty-saldo.csv', $content));
+
+    // columns: 4=date 5=valuta 6=name 7=iban 9=type 10=zweck 11=value; saldo (13) is empty → unmapped
+    $wire->set('mapping.date', 4)
+        ->set('mapping.valuta', 5)
+        ->set('mapping.empf_name', 6)
+        ->set('mapping.empf_iban', 7)
+        ->set('mapping.type', 9)
+        ->set('mapping.zweck', 10)
+        ->set('mapping.value', 11)
+        ->call('reverseCsvOrder')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    // The import is the source of truth: both rows are saved despite the failing hook.
+    expect(BankTransaction::where('konto_id', $acc->id)->count())->toBe(2);
+
+    // The user is warned (not silently dropped) about the references needing manual review.
+    expect(session('message.type'))->toBe('warning')
+        ->and(session('message.text'))->toContain('IP-24-23-A70')
+        ->and(session('message.text'))->toContain('IP-24-26-A79');
+});
+
+test('a referenced auslage in "instructed" is auto-marked paid and the import succeeds', function (): void {
+    // An "instructed" Auslage whose payment shows up in the statement: hookZahlung should
+    // flip its "payed" sub-state and the import reports plain success (no warning).
+    // cashOfficer() is the "kv" user (ref-finanzen-kv) — the group allowed to mark payed.
+    $project = Project::factory()->create();
+    $expense = Expense::factory()->create([
+        'projekt_id' => $project->id,
+        'state' => 'instructed;2024-01-01 00:00:00;kv;Kassen Wart',
+    ]);
+    expect($expense->fresh()->payed)->toBeEmpty();
+
+    $acc = BankAccount::factory()->create();
+
+    // Verwendungszweck references this project/auslage: IP-<hhp>-<project>-A<auslage>.
+    // A leading "konto" column keeps the mapped fields off CSV index 0 (real bank exports
+    // start with metadata columns; index 0 can't be a mapping target — see save()'s ! empty check).
+    $content = "konto;date;valuta;name;iban;type;zweck;value\n"
+        ."AStA;05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;IP-24-{$project->id}-A{$expense->id} Erstattung;70\n";
+
+    Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.csv-import')
+        ->set('account_id', $acc->id)
+        ->set('csv', File::createWithContent('payed.csv', $content))
+        ->set('mapping.date', 1)
+        ->set('mapping.valuta', 2)
+        ->set('mapping.empf_name', 3)
+        ->set('mapping.empf_iban', 4)
+        ->set('mapping.type', 5)
+        ->set('mapping.zweck', 6)
+        ->set('mapping.value', 7)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect(BankTransaction::where('konto_id', $acc->id)->count())->toBe(1)
+        ->and(session('message.type'))->toBe('success');
+
+    // the hook actually transitioned the auslage: the "payed" audit column is now set
+    expect($expense->fresh()->payed)->not->toBeEmpty();
+});
+
+test('a field mapped to CSV column index 0 is imported', function (): void {
+    // Regression: save() used ! empty($mapping[col]); ! empty(0) is false, so a field
+    // mapped to the first CSV column (here "date" at index 0) was silently dropped,
+    // producing a NOT NULL insert error swallowed as a generic import failure.
+    $acc = BankAccount::factory()->create();
+
+    $content = "date;valuta;name;iban;type;zweck;value\n"
+        ."05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;Erstattung;70\n";
+
+    Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.csv-import')
+        ->set('account_id', $acc->id)
+        ->set('csv', File::createWithContent('col-zero.csv', $content))
+        ->set('mapping.date', 0)
+        ->set('mapping.valuta', 1)
+        ->set('mapping.empf_name', 2)
+        ->set('mapping.empf_iban', 3)
+        ->set('mapping.type', 4)
+        ->set('mapping.zweck', 5)
+        ->set('mapping.value', 6)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $transaction = BankTransaction::where('konto_id', $acc->id)->firstOrFail();
+    expect($transaction->date->format('Y-m-d'))->toBe('2024-06-05')
+        ->and(BankTransaction::where('konto_id', $acc->id)->count())->toBe(1);
 });
 
 test('reverseCsvOrder flips the parsed data order', function (): void {

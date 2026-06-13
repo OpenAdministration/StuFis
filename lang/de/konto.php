@@ -21,6 +21,7 @@ return [
     'csv-latest-date' => 'Datum der letzten Kontobuchung',
     'csv-latest-zweck' => 'letzter Verwendungszweck',
     'csv-import-success-msg' => ':transaction-amount Kontoauszüge erfolgreich importiert. Neuer Saldo ist: :new-saldo €',
+    'csv-import-hook-warning-msg' => ':transaction-amount Kontoauszüge importiert (neuer Saldo: :new-saldo €). Folgende Auslagen konnten nicht automatisch auf "gezahlt" gesetzt werden – bitte manuell prüfen: :references',
     'csv-header-empty-column' => '(Spalte :n – kein Name)',
     'csv-import-error' => 'Fehler beim Importieren der Transaktionen. Es wurden keine Daten gespeichert.',
     'csv-parse-error' => 'Die Datei konnte nicht verarbeitet werden. Bitte prüfe das Dateiformat und die Kodierung.',
