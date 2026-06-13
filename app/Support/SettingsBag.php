@@ -8,7 +8,9 @@ use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
 use Stringable;
 
-class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Stringable
+// final so that the `new static(...)` calls below are safe: with no possible
+// subclass, static always resolves to this class and its known constructor.
+final class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Stringable
 {
     public function __construct(protected array $attributes = []) {}
 
@@ -20,7 +22,7 @@ class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable,
         $value = data_get($this->attributes, $key, $default);
 
         if (is_array($value) && ! array_is_list($value)) {
-            return new static($value);
+            return new self($value);
         }
 
         return $value;
@@ -42,7 +44,7 @@ class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable,
         $value = $this->attributes[$key] ?? null;
 
         if (is_array($value) && ! array_is_list($value)) {
-            return new static($value);
+            return new self($value);
         }
 
         return $value;
