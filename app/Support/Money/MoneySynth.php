@@ -4,7 +4,6 @@ namespace App\Support\Money;
 
 use Cknow\Money\Money;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
-use Money\Currency;
 
 /**
  *  Synthesizes a Money object for Livewire usage

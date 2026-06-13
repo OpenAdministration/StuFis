@@ -68,18 +68,18 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
  * @property-read Collection<int, BudgetItem> $siblingsAndSelf All the parent's children.
  * @property-read int|null $siblings_and_self_count
  *
- * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Collection<int, static> all($columns = ['*'])
+ * @method static Collection<int, static> all($columns = ['*'])
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem breadthFirst()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem depthFirst()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem doesntHaveChildren()
- * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Collection<int, static> get($columns = ['*'])
+ * @method static Collection<int, static> get($columns = ['*'])
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem getExpressionGrammar()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem hasChildren()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem hasParent()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem isLeaf()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem isRoot()
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem tree($maxDepth = null)
- * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem treeOf(\Illuminate\Database\Eloquent\Model|callable $constraint, $maxDepth = null)
+ * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem treeOf(Model|callable $constraint, $maxDepth = null)
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem whereBudgetPlanId($value)
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem whereBudgetType($value)
  * @method static \Staudenmeir\LaravelAdjacencyList\Eloquent\Builder<static>|BudgetItem whereCreatedAt($value)

@@ -7,7 +7,6 @@ use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
-use Flux\Flux;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;

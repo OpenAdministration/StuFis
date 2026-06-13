@@ -84,7 +84,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function registerAuth(): void
     {
-        $this->app->singleton(AuthService::class, function (Application $application) {
+        $this->app->singleton(function (Application $application): AuthService {
             $serviceName = ucfirst(strtolower((string) config('auth.service')));
             // weird to escape, but correct
             $classPath = "\App\Services\Auth\\{$serviceName}AuthService";

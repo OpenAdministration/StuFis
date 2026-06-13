@@ -16,7 +16,7 @@ return RectorConfig::configure()
         cacheClass: FileCacheStorage::class
     )
     ->withSets([
-        LaravelLevelSetList::UP_TO_LARAVEL_110,
+        LaravelLevelSetList::UP_TO_LARAVEL_120,
         LaravelSetList::LARAVEL_CODE_QUALITY,
         LaravelSetList::LARAVEL_COLLECTION,
     ])
@@ -25,13 +25,14 @@ return RectorConfig::configure()
         __DIR__.'/bootstrap/app.php',
         __DIR__.'/bootstrap/providers.php',
         __DIR__.'/config',
-        __DIR__.'/lang',
+        // __DIR__.'/lang',    // translation arrays only — nothing for Rector to do
         // __DIR__.'/legacy',
-        __DIR__.'/public',
+        // __DIR__.'/public',  // framework-generated bootstrap; leave untouched
         __DIR__.'/resources',
         __DIR__.'/routes',
         __DIR__.'/tests',
     ])
+    ->withImportNames(importShortClasses: false, removeUnusedImports: true)
     ->withPhpSets() // defaults to the php version from composer
     ->withTypeCoverageLevel(0)
     ->withDeadCodeLevel(0)

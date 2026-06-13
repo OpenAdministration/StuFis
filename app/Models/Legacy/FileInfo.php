@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -21,19 +22,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property FileData $filedatum
  * @property-read FileData|null $fileData
  *
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo query()
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereAddedOn($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereEncoding($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereFileextension($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereFilename($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereHashname($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereLink($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereMime($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileInfo whereSize($value)
+ * @method static Builder|FileInfo newModelQuery()
+ * @method static Builder|FileInfo newQuery()
+ * @method static Builder|FileInfo query()
+ * @method static Builder|FileInfo whereAddedOn($value)
+ * @method static Builder|FileInfo whereData($value)
+ * @method static Builder|FileInfo whereEncoding($value)
+ * @method static Builder|FileInfo whereFileextension($value)
+ * @method static Builder|FileInfo whereFilename($value)
+ * @method static Builder|FileInfo whereHashname($value)
+ * @method static Builder|FileInfo whereId($value)
+ * @method static Builder|FileInfo whereLink($value)
+ * @method static Builder|FileInfo whereMime($value)
+ * @method static Builder|FileInfo whereSize($value)
  *
  * @mixin \Eloquent
  */

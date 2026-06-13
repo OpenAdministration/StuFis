@@ -43,15 +43,15 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @property-read Collection<int, BudgetItem> $rootBudgetItems
  * @property-read int|null $root_budget_items_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereApprovalDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereFiscalYearId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereOrganization($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereParentPlanId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereResolutionDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereUpdatedAt($value)
+ * @method static Builder<static>|BudgetPlan whereApprovalDate($value)
+ * @method static Builder<static>|BudgetPlan whereCreatedAt($value)
+ * @method static Builder<static>|BudgetPlan whereFiscalYearId($value)
+ * @method static Builder<static>|BudgetPlan whereId($value)
+ * @method static Builder<static>|BudgetPlan whereOrganization($value)
+ * @method static Builder<static>|BudgetPlan whereParentPlanId($value)
+ * @method static Builder<static>|BudgetPlan whereResolutionDate($value)
+ * @method static Builder<static>|BudgetPlan whereState($value)
+ * @method static Builder<static>|BudgetPlan whereUpdatedAt($value)
  */
 class BudgetPlan extends Model
 {

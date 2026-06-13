@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Model;
 
 class LegalBasis extends Model
@@ -25,12 +26,14 @@ class LegalBasis extends Model
         ];
     }
 
-    protected function scopeOrdered($query)
+    #[Scope]
+    protected function ordered($query)
     {
         return $query->orderBy('sort_order');
     }
 
-    protected function scopeActive($query)
+    #[Scope]
+    protected function active($query)
     {
         return $query->where('is_active', true);
     }

@@ -4,6 +4,7 @@ namespace App\Models\Legacy;
 
 use App\Models\BudgetItem;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -29,20 +30,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $by_user
  * @property int $done
  *
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction query()
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereBeleg($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereBelegType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereByUser($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereDone($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlung($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereZahlungType($value)
+ * @method static Builder|BookingInstruction newModelQuery()
+ * @method static Builder|BookingInstruction newQuery()
+ * @method static Builder|BookingInstruction query()
+ * @method static Builder|BookingInstruction whereBeleg($value)
+ * @method static Builder|BookingInstruction whereBelegType($value)
+ * @method static Builder|BookingInstruction whereByUser($value)
+ * @method static Builder|BookingInstruction whereDone($value)
+ * @method static Builder|BookingInstruction whereId($value)
+ * @method static Builder|BookingInstruction whereZahlung($value)
+ * @method static Builder|BookingInstruction whereZahlungType($value)
  *
  * @property string|null $instruct_date
  *
- * @method static \Illuminate\Database\Eloquent\Builder|BookingInstruction whereInstructDate($value)
+ * @method static Builder|BookingInstruction whereInstructDate($value)
  *
  * @mixin \Eloquent
  */

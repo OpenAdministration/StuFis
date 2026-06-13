@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -20,17 +21,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Bank $kontoBank
  * @property User $user
  *
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereBankId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereBankUsername($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereOwnerId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanMediumName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanMode($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccountCredential whereTanModeName($value)
+ * @method static Builder|BankAccountCredential newModelQuery()
+ * @method static Builder|BankAccountCredential newQuery()
+ * @method static Builder|BankAccountCredential query()
+ * @method static Builder|BankAccountCredential whereBankId($value)
+ * @method static Builder|BankAccountCredential whereBankUsername($value)
+ * @method static Builder|BankAccountCredential whereId($value)
+ * @method static Builder|BankAccountCredential whereName($value)
+ * @method static Builder|BankAccountCredential whereOwnerId($value)
+ * @method static Builder|BankAccountCredential whereTanMediumName($value)
+ * @method static Builder|BankAccountCredential whereTanMode($value)
+ * @method static Builder|BankAccountCredential whereTanModeName($value)
  *
  * @mixin \Eloquent
  */

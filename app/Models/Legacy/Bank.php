@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,13 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, BankAccountCredential> $kontoCredentials
  * @property-read int|null $konto_credentials_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank query()
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereBlz($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Bank whereUrl($value)
+ * @method static Builder|Bank newModelQuery()
+ * @method static Builder|Bank newQuery()
+ * @method static Builder|Bank query()
+ * @method static Builder|Bank whereBlz($value)
+ * @method static Builder|Bank whereId($value)
+ * @method static Builder|Bank whereName($value)
+ * @method static Builder|Bank whereUrl($value)
  *
  * @mixin \Eloquent
  */

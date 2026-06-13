@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,13 +23,13 @@ use Illuminate\Support\Facades\Date;
  * @property-read Collection<int, LegacyBudgetItem> $budgetItems
  * @property-read int|null $budget_items_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan query()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereBis($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereState($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan whereVon($value)
+ * @method static Builder|LegacyBudgetPlan newModelQuery()
+ * @method static Builder|LegacyBudgetPlan newQuery()
+ * @method static Builder|LegacyBudgetPlan query()
+ * @method static Builder|LegacyBudgetPlan whereBis($value)
+ * @method static Builder|LegacyBudgetPlan whereId($value)
+ * @method static Builder|LegacyBudgetPlan whereState($value)
+ * @method static Builder|LegacyBudgetPlan whereVon($value)
  * @method HasOneOrManyThrough throughBudgetGroups()
  *
  * @mixin \Eloquent

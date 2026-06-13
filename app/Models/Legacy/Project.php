@@ -9,6 +9,7 @@ use App\Models\User;
 use App\States\Project\ProjectState;
 use Carbon\Carbon;
 use Cknow\Money\Money;
+use Database\Factories\Legacy\ProjectFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -69,7 +70,7 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project whereResponsible($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
- * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
+ * @method static ProjectFactory factory($count = null, $state = [])
  * @method HasOneOrManyThrough throughPosts()
  *
  * @mixin \Eloquent

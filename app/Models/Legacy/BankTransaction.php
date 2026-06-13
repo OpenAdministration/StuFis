@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Database\Factories\Legacy\BankTransactionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,7 +50,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property-read BankAccount $account
  *
- * @method static \Database\Factories\Legacy\BankTransactionFactory factory($count = null, $state = [])
+ * @method static BankTransactionFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
  */
