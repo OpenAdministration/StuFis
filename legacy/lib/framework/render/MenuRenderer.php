@@ -174,6 +174,10 @@ class MenuRenderer extends Renderer
             );
         }
 
+        // merge old no-org style (legacy) into new no-org style (livewire)
+        $projekte['no-org'] = array_merge($projekte['no-org'] ?? [], $projekte[''] ?? []);
+        unset($projekte['']);
+
         // var_dump(end(end($projekte)));
         $this->setOverviewTabs($active, $hhp_id); ?>
 
@@ -189,7 +193,7 @@ class MenuRenderer extends Renderer
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
                                 <?php
-                            $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
+                            $titel = $gremium === 'no-org' ? 'Nicht zugeordnete Projekte' :
                                 // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
                                 $gremium; ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?php echo $titel; ?>
