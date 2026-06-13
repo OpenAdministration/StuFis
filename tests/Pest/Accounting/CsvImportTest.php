@@ -2,6 +2,7 @@
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Http\Testing\File;
 
 $acc = null;
@@ -507,8 +508,12 @@ test('an empty csv does not crash the component', function (): void {
     expect($wire->get('data'))->toHaveCount(0);
 });
 
-test('a successful import redirects to the account view', function (): void {
+test('a successful import redirects to the imported account view', function (): void {
     $acc = BankAccount::factory()->create();
+
+    // The konto page selects an account via the path segments konto/{hhp_id}/{konto_id}.
+    // hhp_id is the latest budget plan, the same id the component forwards to.
+    $hhp = LegacyBudgetPlan::latest()?->id;
 
     $wire = Livewire::actingAs(cashOfficer())
         ->test('pages::bank.csv-import')
@@ -518,7 +523,28 @@ test('a successful import redirects to the account view', function (): void {
         ->call('reverseCsvOrder')
         ->call('save')
         ->assertHasNoErrors()
-        ->assertRedirect(route('legacy.konto', ['konto' => $acc->id]));
+        ->assertRedirect(route('legacy.konto', ['hhp_id' => $hhp, 'konto_id' => $acc->id]));
+});
+
+test('a successful import flashes a success message', function (): void {
+    $acc = BankAccount::factory()->create();
+
+    $wire = Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.csv-import')
+        ->set('account_id', $acc->id)
+        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+    mapSemicolonFixture($wire)
+        ->call('reverseCsvOrder')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    // The flashed message is what message.blade.php renders on the target page
+    // (session('message.text') / session('message.type')).
+    expect(session()->has('message'))->toBeTrue()
+        ->and(session('message.type'))->toBe('success')
+        ->and(session('message.text'))->toBe(
+            __('konto.csv-import-success-msg', ['new-saldo' => '18474.22', 'transaction-amount' => 5])
+        );
 });
 
 test('reverseCsvOrder flips the parsed data order', function (): void {

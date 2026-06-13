@@ -2,6 +2,7 @@
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
+use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\User;
 use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
@@ -265,9 +266,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         );
         */
 
-        // $this->redirectRoute('legacy.konto', ['account_id' => $this->account_id]);
-        // return redirect()->route('konto.import.manual', ['account_id' => $this->account_id])
-        return to_route('legacy.konto', ['konto' => $this->account_id])
+        // Forward to the imported account's konto page. The legacy route selects the
+        // account via path segments konto/{hhp_id}/{konto_id}. Passing ['konto' => id]
+        // instead produced /konto?konto=id, landing on the generic overview.
+        $hhp = LegacyBudgetPlan::latest()?->id;
+
+        return to_route('legacy.konto', ['hhp_id' => $hhp, 'konto_id' => $this->account_id])
             ->with(['message' => [
                 'text' => __('konto.csv-import-success-msg', ['new-saldo' => $newBalance, 'transaction-amount' => $this->data->count()]),
                 'type' => 'success',
