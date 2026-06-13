@@ -117,6 +117,15 @@ return [
             'none' => 'Keine',
             'total_in' => 'Einnahmen',
             'total_out' => 'Ausgaben',
+            'states' => [
+                'draft' => 'Entwurf',
+                'wip' => 'Eingereicht',
+                'ok' => 'Genehmigt',
+                'instructed' => 'Zahlung beauftragt',
+                'payed' => 'Bezahlt',
+                'booked' => 'Gebucht',
+                'revocation' => 'Nichtig',
+            ],
         ],
         'state-modal' => [
             'heading' => 'Status wechseln',

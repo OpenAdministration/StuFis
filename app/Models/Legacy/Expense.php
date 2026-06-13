@@ -2,7 +2,7 @@
 
 namespace App\Models\Legacy;
 
-use App\Models\Comment;
+use App\States\Expense\ExpenseState;
 use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -150,6 +150,24 @@ class Expense extends Model
         return Attribute::make(
             get: fn (string $value) => explode(';', $value)[0],
         );
+    }
+
+    public function stateEnum(): ExpenseState
+    {
+        return ExpenseState::from($this->state);
+    }
+
+    /**
+     * Effective state for display, folding in the "payed" substate which lives
+     * under "instructed" (paid per bank statement, not yet booked).
+     */
+    public function displayState(): ExpenseState
+    {
+        if ($this->stateEnum() === ExpenseState::Instructed && ! empty($this->payed)) {
+            return ExpenseState::Payed;
+        }
+
+        return $this->stateEnum();
     }
 
     #[\Override]

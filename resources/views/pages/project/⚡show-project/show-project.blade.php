@@ -513,9 +513,9 @@
                                         <h3 class="text-lg font-semibold text-gray-900">
                                             A{{ $expense->id }} - {{ $expense->name_suffix }}
                                         </h3>
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                            {{ $expense->state }}
-                                        </span>
+                                        <flux:badge :color="$expense->displayState()->color()" size="sm" inset="top bottom">
+                                            {{ $expense->displayState()->label() }}
+                                        </flux:badge>
                                     </div>
                                     <p class="text-sm text-gray-500 mt-1">
                                         {{ $expense->zahlung_name }}
