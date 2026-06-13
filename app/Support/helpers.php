@@ -39,9 +39,19 @@ function guessEncoding($path_to_file): string
 
 function utf8Content(UploadedFile $file): string
 {
-    $enc = guessEncoding($file->getPathname());
+    $content = $file->getContent();
 
-    return iconv($enc, 'UTF-8', $file->getContent());
+    // Already valid UTF-8 → leave it untouched (keeps existing UTF-8 exports correct).
+    // We deliberately do NOT trust finfo's charset guess here: finfo only samples the
+    // first ~64 KB of a file, so on a large bank statement an umlaut past that window
+    // makes it report "us-ascii" and a strict iconv() would throw on that very byte.
+    if (mb_check_encoding($content, 'UTF-8')) {
+        return $content;
+    }
+
+    // Otherwise assume Windows-1252 (the dominant German bank-export encoding, a
+    // superset of ISO-8859-1). mb_convert_encoding never throws and preserves umlauts.
+    return mb_convert_encoding($content, 'UTF-8', 'Windows-1252');
 }
 
 function money_format(float|int|string $value): string

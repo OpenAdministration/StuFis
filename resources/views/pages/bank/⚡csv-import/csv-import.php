@@ -7,6 +7,7 @@ use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
+use Carbon\Exceptions\InvalidFormatException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
@@ -128,8 +129,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     private function parseCSV(): void
     {
         try {
-            // temp save uploaded file
-            $this->csv->store();
+            // Read the upload straight from Livewire's temporary file. We must NOT call
+            // $this->csv->store() first: when the default disk equals the Livewire
+            // temp-upload disk (both "local" here), store() *moves* the temp file away,
+            // so the very next read would fail with "No such file or directory" and get
+            // swallowed into konto.csv-parse-error. Nothing reads the stored copy back
+            // anyway, so persisting it only littered storage/app with orphaned uploads.
             $content = utf8Content($this->csv);
             // explode content in lines
             $content = str($content);
@@ -354,11 +359,26 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         }
 
         return match ($type) {
-            'date' => guessDate($value, 'd.m.Y'),
+            'date' => $this->previewDate($value),
             'decimal' => number_format((float) $value, 2, ',', '.').' €',
             'iban' => iban_to_human_format($value),
             default => $value
         };
+    }
+
+    /**
+     * Format a value as a date for the preview, falling back to the raw value when
+     * the mapped column does not actually contain a date (e.g. the date field is
+     * mapped to an IBAN column). The preview must never hard-fail: showing the raw
+     * value lets the user spot the misaligned mapping instead of hitting a 500.
+     */
+    private function previewDate(string|int $value): string|int
+    {
+        try {
+            return guessDate((string) $value, 'd.m.Y');
+        } catch (InvalidFormatException|TypeError) {
+            return $value;
+        }
     }
 
     /**
