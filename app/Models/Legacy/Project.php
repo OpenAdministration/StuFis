@@ -165,7 +165,6 @@ class Project extends Model
         return $this->hasMany(ProjectAttachment::class, 'projekt_id', 'id');
     }
 
-
     public function totalAusgaben(): Money
     {
         return $this->posts()->sumMoney('ausgaben');

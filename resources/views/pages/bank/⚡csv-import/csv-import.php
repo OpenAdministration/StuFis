@@ -9,6 +9,7 @@ use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
 use Flux\Flux;
 use forms\projekte\auslagen\AuslagenHandler2;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -116,9 +117,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * Only instantiate a column rule when the field is actually mapped to a CSV column.
      * Prevents constructing rules with pluck('') garbage when the user hasn't selected a column yet.
      *
-     * @return array<\Illuminate\Contracts\Validation\ValidationRule>
+     * @return array<ValidationRule>
      */
-    private function whenMapped(string $field, \Closure $make): array
+    private function whenMapped(string $field, Closure $make): array
     {
         $index = $this->mapping->get($field);
 
@@ -176,7 +177,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             if ($this->csvOrderReversed) {
                 $this->data = $this->data->reverse();
             }
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $this->data = collect();
             $this->header = [];
             $this->addError('csv', __('konto.csv-parse-error'));
@@ -239,7 +240,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 $transaction->save();
             }
             DB::commit();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             DB::rollBack();
             $this->addError('csv', __('konto.csv-import-error'));
 

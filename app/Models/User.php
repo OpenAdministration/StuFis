@@ -125,6 +125,7 @@ class User extends Authenticatable
     {
         $configMode = Setting::get('user.committees.mode');
         $configSuperSet = collect(Setting::get('user.committees.data'));
+
         return match ($configMode) {
             'filter' => $configSuperSet->intersect(resolve(AuthService::class)->userCommittees()),
             'all' => $configSuperSet,

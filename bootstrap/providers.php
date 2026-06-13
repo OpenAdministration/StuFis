@@ -1,7 +1,11 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\MarkdownServiceProvider;
+use SocialiteProviders\Manager\ServiceProvider as SocialiteProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\MarkdownServiceProvider::class,
-    \SocialiteProviders\Manager\ServiceProvider::class,
+    AppServiceProvider::class,
+    MarkdownServiceProvider::class,
+    SocialiteProvider::class,
 ];

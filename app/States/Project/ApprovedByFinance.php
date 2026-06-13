@@ -25,7 +25,7 @@ class ApprovedByFinance extends ProjectState
         return 'green';
     }
 
-    public function approvalRules() : array
+    public function approvalRules(): array
     {
         return [
             'recht' => 'required|string',
@@ -33,7 +33,8 @@ class ApprovedByFinance extends ProjectState
         ];
     }
 
-    public function budgetRules() : array {
+    public function budgetRules(): array
+    {
         return [
             'posts.*.titel_id' => 'required|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];

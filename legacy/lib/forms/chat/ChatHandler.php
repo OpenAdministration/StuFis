@@ -187,7 +187,7 @@ class ChatHandler
      * @param  string  $group  group
      * @param  int  $group_id  group identifier
      * @param  string  $user  user name + identifier
-     * @param  \string[][]  $buttons
+     * @param  string[][]  $buttons
      */
     public static function renderChatPanel($group, $group_id, $user, $buttons = [['label' => 'Senden', 'color' => 'success', 'type' => '0']]): void
     {
@@ -662,6 +662,6 @@ class ChatHandler
             return $decrypted;
         }
 
-        throw new \Exception('Corrupted Message: '.$encrypted);
+        throw new Exception('Corrupted Message: '.$encrypted);
     }
 }

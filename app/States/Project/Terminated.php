@@ -19,13 +19,12 @@ class Terminated extends ProjectState
         return 'zinc';
     }
 
-
-    public function approvalRules() : array
+    public function approvalRules(): array
     {
         return [];
     }
 
-    public function budgetRules() : array
+    public function budgetRules(): array
     {
         return [];
     }

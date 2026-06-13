@@ -45,11 +45,11 @@ class BankAccountCredential extends Model
 
     public function kontoBank(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Legacy\Bank::class, 'bank_id');
+        return $this->belongsTo(Bank::class, 'bank_id');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'owner_id');
+        return $this->belongsTo(User::class, 'owner_id');
     }
 }

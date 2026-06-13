@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Legacy\Booking;
-use App\Models\Legacy\Expense;
 use App\Models\Legacy\ExpenseReceipt;
 use Illuminate\Console\Command;
 
@@ -33,6 +32,7 @@ class LegacyUnbookExpensesCommand extends Command
 
         if ($count === 0) {
             $this->info('No missing booked receipts found.');
+
             return;
         }
 

@@ -3,7 +3,6 @@
 namespace forms;
 
 use forms\projekte\PermissionHandler;
-use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\Helper;
 

@@ -18,5 +18,4 @@ class Applied extends ProjectState
     {
         return 'sky';
     }
-
 }

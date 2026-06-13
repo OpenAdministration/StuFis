@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
 
 /**
  * App\Models\BudgetPlan
@@ -38,8 +39,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property string|null $organization
  * @property int|null $fiscal_year_id
- * @property-read \App\Models\FiscalYear|null $fiscalYear
- * @property-read \Staudenmeir\LaravelAdjacencyList\Eloquent\Collection<int, \App\Models\BudgetItem> $rootBudgetItems
+ * @property-read FiscalYear|null $fiscalYear
+ * @property-read Collection<int, BudgetItem> $rootBudgetItems
  * @property-read int|null $root_budget_items_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BudgetPlan whereApprovalDate($value)

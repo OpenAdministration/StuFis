@@ -47,7 +47,7 @@ class File
     public $link;
 
     /**
-     * @var datetime
+     * @var DateTime
      */
     public $added_on;
 

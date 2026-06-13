@@ -2,9 +2,11 @@
 
 namespace App\Support\Money;
 
+use Money\Currency;
 use Money\Money;
+use Money\MoneyFormatter;
 
-class DefaultMoneyFormater implements \Money\MoneyFormatter
+class DefaultMoneyFormater implements MoneyFormatter
 {
     #[\Override]
     public function format(Money $money): string
@@ -36,6 +38,6 @@ class DefaultMoneyFormater implements \Money\MoneyFormatter
         $cents = (int) round($amount * 100);
 
         // Create new Money object with EUR currency
-        return new Money($cents, new \Money\Currency('EUR'));
+        return new Money($cents, new Currency('EUR'));
     }
 }

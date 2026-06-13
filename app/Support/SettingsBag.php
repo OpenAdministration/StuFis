@@ -8,7 +8,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use JsonSerializable;
 use Stringable;
 
-class SettingsBag implements ArrayAccess, Arrayable, Jsonable, JsonSerializable, Stringable
+class SettingsBag implements Arrayable, ArrayAccess, Jsonable, JsonSerializable, Stringable
 {
     protected array $attributes;
 

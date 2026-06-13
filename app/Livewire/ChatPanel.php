@@ -27,7 +27,7 @@ class ChatPanel extends Component
         /** @var Collection<ChatMessage> $messages */
         $messages = ChatMessage::where('target', $this->targetType)
             ->where('target_id', $this->targetId)
-            //->orderBy('timestamp', 'desc')
+            // ->orderBy('timestamp', 'desc')
             ->get();
 
         return view('livewire.chat-panel', ['messages' => $messages]);

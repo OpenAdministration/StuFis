@@ -3,6 +3,7 @@
 use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,7 +23,7 @@ return new class extends Migration
         // Plans partition time without overlap or gaps, so one UPDATE per plan
         // assigns each project to the plan whose [von, bis] contains its createdat.
         foreach (LegacyBudgetPlan::all() as $plan) {
-            \Illuminate\Support\Facades\DB::table('projekte')
+            DB::table('projekte')
                 ->where('createdat', '>=', $plan->von)
                 // Open-ended latest plan has bis = null; `bis` is a date, so
                 // extend to end-of-day to include the whole final day.

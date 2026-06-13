@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'headline'     => 'DATEV Export',
+    'headline' => 'DATEV Export',
     'sub-headline' => 'Gebuchte Abrechnungen als DATEV-Exportdatei für DATEV Belegtransfer herunterladen',
 
     'budget-plan' => [
@@ -9,23 +9,23 @@ return [
     ],
 
     'pdf' => [
-        'label'       => 'PDFs exportieren',
+        'label' => 'PDFs exportieren',
         'description' => 'Belege und Anhänge als PDF-Dateien in den Export einschließen',
     ],
 
     'date-field' => [
-        'label'       => 'Stichtag',
+        'label' => 'Stichtag',
         'description' => 'Die Auswahl des Datums bestimmt, ob die Abrechnung in den Zeitraum fällt.',
-        'options'     => [
-            'booking_date'          => 'Buchungsdatum',
-            'expense_created_date'  => 'Erstelldatum der Abrechnung',
+        'options' => [
+            'booking_date' => 'Buchungsdatum',
+            'expense_created_date' => 'Erstelldatum der Abrechnung',
             'earliest_receipt_date' => 'Frühestes Belegdatum',
             'earliest_payment_date' => 'Frühestes Zahlungsdatum',
         ],
     ],
 
     'timespan' => [
-        'label'       => 'Exportzeitraum',
+        'label' => 'Exportzeitraum',
         'placeholder' => 'Von – Bis auswählen',
     ],
 
@@ -36,19 +36,19 @@ return [
     'preview' => [
         'refresh' => 'Aktualisieren',
         'loading' => 'Vorschau wird geladen …',
-        'stale'   => 'Filter geändert – Vorschau aktualisieren.',
+        'stale' => 'Filter geändert – Vorschau aktualisieren.',
         'columns' => [
-            'invoice'    => 'Abrechnung',
-            'name'       => 'Zahlungsempfänger',
-            'project'    => 'Projekt',
+            'invoice' => 'Abrechnung',
+            'name' => 'Zahlungsempfänger',
+            'project' => 'Projekt',
             'beleg-date' => 'Belegdatum',
-            'bookings'   => 'Buchungen',
-            'paid-at'    => 'Bezahlt am',
+            'bookings' => 'Buchungen',
+            'paid-at' => 'Bezahlt am',
         ],
     ],
 
     'expenses-found' => 'Abrechnungen gefunden',
-    'export-button'  => 'DATEV Export herunterladen',
-    'exporting'      => 'Export wird erstellt …',
-    'export-failed'  => 'Der DATEV-Export konnte nicht erstellt werden. Bitte erneut versuchen.',
+    'export-button' => 'DATEV Export herunterladen',
+    'exporting' => 'Export wird erstellt …',
+    'export-failed' => 'Der DATEV-Export konnte nicht erstellt werden. Bitte erneut versuchen.',
 ];

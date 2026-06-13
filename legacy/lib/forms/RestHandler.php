@@ -21,6 +21,8 @@ namespace forms;
 
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\BankTransaction;
+use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\Setting;
 use App\Models\TaxBudget;
 use booking\BookingTableManager;
 use booking\HHPHandler;
@@ -1465,7 +1467,7 @@ class RestHandler extends EscFunc
 
     private function saveTaxBudgets($routeInfo): void
     {
-        if (! \App\Models\Setting::get('tax.active', false)) {
+        if (! Setting::get('tax.active', false)) {
             JsonController::print_json(
                 [
                     'success' => false,
@@ -1481,7 +1483,7 @@ class RestHandler extends EscFunc
         }
 
         $hhpId = (int) $routeInfo['hhp-id'];
-        if (\App\Models\Legacy\LegacyBudgetPlan::find($hhpId) === null) {
+        if (LegacyBudgetPlan::find($hhpId) === null) {
             JsonController::print_json(
                 [
                     'success' => false,

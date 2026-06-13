@@ -2,6 +2,7 @@
 
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Http\UploadedFile;
+use League\CommonMark\Output\RenderedContentInterface;
 use Spatie\Regex\Regex;
 
 /**
@@ -48,7 +49,7 @@ function money_format(float|int|string $value): string
     return number_format($value, 2, ',', '.').'€';
 }
 
-function markdownToHtml($markdown): \League\CommonMark\Output\RenderedContentInterface
+function markdownToHtml($markdown): RenderedContentInterface
 {
     return app()->get('markdown.converter')->convert($markdown);
 }

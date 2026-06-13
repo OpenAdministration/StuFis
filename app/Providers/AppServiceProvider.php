@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use SocialiteProviders\LaravelPassport\Provider as PassportProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
@@ -49,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Event::listen(function (SocialiteWasCalled $event): void {
-            $event->extendSocialite('stumv', \SocialiteProviders\LaravelPassport\Provider::class);
+            $event->extendSocialite('stumv', PassportProvider::class);
         });
 
         // Layouts live in resources/views/layout (outside the components dir);

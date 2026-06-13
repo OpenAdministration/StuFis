@@ -18,5 +18,4 @@ class NeedOrgApproval extends ProjectState
     {
         return 'yellow';
     }
-
 }

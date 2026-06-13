@@ -18,5 +18,4 @@ class NeedFinanceApproval extends ProjectState
     {
         return 'yellow';
     }
-
 }

@@ -125,7 +125,7 @@ class DatevExport
             ->get();
 
         $payments = $this->paymentLookup($expenses);
-        $document = new DatevDocumentData();
+        $document = new DatevDocumentData;
 
         foreach ($expenses as $expense) {
             $bookings = $this->ledgerBookings($expense);
@@ -137,7 +137,7 @@ class DatevExport
             $belegDate = $this->belegDate($expense);
             $filePaths = $this->exportPdfs ? $this->receiptFilePaths($expense) : [];
 
-            if ($isReceivable){
+            if ($isReceivable) {
                 // receivable
                 $ledger = new DatevAccountLedgerData(
                     consolidatedDate: $belegDate,
@@ -156,7 +156,7 @@ class DatevExport
                     );
                 }
                 $document->buildAccountsReceivableLedger($ledger, $filePaths);
-            }else{
+            } else {
                 // payable
                 $ledger = new DatevAccountLedgerData(
                     consolidatedDate: $belegDate,
@@ -211,6 +211,7 @@ class DatevExport
     {
         $invers = ($isReceivable === false && $booking->budgetItem->budgetGroup->type === 0) ||
         ($isReceivable === true && $booking->budgetItem->budgetGroup->type === 1);
+
         return $invers ? -$booking->value : $booking->value;
     }
 
@@ -251,7 +252,7 @@ class DatevExport
     private function earliestPayment(Collection $bookings, Collection $payments): ?Carbon
     {
         return $bookings->map(
-                fn (Booking $booking) => $payments->get($booking->zahlung_id.'-'.$booking->zahlung_type)?->valuta)
+            fn (Booking $booking) => $payments->get($booking->zahlung_id.'-'.$booking->zahlung_type)?->valuta)
             ->filter()
             ->min();
     }

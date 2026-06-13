@@ -2,9 +2,11 @@
 
 namespace App\Models\Legacy;
 
+use App\Models\Comment;
 use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,9 +37,9 @@ use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
  * @property string $created
  * @property Project $project
  * @property ExpenseReceipt[] $beleges
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Comment> $comments
+ * @property-read Collection<int, Comment> $comments
  * @property-read int|null $comments_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExpenseReceipt> $receipts
+ * @property-read Collection<int, ExpenseReceipt> $receipts
  * @property-read int|null $receipts_count
  *
  * @method static Builder|Expense newModelQuery()
@@ -93,7 +95,8 @@ class Expense extends Model
         return $this->hasMany(ExpenseReceipt::class, 'auslagen_id');
     }
 
-    public function posts() : HasManyThrough{
+    public function posts(): HasManyThrough
+    {
         return $this->throughReceipts()->has('posts');
     }
 

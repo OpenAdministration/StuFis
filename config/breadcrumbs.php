@@ -1,5 +1,8 @@
 <?php
 
+use Diglactic\Breadcrumbs\Generator;
+use Diglactic\Breadcrumbs\Manager;
+
 return [
 
     /*
@@ -52,7 +55,7 @@ return [
     'unnamed-route-exception' => true,
 
     // When route-bound breadcrumbs are used and the matching breadcrumb doesn't exist (InvalidBreadcrumbException)
-    'missing-route-bound-breadcrumb-exception' => !(env('APP_ENV') === 'production'),
+    'missing-route-bound-breadcrumb-exception' => ! (env('APP_ENV') === 'production'),
 
     // When a named breadcrumb is used but doesn't exist (InvalidBreadcrumbException)
     'invalid-named-breadcrumb-exception' => true,
@@ -67,9 +70,9 @@ return [
     */
 
     // Manager
-    'manager-class' => Diglactic\Breadcrumbs\Manager::class,
+    'manager-class' => Manager::class,
 
     // Generator
-    'generator-class' => Diglactic\Breadcrumbs\Generator::class,
+    'generator-class' => Generator::class,
 
 ];

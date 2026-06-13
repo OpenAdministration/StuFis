@@ -20,7 +20,7 @@ use Illuminate\Support\Collection;
  * @property string $last_sync
  * @property Collection $csv_import_settings
  * @property BankTransaction[] $kontos
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $kontoTransactions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, BankTransaction> $kontoTransactions
  * @property-read int|null $konto_transactions_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newModelQuery()
@@ -35,7 +35,7 @@ use Illuminate\Support\Collection;
  * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncUntil($value)
  *
  * @property int $manually_enterable
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankTransaction> $bankTransactions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, BankTransaction> $bankTransactions
  * @property-read int|null $bank_transactions_count
  *
  * @method static \Database\Factories\Legacy\BankAccountFactory factory($count = null, $state = [])

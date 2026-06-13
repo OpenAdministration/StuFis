@@ -19,6 +19,7 @@ class MigrateConfigToDatabase extends Command
 
         if (empty($config)) {
             $this->error('No legacy config found.');
+
             return self::FAILURE;
         }
 
@@ -40,7 +41,7 @@ class MigrateConfigToDatabase extends Command
                 'finance_mail' => $config['finance-mail'] ?? '',
                 'project.protocol_url.prefix' => data_get($config, 'projekt-form.protokoll-prefix', ''),
                 'project.protocol_url.label' => data_get($config, 'projekt-form.protokoll-label', ''),
-                'project.protocol_url.active' => !empty(data_get($config, 'projekt-form.protokoll-label', '')),
+                'project.protocol_url.active' => ! empty(data_get($config, 'projekt-form.protokoll-label', '')),
                 'project.description.min_length' => data_get($config, 'projekt-form.description-min-length', 50),
                 'project.description.max_length' => data_get($config, 'projekt-form.description-max-length', 99999),
             ];
@@ -57,10 +58,11 @@ class MigrateConfigToDatabase extends Command
 
         if (empty($rechtsgrundlagen)) {
             $this->components->warn('No rechtsgrundlagen found in config, skipping.');
+
             return;
         }
 
-        $this->components->task('Migrating legal bases (' . count($rechtsgrundlagen) . ')', function () use ($rechtsgrundlagen) {
+        $this->components->task('Migrating legal bases ('.count($rechtsgrundlagen).')', function () use ($rechtsgrundlagen) {
             $order = 0;
 
             foreach ($rechtsgrundlagen as $slug => $entry) {
@@ -85,15 +87,16 @@ class MigrateConfigToDatabase extends Command
 
         if (empty($gremien)) {
             $this->components->warn('No gremien found in config, skipping.');
+
             return;
         }
 
         // Flatten the categorized structure into a single list
         $flat = Arr::flatten($gremien);
 
-        $this->components->task('Migrating visible gremien (' . count($flat) . ')', function () use ($flat) {
+        $this->components->task('Migrating visible gremien ('.count($flat).')', function () use ($flat) {
             Setting::set('user.committees.data', $flat);
-            Setting::set('user.committees.mode', "filter");
+            Setting::set('user.committees.mode', 'filter');
         });
     }
 
@@ -105,9 +108,9 @@ class MigrateConfigToDatabase extends Command
         $realm = config('stufis.realm');
 
         // Allow an environment-specific orgs file (e.g. config.orgs.testing.php),
-        if($realm === 'testing'){
+        if ($realm === 'testing') {
             $file = base_path('legacy/config/config.orgs.testing.php');
-        }else{
+        } else {
             $file = base_path('legacy/config/config.orgs.php');
         }
 

@@ -65,7 +65,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public array $posts;
 
     public array $existingAttachments = [];
+
     public array $newAttachments = [];
+
     public array $deletedAttachmentIds = [];
 
     public function mount(): void
@@ -114,12 +116,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'readonly' => $readOnlyPosts->contains($post->id),
         ])->all();
         $this->existingAttachments = $project->attachments->map(
-            fn($attachment) => $attachment->only('id', 'path', 'name', 'mime_type', 'size')
+            fn ($attachment) => $attachment->only('id', 'path', 'name', 'mime_type', 'size')
         )->all();
     }
 
     /**
      * Translates the livewire properties into the ones expected by the validator and the project model.
+     *
      * @return array<string, mixed>
      */
     private function getValues(): array
@@ -157,12 +160,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         ]);
     }
 
-    public function addTaxPosts() : void
+    public function addTaxPosts(): void
     {
-        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function(TaxBudget$taxBudget){
+        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget) {
             $budgetTitle = $taxBudget->legacyBudgetTitle;
             $this->posts[] = ([
-                'name' => $budgetTitle->titel_name . ' - Einnahmen',
+                'name' => $budgetTitle->titel_name.' - Einnahmen',
                 'bemerkung' => 'Steuer',
                 'einnahmen' => Money::EUR($taxBudget->tax_percent),
                 'ausgaben' => Money::EUR(0),
@@ -170,7 +173,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 'readonly' => false,
             ]);
             $this->posts[] = ([
-                'name' => $budgetTitle->titel_name . ' - Ausgaben',
+                'name' => $budgetTitle->titel_name.' - Ausgaben',
                 'bemerkung' => 'Steuer',
                 'einnahmen' => Money::EUR(0),
                 'ausgaben' => Money::EUR($taxBudget->tax_percent),
@@ -183,9 +186,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function isPostDeletable(int $index): bool
     {
         return count($this->posts) > 1 && (
-                (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
-                || ! isset($this->posts[$index]['id'])
-            );
+            (isset($this->posts[$index]['id']) && ExpenseReceiptPost::where('projekt_posten_id', $this->posts[$index]['id'])->doesntExist())
+            || ! isset($this->posts[$index]['id'])
+        );
     }
 
     /**
@@ -212,6 +215,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 // Check optimistic locking before validation
                 if ($this->getProject()->version !== $this->version) {
                     $this->addError('save', __('project.error.version-mismatch'));
+
                     return;
                 }
             }
@@ -221,15 +225,15 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             // prepare data and rules
             $state = ProjectState::make($stateName, $project);
             $data = $this->getValues() + [
-                    'uploads' => $this->newAttachments,
-                    'deletedAttachments' => $this->deletedAttachmentIds
-                ];
+                'uploads' => $this->newAttachments,
+                'deletedAttachments' => $this->deletedAttachmentIds,
+            ];
             $rules = $state->basicRules() + [
-                    'uploads.*' => File::types(['pdf', 'xlsx', 'ods'])
-                        ->extensions(['pdf', 'xlsx', 'ods'])->max("5 Mb"),
-                    'deletedAttachments' => 'array',
-                    'deletedAttachments.*' => 'integer',
-                ];
+                'uploads.*' => File::types(['pdf', 'xlsx', 'ods'])
+                    ->extensions(['pdf', 'xlsx', 'ods'])->max('5 Mb'),
+                'deletedAttachments' => 'array',
+                'deletedAttachments.*' => 'integer',
+            ];
             $rules += $canUpdateBudget ? $state->budgetRules() : [];
             $rules += $canUpdateApproval ? $state->approvalRules() : [];
 
@@ -257,7 +261,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 ]);
             }
 
-            if(!$project->state->equals($state)){
+            if (! $project->state->equals($state)) {
                 ChatMessage::create([
                     'text' => "{$project->state->label()} -> {$state->label()}",
                     'type' => ChatMessageType::SYSTEM,
@@ -284,7 +288,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             $project->posts()->whereNotIn('id', collect($filteredPosts)->pluck('id'))
                 ->whereNotIn('id', $readOnlyPosts)->delete();
 
-            foreach ($newAttachments as $attachment){
+            foreach ($newAttachments as $attachment) {
                 $attachment->store('projects/'.$project->id);
                 $project->attachments()->create([
                     'path' => "projects/$project->id/{$attachment->hashName()}",
@@ -294,16 +298,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 ]);
             }
 
-            foreach ($deletedAttachmentIds as $id){
+            foreach ($deletedAttachmentIds as $id) {
                 $pa = ProjectAttachment::where('id', $id)->where('projekt_id', $this->project_id)->findOrFail();
-                \Storage::delete($pa->path);
+                Storage::delete($pa->path);
                 $pa->delete();
             }
 
             DB::commit();
 
             return to_route('project.show', $project->id);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
@@ -332,7 +336,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->deletedAttachmentIds[] = $id;
         $this->existingAttachments = array_filter(
             $this->existingAttachments,
-            fn($a) => $a['id'] !== $id
+            fn ($a) => $a['id'] !== $id
         );
     }
 
@@ -346,7 +350,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     /**
      * Get budget title options based on the project creation date
      */
-    protected function getBudgetTitleOptions(): \Illuminate\Database\Eloquent\Collection
+    protected function getBudgetTitleOptions(): Illuminate\Database\Eloquent\Collection
     {
         $plan = LegacyBudgetPlan::findOrFail($this->hhp_id);
 
@@ -364,9 +368,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function with(): array
     {
         // variables
-        if(Auth::user()->can('pick-any-committee', Project::class)){
+        if (Auth::user()->can('pick-any-committee', Project::class)) {
             $gremien = Setting::get('user.committees.data');
-        }else{
+        } else {
             $gremien = Auth::user()->getCommittees();
         }
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
@@ -378,11 +382,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // permissions
         $canUpdateBudget = Auth::user()->can('update-budget', $this->getProject());
         $canUpdateBudgetPlan = $canUpdateBudget
-            && collect($this->posts)->filter(fn($post) => $post['readonly'])->isEmpty();
+            && collect($this->posts)->filter(fn ($post) => $post['readonly'])->isEmpty();
         $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
 
         $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
-        $canAddTaxTitles = collect($this->posts)->filter(fn($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
+        $canAddTaxTitles = collect($this->posts)->filter(fn ($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
 
         return compact(
             'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',

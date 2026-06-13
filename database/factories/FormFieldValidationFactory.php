@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\PtfProject\FormField;
+use App\Models\PtfProject\FormFieldValidation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PtfProject\FormFieldValidation>
+ * @extends Factory<FormFieldValidation>
  */
 class FormFieldValidationFactory extends Factory
 {

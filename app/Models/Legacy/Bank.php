@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $blz
  * @property string $name
  * @property BankAccountCredential[] $finanzformularKontoCredentials
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\BankAccountCredential> $kontoCredentials
+ * @property-read Collection<int, BankAccountCredential> $kontoCredentials
  * @property-read int|null $konto_credentials_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|Bank newModelQuery()

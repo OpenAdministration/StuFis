@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\Money\DefaultMoneyFormater;
+
 return [
     /*
      |--------------------------------------------------------------------------
@@ -8,7 +10,7 @@ return [
      */
     'locale' => 'de_DE',
     'defaultCurrency' => 'EUR',
-    'defaultFormatter' => \App\Support\Money\DefaultMoneyFormater::class,
+    'defaultFormatter' => DefaultMoneyFormater::class,
     // 'defaultSerializer' => \App\Support\Money\DefaultMoneySerializer::class,
     'defaultSerializer' => null,
     'isoCurrenciesPath' => is_dir(__DIR__.'/../vendor')

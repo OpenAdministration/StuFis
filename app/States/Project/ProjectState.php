@@ -52,8 +52,7 @@ abstract class ProjectState extends State implements Wireable
             ->allowTransition(Draft::class, Applied::class)
             ->allowTransition([ApprovedByOrg::class, ApprovedByFinance::class, ApprovedByOther::class], Terminated::class)
             ->allowTransition([Applied::class, NeedOrgApproval::class, NeedFinanceApproval::class], Revoked::class)
-            ->allowTransition([Applied::class, Revoked::class], Draft::class)
-        ;
+            ->allowTransition([Applied::class, Revoked::class], Draft::class);
 
         // here would be some dynamic logic from config possible
 
@@ -110,7 +109,8 @@ abstract class ProjectState extends State implements Wireable
         return $config;
     }
 
-    public function basicRules() : array {
+    public function basicRules(): array
+    {
         return [
             'name' => 'required|string|max:128',
             'responsible' => 'required|string|max:128|email',
@@ -129,37 +129,44 @@ abstract class ProjectState extends State implements Wireable
         ];
     }
 
-    public function budgetRules() : array {
+    public function budgetRules(): array
+    {
         return [
             'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];
     }
 
-    public function approvalRules() : array {
+    public function approvalRules(): array
+    {
         return [
             'recht' => 'sometimes|nullable|string|exists:App\Models\LegalBasis,slug',
             'recht-additional' => 'sometimes|nullable|string',
         ];
     }
 
-    public function rules(): array {
+    public function rules(): array
+    {
         // merge all rules
         return $this->basicRules() + $this->budgetRules() + $this->approvalRules();
     }
 
-    public function approvalFields() : array {
+    public function approvalFields(): array
+    {
         return array_values($this->approvalRules());
     }
 
-    public function budgetFields() : array {
+    public function budgetFields(): array
+    {
         return array_keys($this->budgetRules());
     }
 
-    public function basicFields() : array {
+    public function basicFields(): array
+    {
         return array_keys($this->basicRules());
     }
 
-    public function fields() : array {
+    public function fields(): array
+    {
         return array_keys($this->rules());
     }
 
@@ -169,17 +176,17 @@ abstract class ProjectState extends State implements Wireable
      * If the provided data is empty, it retrieves the model's attributes and populates additional
      * data such as related posts and attachments.
      *
-     * @param array $data An optional array of data to validate. If empty, the model's attributes will be used.
-     *
+     * @param  array  $data  An optional array of data to validate. If empty, the model's attributes will be used.
      * @return \Illuminate\Contracts\Validation\Validator The validator instance for the given data.
      */
     public function getValidator(array $data = [], ?User $user = null): \Illuminate\Contracts\Validation\Validator
     {
-        if(empty($data)){
+        if (empty($data)) {
             $model = $this->getModel();
             $data = $this->getModel()->getAttributes();
             $data['posts'] = $model->posts->all();
         }
+
         return Validator::make($data, static::rules());
     }
 

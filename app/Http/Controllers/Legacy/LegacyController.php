@@ -9,7 +9,6 @@ use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\FileInfo;
 use App\Models\Legacy\LegacyBudgetPlan;
 use forms\projekte\auslagen\AuslagenHandler2;
-use framework\DBConnector;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -37,7 +36,7 @@ class LegacyController extends Controller
             // otherwise with
             return view('legacy.main', [
                 'content' => $output,
-                //'sectionTabs' => $this->resolveSectionTabs($request),
+                // 'sectionTabs' => $this->resolveSectionTabs($request),
             ]);
         } catch (LegacyRedirectException $e) {
             return $e->redirect;

@@ -7,7 +7,6 @@ use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectPost;
 use App\Models\User;
-use App\States\Project\Draft;
 use App\States\Project\ProjectState;
 use forms\chat\ChatHandler;
 use forms\FormTemplaterProject;
@@ -422,6 +421,7 @@ class ProjektHandler extends Renderer
                 break;
         }
     }
+
     private function renderBackButton(): void
     {
         ?>

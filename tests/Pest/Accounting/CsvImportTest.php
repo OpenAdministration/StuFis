@@ -32,7 +32,7 @@ test('show last transactions', function (): void {
     });
     $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import');
     foreach ($lastTransactions as $transaction) {
-        //Log::debug($transaction->date);
+        // Log::debug($transaction->date);
         $wire->set('account_id', $transaction->konto_id)
             ->assertSee(number_format($transaction->saldo, 2, ',', '.'))
             ->assertSee($transaction->date->format('d.m.Y'))

@@ -407,7 +407,7 @@ class HHPHandler extends Renderer
         <a class="btn btn-primary" target="_blank" href="<?php echo URIBASE; ?>download/hhp/<?php echo $hhp_id; ?>/ods">
             <i class="fa fa-fw fa-download"></i> als ODS
         </a>
-        <?php if(Setting::get('datev', false)){
+        <?php if (Setting::get('datev', false)) {
             $canFinance = AuthHandler::getInstance()->hasGroup('ref-finanzen'); ?>
             <a class="btn btn-primary<?php echo $canFinance ? '' : ' disabled'; ?>"
                href="<?php echo route('datev.export', ['hhpId' => $hhp_id]); ?>"
@@ -415,7 +415,7 @@ class HHPHandler extends Renderer
                 <i class="fa fa-fw fa-download"></i> DATEV Export
             </a>
 		<?php }
-        if(Setting::get('tax.active', false)){
+        if (Setting::get('tax.active', false)) {
             $canHv = AuthHandler::getInstance()->hasGroup('ref-finanzen-hv'); ?>
             <form action="<?php echo URIBASE; ?>rest/forms/hhp/add-tax-budgets/<?php echo $hhp_id; ?>"
                   method="POST" role="form" class="ajax-form" style="display:inline-block;">
@@ -426,7 +426,7 @@ class HHPHandler extends Renderer
                 </button>
             </form>
 		<?php }
-    }
+        }
 
     private function checkTitelBudget(float $should, float $is): string
     {

@@ -1,5 +1,7 @@
 <?php
 
+use Composer\InstalledVersions;
+
 return [
     /**
      * stable - only stable stuff
@@ -14,7 +16,7 @@ return [
         'registration_number' => env('FINTS_REG_NR'),
     ],
 
-    'version' => \Composer\InstalledVersions::getPrettyVersion('openadministration/stufis'),
+    'version' => InstalledVersions::getPrettyVersion('openadministration/stufis'),
 
     'admin_mail' => env('HELP_CONTACT_MAIL', 'stufis@open-administration.de'), // unused?
 

@@ -2,6 +2,8 @@
 
 namespace framework\svg;
 
+use intertopia\Classes\svg\SvgDiagramCore;
+
 /**
  * Adding Beam (Block) Diagram Class
  *
@@ -112,7 +114,7 @@ class SvgDiagramAddingBeam extends SvgDiagramBlock
      * (non-PHPdoc)
      * generate block chart from data - sums values per beam
      *
-     * @see \intertopia\Classes\svg\SvgDiagramCore::render()
+     * @see SvgDiagramCore::render()
      */
     public function render()
     {

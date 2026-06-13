@@ -18,6 +18,7 @@ class ProjectMailDomainChangeCommand extends Command
 
         if (empty($domain)) {
             $this->error('Mail domain is not configured in settings.');
+
             return;
         }
 
@@ -31,6 +32,7 @@ class ProjectMailDomainChangeCommand extends Command
 
         if ($projects->isEmpty()) {
             $this->info('No projects found that need updating.');
+
             return;
         }
 
@@ -44,7 +46,7 @@ class ProjectMailDomainChangeCommand extends Command
             $localPart = strstr($project->responsible, '@', true) ?: $project->responsible;
 
             // Update to the new domain
-            $project->responsible = $localPart . '@' . $domain;
+            $project->responsible = $localPart.'@'.$domain;
             $project->saveQuietly();
 
             $bar->advance();

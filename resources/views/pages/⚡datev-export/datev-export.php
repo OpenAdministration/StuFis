@@ -2,6 +2,7 @@
 
 use App\Exports\Datev\DatevExport;
 use App\Exports\Datev\DatevExportDateField;
+use App\Exports\Datev\DatevExportPreviewRow;
 use App\Models\Legacy\LegacyBudgetPlan;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -14,7 +15,6 @@ use Livewire\Component;
 
 new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
-
     #[Url]
     public ?int $hhpId = null;
 
@@ -54,8 +54,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $fields = [
             DatevExportDateField::BookingDate,
             DatevExportDateField::ExpenseCreatedDate,
-            //DatevExportDateField::EarliestReceiptDate,
-            //DatevExportDateField::EarliestPaymentDate,
+            // DatevExportDateField::EarliestReceiptDate,
+            // DatevExportDateField::EarliestPaymentDate,
         ];
 
         return collect($fields)
@@ -79,7 +79,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * Detailed rows of what will be exported. Heavy (walks the full receipt/booking
      * graph), so the view only accesses it once the user has loaded the preview.
      *
-     * @return Collection<int, \App\Exports\Datev\DatevExportPreviewRow>
+     * @return Collection<int, DatevExportPreviewRow>
      */
     #[Computed]
     public function previewRows(): Collection
@@ -129,11 +129,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     protected function rules(): array
     {
         return [
-            'hhpId'           => ['required', 'int', new Exists(LegacyBudgetPlan::class, 'id')],
+            'hhpId' => ['required', 'int', new Exists(LegacyBudgetPlan::class, 'id')],
             'dateRange.start' => 'required|date',
-            'dateRange.end'   => 'required|date|after:dateRange.start',
-            'exportPdfs'      => 'required|bool',
-            'dateField'       => ['required', Rule::in(array_keys($this->dateFields))],
+            'dateRange.end' => 'required|date|after:dateRange.start',
+            'exportPdfs' => 'required|bool',
+            'dateField' => ['required', Rule::in(array_keys($this->dateFields))],
         ];
     }
 

@@ -176,13 +176,11 @@ Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $proje
     $trail->push(__('general.breadcrumb.project-edit'), route('project.edit', $project_id));
 });
 
-
 // Home > project > PID > Edit
 Breadcrumbs::for('legacy.expense.create', static function (BreadcrumbTrail $trail, $project_id): void {
     $trail->parent('project.show', $project_id);
     $trail->push(__('general.breadcrumb.new-expense'), route('legacy.expense.create', $project_id));
 });
-
 
 // Home > project > PID > Abrechnung > AID
 Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id): void {

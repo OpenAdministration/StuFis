@@ -12,6 +12,10 @@
 */
 
 use App\Http\Controllers\AdminConfigPage;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DatevExportController;
+use App\Http\Controllers\Legacy\TransactionView;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ViewChangelog;
 use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Support\Facades\Route;
@@ -25,16 +29,16 @@ Route::middleware(['auth'])->group(function (): void {
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
 
-    Route::get('config', [AdminConfigPage::class, 'render'] )->name('config');
+    Route::get('config', [AdminConfigPage::class, 'render'])->name('config');
 
     Route::livewire('bank-account/new', 'pages::new-banking-account')->name('bank-account.new');
     Route::livewire('bank-account/import/manual', 'pages::bank.csv-import')->name('bank-account.import.csv');
-    Route::get('bank-account/{account_id}/transaction/{transaction_id}', [\App\Http\Controllers\Legacy\TransactionView::class, 'view'])->name('bank-account.transaction');
+    Route::get('bank-account/{account_id}/transaction/{transaction_id}', [TransactionView::class, 'view'])->name('bank-account.transaction');
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
     Route::livewire('datev/export', 'pages::datev-export')->name('datev.export');
-    Route::get('datev/export/download', [\App\Http\Controllers\DatevExportController::class, 'download'])
+    Route::get('datev/export/download', [DatevExportController::class, 'download'])
         ->middleware('signed')
         ->name('datev.export.download');
 
@@ -42,7 +46,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::livewire('project/{project_id}', 'pages::project.show-project')->name('project.show');
     Route::livewire('project/{project_id}/history', 'pages::project.show-project')->name('project.history');
     Route::livewire('project/{project_id}/edit', 'pages::project.edit-project')->name('project.edit');
-    Route::get('project/attachment/{attachment}/{fileName}', [\App\Http\Controllers\ProjectController::class, 'showAttachment'])->name('project.attachment');
+    Route::get('project/attachment/{attachment}/{fileName}', [ProjectController::class, 'showAttachment'])->name('project.attachment');
 
     Route::permanentRedirect('projekt/create', '/project/create');
     Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');
@@ -50,9 +54,9 @@ Route::middleware(['auth'])->group(function (): void {
 });
 
 // login routes
-Route::get('auth/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
-Route::get('auth/callback', [\App\Http\Controllers\AuthController::class, 'callback'])->name('login.callback');
-Route::get('auth/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+Route::get('auth/login', [AuthController::class, 'login'])->name('login');
+Route::get('auth/callback', [AuthController::class, 'callback'])->name('login.callback');
+Route::get('auth/logout', [AuthController::class, 'logout'])->name('logout');
 
 // guest routes
 Route::get('changelog', ViewChangelog::class)->name('changelog');

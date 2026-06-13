@@ -6,6 +6,7 @@ use Carbon\Exceptions\InvalidFormatException;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
+use Illuminate\Translation\PotentiallyTranslatedString;
 
 class DateColumnRule implements ValidationRule
 {
@@ -14,7 +15,7 @@ class DateColumnRule implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string): \Illuminate\Translation\PotentiallyTranslatedString  $fail
+     * @param  Closure(string): PotentiallyTranslatedString  $fail
      */
     #[\Override]
     public function validate(string $attribute, mixed $value, Closure $fail): void
@@ -35,7 +36,7 @@ class DateColumnRule implements ValidationRule
             if ($firstDate > $lastDate) {
                 $fail(__('konto.csv-verify-date-order-error'));
             }
-        } catch (InvalidFormatException | \TypeError) {
+        } catch (InvalidFormatException|\TypeError) {
             $fail(__('konto.csv-verify-date-error'));
         }
     }

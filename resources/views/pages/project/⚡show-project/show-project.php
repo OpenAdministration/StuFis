@@ -28,10 +28,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $project = Project::findOrFail($this->project_id);
         $state = $project->state;
 
-        $showApproval = \Auth::user()->getGroups()->has('ref-finanzen-hv') || !$state->equals(Draft::class);
+        $showApproval = Auth::user()->getGroups()->has('ref-finanzen-hv') || ! $state->equals(Draft::class);
         $showLink = Setting::get('project.protocol_url.active');
 
-        $userCanDelete = \Auth::user()->can('delete', $project);
+        $userCanDelete = Auth::user()->can('delete', $project);
         $deletionAllowed = $project->expenses()->count() === 0;
 
         return compact('project', 'showApproval', 'showLink', 'userCanDelete', 'deletionAllowed');
@@ -57,8 +57,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 'type' => ChatMessageType::SYSTEM,
                 'target' => 'projekt',
                 'target_id' => $project->id,
-                'creator' => \Auth::user()->username,
-                'creator_alias' => \Auth::user()->name,
+                'creator' => Auth::user()->username,
+                'creator_alias' => Auth::user()->name,
                 'timestamp' => now(),
             ]);
             Flux::modal('state-modal')->close();
@@ -74,6 +74,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->authorize('delete', $project);
         if ($project->expenses()->count() > 0) {
             $this->addError('delete', 'Cannot delete project with expenses');
+
             return;
         }
 

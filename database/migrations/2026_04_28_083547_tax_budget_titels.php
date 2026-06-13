@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreign('titel_id')->references('id')->on('haushaltstitel');
         });
 
-        Setting::set('tax.active' , false);
+        Setting::set('tax.active', false);
     }
 
     /**

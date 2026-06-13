@@ -1287,7 +1287,7 @@ class AuslagenHandler2 extends Renderer
     /**
      * encrypt string
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected static function encryptedStr(string $str): string
     {
@@ -1597,7 +1597,7 @@ class AuslagenHandler2 extends Renderer
 
             return;
         }
-        throw new LegacyDieException(500,'Belege PDF kann nicht generiert werden');
+        throw new LegacyDieException(500, 'Belege PDF kann nicht generiert werden');
     }
 
     public function generate_zahlungsanweisung_pdf(): void
@@ -2354,7 +2354,7 @@ class AuslagenHandler2 extends Renderer
         if (! $hidden) {
             if ($beleg['file_id']) {
                 $file_form = '<div class="beleg-file btn-default" style=" border: 1px solid #ddd; border-radius: 5px; padding: 5px 10px; position: relative;" data-id="'.$beleg['file_id'].'">'.
-                    '<a href="'. route('legacy.get-file', [$this->auslagen_id, $beleg['id'], $beleg['file']['hashname']]).'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
+                    '<a href="'.route('legacy.get-file', [$this->auslagen_id, $beleg['id'], $beleg['file']['hashname']]).'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
                     (($this->stateInfo['editable']) ? ('<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>') : '').
                     '<div><small><span style="min-width: 50px; display: inline-block; font-weight: bold;">Size: </span>'.
                     '<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.

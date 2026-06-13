@@ -2,7 +2,6 @@
 
 namespace App\States\Project;
 
-use App\Rules\ExactlyOneZeroMoneyRule;
 use App\Rules\FluxEditorRule;
 
 class Draft extends ProjectState
@@ -21,7 +20,6 @@ class Draft extends ProjectState
     {
         return 'zinc';
     }
-
 
     public function basicRules(): array
     {
@@ -43,17 +41,18 @@ class Draft extends ProjectState
         ];
     }
 
-    public function budgetRules() : array {
+    public function budgetRules(): array
+    {
         return [
             'posts.*.titel_id' => 'sometimes|nullable|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
         ];
     }
 
-    public function approvalRules() : array {
+    public function approvalRules(): array
+    {
         return [
             'recht' => 'sometimes|nullable|string|exists:App\Models\Legacy\LegalBase,slug',
             'recht-additional' => 'sometimes|nullable|string',
         ];
     }
-
 }

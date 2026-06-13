@@ -26,17 +26,17 @@ class Setting extends Model
     public static function defaults(): array
     {
         return [
-            "finance_mail" => "service@open-administration.de",
-            "mail_domain" => "open-administration.de",
-            "project" => [
-                "description" => [
-                    "max_length" => 99999,
-                    "min_length" => 50,
+            'finance_mail' => 'service@open-administration.de',
+            'mail_domain' => 'open-administration.de',
+            'project' => [
+                'description' => [
+                    'max_length' => 99999,
+                    'min_length' => 50,
                 ],
-                "protocol_url" => [
-                    "active" => false,
-                    "label" => "",
-                    "prefix" => "",
+                'protocol_url' => [
+                    'active' => false,
+                    'label' => '',
+                    'prefix' => '',
                 ],
             ],
 
@@ -82,7 +82,8 @@ class Setting extends Model
         return Arr::undot(array_merge(static::defaults(), $stored));
     }
 
-    public static function drop(string $key) {
+    public static function drop(string $key)
+    {
         return Setting::find($key)?->delete();
     }
 }

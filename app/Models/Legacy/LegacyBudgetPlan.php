@@ -3,8 +3,12 @@
 namespace App\Models\Legacy;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
+use Illuminate\Support\Facades\Date;
 
 /**
  * App\Models\Legacy\LegacyBudgetPlan
@@ -15,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
  * @property string $state
  * @property LegacyBudgetGroup[] $budgetGroups
  * @property-read int|null $budget_groups_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Legacy\LegacyBudgetItem> $budgetItems
+ * @property-read Collection<int, LegacyBudgetItem> $budgetItems
  * @property-read int|null $budget_items_count
  *
  * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetPlan newModelQuery()
@@ -45,12 +49,12 @@ class LegacyBudgetPlan extends Model
      */
     protected $fillable = ['von', 'bis', 'state'];
 
-    public function budgetGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function budgetGroups(): HasMany
     {
         return $this->hasMany(LegacyBudgetGroup::class, 'hhp_id');
     }
 
-    public function budgetItems(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    public function budgetItems(): HasManyThrough
     {
         return $this->throughBudgetGroups()->hasBudgetItems();
     }
@@ -62,7 +66,7 @@ class LegacyBudgetPlan extends Model
 
     public static function findByDate(?Carbon $date = null): ?static
     {
-        $date ??= \Illuminate\Support\Facades\Date::now();
+        $date ??= Date::now();
 
         // `bis` is the last day inside the plan and is stored at midnight, so
         // compare against the start of $date's day to include the whole `bis`

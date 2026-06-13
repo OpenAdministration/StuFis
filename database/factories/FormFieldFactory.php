@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\PtfProject\FormDefinition;
+use App\Models\PtfProject\FormField;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PtfProject\FormField>
+ * @extends Factory<FormField>
  */
 class FormFieldFactory extends Factory
 {

@@ -36,11 +36,11 @@ class LegalBasis extends Model
 
     public function hasAdditionalField(): bool
     {
-        return !empty($this->label_additional);
+        return ! empty($this->label_additional);
     }
 
     public function hasHintText(): bool
     {
-        return !empty($this->hint_text);
+        return ! empty($this->hint_text);
     }
 }

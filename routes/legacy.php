@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\Legacy\DeleteExpenses;
+use App\Http\Controllers\Legacy\DeleteProject;
+use App\Http\Controllers\Legacy\ExportController;
 use App\Http\Controllers\Legacy\LegacyController;
+use App\Models\Legacy\Expense;
+use App\Models\Legacy\LegacyBudgetItem;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->name('legacy.')->group(function (): void {
@@ -45,21 +50,21 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::redirect('p/{projekt_id}', '/projekt/{projekt_id}');
     Route::redirect('a/{auslagen_id}', '/auslagen/{auslagen_id}');
     Route::get('auslagen/{auslagen_id}', static function ($auslage_id) {
-        $auslage = \App\Models\Legacy\Expense::findOrFail($auslage_id);
+        $auslage = Expense::findOrFail($auslage_id);
 
         return redirect()->to("projekt/$auslage->projekt_id/auslagen/$auslage->id");
     })->name('expense');
     Route::get('titel/{titel_id}', static function ($titel_id) {
-        $item = \App\Models\Legacy\LegacyBudgetItem::findOrFail($titel_id);
+        $item = LegacyBudgetItem::findOrFail($titel_id);
         $group = $item->budgetGroup;
 
         return redirect()->to("hhp/$group->hhp_id/titel/$item->id");
     })->name('budget-item');
 
     // "new" adapted stuff
-    Route::get('download/hhp/{hhp_id}/{filetype}', [\App\Http\Controllers\Legacy\ExportController::class, 'budgetPlan']);
-    Route::post('projekt/{projekt_id}/delete', \App\Http\Controllers\Legacy\DeleteProject::class)->name('projekt.delete');
-    Route::post('expenses/{expenses_id}/delete', \App\Http\Controllers\Legacy\DeleteExpenses::class)->name('expenses.delete');
+    Route::get('download/hhp/{hhp_id}/{filetype}', [ExportController::class, 'budgetPlan']);
+    Route::post('projekt/{projekt_id}/delete', DeleteProject::class)->name('projekt.delete');
+    Route::post('expenses/{expenses_id}/delete', DeleteExpenses::class)->name('expenses.delete');
 
     // catch all
     Route::any('{path}', [LegacyController::class, 'render'])
