@@ -66,32 +66,32 @@
                            class="text-zinc-400 [&:has(+[data-slot=image])]:hidden"/>
             @endif
 
-            <?php if ($image): ?>
+            <?php if ($image) { ?>
             <div class="{{ $imageWrapperClasses }}" data-slot="image">
                 <img class="h-full w-full object-cover" src="{{ $image }}" alt="">
             </div>
-            <?php endif; ?>
+            <?php } ?>
         </div>
 
         <div class="flex-1 overflow-hidden py-2.25 me-3 flex flex-col justify-center gap-1"
              data-slot="content">
-            <?php if ($heading): ?>
-            <div
+            <?php if ($heading) { ?>
+            <div title="{{ $heading }}"
                 class="text-sm font-medium text-zinc-700 dark:text-white/80 whitespace-nowrap overflow-hidden text-ellipsis">{{ $heading }}</div>
-            <?php endif; ?>
+            <?php } ?>
 
-            <?php if ($text): ?>
+            <?php if ($text) { ?>
             <div class="text-xs text-zinc-500">{{ $text }}</div>
-            <?php endif; ?>
+            <?php } ?>
         </div>
     </a>
 
-    <?php if ($actions): ?>
+    <?php if ($actions) { ?>
     <div {{ $actions->attributes->class([
         'p-[calc(0.25rem-1px)]',
         'flex-shrink-0 self-start flex h-full items-center gap-2'
     ]) }} data-slot="actions">
         {{ $actions }}
     </div>
-    <?php endif; ?>
+    <?php } ?>
 </div>

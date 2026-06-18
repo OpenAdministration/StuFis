@@ -222,7 +222,7 @@
                     <div class="flex items-center sm:space-x-6">
                         <a href="{{ config('stufis.docs_url') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                            aria-label="{{ __('general.docs-button') }}">
-                            <x-fas-book-open-reader class="size-5 text-indigo-500"/>
+                            <x-fas-book-open-reader class="size-5 text-indigo-500 overflow-visible"/>
                         </a>
                         @can('access-app-configuration', Auth::user())
                             <a href="{{ route('config') }}" class="mx-3 sm:mx-5 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
