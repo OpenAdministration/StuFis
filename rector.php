@@ -38,7 +38,7 @@ return RectorConfig::configure()
     ->withPhpSets() // defaults to the php version from composer
     ->withTypeCoverageLevel(0)
     ->withDeadCodeLevel(0)
-    ->withCodeQualityLevel(78)
+    ->withPreparedSets(codeQuality: true)
     ->withSkip([
         // compact() is idiomatic in Laravel controllers; the explicit-array rewrite is
         // style-only and has an undefined-variable edge case. Keep compact().
