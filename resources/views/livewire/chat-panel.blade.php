@@ -1,5 +1,5 @@
 <div class="bg-white rounded-2xl shadow-accent border border-gray-200 p-6 mb-6">
-    <h2 class="text-xl font-bold text-gray-900 mb-4">Nachrichten</h2>
+    <h2 class="text-xl font-bold text-gray-900 mb-4">{{ __('chat.heading') }}</h2>
 
     <ul role="list" class="space-y-6 ">
         @foreach($messages as $message)
@@ -11,8 +11,9 @@
                     <div class="ml-1 relative flex size-6 flex-none items-center justify-center bg-white">
                         <div class="size-1.5 rounded-full bg-gray-100 ring ring-gray-300"></div>
                     </div>
+                    @php($author = $message->user?->name ?? ($message->creator_alias ?: null))
                     <p class="flex-auto py-0.5 text-xs/5 text-gray-500">
-                        <span class="font-medium text-gray-900">Statuswechsel</span> {{ $message->text }}</p>
+                        <span class="font-medium text-gray-900">{{ $message->text }}</span>@if($author) <span class="text-gray-400">{{ __('chat.by') }}</span> <span class="text-gray-700">{{ $author }}</span>@endif</p>
                     <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">
                         {{ $message->timestamp->diffForHumans() }}
                     </time>
@@ -29,7 +30,7 @@
                         <div class="min-w-0 flex-auto rounded-md p-3 ring-1 ring-gray-200 ring-inset">
                             <div class="flex justify-between gap-x-4">
                                 <div class="min-w-0 py-0.5 text-xs/5 text-gray-500"><span
-                                        class="font-medium text-gray-900">{{ $message->user->name ?? $message->creator_alias ?? "Unknown" }}</span> commented
+                                        class="font-medium text-gray-900">{{ $message->user?->name ?? $message->creator_alias ?? __('chat.unknown') }}</span> {{ __('chat.commented') }}
                                 </div>
                                 <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">{{ $message->timestamp->diffForHumans() }}</time>
                             </div>
