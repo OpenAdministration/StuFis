@@ -348,22 +348,7 @@ $pathConfig = [
                                 ],
                             ],
                         ],
-                        [
-                            'path' => '(edit|history)',
-                            'type' => 'pattern',
-                            'action' => 'edit',
-                            'param' => 'action',
-                            'load' => [
-                                LoadGroups::DATEPICKER,
-                                LoadGroups::SELECTPICKER,
-                            ],
-                        ],
                     ],
-                ],
-                [
-                    'path' => 'create',
-                    'type' => 'path',
-                    'action' => 'create',
                 ],
             ],
         ], // projekt
@@ -393,15 +378,6 @@ $pathConfig = [
                     'controller' => 'error',
                     'action' => '404',
                     'children' => [
-                        [
-                            'path' => '(projekt)(.*)',
-                            'type' => 'pattern',
-                            'param' => 'id',
-                            'match' => 1,
-                            'controller' => 'rest',
-                            'action' => 'projekt',
-                            'is_suffix' => true,
-                        ],
                         [
                             'path' => 'auslagen',
                             'type' => 'path',

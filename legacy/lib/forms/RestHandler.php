@@ -31,20 +31,12 @@ use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
-use forms\projekte\exceptions\ActionNotSetException;
-use forms\projekte\exceptions\IdNotSetException;
-use forms\projekte\exceptions\IllegalStateException;
-use forms\projekte\exceptions\IllegalTransitionException;
-use forms\projekte\exceptions\InvalidDataException;
-use forms\projekte\exceptions\WrongVersionException;
-use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\EscFunc;
 use framework\render\JsonController;
 use framework\Validator;
-use PDOException;
 
 class RestHandler extends EscFunc
 {
@@ -60,9 +52,6 @@ class RestHandler extends EscFunc
         unset($_POST['nonce']);
 
         switch ($routeInfo['action']) {
-            case 'projekt':
-                $this->handleProjekt($routeInfo);
-                break;
             case 'auslagen':
                 $this->handleAuslagen($routeInfo);
                 break;
@@ -223,94 +212,6 @@ class RestHandler extends EscFunc
             'reload' => 1000,
             'headline' => 'Erfolgreich gespeichert',
         ]);
-    }
-
-    public function handleProjekt($routeInfo = null): void
-    {
-        $ret = false;
-        $msgs = [];
-        $projektHandler = null;
-        $dbret = false;
-
-        if (DEV) {
-            $msgs[] = print_r($_POST, true);
-        }
-
-        try {
-
-            if (! isset($_POST['action'])) {
-                throw new ActionNotSetException('Es wurde keine Aktion übertragen');
-            }
-
-            if (DBConnector::getInstance()->dbBegin() === false) {
-                throw new PDOException('cannot start DB transaction');
-            }
-
-            switch ($_POST['action']) {
-                case 'create':
-                    $projektHandler = ProjektHandler::createNewProjekt($_POST);
-                    if ($projektHandler !== null) {
-                        $ret = true;
-                    }
-                    break;
-                case 'changeState':
-                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
-                        throw new IdNotSetException('ID nicht gesetzt.');
-                    }
-                    $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'none']);
-                    $ret = $projektHandler->setState($_POST['newState']);
-                    break;
-                case 'update':
-                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
-                        throw new IdNotSetException('ID nicht gesetzt.');
-                    }
-                    $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'edit']);
-                    $ret = $projektHandler->updateSavedData($_POST);
-                    $msgs[] = 'Try to update';
-                    break;
-                default:
-                    throw new ActionNotSetException('Unbekannte Aktion verlangt!');
-            }
-        } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
-        InvalidDataException|PDOException|IllegalTransitionException $exception) {
-            $ret = false;
-            $msgs[] = 'Ein Fehler ist aufgetreten';
-            $msgs[] = $exception->getMessage();
-        } catch (IllegalStateException $exception) {
-            $ret = false;
-            $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
-            $msgs[] = $exception->getMessage();
-        } finally {
-            if ($ret) {
-                $dbret = DBConnector::getInstance()->dbCommit();
-            }
-            if ($ret === false || $dbret === false) {
-                DBConnector::getInstance()->dbRollBack();
-                $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
-            } else {
-                $msgs[] = 'Daten erfolgreich gespeichert!';
-                $target = URIBASE.'projekt/'.$projektHandler->getID();
-            }
-
-        }
-
-        $json = [
-            'success' => ($ret !== false),
-            'status' => '200',
-            'msg' => $msgs,
-            'type' => 'modal',
-        ];
-        if (isset($target)) {
-            $json['redirect'] = $target;
-        }
-        if ($ret === false) {
-            $json['subtype'] = 'server-error';
-        } else {
-            $json['reload'] = 1000;
-            $json['subtype'] = 'server-success';
-        }
-
-        JsonController::print_json($json);
     }
 
     /**
