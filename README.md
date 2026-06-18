@@ -58,6 +58,18 @@ php artisan serve
 npm run dev
 ```
 
+### Server deployment helpers
+
+For a server install there are helper scripts in [`bin/`](bin/) that wrap the
+above with the right PHP/Composer/Node toolchain (versioned `php8.4`, local
+`composer.phar`, nvm) and put the app into maintenance mode during updates:
+
+- `bin/setup.sh` — first-time setup *and* idempotent toolchain refresh
+- `bin/update-stufis.sh [tag|branch]` — deploy a release tag (or branch tip): self-update toolchain, migrate and rebuild a running instance
+- `bin/rebuild-stufis.sh` — rebuild in place (no pull)
+
+See [docs/hostsharing-installation.md](docs/hostsharing-installation.md) for a full Hostsharing.net walkthrough.
+
 # Feature Request 
 Please write an issue in this github repository 
 

@@ -1,0 +1,113 @@
+#!/bin/bash
+# Shared environment helpers for the StuFis maintenance scripts.
+#
+# This file is meant to be *sourced*, not executed:
+#     source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+#
+# It encapsulates the quirks of a Hostsharing.net user account:
+#   - PHP is only available under a versioned name (e.g. `php8.4`).
+#   - Composer is a local `composer.phar`, run through that PHP.
+#   - Node/npm come from nvm, which only auto-loads in interactive login
+#     shells, so non-interactive scripts must source it explicitly.
+#
+# Versions and paths can be overridden from the environment, e.g.
+#     PHP_VERSION=8.3 bin/update-stufis.sh
+
+PHP_VERSION="${PHP_VERSION:-8.4}"
+NODE_VERSION="${NODE_VERSION:-22}"
+COMPOSER_PHAR="${COMPOSER_PHAR:-composer.phar}"
+NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+export NVM_DIR
+
+# Always operate from the repository root (the parent of bin/).
+cd "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Run the pinned PHP version. Defined as a function (not an alias) so it is
+# also expanded in non-interactive scripts. Lets callers write `php artisan …`.
+php() {
+    command "php${PHP_VERSION}" "$@"
+}
+
+# Composer is a local phar executed through the pinned PHP version.
+composer() {
+    php "$COMPOSER_PHAR" "$@"
+}
+
+# Load nvm and select the pinned Node version so `node`/`npm` are on PATH.
+# Call this before any npm command. Fails loudly if nvm is missing.
+load_node() {
+    if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+        echo "Error: nvm not found at $NVM_DIR. Run bin/setup.sh first." >&2
+        return 1
+    fi
+    # shellcheck disable=SC1091
+    \. "$NVM_DIR/nvm.sh"
+    nvm use "$NODE_VERSION" >/dev/null
+}
+
+# Install or update the self-managed toolchain: the Composer phar, nvm, and the
+# pinned Node version (with npm). Safe to re-run — it installs whatever is
+# missing and updates whatever is already present. Leaves nvm sourced and the
+# pinned Node selected, so npm is ready to use afterwards.
+setup_tooling() {
+    # Composer: download the phar on first run, otherwise update it in place.
+    if [ -f "$COMPOSER_PHAR" ]; then
+        composer self-update --no-interaction
+    else
+        echo "Installing Composer using PHP $PHP_VERSION..."
+        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+        php composer-setup.php
+        php -r "unlink('composer-setup.php');"
+    fi
+
+    # nvm: install the manager on first run. We manage shell init ourselves
+    # (see setup_profile), so tell the installer to leave profile files alone.
+    if [ ! -d "$NVM_DIR" ]; then
+        echo "Installing NVM..."
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | PROFILE=/dev/null bash
+    fi
+    # shellcheck disable=SC1091
+    \. "$NVM_DIR/nvm.sh"
+
+    # Node: install/refresh the latest patch of the pinned major (brings its
+    # bundled npm), then bump npm itself to the current release.
+    nvm install "$NODE_VERSION"
+    nvm use "$NODE_VERSION" >/dev/null
+    npm install -g npm
+}
+
+# Write a managed block to ~/.bash_profile so interactive Hostsharing logins get
+# nvm autoload plus convenient aliases (php -> php8.4, composer, artisan).
+# Idempotent: the block between the markers is rewritten on every run, never
+# duplicated. Anything outside the markers is left untouched.
+setup_profile() {
+    local profile="$HOME/.bash_profile"
+    local repo; repo="$(pwd)"   # common.sh has already cd'd to the repo root
+    local begin="# >>> StuFis (managed by bin/setup.sh — do not edit) >>>"
+    local end="# <<< StuFis <<<"
+
+    touch "$profile"
+
+    # strip any previously managed block (from begin marker to end marker)
+    awk '
+        /# >>> StuFis/  { skip = 1 }
+        skip == 0       { print }
+        /# <<< StuFis/  { skip = 0 }
+    ' "$profile" > "$profile.stufis.tmp"
+    mv "$profile.stufis.tmp" "$profile"
+
+    # append a fresh block
+    {
+        echo "$begin"
+        echo "export NVM_DIR=\"$NVM_DIR\""
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
+        echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
+        echo "export PATH=\"${repo}/bin:\$PATH\""
+        echo "alias php='php${PHP_VERSION}'"
+        echo "alias composer='php${PHP_VERSION} ${repo}/${COMPOSER_PHAR}'"
+        echo "alias artisan='php${PHP_VERSION} ${repo}/artisan'"
+        echo "$end"
+    } >> "$profile"
+
+    echo "Wrote StuFis shell setup to $profile"
+}

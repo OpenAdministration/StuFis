@@ -1,13 +1,14 @@
 #!/bin/bash
-### Script for updating StuFis
-## Options
-#stop on error
+### Rebuild StuFis in place: reinstall dependencies and rebuild caches/assets.
+# Re-exec under bash if started via `sh rebuild-stufis.sh`.
+[ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
 set -e
-#prints commands
-set -x
-# change to the root directory
-cd "$(dirname "$0")/.."
 
+source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+load_node
+
+# print commands as they run
+set -x
 
 # puts StuFis in Maintenance Mode
 php artisan down --with-secret
@@ -23,7 +24,6 @@ composer install --no-dev --optimize-autoloader
 npm ci
 
 # performance optimization
-#php artisan config:cache
 php artisan view:cache
 php artisan route:cache
 

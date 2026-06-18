@@ -1,0 +1,20 @@
+#!/bin/bash
+### Set up (or refresh) a StuFis instance on a Hostsharing.net user.
+# Safe to re-run: installs missing tooling and updates what is already present.
+# Re-exec under bash if started via `sh setup.sh` (dash lacks bash features).
+[ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
+set -e
+
+source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+
+# install/update the toolchain (composer.phar + nvm/node/npm)
+setup_tooling
+
+# write nvm autoload + aliases to ~/.bash_profile for interactive logins
+setup_profile
+
+# install project dependencies
+echo "Installing project dependencies..."
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
