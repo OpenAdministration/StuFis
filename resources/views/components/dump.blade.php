@@ -1,3 +1,3 @@
-<x-layout>
+<x-layout::app>
     @dump($dump)
-</x-layout>
+</x-layout::app>

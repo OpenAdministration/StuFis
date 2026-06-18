@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\Legacy\Expenses;
+use App\Models\Legacy\Expense;
 
 it('should transfer the state in auslagenerstattung', function (): void {
     // create an expense in stated paid
-    $expense = Expenses::factory(2)
+    $expense = Expense::factory(2)
         ->state('payed')
         ->make();
     // create matching payment

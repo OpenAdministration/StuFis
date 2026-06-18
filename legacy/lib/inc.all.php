@@ -5,15 +5,9 @@ $conf = [];
 define('SYSBASE', base_path('/legacy/'));
 
 define('REALM', config('stufis.realm'));
-if (App::runningUnitTests()) {
-    define('ORG_DATA', (include SYSBASE.'/config/config.orgs.testing.php')[REALM] ?? []);
-} else {
-    define('ORG_DATA', (include SYSBASE.'/config/config.orgs.php')[REALM] ?? []);
-}
-const GREMIEN = ORG_DATA['gremien'] ?? [];
-const MAILINGLISTS = ORG_DATA['mailinglists'] ?? [];
-define('DEV', config('app.debug'));
+
 const URIBASE = '/';
+define('DEV', config('app.debug'));
 define('BASE_URL', config('app.url'));
 define('FINTS_REGNR', config('stufis.fints.registration_number', ''));
 

@@ -49,10 +49,8 @@ class LegacyBudgetItemShift extends Command
             $bookings = Booking::where('titel_id', $old_id);
             $this->info($bookings->count().' Bookings will be shifted');
 
-            if (! $this->option('non-interactive')) {
-                if (! $this->confirm('Continue?')) {
-                    return self::FAILURE;
-                }
+            if (! $this->option('non-interactive') && ! $this->confirm('Continue?')) {
+                return self::FAILURE;
             }
 
             $projectPosts->update(['titel_id' => $new_id]);

@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\LegalBasis;
+use App\Models\PtfProject\LegalBasis;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

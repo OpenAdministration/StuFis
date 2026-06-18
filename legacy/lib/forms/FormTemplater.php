@@ -3,7 +3,6 @@
 namespace forms;
 
 use forms\projekte\PermissionHandler;
-use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\Helper;
 
@@ -54,30 +53,6 @@ class FormTemplater
             }
             // set in parent
             $selectable['groups'][] = $ret_group;
-        }
-
-        return $selectable;
-    }
-
-    public static function generateGremienSelectable(): array
-    {
-        $userGremien = AuthHandler::getInstance()->getUserGremien();
-        $showAll = AuthHandler::getInstance()->hasGroup('ref-finanzen');
-
-        $selectable = [];
-        foreach (GREMIEN as $groupName => $gremien) {
-            $group = [];
-            $group['label'] = $groupName;
-
-            $options = [];
-            sort($gremien);
-            foreach ($gremien as $gremiumName) {
-                if ($showAll || in_array($gremiumName, $userGremien, true)) {
-                    $options[] = ['label' => $gremiumName];
-                }
-            }
-            $group['options'] = $options;
-            $selectable['groups'][] = $group;
         }
 
         return $selectable;
@@ -183,44 +158,6 @@ class FormTemplater
         }
 
         return '<div class="editable-disabled'.$additional_class.'">'.(($values_out) ? $values_out[$value] : $value).'</div>';
-    }
-
-    public function getWikiLinkForm($name, $value = '', $width = 12, $placeholder = '', $label_text = '', $validator = [], $linkPrefix = ''): string
-    {
-        $unique_id = htmlspecialchars($this->getUniqueIdFromName($name));
-        $editable = $this->checkWritePermission($name);
-        $out = '';
-
-        if ($editable) {
-            $additonal_array = $this->constructValidatorStrings($validator);
-            $type = 'text';
-            if (isset($validator['email'])) {
-                $type = 'email';
-            }
-            $additonal_str = implode(' ', $additonal_array);
-
-            $value = htmlspecialchars($value);
-            if (isset($linkPrefix) && ! empty($linkPrefix)) {
-                $out .= "<div class='input-group'>";
-                $out .= "<div class='input-group-addon form-field-to-replace'>".$linkPrefix.'</div>';
-            }
-            $out .= "<input type='$type' class='form-control form-field-replace' id='$unique_id' name='$name' value='$value' placeholder='{$placeholder}' $additonal_str >";
-            if (isset($linkPrefix) && ! empty($linkPrefix)) {
-                $out .= '</div>';
-            }
-        } else {
-            if (! empty($linkPrefix) && ! empty($value)) {
-                $out .= "<div id='$unique_id'>
-                            <a target='_blank' href='".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value)."'>".
-                    "<i class='fa fa-fw fa-wikipedia-w'></i> ".htmlspecialchars($linkPrefix).$this->getReadOnlyValue($value).
-                    '</a>
-                         </div>';
-            } else {
-                $out .= "<div id='$unique_id'>".$this->getReadOnlyValue($value).'</div>';
-            }
-        }
-
-        return $this->getOutputWrapped($out, $width, $editable, $name, $unique_id, $label_text, $validator);
     }
 
     private function getUniqueIdFromName($name): string

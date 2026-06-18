@@ -1,1 +1,1 @@
-<x-layouts.error code="404"/>
+<x-layout::error code="404"/>

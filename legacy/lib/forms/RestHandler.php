@@ -21,6 +21,9 @@ namespace forms;
 
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\BankTransaction;
+use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\Setting;
+use App\Models\TaxBudget;
 use booking\BookingTableManager;
 use booking\HHPHandler;
 use booking\konto\FintsConnectionHandler;
@@ -28,20 +31,12 @@ use booking\konto\HibiscusXMLRPCConnector;
 use Exception;
 use forms\chat\ChatHandler;
 use forms\projekte\auslagen\AuslagenHandler2;
-use forms\projekte\exceptions\ActionNotSetException;
-use forms\projekte\exceptions\IdNotSetException;
-use forms\projekte\exceptions\IllegalStateException;
-use forms\projekte\exceptions\IllegalTransitionException;
-use forms\projekte\exceptions\InvalidDataException;
-use forms\projekte\exceptions\WrongVersionException;
-use forms\projekte\ProjektHandler;
 use framework\auth\AuthHandler;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\EscFunc;
 use framework\render\JsonController;
 use framework\Validator;
-use PDOException;
 
 class RestHandler extends EscFunc
 {
@@ -57,9 +52,6 @@ class RestHandler extends EscFunc
         unset($_POST['nonce']);
 
         switch ($routeInfo['action']) {
-            case 'projekt':
-                $this->handleProjekt($routeInfo);
-                break;
             case 'auslagen':
                 $this->handleAuslagen($routeInfo);
                 break;
@@ -89,6 +81,9 @@ class RestHandler extends EscFunc
                 break;
             case 'save-hhp-import':
                 $this->saveHhpImport($routeInfo);
+                break;
+            case 'add-tax-budgets':
+                $this->saveTaxBudgets($routeInfo);
                 break;
             case 'save-new-konto-credentials':
                 $this->newKontoCredentials($routeInfo);
@@ -219,94 +214,6 @@ class RestHandler extends EscFunc
         ]);
     }
 
-    public function handleProjekt($routeInfo = null): void
-    {
-        $ret = false;
-        $msgs = [];
-        $projektHandler = null;
-        $dbret = false;
-
-        if (DEV) {
-            $msgs[] = print_r($_POST, true);
-        }
-
-        try {
-
-            if (! isset($_POST['action'])) {
-                throw new ActionNotSetException('Es wurde keine Aktion übertragen');
-            }
-
-            if (DBConnector::getInstance()->dbBegin() === false) {
-                throw new PDOException('cannot start DB transaction');
-            }
-
-            switch ($_POST['action']) {
-                case 'create':
-                    $projektHandler = ProjektHandler::createNewProjekt($_POST);
-                    if ($projektHandler !== null) {
-                        $ret = true;
-                    }
-                    break;
-                case 'changeState':
-                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
-                        throw new IdNotSetException('ID nicht gesetzt.');
-                    }
-                    $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'none']);
-                    $ret = $projektHandler->setState($_POST['newState']);
-                    break;
-                case 'update':
-                    if (! isset($_POST['id']) || ! is_numeric($_POST['id'])) {
-                        throw new IdNotSetException('ID nicht gesetzt.');
-                    }
-                    $projektHandler = new ProjektHandler(['pid' => $_POST['id'], 'action' => 'edit']);
-                    $ret = $projektHandler->updateSavedData($_POST);
-                    $msgs[] = 'Try to update';
-                    break;
-                default:
-                    throw new ActionNotSetException('Unbekannte Aktion verlangt!');
-            }
-        } catch (ActionNotSetException|IdNotSetException|WrongVersionException|
-        InvalidDataException|PDOException|IllegalTransitionException $exception) {
-            $ret = false;
-            $msgs[] = 'Ein Fehler ist aufgetreten';
-            $msgs[] = $exception->getMessage();
-        } catch (IllegalStateException $exception) {
-            $ret = false;
-            $msgs[] = 'In diesen Status darf nicht gewechselt werden!';
-            $msgs[] = $exception->getMessage();
-        } finally {
-            if ($ret) {
-                $dbret = DBConnector::getInstance()->dbCommit();
-            }
-            if ($ret === false || $dbret === false) {
-                DBConnector::getInstance()->dbRollBack();
-                $msgs[] = 'Deine Änderungen wurden nicht gespeichert (DB Rollback)';
-            } else {
-                $msgs[] = 'Daten erfolgreich gespeichert!';
-                $target = URIBASE.'projekt/'.$projektHandler->getID();
-            }
-
-        }
-
-        $json = [
-            'success' => ($ret !== false),
-            'status' => '200',
-            'msg' => $msgs,
-            'type' => 'modal',
-        ];
-        if (isset($target)) {
-            $json['redirect'] = $target;
-        }
-        if ($ret === false) {
-            $json['subtype'] = 'server-error';
-        } else {
-            $json['reload'] = 1000;
-            $json['subtype'] = 'server-success';
-        }
-
-        JsonController::print_json($json);
-    }
-
     /**
      * handle auslagen posts
      */
@@ -353,19 +260,19 @@ class RestHandler extends EscFunc
                         'minlength' => '2',
                         'error' => 'Ungültiger oder leerer Abrechnungsname.',
                     ],
-                    'zahlung-name' => [
+                    'zahlung_name' => [
                         'regex',
                         'pattern' => '/^[a-zA-Z0-9\-_ :,;%$§\&\+\*\.!\?\/\\\[\]\'"#~()äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'maxlength' => '127',
                         'empty',
                         'error' => 'Ungültiger Zahlungsempfänger.',
                     ],
-                    'zahlung-iban' => [
+                    'zahlung_iban' => [
                         'iban',
                         'empty',
                         'error' => 'Ungültige Iban.',
                     ],
-                    'zahlung-vwzk' => [
+                    'zahlung_vwzk' => [
                         'regex',
                         'pattern' => '/^[a-zA-Z0-9\-_,$§:;\/\\\\()!?& \.\[\]%\'"#~\*\+äöüÄÖÜéèêóòôáàâíìîúùûÉÈÊÓÒÔÁÀÂÍÌÎÚÙÛß]*$/',
                         'empty',
@@ -392,7 +299,6 @@ class RestHandler extends EscFunc
                             'map' => [
                                 'datum' => [
                                     'date',
-                                    'empty',
                                     'format' => 'Y-m-d',
                                     'parse' => 'Y-m-d',
                                     'error' => 'Ungültiges Beleg Datum.',
@@ -484,7 +390,7 @@ class RestHandler extends EscFunc
                     ],
                     'state' => [
                         'regex',
-                        'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok-hv|ok-kv|ok-belege|revoked|rejected)$/',
+                        'pattern' => '/^(draft|wip|ok|instructed|booked|revocation|payed|ok_hv|ok_kv|ok_belege|revoked|rejected)$/',
                         'error' => 'Ungültiger Status.',
                     ],
                 ];
@@ -545,9 +451,9 @@ class RestHandler extends EscFunc
             $empty = strtolower($validated['auslagen-id'] === 'new');
             $auslagen_test_empty = [
                 'auslagen-name',
-                'zahlung-name',
-                'zahlung-iban',
-                'zahlung-vwzk',
+                'zahlung_name',
+                'zahlung_iban',
+                'zahlung_vwzk',
                 'belege',
                 'address',
             ];
@@ -1458,6 +1364,70 @@ class RestHandler extends EscFunc
                 ]
             );
         }
+    }
+
+    private function saveTaxBudgets($routeInfo): void
+    {
+        if (! Setting::get('tax.active', false)) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '403',
+                    'msg' => 'Die Umsatzsteuer-Funktion ist nicht aktiviert',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Nicht aktiviert',
+                ]
+            );
+
+            return;
+        }
+
+        $hhpId = (int) $routeInfo['hhp-id'];
+        if (LegacyBudgetPlan::find($hhpId) === null) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '404',
+                    'msg' => 'Der Haushaltsplan existiert nicht',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Nicht gefunden',
+                ]
+            );
+
+            return;
+        }
+
+        try {
+            TaxBudget::addToPlan($hhpId);
+        } catch (Exception $e) {
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Ein Fehler ist aufgetreten',
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Daten nicht gespeichert',
+                ]
+            );
+
+            return;
+        }
+
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => 'Umsatzsteuer-Titel wurden hinzugefügt',
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'reload' => 1000,
+                'headline' => 'Daten gespeichert',
+                'redirect' => URIBASE.'hhp/'.$hhpId,
+            ]
+        );
     }
 
     private function saveDefaultTanMode($routeInfo): void

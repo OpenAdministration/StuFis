@@ -3,44 +3,57 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\LegalBasis;
+use App\Models\Setting;
 use App\Models\User;
+use App\States\Project\ProjectState;
+use Carbon\Carbon;
+use Cknow\Money\Money;
+use Database\Factories\Legacy\ProjectFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
+use Illuminate\Support\Collection;
+use Spatie\ModelStates\HasStates;
 
 /**
  * App\Models\Legacy\Project
  *
  * @property int $id
  * @property int $creator_id
- * @property string $createdat
- * @property string $lastupdated
+ * @property Carbon $createdat
+ * @property Carbon $lastupdated
  * @property int $version
- * @property string $state
+ * @property ProjectState $state
  * @property int $stateCreator_id
  * @property string $name
- * @property string $responsible
  * @property string $org
  * @property string $org_mail
  * @property string $protokoll
  * @property string $recht
  * @property string $recht_additional
- * @property string $date_start
- * @property string $date_end
+ * @property Carbon $date_start
+ * @property Carbon $date_end
  * @property string $beschreibung
- * @property Expenses[] $expenses
+ * @property Collection<Expense> $expenses
  * @property User $user
- * @property ProjectPost[] $posts
+ * @property-read Collection<ProjectPost> $posts
+ * @property-read int|null $posts_count
  * @property-read User $creator
  * @property-read int|null $expenses_count
- * @property-read int|null $posts_count
  * @property-read User $stateCreator
  *
  * @method static Builder|Project newModelQuery()
  * @method static Builder|Project newQuery()
  * @method static Builder|Project query()
+ * @method static Builder|Project whereState($field, ProjectState|array<ProjectState> $states)
+ * @method static Builder|Project whereNotState($field, ProjectState|array<ProjectState> $states)
  * @method static Builder|Project whereBeschreibung($value)
  * @method static Builder|Project whereCreatedat($value)
  * @method static Builder|Project whereCreatorId($value)
@@ -55,16 +68,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|Project whereRecht($value)
  * @method static Builder|Project whereRechtAdditional($value)
  * @method static Builder|Project whereResponsible($value)
- * @method static Builder|Project whereState($value)
  * @method static Builder|Project whereStateCreatorId($value)
  * @method static Builder|Project whereVersion($value)
- * @method static \Database\Factories\Legacy\ProjectFactory factory($count = null, $state = [])
+ * @method static ProjectFactory factory($count = null, $state = [])
+ * @method HasOneOrManyThrough throughPosts()
  *
  * @mixin \Eloquent
+ *
+ * @property string $responsible The responsible person's email (domain will be automatically appended if missing)
  */
 class Project extends Model
 {
     use HasFactory;
+    use HasStates;
 
     /**
      * The table associated with the model.
@@ -73,20 +89,49 @@ class Project extends Model
      */
     protected $table = 'projekte';
 
-    public $timestamps = false;
+    const string CREATED_AT = 'createdat';
+
+    const string UPDATED_AT = 'lastupdated';
 
     /**
-     * @var array
+     * The attributes that aren't mass-assignable.
+     *
+     * @var array<string>
      */
-    protected $fillable = ['creator_id', 'createdat', 'lastupdated', 'version', 'state', 'stateCreator_id', 'name', 'responsible', 'org', 'org-mail', 'protokoll', 'recht', 'recht-additional', 'date-start', 'date-end', 'beschreibung'];
+    protected $guarded = ['id'];
+
+    protected function responsible(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value === null || $value === '' || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
+            set: fn (string $value) => $value === '' || str_contains($value, '@') ? $value : $value.'@'.Setting::get('mail_domain'),
+        );
+    }
+
+    public function legalBasis(): HasOne|Builder
+    {
+        return $this->hasOne(LegalBasis::class, 'slug', 'recht');
+    }
 
     protected $dispatchesEvents = [
         'updating' => UpdatingModel::class,
     ];
 
+    #[\Override]
+    protected function casts(): array
+    {
+        return [
+            'state' => ProjectState::class,
+            'createdat' => 'datetime',
+            'lastupdated' => 'datetime',
+            'date_start' => 'date',
+            'date_end' => 'date',
+        ];
+    }
+
     public function expenses(): HasMany
     {
-        return $this->hasMany(Expenses::class, 'projekt_id');
+        return $this->hasMany(Expense::class, 'projekt_id', 'id');
     }
 
     public function creator(): BelongsTo
@@ -99,8 +144,76 @@ class Project extends Model
         return $this->belongsTo(User::class, 'stateCreator_id');
     }
 
+    public function relatedBudgetPlan(): LegacyBudgetPlan
+    {
+        return LegacyBudgetPlan::findByDate($this->createdat);
+    }
+
+    /**
+     * Get the ordered posts associated with the project.
+     */
     public function posts(): HasMany
     {
-        return $this->hasMany(ProjectPost::class, 'projekt_id');
+        return $this->hasMany(ProjectPost::class, 'projekt_id')->orderBy('position');
+    }
+
+    public function expensePosts(): HasManyThrough
+    {
+        return $this->throughPosts()->hasExpensePosts();
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(ProjectAttachment::class, 'projekt_id', 'id');
+    }
+
+    public function totalAusgaben(): Money
+    {
+        return $this->posts()->sumMoney('ausgaben');
+    }
+
+    public function totalUsedAusgaben(): Money
+    {
+        return $this->expensePosts()->sumMoney('beleg_posten.ausgaben');
+    }
+
+    public function totalRemainingAusgaben(): Money
+    {
+        return $this->posts()->sumMoney('ausgaben')->subtract($this->totalUsedAusgaben());
+    }
+
+    public function totalRatioAusgaben(): int
+    {
+        $out = $this->totalAusgaben();
+        if ($out->isZero()) {
+            return 0;
+        }
+
+        return (int) ($this->totalUsedAusgaben()->ratioOf($out) * 100);
+    }
+
+    public function totalEinnahmen(): Money
+    {
+        return $this->posts()->sumMoney('einnahmen');
+    }
+
+    public function totalUsedEinnahmen(): Money
+    {
+        return $this->expensePosts()->sumMoney('beleg_posten.einnahmen');
+    }
+
+    public function totalRemainingEinnahmen(): Money
+    {
+        return $this->posts()->sumMoney('einnahmen')->subtract($this->totalUsedEinnahmen());
+    }
+
+    public function totalRatioEinnahmen(): int
+    {
+        $in = $this->totalEinnahmen();
+        if ($in->isZero()) {
+            return 0;
+        }
+
+        return (int) ($this->totalUsedEinnahmen()->ratioOf($in) * 100);
     }
 }

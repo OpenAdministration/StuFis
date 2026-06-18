@@ -2,6 +2,8 @@
 
 namespace App\Models\Legacy;
 
+use Database\Factories\Legacy\BankAccountFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,24 +25,24 @@ use Illuminate\Support\Collection;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, BankTransaction> $kontoTransactions
  * @property-read int|null $konto_transactions_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount query()
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereIban($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereLastSync($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereShort($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncFrom($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereSyncUntil($value)
+ * @method static Builder|BankAccount newModelQuery()
+ * @method static Builder|BankAccount newQuery()
+ * @method static Builder|BankAccount query()
+ * @method static Builder|BankAccount whereIban($value)
+ * @method static Builder|BankAccount whereId($value)
+ * @method static Builder|BankAccount whereLastSync($value)
+ * @method static Builder|BankAccount whereName($value)
+ * @method static Builder|BankAccount whereShort($value)
+ * @method static Builder|BankAccount whereSyncFrom($value)
+ * @method static Builder|BankAccount whereSyncUntil($value)
  *
  * @property int $manually_enterable
  * @property-read \Illuminate\Database\Eloquent\Collection<int, BankTransaction> $bankTransactions
  * @property-read int|null $bank_transactions_count
  *
- * @method static \Database\Factories\Legacy\BankAccountFactory factory($count = null, $state = [])
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereCsvImportSettings($value)
- * @method static \Illuminate\Database\Eloquent\Builder|BankAccount whereManuallyEnterable($value)
+ * @method static BankAccountFactory factory($count = null, $state = [])
+ * @method static Builder|BankAccount whereCsvImportSettings($value)
+ * @method static Builder|BankAccount whereManuallyEnterable($value)
  *
  * @mixin \Eloquent
  */
@@ -70,11 +72,11 @@ class BankAccount extends Model
         ];
     }
 
-    public function csvImportSettings(): Attribute
+    protected function csvImportSettings(): Attribute
     {
         return Attribute::make(
             get: static function (?string $value) {
-                if (empty($value)) {
+                if (in_array($value, [null, '', '0'], true)) {
                     return [];
                 }
 

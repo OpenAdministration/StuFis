@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Legacy;
 
 use App\Http\Controllers\Controller;
 use App\Models\Legacy\Project;
-use framework\auth\AuthHandler;
+use App\Models\User;
 
 class DeleteProject extends Controller
 {
@@ -13,7 +13,7 @@ class DeleteProject extends Controller
         $project = Project::findOrFail($project_id);
 
         // authorize
-        $userPerm = AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
+        $userPerm = \Auth::user()->can('budget-officer', User::class)
             || $project->creator->id === \Auth::user()->id;
         $dataPerm = $project->expenses()->count() === 0;
 
@@ -25,6 +25,6 @@ class DeleteProject extends Controller
         $project->posts()->delete();
         $project->delete();
 
-        return redirect()->route('legacy.dashboard', ['sub' => 'mygremium']);
+        return to_route('legacy.dashboard', ['sub' => 'mygremium']);
     }
 }

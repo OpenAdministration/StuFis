@@ -1,0 +1,20 @@
+--- a/src/DataObjects/DatevAccountLedgerData.php
++++ b/src/DataObjects/DatevAccountLedgerData.php
+@@ -57,7 +57,7 @@
+ 
+     public function addAccountsReceivableLedger(
+         float $amount,
+-        string $accountNo,
++        ?string $accountNo = null,
+         ?string $buCode = null,
+         ?string $information = null,
+         ?float $tax = null,
+@@ -116,7 +116,7 @@
+ 
+     public function addAccountsPayableLedger(
+         float $amount,
+-        string $accountNo,
++        ?string $accountNo = null,
+         ?string $buCode = null,
+         ?string $information = null,
+         ?float $tax = null,

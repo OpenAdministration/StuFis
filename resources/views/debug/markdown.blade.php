@@ -1,4 +1,4 @@
-<x-layout class="p-8">@markdown
+<x-layout::app class="p-8">@markdown
     # Level 1 Heading - Main Title
 
     This is a **paragraph** with some *emphasized text* and a [test link](https://example.com) to see how the styling looks. This paragraph should demonstrate the base text styling with proper spacing and colors.
@@ -116,4 +116,4 @@
     ---
 
     *End of test document*
-    @endmarkdown</x-layout>
+    @endmarkdown</x-layout::app>

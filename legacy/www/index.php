@@ -5,7 +5,6 @@ use booking\BookingHandler;
 use booking\HHPHandler;
 use booking\konto\FintsController;
 use forms\projekte\auslagen\AuslagenHandler2;
-use forms\projekte\ProjektHandler;
 use forms\RestHandler;
 use framework\file\FileController;
 use framework\render\ErrorHandler;
@@ -27,11 +26,6 @@ switch ($controllerName) {
     case 'menu':
         $menuRenderer = new MenuRenderer($routeInfo);
         $htmlRenderer->appendRendererContent($menuRenderer);
-        $htmlRenderer->render();
-        break;
-    case 'projekt':
-        $projektRenderer = new ProjektHandler($routeInfo);
-        $htmlRenderer->appendRendererContent($projektRenderer);
         $htmlRenderer->render();
         break;
     case 'auslagen':

@@ -2,14 +2,22 @@
 
 namespace App\Providers;
 
+use App\Exports\Datev\DatevExport;
+use App\Policies\DatevExportPolicy;
 use App\Services\Auth\AuthService;
+use App\Support\Money\MoneySynth;
+use Cknow\Money\Money;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
 use SocialiteProviders\LaravelPassport\Provider as PassportProvider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
@@ -45,7 +53,16 @@ class AppServiceProvider extends ServiceProvider
             $event->extendSocialite('stumv', PassportProvider::class);
         });
 
+        // Layouts live in resources/views/layout (outside the components dir);
+        // expose them as anonymous components: <x-layout::app>, <x-layout::error>.
+        Blade::anonymousComponentPath(resource_path('views/layout'), 'layout');
+
         $this->bootRoute();
+
+        $this->bootMoney();
+
+        // DatevExport is not an Eloquent model, so its policy needs registering by hand.
+        Gate::policy(DatevExport::class, DatevExportPolicy::class);
 
         // Carbon::setLocale(config('app.locale'));
     }
@@ -62,11 +79,12 @@ class AppServiceProvider extends ServiceProvider
         Route::pattern('projekt_id', '[0-9]+');
         Route::pattern('auslagen_id', '[0-9]+');
         Route::pattern('credential_id', '[0-9]+');
+        Route::pattern('year_id', '[0-9]+');
     }
 
     public function registerAuth(): void
     {
-        $this->app->singleton(AuthService::class, function (Application $application) {
+        $this->app->singleton(function (Application $application): AuthService {
             $serviceName = ucfirst(strtolower((string) config('auth.service')));
             // weird to escape, but correct
             $classPath = "\App\Services\Auth\\{$serviceName}AuthService";
@@ -76,5 +94,11 @@ class AppServiceProvider extends ServiceProvider
 
             abort(500, 'Config Error. Wrong Auth provider given in Environment. Fitting AuthService Class not found');
         });
+    }
+
+    private function bootMoney(): void
+    {
+        Livewire::propertySynthesizer(MoneySynth::class);
+        Builder::macro('sumMoney', fn (string $column): Money => Money::EUR($this->sum($column)));
     }
 }

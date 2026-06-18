@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Application;
-use App\Models\ProjectAttachment;
+use App\Models\PtfProject\Application;
+use App\Models\PtfProject\ProjectAttachment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

@@ -1,17 +1,17 @@
 /**
- * 
+ *
  */
 
 (function(){
 	var animate_delete = function($elm, callback){
-		$elm.animate({ height: 0, opacity: 0 }, 500,function(){ 
+		$elm.animate({ height: 0, opacity: 0 }, 500,function(){
 			$(this).remove();
 			if (typeof(callback) == 'function'){
 				callback();
 			}
 		});
 	};
-	
+
 	var get_projektdata = function ($elm){
 		var $dlist = $elm.closest('.beleg-table').children('.datalists').children('.datalist-projekt').children('option');
 		var map = {};
@@ -20,7 +20,7 @@
 		});
 		return map;
 	}
-	
+
 	var add_beleg_counter = 0;
 	var add_beleg = function(){
 		add_beleg_counter++;
@@ -63,7 +63,7 @@
 			$select.siblings('.posten-out').hide();
 		});
 	};
-		
+
 	var remove_beleg = function(ev){
 		ev.preventDefault();
 		ev.stopPropagation();
@@ -78,17 +78,17 @@
 		var $container = $e.closest('.beleg-container');
 		animate_delete($container.parent());
 	};
-	
+
 	var delete_posten = function (){
 		var $e = $(this);
 		var list = $e.closest('.posten-inner-list');
-		animate_delete($e.closest('.posten-entry'), 
+		animate_delete($e.closest('.posten-entry'),
 			function() {
 				update_posten_counter(list);
 			}
 		);
 	}
-	
+
 	var update_posten_counter = function ($list){
 		//update 'keine Angaben'
 		var $l = $list.children('.posten-entry');
@@ -123,7 +123,7 @@
 		$sumline.children('.posten-sum-in').find('span')[1].innerHTML =  sum_in.toFixed(2);
 		$sumline.children('.posten-sum-out').find('span')[1].innerHTML = sum_out.toFixed(2);
 	}
-	
+
 	var add_posten_counter = 0;
 	var add_posten = function(ev, a,b,c,eee) {
 		ev.stopPropagation();
@@ -137,9 +137,14 @@
 		//clone line
 		var $old = $e.closest('.posten-entry-new');
 		var $new = $old.clone();
-		//old -> remove values
+
+        // FIX: Remove Bootstrap Select markup from cloned element - chrome
+        $new.find('.projekt-posten-select .bootstrap-select').remove();
+        $new.find('.projekt-posten-select select').remove();
+
+        //old -> remove values
 		$e.val(0);
-		//new class -> posten-entry-new -> posten-entry 
+		//new class -> posten-entry-new -> posten-entry
 		$new.removeClass('posten-entry-new').addClass('posten-entry');
 		//new -> remove this callback function on inputs
 		$new.find('input').off('input', add_posten);
@@ -168,7 +173,7 @@
 		update_posten_counter($new.closest('.posten-inner-list'));
 		return true;
 	};
-	
+
 	var posten_handler = function ($posten_inner_list) {
 		// remove button
 		$posten_inner_list.find('.posten-counter .fa-trash').on('click', delete_posten);
@@ -183,7 +188,7 @@
 		});
 
 	};
-	
+
 	// append editable select list for posten name
 	var posten_project_list = function ($target, trigger_addposten){
 		var data = get_projektdata($target);
@@ -231,7 +236,7 @@
 			});
 		}, 100);
 	};
-	
+
 	var auslagen_einnahmen_disable = function($t){
 		var $select = $t.find('.projekt-posten-select');
 		var $inp = $t.find('.posten-in input');
@@ -260,7 +265,7 @@
 			$outa.show();
 		}
 	};
-	
+
 	var update_fileinput = function($target){
 		var $t = $target.find('input');
 		var cfg = {
@@ -275,7 +280,7 @@
         };
         $t.fileinput(cfg);
 	};
-		
+
 	$(document).ready(function(){
 		$('.beleg-table .beleg-container .beleg-file input').each(function(i, e){
 			//update name

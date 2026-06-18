@@ -86,7 +86,7 @@ function adminUser(): User
  */
 function testFile(string $storage_path, ?string $fileName = null): File
 {
-    if (empty($fileName)) {
+    if ($fileName === null) {
         $fileName = str($storage_path)->explode('/')->last();
     }
     $content = Storage::disk('tests')->get($storage_path);

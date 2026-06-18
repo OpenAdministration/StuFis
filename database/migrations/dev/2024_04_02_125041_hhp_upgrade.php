@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->date('start_date');
             $table->date('end_date');
+            $table->timestamps();
         });
 
         Schema::create('budget_plan', static function (Blueprint $table) {
@@ -33,7 +34,7 @@ return new class extends Migration
             $table->unsignedBigInteger('budget_plan_id');
             $table->string('short_name', 16)->nullable();
             $table->string('name')->nullable();
-            $table->decimal('value', 10, 2)->nullable();
+            $table->decimal('value', 10, 2)->default(0);
             $table->integer('budget_type');
             $table->boolean('is_group');
             $table->text('description');
@@ -43,6 +44,7 @@ return new class extends Migration
             $table->foreign('budget_plan_id')->references('id')->on('budget_plan');
             $table->foreign('parent_id')->references('id')->on('budget_item');
             // $table->text('diff_description');
+            $table->timestamps();
         });
 
         // TODO: nachtragshhp auch noch hier rein :)

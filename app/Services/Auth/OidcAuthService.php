@@ -65,9 +65,9 @@ class OidcAuthService extends AuthService
         ];
 
         session([
-            'oidc.groups-raw' => $attributes->{$attributeMapping['groups']},
-            'oidc.committees' => $attributes->{$attributeMapping['committees']},
-            'oidc.all-committees' => $attributes->{$attributeMapping['all-committees']},
+            'oidc.groups-raw' => $attributes->{$attributeMapping['groups']} ?? [],
+            'oidc.committees' => $attributes->{$attributeMapping['committees']} ?? [],
+            'oidc.all-committees' => $attributes->{$attributeMapping['all-committees']} ?? [],
         ]);
 
         return [$identifiers, $userAttributes];

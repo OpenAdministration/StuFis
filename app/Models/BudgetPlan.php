@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Enums\BudgetPlanState;
+use App\Models\Enums\BudgetType;
 use Carbon\Carbon;
 use Database\Factories\BudgetPlanFactory;
 use Eloquent;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
 
 /**
  * App\Models\BudgetPlan
@@ -34,6 +36,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static Builder|BudgetPlan query()
  *
  * @mixin Eloquent
+ *
+ * @property string|null $organization
+ * @property int|null $fiscal_year_id
+ * @property-read FiscalYear|null $fiscalYear
+ * @property-read Collection<int, BudgetItem> $rootBudgetItems
+ * @property-read int|null $root_budget_items_count
+ *
+ * @method static Builder<static>|BudgetPlan whereApprovalDate($value)
+ * @method static Builder<static>|BudgetPlan whereCreatedAt($value)
+ * @method static Builder<static>|BudgetPlan whereFiscalYearId($value)
+ * @method static Builder<static>|BudgetPlan whereId($value)
+ * @method static Builder<static>|BudgetPlan whereOrganization($value)
+ * @method static Builder<static>|BudgetPlan whereParentPlanId($value)
+ * @method static Builder<static>|BudgetPlan whereResolutionDate($value)
+ * @method static Builder<static>|BudgetPlan whereState($value)
+ * @method static Builder<static>|BudgetPlan whereUpdatedAt($value)
  */
 class BudgetPlan extends Model
 {
@@ -66,8 +84,40 @@ class BudgetPlan extends Model
         return $this->hasMany(BudgetItem::class);
     }
 
+    public function budgetItemsTree(BudgetType $budgetType)
+    {
+        // $this is not accessible from the closure scope
+        $plan_id = $this->id;
+
+        $constraint = static fn ($query) => $query->whereNull('parent_id')
+            ->where('budget_plan_id', $plan_id)
+            ->where('budget_type', $budgetType);
+
+        // the full tree flattened out, the position path is a custom-built path
+        return BudgetItem::treeOf($constraint)->orderBy('position_path')->get();
+    }
+
+    public function rootBudgetItems(): Builder|HasMany|BudgetPlan
+    {
+        return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
+    }
+
     public function fiscalYear(): BelongsTo
     {
         return $this->belongsTo(FiscalYear::class);
+    }
+
+    /**
+     * Resets the position values of all children to be sequential starting from 0
+     * Use in case of buggyness in the position values
+     */
+    public function normalizePositions(): void
+    {
+        $items = $this->rootBudgetItems()->get();
+        while ($items->isNotEmpty()) {
+            $item = $items->pop();
+            $item->normalizeChildPositionValues();
+            $items = $items->merge($item->children);
+        }
     }
 }

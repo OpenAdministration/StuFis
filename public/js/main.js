@@ -523,6 +523,11 @@ $(document).ready(function () {
         var $table = $tbody.closest("table");
         if ($table.is(".dynamic-table-readonly")) return;
 
+        // Prevent deletion if it's the last non-template row
+        if ($tbody.children("tr:not(.new-table-row)").length <= 1) {
+            return false;
+        }
+
         $tr.triggerHandler("pre-row-delete");
         $tr.remove();
         $tbody.children("tr").each(function (rowNumber, tr) {

@@ -11,24 +11,46 @@
 |
 */
 
+use App\Http\Controllers\AdminConfigPage;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DatevExportController;
 use App\Http\Controllers\Legacy\TransactionView;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ViewChangelog;
-use App\Livewire\NewBankingAccount;
-use App\Livewire\TransactionImportWire;
+use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
-    // legacy is register later, so we cannot route(legacy.dashboard) there
-    Route::redirect('/', 'menu/mygremium')->name('home');
+    Route::get('/', function () {
+        $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
+        $latestPlan = LegacyBudgetPlan::latest();
 
-    Route::get('bank-account/new', NewBankingAccount::class)->name('bank-account.new');
-    Route::get('bank-account/import/manual', TransactionImportWire::class)->name('bank-account.import.csv');
+        return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
+    })->name('home');
+
+    Route::get('config', [AdminConfigPage::class, 'render'])->name('config');
+
+    Route::livewire('bank-account/new', 'pages::new-banking-account')->name('bank-account.new');
+    Route::livewire('bank-account/import/manual', 'pages::bank.csv-import')->name('bank-account.import.csv');
     Route::get('bank-account/{account_id}/transaction/{transaction_id}', [TransactionView::class, 'view'])->name('bank-account.transaction');
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');
 
+    Route::livewire('datev/export', 'pages::datev-export')->name('datev.export');
+    Route::get('datev/export/download', [DatevExportController::class, 'download'])
+        ->middleware('signed')
+        ->name('datev.export.download');
+
+    Route::livewire('project/create', 'pages::project.edit-project')->name('project.create');
+    Route::livewire('project/{project_id}', 'pages::project.show-project')->name('project.show');
+    Route::livewire('project/{project_id}/history', 'pages::project.show-project')->name('project.history');
+    Route::livewire('project/{project_id}/edit', 'pages::project.edit-project')->name('project.edit');
+    Route::get('project/attachment/{attachment}/{fileName}', [ProjectController::class, 'showAttachment'])->name('project.attachment');
+
+    Route::permanentRedirect('projekt/create', '/project/create');
+    Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');
+    Route::permanentRedirect('projekt/{project_id}/edit', '/project/{project_id}/edit');
 });
 
 // login routes

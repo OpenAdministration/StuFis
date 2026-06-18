@@ -15,7 +15,7 @@ use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
 // Home
 Breadcrumbs::for('legacy.dashboard', static function (BreadcrumbTrail $trail): void {
-    $trail->push('Home', route('legacy.dashboard', 'mygremium'));
+    $trail->push('Home', route('home'));
 });
 
 // Home > TODOS
@@ -42,12 +42,12 @@ Breadcrumbs::for('legacy.todo.kv.bank', static function (BreadcrumbTrail $trail)
 // Home > Booking
 Breadcrumbs::for('legacy.booking', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.booking'), route('legacy.booking'));
+    $trail->push(__('general.breadcrumb.booking.instruct'), route('legacy.booking'));
 });
 
 Breadcrumbs::for('legacy.booking.instruct', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.booking'), route('legacy.booking'));
+    $trail->push(__('general.breadcrumb.booking.instruct'), route('legacy.booking'));
 });
 
 Breadcrumbs::for('legacy.booking.text', static function (BreadcrumbTrail $trail): void {
@@ -63,7 +63,7 @@ Breadcrumbs::for('legacy.booking.history', static function (BreadcrumbTrail $tra
 // Home > Konto
 Breadcrumbs::for('legacy.konto', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.konto'), route('legacy.konto'));
+    $trail->push(__('general.breadcrumb.konto.index'), route('legacy.konto'));
 });
 
 // Home > Konto > New
@@ -72,10 +72,16 @@ Breadcrumbs::for('bank-account.new', static function (BreadcrumbTrail $trail): v
     $trail->push(__('general.breadcrumb.konto.new'), route('bank-account.new'));
 });
 
+// Home > Konto > Zahlung
+Breadcrumbs::for('bank-account.transaction', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.konto');
+    $trail->push(__('general.breadcrumb.konto.transaction'));
+});
+
 // Home > Konto > Import
 Breadcrumbs::for('bank-account.import.csv', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto');
-    $trail->push(__('general.breadcrumb.konto.import.csv'), route('bank-account.import.csv'));
+    $trail->push(__('general.breadcrumb.konto.import-csv'), route('bank-account.import.csv'));
 });
 
 // Home > Konto > Credentials
@@ -87,7 +93,7 @@ Breadcrumbs::for('legacy.konto.credentials', static function (BreadcrumbTrail $t
 // Home > Konto > Credentials
 Breadcrumbs::for('legacy.konto.credentials.new', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto.credentials');
-    $trail->push(__('general.breadcrumb.konto.credentials.new'), route('legacy.konto.credentials.new'));
+    $trail->push(__('general.breadcrumb.konto.credentials-new'), route('legacy.konto.credentials.new'));
 });
 
 // Home > Konto > Credentials > Login
@@ -132,6 +138,12 @@ Breadcrumbs::for('legacy.hhp.import', static function (BreadcrumbTrail $trail): 
     $trail->push(__('general.breadcrumb.budget-plan-import'), route('legacy.hhp.import'));
 });
 
+// Home > HHP > Datev-Export
+Breadcrumbs::for('datev.export', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.hhp');
+    $trail->push(__('general.breadcrumb.datev-export'), route('datev.export'));
+});
+
 // Home > HHP > $hhp_id
 Breadcrumbs::for('legacy.hhp.view', static function (BreadcrumbTrail $trail, $hhp_id): void {
     $trail->parent('legacy.hhp');
@@ -144,37 +156,55 @@ Breadcrumbs::for('legacy.hhp.titel.view', static function (BreadcrumbTrail $trai
     $trail->push(__('general.breadcrumb.hhp-title-details'), route('legacy.hhp.titel.view', [$hhp_id, $title_id]));
 });
 
-// Home > Projekt > New
-Breadcrumbs::for('legacy.new-projekt', static function (BreadcrumbTrail $trail): void {
+// Home > project > New
+Breadcrumbs::for('project.create', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push(__('general.breadcrumb.projekt-new'), route('legacy.new-projekt'));
+    $trail->push(__('general.breadcrumb.project'));
+    $trail->push(__('general.breadcrumb.project-new'), route('project.create'));
 });
 
-// Home > Projekt > PID
-Breadcrumbs::for('legacy.projekt', static function (BreadcrumbTrail $trail, $projekt_id): void {
+// Home > project > PID
+Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $project_id): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.projekt'));
-    $trail->push($projekt_id, route('legacy.projekt', $projekt_id));
+    $trail->push(__('general.breadcrumb.project'));
+    $trail->push($project_id, route('project.show', $project_id));
 });
 
-// Home > Projekt > PID > Abrechnung > AID
-Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id): void {
-    $trail->parent('legacy.projekt', $projekt_id);
+// Home > project > PID > Edit
+Breadcrumbs::for('project.edit', static function (BreadcrumbTrail $trail, $project_id): void {
+    $trail->parent('project.show', $project_id);
+    $trail->push(__('general.breadcrumb.project-edit'), route('project.edit', $project_id));
+});
+
+// Home > project > PID > Edit
+Breadcrumbs::for('legacy.expense.create', static function (BreadcrumbTrail $trail, $project_id): void {
+    $trail->parent('project.show', $project_id);
+    $trail->push(__('general.breadcrumb.new-expense'), route('legacy.expense.create', $project_id));
+});
+
+// Home > project > PID > Abrechnung > AID
+Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id): void {
+    $trail->parent('project.show', $project_id);
     $trail->push(__('general.breadcrumb.abrechnung'));
     $trail->push($auslagen_id, route('legacy.expense', $auslagen_id));
 });
 
-// Home > Projekt > PID > Abrechnung > AID > BelegePDF
-Breadcrumbs::for('legacy.belege-pdf', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id, $version): void {
-    $trail->parent('legacy.expense-long', $projekt_id, $auslagen_id);
+// Home > project > PID > Abrechnung > AID > BelegePDF
+Breadcrumbs::for('legacy.belege-pdf', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
     $trail->push(__('general.breadcrumb.belege-pdf'));
 });
 
-// Home > Projekt > PID > Abrechnung > AID > Zahlungsanweisung
-Breadcrumbs::for('legacy.zahlungsanweisung-pdf', static function (BreadcrumbTrail $trail, $projekt_id, $auslagen_id, $version): void {
-    $trail->parent('legacy.expense-long', $projekt_id, $auslagen_id);
+// Home > project > PID > Abrechnung > AID > Zahlungsanweisung
+Breadcrumbs::for('legacy.zahlungsanweisung-pdf', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
     $trail->push(__('general.breadcrumb.zahlungsanweisung-pdf'));
+});
+
+// Home > project > PID > Abrechnung > AID > Beleg
+Breadcrumbs::for('legacy.get-file', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id, $version): void {
+    $trail->parent('legacy.expense-long', $project_id, $auslagen_id);
+    $trail->push(__('general.breadcrumb.belege-file'));
 });
 
 /**
@@ -197,4 +227,15 @@ Breadcrumbs::for('budget-plan.view', static function (BreadcrumbTrail $trail, $p
 Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $plan_id): void {
     $trail->parent('budget-plan.view', $plan_id);
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
+});
+
+// Home > Admin Interface
+Breadcrumbs::for('config', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.dashboard');
+    $trail->push(__('general.breadcrumb.config'), route('config'));
+});
+
+Breadcrumbs::for('changelog', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.dashboard');
+    $trail->push(__('general.breadcrumb.changelog'), route('changelog'));
 });

@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,12 +17,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, FileInfo> $fileInfo
  * @property-read int|null $file_info_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|FileData newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FileData newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|FileData query()
- * @method static \Illuminate\Database\Eloquent\Builder|FileData whereData($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileData whereDiskpath($value)
- * @method static \Illuminate\Database\Eloquent\Builder|FileData whereId($value)
+ * @method static Builder|FileData newModelQuery()
+ * @method static Builder|FileData newQuery()
+ * @method static Builder|FileData query()
+ * @method static Builder|FileData whereData($value)
+ * @method static Builder|FileData whereDiskpath($value)
+ * @method static Builder|FileData whereId($value)
  *
  * @mixin \Eloquent
  */

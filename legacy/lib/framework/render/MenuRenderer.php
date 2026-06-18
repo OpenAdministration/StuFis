@@ -60,7 +60,7 @@ class MenuRenderer extends Renderer
 
     public function renderProjekte($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE."menu/$active/");
+        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE.'menu/', "/$active");
         echo "<div class='clearfix'></div>";
         $hhp_von = $hhps[$hhp_id]['von'];
         $hhp_bis = $hhps[$hhp_id]['bis'];
@@ -81,7 +81,7 @@ class MenuRenderer extends Renderer
                 break;
             case 'mygremium':
                 if (empty($userGremien)) {
-                    $this->setOverviewTabs($active);
+                    $this->setOverviewTabs($active, $hhp_id);
                     $this->renderAlert(
                         'Schade!',
                         $this->makeClickableMails(
@@ -159,7 +159,7 @@ class MenuRenderer extends Renderer
                     'projekt_id',
                     'auslagen.id',
                     'name_suffix', // auslagen Link
-                    'zahlung-name', // Empf. Name
+                    'zahlung_name', // Empf. Name
                     'einnahmen' => ['einnahmen', DBConnector::GROUP_SUM_ROUND2],
                     'ausgaben' => ['ausgaben', DBConnector::GROUP_SUM_ROUND2],
                     'state',
@@ -174,8 +174,12 @@ class MenuRenderer extends Renderer
             );
         }
 
+        // merge old no-org style (legacy) into new no-org style (livewire)
+        $projekte['no-org'] = array_merge($projekte['no-org'] ?? [], $projekte[''] ?? []);
+        unset($projekte['']);
+
         // var_dump(end(end($projekte)));
-        $this->setOverviewTabs($active); ?>
+        $this->setOverviewTabs($active, $hhp_id); ?>
 
         <div class="panel-group" id="accordion">
             <?php $i = 0;
@@ -189,7 +193,7 @@ class MenuRenderer extends Renderer
                              href="#collapse<?php echo $i; ?>">
                             <h4 class="panel-title">
                                 <?php
-                            $titel = empty($gremium) ? 'Nicht zugeordnete Projekte' :
+                            $titel = $gremium === 'no-org' ? 'Nicht zugeordnete Projekte' :
                                 // (in_array($gremium, $attributes["alle-gremien"], true) ? "" : "[INAKTIV] ") .
                                 $gremium; ?>
                                 <i class="fa fa-fw fa-togglebox"></i>&nbsp;<?php echo $titel; ?>
@@ -205,7 +209,7 @@ class MenuRenderer extends Renderer
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
                                                 "IP-$year-$id",
-                                                'projekt/'.$id
+                                                substr(route('project.show', $id, false), 1),
                                             ); ?>
                                             </div>
                                             <div class="panel-heading collapsed <?php echo (! isset($auslagen[$id]) || count(
@@ -329,7 +333,7 @@ class MenuRenderer extends Renderer
             } else {
                 $this->renderAlert(
                     'Warnung',
-                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".URIBASE."projekt/create'>Neues Projekt erstellen</a>",
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".route('project.create')."'>Neues Projekt erstellen</a>",
                     'warning'
                 );
             }
@@ -403,8 +407,8 @@ class MenuRenderer extends Renderer
               'by_user' => NULL,
               'value' => '9000.00',
               'description' => NULL,
-              'ok-hv' => 'Haushaltsverantwortliche/r',
-              'ok-kv' => 'Kassenverantwortliche/r',
+              'ok_hv' => 'Haushaltsverantwortliche/r',
+              'ok_kv' => 'Kassenverantwortliche/r',
               'frist' => NULL,
               'flag_vorkasse' => '1',
               'flag_bewilligungsbescheid' => '0',
@@ -514,17 +518,14 @@ class MenuRenderer extends Renderer
         // $this->renderTable($header,[$extern],array_keys($header));
     }
 
-    public function setOverviewTabs($active): void
+    public function setOverviewTabs($active, $hhp_id): void
     {
-        $linkbase = URIBASE.'menu/';
+        $linkbase = URIBASE."menu/$hhp_id/";
         $tabs = [
             'mygremium' => "<i class='fa fa-fw fa-home'></i> Meine Gremien",
             'allgremium' => "<i class='fa fa-fw fa-globe'></i> Alle Gremien",
             'open-projects' => "<i class='fa fa-fw fa-file-text'></i> Offene Projekte",
         ];
-        if (AuthHandler::getInstance()->hasGroup('ref-finanzen')) {
-            // $tabs["extern"] = "<i class='fa fa-fw fa-ticket'></i> Externe Anträge";
-        }
         // $tabs["search"] = "<i class='fa fa-fw fa-search'></i> Suche";
         HTMLPageRenderer::setTabs($tabs, $linkbase, $active);
     }
@@ -553,10 +554,10 @@ class MenuRenderer extends Renderer
         [$header, $internContent, $escapeFunctions] = $this->fetchProjectsWithState('need-stura');
         [, $internContentHV] = $this->fetchProjectsWithState('ok-by-hv');
         $groups = [
-            'Vom StuRa abzustimmen' => $internContent,
-            'zur Verkündung (genehmigt von HV)' => $internContentHV,
+            'Vom Gremium abzustimmen' => $internContent,
+            'zur Verkündung' => $internContentHV,
         ];
-        $this->renderHeadline('Projekte für die nächste StuRa Sitzung');
+        $this->renderHeadline('Projekte für die nächste Sitzung');
         $this->renderTable($header, $groups, [], $escapeFunctions);
     }
 
@@ -580,7 +581,7 @@ class MenuRenderer extends Renderer
             ],
             ['state' => $statestring],
             [['type' => 'inner', 'table' => 'projektposten', 'on' => ['projektposten.projekt_id', 'projekte.id']]],
-            ['date-start' => true],
+            ['date_start' => true],
             ['projekte.id']
         );
         $escapeFunctionsIntern = [
@@ -632,11 +633,11 @@ class MenuRenderer extends Renderer
                 'projekte.org', // Org
                 'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
-                'last_change',  // letzte änderung
+                'last_change',  // letzte Änderung
             ],
             [
                 'auslagen.state' => ['LIKE', "$stateString%"],
-                "auslagen.ok-$missingColumn" => '',
+                "auslagen.ok_$missingColumn" => '',
             ],
             [
                 ['table' => 'projekte', 'type' => 'inner', 'on' => ['projekte.id', 'auslagen.projekt_id']],
@@ -693,12 +694,12 @@ class MenuRenderer extends Renderer
                 'projekte.id',
                 'auslagen.id',
                 'auslagen.name_suffix', // Auslagenlink
-                'auslagen.zahlung-name',
-                'auslagen.zahlung-iban',
+                'auslagen.zahlung_name',
+                'auslagen.zahlung_iban',
                 'projekte.id',
                 'projekte.createdat',
                 'auslagen.id',
-                'auslagen.zahlung-vwzk',
+                'auslagen.zahlung_vwzk',
                 'auslagen.name_suffix',
                 'projekte.name', // verwendungszweck
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],

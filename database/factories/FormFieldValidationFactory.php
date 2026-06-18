@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\FormField;
-use App\Models\FormFieldValidation;
+use App\Models\PtfProject\FormField;
+use App\Models\PtfProject\FormFieldValidation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

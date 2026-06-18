@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# Runs Laravel Pint on staged PHP files before committing and re-stages
+# any reformatted files, so un-pinted code never reaches CI.
+# Activated via: git config core.hooksPath .githooks (done by `composer setup`).
+
+set -euo pipefail
+
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.php$' || true)
+[ -z "$FILES" ] && exit 0
+
+if [ ! -x vendor/bin/pint ]; then
+    echo "pre-commit: vendor/bin/pint not found, skipping (run 'composer install')." >&2
+    exit 0
+fi
+
+echo "$FILES" | xargs vendor/bin/pint
+echo "$FILES" | xargs git add

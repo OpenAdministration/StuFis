@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\LegalBasis;
+use App\Models\PtfProject\LegalBasis;
 
 use function Pest\Laravel\assertModelExists;
 

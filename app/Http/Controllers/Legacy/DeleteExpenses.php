@@ -3,26 +3,26 @@
 namespace App\Http\Controllers\Legacy;
 
 use App\Http\Controllers\Controller;
-use App\Models\Legacy\Expenses;
-use App\Models\Legacy\ExpensesReceipt;
+use App\Models\Legacy\Expense;
+use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\FileInfo;
-use framework\auth\AuthHandler;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class DeleteExpenses extends Controller
 {
     public function __invoke(int $expense_id)
     {
-        $expense = Expenses::findOrFail($expense_id);
+        $expense = Expense::findOrFail($expense_id);
         $project = $expense->project;
 
         // authorize user
         $userPerm =
-            AuthHandler::getInstance()->hasGroup('ref-finanzen-hv')
+            \Auth::user()->can('budget-officer', User::class)
             || $project->creator->id === \Auth::user()->id
-            || explode(';', $expense->created)[1] === \Auth::user()->username;
+            || explode(';', (string) $expense->created)[1] === \Auth::user()->username;
         // authorize state
-        $deletableState = ! in_array(explode(';', $expense->state)[0], ['instructed', 'booked'], true);
+        $deletableState = ! in_array(explode(';', (string) $expense->state)[0], ['instructed', 'booked'], true);
 
         if ($userPerm === false || $deletableState === false) {
             abort(403);
@@ -30,7 +30,7 @@ class DeleteExpenses extends Controller
         // to make sure to delete everything and not only parts
         \DB::beginTransaction();
         $reciepts = $expense->receipts;
-        $reciepts->each(function (ExpensesReceipt $receipt): void {
+        $reciepts->each(function (ExpenseReceipt $receipt): void {
             // delete all posts
             $receipt->posts()->delete();
             // delete all files db entries (storage later)
@@ -53,6 +53,6 @@ class DeleteExpenses extends Controller
         });
         \DB::commit();
 
-        return redirect()->route('legacy.dashboard', ['sub' => 'mygremium']);
+        return to_route('legacy.dashboard', ['sub' => 'mygremium']);
     }
 }

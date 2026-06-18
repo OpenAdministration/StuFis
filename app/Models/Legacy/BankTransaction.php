@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Database\Factories\Legacy\BankTransactionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,7 +50,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property-read BankAccount $account
  *
- * @method static \Database\Factories\Legacy\BankTransactionFactory factory($count = null, $state = [])
+ * @method static BankTransactionFactory factory($count = null, $state = [])
  *
  * @mixin \Eloquent
  */
@@ -85,12 +86,21 @@ class BankTransaction extends Model
         return $this->belongsTo(BankAccount::class, 'konto_id');
     }
 
+    /**
+     * konto has a composite primary key (id, konto_id); a booking references it via the
+     * pair (zahlung_id, zahlung_type). The zahlung_type constraint is required to disambiguate.
+     *
+     * WARNING: lazy access only. The constraint reads $this->konto_id, which is null when
+     * Eloquent builds eager-load constraints, so BankTransaction::with('bookings') silently
+     * returns empty results. Use lazy access ($transaction->bookings) until composite-key
+     * relation support (e.g. awobaz/compoships) is added in the overhaul.
+     */
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'zahlung_id')->where('zahlung_type', $this->konto_id);
     }
 
-    public function name(): Attribute
+    protected function name(): Attribute
     {
         $account_name = $this->account->short;
         $id = $this->id;

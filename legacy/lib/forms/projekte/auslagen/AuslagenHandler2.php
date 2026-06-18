@@ -3,9 +3,9 @@
 namespace forms\projekte\auslagen;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\LegalBasis;
 use Exception;
 use forms\chat\ChatHandler;
-use forms\FormHandlerInterface;
 use forms\FormTemplater;
 use forms\projekte\PermissionHandler;
 use forms\projekte\ProjektHandler;
@@ -18,6 +18,7 @@ use framework\LatexGenerator;
 use framework\render\html\BT;
 use framework\render\HTMLPageRenderer;
 use framework\render\JsonController;
+use framework\render\Renderer;
 use framework\svg\SvgDiagram;
 use framework\svg\SvgDiagramAddingBeam;
 use framework\svg\SvgDiagramPie;
@@ -38,7 +39,7 @@ use Illuminate\Support\Facades\File;
  *
  * @copyright         Copyright Referat IT (C) 2018 - All rights reserved
  */
-class AuslagenHandler2 extends FormHandlerInterface
+class AuslagenHandler2 extends Renderer
 {
     // ---------------------------------------------------------
     /* ------- MEMBER VARIABLES -------- */
@@ -109,9 +110,9 @@ class AuslagenHandler2 extends FormHandlerInterface
      * @var array
      */
     private static $subStates = [
-        'ok-hv' => ['wip', true, 'OK HV', 'als Haushaltsverantwortlicher genehmigen'],
-        'ok-kv' => ['wip', true, 'OK KV', 'als Kassenverantwortlicher genehmigen'],
-        'ok-belege' => ['wip', true, 'Belege vorhanden', 'Original Belege vorliegend'],
+        'ok_hv' => ['wip', true, 'OK HV', 'als Haushaltsverantwortlicher genehmigen'],
+        'ok_kv' => ['wip', true, 'OK KV', 'als Kassenverantwortlicher genehmigen'],
+        'ok_belege' => ['wip', true, 'Belege vorhanden', 'Original Belege vorliegend'],
         'revoked' => ['revocation', false, 'Zurückgezogen', 'Zurückziehen'],
         'rejected' => ['revocation', false, 'Abgelehnt', 'Ablehnen'],
         'payed' => ['instructed', true, 'Bezahlt', 'Bezahlt (lt. Kontoauszug)'],
@@ -137,7 +138,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             'revocation' => true,
         ],
         'instructed' => [
-            'booked' => ['groups' => ['ref-finanzen-kv']],
+            'booked' => ['groups' => ['ref-finanzen-belege']],
             'revocation' => ['groups' => ['ref-finanzen-belege']],
         ],
         'booked' => [
@@ -148,13 +149,13 @@ class AuslagenHandler2 extends FormHandlerInterface
         // sub state changes
         // turnes map around:
         // target => current state => permission
-        'ok-hv' => [
+        'ok_hv' => [
             'wip' => ['groups' => ['ref-finanzen-hv']],
         ],
-        'ok-kv' => [
+        'ok_kv' => [
             'wip' => ['groups' => ['ref-finanzen-kv']],
         ],
-        'ok-belege' => [
+        'ok_belege' => [
             'wip' => ['groups' => ['ref-finanzen-belege']],
         ],
         'payed' => [
@@ -187,9 +188,9 @@ class AuslagenHandler2 extends FormHandlerInterface
         'belege' => '',
         'files' => '',
         'auslagen-name' => '',
-        'zahlung-iban' => '',
-        'zahlung-name' => '',
-        'zahlung-vwzk' => '',
+        'zahlung_iban' => '',
+        'zahlung_name' => '',
+        'zahlung_vwzk' => '',
         'address' => '',
         'kv-ok' => '',
         'hv-ok' => '',
@@ -208,18 +209,18 @@ class AuslagenHandler2 extends FormHandlerInterface
     private static $writePermissionFields = [
         'draft' => [
             'auslagen-name' => ['groups' => ['login']],
-            'zahlung-name' => ['groups' => ['login']],
-            'zahlung-iban' => ['groups' => ['login']],
-            'zahlung-vwzk' => ['groups' => ['login']],
+            'zahlung_name' => ['groups' => ['login']],
+            'zahlung_iban' => ['groups' => ['login']],
+            'zahlung_vwzk' => ['groups' => ['login']],
             'address' => ['groups' => ['login']],
             'belege' => ['groups' => ['login']],
             'files' => ['groups' => ['login']],
         ],
         'wip' => [
             'auslagen-name' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-name' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-iban' => ['groups' => ['ref-finanzen-belege']],
-            'zahlung-vwzk' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_name' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_iban' => ['groups' => ['ref-finanzen-belege']],
+            'zahlung_vwzk' => ['groups' => ['ref-finanzen-belege']],
             'address' => ['groups' => ['ref-finanzen-belege']],
             'belege' => ['groups' => ['ref-finanzen-belege']],
             'files' => ['groups' => ['ref-finanzen-belege']],
@@ -658,19 +659,19 @@ class AuslagenHandler2 extends FormHandlerInterface
         // sub states - wip - ok_*
         if ($this->stateInfo['state'] === 'wip') {
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-belege'] ?
+                ($this->auslagen_data['ok_belege'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-belege'
+                    .'ok_belege'
                     : '');
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-hv'] ?
+                ($this->auslagen_data['ok_hv'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-hv'
+                    .'ok_hv'
                     : '');
             $this->stateInfo['substate'] .=
-                ($this->auslagen_data['ok-kv'] ?
+                ($this->auslagen_data['ok_kv'] ?
                     (($this->stateInfo['substate']) ? ',' : '')
-                    .'ok-kv'
+                    .'ok_kv'
                     : '');
         }
         // sub state - instructed
@@ -785,25 +786,49 @@ class AuslagenHandler2 extends FormHandlerInterface
     }
 
     /**
+     * Try to flip the Auslage referenced in a bank Verwendungszweck to "gezahlt".
+     *
      * @param  string  $verwendungszweck  will be searched through with regex for fetching project / auslagen id
+     * @param  bool  $flash  whether to push a legacy warning flash on failure. The legacy
+     *                       FinTS sync runs inside the bootstrap and wants the flash; the
+     *                       Livewire CSV import passes false and reports via the return value
+     *                       instead (it has no request-bound session for addFlash to use).
+     * @return string|null the matched reference (e.g. "IP-24-23-A70") when the Auslage could
+     *                     NOT be marked paid, or null when there was nothing to do / it succeeded
      */
-    public static function hookZahlung(string $verwendungszweck): void
+    public static function hookZahlung(string $verwendungszweck, bool $flash = true): ?string
     {
         // pattern which has wide matching for verwendungszweck (?<x>...) is a named capture group with name x
         $ipRegex = '/I?P(?<hhp>-?[0-9]{2}-)?(?<project>[0-9]+)-A(?<auslage>[0-9]+)/';
         $found = preg_match($ipRegex, $verwendungszweck, $matches);
         if ($found !== 1) {
-            return;
+            return null;
         }
         $hhpYear = $matches['hhp']; // could be year or maybe id in the future -> bad to use
         $projectId = $matches['project'];
         $auslagenId = $matches['auslage'];
         $wholeMatch = $matches[0];
         $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
+        // An Auslage that is approved ("ok") but not yet formally instructed can still be paid
+        // out by the bank. Auto-promote ok -> instructed so the "payed" substate (which lives
+        // under "instructed") becomes reachable. ok -> instructed requires the same
+        // ref-finanzen-kv group as payed, so this adds no new permission surface. The
+        // "instructed" audit entry is attributed to whoever runs the import.
+        if ($ah->stateInfo['state'] === 'ok'
+            && $ah->state_change('instructed', $ah->getAuslagenEtag())) {
+            // state_change rotates the etag and leaves $ah's cached data stale; rebuild.
+            $ah = new AuslagenHandler2(['pid' => $projectId, 'aid' => $auslagenId, 'action' => 'none']);
+        }
         $stateChanged = $ah->state_change('payed', $ah->getAuslagenEtag());
         if (! $stateChanged) {
-            HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status 'gezahlt' überführt werden. Bitte prüfe diesen Eintrag manuell.");
+            if ($flash) {
+                HTMLPageRenderer::addFlash(BT::TYPE_WARNING, "$wholeMatch konnte nicht in den Status 'gezahlt' überführt werden. Bitte prüfe diesen Eintrag manuell.");
+            }
+
+            return $wholeMatch;
         }
+
+        return null;
     }
 
     public function getStateString(): string
@@ -1075,19 +1100,19 @@ class AuslagenHandler2 extends FormHandlerInterface
             'created' => $this->auslagen_data['created'],
             'name_suffix' => $this->routeInfo['validated']['auslagen-name'],
             'state' => $this->auslagen_data['state'],
-            'ok-belege' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-belege'],
-            'ok-hv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-hv'],
-            'ok-kv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok-kv'],
+            'ok_belege' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_belege'],
+            'ok_hv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_hv'],
+            'ok_kv' => ($changed_belege_flag || $changed_posten_flag) ? '' : $this->auslagen_data['ok_kv'],
             'payed' => $this->auslagen_data['payed'],
             'rejected' => $this->auslagen_data['rejected'],
-            'zahlung-iban' => strpos(
-                str_replace(' ', '', $this->routeInfo['validated']['zahlung-iban']),
+            'zahlung_iban' => strpos(
+                str_replace(' ', '', $this->routeInfo['validated']['zahlung_iban']),
                 '......'
-            ) ? $this->auslagen_data['zahlung-iban'] : self::encryptedStr(
-                $this->routeInfo['validated']['zahlung-iban']
+            ) ? $this->auslagen_data['zahlung_iban'] : self::encryptedStr(
+                $this->routeInfo['validated']['zahlung_iban']
             ),
-            'zahlung-name' => $this->routeInfo['validated']['zahlung-name'],
-            'zahlung-vwzk' => $this->routeInfo['validated']['zahlung-vwzk'],
+            'zahlung_name' => $this->routeInfo['validated']['zahlung_name'],
+            'zahlung_vwzk' => $this->routeInfo['validated']['zahlung_vwzk'],
             'address' => ((preg_match('/(\s*)versteckt(\s*)/i', $this->routeInfo['validated']['address']) === 1) ?
                 ($this->auslagen_data['address']) : $this->routeInfo['validated']['address']),
             'last_change' => (string) ($newInfo['date']),
@@ -1266,14 +1291,14 @@ class AuslagenHandler2 extends FormHandlerInterface
             'created' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
             'name_suffix' => '',
             'state' => "{$newInfo['state']};{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
-            'ok-belege' => '',
-            'ok-hv' => '',
-            'ok-kv' => '',
+            'ok_belege' => '',
+            'ok_hv' => '',
+            'ok_kv' => '',
             'payed' => '',
             'rejected' => '',
-            'zahlung-iban' => '',
-            'zahlung-name' => '',
-            'zahlung-vwzk' => '',
+            'zahlung_iban' => '',
+            'zahlung_name' => '',
+            'zahlung_vwzk' => '',
             'address' => '',
             'last_change' => $newInfo['date'],
             'last_change_by' => '',
@@ -1377,7 +1402,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'headline' => 'Erfolgreich',
                 'redirect' => URIBASE.'projekt/'.$this->projekt_id.'/auslagen/'.$this->auslagen_data['id'],
             ];
-            if ($newState === 'wip' && ! $this->auslagen_data['ok-belege']) {
+            if ($newState === 'wip' && ! $this->auslagen_data['ok_belege']) {
                 $this->json_result['reload'] = 5000;
                 $this->json_result['msg'] .= '<br><strong>Bitte beachte, dass gegebenenfalls noch Belege eingereicht werden müssen.<br><i>(Vorlage: "Belege PDF")</i></strong>';
             }
@@ -1474,8 +1499,10 @@ class AuslagenHandler2 extends FormHandlerInterface
             if (isset(self::$states[$newState])) {
                 switch ($newState) {
                     case 'wip':
-                        $set['ok-hv'] = '';
-                        $set['ok-kv'] = '';
+                        $set['ok_hv'] = '';
+                        $set['ok_kv'] = '';
+                        $set['ok_belege'] = '';
+                        $set['payed'] = '';
                         break;
 
                     case 'draft':
@@ -1493,24 +1520,24 @@ class AuslagenHandler2 extends FormHandlerInterface
             }
             if (isset(self::$subStates[$newState])) {
                 $set[$newState] = match ($newState) {
-                    'ok-belege', 'ok-hv', 'ok-kv', 'payed', 'rejected', 'revoked' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
+                    'ok_belege', 'ok_hv', 'ok_kv', 'payed', 'rejected', 'revoked' => "{$newInfo['date']};{$newInfo['user']};{$newInfo['realname']}",
                 };
             }
             $this->db->dbUpdate('auslagen', $where, $set);
             // automagic -> all ok -> set state ok -> auto genehmigt
-            if ($newState === 'ok-belege' || $newState === 'ok-hv' || $newState === 'ok-kv') {
+            if ($newState === 'ok_belege' || $newState === 'ok_hv' || $newState === 'ok_kv') {
                 $tmp_auslage = $this->db->dbFetchAll(
                     tables: 'auslagen',
                     where: ['id' => $this->auslagen_data['id']]
                 );
                 if (
                     $tmp_auslage
-                    && isset($tmp_auslage[0]['ok-belege'])
-                    && $tmp_auslage[0]['ok-belege']
-                    && isset($tmp_auslage[0]['ok-hv'])
-                    && $tmp_auslage[0]['ok-hv']
-                    && isset($tmp_auslage[0]['ok-kv'])
-                    && $tmp_auslage[0]['ok-kv']
+                    && isset($tmp_auslage[0]['ok_belege'])
+                    && $tmp_auslage[0]['ok_belege']
+                    && isset($tmp_auslage[0]['ok_hv'])
+                    && $tmp_auslage[0]['ok_hv']
+                    && isset($tmp_auslage[0]['ok_kv'])
+                    && $tmp_auslage[0]['ok_kv']
                     && str_starts_with($tmp_auslage[0]['state'], 'wip')
                 ) {
                     $this->db->dbUpdate(
@@ -1575,9 +1602,9 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'Eingereicht von' => $info['realname'],
                 // commented because of visibility issues
                 // 'Adresse' => str_replace(PHP_EOL, ' / ', $this->auslagen_data['address']),
-                'Zahlung an' => $this->auslagen_data['zahlung-name'],
+                'Zahlung an' => $this->auslagen_data['zahlung_name'],
             ],
-            'owner' => $this->auslagen_data['zahlung-name'],
+            'owner' => $this->auslagen_data['zahlung_name'],
             'belegeTable' => [
                 'orientation' => 'rlX',
                 'header' => [
@@ -1594,7 +1621,7 @@ class AuslagenHandler2 extends FormHandlerInterface
 
             return;
         }
-        throw new LegacyDieException('Belege PDF kann nicht generiert werden');
+        throw new LegacyDieException(500, 'Belege PDF kann nicht generiert werden');
     }
 
     public function generate_zahlungsanweisung_pdf(): void
@@ -1633,13 +1660,13 @@ class AuslagenHandler2 extends FormHandlerInterface
         }
 
         // label + zusatzfreitext
-        $recht_array = ORG_DATA['rechtsgrundlagen'][$this->projekt_data['recht']] ?? [];
-        $recht = $recht_array['label'] ?? $this->projekt_data['recht'];
-        if (! empty($this->projekt_data['recht-additional'])) {
-            $recht .= ': '.$this->projekt_data['recht-additional'];
+        $recht_data = LegalBasis::find($this->projekt_data['recht']);
+        $recht = $recht_data->label ?? $this->projekt_data['recht'];
+        if (! empty($this->projekt_data['recht_additional'])) {
+            $recht .= ': '.$this->projekt_data['recht_additional'];
         }
-        $hv = explode(';', $this->auslagen_data['ok-hv']);
-        $kv = explode(';', $this->auslagen_data['ok-kv']);
+        $hv = explode(';', $this->auslagen_data['ok_hv']);
+        $kv = explode(';', $this->auslagen_data['ok_kv']);
         // datetime;username;fullname
         $hvString = $hv[2]; // . ' ('. date_create($hv[0])->format('d.m.y') .')';
         $kvString = $kv[2]; // . ' ('. date_create($kv[0])->format('d.m.y') .')';
@@ -1657,9 +1684,9 @@ class AuslagenHandler2 extends FormHandlerInterface
                 'Abrechnungsname' => $this->auslagen_data['name_suffix'],
             ],
             'zahlungsMeta' => [
-                'Name' => $this->auslagen_data['zahlung-name'],
+                'Name' => $this->auslagen_data['zahlung_name'],
                 'Adresse' => $this->auslagen_data['address'],
-                'IBAN' => chunk_split(self::decryptedStr($this->auslagen_data['zahlung-iban']), 4, ' '),
+                'IBAN' => chunk_split(self::decryptedStr($this->auslagen_data['zahlung_iban']), 4, ' '),
                 'Betrag' => number_format($summed_value, 2, ',', '').' EUR',
                 'Datum der Zahlung' => '___.___.______',
             ],
@@ -1786,8 +1813,8 @@ class AuslagenHandler2 extends FormHandlerInterface
             <label for="genehmigung">Genehmigung</label>
             <br>
             <?php
-            if ($this->auslagen_data['ok-belege']) {
-                $be_ok = $this->auslagen_data['ok-belege'];
+            if ($this->auslagen_data['ok_belege']) {
+                $be_ok = $this->auslagen_data['ok_belege'];
                 $be_ok = explode(';', $be_ok);
                 $be_ok = "{$be_ok[0]} {$be_ok[2]}";
             } else {
@@ -1802,8 +1829,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                 []
             ); ?>
             <?php
-            if ($this->auslagen_data['ok-hv']) {
-                $hv_ok = $this->auslagen_data['ok-hv'];
+            if ($this->auslagen_data['ok_hv']) {
+                $hv_ok = $this->auslagen_data['ok_hv'];
                 $hv_ok = explode(';', $hv_ok);
                 $hv_ok = "{$hv_ok[0]} {$hv_ok[2]}";
             } else {
@@ -1811,8 +1838,8 @@ class AuslagenHandler2 extends FormHandlerInterface
             }
             echo $this->templater->getTextForm('hv-ok', $hv_ok, [12, 12, 4], 'HV', 'HV', []); ?>
             <?php
-            if ($this->auslagen_data['ok-kv']) {
-                $kv_ok = $this->auslagen_data['ok-kv'];
+            if ($this->auslagen_data['ok_kv']) {
+                $kv_ok = $this->auslagen_data['ok_kv'];
                 $kv_ok = explode(';', $kv_ok);
                 $kv_ok = "{$kv_ok[0]} {$kv_ok[2]}";
             } else {
@@ -1851,8 +1878,8 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
                 <label for="zahlung">Zahlungsinformationen</label><br>
                 <?php echo $this->templater->getTextForm(
-                    'zahlung-name',
-                    $this->auslagen_data['zahlung-name'] ?? null,
+                    'zahlung_name',
+                    $this->auslagen_data['zahlung_name'] ?? null,
                     [12, 12, 6],
                     'Name Zahlungsempfänger',
                     'Zahlungsempfänger Name',
@@ -1861,7 +1888,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 ); ?>
 
                 <?php // iban only show trimmed if not hv/kv important!
-                $iban_text = $this->auslagen_data['zahlung-iban'] ?? null;
+                $iban_text = $this->auslagen_data['zahlung_iban'] ?? null;
         if ($iban_text) {
             $iban_text = self::decryptedStr($iban_text);
         }
@@ -1871,7 +1898,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             $iban_text = chunk_split($iban_text, 4, ' ');
         }
         echo $this->templater->getTextForm(
-            'zahlung-iban',
+            'zahlung_iban',
             $iban_text,
             [12, 12, 6],
             'DE ...',
@@ -1879,8 +1906,8 @@ class AuslagenHandler2 extends FormHandlerInterface
         ); ?>
                 <div class='clearfix'></div>
                 <?php echo $this->templater->getTextForm(
-                    'zahlung-vwzk',
-                    $this->auslagen_data['zahlung-vwzk'] ?? null,
+                    'zahlung_vwzk',
+                    $this->auslagen_data['zahlung_vwzk'] ?? null,
                     12,
                     'z.B. Rechnungsnr. o.Ä.',
                     'Verwendungszweck (verpflichtend bei Firmen)',
@@ -1890,7 +1917,7 @@ class AuslagenHandler2 extends FormHandlerInterface
                 <div class="clearfix"></div>
                 <?php
                 $tmplabel = ($this->routeInfo['action'] === 'edit' || $this->routeInfo['action'] === 'create') ?
-                    'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Der StuRa ist nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
+                    'Anschrift Empfangsberechtigter/Zahlungspflichtiger<small class="form-text text-muted" style="font-size: 0.7em; display: block; line-height: 1.0em;"><i>Die Studierendenschaften in Thüringen sind nach §12(2)-3 ThürStudFVO verpflichtet, diese Angaben abzufragen und aufzubewahren. Nach §18 ThürStudFVO beträgt die Dauer mindestens 6 Jahre nach Genehmigung der Entlastung.</i></small>' :
                     'Anschrift Empfangsberechtigter/Zahlungspflichtiger';
         $tmpvalue = ($this->checkPermissionByMap(self::$groups['stateless']['finanzen'])
             || $this->checkPermissionByMap(self::$groups['stateless']['owner'])
@@ -1989,6 +2016,10 @@ class AuslagenHandler2 extends FormHandlerInterface
             if ($k === 'revocation') {
                 continue;
             }
+            // Skip 'booked' state - make it unclickable
+            if ($k === 'booked') {
+                continue;
+            }
             if (! $this->state_change_possible($k)) {
                 continue;
             }
@@ -2004,11 +2035,11 @@ class AuslagenHandler2 extends FormHandlerInterface
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
             $set[$s['l']][$s['k']]['target'] = [['draft', 6, ['y' => 20]]];
             $set[$s['l']][$s['k']]['offset'] = ['x' => 0, 'y' => -20];
-            $s = $keymap['ok-hv'];
+            $s = $keymap['ok_hv'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
-            $s = $keymap['ok-kv'];
+            $s = $keymap['ok_kv'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
-            $s = $keymap['ok-belege'];
+            $s = $keymap['ok_belege'];
             unset($set[$s['l']][$s['k']]['children'][$s['c']]);
         }
         // handle childs
@@ -2066,21 +2097,21 @@ class AuslagenHandler2 extends FormHandlerInterface
                     'target' => ['ok', 'revocation'],
                     'children' => [
                         [
-                            'state' => 'ok-hv',
-                            'title' => self::$subStates['ok-hv'][2],
-                            'hovertitle' => self::$subStates['ok-hv'][3],
+                            'state' => 'ok_hv',
+                            'title' => self::$subStates['ok_hv'][2],
+                            'hovertitle' => self::$subStates['ok_hv'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                         [
-                            'state' => 'ok-kv',
-                            'title' => self::$subStates['ok-kv'][2],
-                            'hovertitle' => self::$subStates['ok-kv'][3],
+                            'state' => 'ok_kv',
+                            'title' => self::$subStates['ok_kv'][2],
+                            'hovertitle' => self::$subStates['ok_kv'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                         [
-                            'state' => 'ok-belege',
-                            'title' => self::$subStates['ok-belege'][2],
-                            'hovertitle' => self::$subStates['ok-belege'][3],
+                            'state' => 'ok_belege',
+                            'title' => self::$subStates['ok_belege'][2],
+                            'hovertitle' => self::$subStates['ok_belege'][3],
                             'options' => ['fill' => '#cccccc'],
                         ],
                     ],
@@ -2347,7 +2378,7 @@ class AuslagenHandler2 extends FormHandlerInterface
         if (! $hidden) {
             if ($beleg['file_id']) {
                 $file_form = '<div class="beleg-file btn-default" style=" border: 1px solid #ddd; border-radius: 5px; padding: 5px 10px; position: relative;" data-id="'.$beleg['file_id'].'">'.
-                    '<a href="'.URIBASE.'files/get/'.$this->auslagen_id.'/'.$beleg['file']['hashname'].'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
+                    '<a href="'.route('legacy.get-file', [$this->auslagen_id, $beleg['id'], $beleg['file']['hashname']]).'">'.$beleg['file']['filename'].'.'.$beleg['file']['fileextension'].'</a>'.
                     (($this->stateInfo['editable']) ? ('<button type="button" title="Löschen" class="file-delete btn btn-default pull-right">X</button>') : '').
                     '<div><small><span style="min-width: 50px; display: inline-block; font-weight: bold;">Size: </span>'.
                     '<span>'.FileHandler::formatFilesize($beleg['file']['size']).'</span></small>'.
@@ -2704,7 +2735,7 @@ class AuslagenHandler2 extends FormHandlerInterface
             <?php } ?>
         </div> <?php
         if ($this->routeInfo['action'] !== 'edit' && $this->routeInfo['action'] !== 'create') {
-            $projectOwner = (new ProjektHandler(['id' => $this->projekt_id, 'action' => 'none']))->isOwner();
+            $projectOwner = (new ProjektHandler(['pid' => $this->projekt_id, 'action' => 'none']))->isOwner();
             $hasPermission = $this->isOwner() || $projectOwner || AuthHandler::getInstance()->hasGroup('ref-finanzen-hv');
             $deletableState = ! in_array($this->stateInfo['state'], ['instructed', 'booked'], true);
             $permissionIcon = $hasPermission ? 'fa-check' : 'fa-ban';
@@ -2790,12 +2821,12 @@ class AuslagenHandler2 extends FormHandlerInterface
          'name' => '',
          'responsible' => '',
          'org' => '',
-         'org-mail' => '',
+         'org_mail' => '',
          'protokoll' => '',
          'recht' => '',
-         'recht-additional' => '',
-         'date-start' => '',
-         'date-end' => '',
+         'recht_additional' => '',
+         'date_start' => '',
+         'date_end' => '',
          'beschreibung' => '',
          'posten' => []
          'auslagen' => [
@@ -3068,20 +3099,5 @@ class AuslagenHandler2 extends FormHandlerInterface
         }
 
         return $out_html;
-    }
-
-    public function updateSavedData($data)
-    {
-        // TODO: Implement updateSavedData() method.
-    }
-
-    public function setState($stateName)
-    {
-        // TODO: Implement setState() method.
-    }
-
-    public function getNextPossibleStates()
-    {
-        // TODO: Implement getNextPossibleStates() method.
     }
 }

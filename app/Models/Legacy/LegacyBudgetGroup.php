@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,13 +17,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, LegacyBudgetItem> $budgetItems
  * @property-read int|null $budget_items_count
  *
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup query()
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup whereGruppenName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup whereHhpId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|LegacyBudgetGroup whereType($value)
+ * @method static Builder|LegacyBudgetGroup newModelQuery()
+ * @method static Builder|LegacyBudgetGroup newQuery()
+ * @method static Builder|LegacyBudgetGroup query()
+ * @method static Builder|LegacyBudgetGroup whereGruppenName($value)
+ * @method static Builder|LegacyBudgetGroup whereHhpId($value)
+ * @method static Builder|LegacyBudgetGroup whereId($value)
+ * @method static Builder|LegacyBudgetGroup whereType($value)
  *
  * @mixin \Eloquent
  */

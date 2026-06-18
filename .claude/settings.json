@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -x vendor/bin/pint ] && vendor/bin/pint --dirty 2>/dev/null || true",
+            "statusMessage": "Running Pint..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -185,28 +185,22 @@ $pathConfig = [
                     'navigation' => 'mykonto',
                 ],
                 [
-                    'path' => '(mygremium|allgremium|open-projects)',
+                    'path' => '\d+',
                     'type' => 'pattern',
-                    'param' => 'action',
+                    'param' => 'hhp-id',
                     'navigation' => 'overview',
                     'load' => [
                         LoadGroups::SELECTPICKER,
                     ],
                     'children' => [
                         [
-                            'path' => '\d+',
+                            'path' => '(mygremium|allgremium|open-projects)',
                             'type' => 'pattern',
-                            'param' => 'hhp-id',
+                            'param' => 'action',
                         ],
                     ],
                 ],
-                [
-                    'path' => 'extern',
-                    'type' => 'path',
-                    'action' => 'extern',
-                    'navigation' => 'overview',
-                    'groups' => 'ref-finanzen',
-                ],
+
                 [
                     'path' => 'hv',
                     'type' => 'path',
@@ -272,6 +266,7 @@ $pathConfig = [
                     'type' => 'pattern',
                     'action' => 'view-hhp',
                     'param' => 'hhp-id',
+                    'load' => [LoadGroups::MODALS],
                     'children' => [
                         [
                             'path' => 'titel',
@@ -353,22 +348,7 @@ $pathConfig = [
                                 ],
                             ],
                         ],
-                        [
-                            'path' => '(edit|history)',
-                            'type' => 'pattern',
-                            'action' => 'edit',
-                            'param' => 'action',
-                            'load' => [
-                                LoadGroups::DATEPICKER,
-                                LoadGroups::SELECTPICKER,
-                            ],
-                        ],
                     ],
-                ],
-                [
-                    'path' => 'create',
-                    'type' => 'path',
-                    'action' => 'create',
                 ],
             ],
         ], // projekt
@@ -398,15 +378,6 @@ $pathConfig = [
                     'controller' => 'error',
                     'action' => '404',
                     'children' => [
-                        [
-                            'path' => '(projekt)(.*)',
-                            'type' => 'pattern',
-                            'param' => 'id',
-                            'match' => 1,
-                            'controller' => 'rest',
-                            'action' => 'projekt',
-                            'is_suffix' => true,
-                        ],
                         [
                             'path' => 'auslagen',
                             'type' => 'path',
@@ -468,6 +439,19 @@ $pathConfig = [
                                     'type' => 'path',
                                     'action' => 'save-hhp-import',
                                     'groups' => 'ref-finanzen-hv',
+                                ],
+                                [
+                                    'path' => 'add-tax-budgets',
+                                    'type' => 'path',
+                                    'action' => 'add-tax-budgets',
+                                    'groups' => 'ref-finanzen-hv',
+                                    'children' => [
+                                        [
+                                            'path' => '\d+',
+                                            'type' => 'pattern',
+                                            'param' => 'hhp-id',
+                                        ],
+                                    ],
                                 ],
                             ],
                         ],

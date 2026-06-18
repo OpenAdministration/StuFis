@@ -73,12 +73,12 @@ class Booking extends Model
 
     public function expensesReceiptPost(): BelongsTo
     {
-        return $this->belongsTo(ExpensesReceiptPost::class, 'beleg_id');
+        return $this->belongsTo(ExpenseReceiptPost::class, 'beleg_id');
     }
 
     public function expenseReceipt(): HasOneThrough
     {
-        return $this->hasOneThrough(ExpensesReceipt::class, ExpensesReceiptPost::class, 'beleg_id', 'id');
+        return $this->hasOneThrough(ExpenseReceipt::class, ExpenseReceiptPost::class, 'beleg_id', 'id');
     }
 
     public function expense(): BelongsTo
@@ -87,6 +87,15 @@ class Booking extends Model
         return $this->expensesReceiptPost->expensesReceipt->expense();
     }
 
+    /**
+     * konto has a composite primary key (id, konto_id), referenced here via the pair
+     * (zahlung_id, zahlung_type). The konto_id constraint is required to disambiguate.
+     *
+     * WARNING: lazy access only. The constraint reads $this->zahlung_type, which is null
+     * when Eloquent builds eager-load constraints, so Booking::with('bankTransaction')
+     * silently returns empty results. Use lazy access ($booking->bankTransaction) until
+     * composite-key relation support (e.g. awobaz/compoships) is added in the overhaul.
+     */
     public function bankTransaction(): BelongsTo
     {
         return $this->belongsTo(BankTransaction::class, 'zahlung_id')->where('konto_id', $this->zahlung_type);
