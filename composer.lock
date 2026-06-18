@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df9bafe592a5316d327d65c83868d12e",
+    "content-hash": "9ddd3b6b200de69ce72ffd2a4927158d",
     "packages": [
         {
             "name": "ameax/datev-xml",
