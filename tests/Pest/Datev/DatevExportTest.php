@@ -42,11 +42,11 @@ it('amount() flips the sign for income groups on payables and expense groups on 
     $expense = new Expense; // unused by amount(), but the signature requires it
 
     // payable (isReceivable = false): income group (type 0) is inverted, expense group (type 1) kept
-    expect(datevInvoke($export, 'amount', [datevBooking(0, 100.0), $expense, false]))->toBe(-100.0)
-        ->and(datevInvoke($export, 'amount', [datevBooking(1, 100.0), $expense, false]))->toBe(100.0)
+    expect(datevInvoke($export, 'amount', [datevBooking(0, 100.0), false]))->toBe(-100.0)
+        ->and(datevInvoke($export, 'amount', [datevBooking(1, 100.0),  false]))->toBe(100.0)
         // receivable (isReceivable = true): the inversion mirrors
-        ->and(datevInvoke($export, 'amount', [datevBooking(0, 100.0), $expense, true]))->toBe(100.0)
-        ->and(datevInvoke($export, 'amount', [datevBooking(1, 100.0), $expense, true]))->toBe(-100.0);
+        ->and(datevInvoke($export, 'amount', [datevBooking(0, 100.0), true]))->toBe(100.0)
+        ->and(datevInvoke($export, 'amount', [datevBooking(1, 100.0), true]))->toBe(-100.0);
 });
 
 it('belegDate() uses the latest receipt date', function (): void {
