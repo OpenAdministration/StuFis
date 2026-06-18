@@ -8,6 +8,11 @@
 * Löschung von Projektposten nur noch möglich, wenn keine Abrechnung damit verknüpft ist und es nicht der einzige Posten im Projekt ist
 * Knopf zum automatischen Hinzufügen der Umsatzsteuer-Posten
 * Neue Statusanzeigen
+* Finanzverantwortliche können bereits vor dem Genehmigt-Status den Posten Haushaltstitel zuordnen
+
+**Abrechnungen**
+* Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.
+* Abrechnung kann nun fehlerfrei bearbeitet werden, auch wenn es bereits einmal im Status "Bezahlt" war
 
 **CSV-Import**
 * modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
@@ -21,6 +26,10 @@
 * Stornieren Knopf wurde aus der Buchungsliste entfernt, da nicht funktionsfähig
 * Neue Haushaltstitel zu systematischen Erfassung der Umsatzsteuer hinzugefügt
 
+**Steuern**
+* Hinzufügen von standardisierten Haushaltstiteln für die Umsatzsteuer im Haushaltsplan mit einem Klick
+* Hinzufügen von Umsatzsteuerposten im Projekt mit einem Klick direkt mit den entsprechenden Haushaltstitlen
+
 **DATEV-Export**
 * Neuer DATEV-Export: Buchungen eines Haushaltsplans können als DATEV-Exportdatei heruntergeladen werden
 * Auswahl von Zeitraum und Stichtag (Buchungsdatum, Erstelldatum der Abrechnung, frühestes Beleg- oder Zahlungsdatum)
@@ -29,8 +38,6 @@
 
 **Weitere Fixes**
 * Ausgewähltes Haushaltsjahr wird nun tabübergreifend gespeichert
-* Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.
-* Abrechnung kann nun fehlerfrei bearbeitet werden, auch wenn es bereits einmal im Status "Bezahlt" war
 * Vereinheitlichung von Begriffen und Erweiterung der Lokalisierung
 * Verschiedene technische und optische Anpassungen, Verbesserungen und Updates
 * Update auf Laravel 12 und Livewire 4
