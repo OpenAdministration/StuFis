@@ -75,7 +75,7 @@ return [
             'name' => 'Projektname',
             'responsible_email' => 'Projektverantwortlich (Email)',
             'org' => 'Organisation',
-            'no-org-value' => 'Kein zugeordnetes Gremium',
+            'no-org-value' => 'Keine zugeordnete Organisation',
             'period' => 'Projektzeitraum',
             'period_placeholder' => 'Wähle einen Zeitraum aus',
             'from' => 'von',
