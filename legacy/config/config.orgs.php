@@ -485,6 +485,7 @@ return [
                 'Evangelische Studierenden Gemeinde',
                 'Studierendengärten',
                 'Erfurter Puffbohnen Gaming',
+                'Naturkulinarik',
             ],
         ],
         'mailinglists' => [],
