@@ -3100,19 +3100,4 @@ class AuslagenHandler2 extends Renderer
 
         return $out_html;
     }
-
-    public function updateSavedData($data)
-    {
-        // TODO: Implement updateSavedData() method.
-    }
-
-    public function setState($stateName)
-    {
-        // TODO: Implement setState() method.
-    }
-
-    public function getNextPossibleStates()
-    {
-        // TODO: Implement getNextPossibleStates() method.
-    }
 }
