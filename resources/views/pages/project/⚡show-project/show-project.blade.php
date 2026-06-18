@@ -331,8 +331,10 @@
                         {{ __('project.view.details.org') }}
                     </label>
                     <p class="text-gray-900">
-                        @if (empty($project->org) || $project->org === 'no-org')
+                        @if (empty($project->org))
                             <x-no-content/>
+                        @elseif ($project->org === 'no-org')
+                            {{ __('project.view.details.no-org-value') }}
                         @else
                             {{ $project->org }}
                         @endif
