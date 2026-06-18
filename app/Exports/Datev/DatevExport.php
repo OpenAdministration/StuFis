@@ -150,7 +150,7 @@ class DatevExport
                 );
                 foreach ($bookings as $booking) {
                     $ledger->addAccountsReceivableLedger(
-                        amount: $this->amount($booking, $expense, $isReceivable),
+                        amount: $this->amount($booking, $isReceivable),
                         date: $belegDate,
                         bookingText: mb_substr($booking->comment ?? '', 0, 60) ?: null,
                         // tax (in percent)
@@ -169,7 +169,7 @@ class DatevExport
                 );
                 foreach ($bookings as $booking) {
                     $ledger->addAccountsPayableLedger(
-                        amount: $this->amount($booking, $expense, $isReceivable),
+                        amount: $this->amount($booking, $isReceivable),
                         date: $belegDate,
                         bookingText: mb_substr($booking->comment ?? '', 0, 60) ?: null,
                         // tax (in percent)
@@ -208,7 +208,7 @@ class DatevExport
         return verify_iban($iban) ? $iban : null;
     }
 
-    private function amount(Booking $booking, Expense $expense, bool $isReceivable): float
+    private function amount(Booking $booking, bool $isReceivable): float
     {
         $invers = ($isReceivable === false && $booking->budgetItem->budgetGroup->type === 0) ||
         ($isReceivable && $booking->budgetItem->budgetGroup->type === 1);

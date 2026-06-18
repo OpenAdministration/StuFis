@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Legacy;
 use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
 use App\Http\Controllers\Controller;
-use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\FileInfo;
-use App\Models\Legacy\LegacyBudgetPlan;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Http\Request;
@@ -58,6 +56,8 @@ class LegacyController extends Controller
      * null when the page has no tabs (e.g. Konto, which keeps its own iframe tabs).
      *
      * @return array<int, array{label: string, icon: string, href: string, active: bool}>|null
+     *
+     * @phpstan-ignore-next-line
      */
     private function resolveSectionTabs(Request $request): ?array
     {

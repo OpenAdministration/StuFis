@@ -13,9 +13,7 @@ beforeEach(function (): void {
 
 function createEmptyPlan(): BudgetPlan
 {
-    $plan = BudgetPlan::create(['state' => BudgetPlanState::DRAFT]);
-
-    return $plan;
+    return BudgetPlan::create(['state' => BudgetPlanState::DRAFT]);
 }
 
 it('renders and can add groups and items, save metadata, and prevent deleting non-empty groups', function (): void {
