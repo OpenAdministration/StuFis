@@ -333,7 +333,7 @@ class MenuRenderer extends Renderer
             } else {
                 $this->renderAlert(
                     'Warnung',
-                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".route('legacy.new-projekt')."'>Neues Projekt erstellen</a>",
+                    "In deinen Gremien wurden in diesem Haushaltsjahr noch keine Projekte angelegt. Fange doch jetzt damit an! <a href='".route('project.create')."'>Neues Projekt erstellen</a>",
                     'warning'
                 );
             }

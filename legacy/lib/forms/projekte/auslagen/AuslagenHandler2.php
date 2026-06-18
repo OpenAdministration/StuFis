@@ -2735,7 +2735,7 @@ class AuslagenHandler2 extends Renderer
             <?php } ?>
         </div> <?php
         if ($this->routeInfo['action'] !== 'edit' && $this->routeInfo['action'] !== 'create') {
-            $projectOwner = (new ProjektHandler(['id' => $this->projekt_id, 'action' => 'none']))->isOwner();
+            $projectOwner = (new ProjektHandler(['pid' => $this->projekt_id, 'action' => 'none']))->isOwner();
             $hasPermission = $this->isOwner() || $projectOwner || AuthHandler::getInstance()->hasGroup('ref-finanzen-hv');
             $deletableState = ! in_array($this->stateInfo['state'], ['instructed', 'booked'], true);
             $permissionIcon = $hasPermission ? 'fa-check' : 'fa-ban';
