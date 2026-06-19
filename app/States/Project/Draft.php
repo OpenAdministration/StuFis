@@ -2,7 +2,10 @@
 
 namespace App\States\Project;
 
+use App\Models\Legacy\LegacyBudgetItem;
+use App\Models\LegalBasis;
 use App\Rules\FluxEditorRule;
+use Illuminate\Validation\Rule;
 
 class Draft extends ProjectState
 {
@@ -46,7 +49,7 @@ class Draft extends ProjectState
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => 'sometimes|nullable|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+            'posts.*.titel_id' => ['sometimes', 'nullable', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
         ];
     }
 
@@ -54,8 +57,8 @@ class Draft extends ProjectState
     public function approvalRules(): array
     {
         return [
-            'recht' => 'sometimes|nullable|string|exists:App\Models\Legacy\LegalBase,slug',
-            'recht-additional' => 'sometimes|nullable|string',
+            'recht' => ['sometimes', 'nullable', 'string', Rule::exists(LegalBasis::class, 'slug')],
+            'recht_additional' => 'sometimes|nullable|string',
         ];
     }
 }

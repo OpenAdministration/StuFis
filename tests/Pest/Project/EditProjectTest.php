@@ -4,6 +4,7 @@ namespace Tests\Pest\Project;
 
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
+use App\Models\LegalBasis;
 use Cknow\Money\Money;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -82,6 +83,49 @@ it('can load an existing project for editing', function (): void {
 });
 
 /**
+ * Regression guard for the legal-basis (recht) save bug.
+ *
+ * A migration renamed the column `recht-additional` -> `recht_additional`, but the
+ * approvalRules() in the state classes kept the old hyphenated key and Draft's
+ * `exists:` rule pointed at a non-existent `App\Models\Legacy\LegalBase` model.
+ * As a result the additional field was silently dropped by $validator->validate()
+ * (no rule matched the data key) and picking a legal basis in draft state threw an
+ * SQL error against a missing table. Both must round-trip through a save.
+ */
+it('persists the legal basis (recht) and its additional field', function (): void {
+    $this->actingAs(adminUser());
+
+    LegalBasis::firstOrCreate(['slug' => 'test-basis'], [
+        'label' => 'Test Basis',
+        'label_additional' => 'Reference number',
+        'is_active' => true,
+        'sort_order' => 1,
+    ]);
+
+    $project = Project::factory()->by(adminUser())->create([
+        'name' => 'Recht Project',
+        // Must resolve under the `email:rfc,dns` rule on save.
+        'responsible' => 'test@open-administration.de',
+    ]);
+    $project->posts()->create([
+        'name' => 'Existing Post',
+        'einnahmen' => Money::EUR(0),
+        'ausgaben' => Money::EUR(5000),
+        'bemerkung' => 'This is a description that is long enough for validation.',
+    ]);
+
+    Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
+        ->set('recht', 'test-basis')
+        ->set('recht_additional', 'INV-2026-001')
+        ->call('saveAs', 'draft')
+        ->assertHasNoErrors();
+
+    $project->refresh();
+    expect($project->recht)->toBe('test-basis')
+        ->and($project->recht_additional)->toBe('INV-2026-001');
+});
+
+/**
  * Regression guard for the "Call to a member function isZero() on string" error.
  *
  * The budget table binds <x-money-input wire:model.live.blur="posts.N.einnahmen">,
@@ -138,16 +182,16 @@ it('prevents saving if version has changed (optimistic locking)', function (): v
     expect($project->refresh()->name)->not->toBe('Updated Name');
 });
 
-it('validates required fields based on state rules', function (): void {
+it('rejects saving a project that violates the state rules', function (): void {
+    // A brand-new project has empty required fields, so applying it (transition to
+    // the 'wip'/Applied state, whose basicRules mark name/org/dates/etc. required)
+    // must fail validation and persist nothing.
+    $countBefore = Project::count();
+
     Livewire::test('pages::project.edit-project')
-        ->call('saveAs', 'applied')
-        ->errors();
-    /*->assertHasErrors([
-        'name',
-        'responsible',
-        'org',
-        'date_start',
-        'date_end',
-        'beschreibung'
-    ]);*/
+        ->set('hhp_id', $this->budgetPlan->id)
+        ->call('saveAs', 'wip')
+        ->assertHasErrors();
+
+    expect(Project::count())->toBe($countBefore);
 });
