@@ -19,8 +19,25 @@ COMPOSER_PHAR="${COMPOSER_PHAR:-composer.phar}"
 NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 export NVM_DIR
 
+# Trim npm's chatter during updates: no progress bars or funding ads, and drop
+# the per-package notices. Warnings, errors and the audit summary still show.
+export npm_config_fund=false
+export npm_config_progress=false
+export npm_config_loglevel=warn
+
 # Always operate from the repository root (the parent of bin/).
 cd "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Announce a phase. Replaces `set -x` so the scripts read as a sequence of
+# labelled steps instead of a raw command trace. Goes to stderr (so it stays
+# clear of captured stdout) and only colours when writing to a terminal.
+step() {
+    if [ -t 2 ]; then
+        printf '\n\033[1;34m==> %s\033[0m\n' "$*" >&2
+    else
+        printf '\n==> %s\n' "$*" >&2
+    fi
+}
 
 # Run the pinned PHP version. Defined as a function (not an alias) so it is
 # also expanded in non-interactive scripts. Lets callers write `php artisan …`.
@@ -52,9 +69,10 @@ load_node() {
 setup_tooling() {
     # Composer: download the phar on first run, otherwise update it in place.
     if [ -f "$COMPOSER_PHAR" ]; then
+        step "Updating Composer"
         composer self-update --no-interaction
     else
-        echo "Installing Composer using PHP $PHP_VERSION..."
+        step "Installing Composer (PHP $PHP_VERSION)"
         php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
         php composer-setup.php
         php -r "unlink('composer-setup.php');"
@@ -63,15 +81,18 @@ setup_tooling() {
     # nvm: install the manager on first run. We manage shell init ourselves
     # (see setup_profile), so tell the installer to leave profile files alone.
     if [ ! -d "$NVM_DIR" ]; then
-        echo "Installing NVM..."
+        step "Installing nvm"
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | PROFILE=/dev/null bash
     fi
     # shellcheck disable=SC1091
     \. "$NVM_DIR/nvm.sh"
 
     # Node: install/refresh the latest patch of the pinned major (brings its
-    # bundled npm), then bump npm itself to the current release.
-    nvm install "$NODE_VERSION"
+    # bundled npm), then bump npm itself to the current release. --no-progress
+    # drops nvm's download progress bars; the routine "already installed" path
+    # stays near-silent.
+    step "Installing/updating Node $NODE_VERSION + npm"
+    nvm install "$NODE_VERSION" --no-progress
     nvm use "$NODE_VERSION" >/dev/null
     npm install -g npm
 }

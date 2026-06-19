@@ -6,20 +6,21 @@ set -e
 
 source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
 
-# print commands as they run
-set -x
-
 # puts StuFis in Maintenance Mode
+step "Enabling maintenance mode"
 php artisan down --with-secret
 
+step "Clearing compiled caches"
 php artisan clear-compiled
 php artisan optimize:clear
 
 # does backup of files + db
+step "Backing up files + database"
 php artisan backup:run --disable-notifications
 php artisan backup:clean --disable-notifications
 php artisan backup:list
 
+step "Fetching latest code"
 git fetch --tags --prune
 
 if [ -n "$1" ]; then
@@ -36,17 +37,20 @@ fi
 # install/update the toolchain (composer.phar + nvm/node/npm)
 setup_tooling
 
-# install dependencies
+step "Installing dependencies"
 composer install --no-dev --optimize-autoloader
 npm ci
 
-# update db
+step "Running database migrations"
 php artisan migrate --force
 
 # clear stale caches and warm the production caches
+step "Rebuilding caches"
 rebuild_caches
 
 # compile tailwind css after view cache
+step "Building frontend assets"
 npm run build
 
+step "Disabling maintenance mode"
 php artisan up
