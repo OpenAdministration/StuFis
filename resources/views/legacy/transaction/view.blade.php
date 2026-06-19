@@ -2,13 +2,13 @@
     <flux:heading level="1" size="xl">{{ __('konto.transaction.headline') }}</flux:heading>
     <flux:card class="mt-6">
         <dl class="grid grid-cols-1 sm:grid-cols-2">
-            <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
-                <dt class="text-sm/6 font-medium text-gray-900">{{ __('konto.new.name-headline') }}</dt>
-                <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2">{{$account->name}}</dd>
-            </div>
-            <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
+            <div class="border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0 ">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __('konto.transaction.id') }}</dt>
                 <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2">{{$account->short}}{{ $transaction->id }}</dd>
+            </div>
+            <div class="border-t sm:border-t-0 border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
+                <dt class="text-sm/6 font-medium text-gray-900">{{ __('konto.new.name-headline') }}</dt>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2">{{$account->name}}</dd>
             </div>
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __('konto.label.transaction.empf_name') }}</dt>
