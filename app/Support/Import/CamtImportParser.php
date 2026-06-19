@@ -6,12 +6,14 @@ namespace App\Support\Import;
 
 use Genkgo\Camt\Config;
 use Genkgo\Camt\DTO\Balance;
+use Genkgo\Camt\DTO\BankTransactionCode;
 use Genkgo\Camt\DTO\Creditor;
 use Genkgo\Camt\DTO\Debtor;
 use Genkgo\Camt\DTO\Entry;
 use Genkgo\Camt\DTO\EntryTransactionDetail;
 use Genkgo\Camt\DTO\IbanAccount;
 use Genkgo\Camt\DTO\RecordWithBalances;
+use Genkgo\Camt\DTO\RelatedAgent;
 use Genkgo\Camt\DTO\RelatedPartyTypeInterface;
 use Genkgo\Camt\DTO\UltimateCreditor;
 use Genkgo\Camt\DTO\UltimateDebtor;
@@ -19,7 +21,6 @@ use Genkgo\Camt\Reader;
 use Illuminate\Support\Collection;
 use Money\Currencies\ISOCurrencies;
 use Money\Formatter\DecimalMoneyFormatter;
-use Money\Money;
 
 /**
  * Parses an uploaded ISO 20022 CAMT statement (camt.052/053/054) into transaction rows
@@ -31,7 +32,7 @@ use Money\Money;
  */
 class CamtImportParser
 {
-    private DecimalMoneyFormatter $moneyFormatter;
+    private readonly DecimalMoneyFormatter $moneyFormatter;
 
     public function __construct()
     {
@@ -43,7 +44,7 @@ class CamtImportParser
      */
     public function parse(string $path): array
     {
-        $message = (new Reader(Config::getDefault()))->readFile($path);
+        $message = new Reader(Config::getDefault())->readFile($path);
 
         $rows = collect();
         $accountIban = null;
@@ -130,7 +131,7 @@ class CamtImportParser
             // Entry::getAmount() is already signed by genkgo (DBIT -> negative).
             'value' => $this->moneyFormatter->format($entry->getAmount()),
             'empf_name' => $party?->getName() ?? '',
-            'empf_iban' => $party !== null ? $this->ibanOf($detail, $isCredit) : '',
+            'empf_iban' => $party instanceof RelatedPartyTypeInterface ? $this->ibanOf($detail, $isCredit) : '',
             'empf_bic' => $this->bicOf($detail),
             // primanota is a numeric column in the DB; the CAMT account-servicer reference is
             // alphanumeric, so it has no home here and is intentionally left empty.
@@ -146,7 +147,7 @@ class CamtImportParser
 
     private function counterparty(?EntryTransactionDetail $detail, bool $isCredit): ?RelatedPartyTypeInterface
     {
-        if ($detail === null) {
+        if (! $detail instanceof EntryTransactionDetail) {
             return null;
         }
 
@@ -165,7 +166,7 @@ class CamtImportParser
 
     private function ibanOf(?EntryTransactionDetail $detail, bool $isCredit): string
     {
-        if ($detail === null) {
+        if (! $detail instanceof EntryTransactionDetail) {
             return '';
         }
 
@@ -183,13 +184,13 @@ class CamtImportParser
     {
         $agent = $detail?->getRelatedAgent();
 
-        return $agent !== null ? $agent->getRelatedAgentType()->getBIC() : '';
+        return $agent instanceof RelatedAgent ? $agent->getRelatedAgentType()->getBIC() : '';
     }
 
     private function bookingCode(Entry $entry): string
     {
         $code = $entry->getBankTransactionCode();
-        if ($code === null) {
+        if (! $code instanceof BankTransactionCode) {
             return '';
         }
 

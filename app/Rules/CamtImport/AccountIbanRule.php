@@ -43,6 +43,6 @@ class AccountIbanRule implements ValidationRule
 
     private function normalize(?string $iban): string
     {
-        return strtoupper(preg_replace('/\s+/', '', (string) $iban));
+        return strtoupper((string) preg_replace('/\s+/', '', (string) $iban));
     }
 }
