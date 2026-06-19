@@ -2,11 +2,14 @@
 
 namespace App\States\Project;
 
+use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\Project;
+use App\Models\LegalBasis;
 use App\Models\User;
 use App\Rules\ExactlyOneZeroMoneyRule;
 use App\Rules\FluxEditorRule;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Livewire\Wireable;
 use Spatie\ModelStates\Exceptions\InvalidConfig;
 use Spatie\ModelStates\State;
@@ -132,15 +135,15 @@ abstract class ProjectState extends State implements Wireable
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => 'sometimes|integer|exists:App\Models\Legacy\LegacyBudgetItem,id',
+            'posts.*.titel_id' => ['sometimes', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
         ];
     }
 
     public function approvalRules(): array
     {
         return [
-            'recht' => 'sometimes|nullable|string|exists:App\Models\LegalBasis,slug',
-            'recht-additional' => 'sometimes|nullable|string',
+            'recht' => ['sometimes', 'nullable', 'string', Rule::exists(LegalBasis::class, 'slug')],
+            'recht_additional' => 'sometimes|nullable|string',
         ];
     }
 
