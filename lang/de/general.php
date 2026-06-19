@@ -12,6 +12,7 @@ return [
         'changelog' => 'Änderungshistorie',
         'konto' => [
             'index' => 'Konto bzw. Kasse',
+            'transaction' => 'Umsatzdetails',
             'new' => 'Neu anlegen',
             'import-csv' => 'CSV-Import',
             'credentials' => 'Bankimport',
