@@ -626,6 +626,16 @@ class BookingHandler extends Renderer
             $instructedAuslagen = [0];
         }
 
+        // A Beleg belongs to the selected budget plan when its owning project was
+        // created within the plan's date range. createdat is a DATETIME but bis is a
+        // DATE (midnight), so extend the upper bound to the end of that day to keep it
+        // inclusive. An empty bis marks the still-open latest plan (lower bound only).
+        if (! isset($endDate) || empty($endDate)) {
+            $auslagenWhere = ['projekte.createdat' => ['>=', $startDate]];
+        } else {
+            $auslagenWhere = ['projekte.createdat' => ['BETWEEN', [$startDate, $endDate.' 23:59:59']]];
+        }
+
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             'auslagen',
             [DBConnector::FETCH_ASSOC],
@@ -635,10 +645,10 @@ class BookingHandler extends Renderer
                 'ausgaben' => ['beleg_posten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
                 'einnahmen' => ['beleg_posten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
             ],
-            [
+            array_merge([
                 'auslagen.id' => ['NOT IN', $instructedAuslagen],
                 'auslagen.state' => ['LIKE', 'instructed%'],
-            ],
+            ], $auslagenWhere),
             [
                 ['type' => 'inner', 'table' => 'projekte', 'on' => ['projekte.id', 'auslagen.projekt_id']],
                 ['type' => 'inner', 'table' => 'belege', 'on' => ['belege.auslagen_id', 'auslagen.id']],
