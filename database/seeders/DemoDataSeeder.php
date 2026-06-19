@@ -20,20 +20,32 @@ class DemoDataSeeder extends Seeder
             throw new \InvalidArgumentException('Realm is not demo but we are in production, aborting for your safety');
         }
 
-        $sqlContent = str(Storage::disk('demo')->get('stufis-demo-data.sql'));
         $today = Carbon::today();
-        $biggerYear = $today->year - 1;
-        $smallerYear = $biggerYear - 1;
 
-        $sqlContent = $sqlContent
-            ->replace('2024', $biggerYear)
-            ->replace('2023', $smallerYear);
+        // The demo data holds two fiscal years (April–March) that span three calendar
+        // years (2023–2025): the closed budget plan 2023-04-01..2024-03-31 and the open
+        // plan 2024-04-01..NULL. Fiscal years are anchored on April, so before April we
+        // still belong to the previous one. We pick a whole-year shift so the open plan
+        // (von 2024-04-01) contains today, then apply it uniformly to every year.
+        $targetOpenYear = $today->month < 4 ? $today->year - 1 : $today->year;
+        $delta = $targetOpenYear - 2024;
 
-        $sqlContent = $sqlContent->replace('demo__', DB::getTablePrefix());
+        // Single-pass shift of the known data years only. The digit-boundary guards keep
+        // us from touching years embedded in longer numbers (amounts, IBANs, refs), and a
+        // single pass avoids the cascade where a replaced year is matched again.
+        $sqlContent = str(Storage::disk('demo')->get('stufis-demo-data.sql'))
+            ->replaceMatches(
+                '/(?<!\d)(2023|2024|2025)(?!\d)/',
+                fn (array $matches): string => (string) ((int) $matches[1] + $delta),
+            )
+            ->replace('demo__', DB::getTablePrefix());
 
         DB::unprepared($sqlContent);
 
-        Storage::delete('auslagen');
+        // deleteDirectory (not delete, which only removes files) so a re-seed wipes the
+        // whole tree — including runtime-generated PDFs (belege-pdf-v*, zahlungsanweisung-v*)
+        // and avoids cp nesting the demo copy inside a surviving auslagen/ directory.
+        Storage::deleteDirectory('auslagen');
         Process::run(['cp', '-r', storage_path('demo/auslagen'), storage_path('app/')]);
     }
 }
