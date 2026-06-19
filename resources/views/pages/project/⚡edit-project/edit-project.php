@@ -289,12 +289,22 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 ->whereNotIn('id', $readOnlyPosts)->delete();
 
             foreach ($newAttachments as $attachment) {
-                $attachment->store('projects/'.$project->id);
+                // Read metadata BEFORE store(): when the default disk equals the
+                // Livewire temp-upload disk (both "local" in production), store()
+                // *moves* the temp file away, after which getSize()/getMimeType()
+                // throw "Unable to retrieve metadata" on the gone livewire-tmp file.
+                // (Masked in tests by Livewire's runningUnitTests meta-file shim.)
+                $name = $attachment->getClientOriginalName();
+                $mimeType = $attachment->getMimeType();
+                $size = $attachment->getSize();
+
+                $path = $attachment->store('projects/'.$project->id);
+
                 $project->attachments()->create([
-                    'path' => "projects/$project->id/{$attachment->hashName()}",
-                    'name' => $attachment->getClientOriginalName(),
-                    'mime_type' => $attachment->getMimeType(),
-                    'size' => $attachment->getSize(),
+                    'path' => $path,
+                    'name' => $name,
+                    'mime_type' => $mimeType,
+                    'size' => $size,
                 ]);
             }
 
