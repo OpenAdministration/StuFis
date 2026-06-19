@@ -37,7 +37,12 @@
 
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __( 'konto.label.transaction.value' )}}</dt>
-                <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2">{{ money_format($transaction->value) }}</dd>
+                <dd @class([
+                    'mt-1 text-sm/6 sm:mt-2',
+                    'text-green-600' => $transaction->value > 0,
+                    'text-red-600' => $transaction->value < 0,
+                    'text-gray-700' => $transaction->value == 0,
+                ])>{{ money_format($transaction->value) }}</dd>
             </div>
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-1 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __( 'konto.label.transaction.saldo' )}}</dt>
@@ -45,13 +50,13 @@
             </div>
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-2 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __( 'konto.label.transaction.zweck' )}}</dt>
-                <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2">{{ $transaction->zweck }}</dd>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:mt-2"><x-linkify>{{ $transaction->zweck }}</x-linkify></dd>
             </div>
             <div class="border-t border-gray-100 px-4 py-6 sm:col-span-2 sm:px-0">
                 <dt class="text-sm/6 font-medium text-gray-900">{{ __( 'konto.transaction.bookings' )}}</dt>
                 <dd class="mt-2 text-sm text-gray-700">
                     @if($bookings->isEmpty())
-                        {{ __( 'konto.transaction.bookings.empty' )}}
+                        <span class="text-gray-400 italic">{{ __( 'konto.transaction.bookings.empty' )}}</span>
                     @else
                         <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
                             @foreach($bookings as $booking)

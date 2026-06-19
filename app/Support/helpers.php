@@ -56,7 +56,7 @@ function utf8Content(UploadedFile $file): string
 
 function money_format(float|int|string $value): string
 {
-    return number_format($value, 2, ',', '.').'€';
+    return number_format($value, 2, ',', '.')."\u{00A0}€";
 }
 
 function markdownToHtml($markdown): RenderedContentInterface
