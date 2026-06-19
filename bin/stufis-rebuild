@@ -9,16 +9,17 @@ set -e
 source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
 load_node
 
-# print commands as they run
-set -x
-
 # puts StuFiS in Maintenance Mode
+step "Enabling maintenance mode"
 php artisan down --with-secret
 
 # clear stale caches and warm the production caches
+step "Rebuilding caches"
 rebuild_caches
 
 # rebuild the frontend assets (tailwind/vite)
+step "Building frontend assets"
 npm run build
 
+step "Disabling maintenance mode"
 php artisan up

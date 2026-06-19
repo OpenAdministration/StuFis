@@ -11,10 +11,13 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
 setup_tooling
 
 # write nvm autoload + aliases to ~/.bash_profile for interactive logins
+step "Writing shell profile"
 setup_profile
 
 # install project dependencies
-echo "Installing project dependencies..."
+step "Installing project dependencies"
 composer install --no-dev --optimize-autoloader
 npm ci
+
+step "Building frontend assets"
 npm run build
