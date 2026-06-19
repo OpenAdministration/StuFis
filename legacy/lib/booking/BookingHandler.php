@@ -489,7 +489,6 @@ class BookingHandler extends Renderer
                 <th>Valuta</th>
                 <th>Empfänger</th>
                 <th class="visible-md visible-lg">Verwendungszweck</th>
-                <th class="visible-md visible-lg">IBAN</th>
                 <th class="money">Betrag</th>
                 <th class="money">Saldo</th>
             </tr>
@@ -500,18 +499,18 @@ class BookingHandler extends Renderer
                 $vzweck = explode('DATUM', $zahlung['zweck'])[0];
                 if (empty($vzweck)) {
                     $vzweck = $zahlung['type'];
-                } ?>
+                }
+                $valueClass = $zahlung['value'] < 0 ? ' text-danger' : ($zahlung['value'] > 0 ? ' text-success' : ''); ?>
                 <tr title="<?php echo htmlspecialchars(
                     $zahlung['type'].' - IBAN: '.$zahlung['empf_iban'].' - BIC: '.$zahlung['empf_bic'].PHP_EOL.$zahlung['zweck']
                 ); ?>">
-                    <td><?php echo generateLinkFromRoute($prefix.$zahlung['id'],
+                    <td class="text-nowrap"><?php echo generateLinkFromRoute($prefix.$zahlung['id'],
                         route('bank-account.transaction', ['account_id' => $zahlung['konto_id'], 'transaction_id' => $zahlung['id']])); ?></td>
                     <!-- muss valuta sein - aber nacht Datum wird gefiltert. Das ist so richtig :D -->
-                    <td><?php echo htmlspecialchars($zahlung['valuta']); ?></td>
+                    <td class="text-nowrap"><?php echo $zahlung['valuta'] ? date_create($zahlung['valuta'])->format('d.m.y') : ''; ?></td>
                     <td><?php echo htmlspecialchars($zahlung['empf_name']); ?></td>
                     <td class="visible-md visible-lg"><?php echo $this->makeProjektsClickable($vzweck); ?></td>
-                    <td class="visible-md visible-lg"><?php echo htmlspecialchars(iban_to_human_format($zahlung['empf_iban'])); ?></td>
-                    <td class="money">
+                    <td class="money<?php echo $valueClass; ?>">
                         <?php echo DBConnector::getInstance()->convertDBValueToUserValue($zahlung['value'], 'money'); ?>
                     </td>
                     <td class="money">
