@@ -1,0 +1,10 @@
+#!/bin/bash
+### Put StuFiS into maintenance mode, printing a secret bypass URL.
+# Extra `artisan down` options (e.g. --retry=60, --refresh) are forwarded.
+# Re-exec under bash if started via `sh stufis-down`.
+[ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
+set -e
+
+source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
+
+php artisan down --with-secret "$@"
