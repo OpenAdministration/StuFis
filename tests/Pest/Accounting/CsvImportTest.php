@@ -31,19 +31,19 @@ function mapSemicolonFixture($wire, bool $withSaldo = true)
 }
 
 test('csv import is accessible as cash officer', function (): void {
-    Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import')
+    Livewire::actingAs(cashOfficer())->test('pages::bank.manual-import')
         ->assertSuccessful();
 });
 
 test('csv import is accessible as finance member', function (): void {
     // Access is granted to the whole ref-finanzen (finance) group, which
     // includes the budget officer (see da09b8dc).
-    Livewire::actingAs(budgetManager())->test('pages::bank.csv-import')
+    Livewire::actingAs(budgetManager())->test('pages::bank.manual-import')
         ->assertSuccessful();
 });
 
 test('csv import is not accessible as normal user', function (): void {
-    Livewire::actingAs(user())->test('pages::bank.csv-import')
+    Livewire::actingAs(user())->test('pages::bank.manual-import')
         ->assertForbidden();
 });
 
@@ -55,7 +55,7 @@ test('show last transactions', function (): void {
             $lastTransactions[$account->id] = $tmp;
         }
     });
-    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import');
+    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.manual-import');
     foreach ($lastTransactions as $transaction) {
         // Log::debug($transaction->date);
         $wire->set('account_id', $transaction->konto_id)
@@ -73,7 +73,7 @@ test('account has no transactions view', function (): void {
             $noTransactions[$account->id] = $account->id;
         }
     });
-    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import');
+    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.manual-import');
     foreach ($noTransactions as $id) {
         $wire->set('account_id', $id)
             ->assertSee(__('konto.csv-no-transaction'));
@@ -81,7 +81,7 @@ test('account has no transactions view', function (): void {
 });
 
 test('csv upload visibility', function (): void {
-    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import');
+    $wire = Livewire::actingAs(cashOfficer())->test('pages::bank.manual-import');
     $accountIds = BankAccount::all()->pluck('id')->toArray();
     foreach ($accountIds as $accountId) {
         $wire->set('account_id', $accountId)
@@ -98,9 +98,9 @@ test('parse csv utf8 encoding', function ($header, $data): void {
 
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id) // an account without transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         // check if file is correctly parsed
         ->assertSet('header', $header)
         ->assertSet('data', collect($data));
@@ -111,9 +111,9 @@ test('parse csv win encoding', function ($header, $data): void {
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id) // an account without transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->assertSet('header', $header)
         ->assertSet('data', collect($data));
 })->with('csv imports');
@@ -122,14 +122,14 @@ test('views showing properly', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     $lw = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->assertSee(__('konto.manual-headline'))
         ->assertSee(__('konto.manual-headline-sub'))
         ->assertSee(__('konto.csv-label-choose-konto'))
         ->assertSee(__('konto.csv-upload-headline'))
         ->assertSee(__('konto.csv-upload-headline-sub'))
         ->assertDontSee(__('konto.transaction.headline'))
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->assertSee(__('konto.manual-headline'))
         ->assertSee(__('konto.manual-headline-sub'))
         ->assertSee(__('konto.manual-button-reverse-csv-order'))
@@ -150,9 +150,9 @@ test('csv upload some fields are required', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', 2) // an account with some transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->call('save')
         ->assertHasErrors([
             'mapping.date',
@@ -170,9 +170,9 @@ test('csv upload with wrong date check (order and start)', function (): void {
 
     // input the column numbers to pick
     $lw = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', 2) // an account with some transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->set('mapping.date', 4)
         ->set('mapping.valuta', 5);
     // dump("setter done");
@@ -188,9 +188,9 @@ test('csv upload with wrong saldo check (order and start)', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', 2) // an account with some transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->set('mapping.date', 4)
         ->set('mapping.valuta', 5)
         // ->set('mapping.empf_name', 6)
@@ -208,12 +208,12 @@ test('wrong file extension is not accepted', function (): void {
     $pdf = testFile('empty.pdf');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', 2) // an account with some transactions
-        ->set('csv', $image)
-        ->assertHasErrors(['csv'])
-        ->set('csv', $pdf)
-        ->assertHasErrors(['csv']);
+        ->set('upload', $image)
+        ->assertHasErrors(['upload'])
+        ->set('upload', $pdf)
+        ->assertHasErrors(['upload']);
 });
 
 test('wrong mime type is not accepted', function (): void {
@@ -221,12 +221,12 @@ test('wrong mime type is not accepted', function (): void {
     $pdf_csv = testFile('empty.pdf', 'empty-pdf.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', 2) // an account with some transactions
-        ->set('csv', $image_csv)
-        ->assertHasErrors(['csv'])
-        ->set('csv', $pdf_csv)
-        ->assertHasErrors(['csv']);
+        ->set('upload', $image_csv)
+        ->assertHasErrors(['upload'])
+        ->set('upload', $pdf_csv)
+        ->assertHasErrors(['upload']);
 })->todo('works in web, but not in test');
 
 test('if csv import is saved', function (): void {
@@ -238,9 +238,9 @@ test('if csv import is saved', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id) // an account without transactions
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->set('mapping.date', 4)
         ->set('mapping.valuta', 5)
         ->set('mapping.empf_name', 6)
@@ -276,7 +276,7 @@ test('if mapping was saved and loaded', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id) // the account with the saved transactions
         ->assertSetStrict('mapping.date', 4)
         ->assertSetStrict('mapping.valuta', 5)
@@ -298,9 +298,9 @@ test('csv upload with correct saldo check', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id) // an account with the saved transactions from above
-        ->set('csv', $csvFile)
+        ->set('upload', $csvFile)
         ->call('save')
         ->assertHasErrors(['mapping.saldo']);
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
@@ -310,8 +310,8 @@ test('csv upload with correct saldo check', function (): void {
 test('csv import account loads with the correct order', function (): void {
     $csvFile = testFile('csv-import/test-correct-semicolon.csv');
 
-    Livewire::actingAs(cashOfficer())->test('pages::bank.csv-import')
-        ->set('csv', $csvFile)
+    Livewire::actingAs(cashOfficer())->test('pages::bank.manual-import')
+        ->set('upload', $csvFile)
         ->assertSet('data.0', 1);
 
 })->todo();
@@ -332,10 +332,10 @@ test('large csv with umlaut beyond the finfo sample window still parses', functi
     $csvFile = File::createWithContent('statement.csv', $content);
 
     $lw = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', $csvFile)
-        ->assertHasNoErrors(['csv'])
+        ->set('upload', $csvFile)
+        ->assertHasNoErrors(['upload'])
         ->assertSet('header', ['date', 'valuta', 'empf', 'zweck', 'value', 'saldo']);
 
     // the umlaut must be converted to UTF-8, not dropped or turned into mojibake
@@ -346,9 +346,9 @@ test('saldo is auto-calculated from 0 when not mapped on an empty account', func
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire, withSaldo: false)
         ->call('reverseCsvOrder') // bank exports newest-first; we want oldest-first
         ->call('save')
@@ -365,9 +365,9 @@ test('saldo auto-calculation is seeded from the last existing transaction', func
     BankTransaction::factory()->create(['konto_id' => $acc->id, 'id' => 1, 'value' => '0.00', 'saldo' => '100.00']);
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire, withSaldo: false)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -386,9 +386,9 @@ test('a continuation import with matching saldo succeeds and appends transaction
     BankTransaction::factory()->create(['konto_id' => $acc->id, 'id' => 1, 'value' => '0.00', 'saldo' => '18102.77']);
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -405,10 +405,10 @@ test('comma-separated csv is detected and parsed', function (): void {
         ."04.06.2024,Person 2,DE79181333728582849451,5.00,18094.63\n";
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('comma.csv', $content))
-        ->assertHasNoErrors(['csv'])
+        ->set('upload', File::createWithContent('comma.csv', $content))
+        ->assertHasNoErrors(['upload'])
         ->assertSet('separator', ',')
         ->assertSet('header', ['date', 'empf', 'iban', 'value', 'saldo']);
     expect($wire->get('data'))->toHaveCount(2);
@@ -421,9 +421,9 @@ test('invalid iban in the mapped column is rejected', function (): void {
         ."04.06.2024;Person 2;DE79181333728582849451;5,00\n";
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('bad-iban.csv', $content))
+        ->set('upload', File::createWithContent('bad-iban.csv', $content))
         ->set('mapping.empf_iban', 2)
         ->assertHasErrors(['mapping.empf_iban']);
 });
@@ -435,9 +435,9 @@ test('non-numeric value in the mapped value column is rejected', function (): vo
         ."04.06.2024;Person 2;not-a-number\n";
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('bad-value.csv', $content))
+        ->set('upload', File::createWithContent('bad-value.csv', $content))
         ->set('mapping.value', 2)
         ->assertHasErrors(['mapping.value']);
 });
@@ -445,9 +445,9 @@ test('non-numeric value in the mapped value column is rejected', function (): vo
 test('umlauts are preserved into the database (utf-8 source)', function (): void {
     $acc = BankAccount::factory()->create();
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire, withSaldo: false)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -459,9 +459,9 @@ test('umlauts are preserved into the database (utf-8 source)', function (): void
 test('umlauts are preserved into the database (windows-1252 source)', function (): void {
     $acc = BankAccount::factory()->create();
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon-win-enc.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon-win-enc.csv'));
     mapSemicolonFixture($wire, withSaldo: false)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -479,10 +479,10 @@ test('blank and separator-only lines are ignored', function (): void {
         ."04.06.2024;Person 2;5,00\n";
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('blanks.csv', $content))
-        ->assertHasNoErrors(['csv']);
+        ->set('upload', File::createWithContent('blanks.csv', $content))
+        ->assertHasNoErrors(['upload']);
     expect($wire->get('data'))->toHaveCount(2);
 });
 
@@ -490,11 +490,11 @@ test('a header-only csv parses without rows and without error', function (): voi
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('header-only.csv', "date;empf;value\n"))
+        ->set('upload', File::createWithContent('header-only.csv', "date;empf;value\n"))
         ->assertSuccessful()
-        ->assertHasNoErrors(['csv'])
+        ->assertHasNoErrors(['upload'])
         ->assertSet('header', ['date', 'empf', 'value']);
     expect($wire->get('data'))->toHaveCount(0);
 });
@@ -503,9 +503,9 @@ test('an empty csv does not crash the component', function (): void {
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('empty.csv', ''))
+        ->set('upload', File::createWithContent('empty.csv', ''))
         ->assertSuccessful();
     expect($wire->get('data'))->toHaveCount(0);
 });
@@ -518,9 +518,9 @@ test('a successful import redirects to the imported account view', function (): 
     $hhp = LegacyBudgetPlan::latest()?->id;
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -532,9 +532,9 @@ test('a successful import flashes a success message', function (): void {
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     mapSemicolonFixture($wire)
         ->call('reverseCsvOrder')
         ->call('save')
@@ -570,9 +570,9 @@ test('a row whose auslage cannot be auto-marked paid still imports and warns', f
         ."AStA - Basiskonto;DE12429644757213399722;NKZUVJYQ0P5;Meine Bank;05.06.2024;05.06.2024;Hostsharing;DE02500105170137075030;MWFYLYEL;GUTSCHR. UEBERWEISUNG;{$ref2} - Dezember - Hosting;80;EUR;;;Sonstiges;;;\n";
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('empty-saldo.csv', $content));
+        ->set('upload', File::createWithContent('empty-saldo.csv', $content));
 
     // columns: 4=date 5=valuta 6=name 7=iban 9=type 10=zweck 11=value; saldo (13) is empty → unmapped
     $wire->set('mapping.date', 4)
@@ -615,9 +615,9 @@ test('a referenced auslage in "instructed" is auto-marked paid and the import su
         ."AStA;05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;IP-24-{$project->id}-A{$expense->id} Erstattung;70\n";
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('payed.csv', $content))
+        ->set('upload', File::createWithContent('payed.csv', $content))
         ->set('mapping.date', 1)
         ->set('mapping.valuta', 2)
         ->set('mapping.empf_name', 3)
@@ -652,9 +652,9 @@ test('a referenced auslage still in "ok" is auto-promoted to instructed and mark
         ."AStA;05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;IP-24-{$project->id}-A{$expense->id} Erstattung;70\n";
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('ok-payed.csv', $content))
+        ->set('upload', File::createWithContent('ok-payed.csv', $content))
         ->set('mapping.date', 1)
         ->set('mapping.valuta', 2)
         ->set('mapping.empf_name', 3)
@@ -684,9 +684,9 @@ test('a field mapped to CSV column index 0 is imported', function (): void {
         ."05.06.2024;05.06.2024;ACME GmbH;DE02500105170137075030;GUTSCHR;Erstattung;70\n";
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('col-zero.csv', $content))
+        ->set('upload', File::createWithContent('col-zero.csv', $content))
         ->set('mapping.date', 0)
         ->set('mapping.valuta', 1)
         ->set('mapping.empf_name', 2)
@@ -706,9 +706,9 @@ test('reverseCsvOrder flips the parsed data order', function (): void {
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
 
     // fresh upload keeps the file's own order: newest first (Entry 5, Zweck at index 10)
     expect($wire->get('data')->first()[10])->toBe('Entry 5');
@@ -724,10 +724,10 @@ test('a utf-8 BOM does not break parsing', function (): void {
         ."04.06.2024;Person 2;5,00\n";
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('bom.csv', $content))
-        ->assertHasNoErrors(['csv']);
+        ->set('upload', File::createWithContent('bom.csv', $content))
+        ->assertHasNoErrors(['upload']);
     expect($wire->get('data'))->toHaveCount(2);
 });
 
@@ -743,27 +743,27 @@ test('preview does not crash when a date field is mapped to a non-date column', 
     // throws InvalidFormatException; the preview must degrade to the raw value
     // instead of bubbling a 500 (regression: it used to hard-crash the render).
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', File::createWithContent('statement.csv', $content))
+        ->set('upload', File::createWithContent('statement.csv', $content))
         ->set('mapping.date', 2)
         ->assertSuccessful()
         ->assertSee('DE12429644757213399722');
 });
 
-// 11) clearCsv() must wipe the upload and all derived state so the user can re-upload.
+// 11) clearUpload() must wipe the upload and all derived state so the user can re-upload.
 
-test('clearCsv resets the uploaded file and parsed data', function (): void {
+test('clearUpload resets the uploaded file and parsed data', function (): void {
     $acc = BankAccount::factory()->create();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     expect($wire->get('data'))->toHaveCount(5);
 
-    $wire->call('clearCsv')
-        ->assertSet('csv', null)
+    $wire->call('clearUpload')
+        ->assertSet('upload', null)
         ->assertSet('header', null); // reset() restores the declared default (null)
     expect($wire->get('data'))->toHaveCount(0);
 });
@@ -775,9 +775,9 @@ test('preview formats decimal and iban values', function (): void {
     $acc = BankAccount::factory()->create();
 
     Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $acc->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'))
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'))
         ->set('mapping.value', 11)
         ->set('mapping.empf_iban', 7)
         ->assertSee('420,99 €')                       // first (newest) row value, decimal-formatted
@@ -795,9 +795,9 @@ test('switching account reverses data when the saved order differs', function ()
     $accReversed->save();
 
     $wire = Livewire::actingAs(cashOfficer())
-        ->test('pages::bank.csv-import')
+        ->test('pages::bank.manual-import')
         ->set('account_id', $accNormal->id)
-        ->set('csv', testFile('csv-import/test-correct-semicolon.csv'));
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'));
     expect($wire->get('data')->first()[10])->toBe('Entry 5');       // file order, newest first
 
     $wire->set('account_id', $accReversed->id);

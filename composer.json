@@ -17,6 +17,7 @@
         "cweagans/composer-patches": "^1.7",
         "defuse/php-encryption": "^2.4",
         "diglactic/laravel-breadcrumbs": "^10.0",
+        "genkgo/camt": "^2.10",
         "globalcitizen/php-iban": "^4.2",
         "graham-campbell/markdown": "^16.0",
         "guzzlehttp/guzzle": "^7.9",

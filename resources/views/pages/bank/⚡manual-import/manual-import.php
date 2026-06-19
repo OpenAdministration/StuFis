@@ -4,31 +4,54 @@ use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\User;
+use App\Rules\CamtImport\AccountIbanRule;
+use App\Rules\CamtImport\BalanceConsistencyRule;
+use App\Rules\CamtImport\ContinuityRule;
 use App\Rules\CsvTransactionImport\BalanceColumnRule;
 use App\Rules\CsvTransactionImport\DateColumnRule;
 use App\Rules\CsvTransactionImport\IbanColumnRule;
 use App\Rules\CsvTransactionImport\MoneyColumnRule;
+use App\Support\Import\CamtImportParser;
+use App\Support\Import\CsvImportParser;
 use Carbon\Exceptions\InvalidFormatException;
 use forms\projekte\auslagen\AuslagenHandler2;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
-use Spatie\Regex\Regex;
 
 new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 {
     use WithFileUploads;
 
     /**
-     * @var TemporaryUploadedFile the content of the csv file
+     * @var TemporaryUploadedFile the uploaded statement file (CSV or CAMT XML)
      */
-    public $csv;
+    public $upload;
+
+    /**
+     * @var string detected upload format: 'csv' or 'camt'
+     */
+    public string $format = 'csv';
+
+    /**
+     * @var string|null IBAN the CAMT statement belongs to, for the account sanity check
+     */
+    public $statementIban = null;
+
+    /**
+     * @var string|null opening balance reported by a CAMT statement, for the end-to-end check
+     */
+    public $openingBalance = null;
+
+    /**
+     * @var string|null closing balance reported by a CAMT statement, for the end-to-end check
+     */
+    public $closingBalance = null;
 
     /**
      * @var string which separator to use to parse the csv file
@@ -77,11 +100,29 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         $latestTransaction = BankTransaction::where('konto_id', $this->account_id)->orderBy('id', 'desc')->first();
 
+        // CAMT is self-describing: there is no user column mapping to validate. The data is
+        // already normalized by the parser, so we validate the produced rows directly and add
+        // a statement-balance cross-check unique to CAMT (the file carries the closing balance,
+        // but no per-entry running saldo — that is still computed in save()).
+        if ($this->format === 'camt') {
+            return [
+                'upload' => [
+                    'required', 'file', 'extensions:xml', 'mimes:xml,application/xml,text/xml',
+                    new AccountIbanRule(BankAccount::find($this->account_id)?->iban, $this->statementIban),
+                    new DateColumnRule($this->data->pluck('date')),
+                    new MoneyColumnRule($this->data->pluck('value')),
+                    new IbanColumnRule($this->data->pluck('empf_iban')),
+                    new BalanceConsistencyRule($this->data->pluck('value'), $this->openingBalance, $this->closingBalance),
+                    new ContinuityRule($latestTransaction?->saldo, $this->openingBalance),
+                ],
+            ];
+        }
+
         $saldoMapped = filled($this->mapping->get('saldo'));
         $valueMapped = filled($this->mapping->get('value'));
 
         return [
-            'csv' => 'required|file|extensions:csv|mimes:csv,txt',
+            'upload' => 'required|file|extensions:csv|mimes:csv,txt',
             'mapping.date' => [
                 'bail', 'required', 'int',
                 ...$this->whenMapped('date', fn ($col) => new DateColumnRule($col)),
@@ -131,53 +172,15 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         try {
             // Read the upload straight from Livewire's temporary file. We must NOT call
-            // $this->csv->store() first: when the default disk equals the Livewire
+            // $this->upload->store() first: when the default disk equals the Livewire
             // temp-upload disk (both "local" here), store() *moves* the temp file away,
             // so the very next read would fail with "No such file or directory" and get
             // swallowed into konto.csv-parse-error. Nothing reads the stored copy back
             // anyway, so persisting it only littered storage/app with orphaned uploads.
-            $content = utf8Content($this->csv);
-            // explode content in lines
-            $content = str($content);
-            $lines = $content->explode(PHP_EOL);
-
-            // guess csv separator
-            $amountComma = $content->substrCount(',');
-            $amountSemicolon = $content->substrCount(';');
-            $this->separator = $amountSemicolon > $amountComma ? ';' : ',';
-
-            // extract header and data, explode data with csv separator guesses above
-            $this->header = str_getcsv((string) $lines->first(), $this->separator, escape: '\\');
-            $this->data = $lines->except(0)
-                // reject fully empty lines and lines with only separators inside
-                ->reject(fn ($line): bool => empty($line) || Regex::match('/^(,*|;*)\r?\n?$/', $line)->hasMatch())
-                // transform csv lines to array
-                ->map(fn ($line) => str_getcsv((string) $line, $this->separator, escape: ''))
-                ->map(function ($lineArray) {
-                    // normalize data
-                    foreach ($lineArray as $key => $cell) {
-                        // tests
-                        $moneyTest = Regex::match('/^(\-?)(\d+)([,\.](\d{1,2}))?$/', $cell);
-                        $dateTest = Regex::match('/^([0-3]?\d)\.([01]?\d)\.((20)?\d{2})$/', $cell);
-                        // conversions
-                        if ($moneyTest->hasMatch()) {
-                            // normalize money
-                            $g = $moneyTest->groups();
-                            $lineArray[$key] = $g[1] // sign
-                                .Str::padRight($g[2] ?? '', 1, '0') //  money before delimiter (at least 1 digit)
-                                .'.' // delimiter (3rd group, with the rest together)
-                                .Str::padRight($g[4] ?? '', 2, '0'); // cents after delimiter (at least 2 digits)
-                        } elseif ($dateTest->hasMatch()) {
-                            // normalize dates
-                            $g = $dateTest->groups();
-                            $lineArray[$key] = Str::padLeft($g[3], 4, '20') // year
-                                .'-'.Str::padLeft($g[2], 2, '0')
-                                .'-'.Str::padLeft($g[1], 2, '0');
-                        }
-                    }
-
-                    return $lineArray;
-                });
+            $result = (new CsvImportParser)->parse(utf8Content($this->upload));
+            $this->separator = $result['separator'];
+            $this->header = $result['header'];
+            $this->data = $result['data'];
 
             if ($this->csvOrderReversed) {
                 $this->data = $this->data->reverse();
@@ -185,14 +188,50 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         } catch (Throwable) {
             $this->data = collect();
             $this->header = [];
-            $this->addError('csv', __('konto.csv-parse-error'));
+            $this->addError('upload', __('konto.csv-parse-error'));
         }
     }
 
-    public function updatedCsv(): void
+    private function parseCamt(): void
     {
-        $this->validateOnly('csv');
-        if (in_array($this->csv->getMimeType(), ['text/csv', 'text/plain'])) {
+        try {
+            $result = (new CamtImportParser)->parse($this->upload->getRealPath());
+            $this->data = $result['rows'];
+            $this->statementIban = $result['accountIban'];
+            $this->openingBalance = $result['openingBalance'];
+            $this->closingBalance = $result['closingBalance'];
+            // CAMT needs no column-mapping UI: the rows are keyed by DB column already.
+            $this->header = [];
+            $this->mapping = $this->camtMapping();
+        } catch (Throwable) {
+            $this->data = collect();
+            $this->header = [];
+            $this->statementIban = null;
+            $this->openingBalance = null;
+            $this->closingBalance = null;
+            $this->addError('upload', __('konto.camt-parse-error'));
+        }
+    }
+
+    public function updatedUpload(): void
+    {
+        // Detect the format from the file content so the file rule (csv vs xml) and the parse
+        // branch agree.
+        $this->format = (new CamtImportParser)->isCamt($this->upload->getRealPath()) ? 'camt' : 'csv';
+
+        if ($this->format === 'camt') {
+            // Parse first: the CAMT 'upload' rule validates the produced rows (dates, balance),
+            // so validation must run against the parsed data, not the still-empty default.
+            $this->parseCamt();
+            if ($this->data->isNotEmpty()) {
+                $this->validateOnly('upload');
+            }
+
+            return;
+        }
+
+        $this->validateOnly('upload');
+        if (in_array($this->upload->getMimeType(), ['text/csv', 'text/plain'])) {
             $this->parseCSV();
             // Run validation against mapping presets only after a successful parse.
             // Keeping this outside parseCSV()'s try-catch ensures ValidationException
@@ -209,20 +248,29 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function save()
     {
         $this->validate();
-        // mapping als vorlage speichern
         $account = BankAccount::findOrFail($this->account_id);
-        $account->csv_import_settings = [
-            'csv_import_mapping' => $this->mapping,
-            'csv_order_reversed' => $this->csvOrderReversed,
-        ];
-        $account->save();
+        // Persist the column mapping as a template — CSV only. The CAMT mapping is a fixed
+        // identity mapping, not something the user tuned, so it must not overwrite the
+        // account's saved CSV import settings.
+        if ($this->format !== 'camt') {
+            $account->csv_import_settings = [
+                'csv_import_mapping' => $this->mapping,
+                'csv_order_reversed' => $this->csvOrderReversed,
+            ];
+            $account->save();
+        }
         $last_id = BankTransaction::where('konto_id', $this->account_id)
             ->orderBy('id', 'desc')->limit(1)->first('id')->id ?? 1;
 
         // In case no saldo is given in CSV, we need to calculate it row by row ourselves
         // first Saldo should be sourced from last entry in DB, if there is no entry, we assume 0
         // we decided to set saldo to 0 if it is the first entry in the DB - alternative would have been to throw an error
-        $currentBalance = $account->bankTransactions()->orderBy('id', 'desc')->first()?->saldo ?? 0;
+        // For CAMT we anchor the running saldo to the statement's opening balance so the stored
+        // saldo matches the bank's real figures (it ends exactly on the closing balance). The
+        // ContinuityRule has already verified this equals the last stored saldo when one exists.
+        $currentBalance = ($this->format === 'camt' && $this->openingBalance !== null)
+            ? $this->openingBalance
+            : ($account->bankTransactions()->orderBy('id', 'desc')->first()?->saldo ?? 0);
 
         // References whose Auslage could not be auto-marked "paid". hookZahlung() is a
         // best-effort side effect (it reaches into legacy code that can fail for unrelated
@@ -267,7 +315,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             // Log the swallowed cause: the user only sees a generic message, so without
             // this the import would fail silently with no trace for ops to diagnose.
             report($e);
-            $this->addError('csv', __('konto.csv-import-error'));
+            $this->addError('upload', __('konto.csv-import-error'));
 
             return;
         }
@@ -343,10 +391,33 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
+     * Identity mapping for CAMT: each BankTransaction column maps to the row key of the same
+     * name produced by CamtImportParser, so save() reads $row[$mapping[$col]] === $row[$col].
+     * saldo is left empty so save() computes the running balance; comment stays unset.
+     *
+     * @return Collection<string, string>
+     */
+    private function camtMapping(): Collection
+    {
+        // saldo is computed in save(); comment is user-only; primanota is a numeric bank batch
+        // number with no CAMT equivalent (the account-servicer ref is alphanumeric) — leave them
+        // unmapped so they are not written.
+        return collect((new BankTransaction)->getFillable())
+            ->mapWithKeys(fn ($col) => [$col => in_array($col, ['saldo', 'comment', 'primanota'], true) ? '' : $col]);
+    }
+
+    /**
      * @return void gets called if Account Id changes
      */
     public function updatedAccountId(): void
     {
+        // CAMT carries no per-account mapping/order; keep the parsed rows and identity mapping.
+        if ($this->format === 'camt') {
+            $this->resetValidation();
+
+            return;
+        }
+
         $account = BankAccount::findOrFail($this->account_id);
         $this->mapping = $this->createMapping($account->csv_import_settings['csv_import_mapping'] ?? []);
         $old_Order = $this->csvOrderReversed;
@@ -417,13 +488,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
-     * Clear the uploaded CSV and all derived state so the user can re-upload.
+     * Clear the uploaded file and all derived state so the user can re-upload.
      */
-    public function clearCsv(): void
+    public function clearUpload(): void
     {
-        $this->reset(['csv', 'header', 'separator', 'csvOrderReversed']);
+        $this->reset(['upload', 'header', 'separator', 'csvOrderReversed', 'format', 'statementIban', 'openingBalance', 'closingBalance']);
         $this->data = collect();
-        $this->resetValidation('csv');
+        $this->resetValidation('upload');
+        // Restore the current account's CSV mapping (a CAMT upload had replaced it with the
+        // identity mapping); reset() has already put $format back to its 'csv' default.
+        $this->updatedAccountId();
     }
 
     /**

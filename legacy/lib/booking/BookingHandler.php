@@ -538,12 +538,12 @@ class BookingHandler extends Renderer
             ->body('mit Bankzugang');
         echo '&nbsp;';
         echo HtmlButton::make()
-            ->asLink(route('bank-account.import.csv', ['account_id' => $konto_id]))
+            ->asLink(route('bank-account.import.manual', ['account_id' => $konto_id]))
             ->style('primary')
             ->icon('upload')
             ->disable(! $isKv)
             ->title(! $isKv ? 'Nur durch Kassenverantwortliche möglich' : '')
-            ->body('mit CSV');
+            ->body('mit Datei (CSV/CAMT)');
     }
 
     private function renderBookingText(): void

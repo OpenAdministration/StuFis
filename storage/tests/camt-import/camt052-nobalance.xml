@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.02">
+  <BkToCstmrAcctRpt>
+    <GrpHdr>
+      <MsgId>RPT-NOBAL</MsgId>
+      <CreDtTm>2024-06-05T12:00:00</CreDtTm>
+    </GrpHdr>
+    <Rpt>
+      <Id>RPT-NOBAL</Id>
+      <CreDtTm>2024-06-05T12:00:00</CreDtTm>
+      <Acct>
+        <Id>
+          <IBAN>DE12429644757213399722</IBAN>
+        </Id>
+        <Ccy>EUR</Ccy>
+      </Acct>
+      <Ntry>
+        <Amt Ccy="EUR">20.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2024-06-03</Dt></BookgDt>
+        <ValDt><Dt>2024-06-03</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NTRF+166</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties><Dbtr><Nm>Spender</Nm></Dbtr></RltdPties>
+          <RmtInf><Ustrd>Spende</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">5.00</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2024-06-04</Dt></BookgDt>
+        <ValDt><Dt>2024-06-04</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NTRF+808</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RmtInf><Ustrd>Gebuehr</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+    </Rpt>
+  </BkToCstmrAcctRpt>
+</Document>
