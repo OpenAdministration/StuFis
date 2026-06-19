@@ -64,9 +64,11 @@ For a server install there are helper scripts in [`bin/`](bin/) that wrap the
 above with the right PHP/Composer/Node toolchain (versioned `php8.4`, local
 `composer.phar`, nvm) and put the app into maintenance mode during updates:
 
-- `bin/setup.sh` — first-time setup *and* idempotent toolchain refresh
-- `bin/update-stufis.sh [tag|branch]` — deploy a release tag (or branch tip): self-update toolchain, migrate and rebuild a running instance
-- `bin/rebuild-stufis.sh` — rebuild in place (no pull)
+- `stufis-setup` — first-time setup *and* idempotent toolchain refresh
+- `stufis-update [tag|branch]` — deploy a release tag (or branch tip): self-update toolchain, migrate and rebuild a running instance
+- `stufis-rebuild` — re-warm production caches and rebuild assets (no pull, no dependency install)
+
+After the first `stufis-setup`, `bin/` is on your `PATH`, so these resolve as `stufis-*` commands from anywhere.
 
 See [docs/hostsharing-installation.md](docs/hostsharing-installation.md) for a full Hostsharing.net walkthrough.
 
