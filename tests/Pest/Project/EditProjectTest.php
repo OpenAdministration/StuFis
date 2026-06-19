@@ -51,6 +51,17 @@ it('can create a new project', function (): void {
         ->and($project->state->getValue())->toBe('draft')
         ->and($project->posts)->toHaveCount(1)
         ->and($project->attachments)->toHaveCount(1);
+
+    // Regression guard for the production "Unable to retrieve the file_size for
+    // file at location: livewire-tmp/..." error: store() moves the temp file, so
+    // the attachment metadata must be captured *before* the move. Assert the row
+    // is fully populated and the stored file landed at the recorded path.
+    $attachment = $project->attachments->first();
+    expect($attachment->name)->toBe('document.pdf')
+        ->and($attachment->size)->toBe(500 * 1024)
+        ->and($attachment->mime_type)->toBe('application/pdf')
+        ->and($attachment->path)->toStartWith("projects/{$project->id}/")
+        ->and($attachment->path)->toEndWith('.pdf');
 });
 
 it('can load an existing project for editing', function (): void {
@@ -68,6 +79,39 @@ it('can load an existing project for editing', function (): void {
         ->assertSet('name', 'Existing Project')
         ->assertCount('posts', 1)
         ->assertSet('posts.0.name', 'Existing Post');
+});
+
+/**
+ * Regression guard for the "Call to a member function isZero() on string" error.
+ *
+ * The budget table binds <x-money-input wire:model.live.blur="posts.N.einnahmen">,
+ * so the browser sends the formatted *string*, and the sibling field's
+ * :disabled="!...->isZero()" calls a Money method on it during re-render.
+ * This stays safe only while the MoneySynth hydrates nested Money array values,
+ * so we assert the type survives string updates across the relevant flows.
+ */
+it('keeps money post fields as Money after string wire:model updates', function (): void {
+    $project = Project::factory()->by(user())->create(['name' => 'Money Repro']);
+    $project->posts()->create([
+        'name' => 'Existing Post',
+        'einnahmen' => Money::EUR(0),
+        'ausgaben' => Money::EUR(5000),
+        'bemerkung' => 'This is a description that is long enough for validation.',
+    ]);
+
+    $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id]);
+
+    // The browser sends the formatted string, not a Money object.
+    $component->set('posts.0.einnahmen', '50,00 €')->assertOk();
+    expect($component->get('posts.0.einnahmen'))->toBeInstanceOf(Money::class);
+
+    // Cleared field, cross-field update, and a freshly added row must all stay Money.
+    $component->set('posts.0.einnahmen', '')->assertOk();
+    $component->set('name', 'Renamed')->assertOk();
+    expect($component->get('posts.0.einnahmen'))->toBeInstanceOf(Money::class);
+
+    $component->call('addEmptyPost')->set('posts.1.einnahmen', '12,34 €')->assertOk();
+    expect($component->get('posts.1.einnahmen'))->toBeInstanceOf(Money::class);
 });
 
 it('can add and remove posts', function (): void {
