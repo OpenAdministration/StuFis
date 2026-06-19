@@ -79,9 +79,9 @@ Breadcrumbs::for('bank-account.transaction', static function (BreadcrumbTrail $t
 });
 
 // Home > Konto > Import
-Breadcrumbs::for('bank-account.import.csv', static function (BreadcrumbTrail $trail): void {
+Breadcrumbs::for('bank-account.import.manual', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.konto');
-    $trail->push(__('general.breadcrumb.konto.import-csv'), route('bank-account.import.csv'));
+    $trail->push(__('general.breadcrumb.konto.import-csv'), route('bank-account.import.manual'));
 });
 
 // Home > Konto > Credentials

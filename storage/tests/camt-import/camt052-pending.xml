@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.052.001.02">
+  <BkToCstmrAcctRpt>
+    <GrpHdr>
+      <MsgId>RPT-2024-06-05</MsgId>
+      <CreDtTm>2024-06-05T12:00:00</CreDtTm>
+    </GrpHdr>
+    <Rpt>
+      <Id>RPT-2024-06-05</Id>
+      <CreDtTm>2024-06-05T12:00:00</CreDtTm>
+      <Acct>
+        <Id>
+          <IBAN>DE12429644757213399722</IBAN>
+        </Id>
+        <Ccy>EUR</Ccy>
+      </Acct>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>PRCD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="EUR">100.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2024-06-04</Dt></Dt>
+      </Bal>
+      <Bal>
+        <Tp><CdOrPrtry><Cd>ITBD</Cd></CdOrPrtry></Tp>
+        <Amt Ccy="EUR">110.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Dt><Dt>2024-06-05</Dt></Dt>
+      </Bal>
+      <Ntry>
+        <Amt Ccy="EUR">10.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2024-06-05</Dt></BookgDt>
+        <ValDt><Dt>2024-06-05</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NTRF+166</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties><Dbtr><Nm>Booked Payer</Nm></Dbtr></RltdPties>
+          <RmtInf><Ustrd>booked entry</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">99.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>PDNG</Sts>
+        <BookgDt><Dt>2024-06-05</Dt></BookgDt>
+        <ValDt><Dt>2024-06-05</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NTRF+166</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties><Dbtr><Nm>Pending Payer</Nm></Dbtr></RltdPties>
+          <RmtInf><Ustrd>pending entry</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+    </Rpt>
+  </BkToCstmrAcctRpt>
+</Document>

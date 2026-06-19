@@ -5,8 +5,10 @@
 * Der Projektzeitraum darf jetzt auch nur einen Tag lang sein.
 * Die Anzeige von Daten wurde im gesamten System nun einheitlich auf DD.MM.YYYY geändert.
 * Optische Verbesserung der Kontoauszüge
+* CAMT-Import: Kontoauszüge können nun auch im CAMT-Format (camt.052/053) hochgeladen werden – ohne Spaltenzuordnung und mit automatischer IBAN- und Saldo-Prüfung. CAMT wird gegenüber CSV empfohlen.
 
 ---
+
 # v4.4.0
 **Projekt/Antrag**
 * Vollständige Überarbeitung des Formulars und des Chats

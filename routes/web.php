@@ -32,7 +32,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('config', [AdminConfigPage::class, 'render'])->name('config');
 
     Route::livewire('bank-account/new', 'pages::new-banking-account')->name('bank-account.new');
-    Route::livewire('bank-account/import/manual', 'pages::bank.csv-import')->name('bank-account.import.csv');
+    Route::livewire('bank-account/import/manual', 'pages::bank.manual-import')->name('bank-account.import.manual');
     Route::get('bank-account/{account_id}/transaction/{transaction_id}', [TransactionView::class, 'view'])->name('bank-account.transaction');
 
     Route::get('profile', static fn () => redirect(config('stufis.profile_url')))->name('profile');

@@ -37,46 +37,59 @@
                 </dl>
             @endif
         </div>
-        <div wire:key="csv-upload-block">
+        <div wire:key="upload-block">
             @if($account_id !== "")
                 <div>
                     <x-intro level="2" :headline="__('konto.csv-upload-headline')" :sub-headline="__('konto.csv-upload-headline-sub')"/>
                     @if($data->isNotEmpty())
                         <flux:file-item
                             icon="document-check"
-                            :heading="$csv->getClientOriginalName()"
-                            :size="$csv->getSize()"
+                            :heading="$upload->getClientOriginalName()"
+                            :size="$upload->getSize()"
                         >
                             <x-slot:actions>
-                                <flux:file-item.remove wire:click="clearCsv"/>
+                                <flux:file-item.remove wire:click="clearUpload"/>
                             </x-slot:actions>
                         </flux:file-item>
                     @else
-                        <flux:file-upload wire:model.live="csv">
+                        <flux:callout color="blue" icon="light-bulb" inline class="mb-4">
+                            <flux:callout.heading>{{ __('konto.camt-recommendation-heading') }}</flux:callout.heading>
+                            <flux:callout.text>{{ __('konto.camt-recommendation-text') }}</flux:callout.text>
+                        </flux:callout>
+                        <flux:file-upload wire:model.live="upload" accept=".csv,.txt,.xml">
                             <flux:file-upload.dropzone
                                 :heading="__('konto.csv-draganddrop-fat-text')"
                                 :text="__('konto.csv-draganddrop-sub-text')"
                                 with-progress
                             />
                         </flux:file-upload>
-                        <flux:error name="csv" />
                     @endif
+                    {{-- Shown in both states so a CAMT closing-balance mismatch (raised after the
+                         file is parsed and the dropzone is replaced) is still surfaced. --}}
+                    <flux:error name="upload" />
                 </div>
             @endif
         </div>
 
         @if($data->isNotEmpty())
             <div>
-                <x-intro level="2" :headline="__('konto.csv.transaction.headline')" :sub-headline="__('konto.csv.transaction.headline-sub')"/>
-                <div class="my-5">
-                    <flux:switch
-                        wire:click="reverseCsvOrder"
-                        :checked="$csvOrderReversed"
-                        :label="__('konto.manual-button-reverse-csv-order')"
-                        :description="__('konto.manual-button-reverse-csv-order-sub')"
-                        align="left"
-                    />
-                </div>
+                @if($format === 'camt')
+                    <x-intro level="2" :headline="__('konto.camt.transaction.headline')" :sub-headline="__('konto.camt.transaction.headline-sub')"/>
+                @else
+                    <x-intro level="2" :headline="__('konto.csv.transaction.headline')" :sub-headline="__('konto.csv.transaction.headline-sub')"/>
+                @endif
+                {{-- Reverse toggle is CSV-only; CAMT statements are already sorted by date. --}}
+                @if($format === 'csv')
+                    <div class="my-5">
+                        <flux:switch
+                            wire:click="reverseCsvOrder"
+                            :checked="$csvOrderReversed"
+                            :label="__('konto.manual-button-reverse-csv-order')"
+                            :description="__('konto.manual-button-reverse-csv-order-sub')"
+                            align="left"
+                        />
+                    </div>
+                @endif
             </div>
         @endif
     </div>
@@ -87,24 +100,30 @@
                     <flux:field>
                         <flux:label>{{ __($label) }}</flux:label>
                         <flux:description>{{ __("konto.hint.transaction.$attr") }}</flux:description>
-                        <flux:select wire:model.live.change="mapping.{{ $attr }}" placeholder="">
-                            <option value="">---Kein Import---</option>
-                            @foreach($header as $csv_column_id => $value)
-                                <option value="{{ $csv_column_id }}">
-                                    {{ filled($value) ? $value : __('konto.csv-header-empty-column', ['n' => $csv_column_id + 1]) }}
-                                </option>
-                            @endforeach
-                        </flux:select>
-                        <flux:error name="mapping.{{ $attr }}"/>
+                        {{-- CAMT is self-describing: the column mapping is fixed, so no select is
+                             rendered — only the same first/last preview the CSV path shows. --}}
+                        @if($format === 'csv')
+                            <flux:select wire:model.live.change="mapping.{{ $attr }}" placeholder="">
+                                <option value="">---Kein Import---</option>
+                                @foreach($header as $csv_column_id => $value)
+                                    <option value="{{ $csv_column_id }}">
+                                        {{ filled($value) ? $value : __('konto.csv-header-empty-column', ['n' => $csv_column_id + 1]) }}
+                                    </option>
+                                @endforeach
+                            </flux:select>
+                            <flux:error name="mapping.{{ $attr }}"/>
+                        @endif
                     </flux:field>
                     <x-slot:rows>
+                        {{-- CAMT data is sorted oldest->newest, so first()=oldest, last()=newest;
+                             label by age. CSV order varies (reverse toggle), so label by file position. --}}
                         @isset($firstNewTransaction[$mapping[$attr]])
-                            <x-grid-list.item-card.row label="konto.csv-preview-first">
+                            <x-grid-list.item-card.row :label="$format === 'camt' ? 'konto.camt-preview-oldest' : 'konto.csv-preview-first'">
                                 {{ $this->formatDataView($firstNewTransaction[$mapping[$attr]], $attr) }}
                             </x-grid-list.item-card.row>
                         @endisset
                         @isset($lastNewTransaction[$mapping[$attr]])
-                            <x-grid-list.item-card.row label="konto.csv-preview-last">
+                            <x-grid-list.item-card.row :label="$format === 'camt' ? 'konto.camt-preview-newest' : 'konto.csv-preview-last'">
                                 {{ $this->formatDataView($lastNewTransaction[$mapping[$attr]], $attr) }}
                             </x-grid-list.item-card.row>
                         @endisset
