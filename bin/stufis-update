@@ -1,10 +1,10 @@
 #!/bin/bash
 ### Update StuFis to the latest release: pull, migrate and rebuild caches.
-# Re-exec under bash if started via `sh update-stufis.sh`.
+# Re-exec under bash if started via `sh stufis-update`.
 [ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
 set -e
 
-source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
 
 # print commands as they run
 set -x
@@ -43,9 +43,8 @@ npm ci
 # update db
 php artisan migrate --force
 
-# performance optimization
-php artisan view:cache
-php artisan route:cache
+# clear stale caches and warm the production caches
+rebuild_caches
 
 # compile tailwind css after view cache
 npm run build

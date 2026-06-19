@@ -1,7 +1,7 @@
 # StuFiS Installation on Hostsharing.net Servers
 
 Quick guide for installation on hostsharing.net. The whole toolchain setup is
-automated by `bin/setup.sh`; only the hosting bits (domain, database, `.env`)
+automated by `bin/stufis-setup`; only the hosting bits (domain, database, `.env`)
 are manual.
 
 ## 1. Account & checkout
@@ -24,7 +24,7 @@ running setup — otherwise `composer install` fails.
 ## 3. Run the setup script
 
 ```bash
-bash bin/setup.sh
+bash bin/stufis-setup
 ```
 
 This installs and builds everything:
@@ -41,7 +41,7 @@ Pick up the new aliases and `PATH` in your current shell:
 source ~/.bash_profile
 ```
 
-`bin/setup.sh` is idempotent — re-run it any time to refresh the toolchain.
+`bin/stufis-setup` is idempotent — re-run it any time to refresh the toolchain.
 
 ## 4. Hosting configuration (manual)
 
@@ -80,13 +80,14 @@ Optional: add a bank for the bank-import feature.
 From the project directory (`bin/` is on your `PATH` after step 3):
 
 ```bash
-update-stufis.sh            # update the current branch (fast-forward), then rebuild
-update-stufis.sh v4.4.0     # deploy a specific release tag (recommended, reproducible)
-update-stufis.sh main       # or switch to a branch and follow its tip
+stufis-update            # update the current branch (fast-forward), then rebuild
+stufis-update v4.4.0     # deploy a specific release tag (recommended, reproducible)
+stufis-update main       # or switch to a branch and follow its tip
 ```
 
 Each run goes into maintenance mode, backs up, fetches, self-updates the
 toolchain, migrates and rebuilds. Deploying a **tag** pins the instance to that
 exact release (detached HEAD); pass the next release tag to move it forward.
 
-Use `rebuild-stufis.sh` to rebuild in place without pulling.
+Use `stufis-rebuild` to re-warm the production caches and rebuild assets without
+pulling or reinstalling dependencies (e.g. after a local config change).

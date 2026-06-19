@@ -2,7 +2,7 @@
 # Shared environment helpers for the StuFis maintenance scripts.
 #
 # This file is meant to be *sourced*, not executed:
-#     source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+#     source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
 #
 # It encapsulates the quirks of a Hostsharing.net user account:
 #   - PHP is only available under a versioned name (e.g. `php8.4`).
@@ -11,7 +11,7 @@
 #     shells, so non-interactive scripts must source it explicitly.
 #
 # Versions and paths can be overridden from the environment, e.g.
-#     PHP_VERSION=8.3 bin/update-stufis.sh
+#     PHP_VERSION=8.3 bin/stufis-update
 
 PHP_VERSION="${PHP_VERSION:-8.4}"
 NODE_VERSION="${NODE_VERSION:-22}"
@@ -37,7 +37,7 @@ composer() {
 # Call this before any npm command. Fails loudly if nvm is missing.
 load_node() {
     if [ ! -s "$NVM_DIR/nvm.sh" ]; then
-        echo "Error: nvm not found at $NVM_DIR. Run bin/setup.sh first." >&2
+        echo "Error: nvm not found at $NVM_DIR. Run bin/stufis-setup first." >&2
         return 1
     fi
     # shellcheck disable=SC1091
@@ -82,8 +82,8 @@ setup_tooling() {
 # duplicated. Anything outside the markers is left untouched.
 setup_profile() {
     local profile="$HOME/.bash_profile"
-    local repo; repo="$(pwd)"   # common.sh has already cd'd to the repo root
-    local begin="# >>> StuFis (managed by bin/setup.sh — do not edit) >>>"
+    local repo; repo="$(pwd)"   # stufis-common has already cd'd to the repo root
+    local begin="# >>> StuFis (managed by bin/stufis-setup — do not edit) >>>"
     local end="# <<< StuFis <<<"
 
     touch "$profile"
@@ -110,4 +110,13 @@ setup_profile() {
     } >> "$profile"
 
     echo "Wrote StuFis shell setup to $profile"
+}
+
+# Drop stale bootstrap caches and warm all production caches (config, events,
+# routes, views, blade-icons, …) via Laravel's optimize. Call this after the
+# code/config is in place (i.e. not during first-time setup). Frontend assets
+# are built separately (npm run build), as that needs node on PATH.
+rebuild_caches() {
+    php artisan optimize:clear
+    php artisan optimize
 }

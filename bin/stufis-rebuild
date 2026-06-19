@@ -1,0 +1,24 @@
+#!/bin/bash
+### Rebuild StuFiS production caches and frontend assets (no dependency install).
+# Use after a config/template change to re-warm the caches. To pull new code or
+# update dependencies, use stufis-update; for first-time setup, stufis-setup.
+# Re-exec under bash if started via `sh stufis-rebuild`.
+[ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
+set -e
+
+source "$(dirname -- "${BASH_SOURCE[0]}")/stufis-common"
+load_node
+
+# print commands as they run
+set -x
+
+# puts StuFiS in Maintenance Mode
+php artisan down --with-secret
+
+# clear stale caches and warm the production caches
+rebuild_caches
+
+# rebuild the frontend assets (tailwind/vite)
+npm run build
+
+php artisan up
