@@ -1,10 +1,18 @@
+# v4.4.1
+* Im Menü Buchungen werden Abrechnungen nun ebenso wie Konto- und Kassenumsätze nur im jeweiligen Jahr angezeigt, da diese durch ihre Projekte bereits an ein Haushaltsjahr gebunden sind.
+* PDFs können wieder in Projekte hochgeladen werden.
+* Der Freitext in der Rechtsgrundlage wird wieder gespeichert.
+* Der Projektzeitraum darf jetzt auch nur einen Tag lang sein.
+* Die Anzeige von Daten wurde im gesamten System nun einheitlich auf DD.MM.YYYY geändert.
+* Optische Verbesserung der Kontoauszüge
+
+---
 # v4.4.0
 **Projekt/Antrag**
 * Vollständige Überarbeitung des Formulars und des Chats
 * In Projekten können nun Dateien angehangen werden
 * Wenn ein:e Nutzer:in keine Organisation zugewiesen hat, gibt es nun eine Standardorganisation
 * Verbesserte Validierung der Formularfelder
-* Das Belegdatum ist bei Belegen in Abrechnungen nun ein Pflichtfeld
 * Löschung von Projektposten nur noch möglich, wenn keine Abrechnung damit verknüpft ist und es nicht der einzige Posten im Projekt ist
 * Knopf zum automatischen Hinzufügen der Umsatzsteuer-Posten
 * Neue Statusanzeigen
@@ -13,6 +21,7 @@
 **Abrechnungen**
 * Fehler mit dem Chrome-Browser, bei dem in der Abrechnung bei der Auswahl von Projektposten, diese doppelt angezeigt wurden.
 * Abrechnung kann nun fehlerfrei bearbeitet werden, auch wenn es bereits einmal im Status "Bezahlt" war
+* * Das Belegdatum ist bei Belegen in Abrechnungen nun ein Pflichtfeld
 
 **CSV-Import**
 * modernere Oberfläche, bessere Fehlermeldungen und zuverlässigeres Verhalten beim erneuten Hochladen
