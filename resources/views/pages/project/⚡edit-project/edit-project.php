@@ -3,6 +3,7 @@
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\ExpenseReceiptPost;
+use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectAttachment;
@@ -11,12 +12,14 @@ use App\Models\LegalBasis;
 use App\Models\Setting;
 use App\Models\TaxBudget;
 use App\States\Project\ProjectState;
+use App\States\Project\Terminated;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\File;
 use Livewire\Attributes\Computed;
@@ -32,6 +35,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     #[Url]
     public ?int $project_id = null;
+
+    /** Source project + kind ('copy' | 'leftovers'): entry params and persisted backlink. */
+    #[Url]
+    public ?int $sourceId = null;
+
+    #[Url]
+    public ?string $sourceKind = null;
 
     #[Locked]
     public string $state_name;
@@ -70,20 +80,173 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public array $deletedAttachmentIds = [];
 
+    /** Source attachment ids to physically duplicate into a copied project on save. */
+    public array $carryAttachmentIds = [];
+
     public function mount(): void
     {
         $this->isNew = is_null($this->project_id);
 
-        if ($this->isNew) {
-            Gate::authorize('create', Project::class);
-            $project = new Project;
-            $this->populateData($project);
-            $this->addEmptyPost();
-        } else {
+        if (! $this->isNew) {
             $project = Project::findOrFail($this->project_id);
             Gate::authorize('update', $project);
             $this->populateData($project);
+
+            return;
         }
+
+        Gate::authorize('create', Project::class);
+
+        $source = $this->sourceId !== null ? Project::find($this->sourceId) : null;
+
+        if ($source !== null && $this->sourceKind === 'copy') {
+            Gate::authorize('view', $source);
+            $this->populateFromCopy($source);
+        } elseif ($source !== null && $this->sourceKind === 'leftovers') {
+            Gate::authorize('view', $source);
+            // Leftovers can only be carried over from a finished (terminated) project.
+            abort_unless($source->state->equals(Terminated::class), 403);
+            $this->populateFromLeftovers($source);
+        } else {
+            // Ignore any stray/invalid source params for a plain new project.
+            $this->sourceId = null;
+            $this->sourceKind = null;
+            $this->populateData(new Project);
+            $this->addEmptyPost();
+        }
+    }
+
+    /**
+     * Copy the editable meta fields from a source project (excluding state,
+     * version, posts, attachments and the budget plan binding).
+     */
+    private function copyMetaFrom(Project $source): void
+    {
+        $this->name = $source->name ?? '';
+        $this->responsible = $source->responsible ?? '';
+        $this->org = $source->org ?? '';
+        $this->org_mail = $source->org_mail ?? '';
+        $this->protokoll = $source->protokoll ?? '';
+        $this->beschreibung = $source->beschreibung ?? '';
+        $this->recht = $source->recht ?? '';
+        $this->recht_additional = $source->recht_additional ?? '';
+        $this->dateRange = [
+            'start' => $source->date_start ?? null,
+            'end' => $source->date_end ?? null,
+        ];
+    }
+
+    /**
+     * Prefill the form as a fresh draft duplicating an existing project. Stays
+     * in the source's budget plan, so post titel_ids remain valid.
+     */
+    private function populateFromCopy(Project $source): void
+    {
+        $this->populateData(new Project);
+        $this->copyMetaFrom($source);
+        $this->name = trim($source->name.__('project.view.edit.name_copy_suffix'));
+        $this->hhp_id = LegacyBudgetPlan::findByDate($source->createdat)?->id ?? $this->hhp_id;
+        $this->sourceId = $source->id;
+        $this->sourceKind = 'copy';
+
+        $this->posts = $source->posts->map(fn (ProjectPost $post) => [
+            'name' => $post->name,
+            'bemerkung' => $post->bemerkung ?? '',
+            'einnahmen' => $post->einnahmen,
+            'ausgaben' => $post->ausgaben,
+            'titel_id' => $post->titel_id,
+            'readonly' => false,
+        ])->all();
+
+        if ($this->posts === []) {
+            $this->addEmptyPost();
+        }
+
+        // Show the source attachments as carried over; they are physically
+        // duplicated into the new project on save (see saveAs()).
+        $this->existingAttachments = $source->attachments->map(
+            fn (ProjectAttachment $attachment) => $attachment->only('id', 'path', 'name', 'mime_type', 'size')
+        )->all();
+        $this->carryAttachmentIds = $source->attachments->pluck('id')->all();
+    }
+
+    /**
+     * Prefill the form as a fresh draft carrying the unspent remainder of an
+     * existing project into the latest budget plan. Titel are remapped across
+     * plans by titel_nr; fully-spent posts are dropped.
+     */
+    private function populateFromLeftovers(Project $source): void
+    {
+        $this->populateData(new Project);
+        $this->copyMetaFrom($source);
+        $this->name = trim($source->name.__('project.view.edit.name_leftovers_suffix'));
+        $this->sourceId = $source->id;
+        $this->sourceKind = 'leftovers';
+
+        $targetPlanId = LegacyBudgetPlan::latest()->id;
+        $this->hhp_id = $targetPlanId;
+
+        $this->posts = $source->posts
+            ->map(function (ProjectPost $post) use ($targetPlanId): ?array {
+                $isIncome = $post->ausgaben->isZero();
+                $planned = $isIncome ? $post->einnahmen : $post->ausgaben;
+                $remaining = $planned->subtract($post->expendedSum());
+                if (! $remaining->isPositive()) {
+                    return null;
+                }
+
+                return [
+                    'name' => $post->name,
+                    'bemerkung' => $post->bemerkung ?? '',
+                    'einnahmen' => $isIncome ? $remaining : Money::EUR(0),
+                    'ausgaben' => $isIncome ? Money::EUR(0) : $remaining,
+                    'titel_id' => $this->remapTitelId($post->titel_id, $targetPlanId),
+                    'readonly' => false,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($this->posts === []) {
+            $this->addEmptyPost();
+        }
+    }
+
+    /**
+     * Map a titel_id from its current plan onto the matching titel in the target
+     * plan via the stable titel_nr. Returns null when there is no match.
+     */
+    public function remapTitelId(?int $oldTitelId, int $targetPlanId): ?int
+    {
+        if ($oldTitelId === null) {
+            return null;
+        }
+
+        $titelNr = LegacyBudgetItem::find($oldTitelId)?->titel_nr;
+        if ($titelNr === null) {
+            return null;
+        }
+
+        return LegacyBudgetPlan::find($targetPlanId)
+            ?->budgetItems
+            ->firstWhere('titel_nr', $titelNr)?->id;
+    }
+
+    /**
+     * When the budget plan changes, remap every post's titel into the newly
+     * selected plan (e.g. a finance officer moving the project to another plan).
+     */
+    public function updatedHhpId(): void
+    {
+        $this->posts = collect($this->posts)->map(function (array $post): array {
+            $post['titel_id'] = $this->remapTitelId(
+                $post['titel_id'] !== null ? (int) $post['titel_id'] : null,
+                $this->hhp_id,
+            );
+
+            return $post;
+        })->all();
     }
 
     private function populateData(Project $project): void
@@ -248,9 +411,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             // save data
             DB::beginTransaction();
             if ($this->isNew) {
+                $hasValidSource = in_array($this->sourceKind, ['copy', 'leftovers'], true) && $this->sourceId !== null;
                 $project = Project::create([
                     'creator_id' => Auth::id(),
                     'stateCreator_id' => Auth::id(),
+                    'source_id' => $hasValidSource ? $this->sourceId : null,
+                    'source_kind' => $hasValidSource ? $this->sourceKind : null,
                     ...$filteredMeta,
                 ]);
             } else {
@@ -308,6 +474,25 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 ]);
             }
 
+            // Duplicate carried-over attachments (project copy) into the new
+            // project's storage, leaving the source files untouched.
+            foreach ($this->carryAttachmentIds as $sourceId) {
+                $source = ProjectAttachment::find($sourceId);
+                if ($source === null || ! Storage::exists($source->path)) {
+                    continue;
+                }
+                $extension = pathinfo($source->path, PATHINFO_EXTENSION);
+                $newPath = 'projects/'.$project->id.'/'.uniqid('', true).($extension !== '' ? '.'.$extension : '');
+                Storage::copy($source->path, $newPath);
+
+                $project->attachments()->create([
+                    'path' => $newPath,
+                    'name' => $source->name,
+                    'mime_type' => $source->mime_type,
+                    'size' => $source->size,
+                ]);
+            }
+
             foreach ($deletedAttachmentIds as $id) {
                 $pa = ProjectAttachment::where('id', $id)->where('projekt_id', $this->project_id)->findOrFail();
                 Storage::delete($pa->path);
@@ -343,7 +528,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public function removeExistingAttachment(int $id): void
     {
-        $this->deletedAttachmentIds[] = $id;
+        if ($this->isNew) {
+            // Carried-over (copied) attachment: just drop it from the carry set,
+            // never schedule the source's own attachment row for deletion.
+            $this->carryAttachmentIds = array_values(array_filter(
+                $this->carryAttachmentIds,
+                fn (int $carryId) => $carryId !== $id
+            ));
+        } else {
+            $this->deletedAttachmentIds[] = $id;
+        }
         $this->existingAttachments = array_filter(
             $this->existingAttachments,
             fn ($a) => $a['id'] !== $id
@@ -398,10 +592,15 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
         $canAddTaxTitles = collect($this->posts)->filter(fn ($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
 
+        // Backlink to the origin project: for a new copy/leftovers draft it comes
+        // from the entry params; for an existing project it comes from the record.
+        $backlinkSourceId = $this->isNew ? $this->sourceId : $this->getProject()->source_id;
+        $backlinkSourceKind = $this->isNew ? $this->sourceKind : $this->getProject()->source_kind;
+
         return compact(
             'gremien', 'budgetTitles', 'rechtsgrundlagen', 'state',
             'budgetPlans', 'canUpdateBudget', 'canUpdateApproval', 'canUpdateBudgetPlan', 'protocolLinkSetting',
-            'hasTaxTitels', 'canAddTaxTitles',
+            'hasTaxTitels', 'canAddTaxTitles', 'backlinkSourceId', 'backlinkSourceKind',
         );
     }
 

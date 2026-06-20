@@ -144,6 +144,22 @@ class Project extends Model
         return $this->belongsTo(User::class, 'stateCreator_id');
     }
 
+    /**
+     * The project this one was created from (via "copy" or "leftovers").
+     */
+    public function sourceProject(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'source_id');
+    }
+
+    /**
+     * Projects created from this one (via "copy" or "leftovers").
+     */
+    public function derivedProjects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'source_id');
+    }
+
     public function relatedBudgetPlan(): LegacyBudgetPlan
     {
         return LegacyBudgetPlan::findByDate($this->createdat);
