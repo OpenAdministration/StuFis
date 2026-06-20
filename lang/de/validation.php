@@ -233,7 +233,7 @@ return [
         'name' => 'Name',
         'responsible' => 'Verantwortliche Person',
         'org' => 'Organisation',
-        'protocol' => 'Protokoll-Link',
+        'protokoll' => 'Link',
         'recht' => 'Rechtsgrundlage',
         'recht-additional' => 'Zusätzliche Rechtsgrundlage',
         'date_start' => 'Startdatum',

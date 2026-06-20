@@ -118,7 +118,7 @@ abstract class ProjectState extends State implements Wireable
             'name' => 'required|string|max:128',
             'responsible' => 'required|string|max:128|email',
             'org' => 'required|string|max:64',
-            'protocol' => 'sometimes|nullable|string|url',
+            'protokoll' => 'sometimes|nullable|string|url',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
             'beschreibung' => ['required', 'string', new FluxEditorRule],
