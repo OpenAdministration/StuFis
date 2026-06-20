@@ -4,17 +4,25 @@
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">
-                {{ $isNew ? __('project.view.edit.title_new') : __('project.view.edit.title_existing') }}
+                @switch(true)
+                    @case(!$isNew) {{ __('project.view.edit.title_existing') }} @break
+                    @case($sourceKind === 'copy') {{ __('project.view.edit.title_copy') }} @break
+                    @case($sourceKind === 'leftovers') {{ __('project.view.edit.title_leftovers') }} @break
+                    @default {{ __('project.view.edit.title_new') }}
+                @endswitch
             </h1>
-            @if (!$isNew)
-                <p class="mt-1 text-sm text-gray-500">
+            <p class="mt-1 text-sm text-gray-500">
+                @if (!$isNew)
                     {{ __('project.view.edit.subtitle_existing', ['id' => $project_id, 'state' => $state->label()]) }}
-                </p>
-            @else
-                <p class="mt-1 text-sm text-gray-500">
+                @elseif (! ($sourceId && $sourceKind))
                     {{ __('project.view.edit.subtitle_new') }}
-                </p>
-            @endif
+                @endif
+                @if ($backlinkSourceId && $backlinkSourceKind)
+                    @if (!$isNew) &middot; @endif
+                    {{ __('project.view.source.'.$backlinkSourceKind) }}
+                    <flux:link :href="route('project.show', $backlinkSourceId)">P#{{ $backlinkSourceId }}</flux:link>
+                @endif
+            </p>
         </div>
 
         {{-- Form Actions --}}
@@ -144,17 +152,18 @@
                     </flux:field>
                 </div>
 
-                {{-- Protocol Link (optional based on config) --}}
+                {{-- Protocol Link (optional based on settings) --}}
                 @if ($protocolLinkSetting->active)
                     <div class="sm:col-span-2">
-                        <flux:input type="text" :label="config('stufis.project.link-label', __('project.view.details.fallback_link'))" wire:model="protokoll" />
+                        <flux:input type="text" :label="$protocolLinkSetting->label ?: __('project.view.details.link')" wire:model="protokoll" />
+                        <flux:error name="protokoll" />
                     </div>
                 @endif
 
                 {{-- Creation Date --}}
                 <div class="">
                     @if($canUpdateBudgetPlan)
-                        <flux:select variant="listbox" :label="__('project.view.edit.project_belongs_to_budget_plan')" wire:model="hhp_id">
+                        <flux:select variant="listbox" :label="__('project.view.edit.project_belongs_to_budget_plan')" wire:model.live="hhp_id">
                             @foreach ($budgetPlans as $plan)
                                 <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
                             @endforeach
