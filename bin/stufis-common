@@ -98,9 +98,9 @@ setup_tooling() {
 }
 
 # Write a managed block to ~/.bash_profile so interactive Hostsharing logins get
-# nvm autoload plus convenient aliases (php -> php8.4, composer, artisan).
-# Idempotent: the block between the markers is rewritten on every run, never
-# duplicated. Anything outside the markers is left untouched.
+# nvm autoload, convenient aliases (php -> php8.4, composer) and artisan tab
+# completion. Idempotent: the block between the markers is rewritten on every
+# run, never duplicated. Anything outside the markers is left untouched.
 setup_profile() {
     local profile="$HOME/.bash_profile"
     local repo; repo="$(pwd)"   # stufis-common has already cd'd to the repo root
@@ -108,6 +108,18 @@ setup_profile() {
     local end="# <<< StuFis <<<"
 
     touch "$profile"
+
+    # Pre-generate artisan's bash completion into a static file so interactive
+    # logins source it instead of booting artisan on every shell start. It is
+    # regenerated here on each setup run and sourced from the managed block.
+    local completion="$HOME/.stufis-artisan-completion.bash"
+    if php "$repo/artisan" completion bash > "$completion.tmp" 2>/dev/null; then
+        mv "$completion.tmp" "$completion"
+    else
+        rm -f "$completion.tmp"
+        echo "Warning: could not generate artisan completion; skipping it." >&2
+        completion=
+    fi
 
     # strip any previously managed block (from begin marker to end marker)
     awk '
@@ -124,9 +136,11 @@ setup_profile() {
         echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
         echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
         echo "export PATH=\"${repo}/bin:\$PATH\""
+        echo "export PHP_VERSION=\"${PHP_VERSION}\""
         echo "alias php='php${PHP_VERSION}'"
         echo "alias composer='php${PHP_VERSION} ${repo}/${COMPOSER_PHAR}'"
-        echo "alias artisan='php${PHP_VERSION} ${repo}/artisan'"
+        # artisan is ${repo}/bin/artisan (a real command on PATH); load completion
+        [ -n "$completion" ] && echo "[ -r \"${completion}\" ] && source \"${completion}\""
         echo "$end"
     } >> "$profile"
 
