@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Two\InvalidStateException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -56,5 +57,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', VersionChangeNotification::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // A stale or lost OAuth state on the Socialite callback (expired login, back button,
+        // reused callback URL, dropped session cookie) throws InvalidStateException. It's a
+        // user-flow condition, not a server error: don't log it as ERROR, and restart the
+        // login (which mints a fresh state) instead of returning a 500.
+        $exceptions->dontReport(InvalidStateException::class);
+        $exceptions->renderable(
+            fn (InvalidStateException $e) => redirect()->route('login')
+        );
     })->create();
