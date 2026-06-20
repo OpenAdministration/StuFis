@@ -12,7 +12,7 @@ use Laravel\Socialite\Two\InvalidStateException;
  * redirect back to login (fresh state) instead of a 500, and must not log it as an error.
  */
 it('renders an OAuth InvalidStateException as a redirect to login', function (): void {
-    $handler = app(ExceptionHandler::class);
+    $handler = resolve(ExceptionHandler::class);
 
     $response = $handler->render(request(), new InvalidStateException);
 
@@ -21,7 +21,7 @@ it('renders an OAuth InvalidStateException as a redirect to login', function ():
 });
 
 it('does not report an OAuth InvalidStateException', function (): void {
-    $handler = app(ExceptionHandler::class);
+    $handler = resolve(ExceptionHandler::class);
 
     expect($handler->shouldReport(new InvalidStateException))->toBeFalse();
 });
