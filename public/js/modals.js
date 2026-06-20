@@ -51,7 +51,11 @@ $(document).ready(function () {
 
         frm.find('button[formaction]').each(function (){
             const btn = $(this);
-            btn.on('click', function (){
+            btn.on('click', function (e){
+                // Prevent the native submit of this type="submit" button; otherwise the
+                // form is submitted twice (native + the explicit frm.submit() below),
+                // firing two AJAX requests (e.g. delete succeeds, then "not found").
+                e.preventDefault();
                 frm.attr('action', btn.attr('formaction'))
                 frm.submit();
             })
