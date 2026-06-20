@@ -43,7 +43,5 @@ it('links the budget plan to the legacy plan view', function (): void {
     $project = Project::factory()->by(user())->create();
     $plan = $project->relatedBudgetPlan();
 
-    Livewire::test('pages::project.show-project', ['project_id' => $project->id])
-        ->assertOk()
-        ->assertSee(route('legacy.hhp.view', $plan->id), false);
+    Livewire::test('pages::project.show-project', ['project_id' => $project->id])->assertOk()->assertSeeHtml(route('legacy.hhp.view', $plan->id));
 });

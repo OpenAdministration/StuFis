@@ -50,5 +50,6 @@ class DemoDataSeeder extends Seeder
         // and avoids cp nesting the demo copy inside a surviving auslagen/ directory.
         Storage::deleteDirectory('auslagen');
         Process::run(['cp', '-r', storage_path('demo/auslagen'), storage_path('app/')]);
+
     }
 }

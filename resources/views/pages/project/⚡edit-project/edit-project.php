@@ -481,7 +481,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 if ($source === null || ! Storage::exists($source->path)) {
                     continue;
                 }
-                $extension = pathinfo($source->path, PATHINFO_EXTENSION);
+                $extension = pathinfo((string) $source->path, PATHINFO_EXTENSION);
                 $newPath = 'projects/'.$project->id.'/'.uniqid('', true).($extension !== '' ? '.'.$extension : '');
                 Storage::copy($source->path, $newPath);
 
