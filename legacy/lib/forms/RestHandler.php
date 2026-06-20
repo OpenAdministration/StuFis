@@ -910,31 +910,20 @@ class RestHandler extends EscFunc
     private function deleteBookingInstruction($routeInfo): void
     {
         $instructId = $routeInfo['instruct-id'];
-        $res = DBConnector::getInstance()->dbDelete('booking_instruction', ['id' => $instructId]);
-        if ($res > 0) {
-            JsonController::print_json(
-                [
-                    'success' => true,
-                    'status' => '200',
-                    'msg' => "Vorgang $instructId wurde zurückgesetzt.",
-                    'type' => 'modal',
-                    'subtype' => 'server-success',
-                    'headline' => 'Erfolgreiche Datenübertragung',
-                    'reload' => 2000,
-                ]
-            );
-        } else {
-            JsonController::print_json(
-                [
-                    'success' => false,
-                    'status' => '500',
-                    'msg' => "Vorgang $instructId konnte nicht gefunden werden!",
-                    'type' => 'modal',
-                    'subtype' => 'server-error',
-                    'headline' => 'Fehler bei der Datenübertragung',
-                ]
-            );
-        }
+        // Idempotent: deleting an already-removed instruction (e.g. a double-fired request)
+        // reaches the same desired end state, so report success either way instead of a 500.
+        DBConnector::getInstance()->dbDelete('booking_instruction', ['id' => $instructId]);
+        JsonController::print_json(
+            [
+                'success' => true,
+                'status' => '200',
+                'msg' => "Vorgang $instructId wurde zurückgesetzt.",
+                'type' => 'modal',
+                'subtype' => 'server-success',
+                'headline' => 'Erfolgreiche Datenübertragung',
+                'reload' => 2000,
+            ]
+        );
     }
 
     private function newBookingInstruct($routeInfo): void
