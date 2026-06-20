@@ -30,11 +30,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         $showApproval = Auth::user()->getGroups()->has('ref-finanzen-hv') || ! $state->equals(Draft::class);
         $showLink = Setting::get('project.protocol_url.active');
+        $protocolLabel = Setting::get('project.protocol_url.label');
 
         $userCanDelete = Auth::user()->can('delete', $project);
         $deletionAllowed = $project->expenses()->count() === 0;
 
-        return compact('project', 'showApproval', 'showLink', 'userCanDelete', 'deletionAllowed');
+        $budgetPlan = $project->relatedBudgetPlan();
+
+        return compact('project', 'showApproval', 'showLink', 'protocolLabel', 'userCanDelete', 'deletionAllowed', 'budgetPlan');
     }
 
     public function changeState(): void
