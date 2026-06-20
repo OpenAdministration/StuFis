@@ -1081,9 +1081,10 @@ class RestHandler extends EscFunc
 
     private function saveConfirmedBookingInstruction(): void
     {
-        // var_dump($_POST);
-        $confirmedInstructions = array_keys($_REQUEST['activeInstruction']);
-        $text = $_REQUEST['text'];
+        // Confirm can be posted with nothing selected (no activeInstruction in the request);
+        // default to empty so the "kein Vorgang ausgewählt" handler below runs instead of a 500.
+        $confirmedInstructions = array_keys($_REQUEST['activeInstruction'] ?? []);
+        $text = $_REQUEST['text'] ?? [];
 
         if (empty($confirmedInstructions)) {
             JsonController::print_json(
@@ -1155,6 +1156,32 @@ class RestHandler extends EscFunc
         $zahlung_sum = array_fill_keys($confirmedInstructions, 0);
         $belege_sum = array_fill_keys($confirmedInstructions, 0);
         $table = $btm->getTable();
+        // A posten whose Haushaltstitel no longer resolves comes back with a NULL titel type
+        // (LEFT join). The sum loop below would silently skip it from belege_sum while still
+        // counting its Zahlung, surfacing as a confusing "Differenz der Posten". Catch it here.
+        $missingTitel = [];
+        foreach ($confirmedInstructions as $instruction) {
+            foreach ($table[$instruction] ?? [] as $row) {
+                if (array_key_exists('titel', $row) && ! isset($row['titel']['type'])) {
+                    $missingTitel[] = $instruction;
+                    break;
+                }
+            }
+        }
+        if (! empty($missingTitel)) {
+            DBConnector::getInstance()->dbRollBack();
+            JsonController::print_json(
+                [
+                    'success' => false,
+                    'status' => '500',
+                    'msg' => 'Folgende Vorgänge enthalten Posten ohne gültigen Haushaltstitel und können nicht gebucht werden: '.
+                        implode(', ', $missingTitel),
+                    'type' => 'modal',
+                    'subtype' => 'server-error',
+                    'headline' => 'Konnte nicht gespeichert werden',
+                ]
+            );
+        }
         // sammle werte pro instruction auf
         foreach ($confirmedInstructions as $instruction) {
             $lastTitel = '';
@@ -1174,7 +1201,7 @@ class RestHandler extends EscFunc
             }
         }
         foreach ($confirmedInstructions as $instruction) {
-            if (count($table[$instruction]) !== count($text[$instruction])) {
+            if (count($table[$instruction]) !== count($text[$instruction] ?? [])) {
                 DBConnector::getInstance()->dbRollBack();
                 JsonController::print_json(
                     [
@@ -1221,7 +1248,7 @@ class RestHandler extends EscFunc
 
         foreach ($confirmedInstructions as $instruction) {
             $idx = 0;
-            $bookingText = array_values($text[$instruction]);
+            $bookingText = array_values($text[$instruction] ?? []);
             foreach ($table[$instruction] as $row) {
                 DBConnector::getInstance()->dbInsert(
                     'booking',
