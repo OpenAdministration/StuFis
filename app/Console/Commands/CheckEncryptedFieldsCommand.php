@@ -33,7 +33,7 @@ class CheckEncryptedFieldsCommand extends Command
             $needle = strtolower($this->option('model'));
             $targets = array_filter(
                 $targets,
-                fn (array $t) => str_contains(strtolower($t['model']), $needle)
+                fn (array $t) => str_contains(strtolower((string) $t['model']), $needle)
             );
         }
 
@@ -62,7 +62,7 @@ class CheckEncryptedFieldsCommand extends Command
 
             $model::query()->chunkById(500, function ($records) use (
                 $field, $key, &$total, &$empty, &$ok, &$failed, &$failedKeys, $samples
-            ) {
+            ): void {
                 foreach ($records as $record) {
                     $total++;
                     $raw = $record->getRawOriginal($field);

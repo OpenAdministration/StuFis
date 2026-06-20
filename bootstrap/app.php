@@ -63,6 +63,6 @@ return Application::configure(basePath: dirname(__DIR__))
         // login (which mints a fresh state) instead of returning a 500.
         $exceptions->dontReport(InvalidStateException::class);
         $exceptions->renderable(
-            fn (InvalidStateException $e) => redirect()->route('login')
+            fn (InvalidStateException $e) => to_route('login')
         );
     })->create();
