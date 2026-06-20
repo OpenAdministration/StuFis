@@ -8,6 +8,9 @@
 @php $totalRemainingEinnahmen = $project->totalRemainingEinnahmen() @endphp
 @php $totalRatioEinnahmen = $project->totalRatioEinnahmen(); @endphp
 
+@php $hasAusgaben = ! $totalAusgaben->isZero() @endphp
+@php $hasEinnahmen = ! $totalEinnahmen->isZero() @endphp
+
 <div>
     <div class="space-y-4">
 
@@ -22,16 +25,47 @@
                             {{ $project->name }}
                         @endisset
                     </h1>
-                    <p class="text-sm text-gray-500 mt-1">{{ __('project.view.header.title') }} {{ $project->id }} &middot; {{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</p>
+                    @php
+                        $copiedTo = $project->derivedProjects->where('source_kind', 'copy');
+                        $leftoversTo = $project->derivedProjects->where('source_kind', 'leftovers');
+                    @endphp
+                    <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-gray-500">
+                        <span>{{ __('project.view.header.title') }} {{ $project->id }}</span>
+                        <span aria-hidden="true">&middot;</span>
+                        <span>{{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</span>
+
+                        @if ($project->source_id && $project->source_kind)
+                            <span aria-hidden="true">&middot;</span>
+                            <span>{{ __('project.view.source.'.$project->source_kind) }}</span>
+                            <a href="{{ route('project.show', $project->source_id) }}" class="transition hover:opacity-80">
+                                <flux:badge size="sm" color="zinc" icon="arrow-uturn-left">P#{{ $project->source_id }}</flux:badge>
+                            </a>
+                        @endif
+
+                        {{-- @if ($copiedTo->isNotEmpty())
+                            <span aria-hidden="true">&middot;</span>
+                            <span>{{ __('project.view.source.copied_to') }}</span>
+                            @foreach ($copiedTo as $child)
+                                <a href="{{ route('project.show', $child->id) }}" class="transition hover:opacity-80">
+                                    <flux:badge size="sm" color="zinc" icon="document-duplicate">P#{{ $child->id }}</flux:badge>
+                                </a>
+                            @endforeach
+                        @endif --}}
+
+                        @if ($leftoversTo->isNotEmpty())
+                            <span aria-hidden="true">&middot;</span>
+                            <span>{{ __('project.view.source.leftovers_to') }}</span>
+                            @foreach ($leftoversTo as $child)
+                                <a href="{{ route('project.show', $child->id) }}" class="transition hover:opacity-80">
+                                    <flux:badge size="sm" color="zinc" icon="arrow-uturn-right">P#{{ $child->id }}</flux:badge>
+                                </a>
+                            @endforeach
+                        @endif
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
                     {{-- Button Row --}}
-                    <flux:modal.trigger name="state-modal">
-                        <flux:button icon="arrow-path">
-                            {{ __('project.view.header.change_status') }}
-                        </flux:button>
-                    </flux:modal.trigger>
                     @can('update', $project)
                         <flux:button href="{{ route('project.edit', $project->id) }}" variant="primary"
                                      icon="pencil-square" color="indigo"
@@ -63,6 +97,31 @@
                         <flux:button icon="ellipsis-vertical"/>
 
                         <flux:menu>
+                            <flux:menu.item icon="arrow-path" x-on:click="$flux.modal('state-modal').show()">
+                                {{ __('project.view.header.change_status') }}
+                            </flux:menu.item>
+                            <flux:menu.separator/>
+                            @can('create', \App\Models\Legacy\Project::class)
+                                <flux:menu.item icon="document-duplicate"
+                                                :href="route('project.create', ['sourceId' => $project->id, 'sourceKind' => 'copy'])">
+                                    {{ __('project.view.header.copy') }}
+                                </flux:menu.item>
+                                @if($project->state->equals(\App\States\Project\Terminated::class))
+                                    <flux:menu.item icon="arrow-uturn-right"
+                                                    :href="route('project.create', ['sourceId' => $project->id, 'sourceKind' => 'leftovers'])">
+                                        {{ __('project.view.header.leftovers') }}
+                                    </flux:menu.item>
+                                @else
+                                    <flux:tooltip :content="__('project.view.header.leftovers-not-possible_tooltip')">
+                                        <div>
+                                            <flux:menu.item icon="arrow-uturn-right" disabled>
+                                                {{ __('project.view.header.leftovers') }}
+                                            </flux:menu.item>
+                                        </div>
+                                    </flux:tooltip>
+                                @endif
+                                <flux:menu.separator/>
+                            @endcan
                             <flux:menu.item icon="trash" variant="danger" x-on:click="$flux.modal('delete-modal').show()">
                                 {{ __('project.view.header.delete') }}
                             </flux:menu.item>
@@ -74,29 +133,39 @@
 
         <!-- Summary Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
-            <!-- State Card -->
-            <flux:card size="sm">
-                <div class="flex items-center justify-between">
-                    <div>
+            <!-- State Card (whole card triggers the status-change modal) -->
+            <flux:card size="sm"
+                       class="group relative cursor-pointer overflow-hidden transition"
+                       role="button" tabindex="0"
+                       x-on:click="$flux.modal('state-modal').show()"
+                       x-on:keydown.enter="$flux.modal('state-modal').show()"
+                       x-on:keydown.space.prevent="$flux.modal('state-modal').show()">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="min-w-0">
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.state') }}</p>
+                        @php $stateLabel = $project->state->label() @endphp
+                        {{-- Keep the base size (matching the sibling cards) for short labels;
+                             only shrink long ones so they stay close to the others' height. --}}
                         <p @class([
-                            "font-bold mt-1",
+                            "mt-1 font-bold leading-tight text-balance hyphens-auto break-words",
+                            "text-sm" => \Illuminate\Support\Str::length($stateLabel) > 18,
                             "text-zinc-600" => $project->state->color() === "zinc",
                             "text-sky-600" => $project->state->color() === "sky",
                             "text-yellow-600" => $project->state->color() === "yellow",
                             "text-green-600" => $project->state->color() === "green",
                             "text-rose-600" => $project->state->color() === "rose",
-                        ])>
-                            {{ $project->state->label() }}
+                        ])
+                           lang="de">
+                            {{ $stateLabel }}
                         </p>
                     </div>
                     <div @class(["p-3 rounded-lg",
-                                "bg-zinc-200" => $project->state->color() === "zinc",
-                                "bg-sky-200" => $project->state->color() === "sky",
-                                "bg-yellow-200" => $project->state->color() === "yellow",
-                                "bg-green-200" => $project->state->color() === "green",
-                                "bg-rose-200" => $project->state->color() === "rose",
-                            ])>
+                            "bg-zinc-200" => $project->state->color() === "zinc",
+                            "bg-sky-200" => $project->state->color() === "sky",
+                            "bg-yellow-200" => $project->state->color() === "yellow",
+                            "bg-green-200" => $project->state->color() === "green",
+                            "bg-rose-200" => $project->state->color() === "rose",
+                        ])>
                         <x-dynamic-component :component="$project->state->iconName()" @class(["w-6 h-6",
                                     "text-zinc-600" => $project->state->color() === "zinc",
                                     "text-sky-600" => $project->state->color() === "sky",
@@ -105,6 +174,14 @@
                                     "text-rose-600" => $project->state->color() === "rose",
                                 ])/>
                     </div>
+                </div>
+
+                {{-- Hover overlay: frosted layer that flies over the card to invite changing the status --}}
+                <div class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-2
+                            bg-white/85 backdrop-blur-[1px] text-sm font-semibold text-gray-700
+                            opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <x-fas-arrows-rotate class="w-4 h-4 motion-safe:animate-spin [animation-duration:2.5s]"/>
+                    {{ __('project.view.header.change_status') }}
                 </div>
             </flux:card>
             <!-- Total out Card -->
@@ -125,25 +202,28 @@
             <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_available') }}</p>
+                        <p class="text-xs font-medium text-gray-500 uppercase">{{ __($project->state->equals(\App\States\Project\Terminated::class) ? 'project.view.summary_cards.out_unused' : 'project.view.summary_cards.out_available') }}</p>
                         <p @class([ "text-2xl font-bold mt-1",
-                                    'text-green-600' => $totalRatioAusgaben <  75,
-                                    'text-yellow-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                                    'text-red-600' => $totalRatioAusgaben >  100,
+                                    'text-gray-400' => ! $hasAusgaben,
+                                    'text-green-600' => $hasAusgaben && $totalRatioAusgaben <  75,
+                                    'text-yellow-600' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                                    'text-red-600' => $hasAusgaben && $totalRatioAusgaben >  100,
                         ])>
                             {{ $totalRemainingAusgaben }}
                         </p>
                     </div>
                     <div @class([
                                 "p-3 rounded-lg",
-                                'bg-green-100' => $totalRatioAusgaben <  75,
-                                'bg-yellow-100' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                                'bg-red-100' => $totalRatioAusgaben >  100,
+                                'bg-gray-100' => ! $hasAusgaben,
+                                'bg-green-100' => $hasAusgaben && $totalRatioAusgaben <  75,
+                                'bg-yellow-100' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                                'bg-red-100' => $hasAusgaben && $totalRatioAusgaben >  100,
                             ])>
                         <x-fas-euro-sign @class(['size-6',
-                            'text-green-600' => $totalRatioAusgaben <  75,
-                            'text-yellow-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                            'text-red-600' => $totalRatioAusgaben >  100,
+                            'text-gray-400' => ! $hasAusgaben,
+                            'text-green-600' => $hasAusgaben && $totalRatioAusgaben <  75,
+                            'text-yellow-600' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                            'text-red-600' => $hasAusgaben && $totalRatioAusgaben >  100,
                         ])/>
                     </div>
                 </div>
@@ -155,42 +235,51 @@
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_ratio') }}</p>
                         <p @class([
                                 "text-2xl font-bold mt-1",
-                                'text-yellow-600' => $totalRatioAusgaben <  75,
-                                'text-green-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                                'text-red-600' => $totalRatioAusgaben >  100,
+                                'text-gray-400' => ! $hasAusgaben,
+                                'text-yellow-600' => $hasAusgaben && $totalRatioAusgaben <  75,
+                                'text-green-600' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                                'text-red-600' => $hasAusgaben && $totalRatioAusgaben >  100,
                             ])>
-                            {{ $totalRatioAusgaben }} %
+                            {{ $hasAusgaben ? $totalRatioAusgaben.' %' : '–' }}
                         </p>
                     </div>
                     <div @class([
                             "p-3 rounded-lg",
-                            'bg-yellow-100' => $totalRatioAusgaben <  75,
-                            'bg-green-100' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                            'bg-red-100' => $totalRatioAusgaben >  100,
+                            'bg-gray-100' => ! $hasAusgaben,
+                            'bg-yellow-100' => $hasAusgaben && $totalRatioAusgaben <  75,
+                            'bg-green-100' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                            'bg-red-100' => $hasAusgaben && $totalRatioAusgaben >  100,
                         ])>
                         <x-fas-chart-simple @class(['size-6',
-                                'text-yellow-600' => $totalRatioAusgaben <  75,
-                                'text-green-600' => 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
-                                'text-red-600' => $totalRatioAusgaben >  100,
+                                'text-gray-400' => ! $hasAusgaben,
+                                'text-yellow-600' => $hasAusgaben && $totalRatioAusgaben <  75,
+                                'text-green-600' => $hasAusgaben && 75 <= $totalRatioAusgaben && $totalRatioAusgaben <=100,
+                                'text-red-600' => $hasAusgaben && $totalRatioAusgaben >  100,
                         ])/>
                     </div>
                 </div>
             </flux:card>
 
-            <!-- BudgetPlan Card -->
-            <flux:card size="sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.budgetplan') }}</p>
-                        <p class="font-bold text-gray-900 mt-1">
-                            {{ $project->relatedBudgetPlan()->label() }}
-                        </p>
+            <!-- BudgetPlan Card (whole card links to the legacy budget plan view) -->
+            @php
+                $relatedPlan = $project->relatedBudgetPlan();
+                $planUrl = $relatedPlan ? route('legacy.hhp.view', $relatedPlan->id) : null;
+            @endphp
+            <a href="{{ $planUrl }}" @class(['group block h-full', 'pointer-events-none' => ! $planUrl])>
+                <flux:card size="sm" class="h-full transition {{ $planUrl ? 'cursor-pointer' : '' }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.budgetplan') }}</p>
+                            <p class="font-bold text-gray-900 mt-1">
+                                {{ $relatedPlan?->label() ?? __('project.view.details.none') }}
+                            </p>
+                        </div>
+                        <div class="p-3 bg-indigo-100 rounded-lg transition {{ $planUrl ? 'group-hover:bg-indigo-200' : '' }}">
+                            <x-fas-bars-staggered class="w-6 h-6 text-indigo-600" />
+                        </div>
                     </div>
-                    <div class="p-3 bg-indigo-100 rounded-lg">
-                        <x-fas-bars-staggered class="w-6 h-6 text-indigo-600" />
-                    </div>
-                </div>
-            </flux:card>
+                </flux:card>
+            </a>
             <!-- Total in Card -->
             <flux:card size="sm">
                 <div class="flex items-center justify-between">
@@ -209,22 +298,25 @@
             <flux:card size="sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_available') }}</p>
+                        <p class="text-xs font-medium text-gray-500 uppercase">{{ __($project->state->equals(\App\States\Project\Terminated::class) ? 'project.view.summary_cards.in_unrealized' : 'project.view.summary_cards.in_available') }}</p>
                         <p @class([ "text-2xl font-bold mt-1",
-                                    'text-green-600' => $totalRatioEinnahmen >= 100,
-                                    'text-yellow-600' => $totalRatioEinnahmen < 100,
+                                    'text-gray-400' => ! $hasEinnahmen,
+                                    'text-green-600' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
+                                    'text-yellow-600' => $hasEinnahmen && $totalRatioEinnahmen < 100,
                                 ])>
                             {{ $totalRemainingEinnahmen }}
                         </p>
                     </div>
                     <div @class([
                                 "p-3 rounded-lg",
-                                'bg-green-100' => $totalRatioEinnahmen >= 100,
-                                'bg-yellow-100' => $totalRatioEinnahmen < 100,
+                                'bg-gray-100' => ! $hasEinnahmen,
+                                'bg-green-100' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
+                                'bg-yellow-100' => $hasEinnahmen && $totalRatioEinnahmen < 100,
                             ])>
                         <x-fas-euro-sign @class(['size-6',
-                            'text-green-600' => $totalRatioEinnahmen >= 100,
-                            'text-yellow-600' => $totalRatioEinnahmen < 100,
+                            'text-gray-400' => ! $hasEinnahmen,
+                            'text-green-600' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
+                            'text-yellow-600' => $hasEinnahmen && $totalRatioEinnahmen < 100,
                         ])/>
                     </div>
                 </div>
@@ -236,20 +328,23 @@
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_ratio') }}</p>
                         <p @class([
                                 "text-2xl font-bold mt-1",
-                                'text-yellow-600' => $totalRatioEinnahmen < 100,
-                                'text-green-600' => $totalRatioEinnahmen >= 100,
+                                'text-gray-400' => ! $hasEinnahmen,
+                                'text-yellow-600' => $hasEinnahmen && $totalRatioEinnahmen < 100,
+                                'text-green-600' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
                             ])>
-                            {{ $totalRatioEinnahmen }} %
+                            {{ $hasEinnahmen ? $totalRatioEinnahmen.' %' : '–' }}
                         </p>
                     </div>
                     <div @class([
                             "p-3 rounded-lg",
-                            'bg-yellow-100' => $totalRatioEinnahmen < 100,
-                            'bg-green-100' => $totalRatioEinnahmen >= 100,
+                            'bg-gray-100' => ! $hasEinnahmen,
+                            'bg-yellow-100' => $hasEinnahmen && $totalRatioEinnahmen < 100,
+                            'bg-green-100' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
                         ])>
                         <x-fas-chart-simple @class(['size-6',
-                            'text-yellow-600' => $totalRatioEinnahmen < 100,
-                            'text-green-600' => $totalRatioEinnahmen >= 100,
+                            'text-gray-400' => ! $hasEinnahmen,
+                            'text-yellow-600' => $hasEinnahmen && $totalRatioEinnahmen < 100,
+                            'text-green-600' => $hasEinnahmen && $totalRatioEinnahmen >= 100,
                         ])/>
                     </div>
                 </div>
@@ -360,9 +455,13 @@
                 @if($showLink)
                     <div class="lg:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">
-                            {{ __('project.view.details.link') }}
+                            {{ $protocolLabel ?: __('project.view.details.link') }}
                         </label>
-                        <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
+                        @if(filled($project->protokoll))
+                            <flux:link href="{{ $project->protokoll }}" external>{{ $project->protokoll }}</flux:link>
+                        @else
+                            <p class="text-gray-500 italic">{{ __('project.view.details.none') }}</p>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -414,7 +513,10 @@
                             <td class="px-6 py-4 text-sm text-gray-500 italic">{{ $post->bemerkung }}</td>
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 @if($post->budgetItem)
-                                    {{ $post->budgetItem->titel_name  }} ({{ $post->budgetItem->titel_nr  }})
+                                    @php $budgetItem = $post->budgetItem @endphp
+                                    <flux:link variant="subtle" href="{{ route('legacy.hhp.titel.view', ['hhp_id' => $budgetPlan->id, 'titel_id' => $budgetItem->id]) }}">
+                                        {{ $budgetItem->titel_name }} ({{ $budgetItem->titel_nr  }})
+                                    </flux:link>
                                 @endif
                             </td>
                             <td @class(["px-6 py-4 whitespace-nowrap text-sm text-right font-medium",
