@@ -31,7 +31,7 @@ class Draft extends ProjectState
             'name' => 'required|string|max:128',
             'responsible' => 'sometimes|string|max:128|email:rfc,dns',
             'org' => 'sometimes|string|max:64',
-            'protocol' => 'sometimes|nullable|string|url',
+            'protokoll' => 'sometimes|nullable|string|url',
             'date_start' => 'sometimes|nullable|date',
             'date_end' => 'sometimes|nullable|date',
             'beschreibung' => ['sometimes', 'string', new FluxEditorRule],

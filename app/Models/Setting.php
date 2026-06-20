@@ -37,7 +37,6 @@ class Setting extends Model
                 'protocol_url' => [
                     'active' => false,
                     'label' => '',
-                    'prefix' => '',
                 ],
             ],
             'tax.active' => false,

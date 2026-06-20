@@ -39,7 +39,6 @@ class MigrateConfigToDatabase extends Command
             $mapping = [
                 'mail_domain' => $config['mail-domain'] ?? '',
                 'finance_mail' => $config['finance-mail'] ?? '',
-                'project.protocol_url.prefix' => data_get($config, 'projekt-form.protokoll-prefix', ''),
                 'project.protocol_url.label' => data_get($config, 'projekt-form.protokoll-label', ''),
                 'project.protocol_url.active' => ! empty(data_get($config, 'projekt-form.protokoll-label', '')),
                 'project.description.min_length' => data_get($config, 'projekt-form.description-min-length', 50),
