@@ -6,6 +6,10 @@
 * Die Anzeige von Daten wurde im gesamten System nun einheitlich auf DD.MM.YYYY geändert.
 * Optische Verbesserung der Kontoauszüge
 * CAMT-Import: Kontoauszüge können nun auch im CAMT-Format (camt.052/053) hochgeladen werden – ohne Spaltenzuordnung und mit automatischer IBAN- und Saldo-Prüfung. CAMT wird gegenüber CSV empfohlen.
+* Beim Buchen von Vorgängen erscheint nun eine verständliche Meldung, wenn kein Vorgang ausgewählt wurde, Textfelder fehlen oder ein Posten keinen gültigen Haushaltstitel hat – statt eines Fehlers.
+* Die Detailansicht eines Konto- bzw. Kassenumsatzes funktioniert nun auch dann, wenn eine zugehörige Buchung keiner Abrechnung zugeordnet ist (z. B. Einnahmen oder Umbuchungen).
+* Anmeldung: Eine abgelaufene oder ungültige Login-Sitzung führt nun zu einer automatischen, erneuten Anmeldung statt zu einer Fehlerseite.
+* Verschiedene Stabilitätsverbesserungen, u. a. bei der Anzeige von Profilbildern ohne hinterlegte Nutzer:in.
 
 ---
 
