@@ -40,6 +40,9 @@ class DemoDataSeeder extends Seeder
             )
             ->replace('demo__', DB::getTablePrefix());
 
+        // NB: do not wrap in DB::transaction — the dump is a multi-statement batch (incl.
+        // SET FOREIGN_KEY_CHECKS) run via DB::unprepared, which triggers an implicit commit
+        // and makes the outer transaction fail at commit ("no active transaction").
         DB::unprepared($sqlContent);
 
         // deleteDirectory (not delete, which only removes files) so a re-seed wipes the
