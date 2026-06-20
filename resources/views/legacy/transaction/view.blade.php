@@ -60,7 +60,7 @@
                     @else
                         <ul role="list" class="divide-y divide-gray-100 rounded-md border border-gray-200">
                             @foreach($bookings as $booking)
-                                @php $receipt = $receiptsFromBookings[$booking->id]; @endphp
+                                @php $receipt = $receiptsFromBookings[$booking->id] ?? null; @endphp
                                 <li class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6">
                                     <div class="flex w-0 flex-1 items-center">
                                         <div class="ml-4 flex min-w-0 flex-1 gap-2">
@@ -71,8 +71,10 @@
                                     </div>
                                     <div class="ml-4 flex shrink-0 space-x-4">
                                         <span>{{ money_format($booking->value) }}</span>
-                                        <span class="text-gray-200" aria-hidden="true">|</span>
-                                        <flux:link :href="route('legacy.expense', $receipt->auslagen_id)">A{{ $receipt->auslagen_id }}</flux:link>
+                                        @if($receipt?->auslagen_id)
+                                            <span class="text-gray-200" aria-hidden="true">|</span>
+                                            <flux:link :href="route('legacy.expense', $receipt->auslagen_id)">A{{ $receipt->auslagen_id }}</flux:link>
+                                        @endif
                                     </div>
                                 </li>
                             @endforeach

@@ -13,7 +13,9 @@ class TransactionView extends Controller
         $transaction = BankTransaction::where(['id' => $transaction_id, 'konto_id' => $account_id])->firstOrFail();
         $account = BankAccount::where(['id' => $account_id])->firstOrFail();
         $bookings = $transaction->bookings()->with('expensesReceiptPost.expensesReceipt')->get();
-        $receiptsFromBookings = $bookings->keyBy('id')->map(fn ($booking) => $booking->expensesReceiptPost->expensesReceipt);
+        // Bookings that aren't expense-backed (income, transfers, manual bookings) have no
+        // belegposten/receipt, so this chain can be null — keep it nullable, the view guards it.
+        $receiptsFromBookings = $bookings->keyBy('id')->map(fn ($booking) => $booking->expensesReceiptPost?->expensesReceipt);
 
         return view('legacy.transaction.view', [
             'transaction' => $transaction,
