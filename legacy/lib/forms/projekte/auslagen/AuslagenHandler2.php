@@ -1584,7 +1584,12 @@ class AuslagenHandler2 extends Renderer
                 'name' => $name,
                 'fullPage' => false,
             ];
-            $files[$key.'.pdf'] = \Storage::get("auslagen/{$this->auslagen_id}/{$beleg['file']['hashname']}.pdf");
+            // A beleg without a file (paper-only original) gets an empty placeholder: the
+            // belegPage macro then renders just the cover sheet to staple the original onto,
+            // instead of dereferencing a null file. Same for a file missing on disk.
+            $files[$key.'.pdf'] = ($beleg['file']
+                ? \Storage::get("auslagen/{$this->auslagen_id}/{$beleg['file']['hashname']}.pdf")
+                : null) ?? '';
         }
         $tex = new LatexGenerator;
         $pdf = $tex->renderPdf('belege-pdf', [
