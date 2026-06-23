@@ -11,7 +11,6 @@
 |
 */
 
-use App\Http\Controllers\AdminConfigPage;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DatevExportController;
 use App\Http\Controllers\Legacy\TransactionView;
@@ -29,7 +28,7 @@ Route::middleware(['auth'])->group(function (): void {
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
 
-    Route::get('config', [AdminConfigPage::class, 'render'])->name('config');
+    Route::livewire('config', 'pages::settings')->name('config');
 
     Route::livewire('bank-account/new', 'pages::new-banking-account')->name('bank-account.new');
     Route::livewire('bank-account/import/manual', 'pages::bank.manual-import')->name('bank-account.import.manual');

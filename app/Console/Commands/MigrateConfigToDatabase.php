@@ -42,7 +42,7 @@ class MigrateConfigToDatabase extends Command
                 'project.protocol_url.label' => data_get($config, 'projekt-form.protokoll-label', ''),
                 'project.protocol_url.active' => ! empty(data_get($config, 'projekt-form.protokoll-label', '')),
                 'project.description.min_length' => data_get($config, 'projekt-form.description-min-length', 50),
-                'project.description.max_length' => data_get($config, 'projekt-form.description-max-length', 99999),
+                'project.description.max_length' => data_get($config, 'projekt-form.description-max-length', -1),
             ];
 
             foreach ($mapping as $key => $value) {

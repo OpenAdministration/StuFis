@@ -12,7 +12,7 @@ it('falls back to the hard-coded default for a parent key with no stored row', f
 
     expect($project)->toBeInstanceOf(SettingsBag::class)
         ->and($project->description->min_length)->toBe(50)
-        ->and($project->description->max_length)->toBe(99999);
+        ->and($project->description->max_length)->toBe(-1);
 });
 
 it('prefers a caller-supplied default over the hard-coded default and null', function (): void {
@@ -66,7 +66,7 @@ it('drops a stored key, reverting to the default', function (): void {
 it('exposes a read-only SettingsBag with dot access, has(), and isset()', function (): void {
     $bag = Setting::get('project');
 
-    expect($bag->get('description.max_length'))->toBe(99999)
+    expect($bag->get('description.max_length'))->toBe(-1)
         ->and($bag->get('description.missing', 'd'))->toBe('d')
         ->and($bag->has('description'))->toBeTrue()
         ->and($bag->has('nope'))->toBeFalse()

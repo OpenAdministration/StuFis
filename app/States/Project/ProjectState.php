@@ -6,6 +6,7 @@ use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\Project;
 use App\Models\LegalBasis;
 use App\Models\User;
+use App\Rules\DescriptionLengthRule;
 use App\Rules\ExactlyOneZeroMoneyRule;
 use App\Rules\FluxEditorRule;
 use Illuminate\Support\Facades\Validator;
@@ -121,7 +122,7 @@ abstract class ProjectState extends State implements Wireable
             'protokoll' => 'sometimes|nullable|string|url',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
-            'beschreibung' => ['required', 'string', new FluxEditorRule],
+            'beschreibung' => ['required', 'string', new FluxEditorRule, new DescriptionLengthRule],
             'posts' => 'required|array|min:1',
             'posts.*.id' => 'sometimes|integer',
             'posts.*.name' => 'required|string|max:128|min:1',

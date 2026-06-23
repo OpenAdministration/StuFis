@@ -48,11 +48,10 @@ row has been written, usually by the legacy-config migration.
 | --- | --- | --- | --- |
 | `finance_mail` | string | `service@open-administration.de` | Finance contact address. |
 | `mail_domain` | string | `open-administration.de` | Domain appended to bare project mail aliases (`Legacy\Project::mail`); used by `stufis:change-project-mail-domain`. |
-| `project.description.min_length` | int | `50` | Min length of a project description. |
-| `project.description.max_length` | int | `99999` | Max length of a project description. |
+| `project.description.min_length` | int | `50` | Min number of visible characters (HTML stripped) in a project description, enforced by `DescriptionLengthRule`. `0` disables the lower bound. |
+| `project.description.max_length` | int | `-1` | Max number of visible characters (HTML stripped) in a project description, enforced by `DescriptionLengthRule`. `-1` disables the upper bound (unlimited). |
 | `project.protocol_url.active` | bool | `false` | Whether the protocol-link field is shown in the project form (`show-project`, `edit-project`). |
 | `project.protocol_url.label` | string | `""` | Label for the protocol link. |
-| `project.protocol_url.prefix` | string | `""` | URL prefix prepended to the protocol link. |
 | `user.committees.mode` | `filter`\|`all`\|`raw` | (no default) | How `User::getCommittees()` resolves committees: `filter` = intersect auth committees with `data`; `all` = use `data` verbatim; `raw` = use auth committees only. Set to `filter` by the migration. |
 | `user.committees.data` | string[] | (no default) | The configured committee list used by `user.committees.mode`. Populated from the legacy `gremien` config. |
 | `tax.active` | bool | `false` | Enables the Umsatzsteuer (VAT) feature: the "Umsatzsteuer-Titel hinzufügen" button in the budget plan (`HHPHandler`) and the `add-tax-budgets` endpoint (`RestHandler::saveTaxBudgets`). |
