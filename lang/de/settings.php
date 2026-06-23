@@ -9,14 +9,10 @@ return [
     'groups' => [
         'general' => 'Allgemein',
         'project' => 'Projekte',
-        'committees' => 'Gremien',
+        'committees' => 'Organisationen',
         'features' => 'Funktionen',
     ],
 
-    'finance-mail' => [
-        'label' => 'Finanz-Kontaktadresse',
-        'description' => 'E-Mail-Adresse des Finanzreferats.',
-    ],
     'mail-domain' => [
         'label' => 'Mail-Domain',
         'description' => 'Domain, die an reine Projekt-Mail-Aliase angehängt wird.',
@@ -31,24 +27,24 @@ return [
         'invalid' => 'Die Maximallänge muss -1 (unbegrenzt) oder mindestens so groß wie die Mindestlänge sein.',
     ],
     'protocol-active' => [
-        'label' => 'Protokoll-Link anzeigen',
-        'description' => 'Blendet das Protokoll-Link-Feld im Projektformular ein.',
+        'label' => 'Ergänzender-Link anzeigen',
+        'description' => 'Blendet das Ergänzender-Link-Feld im Projektformular ein.',
     ],
     'protocol-label' => [
-        'label' => 'Beschriftung des Protokoll-Links',
+        'label' => 'Beschriftung des Ergänzenden-Links',
     ],
     'committee-mode' => [
-        'label' => 'Gremien-Modus',
-        'description' => 'Wie Gremien für Nutzer aufgelöst werden.',
+        'label' => 'Organisations-Modus',
+        'description' => 'Wie Organisationen für Nutzer aufgelöst werden.',
         'options' => [
             'filter' => 'Filtern (Schnittmenge aus Login-Provider und Liste)',
-            'all' => 'Statische Gremien (ignoriert Login Provider, für alle User die gleichen Gremien)',
+            'all' => 'Statische Organisationen (ignoriert Login Provider, für alle User die gleichen Gremien)',
             'raw' => 'Ungefiltert (ignoriert Liste, reicht Login-Provider direkt durch)',
         ],
     ],
     'committee-data' => [
-        'label' => 'Gremienliste',
-        'description' => 'Ein Gremium pro Zeile.',
+        'label' => 'Organisationen Liste',
+        'description' => 'Ein Organisation pro Zeile.',
     ],
     'tax-active' => [
         'label' => 'Umsatzsteuer aktivieren',
@@ -57,5 +53,21 @@ return [
     'datev' => [
         'label' => 'DATEV-Export anzeigen',
         'description' => 'Zeigt den DATEV-Export-Button in der Haushaltsplan-Ansicht.',
+    ],
+
+    'legal-bases' => [
+        'heading' => 'Rechtsgrundlagen',
+        'description' => 'Auswählbare Rechtsgrundlagen im Projektformular. Der Slug ist die gespeicherte Kennung und kann nach dem Anlegen nicht mehr geändert werden.',
+        'add' => 'Hinzufügen',
+        'remove' => 'Entfernen',
+        'reorder' => 'Zum Sortieren ziehen',
+        'empty' => 'Noch keine Rechtsgrundlagen angelegt.',
+        'in-use' => 'Diese Rechtsgrundlage wird noch von Projekten verwendet und kann nicht gelöscht werden. Bitte stattdessen deaktivieren.',
+        'slug' => 'Slug',
+        'label' => 'Bezeichnung',
+        'label-additional' => 'Beschriftung des Zusatzfeldes',
+        'placeholder' => 'Platzhalter des Zusatzfeldes',
+        'hint-text' => 'Hinweistext',
+        'active' => 'Aktiv',
     ],
 ];

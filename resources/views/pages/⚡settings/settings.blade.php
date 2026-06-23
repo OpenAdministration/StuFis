@@ -8,12 +8,6 @@
             <flux:heading size="lg">{{ __('settings.groups.general') }}</flux:heading>
 
             <flux:input
-                type="email"
-                wire:model="financeMail"
-                :label="__('settings.finance-mail.label')"
-                :description="__('settings.finance-mail.description')"
-            />
-            <flux:input
                 wire:model="mailDomain"
                 :label="__('settings.mail-domain.label')"
                 :description="__('settings.mail-domain.description')"
@@ -74,6 +68,81 @@
                 :label="__('settings.committee-data.label')"
                 :description="__('settings.committee-data.description')"
             />
+        </flux:card>
+
+        {{-- Legal bases (Rechtsgrundlagen) --}}
+        <flux:card class="space-y-6">
+            <div class="flex items-center justify-between gap-4">
+                <flux:heading size="lg">{{ __('settings.legal-bases.heading') }}</flux:heading>
+                <flux:button size="sm" icon="plus" wire:click="addLegalBasis">
+                    {{ __('settings.legal-bases.add') }}
+                </flux:button>
+            </div>
+            <flux:text>{{ __('settings.legal-bases.description') }}</flux:text>
+
+            <div wire:sort="sortLegalBases" class="space-y-4">
+                @forelse ($legalBases as $index => $basis)
+                    <div
+                        wire:key="legal-basis-{{ $basis['_key'] }}"
+                        wire:sort:item="{{ $basis['_key'] }}"
+                        class="flex items-start gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-700/50"
+                    >
+                        <button
+                            type="button"
+                            wire:sort:handle
+                            class="mt-1 cursor-grab text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                            :aria-label="__('settings.legal-bases.reorder')"
+                        >
+                            <flux:icon.bars-3 variant="micro" />
+                        </button>
+
+                        <div class="flex-1 space-y-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="grid sm:grid-cols-2 gap-4 flex-1">
+                                    <flux:input
+                                        wire:model="legalBases.{{ $index }}.slug"
+                                        :label="__('settings.legal-bases.slug')"
+                                        :readonly="$basis['id'] !== null"
+                                    />
+                                    <flux:input
+                                        wire:model="legalBases.{{ $index }}.label"
+                                        :label="__('settings.legal-bases.label')"
+                                    />
+                                    <flux:input
+                                        wire:model="legalBases.{{ $index }}.label_additional"
+                                        :label="__('settings.legal-bases.label-additional')"
+                                    />
+                                    <flux:input
+                                        wire:model="legalBases.{{ $index }}.placeholder"
+                                        :label="__('settings.legal-bases.placeholder')"
+                                    />
+                                </div>
+                                <flux:button
+                                    size="sm"
+                                    variant="subtle"
+                                    icon="trash"
+                                    wire:click="removeLegalBasis({{ $index }})"
+                                    :tooltip="__('settings.legal-bases.remove')"
+                                />
+                            </div>
+
+                            <flux:textarea
+                                wire:model="legalBases.{{ $index }}.hint_text"
+                                rows="2"
+                                :label="__('settings.legal-bases.hint-text')"
+                            />
+
+                            <flux:switch
+                                wire:model="legalBases.{{ $index }}.is_active"
+                                :label="__('settings.legal-bases.active')"
+                                align="left"
+                            />
+                        </div>
+                    </div>
+                @empty
+                    <flux:text variant="subtle">{{ __('settings.legal-bases.empty') }}</flux:text>
+                @endforelse
+            </div>
         </flux:card>
 
         {{-- Features --}}
