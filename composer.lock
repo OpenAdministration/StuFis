@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "efe65b8aa947a12ab93a1adc7664acb9",
+    "content-hash": "be8af9526599f10b052265e7886fb936",
     "packages": [
         {
             "name": "ameax/datev-xml",
@@ -4516,30 +4516,30 @@
         },
         {
             "name": "open-administration/php-latex-renderer",
-            "version": "1.2.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenAdministration/php-latex-renderer.git",
-                "reference": "9afd246fef0d9514e65b9ddf61d1132f6db2c1e4"
+                "reference": "e3e46a8506e3792fb47d4e539db30bcc1355608d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenAdministration/php-latex-renderer/zipball/9afd246fef0d9514e65b9ddf61d1132f6db2c1e4",
-                "reference": "9afd246fef0d9514e65b9ddf61d1132f6db2c1e4",
+                "url": "https://api.github.com/repos/OpenAdministration/php-latex-renderer/zipball/e3e46a8506e3792fb47d4e539db30bcc1355608d",
+                "reference": "e3e46a8506e3792fb47d4e539db30bcc1355608d",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.0",
+                "php": "^8.2",
                 "psr/log": "^1|^2|^3",
-                "symfony/process": "^5.3|^6.0|^7.0",
+                "symfony/process": "^6.4|^7.0|^8.0",
                 "twig/twig": "^3.10"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.2",
-                "monolog/monolog": "^2.3",
+                "friendsofphp/php-cs-fixer": "^3.85",
+                "monolog/monolog": "^3.0",
                 "roave/security-advisories": "dev-latest"
             },
-            "type": "libary",
+            "type": "library",
             "autoload": {
                 "psr-4": {
                     "PhpLatexRenderer\\": "src/"
@@ -4558,9 +4558,9 @@
             "description": "Renders LaTeX Templates in PHP",
             "support": {
                 "issues": "https://github.com/OpenAdministration/php-latex-renderer/issues",
-                "source": "https://github.com/OpenAdministration/php-latex-renderer/tree/v1.2.0"
+                "source": "https://github.com/OpenAdministration/php-latex-renderer/tree/v1.3.0"
             },
-            "time": "2025-06-03T13:13:23+00:00"
+            "time": "2026-06-23T08:19:35+00:00"
         },
         {
             "name": "owenvoke/blade-fontawesome",
