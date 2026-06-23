@@ -54,7 +54,12 @@ class UserPolicy
         return $user->getGroups()->contains('ref-finanzen');
     }
 
-    public function accessAppConfiguration(User $user): bool
+    public function viewAppConfiguration(User $user): bool
+    {
+        return $user->getGroups()->contains('admin');
+    }
+
+    public function updateAppConfiguration(User $user): bool
     {
         return $user->getGroups()->contains('admin');
     }

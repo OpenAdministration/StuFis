@@ -31,7 +31,7 @@ class Setting extends Model
             'mail_domain' => 'open-administration.de',
             'project' => [
                 'description' => [
-                    'max_length' => 99999,
+                    'max_length' => -1,
                     'min_length' => 50,
                 ],
                 'protocol_url' => [

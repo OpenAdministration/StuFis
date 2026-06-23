@@ -20,5 +20,7 @@ return [
     'blog-link.title' => 'Blog und News',
     'blog-link.subtitle' => 'Lies den StuFis-Blog mit den neusten Updates',
     'flux-editor-malicious-html' => 'Fehlerhafte HTML-Tags',
+    'description-too-short' => 'Die Beschreibung muss mindestens :min Zeichen lang sein.',
+    'description-too-long' => 'Die Beschreibung darf höchstens :max Zeichen lang sein.',
     'one-money-has-to-be-zero' => 'Es darf nur Ausgabe oder Einnahme 0 sein',
 ];

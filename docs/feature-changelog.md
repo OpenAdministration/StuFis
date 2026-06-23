@@ -10,6 +10,9 @@
 * Die Detailansicht eines Konto- bzw. Kassenumsatzes funktioniert nun auch dann, wenn eine zugehörige Buchung keiner Abrechnung zugeordnet ist (z. B. Einnahmen oder Umbuchungen).
 * Anmeldung: Eine abgelaufene oder ungültige Login-Sitzung führt nun zu einer automatischen, erneuten Anmeldung statt zu einer Fehlerseite.
 * Verschiedene Stabilitätsverbesserungen, u. a. bei der Anzeige von Profilbildern ohne hinterlegte Nutzer:in.
+* Beleg-PDF: Hochgeladene Beleg-Dateien werden wieder vollständig in die erzeugte Beleg-PDF eingefügt. Belege ohne hinterlegte Datei führen nicht mehr zu einem Fehler, sondern erzeugen wie gewohnt nur das Deckblatt zum Antackern des Originals.
+* Einstellungen: Die systemweite Konfiguration kann nun direkt im Browser bearbeitet werden (zuvor nur lesbar). Die Seite ist über das Zahnrad-Symbol erreichbar und nur für Administrator:innen zugänglich.
+* Projektbeschreibung: Die konfigurierte Mindest- und Maximallänge wird jetzt tatsächlich geprüft. Gezählt werden nur die sichtbaren Zeichen (HTML wird ignoriert); eine Maximallänge von -1 hebt die Obergrenze auf (Standard), eine Mindestlänge von 0 die Untergrenze.
 
 ---
 
