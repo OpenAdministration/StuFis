@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;

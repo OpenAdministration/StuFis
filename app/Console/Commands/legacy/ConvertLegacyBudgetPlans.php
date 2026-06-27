@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
@@ -252,10 +252,15 @@ class ConvertLegacyBudgetPlans extends Command
             // Calculate total value for the group
             $totalValue = $legacyGroup->budgetItems()->sum('value');
 
-            // Create the group item with the predetermined ID
+            // Create the group item with the predetermined ID. The legacy group has no
+            // number of its own, so derive the Titelnummer from its children (E.1.1 -> E.1).
             $groupItem = new BudgetItem([
                 'budget_plan_id' => $newPlan->id,
-                'short_name' => $this->generateShortName($groupInfo['name']),
+                'short_name' => $this->deriveGroupShortName(
+                    $legacyGroup->budgetItems->pluck('titel_nr')->all(),
+                    $groupInfo['type'],
+                    $groupInfo['position'],
+                ),
                 'name' => $groupInfo['name'],
                 'value' => $totalValue,
                 'budget_type' => $groupInfo['type'],
@@ -325,6 +330,32 @@ class ConvertLegacyBudgetPlans extends Command
             'final', 'approved', '1' => BudgetPlanState::FINAL,
             default => BudgetPlanState::DRAFT,
         };
+    }
+
+    /**
+     * Derive a group's Titelnummer from its children's numbers.
+     *
+     * Legacy groups carry no number, but their items do (e.g. "E.1.1"), so the group is the
+     * parent prefix of the shallowest child: ["E.1.1", "E.1.2"] -> "E.1". When no child is
+     * numbered, fall back to a generated number from the budget type (e.g. "E.1" / "A.1").
+     *
+     * @param  array<int, string|null>  $childTitelNrs
+     */
+    protected function deriveGroupShortName(array $childTitelNrs, BudgetType $type, int $position): string
+    {
+        $numbered = array_values(array_filter(
+            $childTitelNrs,
+            static fn ($nr): bool => filled($nr) && str_contains((string) $nr, '.'),
+        ));
+
+        if ($numbered !== []) {
+            // shallowest child (fewest segments) -> strip its last segment
+            usort($numbered, static fn ($a, $b): int => substr_count($a, '.') <=> substr_count($b, '.'));
+
+            return substr($numbered[0], 0, (int) strrpos($numbered[0], '.'));
+        }
+
+        return $type->numberPrefix().'.'.($position + 1);
     }
 
     /**

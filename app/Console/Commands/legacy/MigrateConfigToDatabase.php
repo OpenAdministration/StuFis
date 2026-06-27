@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use App\Models\LegalBasis;
 use App\Models\Setting;
@@ -9,7 +9,7 @@ use Illuminate\Support\Arr;
 
 class MigrateConfigToDatabase extends Command
 {
-    protected $signature = 'settings:import-from-legacy-config';
+    protected $signature = 'legacy:import-config';
 
     protected $description = 'Migrate legacy PHP array config into the settings and legal_bases tables';
 

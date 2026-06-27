@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\stufis;
 
 use App\Models\Setting;
 use App\Support\SettingsBag;

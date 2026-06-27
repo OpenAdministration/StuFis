@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use Illuminate\Console\Command;
 use Spatie\Regex\Regex;
