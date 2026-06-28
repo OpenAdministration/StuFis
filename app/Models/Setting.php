@@ -39,6 +39,7 @@ class Setting extends Model
                 ],
             ],
             'tax.active' => false,
+            'tax.rates' => [7, 19],
             'datev' => false,
         ];
     }

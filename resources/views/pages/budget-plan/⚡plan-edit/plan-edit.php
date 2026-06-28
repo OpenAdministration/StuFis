@@ -5,6 +5,8 @@ use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use App\Models\Setting;
+use App\Models\TaxBudget;
 use App\Support\Budget\TitleNumberer;
 use Cknow\Money\Money;
 use Flux\Flux;
@@ -225,6 +227,35 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         ]);
 
         $this->redirect(route('budget-plan.view', $this->plan_id));
+    }
+
+    /**
+     * Add the Umsatzsteuer (VAT) group and one title per configured tax rate to this plan, then
+     * refresh the tree. Idempotent — re-running only adds what is missing. Gated by the global
+     * tax.active setting and the plan-update policy.
+     */
+    public function addTaxTitles(): void
+    {
+        $plan = BudgetPlan::findOrFail($this->plan_id);
+        $this->authorize('update', $plan);
+
+        if (! Setting::get('tax.active', false)) {
+            Flux::toast(__('budget-plan.edit.tax-inactive'), variant: 'warning');
+
+            return;
+        }
+
+        $added = TaxBudget::addToPlan($this->plan_id);
+
+        $this->loadItems();
+        $this->refresh();
+
+        Flux::toast(
+            $added > 0
+                ? __('budget-plan.edit.tax-added', ['count' => $added])
+                : __('budget-plan.edit.tax-exists'),
+            variant: $added > 0 ? 'success' : 'warning',
+        );
     }
 
     public function addGroup(BudgetType $budget_type): void

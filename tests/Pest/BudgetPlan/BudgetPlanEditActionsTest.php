@@ -4,6 +4,8 @@ use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\Legacy\Booking;
+use App\Models\Setting;
+use App\Models\TaxBudget;
 use App\States\BudgetPlan\Draft;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
@@ -133,4 +135,25 @@ it('derives bookability and wires the bookings relation per item kind', function
         ->and($leaf->hasBookings())->toBeFalse()
         ->and($leaf->bookings()->getRelated())->toBeInstanceOf(Booking::class)
         ->and($leaf->bookings()->getForeignKeyName())->toBe('titel_id');
+});
+
+it('adds VAT tax titles via the action when the tax feature is active', function (): void {
+    Setting::set('tax.active', true);
+    $this->actingAs(budgetManager());
+    $plan = draftPlan();
+
+    editComponent($plan)->call('addTaxTitles')->assertHasNoErrors();
+
+    expect(BudgetItem::where('budget_plan_id', $plan->id)->where('short_name', 'A.99')->where('is_group', true)->exists())->toBeTrue()
+        ->and(TaxBudget::where('plan_id', $plan->id)->count())->toBe(2);
+});
+
+it('the tax action is a no-op when the tax feature is inactive', function (): void {
+    Setting::set('tax.active', false);
+    $this->actingAs(budgetManager());
+    $plan = draftPlan();
+
+    editComponent($plan)->call('addTaxTitles')->assertHasNoErrors();
+
+    expect(TaxBudget::where('plan_id', $plan->id)->count())->toBe(0);
 });

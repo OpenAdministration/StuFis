@@ -86,8 +86,11 @@
             </flux:tab.panel>
         @endforeach
     </flux:tab.group>
-    <div>
+    <div class="flex gap-2">
         <flux:button wire:click="save" variant="primary">{{ __('budget-plan.edit.save') }}</flux:button>
+        @if (\App\Models\Setting::get('tax.active', false))
+            <flux:button wire:click="addTaxTitles" icon="receipt-percent" variant="subtle">{{ __('budget-plan.edit.add-tax-titles') }}</flux:button>
+        @endif
     </div>
 
     {{-- mount picker: turn the chosen item into a reference to another plan's in/out --}}

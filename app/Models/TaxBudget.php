@@ -26,23 +26,27 @@ class TaxBudget extends Model
     }
 
     /**
-     * Idempotently add the Umsatzsteuer group and its tax titles to a budget plan, in the new
-     * budget_item structure. Existing entries are left untouched, so it is safe to call this
-     * repeatedly for the same plan.
+     * Idempotently add the Umsatzsteuer group and one tax title per VAT rate to a budget plan, in
+     * the new budget_item structure. Existing entries are left untouched, so it is safe to call
+     * repeatedly. Returns the number of tax titles newly added (0 if all already existed).
      *
-     * @param  array<int, array{titel_nr: string, titel_name: string}>  $taxTitles  Tax titles to ensure, keyed by tax percentage.
+     * @param  list<int|float>|null  $rates  VAT rates in percent; defaults to the `tax.rates` setting.
      */
     public static function addToPlan(
         int $planId,
+        ?array $rates = null,
         string $groupName = 'Umsatzsteuer',
         string $groupShortName = 'A.99',
         BudgetType $groupType = BudgetType::EXPENSE,
-        array $taxTitles = [
-            7 => ['titel_nr' => 'A.99.1', 'titel_name' => '7% Umsatzsteuer'],
-            19 => ['titel_nr' => 'A.99.2', 'titel_name' => '19% Umsatzsteuer'],
-        ],
-    ): void {
-        DB::transaction(static function () use ($planId, $groupName, $groupShortName, $groupType, $taxTitles): void {
+    ): int {
+        $rates = collect($rates ?? Setting::get('tax.rates', [7, 19]))
+            ->map(fn ($rate): int => (int) $rate)
+            ->filter(fn (int $rate): bool => $rate > 0)
+            ->unique()
+            ->sort()
+            ->values();
+
+        return DB::transaction(function () use ($planId, $rates, $groupName, $groupShortName, $groupType): int {
             $group = BudgetItem::firstOrCreate(
                 ['budget_plan_id' => $planId, 'short_name' => $groupShortName, 'is_group' => true],
                 [
@@ -54,25 +58,31 @@ class TaxBudget extends Model
                 ],
             );
 
-            $position = 0;
-            foreach ($taxTitles as $percent => $title) {
+            $added = 0;
+            foreach ($rates as $index => $percent) {
                 $item = BudgetItem::firstOrCreate(
-                    ['budget_plan_id' => $planId, 'short_name' => $title['titel_nr']],
+                    ['budget_plan_id' => $planId, 'short_name' => $groupShortName.'.'.($index + 1)],
                     [
-                        'name' => $title['titel_name'],
+                        'name' => $percent.'% '.$groupName,
                         'value' => 0,
                         'budget_type' => $groupType,
                         'is_group' => false,
                         'parent_id' => $group->id,
-                        'position' => $position++,
+                        'position' => $index,
                     ],
                 );
 
-                self::firstOrCreate(
+                $taxBudget = self::firstOrCreate(
                     ['plan_id' => $planId, 'budget_id' => $item->id],
                     ['tax_percent' => $percent],
                 );
+
+                if ($taxBudget->wasRecentlyCreated) {
+                    $added++;
+                }
             }
+
+            return $added;
         });
     }
 
