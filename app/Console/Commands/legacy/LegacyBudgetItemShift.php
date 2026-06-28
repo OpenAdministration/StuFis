@@ -7,6 +7,11 @@ use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\ProjectPost;
 use Illuminate\Console\Command;
 
+/**
+ * @deprecated Legacy HHP tooling, slated for deletion. The legacy budget tables are now read-only
+ * views over budget_plan/budget_item (migration swap_legacy_budget_tables_for_views), so this
+ * command can no longer write them. Manage budget plans in the new budget plan module.
+ */
 class LegacyBudgetItemShift extends Command
 {
     /**
@@ -25,13 +30,15 @@ class LegacyBudgetItemShift extends Command
      *
      * @var string
      */
-    protected $description = 'Shifts one Budget Item id to another in project and booking';
+    protected $description = '[DEPRECATED] Shifts one Budget Item id to another in project and booking';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
+        $this->warn('⚠️  DEPRECATED: the legacy budget tables are now views; this command is slated for deletion and will fail against them.');
+
         return \DB::transaction(function (): int {
             $old_id = $this->argument('old_id');
             $new_id = $this->argument('new_id');
