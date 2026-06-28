@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Enums\BudgetItemKind;
 use App\Models\Enums\BudgetType;
+use App\Models\Legacy\Booking;
 use Cknow\Money\Casts\MoneyDecimalCast;
 use Cknow\Money\Money;
 use Database\Factories\BudgetItemFactory;
@@ -114,9 +115,19 @@ class BudgetItem extends Model
      */
     protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position', 'referenced_plan_id'];
 
+    /**
+     * Bookings recorded against this item. Wired by titel_id == budget_item.id, which holds
+     * for converted leaf items because the conversion preserves their legacy ids. Only
+     * bookable (leaf) items ever carry bookings — see isBookable().
+     */
     public function bookings(): HasMany
     {
-        return $this->hasMany('tbd', 'titel_id');
+        return $this->hasMany(Booking::class, 'titel_id');
+    }
+
+    public function hasBookings(): bool
+    {
+        return $this->bookings()->exists();
     }
 
     public function budgetPlan(): BelongsTo
@@ -143,6 +154,12 @@ class BudgetItem extends Model
     public function isMount(): bool
     {
         return $this->referenced_plan_id !== null;
+    }
+
+    /** Only plain budget leaves can be booked against — groups and mounts cannot. */
+    public function isBookable(): bool
+    {
+        return $this->kind() === BudgetItemKind::Budget;
     }
 
     /**

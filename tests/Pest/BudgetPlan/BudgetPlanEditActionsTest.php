@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
+use App\Models\Legacy\Booking;
 use App\States\BudgetPlan\Draft;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
@@ -117,4 +118,19 @@ it('blocks deleting a group with children but allows deleting a leaf', function 
     // leaf -> deleted
     $lw->call('delete', $leaf->id)->assertHasNoErrors();
     expect(BudgetItem::find($leaf->id))->toBeNull();
+});
+
+it('derives bookability and wires the bookings relation per item kind', function (): void {
+    $plan = draftPlan();
+    $group = BudgetItem::factory()->create(['budget_plan_id' => $plan->id, 'is_group' => true]);
+    $leaf = BudgetItem::factory()->create(['budget_plan_id' => $plan->id, 'is_group' => false]);
+    $mount = BudgetItem::factory()->create(['budget_plan_id' => $plan->id, 'is_group' => false, 'referenced_plan_id' => $plan->id]);
+
+    expect($leaf->isBookable())->toBeTrue()
+        ->and($group->isBookable())->toBeFalse()
+        ->and($mount->isBookable())->toBeFalse()
+        // no bookings yet, and the relation is wired to the booking table by titel_id
+        ->and($leaf->hasBookings())->toBeFalse()
+        ->and($leaf->bookings()->getRelated())->toBeInstanceOf(Booking::class)
+        ->and($leaf->bookings()->getForeignKeyName())->toBe('titel_id');
 });

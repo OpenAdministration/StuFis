@@ -81,8 +81,8 @@ class TaxBudget extends Model
         return $this->belongsTo(LegacyBudgetPlan::class, 'hhp_id');
     }
 
-    public function legacyBudgetTitle(): BelongsTo
+    public function budgetTitle(): BelongsTo
     {
-        return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
+        return $this->belongsTo(BudgetItem::class, 'titel_id');
     }
 }

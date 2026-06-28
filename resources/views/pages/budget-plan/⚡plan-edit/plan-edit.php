@@ -294,6 +294,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         if ($item->is_group) {
             return;
         }
+        if ($item->hasBookings()) {
+            Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
+
+            return;
+        }
         $item->update(['is_group' => true]);
         $this->addBudget($item->id, $item->value->getAmount() / 100);
     }
@@ -349,6 +354,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         // a mount has no children of its own; otherwise it can sit anywhere in the tree
         if ($item->children()->count() > 0) {
+            return;
+        }
+        if ($item->hasBookings()) {
+            Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
+
             return;
         }
 
@@ -431,6 +441,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         if ($item->children()->count() > 0) {
             Flux::toast(__('budget-plan.edit.delete-has-children'), variant: 'danger');
+
+            return;
+        }
+        if ($item->hasBookings()) {
+            Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
 
             return;
         }
