@@ -49,9 +49,13 @@ return new class extends Migration
         });
         Schema::table('tax_budget', function (Blueprint $t): void {
             $t->unsignedBigInteger('titel_id')->change();
+            $t->renameColumn('titel_id', 'budget_id');
+
             $t->unsignedBigInteger('hhp_id')->change();
-            $t->foreign('titel_id')->references('id')->on('budget_item');
-            $t->foreign('hhp_id')->references('id')->on('budget_plan');
+            $t->renameColumn('hhp_id', 'plan_id');
+
+            $t->foreign('budget_id')->references('id')->on('budget_item');
+            $t->foreign('plan_id')->references('id')->on('budget_plan');
         });
 
         // 5. Recreate the legacy names as views projecting the new structure. Mounts are excluded
@@ -103,8 +107,10 @@ return new class extends Migration
                 $t->foreign('titel_id')->references('id')->on('haushaltstitel');
             });
             Schema::table('tax_budget', function (Blueprint $t): void {
-                $t->integer('titel_id')->change();
-                $t->integer('hhp_id')->change();
+                $t->integer('budget_id')->change();
+                $t->renameColumn('budget_id', 'titel_id');
+                $t->integer('plan_id')->change();
+                $t->renameColumn('plan_id', 'hhp_id');
                 $t->foreign('titel_id')->references('id')->on('haushaltstitel');
                 $t->foreign('hhp_id')->references('id')->on('haushaltsplan');
             });

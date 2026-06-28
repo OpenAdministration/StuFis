@@ -12,8 +12,8 @@ class TaxBudget extends Model
     protected $table = 'tax_budget';
 
     protected $fillable = [
-        'hhp_id',
-        'titel_id',
+        'plan_id',
+        'budget_id',
         'tax_percent',
     ];
 
@@ -69,7 +69,7 @@ class TaxBudget extends Model
                 );
 
                 self::firstOrCreate(
-                    ['hhp_id' => $planId, 'titel_id' => $item->id],
+                    ['plan_id' => $planId, 'budget_id' => $item->id],
                     ['tax_percent' => $percent],
                 );
             }
@@ -78,11 +78,11 @@ class TaxBudget extends Model
 
     public function budgetPlan(): BelongsTo
     {
-        return $this->belongsTo(BudgetPlan::class, 'hhp_id');
+        return $this->belongsTo(BudgetPlan::class, 'plan_id');
     }
 
     public function budgetTitle(): BelongsTo
     {
-        return $this->belongsTo(BudgetItem::class, 'titel_id');
+        return $this->belongsTo(BudgetItem::class, 'budget_id');
     }
 }

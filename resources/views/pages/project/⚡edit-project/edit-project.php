@@ -325,7 +325,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public function addTaxPosts(): void
     {
-        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget): void {
+        TaxBudget::where('plan_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget): void {
             $budgetTitle = $taxBudget->budgetTitle;
             $this->posts[] = ([
                 'name' => $budgetTitle->name.' - Einnahmen',
@@ -589,7 +589,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             && collect($this->posts)->filter(fn ($post) => $post['readonly'])->isEmpty();
         $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
 
-        $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
+        $hasTaxTitels = TaxBudget::where('plan_id', $this->hhp_id)->exists();
         $canAddTaxTitles = collect($this->posts)->filter(fn ($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
 
         // Backlink to the origin project: for a new copy/leftovers draft it comes
