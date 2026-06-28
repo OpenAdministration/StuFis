@@ -75,6 +75,12 @@
                     >
                         Haushalt
                     </x-nav-item>
+                    <x-nav-item :href="route('budget-plan.index')"
+                                             :active="Route::is('budget-plan.*')"
+                                             icon="heroicon-o-table-cells"
+                    >
+                        {{ __('budget-plan.budget-plans') }}
+                    </x-nav-item>
                 </div>
             </div>
             <div class="flex flex-col items-center space-y-0.5 text-indigo-400 text-sm mt-6">

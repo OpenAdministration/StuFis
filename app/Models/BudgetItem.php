@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Enums\BudgetItemKind;
 use App\Models\Enums\BudgetType;
 use Cknow\Money\Casts\MoneyDecimalCast;
 use Cknow\Money\Money;
@@ -111,7 +112,7 @@ class BudgetItem extends Model
     /**
      * @var array
      */
-    protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position'];
+    protected $fillable = ['budget_plan_id', 'short_name', 'name', 'value', 'budget_type', 'description', 'parent_id', 'is_group', 'position', 'referenced_plan_id'];
 
     public function bookings(): HasMany
     {
@@ -121,6 +122,53 @@ class BudgetItem extends Model
     public function budgetPlan(): BelongsTo
     {
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
+    }
+
+    /** The plan this item "mounts" (only set for mount items). */
+    public function referencedPlan(): BelongsTo
+    {
+        return $this->belongsTo(BudgetPlan::class, 'referenced_plan_id');
+    }
+
+    /** Derived discriminator (mount > group > budget) until/unless we add a physical column. */
+    public function kind(): BudgetItemKind
+    {
+        if ($this->referenced_plan_id !== null) {
+            return BudgetItemKind::Mount;
+        }
+
+        return $this->is_group ? BudgetItemKind::Group : BudgetItemKind::Budget;
+    }
+
+    public function isMount(): bool
+    {
+        return $this->referenced_plan_id !== null;
+    }
+
+    /**
+     * The item's effective value: a mount resolves to the referenced plan's total for its side
+     * (income/expense), everything else uses the stored value. $visited guards reference cycles.
+     *
+     * @param  array<int, int>  $visited  plan ids already entered, to stop mount cycles
+     */
+    public function effectiveValue(array $visited = []): Money
+    {
+        if ($this->isMount() && $this->referencedPlan !== null) {
+            return $this->referencedPlan->sumForType($this->budget_type, $visited);
+        }
+
+        if ($this->is_group) {
+            // a group's value is the LIVE sum of its children's effective values, so a mount
+            // nested anywhere inside still rolls up (a mount's derived total can't be stored)
+            $sum = Money::EUR(0);
+            foreach ($this->children as $child) {
+                $sum = $sum->add($child->effectiveValue($visited));
+            }
+
+            return $sum;
+        }
+
+        return $this->value ?? Money::EUR(0);
     }
 
     public function orderedChildren(): HasMany
