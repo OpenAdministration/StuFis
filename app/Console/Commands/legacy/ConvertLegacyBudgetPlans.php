@@ -4,12 +4,14 @@ namespace App\Console\Commands\legacy;
 
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
-use App\Models\Enums\BudgetPlanState;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
 use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
+use App\States\BudgetPlan\BudgetPlanState;
+use App\States\BudgetPlan\Draft;
+use App\States\BudgetPlan\Published;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -158,7 +160,7 @@ class ConvertLegacyBudgetPlans extends Command
             $newPlan->save();
         }
 
-        $this->line("  ✓ Created Budget Plan (ID: {$newPlan->id}, State: {$state->value})");
+        $this->line("  ✓ Created Budget Plan (ID: {$newPlan->id}, State: {$state::$name})");
 
         // Get all legacy groups and items
         $legacyGroups = $legacyPlan->budgetGroups()->with('budgetItems')->get();
@@ -245,6 +247,9 @@ class ConvertLegacyBudgetPlans extends Command
     {
         $this->line("\n  📦 Creating group items and updating parent references...");
 
+        // Legacy groups have no number of their own; resolve each one up front.
+        $shortNames = $this->resolveGroupShortNames($legacyGroups);
+
         foreach ($legacyGroups as $legacyGroup) {
             $groupInfo = $this->groupIdMapping[$legacyGroup->id];
             $groupId = $groupInfo['new_id'];
@@ -252,15 +257,9 @@ class ConvertLegacyBudgetPlans extends Command
             // Calculate total value for the group
             $totalValue = $legacyGroup->budgetItems()->sum('value');
 
-            // Create the group item with the predetermined ID. The legacy group has no
-            // number of its own, so derive the Titelnummer from its children (E.1.1 -> E.1).
             $groupItem = new BudgetItem([
                 'budget_plan_id' => $newPlan->id,
-                'short_name' => $this->deriveGroupShortName(
-                    $legacyGroup->budgetItems->pluck('titel_nr')->all(),
-                    $groupInfo['type'],
-                    $groupInfo['position'],
-                ),
+                'short_name' => $shortNames[$legacyGroup->id],
                 'name' => $groupInfo['name'],
                 'value' => $totalValue,
                 'budget_type' => $groupInfo['type'],
@@ -321,41 +320,98 @@ class ConvertLegacyBudgetPlans extends Command
     }
 
     /**
-     * Convert legacy state to new BudgetPlanState enum
+     * Convert a legacy state value to a new BudgetPlanState class.
+     *
+     * @return class-string<BudgetPlanState>
      */
-    protected function convertState(?string $state): BudgetPlanState
+    protected function convertState(?string $state): string
     {
         // Adjust this mapping based on your legacy state values
         return match ($state) {
-            'final', 'approved', '1' => BudgetPlanState::FINAL,
-            default => BudgetPlanState::DRAFT,
+            'final', 'approved', '1' => Published::class,
+            default => Draft::class,
         };
     }
 
     /**
-     * Derive a group's Titelnummer from its children's numbers.
+     * Resolve each legacy group's Titelnummer.
      *
-     * Legacy groups carry no number, but their items do (e.g. "E.1.1"), so the group is the
-     * parent prefix of the shallowest child: ["E.1.1", "E.1.2"] -> "E.1". When no child is
-     * numbered, fall back to a generated number from the budget type (e.g. "E.1" / "A.1").
+     * Preferred: derive from the group's children (E.1.1 -> E.1). When a group has no numbered
+     * children, fall back to auto-counting the next free number per budget type (as the legacy
+     * system did), skipping any number already taken by a derived group so they never collide.
+     *
+     * @return array<int, string> legacy group id => Titelnummer
+     */
+    protected function resolveGroupShortNames($legacyGroups): array
+    {
+        $resolved = [];
+        $usedByPrefix = [];
+        $needsFallback = [];
+
+        // pass 1: derive from children where possible, and record taken top-level numbers
+        foreach ($legacyGroups as $group) {
+            $derived = $this->deriveGroupShortName($group->budgetItems->pluck('titel_nr')->all());
+
+            if ($derived === null) {
+                $needsFallback[] = $group->id;
+
+                continue;
+            }
+
+            $resolved[$group->id] = $derived;
+
+            if (preg_match('/^(\D+)\.(\d+)$/', $derived, $m)) {
+                $usedByPrefix[$m[1]][(int) $m[2]] = true;
+            }
+        }
+
+        // pass 2: auto-count the rest per budget type, filling the first free slot
+        foreach ($needsFallback as $groupId) {
+            $prefix = $this->groupIdMapping[$groupId]['type']->numberPrefix();
+
+            $resolved[$groupId] = $this->nextFreeGroupNumber($prefix, $usedByPrefix[$prefix] ?? []);
+            $usedByPrefix[$prefix][(int) substr(strrchr($resolved[$groupId], '.'), 1)] = true;
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Derive a group's Titelnummer from the parent prefix of the shallowest numbered child
+     * (["E.1.1", "E.1.2"] -> "E.1"), or null when no child is numbered.
      *
      * @param  array<int, string|null>  $childTitelNrs
      */
-    protected function deriveGroupShortName(array $childTitelNrs, BudgetType $type, int $position): string
+    protected function deriveGroupShortName(array $childTitelNrs): ?string
     {
         $numbered = array_values(array_filter(
             $childTitelNrs,
             static fn ($nr): bool => filled($nr) && str_contains((string) $nr, '.'),
         ));
 
-        if ($numbered !== []) {
-            // shallowest child (fewest segments) -> strip its last segment
-            usort($numbered, static fn ($a, $b): int => substr_count($a, '.') <=> substr_count($b, '.'));
-
-            return substr($numbered[0], 0, (int) strrpos($numbered[0], '.'));
+        if ($numbered === []) {
+            return null;
         }
 
-        return $type->numberPrefix().'.'.($position + 1);
+        // shallowest child (fewest segments) -> strip its last segment
+        usort($numbered, static fn ($a, $b): int => substr_count($a, '.') <=> substr_count($b, '.'));
+
+        return substr($numbered[0], 0, (int) strrpos($numbered[0], '.'));
+    }
+
+    /**
+     * The first "{prefix}.{n}" whose number is not already used (auto-counting fallback).
+     *
+     * @param  array<int, bool>  $used  numbers already taken, keyed by the number
+     */
+    protected function nextFreeGroupNumber(string $prefix, array $used): string
+    {
+        $n = 1;
+        while (isset($used[$n])) {
+            $n++;
+        }
+
+        return "{$prefix}.{$n}";
     }
 
     /**
