@@ -2,17 +2,18 @@
 
 namespace Tests\Pest\Project;
 
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\BudgetPlan;
+use App\Models\FiscalYear;
 use App\Models\Legacy\Project;
+use App\States\BudgetPlan\Published;
 use Livewire\Livewire;
 
 beforeEach(function (): void {
-    // relatedBudgetPlan()->label() / the budget-plan link need a covering plan.
-    LegacyBudgetPlan::create([
-        'von' => now()->startOfYear(),
-        'bis' => now()->endOfYear(),
-        'state' => 'final',
-    ]);
+    // relatedBudgetPlan()->label() / the budget-plan link need a covering plan. The legacy
+    // haushaltsplan is now a view over budget_plan, so seed the new structure (published =>
+    // "final" in the view) with a fiscal year covering today.
+    $fiscalYear = FiscalYear::create(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
+    BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Published::class]);
     $this->actingAs(user());
 });
 

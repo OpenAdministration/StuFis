@@ -2,30 +2,24 @@
 
 namespace Tests\Pest\TaxBudget;
 
-use App\Models\Legacy\LegacyBudgetGroup;
-use App\Models\Legacy\LegacyBudgetItem;
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\BudgetItem;
+use App\Models\BudgetPlan;
 use App\Models\TaxBudget;
+use App\States\BudgetPlan\Draft;
 
 beforeEach(function (): void {
-    $this->plan = LegacyBudgetPlan::create([
-        'von' => now()->startOfYear(),
-        'bis' => now()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $this->plan = BudgetPlan::create(['state' => Draft::class]);
 });
 
 function taxTitleCount(int $planId): int
 {
-    $groupIds = LegacyBudgetGroup::where('hhp_id', $planId)->pluck('id');
-
-    return LegacyBudgetItem::whereIn('hhpgruppen_id', $groupIds)->count();
+    return BudgetItem::where('budget_plan_id', $planId)->where('is_group', false)->count();
 }
 
 it('adds the Umsatzsteuer group and two tax titles', function (): void {
     TaxBudget::addToPlan($this->plan->id);
 
-    expect(LegacyBudgetGroup::where('hhp_id', $this->plan->id)->count())->toBe(1)
+    expect(BudgetItem::where('budget_plan_id', $this->plan->id)->where('is_group', true)->count())->toBe(1)
         ->and(taxTitleCount($this->plan->id))->toBe(2)
         ->and(TaxBudget::where('hhp_id', $this->plan->id)->count())->toBe(2);
 });
@@ -35,7 +29,7 @@ it('does not add duplicates when called repeatedly', function (): void {
     TaxBudget::addToPlan($this->plan->id);
     TaxBudget::addToPlan($this->plan->id);
 
-    expect(LegacyBudgetGroup::where('hhp_id', $this->plan->id)->count())->toBe(1)
+    expect(BudgetItem::where('budget_plan_id', $this->plan->id)->where('is_group', true)->count())->toBe(1)
         ->and(taxTitleCount($this->plan->id))->toBe(2)
         ->and(TaxBudget::where('hhp_id', $this->plan->id)->count())->toBe(2);
 });

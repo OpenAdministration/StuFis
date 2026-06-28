@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Legacy\LegacyBudgetGroup;
-use App\Models\Legacy\LegacyBudgetItem;
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\Enums\BudgetType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
@@ -28,57 +26,59 @@ class TaxBudget extends Model
     }
 
     /**
-     * Idempotently add the Umsatzsteuer group and its tax titles to a legacy
-     * budget plan. Existing entries are left untouched, so it is safe to call
-     * this repeatedly for the same plan.
+     * Idempotently add the Umsatzsteuer group and its tax titles to a budget plan, in the new
+     * budget_item structure. Existing entries are left untouched, so it is safe to call this
+     * repeatedly for the same plan.
      *
      * @param  array<int, array{titel_nr: string, titel_name: string}>  $taxTitles  Tax titles to ensure, keyed by tax percentage.
-     * @param  int  $groupType  1 = Ausgabe (expenses), 0 = Einnahme (income).
      */
     public static function addToPlan(
         int $planId,
         string $groupName = 'Umsatzsteuer',
-        int $groupType = 1,
+        string $groupShortName = 'A.99',
+        BudgetType $groupType = BudgetType::EXPENSE,
         array $taxTitles = [
             7 => ['titel_nr' => 'A.99.1', 'titel_name' => '7% Umsatzsteuer'],
             19 => ['titel_nr' => 'A.99.2', 'titel_name' => '19% Umsatzsteuer'],
         ],
     ): void {
-        DB::transaction(static function () use ($planId, $groupName, $groupType, $taxTitles): void {
-            $group = LegacyBudgetGroup::firstOrCreate([
-                'hhp_id' => $planId,
-                'gruppen_name' => $groupName,
-                'type' => $groupType,
-            ]);
+        DB::transaction(static function () use ($planId, $groupName, $groupShortName, $groupType, $taxTitles): void {
+            $group = BudgetItem::firstOrCreate(
+                ['budget_plan_id' => $planId, 'short_name' => $groupShortName, 'is_group' => true],
+                [
+                    'name' => $groupName,
+                    'budget_type' => $groupType,
+                    'value' => 0,
+                    'position' => BudgetItem::where('budget_plan_id', $planId)->whereNull('parent_id')
+                        ->where('budget_type', $groupType)->max('position') + 1,
+                ],
+            );
 
+            $position = 0;
             foreach ($taxTitles as $percent => $title) {
-                $item = LegacyBudgetItem::firstOrCreate(
+                $item = BudgetItem::firstOrCreate(
+                    ['budget_plan_id' => $planId, 'short_name' => $title['titel_nr']],
                     [
-                        'hhpgruppen_id' => $group->id,
-                        'titel_nr' => $title['titel_nr'],
-                    ],
-                    [
-                        'titel_name' => $title['titel_name'],
+                        'name' => $title['titel_name'],
                         'value' => 0,
+                        'budget_type' => $groupType,
+                        'is_group' => false,
+                        'parent_id' => $group->id,
+                        'position' => $position++,
                     ],
                 );
 
                 self::firstOrCreate(
-                    [
-                        'hhp_id' => $planId,
-                        'titel_id' => $item->id,
-                    ],
-                    [
-                        'tax_percent' => $percent,
-                    ],
+                    ['hhp_id' => $planId, 'titel_id' => $item->id],
+                    ['tax_percent' => $percent],
                 );
             }
         });
     }
 
-    public function legacyBudgetPlan(): BelongsTo
+    public function budgetPlan(): BelongsTo
     {
-        return $this->belongsTo(LegacyBudgetPlan::class, 'hhp_id');
+        return $this->belongsTo(BudgetPlan::class, 'hhp_id');
     }
 
     public function budgetTitle(): BelongsTo
