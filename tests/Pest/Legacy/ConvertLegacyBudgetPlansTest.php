@@ -1,21 +1,15 @@
 <?php
 
-use App\Console\Commands\legacy\ConvertLegacyBudgetPlans;
+use App\Support\Budget\BudgetPlanConverter;
 
 function derivedGroupNr(array $childTitelNrs): ?string
 {
-    $method = new ReflectionMethod(ConvertLegacyBudgetPlans::class, 'deriveGroupShortName');
-    $method->setAccessible(true);
-
-    return $method->invoke(new ConvertLegacyBudgetPlans, $childTitelNrs);
+    return (new BudgetPlanConverter)->deriveGroupShortName($childTitelNrs);
 }
 
 function nextFreeGroupNr(string $prefix, array $used): string
 {
-    $method = new ReflectionMethod(ConvertLegacyBudgetPlans::class, 'nextFreeGroupNumber');
-    $method->setAccessible(true);
-
-    return $method->invoke(new ConvertLegacyBudgetPlans, $prefix, $used);
+    return (new BudgetPlanConverter)->nextFreeGroupNumber($prefix, $used);
 }
 
 it('derives the group number from the parent prefix of its children', function (): void {
