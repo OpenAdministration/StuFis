@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Artisan::call('settings:import-from-legacy-config');
+        Artisan::call('legacy:import-config');
     }
 
     public function down(): void
