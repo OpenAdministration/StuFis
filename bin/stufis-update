@@ -24,8 +24,14 @@ step "Fetching latest code"
 git fetch --tags --prune
 
 if [ -n "$1" ]; then
-    # deploy a specific ref: a release tag (recommended, reproducible) or a branch
-    git checkout "$1"
+    # deploy a specific ref: a release tag (recommended, reproducible) or a branch.
+    # Prefer the tag namespace and check it out detached, so a tag never clashes
+    # with a stale local branch of the same name (e.g. v4.4.0 tag vs v4.4.0 branch).
+    if git rev-parse -q --verify "refs/tags/$1^{commit}" >/dev/null; then
+        git checkout --detach "refs/tags/$1"
+    else
+        git checkout "$1"
+    fi
 fi
 
 # fast-forward only when on a branch; a tag checkout is a detached HEAD with no

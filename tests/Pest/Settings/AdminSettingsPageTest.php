@@ -8,7 +8,6 @@ use Livewire\Livewire;
 // Keys the settings page persists. Snapshot them all so the shared, persisted
 // DB is left exactly as it was found.
 const SETTINGS_KEYS = [
-    'finance_mail',
     'mail_domain',
     'project.description.min_length',
     'project.description.max_length',
@@ -25,9 +24,8 @@ beforeEach(function (): void {
         ->mapWithKeys(fn (string $key): array => [$key => Setting::find($key)?->value])
         ->all();
 
-    // Known-good baseline for the required text fields so unrelated validation tests
+    // Known-good baseline for the required text field so unrelated validation tests
     // aren't tripped up by whatever the shared DB happens to hold. Restored afterwards.
-    Setting::set('finance_mail', 'finanzen@open-administration.de');
     Setting::set('mail_domain', 'open-administration.de');
 });
 
@@ -59,7 +57,7 @@ it('persists changed settings on save', function (): void {
     $this->actingAs(adminUser());
 
     Livewire::test('pages::settings')
-        ->set('financeMail', 'neu@open-administration.de')
+        ->set('mailDomain', 'example.org')
         ->set('descMin', 10)
         ->set('descMax', -1)
         ->set('taxActive', true)
@@ -67,7 +65,7 @@ it('persists changed settings on save', function (): void {
         ->call('save')
         ->assertHasNoErrors();
 
-    expect(Setting::get('finance_mail'))->toBe('neu@open-administration.de')
+    expect(Setting::get('mail_domain'))->toBe('example.org')
         ->and(Setting::get('project.description.min_length'))->toBe(10)
         ->and(Setting::get('project.description.max_length'))->toBe(-1)
         ->and(Setting::get('tax.active'))->toBeTrue()
@@ -102,11 +100,11 @@ it('rejects a maximum length below the minimum (unless -1)', function (): void {
         ->assertHasNoErrors();
 });
 
-it('rejects an invalid finance mail address', function (): void {
+it('rejects an empty mail domain', function (): void {
     $this->actingAs(adminUser());
 
     Livewire::test('pages::settings')
-        ->set('financeMail', 'not-an-email')
+        ->set('mailDomain', '')
         ->call('save')
-        ->assertHasErrors('financeMail');
+        ->assertHasErrors('mailDomain');
 });

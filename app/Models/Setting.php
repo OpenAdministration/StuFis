@@ -27,7 +27,6 @@ class Setting extends Model
     public static function defaults(): array
     {
         return [
-            'finance_mail' => 'service@open-administration.de',
             'mail_domain' => 'open-administration.de',
             'project' => [
                 'description' => [

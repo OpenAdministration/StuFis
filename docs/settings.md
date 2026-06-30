@@ -46,7 +46,6 @@ row has been written, usually by the legacy-config migration.
 
 | Key | Type | Default | Purpose / where used |
 | --- | --- | --- | --- |
-| `finance_mail` | string | `service@open-administration.de` | Finance contact address. |
 | `mail_domain` | string | `open-administration.de` | Domain appended to bare project mail aliases (`Legacy\Project::mail`); used by `stufis:change-project-mail-domain`. |
 | `project.description.min_length` | int | `50` | Min number of visible characters (HTML stripped) in a project description, enforced by `DescriptionLengthRule`. `0` disables the lower bound. |
 | `project.description.max_length` | int | `-1` | Max number of visible characters (HTML stripped) in a project description, enforced by `DescriptionLengthRule`. `-1` disables the upper bound (unlimited). |
@@ -60,4 +59,7 @@ row has been written, usually by the legacy-config migration.
 ## Related structured config
 
 The settings migration also seeds the `legal_bases` table (from the legacy `rechtsgrundlagen`
-config), managed via the `App\Models\LegalBasis` model rather than the `Setting` model.
+config), managed via the `App\Models\LegalBasis` model rather than the `Setting` model. The
+`/config` settings page edits these rows too (add / edit / reorder / activate). The `slug`
+is the stored identifier (a project's `recht` column holds it) and is read-only once created;
+a basis still referenced by a project cannot be deleted — deactivate it instead.
