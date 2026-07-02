@@ -49,6 +49,7 @@ return [
     'edit.saved' => 'Gespeichert.',
     'edit.no-fiscal-year' => 'Kein Haushaltsjahr',
     'edit.new-group' => 'Neue Gruppe',
+    'edit.new-budget' => 'Neuer Titel',
     'edit.more-actions' => 'Weitere Aktionen',
     'edit.to-budget' => 'In Titel umwandeln',
     'edit.to-group' => 'In Gruppe umwandeln',

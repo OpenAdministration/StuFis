@@ -79,7 +79,10 @@
                         </div>
                         <div class="col-start-1 col-span-4 grid grid-cols-subgrid gap-4">
                             {{-- span all 4 sub-columns so the button text doesn't force the auto col-1 (handle) track wider --}}
-                            <flux:button class="col-span-4 justify-self-start" icon="plus" wire:click="addGroup({{ $budgetType->value }})" variant="subtle">{{ __('budget-plan.edit.new-group') }}</flux:button>
+                            <div class="col-span-4 flex gap-2 justify-self-start">
+                                <flux:button icon="plus" wire:click="addGroup({{ $budgetType->value }})" variant="subtle">{{ __('budget-plan.edit.new-group') }}</flux:button>
+                                <flux:button icon="plus" wire:click="addRootBudget({{ $budgetType->value }})" variant="subtle">{{ __('budget-plan.edit.new-budget') }}</flux:button>
+                            </div>
                         </div>
                     </div>
                 </flux:fieldset>

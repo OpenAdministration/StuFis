@@ -137,6 +137,40 @@ it('derives bookability and wires the bookings relation per item kind', function
         ->and($leaf->bookings()->getForeignKeyName())->toBe('titel_id');
 });
 
+it('adds a plain budget line at root level (no group)', function (): void {
+    $this->actingAs(budgetManager());
+    $plan = draftPlan();
+    $lw = editComponent($plan);
+
+    $lw->call('addRootBudget', BudgetType::EXPENSE)->assertHasNoErrors();
+
+    $root = BudgetItem::where('budget_plan_id', $plan->id)->whereNull('parent_id')
+        ->where('budget_type', BudgetType::EXPENSE)->sole();
+
+    expect($root->is_group)->toBeFalse()
+        ->and($root->parent_id)->toBeNull()
+        ->and($root->short_name)->not->toBeNull();
+});
+
+it('deletes a tax title along with its tax_budget row (no FK violation)', function (): void {
+    Setting::set('tax.active', true);
+    $this->actingAs(budgetManager());
+    $plan = draftPlan();
+    $lw = editComponent($plan);
+
+    $lw->call('addTaxTitles')->assertHasNoErrors();
+
+    $taxItem = BudgetItem::where('budget_plan_id', $plan->id)
+        ->where('short_name', 'A.99.1')->firstOrFail();
+    expect(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeTrue();
+
+    // deleting the tax title used to fail on the tax_budget.budget_id FK
+    $lw->call('delete', $taxItem->id)->assertHasNoErrors();
+
+    expect(BudgetItem::find($taxItem->id))->toBeNull()
+        ->and(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeFalse();
+});
+
 it('adds VAT tax titles via the action when the tax feature is active', function (): void {
     Setting::set('tax.active', true);
     $this->actingAs(budgetManager());

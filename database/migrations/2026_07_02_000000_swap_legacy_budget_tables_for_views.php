@@ -166,11 +166,15 @@ return new class extends Migration
              SELECT bp.id AS id,
                     fy.start_date AS von,
                     fy.end_date AS bis,
-                    CASE WHEN bp.state IN ('published', 'completed') THEN 'final' ELSE 'draft' END AS state
+                    CASE WHEN bp.state = 'draft' THEN 'draft' ELSE 'final' END AS state
              FROM `{$p}budget_plan` bp
              INNER JOIN `{$p}fiscal_year` fy ON fy.id = bp.fiscal_year_id"
         );
 
+        // Legacy titles must always sit inside a group. A root-level budget line (a leaf with no
+        // parent) has no group, so we synthesize one for it, reusing the leaf's own id as the group
+        // id — safe because legacy group and title ids come from separate auto-increments and already
+        // overlap. Real groups and these phantom groups never collide (budget_item ids are unique).
         DB::statement(
             "CREATE VIEW `{$p}haushaltsgruppen` AS
              SELECT bi.id AS id,
@@ -178,13 +182,15 @@ return new class extends Migration
                     bi.name AS gruppen_name,
                     CASE WHEN bi.budget_type = 1 THEN 0 ELSE 1 END AS type
              FROM `{$p}budget_item` bi
-             WHERE bi.is_group = 1 AND bi.referenced_plan_id IS NULL"
+             WHERE bi.referenced_plan_id IS NULL
+               AND (bi.is_group = 1 OR bi.parent_id IS NULL)"
         );
 
+        // A root leaf points at its phantom group (its own id); nested leaves point at their parent.
         DB::statement(
             "CREATE VIEW `{$p}haushaltstitel` AS
              SELECT bi.id AS id,
-                    bi.parent_id AS hhpgruppen_id,
+                    COALESCE(bi.parent_id, bi.id) AS hhpgruppen_id,
                     bi.name AS titel_name,
                     bi.short_name AS titel_nr,
                     bi.value AS value

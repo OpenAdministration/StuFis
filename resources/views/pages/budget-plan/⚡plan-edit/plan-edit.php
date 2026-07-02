@@ -353,6 +353,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->addBudget($new_item->id);
     }
 
+    /** Add a plain budget line (leaf) at root level — no surrounding group. */
+    public function addRootBudget(BudgetType $budget_type): void
+    {
+        $this->addItem(null, false, budget_type: $budget_type);
+    }
+
     public function addBudget(int $parent_id, float $value = 0.0): void
     {
         $this->addItem($parent_id, false, $value);
@@ -363,18 +369,23 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->addItem($parent_id, true);
     }
 
-    private function addItem(int $parent_id, bool $is_group, $value = 0.0): void
+    private function addItem(?int $parent_id, bool $is_group, $value = 0.0, ?BudgetType $budget_type = null): void
     {
-        $parent = BudgetItem::findOrFail($parent_id);
-        if ($parent->is_group === 0) {
+        $parent = $parent_id !== null ? BudgetItem::findOrFail($parent_id) : null;
+        if ($parent !== null && $parent->is_group === 0) {
             return;
         }
 
-        $pos = $parent->children()->max('position');
+        // root items take their type from the caller; nested items inherit it from the parent
+        $budget_type = $parent?->budget_type ?? $budget_type;
+        $pos = $parent !== null
+            ? $parent->children()->max('position')
+            : $this->query($budget_type)->whereNull('parent_id')->max('position');
+
         $new_item = BudgetItem::create([
             'parent_id' => $parent_id,
-            'budget_plan_id' => $parent->budget_plan_id,
-            'budget_type' => $parent->budget_type,
+            'budget_plan_id' => $parent?->budget_plan_id ?? $this->plan_id,
+            'budget_type' => $budget_type,
             'is_group' => $is_group,
             'position' => $pos + 1,
             'value' => Money::EUR($value, true),
@@ -554,7 +565,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
             return;
         }
-        $item->delete();
+        DB::transaction(function () use ($item): void {
+            // a tax title is referenced by a tax_budget row (budget_id FK, RESTRICT);
+            // drop it first so the item delete doesn't hit the constraint
+            TaxBudget::where('budget_id', $item->id)->delete();
+            $item->delete();
+        });
         $this->reSumItemValues($item);
     }
 

@@ -60,7 +60,7 @@ class LegacyBudgetPlan extends Model
         return $this->throughBudgetGroups()->hasBudgetItems();
     }
 
-    public static function latest(): \Eloquent|static
+    public static function latest(): \Eloquent|static|null
     {
         return self::orderBy('id', 'desc')->first();
     }
