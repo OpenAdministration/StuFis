@@ -23,8 +23,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->group(function (): void {
 
     Route::get('/', function () {
-        $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
         $latestPlan = LegacyBudgetPlan::latest();
+
+        // Fresh install with no budget plan yet: send the user to the plan overview.
+        if ($latestPlan === null) {
+            return to_route('budget-plan.index');
+        }
+
+        $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
 
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
