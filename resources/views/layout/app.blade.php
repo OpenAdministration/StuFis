@@ -69,17 +69,19 @@
                     >
                         Sitzung
                     </x-nav-item>
-                    <x-nav-item :href="route('legacy.hhp')"
-                                :active="Route::is('legacy.hhp')"
-                                icon="heroicon-o-table-cells"
-                    >
-                        Haushalt
-                    </x-nav-item>
+                    @can('admin', \App\Models\User::class)
+                        <x-nav-item :href="route('legacy.hhp')"
+                                    :active="Route::is('legacy.hhp')"
+                                    icon="heroicon-o-table-cells"
+                        >
+                            {{ __('budget-plan.menu.legacy') }}
+                        </x-nav-item>
+                    @endcan
                     <x-nav-item :href="route('budget-plan.index')"
                                              :active="Route::is('budget-plan.*')"
                                              icon="heroicon-o-table-cells"
                     >
-                        {{ __('budget-plan.budget-plans') }}
+                        {{ __('budget-plan.menu.current') }}
                     </x-nav-item>
                 </div>
             </div>
@@ -170,11 +172,19 @@
                             >
                                 Sitzung
                             </x-nav-item>
-                            <x-nav-item mobile :href="route('legacy.hhp')"
-                                        :active="Route::is('legacy.hhp')"
+                            @can('admin', \App\Models\User::class)
+                                <x-nav-item mobile :href="route('legacy.hhp')"
+                                            :active="Route::is('legacy.hhp')"
+                                            icon="heroicon-o-table-cells"
+                                >
+                                    {{ __('budget-plan.menu.legacy') }}
+                                </x-nav-item>
+                            @endcan
+                            <x-nav-item mobile :href="route('budget-plan.index')"
+                                        :active="Route::is('budget-plan.*')"
                                         icon="heroicon-o-table-cells"
                             >
-                                Haushalt
+                                {{ __('budget-plan.menu.current') }}
                             </x-nav-item>
                             <div class="h-4"></div>
                             <x-nav-item mobile :href="route('terms')">TOS</x-nav-item>

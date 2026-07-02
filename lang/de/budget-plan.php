@@ -23,6 +23,8 @@ return [
     'budget-longname' => 'Titelname',
     'budget-value' => 'Wert',
     'budget-group' => 'Haushaltstitelgruppe',
+    'menu.legacy' => 'HHP (alt)',
+    'menu.current' => 'Haushalt',
     'index.button.new' => 'Neu anlegen',
     'index.headline' => 'Übersicht aller Haushaltspläne',
     'index.no-plans' => 'keine Haushaltspläne vorhanden',
