@@ -18,9 +18,7 @@ class MigrateConfigToDatabase extends Command
         $config = $this->getLegacyConfig();
 
         if ($config === []) {
-            $this->error('No legacy config found.');
-
-            return self::FAILURE;
+            $this->components->warn('No legacy config found for realm "'.config('stufis.realm').'", seeding default settings only.');
         }
 
         $this->migrateSettings($config);
@@ -112,6 +110,12 @@ class MigrateConfigToDatabase extends Command
             $file = base_path('legacy/config/config.orgs.php');
         }
 
-        return (include $file)[$realm];
+        // A fresh instance may run against a realm that has no legacy config
+        // (or the legacy file may not exist at all). Treat both as "no config".
+        if (! is_file($file)) {
+            return [];
+        }
+
+        return (include $file)[$realm] ?? [];
     }
 }
