@@ -73,8 +73,8 @@
                         </div>
                         <div class="col-span-8 grid grid-cols-subgrid gap-x-4"
                              wire:sort="sort">
-                            @foreach($root_items[$budgetType->slug()] as $id)
-                                <x-budgetplan.item-group-edit :item="$all_items[$id]" :wire:key="$id" :category="$budgetType->slug()"/>
+                            @foreach($root_items[$budgetType->slug()] as $item)
+                                <x-budgetplan.item-group-edit :item="$item" :values="$values" :wire:key="$item->id" :category="$budgetType->slug()"/>
                             @endforeach
                         </div>
                         <div class="col-start-1 col-span-4 grid grid-cols-subgrid gap-4">

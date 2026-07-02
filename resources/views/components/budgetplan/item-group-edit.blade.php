@@ -1,6 +1,8 @@
 @props([
     'level' => 0,
     'item',
+    /* @var array<int, \Cknow\Money\Money> map of item id => precomputed effective value */
+    'values' => [],
     /* @var bool array of booleans, one for each level, indicating if the item is the last one on that level  */
     'lastItem' => [],
 ])
@@ -69,7 +71,7 @@
                     <flux:input.group.prefix variant="filled">
                         <x-fas-link class="size-3.5"/>
                     </flux:input.group.prefix>
-                    <flux:input readonly variant="filled" value="{{ $item->effectiveValue()->format() }}" class:input="text-right text-black!"/>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
                 </flux:input.group>
             @elseif($item->is_group)
                 {{-- group rows use an input-group so the Σ prefix welds onto the (readonly) sum.
@@ -78,7 +80,7 @@
                     <flux:input.group.prefix variant="filled">
                         <span>Σ</span>
                     </flux:input.group.prefix>
-                    <flux:input readonly variant="filled" value="{{ $item->effectiveValue()->format() }}" class:input="text-right text-black!"/>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
                 </flux:input.group>
             @else
                 {{-- child rows have no prefix; a lone input must NOT sit in an input-group, otherwise
@@ -94,7 +96,7 @@
                         @if($item->isMount())
                             <flux:menu.item wire:click="convertToBudget({{$item->id}})">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
                         @elseif($item->is_group)
-                            <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->children->count() > 0">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
+                            <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->orderedChildren->isNotEmpty()">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
                         @else
                             <flux:menu.item wire:click="convertToGroup({{$item->id}})">{{ __('budget-plan.edit.to-group') }}</flux:menu.item>
                             {{-- open the modal instantly (client-side) so the skeleton shows while candidates load --}}
@@ -108,7 +110,7 @@
                     <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)" icon="clipboard">
                         {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren()->count() !== 0" variant="danger" icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
+                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren->isNotEmpty()" variant="danger" icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
             @if($item->is_group)
@@ -131,6 +133,7 @@
             @foreach($item->orderedChildren as $child)
                 <x-budgetplan.item-group-edit
                     :item="$child"
+                    :values="$values"
                     :wire:key="$child->id"
                     :level="$level +1"
                     :last-item="[...$lastItem, $loop->last]"

@@ -11,6 +11,7 @@ use App\Support\Budget\TitleNumberer;
 use Cknow\Money\Money;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -47,7 +48,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public function mount(int $plan_id): void
     {
-        BudgetItem::eagerLoadRelations(['orderedChildren']);
         $plan = BudgetPlan::findOrFail($plan_id);
         $this->authorize('update', $plan);
 
@@ -89,25 +89,99 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function with(): array
     {
         $fiscal_years = FiscalYear::all();
-        $item_models = $this->query()
-            ->whereIn('id', array_keys($this->items))
-            ->get()->keyBy('id');
 
-        $in_ids = $this->query(1)->whereNull('parent_id')->pluck('id');
-        $out_ids = $this->query(-1)->whereNull('parent_id')->pluck('id');
+        // Load the whole plan in ONE query and assemble the tree in memory, so the recursive
+        // blade walks pre-loaded relations instead of lazy-loading `orderedChildren` per node.
+        $all = BudgetItem::where('budget_plan_id', $this->plan_id)
+            ->orderBy('position')
+            ->get();
 
-        $plan = BudgetPlan::findOrFail($this->plan_id);
+        // attach each item's children as the `orderedChildren` relation the view recurses on
+        $byParent = $all->groupBy('parent_id');
+        foreach ($all as $item) {
+            $item->setRelation('orderedChildren', $byParent->get($item->id, collect()));
+        }
+
+        // preload referenced plans for any mount items (one query for all of them)
+        $refIds = $all->pluck('referenced_plan_id')->filter()->unique();
+        $refPlans = $refIds->isNotEmpty()
+            ? BudgetPlan::whereIn('id', $refIds)->get()->keyBy('id')
+            : collect();
+        foreach ($all as $item) {
+            if ($item->referenced_plan_id !== null) {
+                $item->setRelation('referencedPlan', $refPlans->get($item->referenced_plan_id));
+            }
+        }
+
+        // compute every item's effective value once, bottom-up (memoized), instead of
+        // re-summing each subtree at every level during render
+        $values = $this->computeValues($all);
+
+        $roots = $all->whereNull('parent_id');
+        $rootsFor = fn (BudgetType $type) => $roots
+            ->filter(fn (BudgetItem $i): bool => $i->budget_type === $type)
+            ->values();
 
         return [
             'fiscal_years' => $fiscal_years,
-            'all_items' => $item_models,
+            'values' => $values,
             'root_items' => [
-                'in' => $in_ids,
-                'out' => $out_ids,
+                'in' => $rootsFor(BudgetType::INCOME),
+                'out' => $rootsFor(BudgetType::EXPENSE),
             ],
-            'in_total' => $plan->incomeTotal(),
-            'out_total' => $plan->expenseTotal(),
+            'in_total' => $this->sumRoots($rootsFor(BudgetType::INCOME), $values),
+            'out_total' => $this->sumRoots($rootsFor(BudgetType::EXPENSE), $values),
         ];
+    }
+
+    /**
+     * Compute the effective value of every item once, memoized into an [id => Money] map.
+     * Groups sum their (already-loaded) children; mounts resolve through the referenced plan
+     * (the only branch that still touches the DB, and only for the rare mount item).
+     *
+     * @param  Collection<int, BudgetItem>  $all  all items, with orderedChildren set
+     * @return array<int, Money>
+     */
+    private function computeValues($all): array
+    {
+        $map = [];
+        $resolve = function (BudgetItem $item) use (&$resolve, &$map): Money {
+            if (isset($map[$item->id])) {
+                return $map[$item->id];
+            }
+            if ($item->isMount()) {
+                return $map[$item->id] = $item->effectiveValue();
+            }
+            if ($item->is_group) {
+                $sum = Money::EUR(0);
+                foreach ($item->orderedChildren as $child) {
+                    $sum = $sum->add($resolve($child));
+                }
+
+                return $map[$item->id] = $sum;
+            }
+
+            return $map[$item->id] = $item->value ?? Money::EUR(0);
+        };
+        foreach ($all as $item) {
+            $resolve($item);
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param  Collection<int, BudgetItem>  $roots
+     * @param  array<int, Money>  $values
+     */
+    private function sumRoots($roots, array $values): Money
+    {
+        $sum = Money::EUR(0);
+        foreach ($roots as $root) {
+            $sum = $sum->add($values[$root->id]);
+        }
+
+        return $sum;
     }
 
     /**
