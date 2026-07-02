@@ -4,9 +4,10 @@
 
 // Note: Laravel will automatically resolve `Breadcrumbs::` without
 // this import. This is nice for IDE syntax and refactoring.
-use Diglactic\Breadcrumbs\Breadcrumbs;
+use App\Models\BudgetPlan;
 // This import is also not required, and you could replace `BreadcrumbTrail $trail`
 //  with `$trail`. This is nice for IDE type checking and completion.
+use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
 /**
@@ -166,8 +167,7 @@ Breadcrumbs::for('project.create', static function (BreadcrumbTrail $trail): voi
 // Home > project > PID
 Breadcrumbs::for('project.show', static function (BreadcrumbTrail $trail, $project_id): void {
     $trail->parent('legacy.dashboard');
-    $trail->push(__('general.breadcrumb.project'));
-    $trail->push($project_id, route('project.show', $project_id));
+    $trail->push(__('general.breadcrumb.project').' '.$project_id, route('project.show', $project_id));
 });
 
 // Home > project > PID > Edit
@@ -185,8 +185,7 @@ Breadcrumbs::for('legacy.expense.create', static function (BreadcrumbTrail $trai
 // Home > project > PID > Abrechnung > AID
 Breadcrumbs::for('legacy.expense-long', static function (BreadcrumbTrail $trail, $project_id, $auslagen_id): void {
     $trail->parent('project.show', $project_id);
-    $trail->push(__('general.breadcrumb.abrechnung'));
-    $trail->push($auslagen_id, route('legacy.expense', $auslagen_id));
+    $trail->push(__('general.breadcrumb.abrechnung').' '.$auslagen_id, route('legacy.expense', $auslagen_id));
 });
 
 // Home > project > PID > Abrechnung > AID > BelegePDF
@@ -220,7 +219,13 @@ Breadcrumbs::for('budget-plan.index', static function (BreadcrumbTrail $trail): 
 // Home > Budget-Plans > ID
 Breadcrumbs::for('budget-plan.view', static function (BreadcrumbTrail $trail, $plan_id): void {
     $trail->parent('budget-plan.index');
-    $trail->push($plan_id, route('budget-plan.view', $plan_id));
+
+    $plan = BudgetPlan::find($plan_id);
+    $label = $plan
+        ? collect([$plan->label(), $plan->fiscalYear?->label()])->filter()->implode(' · ')
+        : $plan_id;
+
+    $trail->push($label, route('budget-plan.view', $plan_id));
 });
 
 // Home > Budget-Plans > ID
@@ -238,4 +243,22 @@ Breadcrumbs::for('config', static function (BreadcrumbTrail $trail): void {
 Breadcrumbs::for('changelog', static function (BreadcrumbTrail $trail): void {
     $trail->parent('legacy.dashboard');
     $trail->push(__('general.breadcrumb.changelog'), route('changelog'));
+});
+
+// Home > Budget-Plans > New budget plan
+Breadcrumbs::for('budget-plan.create', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('budget-plan.index');
+    $trail->push(__('budget-plan.create.headline'), route('budget-plan.create'));
+});
+
+// Home > Budget-Plans > New fiscal year
+Breadcrumbs::for('fiscal-year.create', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('budget-plan.index');
+    $trail->push(__('budget-plan.edit.add-fiscal-year'), route('fiscal-year.create'));
+});
+
+// Home > Budget-Plans > Fiscal year ID
+Breadcrumbs::for('fiscal-year.edit', static function (BreadcrumbTrail $trail, $year_id): void {
+    $trail->parent('budget-plan.index');
+    $trail->push(__('budget-plan.fiscal-year').' '.$year_id, route('fiscal-year.edit', $year_id));
 });

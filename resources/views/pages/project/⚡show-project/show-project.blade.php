@@ -515,7 +515,7 @@
                                 @if($post->budgetItem)
                                     @php $budgetItem = $post->budgetItem @endphp
                                     <flux:link variant="subtle" href="{{ route('legacy.hhp.titel.view', ['hhp_id' => $budgetPlan->id, 'titel_id' => $budgetItem->id]) }}">
-                                        {{ $budgetItem->titel_name }} ({{ $budgetItem->titel_nr  }})
+                                        {{ $budgetItem->name }} ({{ $budgetItem->short_name }})
                                     </flux:link>
                                 @endif
                             </td>

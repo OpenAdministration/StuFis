@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;
@@ -8,15 +8,22 @@ use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @deprecated Legacy HHP tooling, slated for deletion. The legacy budget tables are now read-only
+ * views over budget_plan/budget_item (migration swap_legacy_budget_tables_for_views), so this
+ * command can no longer write them. Manage budget plans in the new budget plan module.
+ */
 class LegacyBudgetGroupShift extends Command
 {
     protected $signature = 'legacy:budget-group-shift
         {new_group_id : The new Group ID}';
 
-    protected $description = 'Insert an new budget group with the given id in the newest BudgetPlan';
+    protected $description = '[DEPRECATED] Insert an new budget group with the given id in the newest BudgetPlan';
 
     public function handle(): int
     {
+        $this->warn('⚠️  DEPRECATED: the legacy budget tables are now views; this command is slated for deletion and will fail against them.');
+
         return \DB::transaction(function (): int {
             $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->sole();
             $budgetGroups = LegacyBudgetGroup::where('hhp_id', $latestPlan->id)

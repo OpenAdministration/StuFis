@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\legacy;
 
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Expense;

@@ -37,12 +37,17 @@ return new class extends Migration
             $table->decimal('value', 10, 2)->default(0);
             $table->integer('budget_type');
             $table->boolean('is_group');
-            $table->text('description');
+            // optional metadata; the editor never sets it on create, so it must be nullable
+            $table->text('description')->nullable();
             $table->integer('position')->nullable();
             $table->unsignedBigInteger('parent_id')->nullable();
+            // set => this item is a "mount": it stands in for the whole income/expense
+            // (per its budget_type) of the referenced plan; its value is derived, not stored
+            $table->unsignedBigInteger('referenced_plan_id')->nullable();
 
             $table->foreign('budget_plan_id')->references('id')->on('budget_plan');
             $table->foreign('parent_id')->references('id')->on('budget_item');
+            $table->foreign('referenced_plan_id')->references('id')->on('budget_plan');
             // $table->text('diff_description');
             $table->timestamps();
         });

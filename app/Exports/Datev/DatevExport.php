@@ -4,6 +4,7 @@ namespace App\Exports\Datev;
 
 use Ameax\Datev\DataObjects\DatevAccountLedgerData;
 use Ameax\Datev\DataObjects\DatevDocumentData;
+use App\Models\Enums\BudgetType;
 use App\Models\Legacy\BankTransaction;
 use App\Models\Legacy\Booking;
 use App\Models\Legacy\Expense;
@@ -210,8 +211,9 @@ class DatevExport
 
     private function amount(Booking $booking, bool $isReceivable): float
     {
-        $invers = ($isReceivable === false && $booking->budgetItem->budgetGroup->type === 0) ||
-        ($isReceivable && $booking->budgetItem->budgetGroup->type === 1);
+        $budgetType = $booking->budgetItem->budget_type;
+        $invers = ($isReceivable === false && $budgetType === BudgetType::INCOME) ||
+        ($isReceivable && $budgetType === BudgetType::EXPENSE);
 
         return $invers ? -$booking->value : $booking->value;
     }

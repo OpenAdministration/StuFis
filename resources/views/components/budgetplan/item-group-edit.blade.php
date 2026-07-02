@@ -1,24 +1,28 @@
 @props([
     'level' => 0,
     'item',
+    /* @var array<int, \Cknow\Money\Money> map of item id => precomputed effective value */
+    'values' => [],
     /* @var bool array of booleans, one for each level, indicating if the item is the last one on that level  */
     'lastItem' => [],
 ])
 
 <div @class([
         "col-span-8 grid grid-cols-subgrid",
-    ]) x-sort:item="{{ $item->id }}">
+    ]) wire:sort:item="{{ $item->id }}">
     <div @class(["col-span-8 grid grid-cols-subgrid",
             //"py-2" => $item->is_group,
             //"rounded" => $item->is_group,
             //"bg-zinc-300 my-2" => $item->is_group,
         ])>
-        <div x-sort:handle @class([
+        <div wire:sort:handle @class([
                 "cursor-grab flex items-center justify-end",
                 "my-2"
             ])>
             <x-fas-grip-vertical  class="fill-zinc-400 h-5 w-5"/>
-            @if($item->is_group)
+            @if($item->isMount())
+                <x-fas-link class="fill-indigo-500 w-5 h-5 ml-3"/>
+            @elseif($item->is_group)
                 <x-fas-wallet class="fill-zinc-600 w-5 h-5 ml-3"/>
             @else
                 <x-fas-money-bill class="fill-zinc-400 w-5 h-5 ml-3"/>
@@ -28,61 +32,93 @@
             <flux:input wire:model.live.blur="items.{{$item->id}}.short_name"/>
         </div>
         <div class="col-span-3 my-2">
-            <flux:input wire:model.live.blur="items.{{$item->id}}.name"/>
+            @if($item->isMount())
+                {{-- a mount stands in for another plan; its label links to that plan --}}
+                <div class="flex h-full items-center px-3 text-sm">
+                    @if($item->referencedPlan)
+                        <flux:link :href="route('budget-plan.view', $item->referencedPlan->id)">{{ $item->referencedPlan->label() }}</flux:link>
+                    @endif
+                </div>
+            @else
+                <flux:input wire:model.live.blur="items.{{$item->id}}.name"/>
+            @endif
         </div>
         <div class="col-span-2 flex items-center">
             @if($level > 0)
                 <div class="flex items-top h-full">
                     @for($i = 1; $i <= $level; $i++)
-                        <!-- half or full vertical line, depending if last item -->
+                        <!-- vertical line: ancestor pass-through, or the immediate connector
+                             (extended up ~half a row so it reaches the parent box in the row above) -->
                         <div @class([
                             "ml-5",
                             "mr-4" => $i < $level,
-                            "h-full border-l-2 border-gray-300" => !($lastItem[$i-1]),
-                            "h-1/2 border-l-2 border-gray-300" => ($lastItem[$i-1]) && $i === $level,
+                            // ancestor pass-through line (continues full height through this row)
+                            "h-full border-l-2 border-gray-300" => $i < $level && !($lastItem[$i-1]),
+                            // immediate connector, this item is NOT last: full height + reach up to the parent box's bottom edge
+                            "border-l-2 border-gray-300 -mt-2 h-[calc(100%+0.5rem)]" => $i === $level && !($lastItem[$i-1]),
+                            // immediate connector, this item IS last: stop at the middle (the elbow) + reach up to the parent box's bottom edge
+                            "border-l-2 border-gray-300 -mt-2 h-[calc(50%+0.5rem)]" => $i === $level && ($lastItem[$i-1]),
                         ])></div>
                     @endfor
                     <!-- horizontal line -->
                     <div class="h-1/2 w-4 border-b-2 border-gray-300"></div>
                 </div>
             @endif
-            <flux:input.group @class([
-                    "my-2"
-                    //'pl-16 border-l-8 border-zinc-300' => $level === 3,
-                    //'pl-10 border-l-6 border-zinc-300' => $level === 2,
-                    //'pl-5 border-l-4 border-zinc-300' => $level === 1,
-                ])>
-                @if($item->is_group)
+            @if($item->isMount())
+                {{-- mount: read-only rolled-up total of the referenced plan's side (derived).
+                     Styled like a group sum, but with a link prefix instead of Σ. --}}
+                <flux:input.group class="my-2">
+                    <flux:input.group.prefix variant="filled">
+                        <x-fas-link class="size-3.5"/>
+                    </flux:input.group.prefix>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
+                </flux:input.group>
+            @elseif($item->is_group)
+                {{-- group rows use an input-group so the Σ prefix welds onto the (readonly) sum.
+                     Shown live via effectiveValue so a nested mount's derived total rolls up. --}}
+                <flux:input.group class="my-2">
                     <flux:input.group.prefix variant="filled">
                         <span>Σ</span>
                     </flux:input.group.prefix>
-                @endif
-                <x-money-input wire:model.live.blur="items.{{$item->id}}.value" :disabled="$item->is_group" />
-            </flux:input.group>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
+                </flux:input.group>
+            @else
+                {{-- child rows have no prefix; a lone input must NOT sit in an input-group, otherwise
+                     the trailing flux:error counts as the last child and strips the input's right rounding --}}
+                <x-money-input class="my-2 w-full" wire:model.live.blur="items.{{$item->id}}.value" :disabled="false" />
+            @endif
         </div>
         <div class="my-2">{{-- Action Buttons --}}
-            @if($item->is_group)
-                <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})" variant="ghost"/> {{-- subtle or ghost --}}
-                <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
-            @endif
             <flux:dropdown>
-                <flux:button variant="ghost" icon:trailing="ellipsis-vertical"></flux:button>
+                <flux:button variant="ghost" icon="ellipsis-horizontal" :aria-label="__('budget-plan.edit.more-actions')" />
                 <flux:menu>
-                    <flux:menu.item>Debug: L{{ $level }} id{{$item->id}} P{{$item->position}}</flux:menu.item>
-                    @if($item->is_group)
-                        <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->children->count() > 0" icon="arrows-right-left">to budget</flux:menu.item>
-                    @else
-                        <flux:menu.item wire:click="convertToGroup({{$item->id}})" icon="arrows-right-left"  >to group</flux:menu.item>
-                    @endif
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})" icon="arrow-up"  >item up</flux:menu.item>
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})" icon="arrow-down"  >item down</flux:menu.item>
-                    <flux:menu.item wire:click="copyItem({{ $item->id }})" icon="clipboard">copy</flux:menu.item>
+                    <flux:menu.submenu :heading="__('budget-plan.edit.transform')" icon="arrows-right-left">
+                        @if($item->isMount())
+                            <flux:menu.item wire:click="convertToBudget({{$item->id}})">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
+                        @elseif($item->is_group)
+                            <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->orderedChildren->isNotEmpty()">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
+                        @else
+                            <flux:menu.item wire:click="convertToGroup({{$item->id}})">{{ __('budget-plan.edit.to-group') }}</flux:menu.item>
+                            {{-- open the modal instantly (client-side) so the skeleton shows while candidates load --}}
+                            <flux:menu.item x-on:click="$dispatch('modal-show', { name: 'mount-plan' })" wire:click="openMountPicker({{$item->id}})">{{ __('budget-plan.edit.to-mount') }}</flux:menu.item>
+                        @endif
+                    </flux:menu.submenu>
+                    <flux:menu.separator/>
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})" icon="arrow-up">{{ __('budget-plan.edit.move-up') }}</flux:menu.item>
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})" icon="arrow-down">{{ __('budget-plan.edit.move-down') }}</flux:menu.item>
+                    <flux:menu.item wire:click="copyItem({{ $item->id }})" icon="clipboard">{{ __('budget-plan.edit.copy') }}</flux:menu.item>
                     <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)" icon="clipboard">
-                        copy zur anderen seite
+                        {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren()->count() !== 0" variant="danger" icon="trash">Delete</flux:menu.item>
+                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren->isNotEmpty()" variant="danger" icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
+            @if($item->is_group)
+                <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
+                @if($level < 2)
+                    <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})" variant="ghost"/> {{-- subtle or ghost --}}
+                @endif
+            @endif
         </div>
     </div>
     @if($item->is_group)
@@ -93,10 +129,11 @@
                     //"border-l-16" => $level === 1,
                     //"border-l-24" => $level === 2,
                     //"border-l-28" => $level === 3,
-                ]) x-sort="$wire.sort($item,$position)">
+                ]) wire:sort="sort">
             @foreach($item->orderedChildren as $child)
                 <x-budgetplan.item-group-edit
                     :item="$child"
+                    :values="$values"
                     :wire:key="$child->id"
                     :level="$level +1"
                     :last-item="[...$lastItem, $loop->last]"

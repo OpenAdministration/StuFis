@@ -66,7 +66,7 @@
                                         <div class="ml-4 flex min-w-0 flex-1 gap-2">
                                             <span class="shrink-0 text-gray-400">{{ $booking->id }}</span>
                                             <span class="truncate text-gray-900">{{ $booking->comment }}</span>
-                                            <flux:link variant="subtle" :href="route('legacy.budget-item', ['titel_id' => $booking->budgetItem->id])"  class="shrink-0">{{ $booking->budgetItem->titel_nr }} {{ $booking->budgetItem->titel_name }}</flux:link>
+                                            <flux:link variant="subtle" :href="route('legacy.budget-item', ['titel_id' => $booking->budgetItem->id])"  class="shrink-0">{{ $booking->budgetItem->short_name }} {{ $booking->budgetItem->name }}</flux:link>
                                         </div>
                                     </div>
                                     <div class="ml-4 flex shrink-0 space-x-4">
