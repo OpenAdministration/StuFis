@@ -28,8 +28,10 @@ class BankTransactionFactory extends Factory
             'customer_ref' => fake()->word(),
             'konto_id' => BankAccount::factory(),
 
-            'value' => (fake()->boolean() ? '' : '-').fake()->randomFloat(2),
-            'saldo' => fake()->randomFloat(2),
+            // value/saldo are decimal(10,2): keep magnitudes bounded so a random draw can never
+            // overflow the column (unbounded randomFloat() occasionally rolls into the 100s of millions)
+            'value' => (fake()->boolean() ? '' : '-').fake()->randomFloat(2, 0, 100000),
+            'saldo' => fake()->randomFloat(2, 0, 1000000),
         ];
     }
 
