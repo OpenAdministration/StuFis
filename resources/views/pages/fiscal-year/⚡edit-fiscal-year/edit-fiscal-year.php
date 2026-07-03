@@ -4,6 +4,7 @@ use App\Models\FiscalYear;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -59,9 +60,9 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
         }
 
         try {
-            $start = Carbon::parse($this->start_date)->startOfDay();
-            $end = Carbon::parse($this->end_date)->startOfDay();
-        } catch (\Throwable) {
+            $start = Date::parse($this->start_date)->startOfDay();
+            $end = Date::parse($this->end_date)->startOfDay();
+        } catch (Throwable) {
             return [];
         }
 
@@ -74,7 +75,7 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
         $previous = FiscalYear::query()
             ->when($this->id, fn ($query) => $query->whereKeyNot($this->id))
             ->whereDate('end_date', '<', $start)
-            ->orderByDesc('end_date')
+            ->latest('end_date')
             ->first();
 
         if ($previous && $previous->end_date->copy()->addDay()->lessThan($start)) {
@@ -84,7 +85,7 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
         $next = FiscalYear::query()
             ->when($this->id, fn ($query) => $query->whereKeyNot($this->id))
             ->whereDate('start_date', '>', $end)
-            ->orderBy('start_date')
+            ->oldest('start_date')
             ->first();
 
         if ($next && $next->start_date->copy()->subDay()->greaterThan($end)) {
