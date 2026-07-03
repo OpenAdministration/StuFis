@@ -29,3 +29,14 @@ it('renders the index with plan labels and state, without debug strings or raw k
         ->assertDontSee('ohhneee')
         ->assertDontSee('budget-plan.plan?');
 });
+
+it('lists fiscal years without plans using a placeholder row', function (): void {
+    $this->actingAs(user());
+
+    $empty = FiscalYear::factory()->create(['start_date' => '2024-04-01', 'end_date' => '2025-03-31']);
+
+    $this->get(route('budget-plan.index'))
+        ->assertOk()
+        ->assertSee($empty->label())
+        ->assertSee(__('budget-plan.index.no-plans'));
+});
