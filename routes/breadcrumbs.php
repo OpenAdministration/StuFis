@@ -4,9 +4,10 @@
 
 // Note: Laravel will automatically resolve `Breadcrumbs::` without
 // this import. This is nice for IDE syntax and refactoring.
-use App\Models\BudgetPlan;
+use App\Models\BudgetItem;
 // This import is also not required, and you could replace `BreadcrumbTrail $trail`
 //  with `$trail`. This is nice for IDE type checking and completion.
+use App\Models\BudgetPlan;
 use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbTrail;
 
@@ -232,6 +233,18 @@ Breadcrumbs::for('budget-plan.view', static function (BreadcrumbTrail $trail, $p
 Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $plan_id): void {
     $trail->parent('budget-plan.view', $plan_id);
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
+});
+
+// Home > Budget-Plans > ID > Titel
+Breadcrumbs::for('budget-plan.item.view', static function (BreadcrumbTrail $trail, $plan_id, $item_id): void {
+    $trail->parent('budget-plan.view', $plan_id);
+
+    $item = BudgetItem::find($item_id);
+    $label = $item
+        ? collect([$item->short_name, $item->name])->filter()->implode(' · ')
+        : $item_id;
+
+    $trail->push($label, route('budget-plan.item.view', [$plan_id, $item_id]));
 });
 
 // Home > Admin Interface

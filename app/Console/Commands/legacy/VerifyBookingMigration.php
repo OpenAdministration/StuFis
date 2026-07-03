@@ -30,7 +30,7 @@ class VerifyBookingMigration extends Command
     protected $description = 'Cross-reference bookings against old (haushaltstitel) and new (budget_item) titles to verify the migration';
 
     /** Blocker statuses make the command exit non-zero (deploy gate). */
-    private const BLOCKERS = ['MISSING_NEW', 'GROUP_NOT_BOOKABLE', 'MOUNT_NOT_BOOKABLE', 'ORPHAN_BOOKING'];
+    private const array BLOCKERS = ['MISSING_NEW', 'GROUP_NOT_BOOKABLE', 'MOUNT_NOT_BOOKABLE', 'ORPHAN_BOOKING'];
 
     public function handle(): int
     {

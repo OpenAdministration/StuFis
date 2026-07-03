@@ -35,8 +35,8 @@
         </td>
         <td @class(["text-base text-right sm:pl-3"])><x-fas-link class="size-4 inline text-indigo-700"/></td>
         <td @class(["text-right px-3 sm:pl-3 font-medium"])>{{ $item->effectiveValue()->format() }}</td>
-        <td @class(["text-right px-3 sm:pl-3"])><span class="text-gray-300">–</span></td>
-        <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])><span class="text-gray-300">–</span></td>
+        <td @class(["text-right px-3 sm:pl-3"])>{{ $item->booked->format() }}</td>
+        <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])>{{ $item->committed->format() }}</td>
 
     @elseif($item->is_group)
         {{-- Is Group ; th needed to make sticky work --}}
@@ -55,9 +55,8 @@
             @if($item->is_group) Σ @endif
         </th>
         <th @class(["text-right px-3  sm:pl-3", "py-4" ])>{{ $item->effectiveValue()->format() }}</th>
-        {{-- Ist (booked) / Verfügbar (available) need bookings — placeholders until that lands --}}
-        <th @class(["text-right px-3 sm:pl-3", "py-4"])><span class="text-gray-300">–</span></th>
-        <th @class(["text-right px-3 sm:pl-3 sm:pr-6", "py-4"])><span class="text-gray-300">–</span></th>
+        <th @class(["text-right px-3 sm:pl-3", "py-4"])>{{ $item->booked->format() }}</th>
+        <th @class(["text-right px-3 sm:pl-3 sm:pr-6", "py-4"])>{{ $item->committed->format() }}</th>
 
     @else
         {{-- No Group --}}
@@ -69,13 +68,12 @@
             "px-3 sm:pl-18" => $level === 3,
         ])>
             <x-fas-money-bill class="size-4 mx-2 text-gray-600"/>
-            {{ $item->short_name }}
+            <flux:link :href="route('budget-plan.item.view', [$item->budget_plan_id, $item->id])" wire:navigate>{{ $item->short_name }}</flux:link>
         </td>
         <td @class(["text-left px-3 sm:pl-3",])>{{ $item->name }}</td>
         <td></td>
         <td @class(["text-right px-3  sm:pl-3"])>{{ $item->value->format() }}</td>
-        {{-- Ist (booked) / Verfügbar (available) need bookings — placeholders until that lands --}}
-        <td @class(["text-right px-3 sm:pl-3"])><span class="text-gray-300">–</span></td>
-        <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])><span class="text-gray-300">–</span></td>
+        <td @class(["text-right px-3 sm:pl-3"])>{{ $item->booked->format() }}</td>
+        <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])>{{ $item->committed->format() }}</td>
     @endif
 </tr>

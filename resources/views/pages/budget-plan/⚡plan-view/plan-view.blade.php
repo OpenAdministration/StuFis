@@ -27,9 +27,17 @@
                         {{-- duplication is "create from an existing plan": deep-link into the create flow with this plan preselected as the clone source --}}
                         <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
                     @endcan
-                    {{-- TODO: not yet implemented — disabled until the print/export flows exist --}}
+                    {{-- TODO: print not yet implemented — disabled until the print flow exists --}}
                     <flux:menu.item icon="printer" disabled>{{ __('budget-plan.view.print') }}</flux:menu.item>
-                    <flux:menu.item icon="arrow-down-tray" disabled>{{ __('budget-plan.view.export') }}</flux:menu.item>
+                    {{-- downloads must be real navigations (file responses), so no wire:navigate here --}}
+                    <flux:menu.submenu icon="arrow-down-tray" :heading="__('budget-plan.view.export')">
+                        <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'xlsx'])">
+                            {{ __('budget-plan.view.export.excel') }}
+                        </flux:menu.item>
+                        <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'ods'])">
+                            {{ __('budget-plan.view.export.ods') }}
+                        </flux:menu.item>
+                    </flux:menu.submenu>
                     @can('admin', \App\Models\User::class)
                         <flux:menu.separator/>
                         <flux:menu.item icon="trash" variant="danger"
@@ -100,13 +108,37 @@
                                                 {{-- Sigma column --}}
                                             </th>
                                             <th scope="col" class="px-3 py-3.5 text-right">
-                                                {{ __('budget-plan.view.col.planned') }}
+                                                <span class="inline-flex items-center justify-end gap-1">
+                                                    {{ __('budget-plan.view.col.planned') }}
+                                                    <flux:tooltip toggleable>
+                                                        <flux:button icon="information-circle" size="xs" variant="subtle"/>
+                                                        <flux:tooltip.content class="max-w-[20rem] space-y-2 text-center">
+                                                            {{ __('budget-plan.view.col.planned-hint') }}
+                                                        </flux:tooltip.content>
+                                                    </flux:tooltip>
+                                                </span>
                                             </th>
                                             <th scope="col" class="px-3 py-3.5 text-right">
-                                                {{ __('budget-plan.view.col.booked') }}
+                                                <span class="inline-flex items-center justify-end gap-1">
+                                                    {{ __('budget-plan.view.col.booked') }}
+                                                    <flux:tooltip toggleable>
+                                                        <flux:button icon="information-circle" size="xs" variant="subtle"/>
+                                                        <flux:tooltip.content class="max-w-[20rem] space-y-2 text-center">
+                                                            {{ __('budget-plan.view.col.booked-hint') }}
+                                                        </flux:tooltip.content>
+                                                    </flux:tooltip>
+                                                </span>
                                             </th>
                                             <th scope="col" class="px-3 py-3.5 text-right sm:pr-6">
-                                                {{ __('budget-plan.view.col.available') }}
+                                                <span class="inline-flex items-center justify-end gap-1">
+                                                    {{ __('budget-plan.view.col.committed') }}
+                                                    <flux:tooltip toggleable>
+                                                        <flux:button icon="information-circle" size="xs" variant="subtle"/>
+                                                        <flux:tooltip.content class="max-w-[20rem] space-y-2 text-center">
+                                                            {{ __('budget-plan.view.col.committed-hint') }}
+                                                        </flux:tooltip.content>
+                                                    </flux:tooltip>
+                                                </span>
                                             </th>
                                         </tr>
                                         </thead>

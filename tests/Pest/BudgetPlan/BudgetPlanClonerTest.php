@@ -29,7 +29,7 @@ function addMount(BudgetPlan $parent, BudgetPlan $sub, BudgetType $side, int $po
 
 function cloner(): BudgetPlanCloner
 {
-    return app(BudgetPlanCloner::class);
+    return resolve(BudgetPlanCloner::class);
 }
 
 it('clones a multi-level forest preserving structure, names, values and positions', function (): void {

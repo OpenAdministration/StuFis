@@ -18,14 +18,14 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class TitleNumberer
 {
-    private const SEPARATOR = '.';
+    private const string SEPARATOR = '.';
 
     public function next(BudgetItem $item): string
     {
         $previous = $this->previousSibling($item);
 
         // continue whatever scheme the previous sibling uses
-        if ($previous !== null && $this->hasNumber($previous->short_name)) {
+        if ($previous instanceof BudgetItem && $this->hasNumber($previous->short_name)) {
             return $this->incrementLastNumber($previous->short_name);
         }
 

@@ -4,6 +4,7 @@ use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\User;
 use App\States\BudgetPlan\BudgetPlanState;
+use App\Support\Budget\BudgetPlanMeasures;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -33,8 +34,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return [
             'plan' => $plan,
             'items' => [
-                BudgetType::INCOME->slug() => $plan->budgetItemsTree(BudgetType::INCOME),
-                BudgetType::EXPENSE->slug() => $plan->budgetItemsTree(BudgetType::EXPENSE),
+                // annotate() returns the flattened tree with booked/committed Money set per node
+                BudgetType::INCOME->slug() => new BudgetPlanMeasures($plan, BudgetType::INCOME)->annotate(),
+                BudgetType::EXPENSE->slug() => new BudgetPlanMeasures($plan, BudgetType::EXPENSE)->annotate(),
             ],
         ];
     }
