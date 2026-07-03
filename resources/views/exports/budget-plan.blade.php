@@ -2,13 +2,7 @@
     use App\Models\BudgetItem;
     use Cknow\Money\Money;
 
-    /**
-     * Effective "Plan" (Soll) figure for a row: leaves carry their own value, groups and mounts
-     * roll up (mirrors the on-screen plan view).
-     */
-    $planned = static fn (BudgetItem $item) => $item->is_group || $item->isMount()
-        ? $item->effectiveValue()
-        : $item->value;
+    // planned/booked/committed are pre-rolled-up on every node by BudgetPlanMeasures::annotate()
 
     // decimal() → plain number so the EUR column format applies in the sheet
     $decimal = static fn (Money $money) => (float) $money->formatByDecimal();
@@ -56,7 +50,7 @@
             <tr>
                 <td>{{ $item->short_name }}</td>
                 <td>{!! str_repeat('&nbsp;&nbsp;&nbsp;', $item->depth) !!}@if($item->is_group)<b>{{ $item->name }}</b>@else{{ $item->name }}@endif</td>
-                <td align="right">@if($item->is_group)<b>{{ $decimal($planned($item)) }}</b>@else{{ $decimal($planned($item)) }}@endif</td>
+                <td align="right">@if($item->is_group)<b>{{ $decimal($item->planned) }}</b>@else{{ $decimal($item->planned) }}@endif</td>
                 <td align="right">@if($item->is_group)<b>{{ $decimal($item->booked) }}</b>@else{{ $decimal($item->booked) }}@endif</td>
                 <td align="right">@if($item->is_group)<b>{{ $decimal($item->committed) }}</b>@else{{ $decimal($item->committed) }}@endif</td>
             </tr>
@@ -65,7 +59,7 @@
         <tr>
             <td><b>{{ $sectionTitle }}</b></td>
             <td><b>{{ __('budget-plan.export.total') }}</b></td>
-            <td align="right"><b>{{ $total($roots, $planned) }}</b></td>
+            <td align="right"><b>{{ $total($roots, fn ($item) => $item->planned) }}</b></td>
             <td align="right"><b>{{ $total($roots, fn ($item) => $item->booked) }}</b></td>
             <td align="right"><b>{{ $total($roots, fn ($item) => $item->committed) }}</b></td>
         </tr>

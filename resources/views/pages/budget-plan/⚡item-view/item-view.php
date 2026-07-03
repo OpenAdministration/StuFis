@@ -34,7 +34,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return [
             'plan' => $plan,
             'item' => $item,
-            'planned' => $item->effectiveValue(),
+            'planned' => $measure['planned'],
             'booked' => $measure['booked'],
             'committed' => $measure['committed'],
             'rows' => $this->rows($item),

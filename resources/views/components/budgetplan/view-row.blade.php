@@ -34,7 +34,7 @@
             @endif
         </td>
         <td @class(["text-base text-right sm:pl-3"])><x-fas-link class="size-4 inline text-indigo-700"/></td>
-        <td @class(["text-right px-3 sm:pl-3 font-medium"])>{{ $item->effectiveValue()->format() }}</td>
+        <td @class(["text-right px-3 sm:pl-3 font-medium"])>{{ $item->planned->format() }}</td>
         <td @class(["text-right px-3 sm:pl-3"])>{{ $item->booked->format() }}</td>
         <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])>{{ $item->committed->format() }}</td>
 
@@ -54,7 +54,7 @@
         <th @class(["text-base text-right sm:pl-3 font-semibold text-indigo-700"])>
             @if($item->is_group) Σ @endif
         </th>
-        <th @class(["text-right px-3  sm:pl-3", "py-4" ])>{{ $item->effectiveValue()->format() }}</th>
+        <th @class(["text-right px-3  sm:pl-3", "py-4" ])>{{ $item->planned->format() }}</th>
         <th @class(["text-right px-3 sm:pl-3", "py-4"])>{{ $item->booked->format() }}</th>
         <th @class(["text-right px-3 sm:pl-3 sm:pr-6", "py-4"])>{{ $item->committed->format() }}</th>
 
@@ -72,7 +72,7 @@
         </td>
         <td @class(["text-left px-3 sm:pl-3",])>{{ $item->name }}</td>
         <td></td>
-        <td @class(["text-right px-3  sm:pl-3"])>{{ $item->value->format() }}</td>
+        <td @class(["text-right px-3  sm:pl-3"])>{{ $item->planned->format() }}</td>
         <td @class(["text-right px-3 sm:pl-3"])>{{ $item->booked->format() }}</td>
         <td @class(["text-right px-3 sm:pl-3 sm:pr-6"])>{{ $item->committed->format() }}</td>
     @endif

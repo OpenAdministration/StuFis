@@ -143,9 +143,19 @@ it('counts committed money from terminated projects\' receipt postings', functio
         ->and($items->firstWhere('id', $group->id)->committed->getAmount())->toBe('4000');
 });
 
-it('rolls booked and committed up through a mount', function (): void {
-    // referenced plan: one leaf carrying a booking and an open commitment
-    [$refPlan, , $refLeaf] = expenseGroupWithLeaf();
+it('annotates planned and rolls it up through the group', function (): void {
+    [$plan, $group, $leaf] = expenseGroupWithLeaf(plannedEuros: 100);
+
+    $items = new BudgetPlanMeasures($plan, BudgetType::EXPENSE)->annotate();
+
+    // leaf carries its own value; the group is the live sum of its children
+    expect($items->firstWhere('id', $leaf->id)->planned->getAmount())->toBe('10000')
+        ->and($items->firstWhere('id', $group->id)->planned->getAmount())->toBe('10000');
+});
+
+it('rolls planned, booked and committed up through a mount', function (): void {
+    // referenced plan: one leaf (100 planned) carrying a booking and an open commitment
+    [$refPlan, , $refLeaf] = expenseGroupWithLeaf(plannedEuros: 100);
     bookLeaf($refLeaf, '25');
     commitOpen($refLeaf, 30);
 
@@ -157,10 +167,11 @@ it('rolls booked and committed up through a mount', function (): void {
         'referenced_plan_id' => $refPlan->id,
     ]);
 
-    $items = new BudgetPlanMeasures($parent, BudgetType::EXPENSE)->annotate();
+    $mounted = new BudgetPlanMeasures($parent, BudgetType::EXPENSE)->annotate()->firstWhere('id', $mount->id);
 
-    expect($items->firstWhere('id', $mount->id)->booked->getAmount())->toBe('2500')
-        ->and($items->firstWhere('id', $mount->id)->committed->getAmount())->toBe('3000');
+    expect($mounted->planned->getAmount())->toBe('10000')
+        ->and($mounted->booked->getAmount())->toBe('2500')
+        ->and($mounted->committed->getAmount())->toBe('3000');
 });
 
 it('renders the booked and committed columns with real amounts', function (): void {

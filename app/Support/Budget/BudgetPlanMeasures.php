@@ -55,8 +55,8 @@ class BudgetPlanMeasures
     }
 
     /**
-     * Load this side's item tree and annotate every node with `booked` and `committed` Money
-     * attributes (rolled up through groups and mounts). Returns the flattened, ordered tree.
+     * Load this side's item tree and annotate every node with `planned`, `booked` and `committed`
+     * Money attributes (rolled up through groups and mounts). Returns the flattened, ordered tree.
      */
     public function annotate(): Collection
     {
@@ -71,9 +71,10 @@ class BudgetPlanMeasures
     }
 
     /**
-     * Booked/committed figures for a single item (rolled up, so it also works for groups/mounts).
+     * Planned/booked/committed figures for a single item (rolled up, so it also works for
+     * groups/mounts).
      *
-     * @return array{booked: Money, committed: Money}
+     * @return array{planned: Money, booked: Money, committed: Money}
      */
     public function forItem(BudgetItem $item): array
     {
@@ -84,74 +85,92 @@ class BudgetPlanMeasures
     }
 
     /**
-     * Plan-level booked/committed totals for this side (sum of the roots' effective figures).
-     * Used when a mount resolves to the referenced plan's total.
+     * Plan-level planned/booked/committed totals for this side (sum of the roots' effective
+     * figures). Used when a mount resolves to the referenced plan's total.
      *
-     * @return array{booked: Money, committed: Money}
+     * @return array{planned: Money, booked: Money, committed: Money}
      */
     public function totals(): array
     {
         $items = $this->plan->budgetItemsTree($this->type);
         $childrenByParent = $items->groupBy('parent_id');
 
+        $planned = Money::EUR(0);
         $booked = Money::EUR(0);
         $committed = Money::EUR(0);
         foreach ($items->whereNull('parent_id') as $root) {
             $measure = $this->measure($root, $childrenByParent);
+            $planned = $planned->add($measure['planned']);
             $booked = $booked->add($measure['booked']);
             $committed = $committed->add($measure['committed']);
         }
 
-        return ['booked' => $booked, 'committed' => $committed];
+        return ['planned' => $planned, 'booked' => $booked, 'committed' => $committed];
     }
 
     /**
-     * Set booked/committed on $item and return them: a mount resolves to the referenced plan's
-     * totals, a group sums its children, a leaf reads the precomputed per-titel maps.
+     * Set planned/booked/committed on $item and return them: a mount resolves to the referenced
+     * plan's totals, a group sums its children, a leaf reads its own value and the precomputed
+     * per-titel maps. Planned mirrors BudgetItem::effectiveValue() so the numbers match the tree.
      *
      * @param  Collection<int|string, Collection<int, BudgetItem>>  $childrenByParent
-     * @return array{booked: Money, committed: Money}
+     * @return array{planned: Money, booked: Money, committed: Money}
      */
     private function measure(BudgetItem $item, Collection $childrenByParent): array
     {
         if ($item->isMount()) {
             $referenced = $item->referencedPlan;
-            if ($referenced === null || in_array($referenced->id, $this->visited, true)) {
-                return $this->assign($item, Money::EUR(0), Money::EUR(0));
+            if ($referenced === null) {
+                // dangling reference: effectiveValue() falls back to the stored value
+                return $this->assign($item, $item->value ?? Money::EUR(0), Money::EUR(0), Money::EUR(0));
+            }
+            if (in_array($referenced->id, $this->visited, true)) {
+                return $this->assign($item, Money::EUR(0), Money::EUR(0), Money::EUR(0)); // cycle
             }
             $totals = new self($referenced, $this->type, $this->visited)->totals();
 
-            return $this->assign($item, $totals['booked'], $totals['committed']);
+            return $this->assign($item, $totals['planned'], $totals['booked'], $totals['committed']);
         }
 
         if ($item->is_group) {
+            // a group's planned figure is the LIVE sum of its children (mirrors effectiveValue),
+            // so a mount nested anywhere inside still rolls up even though its total can't be stored
+            $planned = Money::EUR(0);
             $booked = Money::EUR(0);
             $committed = Money::EUR(0);
             foreach ($childrenByParent->get($item->id, collect()) as $child) {
                 $measure = $this->measure($child, $childrenByParent);
+                $planned = $planned->add($measure['planned']);
                 $booked = $booked->add($measure['booked']);
                 $committed = $committed->add($measure['committed']);
             }
 
-            return $this->assign($item, $booked, $committed);
+            return $this->assign($item, $planned, $booked, $committed);
         }
 
         return $this->assign(
             $item,
+            $item->value ?? Money::EUR(0),
             $this->booked[$item->id] ?? Money::EUR(0),
             $this->committed[$item->id] ?? Money::EUR(0),
         );
     }
 
     /**
-     * @return array{booked: Money, committed: Money}
+     * Attach the three computed figures to the item as (view-only, non-persisted) Money attributes
+     * and return them. These are dynamic attributes — not table columns — read as `$item->planned`
+     * / `->booked` / `->committed` in the plan view, item view and export. Returning them as well
+     * lets measure() roll a child's figures into its parent without re-reading the attributes.
+     *
+     * @return array{planned: Money, booked: Money, committed: Money}
      */
-    private function assign(BudgetItem $item, Money $booked, Money $committed): array
+    private function assign(BudgetItem $item, Money $planned, Money $booked, Money $committed): array
     {
+        $item->planned = $planned;
         $item->booked = $booked;
         $item->committed = $committed;
 
-        return ['booked' => $booked, 'committed' => $committed];
+        return ['planned' => $planned, 'booked' => $booked, 'committed' => $committed];
     }
 
     /**
