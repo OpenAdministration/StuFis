@@ -186,7 +186,7 @@ class RestHandler extends EscFunc
             DBConnector::getInstance()->dbInsert('konto', $fields);
         } else {
             $last = BankTransaction::where('konto_id', '=', $fields['konto_id'])
-                ->orderBy('id', 'desc')
+                ->orderByDesc('id')
                 ->first()?->toArray();
 
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {

@@ -62,7 +62,7 @@ class LegacyBudgetPlan extends Model
 
     public static function latest(): \Eloquent|static
     {
-        return self::orderBy('id', 'desc')->first();
+        return self::orderByDesc('id')->first();
     }
 
     public static function findByDate(?Carbon $date = null): ?static
