@@ -2,7 +2,7 @@
 
 namespace App\Exports\Datev;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 
 /**
  * A single expense row for the DATEV export preview table — one expense = one ledger entry.

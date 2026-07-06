@@ -7,7 +7,7 @@ use App\Models\LegalBasis;
 use App\Models\Setting;
 use App\Models\User;
 use App\States\Project\ProjectState;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Cknow\Money\Money;
 use Database\Factories\Legacy\ProjectFactory;
 use Illuminate\Database\Eloquent\Builder;

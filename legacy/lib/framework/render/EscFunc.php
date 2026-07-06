@@ -2,7 +2,7 @@
 
 namespace framework\render;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 
 abstract class EscFunc
 {

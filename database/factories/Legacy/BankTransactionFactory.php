@@ -4,7 +4,7 @@ namespace Database\Factories\Legacy;
 
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BankTransactionFactory extends Factory
