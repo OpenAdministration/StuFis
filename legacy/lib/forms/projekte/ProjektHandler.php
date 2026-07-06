@@ -18,9 +18,7 @@ class ProjektHandler
     public function __construct($pathInfo)
     {
         self::initStaticVars();
-        if (! isset($pathInfo['action'])) {
-            throw new LegacyDieException(400, 'Aktion nicht gesetzt');
-        }
+        throw_unless(isset($pathInfo['action']), new LegacyDieException(400, 'Aktion nicht gesetzt'));
         $this->action = $pathInfo['action'];
         if ($this->action === 'create' || ! isset($pathInfo['pid'])) {
             $this->data = self::$emptyData;

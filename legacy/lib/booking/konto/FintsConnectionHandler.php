@@ -87,9 +87,7 @@ class FintsConnectionHandler
         // resume execution if any
         $resumableAction = $this->resumableAction();
         if ($resumableAction instanceof DialogInitialization) {
-            if (! $resumableAction->isDone()) {
-                throw new NeedsTanException($resumableAction, 'Tan wird zum Login benötigt');
-            }
+            throw_unless($resumableAction->isDone(), new NeedsTanException($resumableAction, 'Tan wird zum Login benötigt'));
             $this->setCache('logged-in', true);
             $this->saveAction();
 
@@ -200,9 +198,7 @@ class FintsConnectionHandler
         if (count($filtered) > 1) {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'Es existieren mehrere Kontos mit der selben IBAN, bitte kontaktiere einen Administrator', $filtered);
         }
-        if (count($filtered) === 0) {
-            throw new InvalidArgumentException("Iban $iban nicht vorhanden");
-        }
+        throw_if(count($filtered) === 0, new InvalidArgumentException("Iban $iban nicht vorhanden"));
 
         return array_values($filtered)[0];
     }
@@ -219,9 +215,7 @@ class FintsConnectionHandler
         }
         $action = $this->resumableAction();
         if ($action instanceof GetSEPAAccounts) {
-            if (! $action->isDone()) {
-                throw new NeedsTanException($action);
-            }
+            throw_unless($action->isDone(), new NeedsTanException($action));
         } else {
             $this->logger->info('Fetch SEPA Accounts', ['credId' => $this->credentialId]);
             $action = GetSEPAAccounts::create();
@@ -335,9 +329,7 @@ class FintsConnectionHandler
             throw new LegacyDieException(500, 'found multiple DB entries');
         }
 
-        if (! self::hasPassword($credentialId)) {
-            throw new LegacyDieException(400, "Bank Passwort für Credentials $credentialId benötigt");
-        }
+        throw_unless(self::hasPassword($credentialId), new LegacyDieException(400, "Bank Passwort für Credentials $credentialId benötigt"));
         $username = $res['bank_username'];
 
         $credentials = Credentials::create($username, self::getPassword($credentialId));
@@ -370,10 +362,8 @@ class FintsConnectionHandler
         try {
             $this->finTs->execute($action);
             $this->saveAction($action);
-            if ($action->needsTan()) {
-                // TODO decoupled tan stuff here
-                throw new NeedsTanException($action);
-            }
+            // TODO decoupled tan stuff here
+            throw_if($action->needsTan(), new NeedsTanException($action));
         } catch (CurlException|ServerException $e) {
             $this->logger->error('Aktion nicht ausgeführt', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt');
@@ -442,9 +432,7 @@ class FintsConnectionHandler
     {
         try {
             $tanMode = $this->finTs->getTanModes()[$tanModeId];
-            if ($tanMediumName === null && $tanMode->needsTanMedium()) {
-                throw new InvalidArgumentException('Tan Medium wird benötigt');
-            }
+            throw_if($tanMediumName === null && $tanMode->needsTanMedium(), new InvalidArgumentException('Tan Medium wird benötigt'));
             $this->saveAction();
             $this->logger->info('Set TAN Mode', ['credId' => $this->credentialId, 'tanMode' => $tanModeId, 'tanMedium' => $tanMediumName]);
         } catch (CurlException|ServerException  $e) {

@@ -26,9 +26,7 @@ class DeleteExpenses extends Controller
         // authorize state
         $deletableState = ! in_array(explode(';', (string) $expense->state)[0], ['instructed', 'booked'], true);
 
-        if ($userPerm === false || $deletableState === false) {
-            abort(403);
-        }
+        abort_if($userPerm === false || $deletableState === false, 403);
         // to make sure to delete everything and not only parts
         DB::beginTransaction();
         $reciepts = $expense->receipts;

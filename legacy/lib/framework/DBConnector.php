@@ -637,9 +637,7 @@ class DBConnector extends Singleton
         }
 
         foreach ($tables as $table) {
-            if (! isset($this->scheme[$table])) {
-                throw new LegacyDieException(500, "Unkown table $table");
-            }
+            throw_unless(isset($this->scheme[$table]), new LegacyDieException(500, "Unkown table $table"));
         }
 
         // fill with everything if empty
@@ -681,64 +679,48 @@ class DBConnector extends Singleton
         // check join
         $validJoinOnOperators = ['=', '<', '>', '<>', '<=', '>='];
         foreach (array_keys($joins) as $nr) {
-            if (! isset($joins[$nr]['table'])) {
-                throw new LegacyDieException(500, "no Jointable set in '".$nr."' use !");
-            } elseif (! array_key_exists($joins[$nr]['table'], $this->scheme)) {
-                throw new LegacyDieException(500, 'Unknown Table '.$joins[$nr]['table']);
-            } elseif (isset($joins[$nr]['type']) && ! in_array(
+            throw_unless(isset($joins[$nr]['table']), new LegacyDieException(500, "no Jointable set in '".$nr."' use !"));
+
+            throw_unless(array_key_exists($joins[$nr]['table'], $this->scheme), new LegacyDieException(500, 'Unknown Table '.$joins[$nr]['table']));
+
+            throw_if(isset($joins[$nr]['type']) && ! in_array(
                 strtolower($joins[$nr]['type']),
                 ['inner', 'left', 'natural', 'right']
-            )) {
-                throw new LegacyDieException(500, 'Unknown Join type '.$joins[$nr]['type']);
-            }
+            ), new LegacyDieException(500, 'Unknown Join type '.$joins[$nr]['type']));
             if (! isset($joins[$nr]['on'])) {
                 $joins[$nr]['on'] = [];
             }
-            if (! is_array($joins[$nr]['on'])) {
-                throw new LegacyDieException(500, "on '{$joins[$nr]['on']}' has to be an array!");
-            }
+            throw_unless(is_array($joins[$nr]['on']), new LegacyDieException(500, "on '{$joins[$nr]['on']}' has to be an array!"));
             if (count($joins[$nr]['on']) === 2 && ! is_array($joins[$nr]['on'][0])) {
                 $joins[$nr]['on'] = [$joins[$nr]['on']]; // if only 1 "on" set bring it into an array-form
             }
             foreach ($joins[$nr]['on'] as $pair) {
-                if (! is_array($pair)) {
-                    throw new LegacyDieException(500, "Join on '$pair' is not an array");
-                }
-                if (count($pair) !== 2) {
-                    throw new LegacyDieException(500, 'unvalid joinon pair:'.implode(', ', $pair));
-                }
+                throw_unless(is_array($pair), new LegacyDieException(500, "Join on '$pair' is not an array"));
+                throw_if(count($pair) !== 2, new LegacyDieException(500, 'unvalid joinon pair:'.implode(', ', $pair)));
             }
             if (isset($joins[$nr]['operator'])) {
                 if (! is_array($joins[$nr]['operator'])) {
                     $joins[$nr]['operator'] = [$joins[$nr]['operator']];
                 }
                 foreach ($joins[$nr]['operator'] as $op) {
-                    if (! in_array($op, $validJoinOnOperators, true)) {
-                        throw new LegacyDieException(500, "unallowed join operator '$op' in {$nr}th join");
-                    }
+                    throw_unless(in_array($op, $validJoinOnOperators, true), new LegacyDieException(500, "unallowed join operator '$op' in {$nr}th join"));
                 }
             } else {
                 $joins[$nr]['operator'] = array_fill(0, count($joins[$nr]['on']), '=');
             }
-            if (count($joins[$nr]['on']) !== count($joins[$nr]['operator'])) {
-                throw new LegacyDieException(500,
+            throw_if(count($joins[$nr]['on']) !== count($joins[$nr]['operator']), new LegacyDieException(500,
                     'not same amount of on-pairs('.count($joins[$nr]['on']).') and operators ('.count(
                         $joins[$nr]['operator']
                     ).')!'
-                );
-            }
+                ));
         }
 
         foreach ($sort as $field => $value) {
-            if (! in_array($field, $this->validFields, true)) {
-                throw new LegacyDieException(500, "Unkown column $field in ORDER");
-            }
+            throw_unless(in_array($field, $this->validFields, true), new LegacyDieException(500, "Unkown column $field in ORDER"));
         }
 
         foreach ($groupBy as $field) {
-            if (! in_array($field, $this->validFields, true)) {
-                throw new LegacyDieException(500, "Unkown column $field in GROUP");
-            }
+            throw_unless(in_array($field, $this->validFields, true), new LegacyDieException(500, "Unkown column $field in GROUP"));
         }
 
         //
@@ -897,9 +879,7 @@ class DBConnector extends Singleton
         }
         foreach ($where as $whereGroup) {
             foreach ($whereGroup as $field => $value) {
-                if (! in_array($field, $this->validFields, true)) {
-                    throw new LegacyDieException(500, "Unkown column $field in WHERE");
-                }
+                throw_unless(in_array($field, $this->validFields, true), new LegacyDieException(500, "Unkown column $field in WHERE"));
             }
         }
         $w = [];
@@ -929,9 +909,7 @@ class DBConnector extends Singleton
                     $k = $this->dbPrefix.$k;
                 }
                 if (is_array($v)) {
-                    if (! in_array(strtolower($v[0]), $validWhereOperators)) {
-                        throw new LegacyDieException(500, "Unknown where operator $v[0]");
-                    }
+                    throw_unless(in_array(strtolower($v[0]), $validWhereOperators), new LegacyDieException(500, "Unknown where operator $v[0]"));
                     if (is_array($v[1])) {
                         switch (strtolower($v[0])) {
                             case 'not in':
@@ -941,9 +919,7 @@ class DBConnector extends Singleton
                                 break;
                             case 'between':
                                 $wg[] = $this->quoteIdent($k)." $v[0] ? AND ?";
-                                if (count($v[1]) !== 2) {
-                                    throw new LegacyDieException(500, 'To many values for '.$v[0]);
-                                }
+                                throw_if(count($v[1]) !== 2, new LegacyDieException(500, 'To many values for '.$v[0]));
                                 break;
                             default:
                                 throw new LegacyDieException(500, 'unknown identifier '.$v[0]);
@@ -1024,9 +1000,7 @@ class DBConnector extends Singleton
      */
     public function dbInsert(string $table, array $fields): string
     {
-        if (! isset($this->scheme[$table])) {
-            throw new LegacyDieException(500, "Unkown table $table");
-        }
+        throw_unless(isset($this->scheme[$table]), new LegacyDieException(500, "Unkown table $table"));
         // if (isset($fields["id"])) unset($fields["id"]);
 
         $fields = array_intersect_key($fields, $this->scheme[$table]);
@@ -1059,9 +1033,7 @@ class DBConnector extends Singleton
      */
     public function dbInsertMultiple(string $table, array $fieldSchema, array ...$multiFields): string
     {
-        if (! isset($this->scheme[$table])) {
-            throw new LegacyDieException(500, "Unknown table $table");
-        }
+        throw_unless(isset($this->scheme[$table]), new LegacyDieException(500, "Unknown table $table"));
         $fieldSchema = array_flip(array_intersect_key(array_flip($fieldSchema), $this->scheme[$table]));
 
         $sql = 'INSERT '.$this->dbPrefix."$table (".implode(
@@ -1071,12 +1043,10 @@ class DBConnector extends Singleton
         $values = [];
         foreach ($multiFields as $fields) {
             $fields = array_intersect_key($fields, array_flip($fieldSchema));
-            if (count($fields) !== count($fieldSchema)) {
-                throw new LegacyDieException(500, 'Ein Datenfehler ist aufgetreten - Falsche Dimension', [
+            throw_if(count($fields) !== count($fieldSchema), new LegacyDieException(500, 'Ein Datenfehler ist aufgetreten - Falsche Dimension', [
                     'ist' => $fields,
                     'soll' => $fieldSchema,
-                ]);
-            }
+                ]));
             $values[] = array_values($fields);
         }
 
@@ -1158,9 +1128,7 @@ class DBConnector extends Singleton
      */
     public function dbUpdate(string $table, array $filter, array $fields, bool $debugDump = false): int
     {
-        if (! isset($this->scheme[$table])) {
-            throw new LegacyDieException(500, "Unkown table $table");
-        }
+        throw_unless(isset($this->scheme[$table]), new LegacyDieException(500, "Unkown table $table"));
 
         $filter = array_intersect_key(
             $filter,
@@ -1169,12 +1137,8 @@ class DBConnector extends Singleton
         ); // only fetch using id and url
         // $fields = array_diff_key(array_intersect_key($fields, $this->scheme[$table]), array_flip($this->validFields)); # do not update filter fields
         $fields = array_intersect_key($fields, array_flip($this->validFields));
-        if (count($filter) === 0) {
-            throw new LegacyDieException(500, 'No filter fields given.');
-        }
-        if (count($fields) === 0) {
-            throw new LegacyDieException(500, 'No fields given.');
-        }
+        throw_if(count($filter) === 0, new LegacyDieException(500, 'No filter fields given.'));
+        throw_if(count($fields) === 0, new LegacyDieException(500, 'No fields given.'));
         $u = [];
         foreach ($fields as $k => $v) {
             $u[] = $this->quoteIdent($k).' = ?';
@@ -1191,9 +1155,7 @@ class DBConnector extends Singleton
         if ($debugDump) {
             dump($sql, $values);
         }
-        if ($ret === false) {
-            throw new LegacyDieException(500, "DB Update in $table failed", $query->errorInfo());
-        }
+        throw_if($ret === false, new LegacyDieException(500, "DB Update in $table failed", $query->errorInfo()));
 
         return $query->rowCount();
     }
@@ -1205,26 +1167,22 @@ class DBConnector extends Singleton
      */
     public function dbDelete(string $table, array $filter): int
     {
-        if (! isset($this->scheme[$table])) {
-            throw new LegacyDieException(
+        throw_unless(isset($this->scheme[$table]), new LegacyDieException(
                 500,
                 'Ein Datenbankfehler ist aufgetreten',
                 "Deletion of table entries from $table not possible, table name unknown"
-            );
-        }
+            ));
 
         [$whereSql, $values] = $this->buildWhereSql($filter);
 
         $sql = 'DELETE FROM '.$this->dbPrefix.$table.$whereSql;
         $query = $this->pdo->prepare($sql);
         $ret = $query->execute($values);
-        if ($ret === false) {
-            throw new LegacyDieException(
+        throw_if($ret === false, new LegacyDieException(
                 500,
                 'Ein Datenbank Fehler ist aufgetreten',
                 "Deletion of table $table not possible:".PHP_EOL.print_r($query->errorInfo(), true).PHP_EOL.$sql.print_r($values, true)
-            );
-        }
+            ));
 
         return $query->rowCount();
     }

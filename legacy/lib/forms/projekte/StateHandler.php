@@ -54,9 +54,7 @@ class StateHandler
     {
         $this->owners = $owners;
         $this->parentTableName = $parentTableName;
-        if (! is_array($allStates) || ! is_array($transitions)) {
-            throw new InvalidArgumentException('Keine Arrays in States / Transitions übergeben!');
-        }
+        throw_if(! is_array($allStates) || ! is_array($transitions), new InvalidArgumentException('Keine Arrays in States / Transitions übergeben!'));
 
         if ($start === null || empty($start)) {
             if (isset($allStates['draft'])) {
@@ -84,9 +82,7 @@ class StateHandler
             } elseif (! is_callable($postTransitionHooks[$state])) {
                 throw new InvalidArgumentException("Validator zu $state ist keine Funktion!");
             }
-            if (! isset($transitions[$state])) {
-                throw new InvalidArgumentException("Cannot find state '$state' in \$transition array as key");
-            }
+            throw_unless(isset($transitions[$state]), new InvalidArgumentException("Cannot find state '$state' in \$transition array as key"));
         }
         $this->transitions = $transitions;
         $this->validations = $validations;
@@ -107,15 +103,9 @@ class StateHandler
      */
     public function transitionTo($newState)
     {
-        if (! $this->isExitingState($newState)) {
-            throw new IllegalStateException("$newState nicht bekannt!");
-        }
-        if (! $this->isTransitionableTo($newState)) {
-            throw new IllegalTransitionException("$this->actualState nicht in $newState überführbar - Daten fehlen!");
-        }
-        if (! $this->isAllowedToTransitionTo($newState)) {
-            throw new IllegalTransitionException("$this->actualState nicht in $newState überführbar - nicht die passenden Rechte!");
-        }
+        throw_unless($this->isExitingState($newState), new IllegalStateException("$newState nicht bekannt!"));
+        throw_unless($this->isTransitionableTo($newState), new IllegalTransitionException("$this->actualState nicht in $newState überführbar - Daten fehlen!"));
+        throw_unless($this->isAllowedToTransitionTo($newState), new IllegalTransitionException("$this->actualState nicht in $newState überführbar - nicht die passenden Rechte!"));
         $oldState = $this->actualState;
         $this->actualState = $newState;
         if (isset($this->postTransitionHooks[$oldState])) {

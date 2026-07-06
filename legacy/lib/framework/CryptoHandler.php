@@ -62,9 +62,7 @@ class CryptoHandler
      */
     public static function generateRandomString($length): ?string
     {
-        if (! is_int($length)) {
-            throw new \Exception('Invalid argument type. Integer expected.');
-        }
+        throw_unless(is_int($length), new \Exception('Invalid argument type. Integer expected.'));
 
         return bin2hex(random_bytes($length));
     }

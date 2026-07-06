@@ -25,9 +25,7 @@ class DataElement
         }
         $length = (int) substr($challenge, 0, 2);
         $data = substr($challenge, 2, $length);
-        if (strlen($data) !== $length) {
-            throw new InvalidArgumentException('Parsing went wromg');
-        }
+        throw_if(strlen($data) !== $length, new InvalidArgumentException('Parsing went wromg'));
         $rest = substr($challenge, 2 + $length);
 
         return [$rest, new self($data)];

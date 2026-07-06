@@ -97,8 +97,7 @@ abstract class Renderer extends EscFunc
             if (empty($content)) {
                 continue;
             }
-            if (count(reset($content)) !== $paramSum && count($keys) !== $paramSum) {
-                throw new LegacyDieException(500,
+            throw_if(count(reset($content)) !== $paramSum && count($keys) !== $paramSum, new LegacyDieException(500,
                     "In Gruppe '$groupName' passt Spaltenzahl (".count(
                         reset($content)
                     ).') bzw. Key Anzahl ('.count(
@@ -106,8 +105,7 @@ abstract class Renderer extends EscFunc
                     ).") nicht zur benötigten Parameterzahl $paramSum \n es wurden ".count(
                         $escapeFunctions
                     ).' Funktionen übergeben '.$diff.' wurde(n) hinzugefügt.'
-                );
-            }
+                ));
         }
 
         if (count($keys) === 0) {
@@ -291,9 +289,7 @@ abstract class Renderer extends EscFunc
      */
     protected function renderAlert($strongMsg, $msg, string $type = self::ALERT_SUCCESS): void
     {
-        if (! in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER])) {
-            throw new LegacyDieException(500, 'Falscher Datentyp in renderAlert()');
-        }
+        throw_unless(in_array($type, [self::ALERT_SUCCESS, self::ALERT_INFO, self::ALERT_WARNING, self::ALERT_DANGER]), new LegacyDieException(500, 'Falscher Datentyp in renderAlert()'));
         if (is_array($msg)) {
             $msg = $this->arrayToListEscapeFunction($msg);
         } ?>
@@ -367,9 +363,7 @@ abstract class Renderer extends EscFunc
             [],
             ['von' => false]
         );
-        if (! isset($hhps) || empty($hhps)) {
-            throw new LegacyDieException(500, 'Konnte keine Haushaltspläne finden');
-        }
+        throw_if(! isset($hhps) || empty($hhps), new LegacyDieException(500, 'Konnte keine Haushaltspläne finden'));
         if (! isset($routeInfo['hhp-id'])) {
             foreach (array_reverse($hhps, true) as $id => $hhp) {
                 if ($hhp['state'] === 'final') {
