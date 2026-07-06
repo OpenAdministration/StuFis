@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\Expense;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
@@ -51,13 +53,13 @@ class LegacyMigrateEncryption extends Command
                             // old prefix
                             $text = substr($text, strlen('$enc$'));
                             $text = ChatHandler::legacyDecryptMessage($text, Env::get('CHAT_PRIVATE_KEY'));
-                            $message->text = \Crypt::encryptString($text);
+                            $message->text = Crypt::encryptString($text);
                             $message->save();
                             $count++;
                         } elseif ($message->type === -1) {
                             // not used productive anymore, was "private message"
                             $text = ChatHandler::legacyDecryptMessage($text, Env::get('CHAT_PRIVATE_KEY'));
-                            $message->text = \Crypt::encryptString($text);
+                            $message->text = Crypt::encryptString($text);
                             $message->save();
                             $count++;
                         }
@@ -72,11 +74,11 @@ class LegacyMigrateEncryption extends Command
             Expense::all()->each(function ($expense) use (&$count): void {
                 $cryptIban = $expense->getAttribute('zahlung_iban');
                 try {
-                    \Crypt::decryptString($cryptIban);
+                    Crypt::decryptString($cryptIban);
                 } catch (DecryptException) {
                     $iban = AuslagenHandler2::legacyDecryptStr($cryptIban);
-                    $expense->setAttribute('zahlung_iban', \Crypt::encryptString($iban));
-                    $expense->etag = \Str::random(32);
+                    $expense->setAttribute('zahlung_iban', Crypt::encryptString($iban));
+                    $expense->etag = Str::random(32);
                     $expense->save();
                     $count++;
                 }

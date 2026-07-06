@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use Illuminate\Console\Command;
@@ -36,12 +38,12 @@ class LegacyDeleteBudgetPlan extends Command
             return;
         }
 
-        \DB::transaction(function () use ($hhp, $groups, $title): void {
-            \Schema::disableForeignKeyConstraints();
+        DB::transaction(function () use ($hhp, $groups, $title): void {
+            Schema::disableForeignKeyConstraints();
             $title->delete();
             $groups->delete();
             $hhp->delete();
-            \Schema::enableForeignKeyConstraints();
+            Schema::enableForeignKeyConstraints();
             $this->info('Plan, Groups and Bugets are deleted successfully!');
         });
 

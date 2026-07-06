@@ -2,6 +2,7 @@
 
 namespace framework;
 
+use Illuminate\Support\Facades\Auth;
 use App\Exceptions\LegacyDieException;
 use framework\render\HTMLPageRenderer;
 use Illuminate\Support\Facades\DB;
@@ -575,7 +576,7 @@ class DBConnector extends Singleton
             return $this->user;
         }
 
-        $user = \Auth::user()?->toArray();
+        $user = Auth::user()?->toArray();
         $user['fullname'] = $user['name'];
         $this->user = $user;
 

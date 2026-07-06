@@ -2,6 +2,7 @@
 
 namespace forms\projekte;
 
+use Illuminate\Support\Facades\Auth;
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\Project;
 use App\States\Project\ProjectState;
@@ -69,6 +70,6 @@ class ProjektHandler
 
     public function isOwner(): bool
     {
-        return isset($this->data['creator_id']) && \Auth::user()->id === $this->data['creator_id'];
+        return isset($this->data['creator_id']) && Auth::user()->id === $this->data['creator_id'];
     }
 }

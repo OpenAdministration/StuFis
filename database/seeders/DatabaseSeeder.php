@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Database\Seeder;
 use Illuminate\Foundation\Testing\WithFaker;
 
@@ -17,18 +18,18 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
         // BudgetPlan::factory(5)->populate()->create();
 
-        if (\App::runningUnitTests()) {
+        if (App::runningUnitTests()) {
             $this->call(DemoDataSeeder::class);
             $this->call(LocalSeeder::class);
             $this->call(TestSeeder::class);
         }
 
-        if (\App::isLocal()) {
+        if (App::isLocal()) {
             $this->call(DemoDataSeeder::class);
             $this->call(LocalSeeder::class);
         }
 
-        if (\App::isProduction()) {
+        if (App::isProduction()) {
             if (config('stufis.realm') === 'demo') {
                 $this->call(DemoDataSeeder::class);
             }

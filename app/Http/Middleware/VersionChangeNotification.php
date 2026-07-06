@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -16,7 +17,7 @@ class VersionChangeNotification
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (($user = \Auth::user()) !== null) {
+        if (($user = Auth::user()) !== null) {
             $lastVersion = $user->version;
             if ($lastVersion !== config('stufis.version')) {
                 Session::put('message.text', __('general.version_notification.text'));

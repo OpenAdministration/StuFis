@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\Schema;
 use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
@@ -17,12 +18,12 @@ class LegacyBudgetGroupShift extends Command
 
     public function handle(): int
     {
-        return \DB::transaction(function (): int {
+        return DB::transaction(function (): int {
             $latestPlan = LegacyBudgetPlan::orderBy('id', 'desc')->limit(1)->sole();
             $budgetGroups = LegacyBudgetGroup::where('hhp_id', $latestPlan->id)
                 ->where('id', '>=', $this->argument('new_group_id'));
             $this->info('The following amount of other groups will be shifted back: '.$budgetGroups->count());
-            \Schema::disableForeignKeyConstraints();
+            Schema::disableForeignKeyConstraints();
             // this is so hacky ...
             $budgetGroups->update(['id' => DB::raw('-(id + 1)')]);
             LegacyBudgetGroup::where('id', '<', 0)->update(['id' => DB::raw('-id')]);
@@ -36,7 +37,7 @@ class LegacyBudgetGroupShift extends Command
             ]);
             $newGroup->id = $this->argument('new_group_id');
             $newGroup->save();
-            \Schema::enableForeignKeyConstraints();
+            Schema::enableForeignKeyConstraints();
 
             return self::SUCCESS;
         });

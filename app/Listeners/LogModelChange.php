@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use Illuminate\Support\Facades\Auth;
 use App\Events\UpdatingModel;
 use App\Models\Changelog;
 
@@ -30,7 +31,7 @@ class LogModelChange
             'type' => $model::class,
             'type_id' => $model->getKey(),
             'previous_data' => $changes,
-            'user_id' => \Auth::user()->id,
+            'user_id' => Auth::user()->id,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Support\Facades\Auth;
 use Closure;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class Authenticate extends Middleware
         $this->authenticate($request, $guards);
 
         // adds to parent: only user with the login or admin group pass
-        $groups = \Auth::user()->getGroups();
+        $groups = Auth::user()->getGroups();
         if ($groups->contains('login') || $groups->contains('admin')) {
             return $next($request);
         }

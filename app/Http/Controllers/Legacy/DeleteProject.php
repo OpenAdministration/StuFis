@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Legacy;
 
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Legacy\Project;
 use App\Models\User;
@@ -13,8 +14,8 @@ class DeleteProject extends Controller
         $project = Project::findOrFail($project_id);
 
         // authorize
-        $userPerm = \Auth::user()->can('budget-officer', User::class)
-            || $project->creator->id === \Auth::user()->id;
+        $userPerm = Auth::user()->can('budget-officer', User::class)
+            || $project->creator->id === Auth::user()->id;
         $dataPerm = $project->expenses()->count() === 0;
 
         if ($userPerm === false || $dataPerm === false) {

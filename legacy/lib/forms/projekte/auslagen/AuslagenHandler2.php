@@ -2,6 +2,9 @@
 
 namespace forms\projekte\auslagen;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use App\Exceptions\LegacyDieException;
 use App\Models\LegalBasis;
 use Exception;
@@ -735,7 +738,7 @@ class AuslagenHandler2 extends Renderer
         $owner = explode(';', $this->auslagen_data['created']);
         $owner = $owner[1];
 
-        return \Auth::user()->username === $owner;
+        return Auth::user()->username === $owner;
     }
 
     /**
@@ -1118,7 +1121,7 @@ class AuslagenHandler2 extends Renderer
             'last_change' => (string) ($newInfo['date']),
             'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
             'version' => (int) $this->auslagen_data['version'] + 1,
-            'etag' => \Str::random(32),
+            'etag' => Str::random(32),
         ];
         // insert/update in db
         if ($this->auslagen_data['id']) {
@@ -1368,7 +1371,7 @@ class AuslagenHandler2 extends Renderer
                 'last_change' => ($newInfo['date']),
                 'last_change_by' => "{$newInfo['user']};{$newInfo['realname']}",
                 'version' => (int) $this->auslagen_data['version'] + 1,
-                'etag' => \Str::random(32),
+                'etag' => Str::random(32),
             ]
         );
         // remove from laravell storage
@@ -1482,7 +1485,7 @@ class AuslagenHandler2 extends Renderer
             try {
                 $set = [
                     'version' => $this->auslagen_data['version'] + 1,
-                    'etag' => \Str::random(32),
+                    'etag' => Str::random(32),
                 ];
             } catch (Exception $e) {
                 return false;
@@ -1559,7 +1562,7 @@ class AuslagenHandler2 extends Renderer
     {
         $filePath = "/auslagen/{$this->auslagen_id}/belege-pdf-v{$this->auslagen_data['version']}.pdf";
         // nothing to do if this version of the file already exists
-        if (\Storage::exists($filePath)) {
+        if (Storage::exists($filePath)) {
             return;
         }
         // clean up old versions of the summary to make sure there are no leftovers from deleted files
@@ -1588,7 +1591,7 @@ class AuslagenHandler2 extends Renderer
             // belegPage macro then renders just the cover sheet to staple the original onto,
             // instead of dereferencing a null file. Same for a file missing on disk.
             $files[$key.'.pdf'] = ($beleg['file']
-                ? \Storage::get("auslagen/{$this->auslagen_id}/{$beleg['file']['hashname']}.pdf")
+                ? Storage::get("auslagen/{$this->auslagen_id}/{$beleg['file']['hashname']}.pdf")
                 : null) ?? '';
         }
         $tex = new LatexGenerator;
@@ -1622,7 +1625,7 @@ class AuslagenHandler2 extends Renderer
             'belegeFiles' => $belegeFiles,
         ], $files);
         if ($pdf !== null) {
-            \Storage::put($filePath, $pdf);
+            Storage::put($filePath, $pdf);
 
             return;
         }
@@ -1632,7 +1635,7 @@ class AuslagenHandler2 extends Renderer
     public function generate_zahlungsanweisung_pdf(): void
     {
         $fileName = "/auslagen/{$this->auslagen_id}/zahlungsanweisung-v{$this->auslagen_data['version']}.pdf";
-        if (\Storage::exists($fileName)) {
+        if (Storage::exists($fileName)) {
             return;
         }
 
@@ -1708,7 +1711,7 @@ class AuslagenHandler2 extends Renderer
         ]);
 
         if ($pdf !== null) {
-            \Storage::put($fileName, $pdf);
+            Storage::put($fileName, $pdf);
 
             return;
         }

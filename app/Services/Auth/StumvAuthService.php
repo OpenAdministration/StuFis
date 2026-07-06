@@ -2,6 +2,8 @@
 
 namespace App\Services\Auth;
 
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\App;
 use GuzzleHttp\Client;
 use Http;
 use Illuminate\Http\Client\PendingRequest;
@@ -34,7 +36,7 @@ class StumvAuthService extends AuthService
     {
         $driver = Socialite::driver('stumv');
         // if we have a local dev instance of stumv there is no need to verify ssl certs
-        if (\App::isLocal()) {
+        if (App::isLocal()) {
             $driver = $driver->setHttpClient(new Client(['verify' => false]));
         }
         $user = $driver->user();
@@ -71,13 +73,13 @@ class StumvAuthService extends AuthService
     #[\Override]
     public function userCommittees(): Collection
     {
-        return \Session::remember('stumv.comittees', fn () => $this->api()->get('/api/my/committees')->collect());
+        return Session::remember('stumv.comittees', fn () => $this->api()->get('/api/my/committees')->collect());
     }
 
     #[\Override]
     public function userGroupsRaw(): Collection
     {
-        return \Session::remember('stumv.groups', fn () => $this->api()->get('/api/my/groups')->collect());
+        return Session::remember('stumv.groups', fn () => $this->api()->get('/api/my/groups')->collect());
     }
 
     #[\Override]
@@ -89,7 +91,7 @@ class StumvAuthService extends AuthService
     #[\Override]
     public function afterLogout()
     {
-        \Session::flush();
+        Session::flush();
 
         return redirect(to: config('services.stumv.host').
             config('services.stumv.logout_path')

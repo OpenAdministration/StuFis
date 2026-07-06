@@ -3,7 +3,7 @@
 namespace framework\auth;
 
 use App\Exceptions\LegacyDieException;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use framework\Singleton;
 
 /**

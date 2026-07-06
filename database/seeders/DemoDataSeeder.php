@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class DemoDataSeeder extends Seeder
 {

@@ -2,34 +2,35 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
 
 class LocalSeeder extends Seeder
 {
     public function run(): void
     {
-        \DB::table('user')->insert([
+        DB::table('user')->insert([
             'name' => 'Demo User',
             'username' => 'user-no-login',
             'email' => 'user@example.com',
             'provider' => 'local',
             'provider_uid' => 'user',
         ]);
-        \DB::table('user')->insert([
+        DB::table('user')->insert([
             'name' => 'Demo User',
             'username' => 'user',
             'email' => 'user@example.com',
             'provider' => 'local',
             'provider_uid' => 'user',
         ]);
-        \DB::table('user')->insert([
+        DB::table('user')->insert([
             'name' => 'Demo Cash Officer',
             'username' => 'kv',
             'email' => 'kv@example.com',
             'provider' => 'local',
             'provider_uid' => 'kv',
         ]);
-        \DB::table('user')->insert([
+        DB::table('user')->insert([
             'name' => 'Demo Budget Officer',
             'username' => 'hhv',
             'email' => 'hhv@example.com',
@@ -37,7 +38,7 @@ class LocalSeeder extends Seeder
             'provider_uid' => 'hhv',
         ]);
 
-        \DB::table('user')->insert([
+        DB::table('user')->insert([
             'name' => 'The Admin',
             'username' => 'admin',
             'email' => 'admin@example.com',

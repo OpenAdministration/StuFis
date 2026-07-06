@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -27,7 +28,7 @@ class LocalAuthService extends AuthService
     #[\Override]
     public function userCommittees(): Collection
     {
-        return match (\Auth::user()->username) {
+        return match (Auth::user()->username) {
             'user' => collect(['Students Council']),
             'hhv', 'kv' => collect(['Financial Department']),
             'revision' => collect(),
@@ -48,7 +49,7 @@ class LocalAuthService extends AuthService
     #[\Override]
     public function userGroupsRaw(): Collection
     {
-        return match (\Auth::user()->username) {
+        return match (Auth::user()->username) {
             'user-no-login' => collect(),
             'user', 'external' => collect(['login']),
             'hhv' => collect(['login', 'ref-finanzen', 'ref-finanzen-hv', 'ref-finanzen-belege']),
