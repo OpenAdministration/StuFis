@@ -190,6 +190,27 @@ class BudgetItem extends Model
     }
 
     /**
+     * Ids of this item's ancestor groups (root → parent), read off the adjacency-list `path`.
+     * Only groups can have children, so every ancestor id is a group id — exactly the set of
+     * groups whose collapse should hide this row in the plan view. Requires the model to come
+     * from a tree query (treeOf()/budgetItemsTree()) that populates the `path` attribute.
+     *
+     * @return list<int>
+     */
+    public function ancestorIds(): array
+    {
+        $path = (string) ($this->{$this->getPathName()} ?? '');
+        if ($path === '') {
+            return [];
+        }
+
+        $ids = array_map(intval(...), explode($this->getPathSeparator(), $path));
+        array_pop($ids); // drop self, keep ancestors only
+
+        return array_values($ids);
+    }
+
+    /**
      * The item's effective value: a mount resolves to the referenced plan's total for its side
      * (income/expense), everything else uses the stored value. $visited guards reference cycles.
      *

@@ -142,7 +142,20 @@
                                             </th>
                                         </tr>
                                         </thead>
-                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                        <tbody
+                                            class="divide-y divide-gray-200 bg-white"
+                                            x-data="{
+                                                collapsed: $persist([]).as('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}'),
+                                                toggle(id) {
+                                                    this.collapsed = this.collapsed.includes(id)
+                                                        ? this.collapsed.filter(i => i !== id)
+                                                        : [...this.collapsed, id]
+                                                },
+                                                isHidden(ancestors) {
+                                                    return ancestors.some(id => this.collapsed.includes(id))
+                                                },
+                                            }"
+                                        >
                                             @foreach($items[$budgetType->slug()] as $item)
                                                 <x-budgetplan.view-row :item="$item"/>
                                             @endforeach

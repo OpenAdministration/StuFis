@@ -40,6 +40,31 @@ it('renders the read-only view with real totals and item rows', function (): voi
         ->assertDontSee('Semesterbeiträge');
 });
 
+it('renders the collapse wiring: toggle on group rows and x-show on every row', function (): void {
+    $this->actingAs(user());
+    $plan = planWithItems();
+
+    $group = $plan->budgetItems()->whereIsGroup(true)->firstOrFail();
+
+    $html = $this->get(route('budget-plan.view', $plan->id))
+        ->assertOk()
+        ->assertSee('budget-collapse-'.$plan->id.'-in', false) // per-plan, per-tab persist key
+        ->assertSee('isHidden(', false)                        // rows react to collapsed ancestors
+        ->content();
+
+    // the group row carries the click-to-toggle and its own id
+    expect($html)->toContain('toggle('.$group->id.')');
+});
+
+it('derives ancestor group ids from the adjacency-list path', function (): void {
+    $plan = planWithItems();
+    $leaf = $plan->budgetItemsTree(BudgetType::INCOME)->firstWhere('is_group', false);
+    $group = $plan->budgetItemsTree(BudgetType::INCOME)->firstWhere('is_group', true);
+
+    expect($leaf->ancestorIds())->toBe([$group->id])
+        ->and($group->ancestorIds())->toBe([]); // root group has no ancestors
+});
+
 it('lets an admin delete the whole plan (with its items)', function (): void {
     $this->actingAs(adminUser());
     $plan = planWithItems();
