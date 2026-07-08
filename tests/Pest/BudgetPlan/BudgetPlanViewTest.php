@@ -54,6 +54,10 @@ it('renders the collapse wiring: toggle on group rows and x-show on every row', 
 
     // the group row carries the click-to-toggle and its own id
     expect($html)->toContain('toggle('.$group->id.')');
+
+    // the collapse-all / expand-all toolbar is wired to the shared Alpine scope
+    expect($html)->toContain('collapseAll()')
+        ->and($html)->toContain('expandAll()');
 });
 
 it('derives ancestor group ids from the adjacency-list path', function (): void {

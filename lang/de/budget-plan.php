@@ -106,6 +106,8 @@ return [
     'view.summary.income' => 'Einnahmen',
     'view.summary.expense' => 'Ausgaben',
     'view.summary.balance' => 'Saldo',
+    'view.collapse-all' => 'Alle einklappen',
+    'view.expand-all' => 'Alle ausklappen',
     'view.col.planned' => 'Plan',
     'view.col.booked' => 'Gebucht',
     'view.col.committed' => 'Beschlossen',

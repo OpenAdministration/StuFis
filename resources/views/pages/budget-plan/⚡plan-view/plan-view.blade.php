@@ -90,7 +90,39 @@
 
         @foreach(BudgetType::cases() as $budgetType)
             <flux:tab.panel :name="$budgetType->slug()" class="pt-4">
-                <div class="sm:px-6">
+                <div
+                    class="sm:px-6"
+                    x-data="{
+                        collapsed: $persist([]).as('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}'),
+                        allGroupIds: @js($items[$budgetType->slug()]->where('is_group', true)->pluck('id')->values()),
+                        toggle(id) {
+                            this.collapsed = this.collapsed.includes(id)
+                                ? this.collapsed.filter(i => i !== id)
+                                : [...this.collapsed, id]
+                        },
+                        isHidden(ancestors) {
+                            return ancestors.some(id => this.collapsed.includes(id))
+                        },
+                        collapseAll() { this.collapsed = [...this.allGroupIds] },
+                        expandAll() { this.collapsed = [] },
+                    }"
+                >
+                    {{-- collapse/expand every group at once; disabled (not hidden) when already in that state,
+                         and absent entirely when the plan side has no groups to fold --}}
+                    @if($items[$budgetType->slug()]->where('is_group', true)->isNotEmpty())
+                        <div class="flex justify-end gap-2">
+                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                         x-on:click="collapseAll()"
+                                         x-bind:disabled="collapsed.length === allGroupIds.length">
+                                {{ __('budget-plan.view.collapse-all') }}
+                            </flux:button>
+                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                         x-on:click="expandAll()"
+                                         x-bind:disabled="collapsed.length === 0">
+                                {{ __('budget-plan.view.expand-all') }}
+                            </flux:button>
+                        </div>
+                    @endif
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -142,20 +174,7 @@
                                             </th>
                                         </tr>
                                         </thead>
-                                        <tbody
-                                            class="divide-y divide-gray-200 bg-white"
-                                            x-data="{
-                                                collapsed: $persist([]).as('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}'),
-                                                toggle(id) {
-                                                    this.collapsed = this.collapsed.includes(id)
-                                                        ? this.collapsed.filter(i => i !== id)
-                                                        : [...this.collapsed, id]
-                                                },
-                                                isHidden(ancestors) {
-                                                    return ancestors.some(id => this.collapsed.includes(id))
-                                                },
-                                            }"
-                                        >
+                                        <tbody class="divide-y divide-gray-200 bg-white">
                                             @foreach($items[$budgetType->slug()] as $item)
                                                 <x-budgetplan.view-row :item="$item"/>
                                             @endforeach
