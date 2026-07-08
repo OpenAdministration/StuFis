@@ -2,14 +2,12 @@
 
 namespace App\Models\Legacy;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
-use Illuminate\Support\Facades\Date;
 
 /**
  * App\Models\Legacy\LegacyBudgetPlan
@@ -63,19 +61,6 @@ class LegacyBudgetPlan extends Model
     public static function latest(): \Eloquent|static|null
     {
         return self::orderBy('id', 'desc')->first();
-    }
-
-    public static function findByDate(?Carbon $date = null): ?static
-    {
-        $date ??= Date::now();
-
-        // `bis` is the last day inside the plan and is stored at midnight, so
-        // compare against the start of $date's day to include the whole `bis`
-        // day (a date created at 14:00 on the bis date still belongs to the plan).
-        return self::query()->where('von', '<=', $date)
-            ->where(fn ($query) => $query->where('bis', '>=', $date->copy()->startOfDay())
-                ->orWhereNull('bis'))
-            ->first();
     }
 
     public function label(): string

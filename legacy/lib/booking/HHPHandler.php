@@ -512,7 +512,7 @@ class HHPHandler extends Renderer
         $this->renderTable(
             ['Projekt', 'Posten', 'Betrag'],
             [$openMoney],
-            ['projekte.id', 'projekte.createdat', 'projekte.name', 'name', 'value'],
+            ['projekte.id', 'projekte.created_at', 'projekte.name', 'name', 'value'],
             [
                 [$this, 'projektLinkEscapeFunction'],
                 null,
@@ -526,7 +526,7 @@ class HHPHandler extends Renderer
             [$closedMoney],
             [
                 'projekte.id',
-                'projekte.createdat',
+                'projekte.created_at',
                 'projekte.name',
                 'projekte.id',
                 'auslagen.id',

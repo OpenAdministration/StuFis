@@ -128,7 +128,7 @@ class BookingTableManager extends Renderer
                         'belege_id' => 'belege.id',
                         'titel_name',
                         'projekt_name' => 'projekte.name',
-                        'projekt_createdate' => 'projekte.createdat',
+                        'projekt_createdate' => 'projekte.created_at',
                         'auslagen_name' => 'name_suffix',
                         'titel_nr',
                         'titel_id' => 'haushaltstitel.id',

@@ -16,7 +16,6 @@ use App\States\Project\Terminated;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -145,7 +144,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->populateData(new Project);
         $this->copyMetaFrom($source);
         $this->name = trim($source->name.__('project.view.edit.name_copy_suffix'));
-        $this->hhp_id = LegacyBudgetPlan::findByDate($source->createdat)?->id ?? $this->hhp_id;
+        // Stay in the source's budget plan so the copied posts' titel_ids remain valid.
+        $this->hhp_id = $source->budget_plan_id ?? $this->hhp_id;
         $this->sourceId = $source->id;
         $this->sourceKind = 'copy';
 
@@ -264,7 +264,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'end' => $project->date_end ?? null,
         ];
         $this->version = $project->version ?? 1;
-        $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)?->id;
+        // A saved project has its plan persisted; a new draft (unsaved Project) defaults to the
+        // latest plan, which the user can still change in the form.
+        $this->hhp_id = $project->budget_plan_id ?? LegacyBudgetPlan::latest()?->id;
         $this->state_name = $project->state->getValue();
 
         $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
@@ -303,7 +305,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'date_start' => $this->dateRange['start'] ?? null,
             'date_end' => $this->dateRange['end'] ?? null,
             'version' => $this->version,
-            'createdat' => Date::parse(LegacyBudgetPlan::find($this->hhp_id)->von)->addDays(7),
+            'budget_plan_id' => $this->hhp_id,
             'posts' => $this->posts,
         ];
     }

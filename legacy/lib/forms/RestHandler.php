@@ -559,7 +559,7 @@ class RestHandler extends EscFunc
                     if (! $r || count($r) === 0) {
                         break;
                     }
-                    $pdate = date_create(substr($r[0]['createdat'], 0, 4).'-01-01 00:00:00');
+                    $pdate = date_create(substr($r[0]['created_at'], 0, 4).'-01-01 00:00:00');
                     $pdate->modify('+1 year');
                     $now = date_create();
                     // info mail

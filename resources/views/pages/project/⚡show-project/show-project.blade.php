@@ -32,7 +32,7 @@
                     <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-gray-500">
                         <span>{{ __('project.view.header.title') }} {{ $project->id }}</span>
                         <span aria-hidden="true">&middot;</span>
-                        <span>{{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</span>
+                        <span>{{ __('project.view.header.created_at') }} {{ $project->created_at?->format('d.m.Y') }}</span>
 
                         @if ($project->source_id && $project->source_kind)
                             <span aria-hidden="true">&middot;</span>

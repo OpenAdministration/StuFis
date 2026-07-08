@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Legacy;
 
+use App\Models\BudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,6 +19,9 @@ class ProjectFactory extends Factory
         return [
             'creator_id' => User::factory(),
             'stateCreator_id' => User::factory(),
+            // Reuse the newest existing plan (tests set one up first, and auto-increment ids make
+            // it the current test's plan) so the project shares it; only create one if none exist.
+            'budget_plan_id' => BudgetPlan::orderByDesc('id')->value('id') ?? BudgetPlan::factory(),
             'version' => 1,
             'state' => 'draft',
             'name' => fake()->sentence(3),

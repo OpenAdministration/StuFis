@@ -2,6 +2,7 @@
 
 namespace App\States\Project;
 
+use App\Models\BudgetPlan;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\Project;
 use App\Models\LegalBasis;
@@ -120,6 +121,7 @@ abstract class ProjectState extends State implements Wireable
             'responsible' => 'required|string|max:128|email',
             'org' => 'required|string|max:64',
             'protokoll' => 'sometimes|nullable|string|url',
+            'budget_plan_id' => ['required', 'integer', Rule::exists(BudgetPlan::class, 'id')],
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
             'beschreibung' => ['required', 'string', new FluxEditorRule, new DescriptionLengthRule],

@@ -219,8 +219,8 @@ class DBConnector extends Singleton
         $scheme['projekte'] = [
             'id' => 'INT NOT NULL',
             'creator_id' => 'INT NOT NULL',
-            'createdat' => 'DATETIME NOT NULL',
-            'lastupdated' => 'DATETIME NOT NULL',
+            'created_at' => 'DATETIME NOT NULL',
+            'updated_at' => 'DATETIME NOT NULL',
             'version' => 'INT NOT NULL DEFAULT 1',
             'state' => 'VARCHAR(32) NOT NULL',
             'stateCreator_id' => 'INT NOT NULL',
@@ -234,6 +234,10 @@ class DBConnector extends Singleton
             'date_start' => 'DATE NULL',
             'date_end' => 'DATE NULL',
             'beschreibung' => 'TEXT NULL',
+            // Appended (not reordered) so FETCH_NUMERIC '*' column positions stay stable. The new
+            // app owns this FK; not declared as a legacy foreign key because the referenced
+            // budget_plan table is outside the legacy scheme.
+            'budget_plan_id' => 'INT NULL',
         ];
         $keys['projekte'] = [
             'primary' => ['id'],

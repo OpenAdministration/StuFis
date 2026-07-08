@@ -225,7 +225,7 @@ it('rejects saving a project that violates the state rules', function (): void {
 
 /**
  * A budget plan (new structure) whose fiscal year covers the given range, projected by the
- * legacy haushaltsplan view as a "final" plan so relatedBudgetPlan()/findByDate() see it.
+ * legacy haushaltsplan view as a "final" plan so relatedBudgetPlan() sees it.
  */
 function coveringPlan(Carbon $start, Carbon $end): BudgetPlan
 {
