@@ -156,10 +156,37 @@ class BudgetItem extends Model
         return $this->referenced_plan_id !== null;
     }
 
+    /**
+     * Deepest allowed nesting level (0-based, matching the adjacency-list `depth`). A leaf may
+     * sit at this depth; a group may not, since a group here would push its children one level
+     * past it. Enforced server-side in the plan editor and mirrored by the read-only view.
+     */
+    public const int MAX_DEPTH = 3;
+
     /** Only plain budget leaves can be booked against — groups and mounts cannot. */
     public function isBookable(): bool
     {
         return $this->kind() === BudgetItemKind::Budget;
+    }
+
+    /**
+     * This item's 0-based nesting depth, computed by walking the parent chain. Works on plainly
+     * loaded models (no tree query needed); the chain is at most MAX_DEPTH links deep.
+     */
+    public function nestingDepth(): int
+    {
+        $depth = 0;
+        for ($ancestor = $this->parent; $ancestor !== null; $ancestor = $ancestor->parent) {
+            $depth++;
+        }
+
+        return $depth;
+    }
+
+    /** Whether a plain leaf at this depth may still be turned into a group without over-nesting. */
+    public function canBecomeGroup(): bool
+    {
+        return $this->nestingDepth() <= self::MAX_DEPTH - 1;
     }
 
     /**

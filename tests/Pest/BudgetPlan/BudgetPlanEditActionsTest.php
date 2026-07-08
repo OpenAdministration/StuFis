@@ -122,6 +122,37 @@ it('blocks deleting a group with children but allows deleting a leaf', function 
     expect(BudgetItem::find($leaf->id))->toBeNull();
 });
 
+it('enforces the max nesting depth server-side (add sub-group and convert-to-group)', function (): void {
+    $this->actingAs(budgetManager());
+    $plan = draftPlan();
+    $lw = editComponent($plan);
+
+    // root group (level 0), auto-gets a leaf child
+    $lw->call('addGroup', BudgetType::EXPENSE)->assertHasNoErrors();
+    $g0 = BudgetItem::where('budget_plan_id', $plan->id)->whereNull('parent_id')->firstOrFail();
+
+    // nest groups down to the deepest allowed group level (MAX_DEPTH - 1 == 2)
+    $lw->call('addSubGroup', $g0->id)->assertHasNoErrors();
+    $g1 = $g0->children()->where('is_group', true)->firstOrFail();
+    $lw->call('addSubGroup', $g1->id)->assertHasNoErrors();
+    $g2 = $g1->children()->where('is_group', true)->firstOrFail();
+    expect($g2->nestingDepth())->toBe(2);
+
+    // a further sub-group would land at level 3 (> MAX_DEPTH - 1) -> refused
+    $lw->call('addSubGroup', $g2->id)->assertHasNoErrors();
+    expect($g2->children()->where('is_group', true)->count())->toBe(0);
+
+    // a leaf under g2 sits at MAX_DEPTH (3): allowed, but too deep to become a group itself
+    $lw->call('addBudget', $g2->id, 5.0)->assertHasNoErrors();
+    $leaf = $g2->children()->where('is_group', false)->firstOrFail();
+    expect($leaf->nestingDepth())->toBe(3)
+        ->and($leaf->canBecomeGroup())->toBeFalse();
+
+    // converting that deepest leaf would push its auto-added child past the max -> refused
+    $lw->call('convertToGroup', $leaf->id)->assertHasNoErrors();
+    expect(BudgetItem::find($leaf->id)->is_group)->toBeFalse();
+});
+
 it('derives bookability and wires the bookings relation per item kind', function (): void {
     $plan = draftPlan();
     $group = BudgetItem::factory()->create(['budget_plan_id' => $plan->id, 'is_group' => true]);

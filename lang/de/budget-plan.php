@@ -63,6 +63,7 @@ return [
     'edit.delete' => 'Löschen',
     'edit.delete-has-children' => 'Eine Gruppe mit Untertiteln kann nicht gelöscht werden.',
     'edit.has-bookings' => 'Auf diesen Titel wurden bereits Buchungen vorgenommen – er kann nicht gelöscht oder umgewandelt werden.',
+    'edit.max-depth' => 'Die maximale Verschachtelungstiefe ist erreicht – hier kann keine Gruppe angelegt werden.',
     'edit.transform' => 'Umwandeln',
     'edit.to-mount' => 'Plan einbinden …',
     'edit.mount-heading' => 'Plan einbinden',

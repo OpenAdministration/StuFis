@@ -1,7 +1,8 @@
+@php use App\Models\BudgetItem;use Cknow\Money\Money; @endphp
 @props([
     'level' => 0,
     'item',
-    /* @var array<int, \Cknow\Money\Money> map of item id => precomputed effective value */
+    /* @var array<int, Money> map of item id => precomputed effective value */
     'values' => [],
     /* @var bool array of booleans, one for each level, indicating if the item is the last one on that level  */
     'lastItem' => [],
@@ -19,7 +20,7 @@
                 "cursor-grab flex items-center justify-end",
                 "my-2"
             ])>
-            <x-fas-grip-vertical  class="fill-zinc-400 h-5 w-5"/>
+            <x-fas-grip-vertical class="fill-zinc-400 h-5 w-5"/>
             @if($item->isMount())
                 <x-fas-link class="fill-indigo-500 w-5 h-5 ml-3"/>
             @elseif($item->is_group)
@@ -36,7 +37,8 @@
                 {{-- a mount stands in for another plan; its label links to that plan --}}
                 <div class="flex h-full items-center px-3 text-sm">
                     @if($item->referencedPlan)
-                        <flux:link :href="route('budget-plan.view', $item->referencedPlan->id)">{{ $item->referencedPlan->label() }}</flux:link>
+                        <flux:link
+                            :href="route('budget-plan.view', $item->referencedPlan->id)">{{ $item->referencedPlan->label() }}</flux:link>
                     @endif
                 </div>
             @else
@@ -71,7 +73,8 @@
                     <flux:input.group.prefix variant="filled">
                         <x-fas-link class="size-3.5"/>
                     </flux:input.group.prefix>
-                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}"
+                                class:input="text-right text-black!"/>
                 </flux:input.group>
             @elseif($item->is_group)
                 {{-- group rows use an input-group so the Σ prefix welds onto the (readonly) sum.
@@ -80,43 +83,57 @@
                     <flux:input.group.prefix variant="filled">
                         <span>Σ</span>
                     </flux:input.group.prefix>
-                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}" class:input="text-right text-black!"/>
+                    <flux:input readonly variant="filled" value="{{ $values[$item->id]->format() }}"
+                                class:input="text-right text-black!"/>
                 </flux:input.group>
             @else
                 {{-- child rows have no prefix; a lone input must NOT sit in an input-group, otherwise
                      the trailing flux:error counts as the last child and strips the input's right rounding --}}
-                <x-money-input class="my-2 w-full" wire:model.live.blur="items.{{$item->id}}.value" :disabled="false" />
+                <x-money-input class="my-2 w-full" wire:model.live.blur="items.{{$item->id}}.value" :disabled="false"/>
             @endif
         </div>
         <div class="my-2">{{-- Action Buttons --}}
             <flux:dropdown>
-                <flux:button variant="ghost" icon="ellipsis-horizontal" :aria-label="__('budget-plan.edit.more-actions')" />
+                <flux:button variant="ghost" icon="ellipsis-horizontal"
+                             :aria-label="__('budget-plan.edit.more-actions')"/>
                 <flux:menu>
                     <flux:menu.submenu :heading="__('budget-plan.edit.transform')" icon="arrows-right-left">
                         @if($item->isMount())
-                            <flux:menu.item wire:click="convertToBudget({{$item->id}})">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
+                            <flux:menu.item
+                                wire:click="convertToBudget({{$item->id}})">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
                         @elseif($item->is_group)
-                            <flux:menu.item wire:click="convertToBudget({{$item->id}})" :disabled="$item->orderedChildren->isNotEmpty()">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
+                            <flux:menu.item wire:click="convertToBudget({{$item->id}})"
+                                            :disabled="$item->orderedChildren->isNotEmpty()">{{ __('budget-plan.edit.to-budget') }}</flux:menu.item>
                         @else
-                            <flux:menu.item wire:click="convertToGroup({{$item->id}})">{{ __('budget-plan.edit.to-group') }}</flux:menu.item>
+                            {{-- disabled past the max nesting depth: a group here would push its child too deep --}}
+                            <flux:menu.item wire:click="convertToGroup({{$item->id}})"
+                                            :disabled="$level >= \App\Models\BudgetItem::MAX_DEPTH">{{ __('budget-plan.edit.to-group') }}</flux:menu.item>
                             {{-- open the modal instantly (client-side) so the skeleton shows while candidates load --}}
-                            <flux:menu.item x-on:click="$dispatch('modal-show', { name: 'mount-plan' })" wire:click="openMountPicker({{$item->id}})">{{ __('budget-plan.edit.to-mount') }}</flux:menu.item>
+                            <flux:menu.item x-on:click="$dispatch('modal-show', { name: 'mount-plan' })"
+                                            wire:click="openMountPicker({{$item->id}})">{{ __('budget-plan.edit.to-mount') }}</flux:menu.item>
                         @endif
                     </flux:menu.submenu>
                     <flux:menu.separator/>
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})" icon="arrow-up">{{ __('budget-plan.edit.move-up') }}</flux:menu.item>
-                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})" icon="arrow-down">{{ __('budget-plan.edit.move-down') }}</flux:menu.item>
-                    <flux:menu.item wire:click="copyItem({{ $item->id }})" icon="clipboard">{{ __('budget-plan.edit.copy') }}</flux:menu.item>
-                    <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)" icon="clipboard">
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position - 1 }})"
+                                    icon="arrow-up">{{ __('budget-plan.edit.move-up') }}</flux:menu.item>
+                    <flux:menu.item wire:click="sort({{$item->id}}, {{ $item->position + 1 }})"
+                                    icon="arrow-down">{{ __('budget-plan.edit.move-down') }}</flux:menu.item>
+                    <flux:menu.item wire:click="copyItem({{ $item->id }})"
+                                    icon="clipboard">{{ __('budget-plan.edit.copy') }}</flux:menu.item>
+                    <flux:menu.item wire:click="copyInverse({{ $item->id }})" :disabled="!is_null($item->parent_id)"
+                                    icon="clipboard">
                         {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})" :disabled="$item->orderedChildren->isNotEmpty()" variant="danger" icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
+                    <flux:menu.item wire:click="delete({{ $item->id }})"
+                                    :disabled="$item->orderedChildren->isNotEmpty()" variant="danger"
+                                    icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
             @if($item->is_group)
                 <flux:button icon="plus-money-bill" wire:click="addBudget({{ $item->id }})" variant="ghost"/>
-                @if($level < 2)
-                    <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})" variant="ghost"/> {{-- subtle or ghost --}}
+                @if($level < BudgetItem::MAX_DEPTH - 1)
+                    <flux:button icon="plus-wallet" wire:click="addSubGroup({{ $item->id }})"
+                                 variant="ghost"/> {{-- subtle or ghost --}}
                 @endif
             @endif
         </div>

@@ -376,6 +376,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             return;
         }
 
+        // guard the depth invariant server-side (the UI only hides the buttons): a group may not
+        // go deeper than MAX_DEPTH - 1, a leaf not deeper than MAX_DEPTH
+        $newDepth = $parent !== null ? $parent->nestingDepth() + 1 : 0;
+        $maxForKind = $is_group ? BudgetItem::MAX_DEPTH - 1 : BudgetItem::MAX_DEPTH;
+        if ($newDepth > $maxForKind) {
+            return;
+        }
+
         // root items take their type from the caller; nested items inherit it from the parent
         $budget_type = $parent?->budget_type ?? $budget_type;
         $pos = $parent !== null
@@ -412,6 +420,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         }
         if ($item->hasBookings()) {
             Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
+
+            return;
+        }
+        // a group here would force its auto-added child past MAX_DEPTH — refuse (UI also hides this)
+        if (! $item->canBecomeGroup()) {
+            Flux::toast(__('budget-plan.edit.max-depth'), variant: 'danger');
 
             return;
         }
