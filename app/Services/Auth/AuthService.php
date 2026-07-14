@@ -16,8 +16,6 @@ abstract class AuthService
 
     abstract public function userCommittees(): Collection;
 
-    abstract public function allCommittees(): Collection;
-
     abstract public function userGroupsRaw(): Collection;
 
     public function groupMapping(): Collection

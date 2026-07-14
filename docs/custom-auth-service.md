@@ -85,8 +85,6 @@ Your Auth Provider has to provide the following infos:
 * User specific info:
   * name, username, email, committee-memberships, group-memberships
   * so far optional: picture, iban, address
-* General info: 
-  * all available committees
 
 Best: Copy `StumvAuthService` and start from there. StuMV gets most of its information from oauth2 userinfo, but some additional infos via oauth2-guarded API calls. If you have all infos provided as claims inside the userinfo that should work out as well. 
 

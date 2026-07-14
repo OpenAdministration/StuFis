@@ -67,7 +67,6 @@ class OidcAuthService extends AuthService
         session([
             'oidc.groups-raw' => $attributes->{$attributeMapping['groups']} ?? [],
             'oidc.committees' => $attributes->{$attributeMapping['committees']} ?? [],
-            'oidc.all-committees' => $attributes->{$attributeMapping['all-committees']} ?? [],
         ]);
 
         return [$identifiers, $userAttributes];
@@ -97,11 +96,5 @@ class OidcAuthService extends AuthService
         \Session::flush();
 
         return redirect()->to(config('services.oidc.logout_url'));
-    }
-
-    #[\Override]
-    public function allCommittees(): Collection
-    {
-        return collect(session('oidc.all-committees'));
     }
 }

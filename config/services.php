@@ -8,6 +8,14 @@ return [
         'client_secret' => env('STUMV_CLIENT_SECRET'),
         'redirect' => rtrim((string) env('APP_URL', 'http://localhost:8000'), '/').'/auth/callback',
         'host' => env('STUMV_HOST'),
+        // Prefix for StuMV's OAuth-protected user/committees/groups API.
+        // StuMV moved this surface from /api/* to /api-legacy/* (the /api/*
+        // prefix is now a separate client-credentials Directory API), so the
+        // prefix is configurable to survive future moves without a code change.
+        'api_path' => trim((string) env('STUMV_API_PATH', 'api-legacy'), '/'),
+        // Userinfo endpoint the LaravelPassport Socialite driver calls (it
+        // defaults to 'api/user'); keep it under the same configurable prefix.
+        'userinfo_uri' => trim((string) env('STUMV_API_PATH', 'api-legacy'), '/').'/user',
         'logout_path' => env('STUMV_LOGOUT_PATH', 'logout'),
         'mapping' => [
             'login' => env('STUMV_GROUP_LOGIN', 'login'),
@@ -36,7 +44,6 @@ return [
             'address' => env('OIDC_ATTRIBUTE_ADDRESS', 'address'),
             'groups' => env('OIDC_ATTRIBUTE_GROUP', 'groups'),
             'committees' => env('OIDC_ATTRIBUTE_COMMITTEES', 'committees'),
-            'all-committees' => env('OIDC_ATTRIBUTE_ALL_COMMITTEES', 'all-committees'),
         ],
         'group-mapping' => [
             'login' => env('OIDC_GROUP_LOGIN', 'login'),

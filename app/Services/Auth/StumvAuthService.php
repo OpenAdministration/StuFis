@@ -15,7 +15,10 @@ class StumvAuthService extends AuthService
 {
     private function api(): PendingRequest
     {
-        return Http::baseUrl(config('services.stumv.host'))
+        $baseUrl = rtrim((string) config('services.stumv.host'), '/')
+            .'/'.trim((string) config('services.stumv.api_path'), '/').'/';
+
+        return Http::baseUrl($baseUrl)
             ->withToken(session('stumv.tokens.access_token'))
             ->acceptJson();
     }
@@ -71,13 +74,13 @@ class StumvAuthService extends AuthService
     #[\Override]
     public function userCommittees(): Collection
     {
-        return \Session::remember('stumv.comittees', fn () => $this->api()->get('/api/my/committees')->collect());
+        return \Session::remember('stumv.comittees', fn () => $this->api()->get('my/committees')->collect());
     }
 
     #[\Override]
     public function userGroupsRaw(): Collection
     {
-        return \Session::remember('stumv.groups', fn () => $this->api()->get('/api/my/groups')->collect());
+        return \Session::remember('stumv.groups', fn () => $this->api()->get('my/groups')->collect());
     }
 
     #[\Override]
@@ -94,13 +97,5 @@ class StumvAuthService extends AuthService
         return redirect(to: config('services.stumv.host').
             config('services.stumv.logout_path')
         );
-    }
-
-    #[\Override]
-    public function allCommittees(): Collection
-    {
-        $community_uid = config('stufis.community_uid');
-
-        return $this->api()->get("/api/committees/$community_uid")->collect();
     }
 }
