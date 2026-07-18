@@ -5,7 +5,7 @@ use App\Http\Middleware\VersionChangeNotification;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Two\InvalidStateException;
 
@@ -42,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             // has to be last because there is a catch-all inside
             Route::middleware('web')
-                ->withoutMiddleware(VerifyCsrfToken::class)
+                ->withoutMiddleware(PreventRequestForgery::class)
                 ->group(base_path('routes/legacy.php'));
         }
     )
