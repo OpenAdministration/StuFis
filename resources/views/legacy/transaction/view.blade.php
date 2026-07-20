@@ -64,7 +64,7 @@
                                 <li class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6">
                                     <div class="flex w-0 flex-1 items-center">
                                         <div class="ml-4 flex min-w-0 flex-1 gap-2">
-                                            <span class="shrink-0 text-gray-400">{{ $booking->id }}</span>
+                                            <span class="shrink-0 text-gray-400">B{{ $booking->id }}</span>
                                             <span class="truncate text-gray-900">{{ $booking->comment }}</span>
                                             <flux:link variant="subtle" :href="route('legacy.budget-item', ['titel_id' => $booking->budgetItem->id])"  class="shrink-0">{{ $booking->budgetItem->short_name }} {{ $booking->budgetItem->name }}</flux:link>
                                         </div>
