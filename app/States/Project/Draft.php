@@ -3,7 +3,6 @@
 namespace App\States\Project;
 
 use App\Models\BudgetPlan;
-use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\LegalBasis;
 use App\Rules\FluxEditorRule;
 use Illuminate\Validation\Rule;
@@ -51,7 +50,7 @@ class Draft extends ProjectState
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => ['sometimes', 'nullable', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
+            'posts.*.titel_id' => ['sometimes', 'nullable', 'integer', $this->budgetItemExistsRule()],
         ];
     }
 

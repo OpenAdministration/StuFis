@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\BudgetPlan;
 use App\Models\LegalBasis;
 use App\Models\Setting;
 use App\Models\User;
@@ -158,9 +159,9 @@ class Project extends Model
         return $this->hasMany(Project::class, 'source_id');
     }
 
-    public function relatedBudgetPlan(): ?LegacyBudgetPlan
+    public function relatedBudgetPlan(): ?BudgetPlan
     {
-        return LegacyBudgetPlan::find($this->budget_plan_id);
+        return BudgetPlan::find($this->budget_plan_id);
     }
 
     /**

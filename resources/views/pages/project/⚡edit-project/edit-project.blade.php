@@ -248,13 +248,13 @@
                                 <td class="px-3 py-4 text-sm text-gray-900">
                                     @if ($post["readonly"] === true)
                                         @php $title = $budgetTitles->find($post['titel_id']) @endphp
-                                        <span class="text-gray-500">{{ $title->titel_name }} ({{ $title->titel_nr }})</span>
+                                        <span class="text-gray-500">{{ $title->name }} ({{ $title->short_name }})</span>
                                     @else
                                         <flux:select variant="listbox" wire:model="posts.{{ $index }}.titel_id" searchable>
                                         @foreach ($budgetTitles as $title)
                                             <flux:select.option value="{{ $title->id }}">
-                                                {{ $title->titel_name }}
-                                                <span class="text-gray-500 ml-2">{{ $title->titel_nr }}</span>
+                                                {{ $title->name }}
+                                                <span class="text-gray-500 ml-2">{{ $title->short_name }}</span>
                                             </flux:select.option>
                                         @endforeach
                                         </flux:select>

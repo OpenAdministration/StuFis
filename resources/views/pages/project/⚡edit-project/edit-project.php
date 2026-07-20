@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\BudgetItem;
+use App\Models\BudgetPlan;
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\ExpenseReceiptPost;
-use App\Models\Legacy\LegacyBudgetItem;
-use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectAttachment;
 use App\Models\Legacy\ProjectPost;
@@ -173,7 +173,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     /**
      * Prefill the form as a fresh draft carrying the unspent remainder of an
      * existing project into the latest budget plan. Titel are remapped across
-     * plans by titel_nr; fully-spent posts are dropped.
+     * plans by short_name (Titelnummer); fully-spent posts are dropped.
      */
     private function populateFromLeftovers(Project $source): void
     {
@@ -183,7 +183,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->sourceId = $source->id;
         $this->sourceKind = 'leftovers';
 
-        $targetPlanId = LegacyBudgetPlan::latest()->id;
+        $targetPlanId = BudgetPlan::query()->orderByDesc('id')->first()->id;
         $this->hhp_id = $targetPlanId;
 
         $this->posts = $source->posts
@@ -214,8 +214,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
-     * Map a titel_id from its current plan onto the matching titel in the target
-     * plan via the stable titel_nr. Returns null when there is no match.
+     * Map a titel_id from its current plan onto the matching bookable item in the target
+     * plan via the stable short_name (Titelnummer). Returns null when there is no match.
      */
     public function remapTitelId(?int $oldTitelId, int $targetPlanId): ?int
     {
@@ -223,14 +223,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             return null;
         }
 
-        $titelNr = LegacyBudgetItem::find($oldTitelId)?->titel_nr;
-        if ($titelNr === null) {
+        $shortName = BudgetItem::find($oldTitelId)?->short_name;
+        if ($shortName === null) {
             return null;
         }
 
-        return LegacyBudgetPlan::find($targetPlanId)
-            ?->budgetItems
-            ->firstWhere('titel_nr', $titelNr)?->id;
+        return BudgetPlan::find($targetPlanId)
+            ?->budgetItems()
+            ->bookable()
+            ->where('short_name', $shortName)
+            ->first()?->id;
     }
 
     /**
@@ -266,7 +268,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->version = $project->version ?? 1;
         // A saved project has its plan persisted; a new draft (unsaved Project) defaults to the
         // latest plan, which the user can still change in the form.
-        $this->hhp_id = $project->budget_plan_id ?? LegacyBudgetPlan::latest()?->id;
+        $this->hhp_id = $project->budget_plan_id ?? BudgetPlan::query()->orderByDesc('id')->first()?->id;
         $this->state_name = $project->state->getValue();
 
         $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
@@ -558,9 +560,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     protected function getBudgetTitleOptions(): Illuminate\Database\Eloquent\Collection
     {
-        $plan = LegacyBudgetPlan::findOrFail($this->hhp_id);
+        $plan = BudgetPlan::findOrFail($this->hhp_id);
 
-        return $plan->budgetItems;
+        return $plan->budgetItems()->bookable()->get();
     }
 
     /**
@@ -582,7 +584,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $state = $this->getState();
         $budgetTitles = $this->getBudgetTitleOptions();
-        $budgetPlans = LegacyBudgetPlan::all();
+        $budgetPlans = BudgetPlan::orderByDesc('id')->get();
         // settings
         $protocolLinkSetting = Setting::get('project.protocol_url');
         // permissions

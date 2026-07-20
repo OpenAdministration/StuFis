@@ -170,6 +170,16 @@ class BudgetItem extends Model
     }
 
     /**
+     * Constrain to bookable leaves — the query-level counterpart of isBookable(): plain budget
+     * items, excluding groups and mounts. This is exactly the set the legacy `haushaltstitel`
+     * view exposed, so it defines which items a project post's titel_id may point at.
+     */
+    public function scopeBookable(Builder $query): void
+    {
+        $query->where('is_group', false)->whereNull('referenced_plan_id');
+    }
+
+    /**
      * This item's 0-based nesting depth, computed by walking the parent chain. Works on plainly
      * loaded models (no tree query needed); the chain is at most MAX_DEPTH links deep.
      */
