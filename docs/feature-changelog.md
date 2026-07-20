@@ -1,3 +1,9 @@
+# v4.4.2
+* Projektbeschreibungen und Nachrichten werden nun mit der vollständigen Formatierung des Editors angezeigt (Aufzählungen, nummerierte Listen, Überschriften, Links, Fett-/Kursivschrift). Zuvor gingen z. B. Listen in der Ansicht verloren, obwohl sie korrekt gespeichert waren.
+* Ältere, noch als reiner Text gespeicherte Projektbeschreibungen behalten beim Anzeigen und erneuten Bearbeiten ihre Zeilenumbrüche und werden automatisch ins neue Format übernommen.
+
+---
+
 # v4.4.1
 * Im Menü Buchungen werden Abrechnungen nun ebenso wie Konto- und Kassenumsätze nur im jeweiligen Jahr angezeigt, da diese durch ihre Projekte bereits an ein Haushaltsjahr gebunden sind.
 * PDFs können wieder in Projekte hochgeladen werden.
