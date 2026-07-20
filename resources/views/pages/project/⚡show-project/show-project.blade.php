@@ -587,8 +587,8 @@
             @empty($project->beschreibung)
                 <x-no-content/>
             @else
-                <div class="text-gray-900 whitespace-pre-wrap wrap-break-word">
-                    {!! Str::markdown($project->beschreibung) !!}
+                <div class="text-gray-900 wrap-break-word">
+                    {!! $project->beschreibung !!}
                 </div>
             @endempty
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
