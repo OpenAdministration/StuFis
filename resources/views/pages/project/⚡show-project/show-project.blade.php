@@ -468,7 +468,7 @@
         </flux:card>
 
         <!-- Budget Table -->
-        <flux:card class="overflow-hidden p-0" x-data="budgetTable()">
+        <flux:card class="overflow-hidden p-0">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-bold text-gray-900">{{ __('project.view.budget_table.heading') }}</h2>
                 <p class="text-sm text-gray-500 mt-1">{{ __('project.view.budget_table.subheading') }}</p>
