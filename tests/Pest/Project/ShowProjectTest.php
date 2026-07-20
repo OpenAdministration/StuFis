@@ -40,9 +40,9 @@ it('shows forward references to derived leftover projects on the source', functi
         ->assertSee("P#{$leftover->id}");
 });
 
-it('links the budget plan to the legacy plan view', function (): void {
+it('links the budget plan to the budget plan view', function (): void {
     $project = Project::factory()->by(user())->create();
     $plan = $project->relatedBudgetPlan();
 
-    Livewire::test('pages::project.show-project', ['project_id' => $project->id])->assertOk()->assertSeeHtml(route('legacy.hhp.view', $plan->id));
+    Livewire::test('pages::project.show-project', ['project_id' => $project->id])->assertOk()->assertSeeHtml(route('budget-plan.view', $plan->id));
 });

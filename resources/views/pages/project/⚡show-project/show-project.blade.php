@@ -260,12 +260,12 @@
                 </div>
             </flux:card>
 
-            <!-- BudgetPlan Card (whole card links to the legacy budget plan view) -->
+            <!-- BudgetPlan Card (whole card links to the budget plan view) -->
             @php
                 $relatedPlan = $project->relatedBudgetPlan();
-                $planUrl = $relatedPlan ? route('legacy.hhp.view', $relatedPlan->id) : null;
+                $planUrl = $relatedPlan ? route('budget-plan.view', $relatedPlan->id) : null;
             @endphp
-            <a href="{{ $planUrl }}" @class(['group block h-full', 'pointer-events-none' => ! $planUrl])>
+            <a href="{{ $planUrl }}" wire:navigate @class(['group block h-full', 'pointer-events-none' => ! $planUrl])>
                 <flux:card size="sm" class="h-full transition {{ $planUrl ? 'cursor-pointer' : '' }}">
                     <div class="flex items-center justify-between">
                         <div>
@@ -514,7 +514,7 @@
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 @if($post->budgetItem)
                                     @php $budgetItem = $post->budgetItem @endphp
-                                    <flux:link variant="subtle" href="{{ route('legacy.hhp.titel.view', ['hhp_id' => $budgetPlan->id, 'titel_id' => $budgetItem->id]) }}">
+                                    <flux:link variant="subtle" href="{{ route('budget-plan.item.view', ['plan_id' => $budgetItem->budget_plan_id, 'item_id' => $budgetItem->id]) }}" wire:navigate>
                                         {{ $budgetItem->name }} ({{ $budgetItem->short_name }})
                                     </flux:link>
                                 @endif
