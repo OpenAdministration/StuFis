@@ -2,8 +2,6 @@
 
 namespace App\Support;
 
-use App\Rules\FluxEditorRule;
-
 /**
  * Converts legacy plain-text project descriptions into the HTML that the
  * flux:editor and the raw-HTML show view now expect.
