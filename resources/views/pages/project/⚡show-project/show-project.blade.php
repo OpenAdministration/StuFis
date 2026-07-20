@@ -587,7 +587,7 @@
             @empty($project->beschreibung)
                 <x-no-content/>
             @else
-                <div class="text-gray-900 wrap-break-word">
+                <div class="prose max-w-none wrap-break-word prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1">
                     {!! $project->beschreibung !!}
                 </div>
             @endempty
