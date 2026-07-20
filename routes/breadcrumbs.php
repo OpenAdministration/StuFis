@@ -235,15 +235,27 @@ Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $p
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
 });
 
-// Home > Budget-Plans > ID > Titel
+// Home > Budget-Plans > ID > [Gruppen] > Titel
 Breadcrumbs::for('budget-plan.item.view', static function (BreadcrumbTrail $trail, $plan_id, $item_id): void {
     $trail->parent('budget-plan.view', $plan_id);
 
     $item = BudgetItem::find($item_id);
-    $label = $item
-        ? collect([$item->short_name, $item->name])->filter()->implode(' · ')
-        : $item_id;
+    if ($item === null) {
+        $trail->push($item_id, route('budget-plan.item.view', [$plan_id, $item_id]));
 
+        return;
+    }
+
+    // parent groups (root → immediate parent) as unlinked crumbs — groups have no own page
+    $ancestors = collect();
+    for ($parent = $item->parent; $parent !== null; $parent = $parent->parent) {
+        $ancestors->prepend($parent);
+    }
+    foreach ($ancestors as $ancestor) {
+        $trail->push(collect([$ancestor->short_name, $ancestor->name])->filter()->implode(' · '));
+    }
+
+    $label = collect([$item->short_name, $item->name])->filter()->implode(' · ');
     $trail->push($label, route('budget-plan.item.view', [$plan_id, $item_id]));
 });
 

@@ -188,3 +188,34 @@ it('renders the booked and committed columns with real amounts', function (): vo
         ->assertSee('25,00')
         ->assertSee('30,00');
 });
+
+it('breaks the committed figure down per project and reconciles with the total', function (): void {
+    [$plan, , $leaf] = expenseGroupWithLeaf();
+    commitOpen($leaf, 30);   // open → its planned 30 counts
+    commitClosed($leaf, 40); // terminated → only its billed 40 counts
+
+    $measures = new BudgetPlanMeasures($plan, BudgetType::EXPENSE);
+    $rows = $measures->committedBreakdown($leaf);
+
+    expect($rows)->toHaveCount(2);
+
+    $open = $rows->firstWhere('is_open', true);
+    $closed = $rows->firstWhere('is_open', false);
+
+    expect($open['planned']->getAmount())->toBe('3000')
+        ->and($open['committed']->getAmount())->toBe('3000')   // open commits its planned figure
+        ->and($closed['planned']->getAmount())->toBe('0')
+        ->and($closed['billed']->getAmount())->toBe('4000')
+        ->and($closed['committed']->getAmount())->toBe('4000'); // terminated commits only what was billed
+
+    // Σ committed over the breakdown == the committed figure shown on the card
+    $sum = $rows->reduce(fn (int $carry, array $row): int => $carry + (int) $row['committed']->getAmount(), 0);
+    expect((string) $sum)->toBe($measures->forItem($leaf)['committed']->getAmount());
+});
+
+it('omits projects whose state does not commit from the breakdown', function (): void {
+    [$plan, , $leaf] = expenseGroupWithLeaf();
+    commitOpen($leaf, 30, state: 'draft'); // draft never commits
+
+    expect(new BudgetPlanMeasures($plan, BudgetType::EXPENSE)->committedBreakdown($leaf))->toBeEmpty();
+});

@@ -212,12 +212,10 @@ class BudgetPlanMeasures
         $committed = [];
         foreach ([$this->openPostings($leafIds), $this->closedPostings($leafIds)] as $rows) {
             foreach ($rows as $row) {
-                $einnahmen = Money::parseByDecimal((string) ($row->einnahmen ?? 0), 'EUR');
-                $ausgaben = Money::parseByDecimal((string) ($row->ausgaben ?? 0), 'EUR');
-
-                $value = $this->type === BudgetType::EXPENSE
-                    ? $ausgaben->subtract($einnahmen)
-                    : $einnahmen->subtract($ausgaben);
+                $value = $this->bySide(
+                    Money::parseByDecimal((string) ($row->einnahmen ?? 0), 'EUR'),
+                    Money::parseByDecimal((string) ($row->ausgaben ?? 0), 'EUR'),
+                );
 
                 $committed[$row->titel_id] = isset($committed[$row->titel_id])
                     ? $committed[$row->titel_id]->add($value)
@@ -229,25 +227,34 @@ class BudgetPlanMeasures
     }
 
     /**
+     * Project states whose (planned) projektposten count toward the committed figure — the
+     * approved/ongoing projects that have reserved budget but are not yet terminated.
+     *
+     * @return list<string>
+     */
+    private static function openStates(): array
+    {
+        return [
+            NeedFinanceApproval::$name, // ok-by-hv
+            ApprovedByOrg::$name,       // ok-by-stura
+            ApprovedByFinance::$name,   // done-hv
+            ApprovedByOther::$name,     // done-other
+        ];
+    }
+
+    /**
      * Postings of not-yet-terminated (approved/ongoing) projects, summed per titel.
      *
      * @param  array<int, int>  $leafIds
      */
     private function openPostings(array $leafIds): Collection
     {
-        $openStates = [
-            NeedFinanceApproval::$name, // ok-by-hv
-            ApprovedByOrg::$name,       // ok-by-stura
-            ApprovedByFinance::$name,   // done-hv
-            ApprovedByOther::$name,     // done-other
-        ];
-
         // DB::table (not the Eloquent model) keeps einnahmen/ausgaben as raw decimals rather than
         // Money. titel_id/einnahmen/ausgaben only exist on projektposten here, so the raw SUM(...)
         // can stay unqualified and sidestep the environment table prefix.
         return DB::table('projektposten')
             ->join('projekte', 'projekte.id', '=', 'projektposten.projekt_id')
-            ->whereIn('projekte.state', $openStates)
+            ->whereIn('projekte.state', self::openStates())
             ->whereIn('projektposten.titel_id', $leafIds)
             ->groupBy('projektposten.titel_id')
             ->selectRaw('titel_id, SUM(einnahmen) as einnahmen, SUM(ausgaben) as ausgaben')
@@ -280,5 +287,116 @@ class BudgetPlanMeasures
             ->groupBy('projektposten.titel_id')
             ->selectRaw("titel_id, SUM({$bp}.einnahmen) as einnahmen, SUM({$bp}.ausgaben) as ausgaben")
             ->get();
+    }
+
+    /**
+     * Per-project breakdown of the committed figure for a single (leaf) titel: one row per
+     * projektposten of a project that contributes to "Beschlossen" — i.e. open projects (their
+     * planned posting counts) and terminated projects (their billed receipt postings count,
+     * revocations excluded). This is the row-level view behind the committed card; by drawing
+     * from the same states/sign/revocation rules as committedMap(), Σ committed == the card.
+     *
+     * Assumes $leaf is a bookable leaf (the only kind the detail page links to); groups/mounts
+     * roll up in measure() but carry no postings of their own.
+     *
+     * @return Collection<int, array{
+     *     project_id: int, project_name: string, project_state: string,
+     *     posten_id: int, posten_name: ?string,
+     *     planned: Money, billed: Money, committed: Money, is_open: bool
+     * }>
+     */
+    public function committedBreakdown(BudgetItem $leaf): Collection
+    {
+        $relevantStates = [...self::openStates(), Terminated::$name];
+
+        $posts = DB::table('projektposten')
+            ->join('projekte', 'projekte.id', '=', 'projektposten.projekt_id')
+            ->where('projektposten.titel_id', $leaf->id)
+            ->whereIn('projekte.state', $relevantStates)
+            ->select(
+                'projektposten.id as posten_id',
+                'projektposten.name as posten_name',
+                'projektposten.einnahmen as posten_einnahmen',
+                'projektposten.ausgaben as posten_ausgaben',
+                'projekte.id as project_id',
+                'projekte.name as project_name',
+                'projekte.state as project_state',
+            )
+            ->orderByDesc('projekte.id')
+            ->get();
+
+        if ($posts->isEmpty()) {
+            return collect();
+        }
+
+        $billed = $this->billedByPost($posts->pluck('posten_id')->all());
+
+        return $posts->map(function (object $post) use ($billed): array {
+            $isOpen = in_array($post->project_state, self::openStates(), true);
+
+            $planned = $this->bySide(
+                Money::parseByDecimal((string) $post->posten_einnahmen, 'EUR'),
+                Money::parseByDecimal((string) $post->posten_ausgaben, 'EUR'),
+            );
+            $billedMoney = $this->bySide(
+                $billed[$post->posten_id]['einnahmen'] ?? Money::EUR(0),
+                $billed[$post->posten_id]['ausgaben'] ?? Money::EUR(0),
+            );
+
+            return [
+                'project_id' => (int) $post->project_id,
+                'project_name' => (string) $post->project_name,
+                'project_state' => (string) $post->project_state,
+                'posten_id' => (int) $post->posten_id,
+                'posten_name' => $post->posten_name !== null ? (string) $post->posten_name : null,
+                'planned' => $planned,
+                'billed' => $billedMoney,
+                // open projects commit their planned figure; terminated ones only what was billed
+                'committed' => $isOpen ? $planned : $billedMoney,
+                'is_open' => $isOpen,
+            ];
+        });
+    }
+
+    /**
+     * Billed (beleg_posten) sums per projektposten id, revocation expenses excluded — mirrors
+     * closedPostings() but keeps posting identity instead of collapsing to titel.
+     *
+     * @param  array<int, int>  $postenIds
+     * @return array<int, array{einnahmen: Money, ausgaben: Money}>
+     */
+    private function billedByPost(array $postenIds): array
+    {
+        if ($postenIds === []) {
+            return [];
+        }
+
+        $bp = DB::getTablePrefix().'beleg_posten';
+
+        return DB::table('beleg_posten')
+            ->join('belege', 'belege.id', '=', 'beleg_posten.beleg_id')
+            ->join('auslagen', 'auslagen.id', '=', 'belege.auslagen_id')
+            ->whereIn('beleg_posten.projekt_posten_id', $postenIds)
+            ->where('auslagen.state', 'NOT LIKE', 'revocation%')
+            ->groupBy('beleg_posten.projekt_posten_id')
+            ->selectRaw("{$bp}.projekt_posten_id as posten_id, SUM({$bp}.einnahmen) as einnahmen, SUM({$bp}.ausgaben) as ausgaben")
+            ->get()
+            ->mapWithKeys(static fn (object $row): array => [(int) $row->posten_id => [
+                'einnahmen' => Money::parseByDecimal((string) $row->einnahmen, 'EUR'),
+                'ausgaben' => Money::parseByDecimal((string) $row->ausgaben, 'EUR'),
+            ]])
+            ->all();
+    }
+
+    /**
+     * Fold an income/expense pair into a single signed amount for this side, matching
+     * committedMap(): the expense side reads ausgaben − einnahmen, the income side the reverse,
+     * so both columns render as positive amounts.
+     */
+    private function bySide(Money $einnahmen, Money $ausgaben): Money
+    {
+        return $this->type === BudgetType::EXPENSE
+            ? $ausgaben->subtract($einnahmen)
+            : $einnahmen->subtract($ausgaben);
     }
 }
