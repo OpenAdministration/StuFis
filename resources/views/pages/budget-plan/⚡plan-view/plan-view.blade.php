@@ -92,20 +92,8 @@
             <flux:tab.panel :name="$budgetType->slug()" class="pt-4">
                 <div
                     class="sm:px-6"
-                    x-data="{
-                        collapsed: $persist([]).as('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}'),
-                        allGroupIds: @js($items[$budgetType->slug()]->where('is_group', true)->pluck('id')->values()),
-                        toggle(id) {
-                            this.collapsed = this.collapsed.includes(id)
-                                ? this.collapsed.filter(i => i !== id)
-                                : [...this.collapsed, id]
-                        },
-                        isHidden(ancestors) {
-                            return ancestors.some(id => this.collapsed.includes(id))
-                        },
-                        collapseAll() { this.collapsed = [...this.allGroupIds] },
-                        expandAll() { this.collapsed = [] },
-                    }"
+                    x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
+                    data-group-ids="@json($items[$budgetType->slug()]->where('is_group', true)->pluck('id')->values())"
                 >
                     {{-- collapse/expand every group at once; disabled (not hidden) when already in that state,
                          and absent entirely when the plan side has no groups to fold --}}

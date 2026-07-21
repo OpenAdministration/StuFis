@@ -16,7 +16,8 @@
 @endphp
 
 <tr
-  x-show="!isHidden(@js($item->ancestorIds()))"
+  x-show="!isHidden($el)"
+  data-ancestor-ids="@json($item->ancestorIds())"
   x-transition.opacity.duration.200ms
   x-cloak
   style="--indent: {{ $indentRem }}rem"

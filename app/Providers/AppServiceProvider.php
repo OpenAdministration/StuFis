@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use SocialiteProviders\LaravelPassport\Provider as PassportProvider;
@@ -63,6 +64,13 @@ class AppServiceProvider extends ServiceProvider
 
         // DatevExport is not an Eloquent model, so its policy needs registering by hand.
         Gate::policy(DatevExport::class, DatevExportPolicy::class);
+
+        // Feed spatie's per-request CSP nonce to Vite so Livewire and Flux (both
+        // fall back to Vite::cspNonce()) tag their inline <script>/<style> with the
+        // same nonce as the Content-Security-Policy header. Without this the
+        // enforcing policy blocks the inline @livewireScriptConfig and Livewire
+        // never boots.
+        Vite::useCspNonce(resolve('csp-nonce'));
 
         // Carbon::setLocale(config('app.locale'));
     }
