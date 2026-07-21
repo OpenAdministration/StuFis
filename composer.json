@@ -35,6 +35,7 @@
         "propaganistas/laravel-phone": "^6.0",
         "socialiteproviders/laravelpassport": "^4.3",
         "spatie/laravel-backup": "^10.3",
+        "spatie/laravel-csp": "^3.26",
         "spatie/laravel-model-states": "^2.12",
         "spatie/regex": "*",
         "staudenmeir/laravel-adjacency-list": "^1.24"

@@ -2,7 +2,7 @@
 @import '../../vendor/livewire/flux/dist/flux.css';
 
 @plugin '@tailwindcss/forms';
-/*@plugin '@tailwindcss/typography';*/
+@plugin '@tailwindcss/typography';
 /*@plugin '@tailwindcss/aspect-ratio';*/
 
 @source '../../storage/framework/views/*.php';

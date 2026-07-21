@@ -34,7 +34,7 @@
                                 </div>
                                 <time datetime="{{ $message->timestamp }}" class="flex-none py-0.5 text-xs/5 text-gray-500">{{ $message->timestamp->diffForHumans() }}</time>
                             </div>
-                            <div class="wrap-break-word text-sm/6">{!! $message->text !!}</div>
+                            <div class="prose prose-sm max-w-none wrap-break-word">{!! $message->text !!}</div>
                         </div>
                     </li>
             @elseif($message->type === App\Models\Enums\ChatMessageType::SUPPORT)

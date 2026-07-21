@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 use Laravel\Socialite\Two\InvalidStateException;
+use Spatie\Csp\AddCspHeaders;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -55,6 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => Authenticate::class,
         ]);
         $middleware->appendToGroup('web', VersionChangeNotification::class);
+
+        // Content-Security-Policy in REPORT-ONLY mode (see config/csp.php). Emits a
+        // Content-Security-Policy-Report-Only header so violations are reported without
+        // blocking anything. Revisit enforcing a real policy in 4.5.0.
+        $middleware->appendToGroup('web', AddCspHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // A stale or lost OAuth state on the Socialite callback (expired login, back button,

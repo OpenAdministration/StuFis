@@ -11,6 +11,8 @@ use App\Models\Legacy\ProjectPost;
 use App\Models\LegalBasis;
 use App\Models\Setting;
 use App\Models\TaxBudget;
+use App\Rules\ContentMatchesExtension;
+use App\Rules\NoEmbeddedMacros;
 use App\States\Project\ProjectState;
 use App\States\Project\Terminated;
 use Cknow\Money\Money;
@@ -396,8 +398,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 'deletedAttachments' => $this->deletedAttachmentIds,
             ];
             $rules = $state->basicRules() + [
-                'uploads.*' => File::types(['pdf', 'xlsx', 'ods'])
-                    ->extensions(['pdf', 'xlsx', 'ods'])->max('5 Mb'),
+                // Gate on the real filename extension (getClientOriginalExtension),
+                // which also blocks executable PHP uploads. We avoid Laravel's
+                // File::types/mimes content check (finfo reports every zip-based
+                // office format as application/zip → false rejects); NoEmbeddedMacros
+                // strips macro-bearing docs and ContentMatchesExtension verifies the
+                // bytes structurally match the extension. Serving is hardened via nosniff.
+                'uploads.*' => [(new File)->extensions(ProjectAttachment::allowedExtensions())
+                    ->max($this->attachmentMaxSizeMb().' Mb'), new NoEmbeddedMacros, new ContentMatchesExtension],
                 'deletedAttachments' => 'array',
                 'deletedAttachments.*' => 'integer',
             ];
@@ -465,7 +473,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 // throw "Unable to retrieve metadata" on the gone livewire-tmp file.
                 // (Masked in tests by Livewire's runningUnitTests meta-file shim.)
                 $name = $attachment->getClientOriginalName();
-                $mimeType = $attachment->getMimeType();
+                // Derive the stored mime_type from the (validated) extension, not
+                // from content: finfo reports "application/zip" for ODF/OOXML, and
+                // the serving layer trusts only the extension anyway. Canonical
+                // source: ProjectAttachment::MIME_TYPES.
+                $mimeType = ProjectAttachment::mimeForName($name) ?? $attachment->getMimeType();
                 $size = $attachment->getSize();
 
                 $path = $attachment->store('projects/'.$project->id);
@@ -492,7 +504,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 $project->attachments()->create([
                     'path' => $newPath,
                     'name' => $source->name,
-                    'mime_type' => $source->mime_type,
+                    'mime_type' => ProjectAttachment::mimeForName($source->name) ?? $source->mime_type,
                     'size' => $source->size,
                 ]);
             }
@@ -606,6 +618,22 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'budgetPlans', 'canUpdateBudget', 'canUpdateApproval', 'canUpdateBudgetPlan', 'protocolLinkSetting',
             'hasTaxTitels', 'canAddTaxTitles', 'backlinkSourceId', 'backlinkSourceKind',
         );
+    }
+
+    /** `accept` value for the attachment file input, derived from the allow-list. */
+    #[Computed]
+    public function attachmentAccept(): string
+    {
+        return collect(ProjectAttachment::allowedExtensions())
+            ->map(fn (string $ext) => '.'.$ext)
+            ->implode(',');
+    }
+
+    /** Max attachment upload size in MB, configurable via the `project.attachment.max_size_mb` setting. */
+    #[Computed]
+    public function attachmentMaxSizeMb(): int
+    {
+        return (int) Setting::get('project.attachment.max_size_mb');
     }
 
     #[Computed]

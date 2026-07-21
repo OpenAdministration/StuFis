@@ -125,7 +125,7 @@ return [
         'attachments' => [
             'upload_label' => 'Ergänzende Dateien hinzufügen',
             'dropzone_heading' => 'Ziehe hier die Dateien hinein oder Klicke zum Durchsuchen',
-            'dropzone_text' => '.pdf, .xlsx oder .ods bis 5MB',
+            'dropzone_text' => 'PDF, Office-Dokumente und Bilder bis :size MB',
         ],
         'expenses' => [
             'heading' => 'Im Projekt vorhandene Abrechnungen',

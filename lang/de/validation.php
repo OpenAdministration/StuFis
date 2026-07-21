@@ -212,7 +212,7 @@ return [
         ],
         'uploads.*' => [
             'uploaded' => 'Der Anhang konnte nicht hochgeladen werden. Bitte versuche es erneut.',
-            'extensions' => 'Anhänge müssen im Format PDF, XLSX oder ODS sein.',
+            'extensions' => 'Anhänge müssen ein PDF, ein Office-Dokument oder ein Bild sein.',
             'max' => 'Ein Anhang darf maximal 5 MB groß sein.',
         ],
     ],
