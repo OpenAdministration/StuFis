@@ -597,7 +597,7 @@
                         :href="route('project.attachment', [$attachment->id, $attachment->name])"
                         :heading="$attachment->name"
                         :size="$attachment->size"
-                        :icon="$attachment->mime_type"
+                        :filetype="$attachment->mime_type"
                     >
                         <x-slot:actions>
                             <flux:button

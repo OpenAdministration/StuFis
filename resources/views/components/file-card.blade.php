@@ -1,7 +1,8 @@
 @blaze
 
 @props([
-    'icon' => 'document',
+    'icon' => null,
+    'filetype' => null,
     'invalid' => false,
     'actions' => null,
     'heading' => null,
@@ -52,15 +53,45 @@
         }
     }
 
+    // An explicit $icon is a heroicon name and always wins ('name' → <flux:icon>).
+    // Otherwise the icon is derived to a coloured FontAwesome file glyph below.
+    // The file EXTENSION (from $heading, the filename) is the primary signal:
+    // finfo reports both .ods and .odt as "application/zip" (ODF is a ZIP), so
+    // $filetype alone can't tell a spreadsheet from a document. MIME is only a
+    // fallback for entries without a usable extension. Branches match the upload
+    // allow-list (pdf, xlsx, ods, jpg/png, docx, odt, pptx, odp); anything else → 'file'.
+    $extension = strtolower(pathinfo((string) $heading, PATHINFO_EXTENSION));
+    $mime = (string) $filetype;
+    $iconKind = match (true) {
+        $icon !== null => 'name', // explicit heroicon name, pass through
+        $extension === 'pdf', str_contains($mime, 'pdf') => 'pdf',
+        in_array($extension, ['xlsx', 'xls', 'ods'], true), str_contains($mime, 'sheet') => 'spreadsheet',
+        in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true), str_contains($mime, 'image/') => 'image',
+        in_array($extension, ['docx', 'doc', 'odt'], true),
+        str_contains($mime, 'word'),
+        str_contains($mime, 'opendocument.text') => 'word',
+        in_array($extension, ['pptx', 'ppt', 'odp'], true),
+        str_contains($mime, 'presentation') => 'presentation',
+        default => 'file',
+    };
+
     $iconVariant = $text ? 'solid' : 'micro';
 @endphp
 <div {{ $attributes->class($classes) }}>
-    <a href="{{ $href }}" target="_blank" class="cursor-pointer flex-1 flex items-start">
+    <a href="{{ $href }}" target="_blank" class="cursor-pointer flex-1 min-w-0 flex items-start">
         <div class="{{ $figureWrapperClasses }}">
-            @if(str_contains($icon, 'pdf' ))
+            @if($iconKind === 'pdf')
                 <x-fas-file-pdf class="size-8 text-red-400 [&:has(+[data-slot=image])]:hidden"/>
-            @elseif(str_contains($icon, 'xls') || str_contains($icon, 'opendocument.spreadsheet'))
-                <x-fas-file-excel class="size-8 text-green-600 [&:has(+[data-slot=image])]:hidden"/>
+            @elseif($iconKind === 'spreadsheet')
+                <x-fas-file-excel class="size-8 text-emerald-500 [&:has(+[data-slot=image])]:hidden"/>
+            @elseif($iconKind === 'word')
+                <x-fas-file-word class="size-8 text-blue-400 [&:has(+[data-slot=image])]:hidden"/>
+            @elseif($iconKind === 'presentation')
+                <x-fas-file-powerpoint class="size-8 text-orange-500 [&:has(+[data-slot=image])]:hidden"/>
+            @elseif($iconKind === 'image')
+                <x-fas-file-image class="size-8 text-amber-500 [&:has(+[data-slot=image])]:hidden"/>
+            @elseif($iconKind === 'file')
+                <x-fas-file-lines class="size-8 text-zinc-400 [&:has(+[data-slot=image])]:hidden"/>
             @else
                 <flux:icon name="{{ $icon }}" variant="{{ $iconVariant }}"
                            class="text-zinc-400 [&:has(+[data-slot=image])]:hidden"/>

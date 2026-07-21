@@ -31,7 +31,12 @@ it('can render the create project page', function (): void {
 
 it('can create a new project', function (): void {
     Storage::fake('projects');
-    $file = UploadedFile::fake()->create('document.pdf', 500, 'application/pdf');
+    // Real %PDF- magic bytes, padded to 500 KB: the upload passes the
+    // ContentMatchesExtension rule while keeping the asserted size exact.
+    $file = UploadedFile::fake()->createWithContent(
+        'document.pdf',
+        '%PDF-'.str_repeat('0', 500 * 1024 - 5),
+    );
 
     Livewire::test('pages::project.edit-project')
         ->set('name', 'Test Project')

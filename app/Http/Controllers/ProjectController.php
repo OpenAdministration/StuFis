@@ -48,13 +48,30 @@ class ProjectController extends Controller
     {
         Gate::authorize('view', $attachment->project);
 
-        return response()->file(Storage::path($attachment->path));
+        // Content-Type is derived from the (validated) extension via the model's
+        // canonical map — NEVER guessed from content. See ProjectAttachment::MIME_TYPES.
+        $mimeType = ProjectAttachment::mimeForName($attachment->name);
+
+        // Unexpected extension: never render inline. Force a download with a
+        // neutral type so a disguised file cannot execute in our origin.
+        if ($mimeType === null) {
+            return $this->downloadAttachment($attachment, $filename);
+        }
+
+        // Declare the type from the (validated) extension, not from content, and
+        // forbid MIME-sniffing. Together these keep inline serving safe.
+        return response()->file(Storage::path($attachment->path), [
+            'Content-Type' => $mimeType,
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function downloadAttachment(ProjectAttachment $attachment, string $filename)
     {
         Gate::authorize('view', $attachment->project);
 
-        return response()->download(Storage::path($attachment->path), $attachment->name);
+        return response()->download(Storage::path($attachment->path), $attachment->name, [
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }
