@@ -4,7 +4,7 @@
 // this app doesn't use (it bundles Livewire via Vite), so the swap must happen here.
 import {Livewire, Alpine} from '../../vendor/livewire/livewire/dist/livewire.csp.esm';
 import '@fontsource-variable/inter';
-import {registerBudgetCollapse} from './budget-collapse';
+import {registerBudgetCollapse} from '../views/pages/budget-plan/⚡plan-view/budget-collapse';
 
 // Register global Alpine components BEFORE Livewire.start() boots Alpine.
 registerBudgetCollapse(Alpine);
