@@ -1,6 +1,7 @@
 # v4.4.2
 * Projektbeschreibungen und Nachrichten werden nun mit der vollständigen Formatierung des Editors angezeigt (Aufzählungen, nummerierte Listen, Überschriften, Links, Fett-/Kursivschrift). Zuvor gingen z. B. Listen in der Ansicht verloren, obwohl sie korrekt gespeichert waren.
 * Ältere, noch als reiner Text gespeicherte Projektbeschreibungen behalten beim Anzeigen und erneuten Bearbeiten ihre Zeilenumbrüche und werden automatisch ins neue Format übernommen.
+* Projektanhänge können nun direkt über einen Download-Knopf je Datei heruntergeladen werden (bisher wurden sie nur im Browser geöffnet).
 
 ---
 
