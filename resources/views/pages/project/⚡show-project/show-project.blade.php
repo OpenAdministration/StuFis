@@ -597,9 +597,19 @@
                         :href="route('project.attachment', [$attachment->id, $attachment->name])"
                         :heading="$attachment->name"
                         :size="$attachment->size"
-                        :url="$attachment->url"
                         :icon="$attachment->mime_type"
-                    />
+                    >
+                        <x-slot:actions>
+                            <flux:button
+                                :href="route('project.attachment.download', [$attachment->id, $attachment->name])"
+                                icon="arrow-down-tray"
+                                variant="ghost"
+                                size="sm"
+                                square
+                                :tooltip="__('Download')"
+                            />
+                        </x-slot:actions>
+                    </x-file-card>
                 @endforeach
             </div>
         </flux:card>

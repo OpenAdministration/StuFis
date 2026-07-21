@@ -46,6 +46,15 @@ class ProjectController extends Controller
 
     public function showAttachment(ProjectAttachment $attachment, string $filename)
     {
+        Gate::authorize('view', $attachment->project);
+
         return response()->file(Storage::path($attachment->path));
+    }
+
+    public function downloadAttachment(ProjectAttachment $attachment, string $filename)
+    {
+        Gate::authorize('view', $attachment->project);
+
+        return response()->download(Storage::path($attachment->path), $attachment->name);
     }
 }
