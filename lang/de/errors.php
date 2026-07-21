@@ -23,4 +23,6 @@ return [
     'description-too-short' => 'Die Beschreibung muss mindestens :min Zeichen lang sein.',
     'description-too-long' => 'Die Beschreibung darf höchstens :max Zeichen lang sein.',
     'one-money-has-to-be-zero' => 'Es darf nur Ausgabe oder Einnahme 0 sein',
+    'attachment-contains-macros' => 'Anhänge dürfen keine Makros enthalten. Bitte entferne die Makros oder lade das Dokument ohne Makros (bzw. als PDF) hoch.',
+    'attachment-content-mismatch' => 'Der Inhalt des Anhangs passt nicht zur angegebenen Dateiendung. Bitte lade eine gültige Datei im passenden Format hoch.',
 ];

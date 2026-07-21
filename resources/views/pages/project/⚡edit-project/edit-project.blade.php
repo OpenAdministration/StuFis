@@ -345,10 +345,10 @@
         </flux:card>
 
     <flux:card>
-            <flux:file-upload wire:model="newAttachments" multiple :label="__('project.view.attachments.upload_label')">
+            <flux:file-upload wire:model="newAttachments" multiple :accept="$this->attachmentAccept" :label="__('project.view.attachments.upload_label')">
                 <flux:file-upload.dropzone
                     :heading="__('project.view.attachments.dropzone_heading')"
-                    :text="__('project.view.attachments.dropzone_text')"
+                    :text="__('project.view.attachments.dropzone_text', ['size' => $this->attachmentMaxSizeMb])"
                     with-progress
                 />
             </flux:file-upload>
@@ -369,7 +369,7 @@
                         <x-file-card
                             :heading="$attachment['name']"
                             :size="$attachment['size']"
-                            :icon="$attachment['mime_type']"
+                            :filetype="$attachment['mime_type']"
                         >
                             <x-slot name="actions">
                                 <flux:file-item.remove wire:click="removeExistingAttachment({{ $attachment['id'] }})"/>

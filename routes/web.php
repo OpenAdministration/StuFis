@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::livewire('project/{project_id}/history', 'pages::project.show-project')->name('project.history');
     Route::livewire('project/{project_id}/edit', 'pages::project.edit-project')->name('project.edit');
     Route::get('project/attachment/{attachment}/{fileName}', [ProjectController::class, 'showAttachment'])->name('project.attachment');
+    Route::get('project/attachment/{attachment}/{fileName}/download', [ProjectController::class, 'downloadAttachment'])->name('project.attachment.download');
 
     Route::permanentRedirect('projekt/create', '/project/create');
     Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');

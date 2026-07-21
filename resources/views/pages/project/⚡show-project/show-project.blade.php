@@ -468,7 +468,7 @@
         </flux:card>
 
         <!-- Budget Table -->
-        <flux:card class="overflow-hidden p-0" x-data="budgetTable()">
+        <flux:card class="overflow-hidden p-0">
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-bold text-gray-900">{{ __('project.view.budget_table.heading') }}</h2>
                 <p class="text-sm text-gray-500 mt-1">{{ __('project.view.budget_table.subheading') }}</p>
@@ -587,8 +587,8 @@
             @empty($project->beschreibung)
                 <x-no-content/>
             @else
-                <div class="text-gray-900 whitespace-pre-wrap wrap-break-word">
-                    {!! Str::markdown($project->beschreibung) !!}
+                <div class="prose max-w-none wrap-break-word prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1">
+                    {!! $project->beschreibung !!}
                 </div>
             @endempty
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -597,9 +597,19 @@
                         :href="route('project.attachment', [$attachment->id, $attachment->name])"
                         :heading="$attachment->name"
                         :size="$attachment->size"
-                        :url="$attachment->url"
-                        :icon="$attachment->mime_type"
-                    />
+                        :filetype="$attachment->mime_type"
+                    >
+                        <x-slot:actions>
+                            <flux:button
+                                :href="route('project.attachment.download', [$attachment->id, $attachment->name])"
+                                icon="arrow-down-tray"
+                                variant="ghost"
+                                size="sm"
+                                square
+                                :tooltip="__('Download')"
+                            />
+                        </x-slot:actions>
+                    </x-file-card>
                 @endforeach
             </div>
         </flux:card>

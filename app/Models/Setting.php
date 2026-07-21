@@ -37,6 +37,9 @@ class Setting extends Model
                     'active' => false,
                     'label' => '',
                 ],
+                'attachment' => [
+                    'max_size_mb' => 5,
+                ],
             ],
             'tax.active' => false,
             'datev' => false,
