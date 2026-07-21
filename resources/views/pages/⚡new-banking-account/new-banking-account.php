@@ -37,6 +37,13 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'short.not_in' => __('konto.new.prefix-reserved'),
+        ];
+    }
+
     public function store(): void
     {
         $data = $this->validate();
