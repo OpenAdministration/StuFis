@@ -213,4 +213,45 @@
             </flux:button>
         </div>
     </flux:modal>
+
+    {{-- Register the budgetCollapse Alpine component from a nonced inline <script> — the
+         mechanism from the Livewire CSP docs' "Working around limitations" section. This
+         keeps the component's JS inside its MFC rather than in the shared resources/js
+         bundle. @cspNonce emits nonce="…" matching the CSP header (same scoped singleton),
+         which is what makes an inline script pass our strict script-src. Full JS is allowed
+         here (arrows/spreads) because a nonced <script> is a real script context, not an
+         Alpine attribute expression — so the rich logic Alpine's CSP evaluator can't parse
+         lives here and the blade keeps only CSP-safe expressions (bare refs, method calls).
+         Register on alpine:init, or immediately if Alpine is already up — the latter covers
+         wire:navigate INTO this page, where alpine:init already fired on the first page. --}}
+    <script @cspNonce>
+        const registerBudgetCollapse = () => {
+            window.Alpine.data('budgetCollapse', (persistKey) => ({
+                collapsed: window.Alpine.$persist([]).as(persistKey),
+                allGroupIds: [],
+
+                init() {
+                    this.allGroupIds = JSON.parse(this.$el.dataset.groupIds || '[]');
+                },
+
+                toggle(id) {
+                    this.collapsed = this.collapsed.includes(id)
+                        ? this.collapsed.filter(existing => existing !== id)
+                        : [...this.collapsed, id];
+                },
+
+                isHidden(row) {
+                    const ancestors = JSON.parse(row.dataset.ancestorIds || '[]');
+                    return ancestors.some(id => this.collapsed.includes(id));
+                },
+
+                collapseAll() { this.collapsed = [...this.allGroupIds]; },
+                expandAll()   { this.collapsed = []; },
+            }));
+        };
+
+        window.Alpine
+            ? registerBudgetCollapse()
+            : document.addEventListener('alpine:init', registerBudgetCollapse);
+    </script>
 </div>

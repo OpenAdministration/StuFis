@@ -9,6 +9,7 @@ use Cknow\Money\Casts\MoneyDecimalCast;
 use Cknow\Money\Money;
 use Database\Factories\BudgetItemFactory;
 use Eloquent;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -174,7 +175,8 @@ class BudgetItem extends Model
      * items, excluding groups and mounts. This is exactly the set the legacy `haushaltstitel`
      * view exposed, so it defines which items a project post's titel_id may point at.
      */
-    public function scopeBookable(Builder $query): void
+    #[Scope]
+    protected function bookable(Builder $query): void
     {
         $query->where('is_group', false)->whereNull('referenced_plan_id');
     }

@@ -13,6 +13,7 @@ use App\Models\Legacy\Project;
 use App\States\BudgetPlan\Draft;
 use Cknow\Money\Money;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Livewire\Attributes\Url;
 
 uses(DatabaseTransactions::class);
 
@@ -151,7 +152,7 @@ it('keeps the active tab in a URL query parameter', function (): void {
         ->assertSet('tab', 'committed');
 
     // #[Url] exposes it to the query string so a reload/link lands on the same tab
-    expect((new ReflectionProperty($lw->instance(), 'tab'))->getAttributes(Livewire\Attributes\Url::class))->not->toBeEmpty();
+    expect(new ReflectionProperty($lw->instance(), 'tab')->getAttributes(Url::class))->not->toBeEmpty();
 });
 
 it('sorts the bookings table by the clicked column and flips on a repeat click', function (): void {

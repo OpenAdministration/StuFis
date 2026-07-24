@@ -232,7 +232,7 @@ class BudgetPlanMeasures
      *
      * @return list<string>
      */
-    private static function openStates(): array
+    private function openStates(): array
     {
         return [
             NeedFinanceApproval::$name, // ok-by-hv
@@ -254,7 +254,7 @@ class BudgetPlanMeasures
         // can stay unqualified and sidestep the environment table prefix.
         return DB::table('projektposten')
             ->join('projekte', 'projekte.id', '=', 'projektposten.projekt_id')
-            ->whereIn('projekte.state', self::openStates())
+            ->whereIn('projekte.state', $this->openStates())
             ->whereIn('projektposten.titel_id', $leafIds)
             ->groupBy('projektposten.titel_id')
             ->selectRaw('titel_id, SUM(einnahmen) as einnahmen, SUM(ausgaben) as ausgaben')
@@ -307,7 +307,7 @@ class BudgetPlanMeasures
      */
     public function committedBreakdown(BudgetItem $leaf): Collection
     {
-        $relevantStates = [...self::openStates(), Terminated::$name];
+        $relevantStates = [...$this->openStates(), Terminated::$name];
 
         $posts = DB::table('projektposten')
             ->join('projekte', 'projekte.id', '=', 'projektposten.projekt_id')
@@ -332,7 +332,7 @@ class BudgetPlanMeasures
         $billed = $this->billedByPost($posts->pluck('posten_id')->all());
 
         return $posts->map(function (object $post) use ($billed): array {
-            $isOpen = in_array($post->project_state, self::openStates(), true);
+            $isOpen = in_array($post->project_state, $this->openStates(), true);
 
             $planned = $this->bySide(
                 Money::parseByDecimal((string) $post->posten_einnahmen, 'EUR'),

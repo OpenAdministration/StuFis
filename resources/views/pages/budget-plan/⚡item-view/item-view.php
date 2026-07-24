@@ -7,6 +7,7 @@ use App\Support\Budget\BudgetPlanMeasures;
 use Cknow\Money\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Date;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
@@ -95,7 +96,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 return [
                     'id' => $booking->id,
                     // legacy timestamps are plain strings and may hold unparseable zero-dates
-                    'date' => rescue(static fn (): Carbon => Carbon::parse($booking->timestamp), null, report: false),
+                    'date' => rescue(static fn (): Carbon => Date::parse($booking->timestamp), null, report: false),
                     'transaction' => $booking->bankTransaction,
                     'project' => $expense?->project,
                     'expense' => $expense,
