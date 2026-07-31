@@ -8,7 +8,14 @@
             <div class="px-4 py-5 sm:p-6 space-y-5">
                 <flux:select class="max-w-md" wire:model.live="hhpId" :label="__('datev-export.budget-plan.select-label')" variant="listbox">
                     @foreach($this->budgetPlans() as $plan)
-                        <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
+                        {{-- HHP number and fiscal year keep plans apart: label() is only the
+                             organization, which several plans may share. --}}
+                        <flux:select.option value="{{ $plan->id }}">
+                            HHP{{ $plan->id }} {{ $plan->label() }}
+                            @if($plan->fiscalYear)
+                                ({{ $plan->fiscalYear->label() }})
+                            @endif
+                        </flux:select.option>
                     @endforeach
                 </flux:select>
             </div>

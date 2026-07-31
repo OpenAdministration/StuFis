@@ -17,16 +17,16 @@ use App\Http\Controllers\DatevExportController;
 use App\Http\Controllers\Legacy\TransactionView;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ViewChangelog;
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\BudgetPlan;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
     Route::get('/', function () {
-        $latestPlan = LegacyBudgetPlan::latest();
+        $latestPlan = BudgetPlan::newest();
 
         // Fresh install with no budget plan yet: send the user to the plan overview.
-        if ($latestPlan === null) {
+        if (! $latestPlan instanceof BudgetPlan) {
             return to_route('budget-plan.index');
         }
 

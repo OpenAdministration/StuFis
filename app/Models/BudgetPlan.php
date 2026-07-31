@@ -232,6 +232,17 @@ class BudgetPlan extends Model
         return $candidate;
     }
 
+    /**
+     * The most recently created plan, or null when none exist yet.
+     *
+     * Deliberately not named `latest()`: that would shadow Eloquent's builder
+     * scope, so callers expecting a query would silently get a model instead.
+     */
+    public static function newest(): ?static
+    {
+        return static::orderByDesc('id')->first();
+    }
+
     /** Human label for the plan (organization, with a fallback). */
     public function label(): string
     {

@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\BudgetPlan;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
-use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\User;
 use App\Rules\CamtImport\AccountIbanRule;
 use App\Rules\CamtImport\BalanceConsistencyRule;
@@ -337,7 +337,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // Forward to the imported account's konto page. The legacy route selects the
         // account via path segments konto/{hhp_id}/{konto_id}. Passing ['konto' => id]
         // instead produced /konto?konto=id, landing on the generic overview.
-        $hhp = LegacyBudgetPlan::latest()?->id;
+        $hhp = BudgetPlan::newest()?->id;
 
         $message = $failedHooks === []
             ? [
