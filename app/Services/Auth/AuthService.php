@@ -73,4 +73,15 @@ abstract class AuthService
     }
 
     abstract public function afterLogout();
+
+    /**
+     * Handle an out-of-band logout notification POSTed by the identity provider
+     * (e.g. OIDC Back-Channel Logout). Providers that support it override this;
+     * by default the endpoint behaves as if it does not exist.
+     */
+    public function backChannelLogout(): Response
+    {
+        return response('Not found', Response::HTTP_NOT_FOUND)
+            ->header('Cache-Control', 'no-store');
+    }
 }

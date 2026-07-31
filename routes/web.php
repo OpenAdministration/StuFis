@@ -11,7 +11,6 @@
 |
 */
 
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BudgetPlanController;
 use App\Http\Controllers\BudgetPlanExportController;
 use App\Http\Controllers\DatevExportController;
@@ -70,11 +69,6 @@ Route::middleware(['auth'])->group(function (): void {
     Route::livewire('year/create', 'pages::fiscal-year.edit-fiscal-year')->name('fiscal-year.create');
     Route::livewire('year/{year_id}', 'pages::fiscal-year.edit-fiscal-year')->name('fiscal-year.edit');
 });
-
-// login routes
-Route::get('auth/login', [AuthController::class, 'login'])->name('login');
-Route::get('auth/callback', [AuthController::class, 'callback'])->name('login.callback');
-Route::get('auth/logout', [AuthController::class, 'logout'])->name('logout');
 
 // guest routes
 Route::get('changelog', ViewChangelog::class)->name('changelog');

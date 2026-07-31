@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Exports\Datev\DatevExport;
+use App\Extensions\Session\OidcDatabaseSessionHandler;
 use App\Policies\DatevExportPolicy;
 use App\Services\Auth\AuthService;
 use App\Support\Money\MoneySynth;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -53,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('stumv', PassportProvider::class);
         });
+
+        $this->bootSession();
 
         // Layouts live in resources/views/layout (outside the components dir);
         // expose them as anonymous components: <x-layout::app>, <x-layout::error>.
@@ -108,5 +112,24 @@ class AppServiceProvider extends ServiceProvider
     {
         Livewire::propertySynthesizer(MoneySynth::class);
         Builder::macro('sumMoney', fn (string $column): Money => Money::EUR($this->sum($column)));
+    }
+
+    /**
+     * Back the `database` session driver with a handler that also stores the
+     * OIDC `sid` in an indexed column, so OIDC Back-Channel Logout can locate
+     * and destroy a session by its `sid`. Overriding the built-in `database`
+     * creator (SessionManager checks custom creators first) means this applies
+     * transparently whenever SESSION_DRIVER=database, without a bespoke driver
+     * name leaking into config.
+     */
+    private function bootSession(): void
+    {
+        Session::extend('database', function (Application $app): OidcDatabaseSessionHandler {
+            $table = $app['config']->get('session.table', 'sessions');
+            $lifetime = $app['config']->get('session.lifetime', 120);
+            $connection = $app['db']->connection($app['config']->get('session.connection'));
+
+            return new OidcDatabaseSessionHandler($connection, $table, $lifetime, $app);
+        });
     }
 }

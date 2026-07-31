@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
+            // Auth routes apply their own middleware (see routes/auth.php):
+            // browser flows use the web group, Back-Channel Logout is stateless.
+            Route::group([], base_path('routes/auth.php'));
+
             if (config('stufis.features') === 'dev') {
                 Route::middleware('web')
                     ->group(base_path('routes/web-dev.php'));

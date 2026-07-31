@@ -2,6 +2,7 @@
 * Anmeldung über StuMV: StuFis folgt nun der reorganisierten StuMV-API. Die OAuth-geschützten Endpunkte für Nutzerprofil, Gremien und Gruppen liegen jetzt unter `/api-legacy/*` (der Präfix `/api/*` beherbergt bei StuMV nun eine separate Directory-API). Ohne diese Anpassung schlug die Anmeldung fehl und Gremien-/Gruppenrechte wurden nicht mehr geladen. Der Präfix ist über die neue Variable `STUMV_API_PATH` (Standard: `api-legacy`) konfigurierbar.
 * Interne Aufräumarbeiten: Die nirgends genutzte Funktion „alle verfügbaren Gremien" (`allCommittees`) wurde aus allen Auth-Providern entfernt. Für OIDC entfallen dadurch der Scope-Bestandteil `all-committees` sowie die Variable `OIDC_ATTRIBUTE_ALL_COMMITTEES`.
 * Sicherheit: StuFis erzwingt nun eine strikte Content-Security-Policy (CSP). Dies erschwert Cross-Site-Scripting (XSS) Angriffe deutlich.
+* Einheitliche Abmeldung (Single Logout): Ab- und Anmeldung sind nun zwischen StuFis und dem zentralen Login-Dienst (StuMV) gekoppelt. Meldest du dich beim zentralen Dienst ab, wirst du automatisch auch aus StuFis abgemeldet – und meldest du dich in StuFis ab, wirst du auch aus dem zentralen Login-Dienst abgemeldet.
 
 ---
 

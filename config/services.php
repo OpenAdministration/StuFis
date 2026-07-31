@@ -34,6 +34,15 @@ return [
         'certificate_path' => env('OIDC_CERT_PATH'),
         'scopes' => explode(' ', (string) env('OIDC_SCOPES', 'openid profile email')),
         'verify_host' => env('OIDC_VERIFY_HOST', true),
+        // Where the browser lands after logout; also sent to the IdP as
+        // post_logout_redirect_uri (must be registered on the IdP client).
+        // Empty falls back to the login route.
+        'post_logout_redirect' => env('OIDC_POST_LOGOUT_REDIRECT'),
+        // When true (the default), the IdP is asked to show its logout-
+        // confirmation prompt (id_token_hint is withheld) - so the user
+        // confirms before their whole SSO session ends. Set false for a
+        // seamless logout without a prompt.
+        'logout_confirm' => env('OIDC_LOGOUT_CONFIRM', true),
         'attribute-mapping' => [
             'uid' => env('OIDC_ATTRIBUTE_UID', 'sub'),
             'username' => env('OIDC_ATTRIBUTE_USERNAME', 'username'),
