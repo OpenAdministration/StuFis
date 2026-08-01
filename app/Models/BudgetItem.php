@@ -136,6 +136,19 @@ class BudgetItem extends Model
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
     }
 
+    /**
+     * Every BudgetItemChange row currently pointing at this item, across however many amendments
+     * touch it in parallel — OP#581 explicitly allows that (the unique key is
+     * (budget_plan_id, budget_item_id), not budget_item_id alone). For modify/delete this is
+     * always the live item (see BudgetItemChange's class doc: nothing is copied, budget_item_id
+     * points straight at this row); for add it only resolves here once AmendmentApplier has
+     * rehomed the new item onto this row's plan.
+     */
+    public function amendmentChanges(): HasMany
+    {
+        return $this->hasMany(BudgetItemChange::class, 'budget_item_id');
+    }
+
     /** The plan this item "mounts" (only set for mount items). */
     public function referencedPlan(): BelongsTo
     {

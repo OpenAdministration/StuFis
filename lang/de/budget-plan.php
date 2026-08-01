@@ -153,6 +153,7 @@ return [
     'item.meter.of-soll' => 'vom Plan',
     'item.meter.available' => 'Verfügbar',
     'item.meter.overspent' => 'Überzogen',
+    'item.amendment-hint.heading' => 'Von Nachträgen betroffen',
     'fiscal-year.create.headline' => 'Neues Haushaltsjahr anlegen',
     'fiscal-year.edit.headline' => 'Haushaltsjahr bearbeiten',
     'fiscal-year.edit.sub' => 'Lege den Zeitraum des Haushaltsjahres fest. Haushaltsjahre dürfen sich nicht überschneiden.',
