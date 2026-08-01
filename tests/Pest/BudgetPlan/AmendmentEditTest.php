@@ -90,6 +90,55 @@ it('records a modify change row when editing a base item value, leaving the live
     expect((int) $leaf->fresh()->value->getAmount())->toBe(10000);
 });
 
+it('reflects an edited value back into the titles-table form and the group sum after a real browser round-trip', function (): void {
+    // Reproduces the manual-test bug (B1): editing a value showed up correctly in the
+    // Begründungen tab, but the titles-table input snapped back to the old value. That symptom
+    // came from a naming collision — BudgetItemChange::fieldChange() read `$this->changes`
+    // (Eloquent's OWN internal dirty-tracking property of that exact name) instead of our JSON
+    // `changes` column when called from inside the model. Blade/AmendmentApplier access
+    // `$change->changes` from OUTSIDE the model, so they went through the magic accessor and
+    // saw the correct value — only loadItems()'s internal fieldChange() calls were broken.
+    //
+    // Passing a plain string mirrors what a real browser sends across the wire for the input: on
+    // blur, `x-money-input` (a plain flux:input) posts back the literal (edited) text content of
+    // the field — MoneySynth::hydrate() then converts it into a Money instance before this
+    // component's updatedItems() ever sees it.
+    $this->actingAs(budgetManager());
+    [$parent, $group, $leaf] = nhhpParentWithLeaf();
+    $amendment = nhhpDraftAmendment($parent);
+
+    $lw = nhhpEditComponent($parent, $amendment)
+        ->set('items.'.$leaf->id.'.value', '300')
+        ->assertHasNoErrors();
+
+    $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
+    expect((int) $change->changes['value']['to'])->toBe(30000); // 300,00 € as cents, not 300 cents
+
+    // the re-rendered titles-table input must show the NEW value, not fall back to the old one
+    $lw->assertSet('items.'.$leaf->id.'.value', Money::EUR(30000));
+
+    // the group sum (100 -> group had only this leaf) must reflect the edit too
+    expect($lw->html())->toContain(Money::EUR(30000)->format());
+});
+
+it('converts every euro-decimal input format the browser could send into the correct integer cents', function (string $input, int $expectedCents): void {
+    $this->actingAs(budgetManager());
+    [$parent, , $leaf] = nhhpParentWithLeaf();
+    $amendment = nhhpDraftAmendment($parent);
+
+    nhhpEditComponent($parent, $amendment)
+        ->set('items.'.$leaf->id.'.value', $input)
+        ->assertHasNoErrors();
+
+    $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
+    expect((int) $change->changes['value']['to'])->toBe($expectedCents);
+})->with([
+    'plain integer' => ['300', 30000],
+    'decimal comma' => ['300,50', 30050],
+    'thousands separator' => ['1.500,00', 150000],
+    'formatted with euro sign' => ['152,05 €', 15205],
+]);
+
 it('updates "to" on a second edit of the same field while keeping the original "from"', function (): void {
     $this->actingAs(budgetManager());
     [$parent, , $leaf] = nhhpParentWithLeaf();

@@ -7,6 +7,7 @@ use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Draft;
 use App\Support\Budget\TitleNumberer;
+use App\Support\Money\DefaultMoneyFormater;
 use Cknow\Money\Money;
 use Flux\Flux;
 use Illuminate\Support\Collection;
@@ -244,7 +245,15 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     private function normalize(string $field, mixed $value): mixed
     {
         if ($field === 'value') {
-            return $value instanceof Money ? (int) $value->getAmount() : (int) $value;
+            // In practice MoneySynth already hydrates the wire value into a Money instance before
+            // updatedItems() sees it, but defend against any other caller passing a raw
+            // euro-decimal/formatted string (e.g. "300", "300,50", "1.500,00", "152,05 €") instead
+            // of hand-rolling a cents cast — that would silently misread euros as cents.
+            if ($value instanceof Money) {
+                return (int) $value->getAmount();
+            }
+
+            return (int) (new DefaultMoneyFormater)->inverse((string) $value)->getAmount();
         }
         if ($field === 'position' || $field === 'parent_id') {
             return $value === null ? null : (int) $value;

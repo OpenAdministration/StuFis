@@ -65,16 +65,22 @@ class BudgetItemChange extends Model
      * The {from, to} pair recorded for a single field, or null when this change row doesn't
      * (or no longer) touches that field.
      *
+     * NOTE: this reads via `getAttribute('changes')` rather than `$this->changes` — Eloquent's
+     * own HasAttributes trait already declares a `protected $changes` property for its dirty-
+     * tracking bookkeeping, which shadows our `changes` JSON column when accessed from INSIDE the
+     * model class (magic `__get()` only kicks in for external access, so `$this->changes` here
+     * would silently read Eloquent's internal array instead of our cast attribute).
+     *
      * @return array{from: mixed, to: mixed}|null
      */
     public function fieldChange(string $field): ?array
     {
-        return $this->changes[$field] ?? null;
+        return $this->getAttribute('changes')[$field] ?? null;
     }
 
     /** Whether this row currently touches any field at all (an empty `changes` should be pruned). */
     public function isEmpty(): bool
     {
-        return $this->action === self::ACTION_MODIFY && blank($this->changes);
+        return $this->action === self::ACTION_MODIFY && blank($this->getAttribute('changes'));
     }
 }
