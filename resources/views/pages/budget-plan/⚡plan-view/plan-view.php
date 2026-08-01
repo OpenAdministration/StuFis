@@ -33,7 +33,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * The three meta dates (OP#588), captured ONLY in the state-change modal, at the moment of
      * the transition that gives each one its meaning — never freely editable in an edit form or
      * detail view anymore (that was the pre-OP#588 design: a free resolution_date/approval_date
-     * pair on ⚡plan-edit, and an approval_date/effective_date pair editable directly on an
+     * pair on ⚡plan-edit, and an approval_date/activation_date pair editable directly on an
      * amendment's view). All three stay optional: a blank value must never block the transition.
      * See targetState() for which of these the modal actually shows, and changeState() for how
      * a supplied value is persisted in the same write as the state change itself.
@@ -42,7 +42,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public $approval_date;
 
-    public $effective_date;
+    public $activation_date;
 
     public function mount(int $plan_id): void
     {
@@ -73,7 +73,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function updatedNewState(): void
     {
-        $this->reset('resolution_date', 'approval_date', 'effective_date');
+        $this->reset('resolution_date', 'approval_date', 'activation_date');
     }
 
     public function with(): array
@@ -87,13 +87,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 BudgetType::INCOME->slug() => new BudgetPlanMeasures($plan, BudgetType::INCOME)->annotate(),
                 BudgetType::EXPENSE->slug() => new BudgetPlanMeasures($plan, BudgetType::EXPENSE)->annotate(),
             ],
-            // an Approved amendment whose scheduled effective_date has passed without the daily
+            // an Approved amendment whose scheduled activation_date has passed without the daily
             // stufis:apply-due-amendments run having activated it yet (e.g. its parent plan wasn't
             // Active at the time) — surfaced as a warning callout rather than failing silently
             'amendment_overdue' => $plan->isAmendment()
                 && $plan->state instanceof Approved
-                && $plan->effective_date !== null
-                && $plan->effective_date->isPast(),
+                && $plan->activation_date !== null
+                && $plan->activation_date->isPast(),
             // amendments not yet (or no longer) live-effective — parallel drafts are allowed, so
             // there can be more than one. Only shown on an original plan's own view.
             'open_amendments' => $plan->isAmendment()
@@ -153,7 +153,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             // required to complete the transition
             'resolution_date' => ['nullable', 'date'],
             'approval_date' => ['nullable', 'date'],
-            'effective_date' => ['nullable', 'date'],
+            'activation_date' => ['nullable', 'date'],
         ]);
         $newState = BudgetPlanState::make($filtered['newState'], $plan);
 
@@ -199,13 +199,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 if (filled($this->approval_date)) {
                     $plan->approval_date = $this->approval_date;
                 }
-                // effective_date stays amendment-only (unchanged from before OP#588)
-                if ($plan->isAmendment() && filled($this->effective_date)) {
-                    $plan->effective_date = $this->effective_date;
+                // activation_date stays amendment-only (unchanged from before OP#588)
+                if ($plan->isAmendment() && filled($this->activation_date)) {
+                    $plan->activation_date = $this->activation_date;
                 }
             }
-            if ($newState instanceof Active && $plan->isAmendment() && $plan->effective_date === null && filled($this->effective_date)) {
-                $plan->effective_date = $this->effective_date;
+            if ($newState instanceof Active && $plan->isAmendment() && $plan->activation_date === null && filled($this->activation_date)) {
+                $plan->activation_date = $this->activation_date;
             }
         }
 
@@ -213,7 +213,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             $plan->state->transitionTo($newState);
             Flux::toast(__('budget-plan.view.state-changed'), variant: 'success');
             Flux::modal('state-modal')->close();
-            $this->reset('newState', 'resolution_date', 'approval_date', 'effective_date');
+            $this->reset('newState', 'resolution_date', 'approval_date', 'activation_date');
         } catch (AmendmentConflictException $e) {
             // the amendment apply/revert engine aborted the whole transition atomically —
             // the plan's state is unchanged, so surface this as a toast, not a field error

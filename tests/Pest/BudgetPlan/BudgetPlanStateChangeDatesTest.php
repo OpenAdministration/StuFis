@@ -9,13 +9,13 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Livewire\Livewire;
 
 /**
- * OP#588: resolution_date/approval_date/effective_date are no longer freely editable in
+ * OP#588: resolution_date/approval_date/activation_date are no longer freely editable in
  * ⚡plan-edit or on an amendment's plan-view — they are captured as OPTIONAL fields inside the
  * state-change modal (⚡plan-view's state-modal), offered only for the target state that gives
  * each date its meaning:
  *   - into Resolved  -> resolution_date
- *   - into Approved  -> approval_date, plus effective_date for an amendment
- *   - into Active    -> effective_date for an amendment, only if still unset
+ *   - into Approved  -> approval_date, plus activation_date for an amendment
+ *   - into Active    -> activation_date for an amendment, only if still unset
  * Never more than one of these groups at once, never on a backward step (only a forward step,
  * per BudgetPlanState::advancesTo(), demands or even offers a date), and a supplied date is
  * persisted in the very same write as the transition itself.
@@ -47,10 +47,10 @@ it('offers resolution_date, and only resolution_date, when the target state is R
 
     expect($html)->toContain('wire:model="resolution_date"')
         ->and($html)->not->toContain('wire:model="approval_date"')
-        ->and($html)->not->toContain('wire:model="effective_date"');
+        ->and($html)->not->toContain('wire:model="activation_date"');
 });
 
-it('offers approval_date, but not effective_date, when the target is Approved for an ordinary plan', function (): void {
+it('offers approval_date, but not activation_date, when the target is Approved for an ordinary plan', function (): void {
     $this->actingAs(budgetManager());
     $plan = BudgetPlan::create(['state' => Resolved::class]);
 
@@ -59,11 +59,11 @@ it('offers approval_date, but not effective_date, when the target is Approved fo
         ->html();
 
     expect($html)->toContain('wire:model="approval_date"')
-        ->and($html)->not->toContain('wire:model="effective_date"')
+        ->and($html)->not->toContain('wire:model="activation_date"')
         ->and($html)->not->toContain('wire:model="resolution_date"');
 });
 
-it('offers both approval_date and effective_date, but not resolution_date, when the target is Approved for an amendment', function (): void {
+it('offers both approval_date and activation_date, but not resolution_date, when the target is Approved for an amendment', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Resolved::class);
@@ -73,11 +73,11 @@ it('offers both approval_date and effective_date, but not resolution_date, when 
         ->html();
 
     expect($html)->toContain('wire:model="approval_date"')
-        ->and($html)->toContain('wire:model="effective_date"')
+        ->and($html)->toContain('wire:model="activation_date"')
         ->and($html)->not->toContain('wire:model="resolution_date"');
 });
 
-it('offers effective_date when the target is Active for an amendment with none set yet', function (): void {
+it('offers activation_date when the target is Active for an amendment with none set yet', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Approved::class);
@@ -86,23 +86,23 @@ it('offers effective_date when the target is Active for an amendment with none s
         ->set('newState', 'active')
         ->html();
 
-    expect($html)->toContain('wire:model="effective_date"');
+    expect($html)->toContain('wire:model="activation_date"');
 });
 
-it('does not offer effective_date for Active once the amendment already has one', function (): void {
+it('does not offer activation_date for Active once the amendment already has one', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Approved::class);
-    $amendment->forceFill(['effective_date' => now()])->save();
+    $amendment->forceFill(['activation_date' => now()])->save();
 
     $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
         ->set('newState', 'active')
         ->html();
 
-    expect($html)->not->toContain('wire:model="effective_date"');
+    expect($html)->not->toContain('wire:model="activation_date"');
 });
 
-it('never offers effective_date for an ordinary (non-amendment) plan, even moving into Active', function (): void {
+it('never offers activation_date for an ordinary (non-amendment) plan, even moving into Active', function (): void {
     $this->actingAs(budgetManager());
     $plan = BudgetPlan::create(['state' => Approved::class]);
 
@@ -110,7 +110,7 @@ it('never offers effective_date for an ordinary (non-amendment) plan, even movin
         ->set('newState', 'active')
         ->html();
 
-    expect($html)->not->toContain('wire:model="effective_date"')
+    expect($html)->not->toContain('wire:model="activation_date"')
         ->and($html)->not->toContain('wire:model="approval_date"')
         ->and($html)->not->toContain('wire:model="resolution_date"');
 });
@@ -130,7 +130,7 @@ it('persists a supplied resolution_date together with the transition into Resolv
         ->and($plan->resolution_date->format('Y-m-d'))->toBe('2026-03-15');
 });
 
-it('persists both approval_date and effective_date together with an amendment reaching Approved', function (): void {
+it('persists both approval_date and activation_date together with an amendment reaching Approved', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Resolved::class);
@@ -138,14 +138,14 @@ it('persists both approval_date and effective_date together with an amendment re
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
         ->set('newState', 'approved')
         ->set('approval_date', '2026-04-01')
-        ->set('effective_date', '2026-05-01')
+        ->set('activation_date', '2026-05-01')
         ->call('changeState')
         ->assertHasNoErrors();
 
     $amendment->refresh();
     expect($amendment->state)->toBeInstanceOf(Approved::class)
         ->and($amendment->approval_date->format('Y-m-d'))->toBe('2026-04-01')
-        ->and($amendment->effective_date->format('Y-m-d'))->toBe('2026-05-01');
+        ->and($amendment->activation_date->format('Y-m-d'))->toBe('2026-05-01');
 });
 
 it('lets the transition succeed with the date field left blank', function (): void {
@@ -195,10 +195,10 @@ it('no longer offers free date inputs on an amendment detail view before a targe
 
     expect($html)->not->toContain('wire:model="resolution_date"')
         ->and($html)->not->toContain('wire:model="approval_date"')
-        ->and($html)->not->toContain('wire:model="effective_date"');
+        ->and($html)->not->toContain('wire:model="activation_date"');
 });
 
-it('still prefills effective_date from approval_date when an amendment reaches Approved via the modal without one set', function (): void {
+it('still prefills activation_date from approval_date when an amendment reaches Approved via the modal without one set', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Resolved::class);
@@ -206,22 +206,22 @@ it('still prefills effective_date from approval_date when an amendment reaches A
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
         ->set('newState', 'approved')
         ->set('approval_date', '2026-04-01')
-        // effective_date deliberately left blank
+        // activation_date deliberately left blank
         ->call('changeState')
         ->assertHasNoErrors();
 
     $amendment->refresh();
-    expect($amendment->effective_date->format('Y-m-d'))->toBe('2026-04-01');
+    expect($amendment->activation_date->format('Y-m-d'))->toBe('2026-04-01');
 });
 
-it('still lets stufis:apply-due-amendments activate an amendment whose effective_date was set through the modal', function (): void {
+it('still lets stufis:apply-due-amendments activate an amendment whose activation_date was set through the modal', function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Resolved::class);
 
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
         ->set('newState', 'approved')
-        ->set('effective_date', now()->subDay()->toDateString())
+        ->set('activation_date', now()->subDay()->toDateString())
         ->call('changeState')
         ->assertHasNoErrors();
 
@@ -235,14 +235,14 @@ it('still lets stufis:apply-due-amendments activate an amendment whose effective
 /**
  * Now that capture lives exclusively in the state-change modal, the three dates need a read-only
  * display somewhere or they'd be set-able but invisible — the amendment's frozen <dl> (approval_date
- * / effective_date) and the ordinary plan's header (resolution_date / approval_date), both with the
+ * / activation_date) and the ordinary plan's header (resolution_date / approval_date), both with the
  * `d.m.Y` formatting and the `—` placeholder the rest of the app already uses for an unset date.
  */
-it("shows an amendment's approval_date and effective_date read-only on its plan-view, with a placeholder when unset", function (): void {
+it("shows an amendment's approval_date and activation_date read-only on its plan-view, with a placeholder when unset", function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Resolved::class);
-    $amendment->forceFill(['approval_date' => '2026-04-01', 'effective_date' => '2026-05-01'])->save();
+    $amendment->forceFill(['approval_date' => '2026-04-01', 'activation_date' => '2026-05-01'])->save();
 
     $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])->html();
 
@@ -250,17 +250,17 @@ it("shows an amendment's approval_date and effective_date read-only on its plan-
         ->and($html)->toContain('01.05.2026');
 });
 
-it("shows a — placeholder for an amendment's unset approval_date/effective_date", function (): void {
+it("shows a — placeholder for an amendment's unset approval_date/activation_date", function (): void {
     $this->actingAs(budgetManager());
     $parent = stateChangeDatesParent();
     $amendment = stateChangeDatesAmendment($parent, Draft::class);
-    expect($amendment->approval_date)->toBeNull()->and($amendment->effective_date)->toBeNull();
+    expect($amendment->approval_date)->toBeNull()->and($amendment->activation_date)->toBeNull();
 
     $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])->html();
 
     // the dl's <dd> renders the literal '—' fallback with no formatted date around it — a bare
     // assertSee('—') would also pass on unrelated em-dashes elsewhere on the page, so this pins it
-    // to the exact markup the read-only dl produces, twice (approval_date and effective_date)
+    // to the exact markup the read-only dl produces, twice (approval_date and activation_date)
     expect(substr_count($html, '<dd>—</dd>'))->toBeGreaterThanOrEqual(2);
 });
 
@@ -299,10 +299,10 @@ it('shows no wire:model date input anywhere outside the state-change modal, for 
 
         expect($html)->not->toContain('wire:model="resolution_date"')
             ->and($html)->not->toContain('wire:model="approval_date"')
-            ->and($html)->not->toContain('wire:model="effective_date"')
+            ->and($html)->not->toContain('wire:model="activation_date"')
             ->and($html)->not->toContain('wire:model.live.blur="resolution_date"')
             ->and($html)->not->toContain('wire:model.live.blur="approval_date"')
-            ->and($html)->not->toContain('wire:model.live.blur="effective_date"');
+            ->and($html)->not->toContain('wire:model.live.blur="activation_date"');
     }
 
     $editHtml = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id])->html();

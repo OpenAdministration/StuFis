@@ -103,7 +103,7 @@ it('shows a placeholder when the amendment has no changes yet', function (): voi
         ->assertSee(__('budget-plan.amendment.no-changes-yet'));
 });
 
-// The B3 (OP#581) free-standing approval_date/effective_date editor that used to live directly on
+// The B3 (OP#581) free-standing approval_date/activation_date editor that used to live directly on
 // this view was replaced by OP#588's state-change-modal date capture — see
 // BudgetPlanStateChangeDatesTest.php for its coverage, including the "no free date inputs
 // anywhere outside the modal" assertions for both this view and ⚡plan-edit.

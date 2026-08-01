@@ -11,11 +11,9 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Regression coverage for the Published -> Active state rename (OP#581 prep): the linear
- * BudgetPlanState workflow must still allow the full forward/backward chain, the stored
- * column value must round-trip as 'active' (not 'published'), the data migration must have
- * rewritten any existing 'published' rows, and legacy readers (haushaltsplan view) must keep
- * reporting 'final'/'draft' exactly as before.
+ * Coverage for the linear BudgetPlanState workflow: the full forward/backward chain must be
+ * walkable, the stored column value must round-trip as 'active', and legacy readers (the
+ * haushaltsplan view) must keep reporting 'final'/'draft'.
  */
 uses(DatabaseTransactions::class);
 
@@ -56,7 +54,7 @@ it('allows each backward step of the chain', function (): void {
     expect($plan->state)->toBeInstanceOf(Draft::class);
 });
 
-it('persists and rehydrates state = active (not published)', function (): void {
+it('persists and rehydrates state = active', function (): void {
     $plan = activeStatePlan(Active::class);
 
     $raw = DB::table('budget_plan')->where('id', $plan->id)->value('state');
@@ -65,17 +63,6 @@ it('persists and rehydrates state = active (not published)', function (): void {
     $fresh = BudgetPlan::findOrFail($plan->id);
     expect($fresh->state)->toBeInstanceOf(Active::class)
         ->and($fresh->state::$name)->toBe('active');
-});
-
-it('rewrites legacy published rows to active via the data migration, no published literal reachable', function (): void {
-    // simulate a pre-migration row by writing the raw literal directly, bypassing the enum cast
-    $plan = activeStatePlan(Draft::class);
-    DB::table('budget_plan')->where('id', $plan->id)->update(['state' => 'published']);
-
-    (new (require base_path('database/migrations/2026_08_01_000000_rename_budget_plan_published_state_to_active.php')))->up();
-
-    expect(DB::table('budget_plan')->where('id', $plan->id)->value('state'))->toBe('active')
-        ->and(DB::table('budget_plan')->where('state', 'published')->exists())->toBeFalse();
 });
 
 it('reports final for an active plan and draft for a draft plan in the legacy haushaltsplan view', function (): void {

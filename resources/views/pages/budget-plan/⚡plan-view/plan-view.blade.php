@@ -106,7 +106,7 @@
         <flux:callout color="amber" icon="exclamation-triangle" inline>
             <flux:callout.heading>{{ __('budget-plan.amendment.overdue-heading') }}</flux:callout.heading>
             <flux:callout.text>
-                {{ __('budget-plan.amendment.overdue-text', ['date' => $plan->effective_date->format('d.m.Y')]) }}
+                {{ __('budget-plan.amendment.overdue-text', ['date' => $plan->activation_date->format('d.m.Y')]) }}
             </flux:callout.text>
         </flux:callout>
     @endif
@@ -147,8 +147,8 @@
                     <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
                 </div>
                 <div>
-                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
-                    <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.activation-date') }}</dt>
+                    <dd>{{ $plan->activation_date?->format('d.m.Y') ?? '—' }}</dd>
                 </div>
             </dl>
 
@@ -357,7 +357,7 @@
         @php
             // OP#588: which of the three optional meta dates (if any) belong to the currently
             // selected target state — never shown together, never on a backward step (see
-            // changeState()'s matching $isForwardStep gate), and effective_date stays
+            // changeState()'s matching $isForwardStep gate), and activation_date stays
             // amendment-only throughout.
             $targetState = $this->targetState();
             $isForwardStep = $targetState && $plan->state->advancesTo($targetState);
@@ -372,16 +372,16 @@
                 <flux:input wire:model="approval_date" type="date" badge="Optional"
                             :label="__('budget-plan.edit.approval-date')"/>
                 @if($plan->isAmendment())
-                    <flux:input wire:model="effective_date" type="date" badge="Optional"
-                                :label="__('budget-plan.amendment.effective-date')"
-                                :description="__('budget-plan.amendment.effective-date-hint')"/>
+                    <flux:input wire:model="activation_date" type="date" badge="Optional"
+                                :label="__('budget-plan.amendment.activation-date')"
+                                :description="__('budget-plan.amendment.activation-date-hint')"/>
                 @endif
             </div>
-        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Active && $plan->isAmendment() && $plan->effective_date === null)
+        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Active && $plan->isAmendment() && $plan->activation_date === null)
             <div class="mt-4">
-                <flux:input wire:model="effective_date" type="date" badge="Optional"
-                            :label="__('budget-plan.amendment.effective-date')"
-                            :description="__('budget-plan.amendment.effective-date-hint')"/>
+                <flux:input wire:model="activation_date" type="date" badge="Optional"
+                            :label="__('budget-plan.amendment.activation-date')"
+                            :description="__('budget-plan.amendment.activation-date-hint')"/>
             </div>
         @endif
         @if ($errors->has('newState'))

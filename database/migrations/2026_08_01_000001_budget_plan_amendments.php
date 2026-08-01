@@ -6,10 +6,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Schema for the Nachtragshaushaltsplan (supplementary budget plan / amendment) feature — OP#581.
+ * Schema for the budget plan amendment feature ("Nachtragshaushaltsplan") — OP#581.
  *
  * An amendment is a `budget_plan` row with `parent_plan_id` set (column + FK already exist from
- * 2026_07_01_000000_hhp_upgrade). It carries two new plan-level fields (`effective_date`,
+ * 2026_07_01_000000_hhp_upgrade). It carries two new plan-level fields (`activation_date`,
  * `justification`) and stores its edits as delta rows in the new `budget_item_change` table
  * rather than as copied items — see App\Support\Budget\AmendmentApplier for how those deltas are
  * applied/reverted onto the live budget_item rows.
@@ -25,8 +25,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('budget_plan', static function (Blueprint $table): void {
-            $table->date('effective_date')->nullable()->after('approval_date');
-            $table->text('justification')->nullable()->after('effective_date');
+            $table->date('activation_date')->nullable()->after('approval_date');
+            $table->text('justification')->nullable()->after('activation_date');
         });
 
         Schema::create('budget_item_change', static function (Blueprint $table): void {
@@ -54,7 +54,7 @@ return new class extends Migration
         Schema::dropIfExists('budget_item_change');
 
         Schema::table('budget_plan', static function (Blueprint $table): void {
-            $table->dropColumn(['effective_date', 'justification']);
+            $table->dropColumn(['activation_date', 'justification']);
         });
     }
 

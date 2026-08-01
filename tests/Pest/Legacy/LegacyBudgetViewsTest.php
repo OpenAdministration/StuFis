@@ -109,7 +109,7 @@ it('hides a plan without a fiscal year from the haushaltsplan view', function ()
 });
 
 /**
- * Amendment-awareness (OP#581, 2026_08_01_..._nachtragshaushaltsplan): an amendment never
+ * Amendment-awareness (OP#581, 2026_08_01_..._budget_plan_amendments): an amendment never
  * surfaces as its own plan, and its as-yet-unapplied additions/deletions don't leak into the
  * parent plan's legacy rows.
  */

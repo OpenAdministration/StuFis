@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 
 /**
  * `stufis:apply-due-amendments` — the daily job that activates an Approved amendment once its
- * effective_date has arrived, without anyone clicking "aktivieren" manually. Mirrors area F of
+ * activation_date has arrived, without anyone clicking "aktivieren" manually. Mirrors area F of
  * the OP#581 test plan.
  */
 uses(DatabaseTransactions::class);
@@ -34,22 +34,22 @@ function nhhpDueAmendment(BudgetPlan $parent, string $state = Draft::class): Bud
     ]);
 }
 
-it('activates an Approved amendment whose effective_date is today (past-or-present) under an Active parent', function (): void {
+it('activates an Approved amendment whose activation_date is today (past-or-present) under an Active parent', function (): void {
     $parent = nhhpDueParent();
     $amendment = nhhpDueAmendment($parent, Resolved::class);
     $amendment->state->transitionTo(Approved::class);
-    $amendment->forceFill(['effective_date' => now()->subDay()])->save();
+    $amendment->forceFill(['activation_date' => now()->subDay()])->save();
 
     $this->artisan('stufis:apply-due-amendments')->assertExitCode(0);
 
     expect($amendment->fresh()->state)->toBeInstanceOf(Active::class);
 });
 
-it('leaves an Approved amendment with a future effective_date untouched', function (): void {
+it('leaves an Approved amendment with a future activation_date untouched', function (): void {
     $parent = nhhpDueParent();
     $amendment = nhhpDueAmendment($parent, Resolved::class);
     $amendment->state->transitionTo(Approved::class);
-    $amendment->forceFill(['effective_date' => now()->addWeek()])->save();
+    $amendment->forceFill(['activation_date' => now()->addWeek()])->save();
 
     $this->artisan('stufis:apply-due-amendments')->assertExitCode(0);
 
@@ -59,9 +59,9 @@ it('leaves an Approved amendment with a future effective_date untouched', functi
 it('leaves a Draft amendment with a past date untouched (state machine respected)', function (): void {
     $parent = nhhpDueParent();
     $amendment = nhhpDueAmendment($parent, Draft::class);
-    // effective_date isn't even normally settable on a Draft, but force it to prove the command
+    // activation_date isn't even normally settable on a Draft, but force it to prove the command
     // still won't touch anything that isn't Approved
-    $amendment->forceFill(['effective_date' => now()->subDay()])->save();
+    $amendment->forceFill(['activation_date' => now()->subDay()])->save();
 
     $this->artisan('stufis:apply-due-amendments')->assertExitCode(0);
 
@@ -83,7 +83,7 @@ it('reports failure and exits non-zero for a conflicting due amendment, while st
     // value is changed directly, so applying it will hit a stale-item conflict
     $conflicting = nhhpDueAmendment($parent, Resolved::class);
     $conflicting->state->transitionTo(Approved::class);
-    $conflicting->forceFill(['effective_date' => now()->subDay()])->save();
+    $conflicting->forceFill(['activation_date' => now()->subDay()])->save();
     BudgetItemChange::create([
         'budget_plan_id' => $conflicting->id, 'budget_item_id' => $leaf->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
@@ -95,7 +95,7 @@ it('reports failure and exits non-zero for a conflicting due amendment, while st
     $otherParent = nhhpDueParent();
     $clean = nhhpDueAmendment($otherParent, Resolved::class);
     $clean->state->transitionTo(Approved::class);
-    $clean->forceFill(['effective_date' => now()->subDay()])->save();
+    $clean->forceFill(['activation_date' => now()->subDay()])->save();
 
     $this->artisan('stufis:apply-due-amendments')->assertExitCode(1);
 
@@ -104,19 +104,19 @@ it('reports failure and exits non-zero for a conflicting due amendment, while st
         ->and($clean->fresh()->state)->toBeInstanceOf(Active::class);
 });
 
-it('prefills effective_date from approval_date on Approved when unset, and preserves an explicitly pre-set date', function (): void {
+it('prefills activation_date from approval_date on Approved when unset, and preserves an explicitly pre-set date', function (): void {
     $parent = nhhpDueParent();
 
     $unset = nhhpDueAmendment($parent, Resolved::class);
     $unset->forceFill(['approval_date' => now()->subDays(3)])->save();
     $unset->state->transitionTo(Approved::class);
-    expect($unset->fresh()->effective_date->isSameDay($unset->fresh()->approval_date))->toBeTrue();
+    expect($unset->fresh()->activation_date->isSameDay($unset->fresh()->approval_date))->toBeTrue();
 
     $preset = nhhpDueAmendment($parent, Resolved::class);
     $explicitDate = now()->addDays(10)->startOfDay();
-    $preset->forceFill(['effective_date' => $explicitDate])->save();
+    $preset->forceFill(['activation_date' => $explicitDate])->save();
     $preset->state->transitionTo(Approved::class);
-    expect($preset->fresh()->effective_date->isSameDay($explicitDate))->toBeTrue();
+    expect($preset->fresh()->activation_date->isSameDay($explicitDate))->toBeTrue();
 });
 
 it('is registered in the schedule to run daily', function (): void {

@@ -31,7 +31,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @property Carbon $end_date
  * @property Carbon $resolution_date
  * @property Carbon $approval_date
- * @property Carbon|null $effective_date
+ * @property Carbon|null $activation_date
  * @property string|null $justification
  * @property string|null $name
  * @property BudgetPlanState $state
@@ -85,7 +85,7 @@ class BudgetPlan extends Model
     /**
      * @var array
      */
-    protected $fillable = ['organization', 'name', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'effective_date', 'justification'];
+    protected $fillable = ['organization', 'name', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'activation_date', 'justification'];
 
     #[\Override]
     protected function casts(): array
@@ -94,12 +94,12 @@ class BudgetPlan extends Model
             'state' => BudgetPlanState::class,
             'resolution_date' => 'date',
             'approval_date' => 'date',
-            'effective_date' => 'date',
+            'activation_date' => 'date',
         ];
     }
 
     /**
-     * When an amendment reaches Approved with no effective_date set yet, default it to the
+     * When an amendment reaches Approved with no activation_date set yet, default it to the
      * approval_date (still editable afterwards, and may be set earlier too — both are allowed).
      * A plain model event rather than transition-specific logic, so it fires regardless of which
      * arc reaches Approved (Resolved -> Approved, or back from Active -> Approved).
@@ -108,8 +108,8 @@ class BudgetPlan extends Model
     protected static function booted(): void
     {
         static::saving(function (self $plan): void {
-            if ($plan->isAmendment() && $plan->effective_date === null && $plan->state instanceof Approved) {
-                $plan->effective_date = $plan->approval_date;
+            if ($plan->isAmendment() && $plan->activation_date === null && $plan->state instanceof Approved) {
+                $plan->activation_date = $plan->approval_date;
             }
         });
     }
