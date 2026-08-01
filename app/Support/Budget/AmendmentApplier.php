@@ -102,7 +102,7 @@ class AmendmentApplier
 
                 return;
             }
-            foreach ((array) $change->changes as $field => $pair) {
+            foreach ((array) $change->diff as $field => $pair) {
                 // short_name (Titelnummer) is immutable for base items (F2, OP#581) — the editor
                 // refuses to ever record it, but skip it here too in case an older change row
                 // somehow still carries one
@@ -140,7 +140,7 @@ class AmendmentApplier
 
             return;
         }
-        foreach ((array) $change->changes as $field => $pair) {
+        foreach ((array) $change->diff as $field => $pair) {
             if ($field === 'short_name') {
                 continue;
             }
@@ -156,7 +156,7 @@ class AmendmentApplier
     {
         $item = BudgetItem::findOrFail($change->budget_item_id);
         $updates = [];
-        foreach ((array) $change->changes as $field => $pair) {
+        foreach ((array) $change->diff as $field => $pair) {
             if ($field === 'short_name') {
                 continue;
             }
@@ -169,7 +169,7 @@ class AmendmentApplier
     {
         $item = BudgetItem::findOrFail($change->budget_item_id);
         $updates = [];
-        foreach ((array) $change->changes as $field => $pair) {
+        foreach ((array) $change->diff as $field => $pair) {
             if ($field === 'short_name') {
                 continue;
             }

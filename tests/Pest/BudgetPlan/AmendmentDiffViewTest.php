@@ -54,7 +54,7 @@ it('shows only changed items on the amendment plan-view, with from->to and the r
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => ['value' => ['from' => 10000, 'to' => 15000]],
+        'diff' => ['value' => ['from' => 10000, 'to' => 15000]],
         'reason' => 'Preissteigerung beim Lieferanten',
     ]);
 

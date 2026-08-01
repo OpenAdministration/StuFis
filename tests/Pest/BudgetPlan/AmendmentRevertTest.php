@@ -64,7 +64,7 @@ function nhhpRevertModify(BudgetPlan $amendment, BudgetItem $item, int $toCents,
         'budget_plan_id' => $amendment->id,
         'budget_item_id' => $item->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => [$field => ['from' => $from, 'to' => $toCents]],
+        'diff' => [$field => ['from' => $from, 'to' => $toCents]],
     ]);
 }
 

@@ -68,7 +68,7 @@ function nhhpModify(BudgetPlan $amendment, BudgetItem $item, int $toCents, strin
         'budget_plan_id' => $amendment->id,
         'budget_item_id' => $item->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => [$field => ['from' => $from, 'to' => $toCents]],
+        'diff' => [$field => ['from' => $from, 'to' => $toCents]],
     ]);
 }
 
@@ -230,7 +230,7 @@ it('compares an integer-cents "from" semantically against the live Money value (
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf1->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => ['value' => ['from' => (string) $leaf1->value->getAmount(), 'to' => 20000]],
+        'diff' => ['value' => ['from' => (string) $leaf1->value->getAmount(), 'to' => 20000]],
     ]);
 
     resolve(AmendmentApplier::class)->apply($amendment);

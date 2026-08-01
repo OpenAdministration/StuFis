@@ -87,7 +87,7 @@ it('reports failure and exits non-zero for a conflicting due amendment, while st
     BudgetItemChange::create([
         'budget_plan_id' => $conflicting->id, 'budget_item_id' => $leaf->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => ['value' => ['from' => 10000, 'to' => 20000]],
+        'diff' => ['value' => ['from' => 10000, 'to' => 20000]],
     ]);
     $leaf->update(['value' => Money::EUR(30000)]); // drifted since drafting
 

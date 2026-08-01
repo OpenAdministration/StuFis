@@ -82,9 +82,9 @@
                                     }">{{ __('budget-plan.amendment.change.'.$change->action) }}</flux:badge>
                                     <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
                                 </div>
-                                @if($change->action === 'modify' && filled($change->changes))
+                                @if($change->action === 'modify' && filled($change->diff))
                                     <ul class="text-sm text-gray-600 list-disc list-inside">
-                                        @foreach($change->changes as $field => $pair)
+                                        @foreach($change->diff as $field => $pair)
                                             <li>
                                                 {{ __('budget-plan.amendment.field.'.$field) }}:
                                                 @if($field === 'value')

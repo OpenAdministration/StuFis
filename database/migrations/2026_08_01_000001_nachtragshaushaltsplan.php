@@ -34,7 +34,7 @@ return new class extends Migration
             $table->unsignedBigInteger('budget_plan_id'); // the amendment plan
             $table->unsignedBigInteger('budget_item_id'); // the (live or added) item touched
             $table->string('action', 16); // modify|add|delete
-            $table->json('changes')->nullable();
+            $table->json('diff')->nullable();
             $table->text('reason')->nullable();
             $table->timestamps();
 

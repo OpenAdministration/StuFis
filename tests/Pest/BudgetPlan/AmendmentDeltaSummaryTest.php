@@ -75,7 +75,7 @@ it('sums a mixed modify/add/delete scenario across both budget types into the co
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $incomeLeaf->id,
         'action' => BudgetItemChange::ACTION_MODIFY,
-        'changes' => ['value' => ['from' => 20000, 'to' => 25000]],
+        'diff' => ['value' => ['from' => 20000, 'to' => 25000]],
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $expenseLeafToDelete->id,

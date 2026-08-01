@@ -83,8 +83,8 @@ it('records a modify change row when editing a base item value, leaving the live
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
     expect($change->action)->toBe(BudgetItemChange::ACTION_MODIFY)
-        ->and((int) $change->changes['value']['from'])->toBe(10000)
-        ->and((int) $change->changes['value']['to'])->toBe(15000);
+        ->and((int) $change->diff['value']['from'])->toBe(10000)
+        ->and((int) $change->diff['value']['to'])->toBe(15000);
 
     // the live parent-plan item is untouched
     expect((int) $leaf->fresh()->value->getAmount())->toBe(10000);
@@ -93,11 +93,14 @@ it('records a modify change row when editing a base item value, leaving the live
 it('reflects an edited value back into the titles-table form and the group sum after a real browser round-trip', function (): void {
     // Reproduces the manual-test bug (B1): editing a value showed up correctly in the
     // Begründungen tab, but the titles-table input snapped back to the old value. That symptom
-    // came from a naming collision — BudgetItemChange::fieldChange() read `$this->changes`
-    // (Eloquent's OWN internal dirty-tracking property of that exact name) instead of our JSON
-    // `changes` column when called from inside the model. Blade/AmendmentApplier access
-    // `$change->changes` from OUTSIDE the model, so they went through the magic accessor and
-    // saw the correct value — only loadItems()'s internal fieldChange() calls were broken.
+    // came from a naming collision — the JSON column used to be called `changes`, and
+    // BudgetItemChange::fieldChange() read `$this->changes` from INSIDE the model, which
+    // resolved to Eloquent's OWN internal dirty-tracking property of that exact name instead of
+    // our column. Blade/AmendmentApplier accessed `$change->changes` from OUTSIDE the model, so
+    // they went through the magic accessor and saw the correct value — only loadItems()'s
+    // internal fieldChange() calls were broken. The column has since been renamed to `diff`
+    // (see BudgetItemChange's class docblock), which removes the collision structurally; this
+    // regression test is kept to guard the observable symptom either way.
     //
     // Passing a plain string mirrors what a real browser sends across the wire for the input: on
     // blur, `x-money-input` (a plain flux:input) posts back the literal (edited) text content of
@@ -112,7 +115,7 @@ it('reflects an edited value back into the titles-table form and the group sum a
         ->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect((int) $change->changes['value']['to'])->toBe(30000); // 300,00 € as cents, not 300 cents
+    expect((int) $change->diff['value']['to'])->toBe(30000); // 300,00 € as cents, not 300 cents
 
     // the re-rendered titles-table input must show the NEW value, not fall back to the old one
     $lw->assertSet('items.'.$leaf->id.'.value', Money::EUR(30000));
@@ -131,7 +134,7 @@ it('converts every euro-decimal input format the browser could send into the cor
         ->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect((int) $change->changes['value']['to'])->toBe($expectedCents);
+    expect((int) $change->diff['value']['to'])->toBe($expectedCents);
 })->with([
     'plain integer' => ['300', 30000],
     'decimal comma' => ['300,50', 30050],
@@ -149,8 +152,8 @@ it('updates "to" on a second edit of the same field while keeping the original "
     $lw->set('items.'.$leaf->id.'.value', Money::EUR(20000));
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect((int) $change->changes['value']['from'])->toBe(10000)
-        ->and((int) $change->changes['value']['to'])->toBe(20000);
+    expect((int) $change->diff['value']['from'])->toBe(10000)
+        ->and((int) $change->diff['value']['to'])->toBe(20000);
 });
 
 it('drops the field (and the whole row once empty) when a value is reverted back to base', function (): void {
@@ -180,7 +183,7 @@ it('accumulates multiple field edits on one item into a single change row', func
     // the unique (budget_plan_id, budget_item_id) constraint means both edits share one row
     $rows = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->get();
     expect($rows)->toHaveCount(1);
-    expect($rows->first()->changes)->toHaveKeys(['value', 'name']);
+    expect($rows->first()->diff)->toHaveKeys(['value', 'name']);
 });
 
 it('rings only the specific field that changed (F1), not the untouched sibling field', function (): void {
@@ -348,8 +351,8 @@ it('records reordering of a base item as a position change without touching the 
     $leafChange = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->first();
     $siblingChange = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $sibling->id)->first();
 
-    expect($leafChange?->changes['position']['to'] ?? null)->toBe(1)
-        ->and($siblingChange?->changes['position']['to'] ?? null)->toBe(0);
+    expect($leafChange?->diff['position']['to'] ?? null)->toBe(1)
+        ->and($siblingChange?->diff['position']['to'] ?? null)->toBe(0);
 
     // live rows never moved
     expect($leaf->fresh()->position)->toBe(0)

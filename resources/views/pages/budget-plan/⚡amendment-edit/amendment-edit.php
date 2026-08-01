@@ -237,7 +237,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             return; // e.g. marked for deletion — the UI disables field edits on that row
         }
 
-        $changes = $change->changes ?? [];
+        $changes = $change->diff ?? [];
         if ($new === $live) {
             unset($changes[$field]);
         } else {
@@ -251,7 +251,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
             return;
         }
-        $change->changes = $changes;
+        $change->diff = $changes;
         $change->save();
     }
 
@@ -440,7 +440,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             }
             BudgetItemChange::updateOrCreate(
                 ['budget_plan_id' => $this->amendment_id, 'budget_item_id' => $item_id],
-                ['action' => BudgetItemChange::ACTION_DELETE, 'changes' => null],
+                ['action' => BudgetItemChange::ACTION_DELETE, 'diff' => null],
             );
         }
 
