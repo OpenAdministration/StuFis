@@ -372,19 +372,50 @@
     </flux:modal>
 
     @can('admin', \App\Models\User::class)
-        <flux:modal name="delete-plan-modal" class="min-w-96">
-            <div>
-                <flux:heading size="lg">{{ __('budget-plan.view.delete-modal.heading') }}</flux:heading>
-                <flux:text class="mt-4">{{ __('budget-plan.view.delete-confirm') }}</flux:text>
-            </div>
-            <div class="mt-6 flex gap-3">
-                <flux:spacer/>
-                <flux:button x-on:click="$flux.modal('delete-plan-modal').close()" variant="ghost">
-                    {{ __('budget-plan.view.delete-modal.cancel') }}
-                </flux:button>
-                <flux:button wire:click="deletePlan" variant="danger">
-                    {{ __('budget-plan.view.delete-modal.confirm') }}
-                </flux:button>
+        {{-- F5 (OP#589): same checklist pattern as ⚡show-project's delete-modal — a condition row
+             per requirement, Confirm disabled until every one holds, rather than a bare
+             heading + Cancel/Confirm. --}}
+        <flux:modal name="delete-plan-modal" class="md:w-[32rem]">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <x-fas-triangle-exclamation class="h-6 w-6 text-red-600"/>
+                    </div>
+                    <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('budget-plan.view.delete-modal.heading') }}</h3>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-500">{{ __('budget-plan.view.delete-modal.intro') }}</p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li class="flex items-start gap-2">
+                            @if($user_can_delete_plan)
+                                <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                            @else
+                                <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                            @endif
+                            <span>{{ __('budget-plan.view.delete-modal.conditions.admin') }}</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            @if($plan_deletable)
+                                <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                            @else
+                                <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                            @endif
+                            <span>{{ __('budget-plan.view.delete-modal.conditions.editable-state', ['state' => $plan->state->label()]) }}</span>
+                        </li>
+                    </ul>
+                    <p class="text-sm text-gray-500">{{ __('budget-plan.view.delete-confirm') }}</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <flux:spacer/>
+                    <flux:button x-on:click="$flux.modal('delete-plan-modal').close()" variant="ghost">
+                        {{ __('budget-plan.view.delete-modal.cancel') }}
+                    </flux:button>
+                    <flux:button wire:click="deletePlan" variant="danger" :disabled="! ($user_can_delete_plan && $plan_deletable)">
+                        {{ __('budget-plan.view.delete-modal.confirm') }}
+                    </flux:button>
+                </div>
             </div>
         </flux:modal>
     @endcan

@@ -4,6 +4,8 @@ namespace App\States\BudgetPlan;
 
 use App\Models\BudgetPlan;
 use App\States\BudgetPlan\Transitions\ApplyAmendmentTransition;
+use App\States\BudgetPlan\Transitions\CompleteAmendmentsTransition;
+use App\States\BudgetPlan\Transitions\ReactivateAmendmentsTransition;
 use App\States\BudgetPlan\Transitions\RevertAmendmentTransition;
 use Livewire\Wireable;
 use Spatie\ModelStates\State;
@@ -42,6 +44,13 @@ abstract class BudgetPlanState extends State implements Wireable
         // budget_item rows, and Active -> Approved is where an applied amendment gets reverted. Both
         // transition classes are no-ops for an ordinary (non-amendment) plan — see
         // App\Support\Budget\AmendmentApplier.
+        //
+        // Two more arcs, Active <-> Completed, carry a cascade transition class (OP#589 F8): when
+        // an original plan crosses this arc, every one of its amendments that is currently
+        // Active/Completed follows it in the same DB transaction, so an amendment never drifts out
+        // of sync with the plan it was applied to. An amendment reached directly on this arc is
+        // blocked at the policy layer (BudgetPlanPolicy::transitionTo) — see
+        // CompleteAmendmentsTransition / ReactivateAmendmentsTransition for the cascade itself.
         return parent::config()
             ->default(Draft::class)
             ->allowTransition(Resolved::class, Draft::class)
@@ -50,8 +59,8 @@ abstract class BudgetPlanState extends State implements Wireable
             ->allowTransition(Resolved::class, Approved::class)
             ->allowTransition(Active::class, Approved::class, RevertAmendmentTransition::class)
             ->allowTransition(Approved::class, Active::class, ApplyAmendmentTransition::class)
-            ->allowTransition(Completed::class, Active::class)
-            ->allowTransition(Active::class, Completed::class);
+            ->allowTransition(Completed::class, Active::class, ReactivateAmendmentsTransition::class)
+            ->allowTransition(Active::class, Completed::class, CompleteAmendmentsTransition::class);
     }
 
     public function toLivewire(): array

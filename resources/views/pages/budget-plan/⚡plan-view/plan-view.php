@@ -103,8 +103,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'open_amendments' => $plan->isAmendment()
                 ? collect()
                 : $plan->amendments()->whereNotIn('state', [Active::$name, Completed::$name])->get(),
+            // F4 (OP#589): an amendment may be drafted against an Approved plan as well as an
+            // Active one — Approved is already a stable, agreed-upon document, so there's no
+            // reason to force waiting for activation first. Keep this in sync with the
+            // abort_unless() guard in createAmendment() below.
             'can_create_amendment' => ! $plan->isAmendment()
-                && $plan->state instanceof Active
+                && ($plan->state instanceof Active || $plan->state instanceof Approved)
                 && Auth::user()?->can('create', BudgetPlan::class),
             // an amendment's own view shows the diff (changed items only, from -> to, with
             // reasons) instead of the plain tree — the full merged tree stays the editor's job
@@ -113,6 +117,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 : collect(),
             'dates_editable' => $this->datesEditable(),
             'delta_summary' => $plan->isAmendment() ? $plan->amendmentDeltaSummary() : null,
+            // F5 (OP#589): the delete-plan-modal's checklist rows — surfaced here rather than
+            // computed inline in the blade so deletePlan()'s server-side guard below reads
+            // identically to what the user was shown.
+            'user_can_delete_plan' => Auth::user()?->can('admin', User::class) ?? false,
+            'plan_deletable' => $plan->isEditable(),
         ];
     }
 
@@ -124,7 +133,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         $plan = $this->plan();
         $this->authorize('create', BudgetPlan::class);
-        abort_unless(! $plan->isAmendment() && $plan->state instanceof Active, 403);
+        abort_unless(! $plan->isAmendment() && ($plan->state instanceof Active || $plan->state instanceof Approved), 403);
 
         $amendment = BudgetPlan::create([
             'state' => Draft::class,
@@ -163,13 +172,17 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
-     * Delete the whole plan and its items. Admin-only for now.
+     * Delete the whole plan and its items. Admin-only for now, and (F5, OP#589) only while the
+     * plan is still editable (Draft/Resolved) — past Approved it's meant to be a stable,
+     * agreed-upon document, so it may no longer be wiped outright. Mirrors the checklist rows
+     * shown in delete-plan-modal.
      */
     public function deletePlan(): void
     {
         $this->authorize('admin', User::class);
 
         $plan = $this->plan();
+        abort_unless($plan->isEditable(), 403);
 
         DB::transaction(static function () use ($plan): void {
             // budget_item has a self-referencing parent_id FK and a plan FK without cascade;
