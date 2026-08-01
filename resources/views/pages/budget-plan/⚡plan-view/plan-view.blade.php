@@ -41,8 +41,8 @@
                         <flux:menu.separator/>
                     @endif
                     @if($plan->isAmendment())
-                        {{-- an amendment is only editable through its dedicated editor, and only while Draft --}}
-                        @if($plan->state instanceof \App\States\BudgetPlan\Draft)
+                        {{-- an amendment is only editable through its dedicated editor, and only while Draft (see BudgetPlan::isEditable()) --}}
+                        @if($plan->isEditable())
                             <flux:menu.item icon="pencil"
                                             :href="route('budget-plan.amendment.edit', [$plan->parent_plan_id, $plan->id])" wire:navigate>{{ __('budget-plan.view.edit') }}</flux:menu.item>
                         @else
@@ -60,7 +60,10 @@
                             </div>
                         </flux:tooltip>
                     @endif
-                    @can('update', $plan)
+                    {{-- the officer role directly, not the 'update' ability: 'update' now also
+                         requires the plan to still be editable (Draft/Resolved), but a workflow
+                         transition (e.g. Approved -> Active) must stay reachable past that point too --}}
+                    @can('budget-officer', \App\Models\User::class)
                         <flux:menu.item icon="arrow-path" x-on:click="$flux.modal('state-modal').show()">
                             {{ __('budget-plan.view.change-state') }}
                         </flux:menu.item>
@@ -87,7 +90,7 @@
                             @endcan
                         @endif
                     </flux:menu.submenu>
-                    @can('admin', \App\Models\User::class)
+                    @can('budget-officer', \App\Models\User::class)
                         <flux:menu.separator/>
                         {{-- a native window.confirm() would be the only non-Flux dialog left in the
                              app (and is unstyleable), so this goes through a flux:modal like every
@@ -122,7 +125,7 @@
                                 {{ $amendment->label() }} — {{ $amendment->state->label() }}
                             </flux:link>
                             @can('update', $amendment)
-                                @if($amendment->state instanceof \App\States\BudgetPlan\Draft)
+                                @if($amendment->isEditable())
                                     ·
                                     <flux:link :href="route('budget-plan.amendment.edit', [$plan->id, $amendment->id])" wire:navigate>
                                         {{ __('budget-plan.amendment.continue-editing') }}
@@ -404,7 +407,7 @@
         </div>
     </flux:modal>
 
-    @can('admin', \App\Models\User::class)
+    @can('budget-officer', \App\Models\User::class)
         {{-- F5 (OP#589): same checklist pattern as ⚡show-project's delete-modal — a condition row
              per requirement, Confirm disabled until every one holds, rather than a bare
              heading + Cancel/Confirm. --}}
@@ -426,7 +429,7 @@
                             @else
                                 <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
                             @endif
-                            <span>{{ __('budget-plan.view.delete-modal.conditions.admin') }}</span>
+                            <span>{{ __('budget-plan.view.delete-modal.conditions.role') }}</span>
                         </li>
                         <li class="flex items-start gap-2">
                             @if($plan_deletable)

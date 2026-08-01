@@ -115,7 +115,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             // F5 (OP#589): the delete-plan-modal's checklist rows — surfaced here rather than
             // computed inline in the blade so deletePlan()'s server-side guard below reads
             // identically to what the user was shown.
-            'user_can_delete_plan' => Auth::user()?->can('admin', User::class) ?? false,
+            'user_can_delete_plan' => Auth::user()?->can('budget-officer', User::class) ?? false,
             'plan_deletable' => $plan->isEditable(),
         ];
     }
@@ -224,17 +224,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
-     * Delete the whole plan and its items. Admin-only for now, and (F5, OP#589) only while the
-     * plan is still editable (Draft/Resolved) — past Approved it's meant to be a stable,
-     * agreed-upon document, so it may no longer be wiped outright. Mirrors the checklist rows
-     * shown in delete-plan-modal.
+     * Delete the whole plan and its items. Both conditions — budget officer, and a still-editable
+     * plan — live in BudgetPlanPolicy::delete(); the checklist rows in delete-plan-modal show the
+     * same two conditions separately so a blocked user can see which one fails.
      */
     public function deletePlan(): void
     {
-        $this->authorize('admin', User::class);
-
         $plan = $this->plan();
-        abort_unless($plan->isEditable(), 403);
+        $this->authorize('delete', $plan);
 
         DB::transaction(static function () use ($plan): void {
             // budget_item has a self-referencing parent_id FK and a plan FK without cascade;

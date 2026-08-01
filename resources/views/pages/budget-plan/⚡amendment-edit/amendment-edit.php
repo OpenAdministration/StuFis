@@ -6,7 +6,6 @@ use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
-use App\States\BudgetPlan\Draft;
 use App\Support\Budget\TitleNumberer;
 use App\Support\Money\DefaultMoneyFormater;
 use Cknow\Money\Money;
@@ -51,8 +50,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         abort_unless($amendment->parent_plan_id === $plan_id, 404);
 
         // the editor is only available while the amendment is still a draft — once it has moved
-        // on in its own workflow, plan-view's diff view is the read-only place to look at it
-        if (! ($amendment->state instanceof Draft)) {
+        // on in its own workflow, plan-view's diff view is the read-only place to look at it. Goes
+        // through the model's isEditable() (BudgetPlan::isEditable() folds in this amendment-only
+        // Draft-only rule) rather than re-checking the state directly.
+        if (! $amendment->isEditable()) {
             $this->redirect(route('budget-plan.view', $amendment->id), navigate: true);
 
             return;

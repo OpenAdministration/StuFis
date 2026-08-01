@@ -116,6 +116,16 @@ abstract class BudgetPlanState extends State implements Wireable
     }
 
     /**
+     * Whether a plan may still be edited while in this state (F8, OP#581). Approved is the point
+     * past which the plan is meant to be a stable, agreed-upon document, so only Draft and
+     * Resolved override this to true — Active/Completed plans are live or done and stay frozen.
+     */
+    public function isEditable(): bool
+    {
+        return false;
+    }
+
+    /**
      * Business-rule checks a plan's budget items must satisfy to legitimately BE in this state
      * (OP#584): short_name (Titelnummer) unique within scope, name non-empty, value non-negative.
      * Direction-agnostic by design — whether reaching this state is a forward or backward step is

@@ -45,7 +45,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function mount(int $plan_id): void
     {
         $plan = BudgetPlan::findOrFail($plan_id);
-        $this->authorize('update', $plan);
 
         // an amendment is never edited here — its edits must go through the change-tracking
         // amendment editor, which lets the live parent-plan items stay untouched while drafting
@@ -56,12 +55,17 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         }
 
         // F8 (OP#581): once Approved (or beyond), the plan is a stable, agreed-upon document —
-        // direct route access is refused the same way an out-of-state amendment redirects away
+        // direct route access is refused the same way an out-of-state amendment redirects away.
+        // Checked before authorize() so a stale/bookmarked link degrades to this friendly redirect
+        // rather than a 403 — BudgetPlanPolicy::update() also enforces this same state rule, but
+        // only ever to refuse a non-officer, since by this point the plan is already editable.
         if (! $plan->isEditable()) {
             $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
 
             return;
         }
+
+        $this->authorize('update', $plan);
 
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;

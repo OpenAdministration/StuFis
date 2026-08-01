@@ -8,7 +8,6 @@ use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\States\BudgetPlan\Completed;
 use App\States\BudgetPlan\Draft;
-use App\States\BudgetPlan\Resolved;
 use App\Support\Budget\AmendmentDeltaSummary;
 use Carbon\Carbon;
 use Cknow\Money\Money;
@@ -170,15 +169,13 @@ class BudgetPlan extends Model
     }
 
     /**
-     * Whether a normal (non-amendment) plan may still go through ⚡plan-edit (F8, OP#581):
-     * editable in Draft/Resolved, frozen from Approved onward — Approved is the point past which
-     * the plan is meant to be a stable, agreed-upon document, and Active/Completed plans are live
-     * or done. An amendment follows its own, stricter rule (Draft only) enforced directly in
-     * ⚡amendment-edit, not this method.
+     * Whether this plan may still go through ⚡plan-edit / ⚡amendment-edit (F8, OP#581). Delegates
+     * to the state (see BudgetPlanState::isEditable() for the Draft/Resolved rule and its
+     * rationale), plus an amendment's own stricter constraint: Draft only.
      */
     public function isEditable(): bool
     {
-        return $this->state instanceof Draft || $this->state instanceof Resolved;
+        return $this->state->isEditable() && (! $this->isAmendment() || $this->state instanceof Draft);
     }
 
     /** Whether this plan is an amendment (supplements another plan) rather than an original plan. */

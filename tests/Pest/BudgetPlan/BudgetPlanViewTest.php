@@ -97,8 +97,8 @@ it('confirms the plan deletion through a flux modal instead of a native window.c
         ->and($html)->toContain(__('budget-plan.view.delete-modal.confirm'));
 });
 
-it('forbids a non-admin from deleting the plan', function (): void {
-    $this->actingAs(budgetManager()); // budget-officer, not admin
+it('forbids a user without the budget-officer role from deleting the plan', function (): void {
+    $this->actingAs(user()); // neither budget-officer nor admin
     $plan = planWithItems();
 
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])

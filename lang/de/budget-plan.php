@@ -119,7 +119,7 @@ return [
     'view.delete-confirm' => 'Diesen Haushaltsplan und alle seine Titel unwiderruflich löschen?',
     'view.delete-modal.heading' => 'Haushaltsplan löschen',
     'view.delete-modal.intro' => 'Bevor der Haushaltsplan gelöscht werden kann, müssen folgende Bedingungen erfüllt sein:',
-    'view.delete-modal.conditions.admin' => 'Du bist als Administrator/in zum Löschen berechtigt.',
+    'view.delete-modal.conditions.role' => 'Du bist als Haushaltsverantwortliche*r zum Löschen berechtigt.',
     'view.delete-modal.conditions.editable-state' => 'Der Plan befindet sich in einem löschbaren Status (Entwurf oder Beschlossen) – aktuell: :state.',
     'view.delete-modal.cancel' => 'Abbrechen',
     'view.delete-modal.confirm' => 'Endgültig löschen',

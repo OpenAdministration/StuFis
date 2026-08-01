@@ -28,12 +28,12 @@ class BudgetPlanPolicy
 
     public function update(User $user, BudgetPlan $budgetPlan): bool
     {
-        return $user->can('budget-officer', User::class);
+        return $user->can('budget-officer', User::class) && $budgetPlan->state->isEditable();
     }
 
     public function delete(User $user, BudgetPlan $budgetPlan): bool
     {
-        return $user->can('budget-officer', User::class);
+        return $user->can('budget-officer', User::class) && $budgetPlan->state->isEditable();
     }
 
     public function transitionTo(User $user, BudgetPlan $budgetPlan, BudgetPlanState $newState): bool
