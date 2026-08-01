@@ -220,6 +220,61 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
     expect(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->exists())->toBeFalse();
 });
 
+it('gives every rendered row a stable wire:key so morphdom can tell rows apart (B2)', function (): void {
+    // Root cause of B2 (deleting an unbooked base item did nothing visible): the recursive
+    // <x-budgetplan.item-group-amendment :wire:key="..."> call passed a key, but the component's
+    // own root <div> never echoes $attributes, so Blade silently drops it — every row rendered
+    // with NO wire:key at all. Livewire's morphdom then had no reliable per-row identity, so the
+    // isDeleted-driven swap (dropdown-menu -> undo-button, a structurally different subtree)
+    // could get morph-patched onto the wrong sibling instead of the row that was actually deleted.
+    $this->actingAs(budgetManager());
+    [$parent, $group, $leaf] = nhhpParentWithLeaf();
+    $sibling = $group->children()->create([
+        'budget_plan_id' => $parent->id, 'is_group' => false, 'budget_type' => BudgetType::EXPENSE,
+        'position' => 1, 'short_name' => 'A1.2', 'name' => 'Sonstiges', 'value' => Money::EUR(0),
+    ]);
+    $amendment = nhhpDraftAmendment($parent);
+
+    $html = nhhpEditComponent($parent, $amendment)->html();
+
+    expect($html)->toContain('wire:key="budget-item-'.$leaf->id.'"')
+        ->and($html)->toContain('wire:key="budget-item-'.$sibling->id.'"')
+        ->and($html)->toContain('wire:key="budget-item-'.$group->id.'"');
+});
+
+it('shows the delete badge/undo affordance on the deleted row, not a sibling row, after clicking delete', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent, $group, $leaf] = nhhpParentWithLeaf();
+    $sibling = $group->children()->create([
+        'budget_plan_id' => $parent->id, 'is_group' => false, 'budget_type' => BudgetType::EXPENSE,
+        'position' => 1, 'short_name' => 'A1.2', 'name' => 'Sonstiges', 'value' => Money::EUR(0),
+    ]);
+    $amendment = nhhpDraftAmendment($parent);
+    $lw = nhhpEditComponent($parent, $amendment);
+
+    $lw->call('delete', $leaf->id)->assertHasNoErrors();
+
+    $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
+    expect($change->action)->toBe(BudgetItemChange::ACTION_DELETE);
+
+    // the deleted row's own DOM node (identified by its now-stable wire:key) must carry the
+    // undo affordance; the untouched sibling must not. Slice from each row's own wire:key up to
+    // the next sibling's wire:key (or end of document) so the two rows can't bleed into each other.
+    $html = $lw->html();
+    $row = function (int $itemId) use ($html): string {
+        $start = strpos((string) $html, 'wire:key="budget-item-'.$itemId.'"');
+        $next = strpos((string) $html, 'wire:key="budget-item-', $start + 1);
+
+        return substr((string) $html, $start, $next !== false ? $next - $start : null);
+    };
+    $leafRow = $row($leaf->id);
+    $siblingRow = $row($sibling->id);
+
+    expect($leafRow)->toContain('undoDelete('.$leaf->id.')')
+        ->and($leafRow)->toContain(__('budget-plan.amendment.change.delete'))
+        ->and($siblingRow)->not->toContain('undoDelete('.$leaf->id.')');
+});
+
 it('deletes an amendment-added item outright (item + change row), no delete-row parking', function (): void {
     $this->actingAs(budgetManager());
     [$parent, $group] = nhhpParentWithLeaf();

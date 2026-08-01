@@ -35,7 +35,6 @@
                                             :values="$values"
                                             :changes="$changes"
                                             :amendment-id="$amendment->id"
-                                            :wire:key="$item->id"
                                         />
                                     @endforeach
                                 </div>

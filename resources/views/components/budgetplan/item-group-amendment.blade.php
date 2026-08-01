@@ -19,10 +19,20 @@
     $isModified = $change?->action === BudgetItemChange::ACTION_MODIFY;
 @endphp
 
+{{--
+    wire:key is set explicitly here (not just at the recursive x-budgetplan.item-group-amendment
+    call site below) because a Blade anonymous component only forwards its caller's attributes
+    (including :wire:key) onto the root element when the template echoes $attributes somewhere —
+    this component never does, so that outer wire:key was silently dropped, leaving Livewire's
+    morphdom with no stable per-row identity. That's the root cause of B2 (deleting an unbooked
+    base item did nothing visible): without a key, the $isDeleted-driven swap between the
+    dropdown-menu and the undo-button (a structurally very different subtree) could get
+    morph-patched onto the wrong sibling row instead of the row that was actually deleted.
+--}}
 <div @class([
         "col-span-8 grid grid-cols-subgrid",
         "opacity-60" => $isDeleted,
-    ]) wire:sort:item="{{ $item->id }}">
+    ]) wire:sort:item="{{ $item->id }}" wire:key="budget-item-{{ $item->id }}">
     <div @class([
             "col-span-8 grid grid-cols-subgrid rounded",
             "bg-green-50 dark:bg-green-950/30" => $isAdded && ! $isDeleted,
@@ -135,7 +145,6 @@
                     :values="$values"
                     :changes="$changes"
                     :amendment-id="$amendmentId"
-                    :wire:key="$child->id"
                     :level="$level + 1"
                     :last-item="[...$lastItem, $loop->last]"
                 />
