@@ -107,3 +107,68 @@ it('hides a plan without a fiscal year from the haushaltsplan view', function ()
 
     expect(DB::table('haushaltsplan')->where('id', $plan->id)->exists())->toBeFalse();
 });
+
+/**
+ * Amendment-awareness (OP#581, 2026_08_01_..._nachtragshaushaltsplan): an amendment never
+ * surfaces as its own plan, and its as-yet-unapplied additions/deletions don't leak into the
+ * parent plan's legacy rows.
+ */
+function viewAmendmentOf(BudgetPlan $parent): BudgetPlan
+{
+    return BudgetPlan::create([
+        'state' => Draft::class,
+        'fiscal_year_id' => $parent->fiscal_year_id,
+        'parent_plan_id' => $parent->id,
+    ]);
+}
+
+it('never lists a draft amendment in haushaltsplan, while its parent stays visible exactly once', function (): void {
+    $parent = viewPlan();
+    $amendment = viewAmendmentOf($parent);
+
+    expect(DB::table('haushaltsplan')->where('id', $amendment->id)->exists())->toBeFalse()
+        ->and(DB::table('haushaltsplan')->where('id', $parent->id)->count())->toBe(1);
+});
+
+it('hides amendment-owned items (drafted additions, and parked deletions) from haushaltstitel/haushaltsgruppen', function (): void {
+    $parent = viewPlan();
+    $amendment = viewAmendmentOf($parent);
+
+    // a drafted addition: a real budget_item already living under the amendment plan
+    $addedGroup = viewItem($amendment, ['is_group' => true, 'name' => 'Neue Gruppe']);
+    $addedLeaf = viewItem($amendment, ['name' => 'Neuer Titel', 'short_name' => 'A9.1', 'value' => Money::EUR(100)]);
+
+    // a parked deletion: an item AmendmentApplier already re-homed onto the amendment plan
+    $parkedLeaf = viewItem($amendment, ['name' => 'Geparkt', 'short_name' => 'A9.2']);
+
+    expect(DB::table('haushaltsgruppen')->where('id', $addedGroup->id)->exists())->toBeFalse()
+        ->and(DB::table('haushaltstitel')->where('id', $addedLeaf->id)->exists())->toBeFalse()
+        ->and(DB::table('haushaltstitel')->where('id', $parkedLeaf->id)->exists())->toBeFalse();
+});
+
+it('shows modified values, applied additions, but not parked deletions, once an amendment has applied', function (): void {
+    $parent = viewPlan();
+    $amendment = viewAmendmentOf($parent);
+    $leaf = viewItem($parent, ['name' => 'Titel', 'short_name' => 'A1.1', 'value' => Money::EUR(300)]);
+
+    // simulate AmendmentApplier's effects directly at the row level: a modify writes the new
+    // value in place, an add/delete re-homes budget_plan_id between amendment <-> parent
+    $leaf->update(['value' => Money::EUR(500)]);
+    $appliedAddition = viewItem($parent, ['name' => 'Angewandt', 'short_name' => 'A1.2', 'value' => Money::EUR(50)]);
+    $parkedDeletion = viewItem($amendment, ['name' => 'Gestrichen', 'short_name' => 'A1.3']);
+
+    $t = DB::table('haushaltstitel')->where('id', $leaf->id)->sole();
+    expect((float) $t->value)->toBe(5.0)
+        ->and(DB::table('haushaltstitel')->where('id', $appliedAddition->id)->exists())->toBeTrue()
+        ->and(DB::table('haushaltstitel')->where('id', $parkedDeletion->id)->exists())->toBeFalse();
+});
+
+it('keeps the phantom-group logic for root leaves intact when an unrelated amendment exists', function (): void {
+    $parent = viewPlan();
+    viewAmendmentOf($parent); // present, but must not interfere
+    $leaf = viewItem($parent, ['name' => 'Wurzeltitel', 'short_name' => 'E1', 'budget_type' => BudgetType::INCOME, 'value' => Money::EUR(500)]);
+
+    $g = DB::table('haushaltsgruppen')->where('id', $leaf->id)->sole();
+    expect($g->hhp_id)->toBe($parent->id)
+        ->and($g->gruppen_name)->toBe('Wurzeltitel');
+});
