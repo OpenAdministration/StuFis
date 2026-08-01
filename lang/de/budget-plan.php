@@ -97,6 +97,7 @@ return [
     'view.no-organization' => 'Keine Organisation',
     'view.actions' => 'Aktionen',
     'view.edit' => 'Bearbeiten',
+    'view.edit-not-possible' => 'Der Plan kann im Status „:state“ nicht mehr bearbeitet werden.',
     'view.duplicate' => 'Duplizieren',
     'view.print' => 'Drucken',
     'view.export' => 'Exportieren',

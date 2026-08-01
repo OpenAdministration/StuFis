@@ -59,6 +59,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             return;
         }
 
+        // F8 (OP#581): once Approved (or beyond), the plan is a stable, agreed-upon document —
+        // direct route access is refused the same way an out-of-state amendment redirects away
+        if (! $plan->isEditable()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;
         $this->resolution_date = $plan->resolution_date;

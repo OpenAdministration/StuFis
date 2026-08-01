@@ -69,7 +69,9 @@ it('still flags a second ORIGINAL plan with the same organization+fiscal year as
 it('does not offer amendments as mount targets', function (): void {
     $this->actingAs(budgetManager());
     $mountable = originalPlan(['organization' => 'Mountable']);
-    $parent = originalPlan(['fiscal_year_id' => $mountable->fiscal_year_id]);
+    // Draft (not the originalPlan() default of Active) — F8 (OP#581) now guards ⚡plan-edit access
+    // by state, and this test opens $parent's OWN editor, so it must stay in an editable state
+    $parent = originalPlan(['fiscal_year_id' => $mountable->fiscal_year_id, 'state' => Draft::class]);
     draftAmendmentOf($parent); // an amendment sharing the same fiscal year as $mountable
 
     $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $parent->id]);

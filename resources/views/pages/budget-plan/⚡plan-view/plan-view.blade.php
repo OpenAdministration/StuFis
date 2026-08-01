@@ -40,9 +40,17 @@
                         @else
                             <flux:menu.item icon="pencil" disabled>{{ __('budget-plan.view.edit') }}</flux:menu.item>
                         @endif
-                    @else
+                    @elseif($plan->isEditable())
                         <flux:menu.item icon="pencil"
                                         :href="route('budget-plan.edit', $plan->id)">{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                    @else
+                        {{-- F8 (OP#581): frozen from Approved onward — the plan is meant to be a
+                             stable, agreed-upon document past that point --}}
+                        <flux:tooltip :content="__('budget-plan.view.edit-not-possible', ['state' => $plan->state->label()])">
+                            <div>
+                                <flux:menu.item icon="pencil" disabled>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                            </div>
+                        </flux:tooltip>
                     @endif
                     @can('update', $plan)
                         <flux:menu.item icon="arrow-path" x-on:click="$flux.modal('state-modal').show()">
