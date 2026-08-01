@@ -583,7 +583,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return (int) $query->max('position') + 1;
     }
 
-    public function delete(int $item_id): void
+    /**
+     * NOTE: must NOT be called `delete()`. Livewire's CSP-safe evaluator rewrites a
+     * `wire:click="foo(1)"` expression to `$wire.foo(1)` and parses it with a hand-written
+     * tokenizer that treats `delete` as a reserved KEYWORD, so `$wire.delete(1)` fails to parse
+     * and the click is swallowed with only a console warning — no request at all.
+     */
+    public function deleteItem(int $item_id): void
     {
         $item = BudgetItem::findOrFail($item_id);
 

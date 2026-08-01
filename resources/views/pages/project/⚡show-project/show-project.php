@@ -69,7 +69,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         }
     }
 
-    public function delete(): void
+    /**
+     * NOTE: must NOT be called `delete()`. Livewire's CSP-safe evaluator rewrites a
+     * `wire:click="foo()"` expression to `$wire.foo()` and parses it with a hand-written
+     * tokenizer that treats `delete` as a reserved KEYWORD, so `$wire.delete()` fails to parse
+     * and the click is swallowed with only a console warning — no request at all.
+     */
+    public function deleteProject(): void
     {
         $project = Project::findOrFail($this->project_id);
         $this->authorize('delete', $project);

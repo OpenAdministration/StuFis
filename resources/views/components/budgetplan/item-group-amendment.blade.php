@@ -136,7 +136,7 @@
                                 </div>
                             </flux:tooltip>
                         @else
-                            <flux:menu.item wire:click="delete({{ $item->id }})"
+                            <flux:menu.item wire:click="deleteItem({{ $item->id }})"
                                             :disabled="$item->orderedChildren->isNotEmpty()" variant="danger"
                                             icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                         @endif

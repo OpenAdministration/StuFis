@@ -414,8 +414,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * Delete $item_id: a base item without bookings gets a `delete` change row (the item itself
      * is untouched until apply — reversible via undoDelete()); an item this amendment itself
      * added is removed outright, together with its `add` change row.
+     *
+     * NOTE: must NOT be called `delete()`. Livewire's CSP-safe evaluator rewrites a
+     * `wire:click="foo(1)"` expression to `$wire.foo(1)` and parses it with a hand-written
+     * tokenizer that treats `delete` as a reserved KEYWORD, so `$wire.delete(1)` fails to parse
+     * and the click is swallowed with only a console warning — no request at all.
      */
-    public function delete(int $item_id): void
+    public function deleteItem(int $item_id): void
     {
         $item = BudgetItem::findOrFail($item_id);
         if ($item->children()->count() > 0) {
