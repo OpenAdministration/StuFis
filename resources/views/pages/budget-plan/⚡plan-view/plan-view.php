@@ -59,6 +59,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'can_create_amendment' => ! $plan->isAmendment()
                 && $plan->state instanceof Active
                 && Auth::user()?->can('create', BudgetPlan::class),
+            // an amendment's own view shows the diff (changed items only, from -> to, with
+            // reasons) instead of the plain tree — the full merged tree stays the editor's job
+            'amendment_changes' => $plan->isAmendment()
+                ? $plan->itemChanges()->with('budgetItem')->get()
+                : collect(),
         ];
     }
 

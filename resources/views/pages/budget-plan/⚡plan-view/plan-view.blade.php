@@ -110,6 +110,66 @@
         </flux:callout>
     @endif
 
+    @if($plan->isAmendment())
+        <div class="max-w-3xl space-y-6">
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
+                    <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
+                    <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
+                </div>
+            </dl>
+
+            @if(filled($plan->justification))
+                <div>
+                    <flux:heading size="sm">{{ __('budget-plan.amendment.justification') }}</flux:heading>
+                    <flux:text class="mt-1 whitespace-pre-line">{{ $plan->justification }}</flux:text>
+                </div>
+            @endif
+
+            <div>
+                <flux:heading size="sm">{{ __('budget-plan.amendment.diff-heading') }}</flux:heading>
+                @if($amendment_changes->isEmpty())
+                    <flux:text class="mt-2 italic text-gray-500">{{ __('budget-plan.amendment.no-changes-yet') }}</flux:text>
+                @else
+                    <div class="mt-2 divide-y divide-gray-200 rounded-lg outline-1 outline-black/5">
+                        @foreach($amendment_changes as $change)
+                            @php $changedItem = $change->budgetItem; @endphp
+                            <div class="p-4 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <flux:badge size="sm" :color="match($change->action) {
+                                        'add' => 'green', 'delete' => 'red', default => 'amber',
+                                    }">{{ __('budget-plan.amendment.change.'.$change->action) }}</flux:badge>
+                                    <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
+                                </div>
+                                @if($change->action === 'modify' && filled($change->changes))
+                                    <ul class="text-sm text-gray-600 list-disc list-inside">
+                                        @foreach($change->changes as $field => $pair)
+                                            <li>
+                                                {{ __('budget-plan.amendment.field.'.$field) }}:
+                                                @if($field === 'value')
+                                                    {{ \Cknow\Money\Money::EUR((int) $pair['from'])->format() }}
+                                                    → {{ \Cknow\Money\Money::EUR((int) $pair['to'])->format() }}
+                                                @else
+                                                    „{{ $pair['from'] }}“ → „{{ $pair['to'] }}“
+                                                @endif
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                                @if(filled($change->reason))
+                                    <flux:text class="text-sm italic">{{ $change->reason }}</flux:text>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+    @else
     @php
         $income = $plan->incomeTotal();
         $expense = $plan->expenseTotal();
@@ -235,6 +295,7 @@
             </flux:tab.panel>
         @endforeach
     </flux:tab.group>
+    @endif
 
     {{-- state-change modal: lists only the transitions allowed from the current state --}}
     <flux:modal name="state-modal" class="min-w-96">

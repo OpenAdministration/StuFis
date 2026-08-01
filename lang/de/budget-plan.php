@@ -191,5 +191,7 @@ return [
     'amendment.create-not-possible' => 'Ein Nachtrag kann nur zu einem aktiven Haushaltsplan erstellt werden.',
     'amendment.open-heading' => 'Offene Nachträge',
     'amendment.continue-editing' => 'weiter bearbeiten',
+    'amendment.effective-date' => 'Wirksam zum',
+    'amendment.diff-heading' => 'Änderungen',
     '' => '',
 ];
