@@ -14,6 +14,7 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -154,6 +155,28 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $plan = $this->plan();
         $filtered = $this->validate(['newState' => ['required', new ValidStateRule(BudgetPlanState::class)]]);
         $newState = BudgetPlanState::make($filtered['newState'], $plan);
+
+        // Business-rule check (OP#584): the target state's item rules (Titelnummer uniqueness,
+        // name, non-negative value) must hold before the transition is even authorized — mirrors
+        // ⚡show-project's changeState(). Only checked on a FORWARD step (advancesTo()): moving
+        // backward only ever demotes data away from "official", never promotes it, so a backward
+        // step (e.g. reverting an applied amendment, or reactivating a Completed plan) must always
+        // stay possible regardless of a pre-existing violation it cannot fix. This deliberately
+        // runs only here, at the Livewire layer: the cascaded Active<->Completed writes for an
+        // amendment's siblings (CompleteAmendmentsTransition / ReactivateAmendmentsTransition,
+        // OP#589) call $child->state->transitionTo() directly on the model and never come through
+        // here, so this check can never block that cascade either way.
+        if ($plan->state->advancesTo($newState)) {
+            try {
+                $newState->getValidator()->validate();
+            } catch (ValidationException $e) {
+                foreach ($e->validator->errors()->all() as $message) {
+                    $this->addError('newState', $message);
+                }
+
+                return;
+            }
+        }
 
         $this->authorize('transition-to', [$plan, $newState]);
 

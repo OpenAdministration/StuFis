@@ -355,11 +355,17 @@
                 </flux:select>
             @endif
         </div>
-        @error('newState')
+        @if ($errors->has('newState'))
+            {{-- looped (not a single @error), since a business-rule failure (OP#584) can name
+                 more than one offending Titel at once --}}
             <div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
-                <p class="text-red-600 text-sm">{{ $message }}</p>
+                <ul class="list-disc list-inside text-red-600 text-sm space-y-1">
+                    @foreach ($errors->get('newState') as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
             </div>
-        @enderror
+        @endif
         <div class="mt-6 flex gap-3">
             <flux:spacer/>
             <flux:button x-on:click="$flux.modal('state-modal').close()" variant="ghost">
