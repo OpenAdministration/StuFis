@@ -274,8 +274,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     /** @param  array<int, string>  $value */
     public function updatedReasonInputs(mixed $value, string $property): void
     {
-        // $property is "reasonInputs.{change_id}"
-        [, $changeId] = explode('.', $property, 2);
+        // Livewire's updated{Property} hook passes only the path AFTER the first dot, so for the
+        // top-level array property "reasonInputs.{change_id}" $property IS just "{change_id}"
+        // (no dot left to split on) — mirrors updatedItems()'s handling of "items.{id}.field".
+        $changeId = $property;
         BudgetItemChange::whereKey($changeId)->where('budget_plan_id', $this->amendment_id)
             ->update(['reason' => $this->reasonInputs[$changeId] ?: null]);
         Flux::toast(__('budget-plan.edit.saved'), variant: 'success');
