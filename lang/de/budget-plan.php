@@ -185,6 +185,7 @@ return [
     'amendment.field.description' => 'Beschreibung',
     'amendment.field.position' => 'Position',
     'amendment.field.parent_id' => 'Übergeordnete Gruppe',
+    'amendment.field-was' => 'Bisher: :value',
     'amendment.undo-delete' => 'Löschung rückgängig machen',
     'amendment.not-changeable-in-amendment' => 'Im Nachtrag nicht änderbar.',
     'amendment.create' => 'Nachtrag erstellen',

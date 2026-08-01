@@ -183,6 +183,26 @@ it('accumulates multiple field edits on one item into a single change row', func
     expect($rows->first()->changes)->toHaveKeys(['value', 'name']);
 });
 
+it('rings only the specific field that changed (F1), not the untouched sibling field', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent, , $leaf] = nhhpParentWithLeaf();
+    $amendment = nhhpDraftAmendment($parent);
+    $lw = nhhpEditComponent($parent, $amendment);
+
+    // only `value` is touched — `name` must NOT get the amber ring
+    $lw->set('items.'.$leaf->id.'.value', Money::EUR(15000))->assertHasNoErrors();
+
+    $html = $lw->html();
+    expect($html)->toContain('ring-amber-400')
+        ->and($html)->toContain(__('budget-plan.amendment.field-was', ['value' => Money::EUR(10000)->format()]));
+
+    // now also touch `name` — both fields ring, each showing its OWN old value
+    $lw->set('items.'.$leaf->id.'.name', 'Neues Material')->assertHasNoErrors();
+    $html = $lw->html();
+    expect($html)->toContain(__('budget-plan.amendment.field-was', ['value' => 'Material']))
+        ->and(substr_count((string) $html, 'ring-amber-400'))->toBe(2);
+});
+
 it('refuses to record a short_name change for a base item (F2), but still accepts it for the amendment\'s own additions', function (): void {
     $this->actingAs(budgetManager());
     [$parent, $group, $leaf] = nhhpParentWithLeaf();

@@ -17,6 +17,10 @@
     $isAdded = $item->budget_plan_id === $amendmentId;
     $isDeleted = $change?->action === BudgetItemChange::ACTION_DELETE;
     $isModified = $change?->action === BudgetItemChange::ACTION_MODIFY;
+    // F1 (OP#581): highlight the CONCRETE changed field, not just the row tint — per-field pairs,
+    // so a modify that only touches e.g. `value` doesn't also ring-highlight an untouched `name`.
+    $nameChange = $isModified ? $change->fieldChange('name') : null;
+    $valueChange = $isModified ? $change->fieldChange('value') : null;
 @endphp
 
 {{--
@@ -57,7 +61,9 @@
             @endif
         </div>
         <div class="col-span-3 my-2 flex items-center gap-2">
-            <flux:input class="flex-1" wire:model.live.blur="items.{{$item->id}}.name" :disabled="$isDeleted"/>
+            <flux:input class="flex-1" wire:model.live.blur="items.{{$item->id}}.name" :disabled="$isDeleted"
+                        :class:input="$nameChange !== null ? 'ring-2 ring-amber-400 dark:ring-amber-500' : ''"
+                        :title="$nameChange !== null ? __('budget-plan.amendment.field-was', ['value' => $nameChange['from']]) : null"/>
             @if($isAdded)
                 <flux:badge color="green" size="sm">{{ __('budget-plan.amendment.change.add') }}</flux:badge>
             @elseif($isDeleted)
@@ -90,7 +96,9 @@
                                 class:input="text-right text-black!"/>
                 </flux:input.group>
             @else
-                <x-money-input class="my-2 w-full" wire:model.live.blur="items.{{$item->id}}.value" :disabled="$isDeleted"/>
+                <x-money-input class="my-2 w-full" wire:model.live.blur="items.{{$item->id}}.value" :disabled="$isDeleted"
+                               :class:input="$valueChange !== null ? 'text-right ring-2 ring-amber-400 dark:ring-amber-500' : 'text-right'"
+                               :title="$valueChange !== null ? __('budget-plan.amendment.field-was', ['value' => \Cknow\Money\Money::EUR((int) $valueChange['from'])->format()]) : null"/>
             @endif
         </div>
         <div class="my-2 flex items-center">
