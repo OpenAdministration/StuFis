@@ -7,6 +7,7 @@ use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\States\BudgetPlan\Completed;
+use App\Support\Budget\AmendmentDeltaSummary;
 use Carbon\Carbon;
 use Cknow\Money\Money;
 use Database\Factories\BudgetPlanFactory;
@@ -156,6 +157,17 @@ class BudgetPlan extends Model
     public function itemChanges(): HasMany
     {
         return $this->hasMany(BudgetItemChange::class);
+    }
+
+    /**
+     * This amendment's net income/expense delta, aggregated once here (F5, OP#581) and shown in
+     * both the editor's Begründungen tab and the amendment's plan-view diff section.
+     *
+     * @return array{income: Money, expense: Money, saldo: Money}
+     */
+    public function amendmentDeltaSummary(): array
+    {
+        return resolve(AmendmentDeltaSummary::class)->compute($this);
     }
 
     /** Whether this plan is a Nachtragshaushaltsplan (supplements another plan) rather than an original plan. */

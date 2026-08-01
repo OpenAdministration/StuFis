@@ -199,5 +199,10 @@ return [
     'amendment.name-sub' => 'Optionale Bezeichnung des Nachtrags (z. B. für Sitzungsvorlagen). Ohne Angabe wird das Erstellungsdatum angezeigt.',
     'amendment.unnamed-fallback' => 'Nachtrag vom :date',
     'amendment.back-to-view' => 'Zurück zum Nachtrag',
+    'amendment.delta-heading' => 'Auswirkung des Nachtrags',
+    'amendment.delta-income' => 'Δ Einnahmen',
+    'amendment.delta-expense' => 'Δ Ausgaben',
+    'amendment.delta-saldo' => 'Δ Saldo',
+    'amendment.reason-label' => 'Begründung',
     '' => '',
 ];

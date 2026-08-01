@@ -138,6 +138,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'root_items' => ['in' => $rootsFor(BudgetType::INCOME), 'out' => $rootsFor(BudgetType::EXPENSE)],
             'values' => $values,
             'changes' => $changes,
+            'delta_summary' => $this->amendment()->amendmentDeltaSummary(),
         ];
     }
 

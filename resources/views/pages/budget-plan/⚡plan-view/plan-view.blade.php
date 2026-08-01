@@ -144,6 +144,8 @@
                 </div>
             @endif
 
+            <x-budgetplan.amendment-delta-summary :summary="$delta_summary"/>
+
             <div>
                 <flux:heading size="sm">{{ __('budget-plan.amendment.diff-heading') }}</flux:heading>
                 @if($amendment_changes->isEmpty())
@@ -175,7 +177,10 @@
                                     </ul>
                                 @endif
                                 @if(filled($change->reason))
-                                    <flux:text class="text-sm italic">{{ $change->reason }}</flux:text>
+                                    <flux:text class="text-sm">
+                                        <span class="font-medium">{{ __('budget-plan.amendment.reason-label') }}:</span>
+                                        <span class="italic">{{ $change->reason }}</span>
+                                    </flux:text>
                                 @endif
                             </div>
                         @endforeach

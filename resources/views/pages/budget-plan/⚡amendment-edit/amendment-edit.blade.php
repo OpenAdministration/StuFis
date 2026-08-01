@@ -67,6 +67,8 @@
                                :description="__('budget-plan.amendment.justification-sub')"
                                rows="4"/>
 
+                <x-budgetplan.amendment-delta-summary :summary="$delta_summary"/>
+
                 @if($changes->isEmpty())
                     <flux:text class="italic text-gray-500">{{ __('budget-plan.amendment.no-changes-yet') }}</flux:text>
                 @else

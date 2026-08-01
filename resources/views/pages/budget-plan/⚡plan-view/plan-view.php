@@ -112,6 +112,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 ? $plan->itemChanges()->with('budgetItem')->get()
                 : collect(),
             'dates_editable' => $this->datesEditable(),
+            'delta_summary' => $plan->isAmendment() ? $plan->amendmentDeltaSummary() : null,
         ];
     }
 
