@@ -1,9 +1,9 @@
 <?php
 
+use App\Models\BudgetPlan;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
 use App\Models\Legacy\Expense;
-use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use Illuminate\Http\Testing\File;
 
@@ -513,9 +513,13 @@ test('an empty csv does not crash the component', function (): void {
 test('a successful import redirects to the imported account view', function (): void {
     $acc = BankAccount::factory()->create();
 
-    // The konto page selects an account via the path segments konto/{hhp_id}/{konto_id}.
-    // hhp_id is the latest budget plan, the same id the component forwards to.
-    $hhp = LegacyBudgetPlan::latest()?->id;
+    // The konto page selects an account via the path segments konto/{hhp_id}/{konto_id}, and the
+    // component forwards BudgetPlan::newest() — the highest-id original plan, read straight off
+    // budget_plan. Create that plan here instead of looking one up: the legacy `haushaltsplan`
+    // view INNER JOINs fiscal_year, so a plan without a fiscal year is invisible to the view while
+    // still being the component's newest. Other tests leave several such plans behind in the
+    // persistent testing database, and the two ids then drift apart.
+    $hhp = BudgetPlan::factory()->create()->id;
 
     $wire = Livewire::actingAs(cashOfficer())
         ->test('pages::bank.manual-import')
