@@ -407,17 +407,26 @@ it('shows "Nachtrag erstellen" enabled on an Active plan and disabled otherwise,
     $this->actingAs(budgetManager());
     [$parent] = nhhpParentWithLeaf(); // Active
 
-    Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $parent->id])
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $parent->id])
         ->assertSee(__('budget-plan.amendment.create'))
         ->call('createAmendment')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->html();
+
+    // F7 (OP#581): "Nachtrag erstellen" lives in the actions dropdown as a real menu item now,
+    // not a standalone header button — Flux renders every flux:menu.item with the
+    // data-flux-menu-item marker, so its proximity to wire:click="createAmendment" pins the move
+    // (a standalone flux:button never carries that marker).
+    $pos = strpos((string) $html, 'wire:click="createAmendment"');
+    expect($pos)->not->toBeFalse()
+        ->and(substr((string) $html, max(0, $pos - 200), 200))->toContain('data-flux-menu-item');
 
     $amendment = BudgetPlan::query()->whereNotNull('parent_plan_id')->where('parent_plan_id', $parent->id)->sole();
     expect($amendment->state)->toBeInstanceOf(Draft::class)
         ->and($amendment->organization)->toBe($parent->organization)
         ->and($amendment->fiscal_year_id)->toBe($parent->fiscal_year_id);
 
-    // a Draft (non-Active) plan must render the button disabled rather than hide it
+    // a Draft (non-Active) plan must render the item disabled rather than hide it
     $draftPlan = BudgetPlan::create(['state' => Draft::class]);
     $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $draftPlan->id])->html();
     expect($html)->toContain(__('budget-plan.amendment.create'))

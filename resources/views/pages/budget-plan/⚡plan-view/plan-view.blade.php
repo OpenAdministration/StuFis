@@ -12,23 +12,26 @@
             </span>
         </x-slot:subHeadline>
         <x-slot:button>
-            @if(! $plan->isAmendment())
-                @if($can_create_amendment)
-                    <flux:button icon="document-plus" variant="outline" wire:click="createAmendment">
-                        {{ __('budget-plan.amendment.create') }}
-                    </flux:button>
-                @else
-                    <flux:tooltip :content="__('budget-plan.amendment.create-not-possible')">
-                        <div><flux:button icon="document-plus" variant="outline" disabled>
-                                {{ __('budget-plan.amendment.create') }}
-                            </flux:button></div>
-                    </flux:tooltip>
-                @endif
-            @endif
             <flux:dropdown>
                 <flux:button icon:trailing="chevron-down"
                              variant="primary">{{ __('budget-plan.view.actions') }}</flux:button>
                 <flux:menu>
+                    @if(! $plan->isAmendment())
+                        {{-- F7 (OP#581): moved here from a standalone header button so it lives
+                             alongside the plan's other actions --}}
+                        @if($can_create_amendment)
+                            <flux:menu.item icon="document-plus" wire:click="createAmendment">
+                                {{ __('budget-plan.amendment.create') }}
+                            </flux:menu.item>
+                        @else
+                            <flux:tooltip :content="__('budget-plan.amendment.create-not-possible')">
+                                <div>
+                                    <flux:menu.item icon="document-plus" disabled>{{ __('budget-plan.amendment.create') }}</flux:menu.item>
+                                </div>
+                            </flux:tooltip>
+                        @endif
+                        <flux:menu.separator/>
+                    @endif
                     @if($plan->isAmendment())
                         {{-- an amendment is only editable through its dedicated editor, and only while Draft --}}
                         @if($plan->state instanceof \App\States\BudgetPlan\Draft)
