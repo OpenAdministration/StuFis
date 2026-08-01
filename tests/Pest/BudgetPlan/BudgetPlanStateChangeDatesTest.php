@@ -17,7 +17,7 @@ use Livewire\Livewire;
  *   - into Approved  -> approval_date, plus activation_date for an amendment
  *   - into Active    -> activation_date for an amendment, only if still unset
  * Never more than one of these groups at once, never on a backward step (only a forward step,
- * per BudgetPlanState::advancesTo(), demands or even offers a date), and a supplied date is
+ * per BudgetPlanState::isAdvancement(), demands or even offers a date), and a supplied date is
  * persisted in the very same write as the transition itself.
  */
 uses(DatabaseTransactions::class);

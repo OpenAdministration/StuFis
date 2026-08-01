@@ -31,7 +31,7 @@ class ReactivateAmendmentsTransition extends DefaultTransition
             $result = parent::handle();
 
             if (! $model->isAmendment()) {
-                foreach ($model->amendments()->where('state', Completed::$name)->get() as $amendment) {
+                foreach ($model->amendments()->whereState('state', Completed::class)->get() as $amendment) {
                     $amendment->state->transitionTo(Active::class);
                 }
             }

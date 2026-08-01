@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Draft;
@@ -51,7 +52,7 @@ it('shows only changed items on the amendment plan-view, with from->to and the r
 
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 15000]],
         'reason' => 'Preissteigerung beim Lieferanten',
     ]);
@@ -79,11 +80,11 @@ it('shows added and deleted items on the diff with their action badges', functio
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $added->id,
-        'action' => BudgetItemChange::ACTION_ADD,
+        'action' => BudgetItemChangeAction::Add,
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $untouched->id,
-        'action' => BudgetItemChange::ACTION_DELETE,
+        'action' => BudgetItemChangeAction::Delete,
     ]);
 
     $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])->html();

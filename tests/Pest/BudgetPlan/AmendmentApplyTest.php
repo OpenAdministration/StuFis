@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
@@ -67,7 +68,7 @@ function nhhpModify(BudgetPlan $amendment, BudgetItem $item, int $toCents, strin
     return BudgetItemChange::create([
         'budget_plan_id' => $amendment->id,
         'budget_item_id' => $item->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => [$field => ['from' => $from, 'to' => $toCents]],
     ]);
 }
@@ -82,7 +83,7 @@ function nhhpAdd(BudgetPlan $amendment, BudgetItem $parentGroup): BudgetItem
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $newItem->id,
-        'action' => BudgetItemChange::ACTION_ADD,
+        'action' => BudgetItemChangeAction::Add,
     ]);
 
     return $newItem;
@@ -93,7 +94,7 @@ function nhhpMarkDelete(BudgetPlan $amendment, BudgetItem $item): BudgetItemChan
 {
     return BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $item->id,
-        'action' => BudgetItemChange::ACTION_DELETE,
+        'action' => BudgetItemChangeAction::Delete,
     ]);
 }
 
@@ -229,7 +230,7 @@ it('compares an integer-cents "from" semantically against the live Money value (
     // than an int — fieldsEqual() must still compare it against the live Money cents semantically
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf1->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => (string) $leaf1->value->getAmount(), 'to' => 20000]],
     ]);
 

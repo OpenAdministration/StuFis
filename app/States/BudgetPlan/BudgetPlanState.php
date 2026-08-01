@@ -7,6 +7,7 @@ use App\Models\BudgetPlan;
 use App\Models\User;
 use App\Rules\BudgetPlanItemRule;
 use App\States\BudgetPlan\Transitions\ApplyAmendmentTransition;
+use App\States\BudgetPlan\Transitions\ApproveAmendmentTransition;
 use App\States\BudgetPlan\Transitions\CompleteAmendmentsTransition;
 use App\States\BudgetPlan\Transitions\ReactivateAmendmentsTransition;
 use App\States\BudgetPlan\Transitions\RevertAmendmentTransition;
@@ -43,11 +44,12 @@ abstract class BudgetPlanState extends State implements Wireable
     public static function config(): StateConfig
     {
         // Linear workflow: each state may advance to the next or step back to the previous one.
-        // Two arcs carry a custom transition class instead of the package default: Approved -> Active
-        // is where a Nachtragshaushaltsplan (amendment) gets applied onto its parent plan's live
-        // budget_item rows, and Active -> Approved is where an applied amendment gets reverted. Both
-        // transition classes are no-ops for an ordinary (non-amendment) plan — see
-        // App\Support\Budget\AmendmentApplier.
+        // Three arcs carry a custom transition class instead of the package default. Resolved ->
+        // Approved and Active -> Approved (revert) both default an amendment's activation_date to
+        // approval_date when unset (DefaultsActivationDateOnApproval); Approved -> Active is where
+        // an amendment gets applied onto its parent plan's live budget_item rows, and Active ->
+        // Approved also un-applies it on the way back. All three are no-ops for an ordinary
+        // (non-amendment) plan — see App\Support\Budget\AmendmentApplier.
         //
         // Two more arcs, Active <-> Completed, carry a cascade transition class (OP#589 F8): when
         // an original plan crosses this arc, every one of its amendments that is currently
@@ -60,7 +62,7 @@ abstract class BudgetPlanState extends State implements Wireable
             ->allowTransition(Resolved::class, Draft::class)
             ->allowTransition(Draft::class, Resolved::class)
             ->allowTransition(Approved::class, Resolved::class)
-            ->allowTransition(Resolved::class, Approved::class)
+            ->allowTransition(Resolved::class, Approved::class, ApproveAmendmentTransition::class)
             ->allowTransition(Active::class, Approved::class, RevertAmendmentTransition::class)
             ->allowTransition(Approved::class, Active::class, ApplyAmendmentTransition::class)
             ->allowTransition(Completed::class, Active::class, ReactivateAmendmentsTransition::class)
@@ -71,7 +73,7 @@ abstract class BudgetPlanState extends State implements Wireable
      * The canonical order of the linear BudgetPlanState workflow (OP#584) — Draft is the least
      * advanced, Completed the most. config() only declares which arcs exist, not their relative
      * order, so this is the single source of truth used to tell a forward step (promoting data
-     * toward "official") from a backward one (demoting) — see advancesTo(). Do not infer this
+     * toward "official") from a backward one (demoting) — see isAdvancement(). Do not infer this
      * from config()'s allowTransition() calls; those describe the graph, not a direction.
      *
      * @return list<class-string<BudgetPlanState>>
@@ -96,22 +98,34 @@ abstract class BudgetPlanState extends State implements Wireable
      * amendment, or reactivating a Completed plan, must always stay possible regardless of
      * legacy item data.
      */
-    public function advancesTo(BudgetPlanState $target): bool
+    public function isAdvancement(BudgetPlanState $target): bool
     {
         return $target->rank() > $this->rank();
+    }
+
+    /**
+     * Whether moving from this state to $target is the Active <-> Completed arc that
+     * CompleteAmendmentsTransition / ReactivateAmendmentsTransition cascade onto an amendment's
+     * siblings (OP#589 F8) — the one arc an amendment must never walk on its own. Used by
+     * BudgetPlanPolicy::transitionTo() to refuse it for an amendment reached directly.
+     */
+    public function isCascadingArc(BudgetPlanState $target): bool
+    {
+        return ($this instanceof Active && $target instanceof Completed)
+            || ($this instanceof Completed && $target instanceof Active);
     }
 
     /**
      * Business-rule checks a plan's budget items must satisfy to legitimately BE in this state
      * (OP#584): short_name (Titelnummer) unique within scope, name non-empty, value non-negative.
      * Direction-agnostic by design — whether reaching this state is a forward or backward step is
-     * decided by the caller (see advancesTo()), not here.
+     * decided by the caller (see isAdvancement()), not here.
      *
      * Completed overrides this to an empty ruleset: Active -> Completed is the only forward arc
      * that ever reaches it, and it's a bookkeeping-period toggle, not a data edit — an
      * already-Active plan must never get stuck un-transitionable over legacy item data just
      * because it's being marked done. (Completed -> Active reactivation is a backward step and is
-     * already exempt via advancesTo() regardless of this override — see that method.)
+     * already exempt via isAdvancement() regardless of this override — see that method.)
      */
     public function itemRules(): array
     {

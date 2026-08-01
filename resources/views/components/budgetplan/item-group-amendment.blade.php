@@ -1,4 +1,4 @@
-@php use App\Models\BudgetItem;use App\Models\BudgetItemChange;use Illuminate\Support\Collection; @endphp
+@php use App\Models\BudgetItem;use App\Models\BudgetItemChange;use App\Models\Enums\BudgetItemChangeAction;use Illuminate\Support\Collection; @endphp
 @props([
     'level' => 0,
     'item',
@@ -15,8 +15,8 @@
     /** @var BudgetItem $item */
     $change = $changes->get($item->id);
     $isAdded = $item->budget_plan_id === $amendmentId;
-    $isDeleted = $change?->action === BudgetItemChange::ACTION_DELETE;
-    $isModified = $change?->action === BudgetItemChange::ACTION_MODIFY;
+    $isDeleted = $change?->action === BudgetItemChangeAction::Delete;
+    $isModified = $change?->action === BudgetItemChangeAction::Modify;
     // F1 (OP#581): highlight the CONCRETE changed field, not just the row tint — per-field pairs,
     // so a modify that only touches e.g. `value` doesn't also ring-highlight an untouched `name`.
     $nameChange = $isModified ? $change->fieldChange('name') : null;

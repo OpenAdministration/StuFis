@@ -1,3 +1,5 @@
+@php use App\Models\Enums\BudgetItemChangeAction; @endphp
+
 <div class="space-y-10">
     <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -77,12 +79,10 @@
                             @php $changedItem = \App\Models\BudgetItem::find($change->budget_item_id); @endphp
                             <div class="py-4 space-y-2">
                                 <div class="flex items-center gap-2">
-                                    <flux:badge size="sm" :color="match($change->action) {
-                                        'add' => 'green', 'delete' => 'red', default => 'amber',
-                                    }">{{ __('budget-plan.amendment.change.'.$change->action) }}</flux:badge>
+                                    <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
                                     <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
                                 </div>
-                                @if($change->action === 'modify' && filled($change->diff))
+                                @if($change->action === BudgetItemChangeAction::Modify && filled($change->diff))
                                     <ul class="text-sm text-gray-600 list-disc list-inside">
                                         @foreach($change->diff as $field => $pair)
                                             <li>

@@ -4,9 +4,7 @@ namespace App\Policies;
 
 use App\Models\BudgetPlan;
 use App\Models\User;
-use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\BudgetPlanState;
-use App\States\BudgetPlan\Completed;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BudgetPlanPolicy
@@ -48,18 +46,12 @@ class BudgetPlanPolicy
         // an amendment's Active <-> Completed arcs move only in lockstep with the original plan it
         // was applied to (OP#589 F8) — cascaded by CompleteAmendmentsTransition /
         // ReactivateAmendmentsTransition, never walked individually. Its Approved <-> Active arcs
-        // (apply/revert) stay individually available; only these two lockstep arcs are refused here.
-        if ($budgetPlan->isAmendment() && $this->isLockstepArc($budgetPlan->state, $newState)) {
+        // (apply/revert) stay individually available; only this cascading arc is refused here.
+        if ($budgetPlan->isAmendment() && $budgetPlan->state->isCascadingArc($newState)) {
             return false;
         }
 
         // ... and only budget officers may move a plan along its workflow
         return $user->can('budget-officer', User::class);
-    }
-
-    private function isLockstepArc(BudgetPlanState $from, BudgetPlanState $to): bool
-    {
-        return ($from instanceof Active && $to instanceof Completed)
-            || ($from instanceof Completed && $to instanceof Active);
     }
 }

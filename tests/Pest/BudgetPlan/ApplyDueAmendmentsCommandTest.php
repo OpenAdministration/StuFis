@@ -2,6 +2,7 @@
 
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Approved;
@@ -86,7 +87,7 @@ it('reports failure and exits non-zero for a conflicting due amendment, while st
     $conflicting->forceFill(['activation_date' => now()->subDay()])->save();
     BudgetItemChange::create([
         'budget_plan_id' => $conflicting->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 20000]],
     ]);
     $leaf->update(['value' => Money::EUR(30000)]); // drifted since drafting
@@ -127,5 +128,5 @@ it('is registered in the schedule to run daily', function (): void {
     $events = collect($schedule->events())->filter(fn ($event): bool => str_contains($event->command ?? '', 'stufis:apply-due-amendments'));
 
     expect($events)->not->toBeEmpty();
-    expect($events->first()->expression)->toBe('0 4 * * *');
+    expect($events->first()->expression)->toBe('1 0 * * *');
 });

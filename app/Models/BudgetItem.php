@@ -137,12 +137,9 @@ class BudgetItem extends Model
     }
 
     /**
-     * Every BudgetItemChange row currently pointing at this item, across however many amendments
-     * touch it in parallel — OP#581 explicitly allows that (the unique key is
-     * (budget_plan_id, budget_item_id), not budget_item_id alone). For modify/delete this is
-     * always the live item (see BudgetItemChange's class doc: nothing is copied, budget_item_id
-     * points straight at this row); for add it only resolves here once AmendmentApplier has
-     * rehomed the new item onto this row's plan.
+     * The change rows amendments have drafted against this item — several amendments may touch
+     * the same item at once. An `add` row only surfaces here once its amendment was applied and
+     * the new item got rehomed onto this plan.
      */
     public function amendmentChanges(): HasMany
     {

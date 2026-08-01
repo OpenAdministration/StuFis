@@ -158,11 +158,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $newState = BudgetPlanState::make($filtered['newState'], $plan);
 
         // OP#584/OP#588 share this same forward/backward distinction (BudgetPlanState::order() /
-        // advancesTo()): a backward step only ever demotes data away from "official" and must
+        // isAdvancement()): a backward step only ever demotes data away from "official" and must
         // never be gated OR asked for anything new — so both the item-rule validation below and
         // the date capture further down are skipped entirely for a backward move (e.g. reverting
         // an applied amendment, or reactivating a Completed plan).
-        $isForwardStep = $plan->state->advancesTo($newState);
+        $isForwardStep = $plan->state->isAdvancement($newState);
 
         // Business-rule check (OP#584): the target state's item rules (Titelnummer uniqueness,
         // name, non-negative value) must hold before the transition is even authorized — mirrors

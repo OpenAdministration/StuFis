@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Approved;
@@ -17,7 +18,7 @@ use Livewire\Livewire;
  * OP#584: business-rule validation of a plan's budget items before it may advance along its
  * workflow — short_name (Titelnummer) unique within scope, name non-empty, value non-negative.
  * Enforced only at the Livewire layer (⚡plan-view::changeState()), and only on a FORWARD step
- * (BudgetPlanState::advancesTo(), keyed off the canonical order() Draft < Resolved < Approved <
+ * (BudgetPlanState::isAdvancement(), keyed off the canonical order() Draft < Resolved < Approved <
  * Active < Completed): a backward step only ever demotes data away from "official" and must never
  * be gated by a pre-existing violation it cannot fix — reverting an applied amendment, or
  * reactivating a Completed plan, must always stay possible.
@@ -130,7 +131,7 @@ it('catches an amendment introducing a Titelnummer that already exists on its ba
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $added->id,
-        'action' => BudgetItemChange::ACTION_ADD,
+        'action' => BudgetItemChangeAction::Add,
     ]);
 
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
@@ -155,7 +156,7 @@ it('does not flag an amendment\'s own modify row — which points at the live ba
     // up exactly once in the combined [amendment, parent] scope, never as a duplicate of itself
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => (int) $leaf->value->getAmount(), 'to' => 20000]],
     ]);
 

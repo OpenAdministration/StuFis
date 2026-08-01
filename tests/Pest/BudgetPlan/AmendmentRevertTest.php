@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
@@ -63,7 +64,7 @@ function nhhpRevertModify(BudgetPlan $amendment, BudgetItem $item, int $toCents,
     return BudgetItemChange::create([
         'budget_plan_id' => $amendment->id,
         'budget_item_id' => $item->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => [$field => ['from' => $from, 'to' => $toCents]],
     ]);
 }
@@ -77,7 +78,7 @@ function nhhpRevertAdd(BudgetPlan $amendment, BudgetItem $parentGroup): BudgetIt
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $newItem->id,
-        'action' => BudgetItemChange::ACTION_ADD,
+        'action' => BudgetItemChangeAction::Add,
     ]);
 
     return $newItem;
@@ -87,7 +88,7 @@ function nhhpRevertMarkDelete(BudgetPlan $amendment, BudgetItem $item): BudgetIt
 {
     return BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $item->id,
-        'action' => BudgetItemChange::ACTION_DELETE,
+        'action' => BudgetItemChangeAction::Delete,
     ]);
 }
 

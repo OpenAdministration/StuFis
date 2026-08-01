@@ -4,7 +4,6 @@ namespace App\Console\Commands\stufis;
 
 use App\Models\BudgetPlan;
 use App\States\BudgetPlan\Active;
-use App\States\BudgetPlan\Approved;
 use App\Support\Budget\AmendmentConflictException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -12,9 +11,9 @@ use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
 use Throwable;
 
 /**
- * Scheduled effectiveness for Nachtragshaushaltspläne (amendments, OP#581): an approved amendment
- * with an `activation_date` in the past should go live on its own, without someone manually
- * clicking "aktivieren" on the day. Runs daily (see routes/console.php).
+ * Scheduled effectiveness for amendments (OP#581): an approved amendment with an
+ * `activation_date` in the past should go live on its own, without someone manually clicking
+ * "aktivieren" on the day. Runs daily (see routes/console.php).
  *
  * Every due amendment is transitioned independently, so one amendment's conflict (e.g. a stale
  * item, or its parent plan no longer being Active) doesn't block the others. Failures are logged
@@ -36,17 +35,11 @@ class ApplyDueAmendments extends Command
      *
      * @var string
      */
-    protected $description = 'Activate approved Nachtragshaushaltspläne (amendments) whose activation_date has arrived';
+    protected $description = 'Activate approved amendments whose activation_date has arrived';
 
     public function handle(): int
     {
-        $due = BudgetPlan::query()
-            ->whereNotNull('parent_plan_id')
-            ->where('state', Approved::$name)
-            ->whereNotNull('activation_date')
-            ->whereDate('activation_date', '<=', today())
-            ->get()
-            ->filter(fn (BudgetPlan $amendment): bool => $amendment->parentPlan?->state instanceof Active);
+        $due = BudgetPlan::query()->dueForActivation()->get();
 
         if ($due->isEmpty()) {
             $this->info('No due amendments to activate.');

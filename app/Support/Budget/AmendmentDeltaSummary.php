@@ -4,13 +4,14 @@ namespace App\Support\Budget;
 
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use Cknow\Money\Money;
 
 /**
  * Aggregates an amendment's net income/expense delta from its change rows (F5, OP#581) — how much
- * the Nachtrag adds/removes in sum, plus the resulting saldo shift. Computed once here and
- * rendered in both the editor's Begründungen tab and the amendment's plan-view diff section.
+ * the amendment adds/removes in sum, plus the resulting balance shift. Computed once here and
+ * rendered in both the editor's reasons tab and the amendment's plan-view diff section.
  *
  * Only LEAF items ever contribute: a group's value is always derived (the live sum of its
  * children), never stored/changed directly, so counting it too would double-count every leaf
@@ -33,10 +34,9 @@ class AmendmentDeltaSummary
             }
 
             $delta = match ($change->action) {
-                BudgetItemChange::ACTION_MODIFY => $this->modifyDelta($change),
-                BudgetItemChange::ACTION_ADD => $item->value ?? Money::EUR(0),
-                BudgetItemChange::ACTION_DELETE => Money::EUR(0)->subtract($item->value ?? Money::EUR(0)),
-                default => Money::EUR(0),
+                BudgetItemChangeAction::Modify => $this->modifyDelta($change),
+                BudgetItemChangeAction::Add => $item->value ?? Money::EUR(0),
+                BudgetItemChangeAction::Delete => Money::EUR(0)->subtract($item->value ?? Money::EUR(0)),
             };
 
             if ($item->budget_type === BudgetType::INCOME) {

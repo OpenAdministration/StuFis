@@ -4,6 +4,7 @@ use App\Livewire\BudgetPlan\ItemForm;
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Draft;
 use App\Support\Budget\TitleNumberer;
@@ -15,7 +16,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * The Nachtragshaushaltsplan (amendment) editor — OP#581. Renders the PARENT plan's item tree
+ * The amendment editor — OP#581. Renders the PARENT plan's item tree
  * merged with this amendment's overlay (see App\Models\BudgetItemChange / App\Support\Budget\
  * AmendmentApplier for the change-set design) and lets the user draft modify/add/delete changes
  * against it. The live parent-plan items are never written to directly here — every edit against
@@ -100,7 +101,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             $form->setItem($item);
 
             $change = $changes->get($item->id);
-            if ($change !== null && $change->action === BudgetItemChange::ACTION_MODIFY) {
+            if ($change !== null && $change->action === BudgetItemChangeAction::Modify) {
                 if (($pair = $change->fieldChange('value')) !== null) {
                     $form->value = Money::EUR((int) $pair['to']);
                 }
@@ -168,7 +169,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             }
 
             $change = $changes->get($item->id);
-            if ($change !== null && $change->action === BudgetItemChange::ACTION_MODIFY && ($pair = $change->fieldChange('value')) !== null) {
+            if ($change !== null && $change->action === BudgetItemChangeAction::Modify && ($pair = $change->fieldChange('value')) !== null) {
                 return $map[$item->id] = Money::EUR((int) $pair['to']);
             }
 
@@ -185,7 +186,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     private function effectiveField(BudgetItem $item, string $field): mixed
     {
         $change = $this->changesByItem()->get($item->id);
-        if ($change !== null && $change->action === BudgetItemChange::ACTION_MODIFY && ($pair = $change->fieldChange($field)) !== null) {
+        if ($change !== null && $change->action === BudgetItemChangeAction::Modify && ($pair = $change->fieldChange($field)) !== null) {
             return $pair['to'];
         }
 
@@ -231,9 +232,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'budget_item_id' => $item->id,
         ]);
         if (! $change->exists) {
-            $change->action = BudgetItemChange::ACTION_MODIFY;
+            $change->action = BudgetItemChangeAction::Modify;
         }
-        if ($change->action !== BudgetItemChange::ACTION_MODIFY) {
+        if ($change->action !== BudgetItemChangeAction::Modify) {
             return; // e.g. marked for deletion — the UI disables field edits on that row
         }
 
@@ -402,7 +403,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         BudgetItemChange::create([
             'budget_plan_id' => $this->amendment_id,
             'budget_item_id' => $newItem->id,
-            'action' => BudgetItemChange::ACTION_ADD,
+            'action' => BudgetItemChangeAction::Add,
         ]);
 
         $this->loadItems();
@@ -440,7 +441,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             }
             BudgetItemChange::updateOrCreate(
                 ['budget_plan_id' => $this->amendment_id, 'budget_item_id' => $item_id],
-                ['action' => BudgetItemChange::ACTION_DELETE, 'diff' => null],
+                ['action' => BudgetItemChangeAction::Delete, 'diff' => null],
             );
         }
 
@@ -453,7 +454,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         BudgetItemChange::where('budget_plan_id', $this->amendment_id)
             ->where('budget_item_id', $item_id)
-            ->where('action', BudgetItemChange::ACTION_DELETE)
+            ->where('action', BudgetItemChangeAction::Delete)
             ->delete();
 
         $this->loadItems();

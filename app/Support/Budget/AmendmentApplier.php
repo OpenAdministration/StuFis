@@ -5,13 +5,14 @@ namespace App\Support\Budget;
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\States\BudgetPlan\Active;
 use Cknow\Money\Money;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Applies/reverts a Nachtragshaushaltsplan (amendment) onto the live budget_item rows of its
- * parent plan — see the "Architecture: change-set overlay" section of OP#581.
+ * Applies/reverts an amendment onto the live budget_item rows of its parent plan — see the
+ * "Architecture: change-set overlay" section of OP#581.
  *
  * apply() runs on the amendment's Approved -> Active transition, revert() on Active -> Approved.
  * Both are single DB transactions: every touched item is first verified against the value it had
@@ -50,10 +51,9 @@ class AmendmentApplier
 
             foreach ($changes as $change) {
                 match ($change->action) {
-                    BudgetItemChange::ACTION_MODIFY => $this->writeModify($change),
-                    BudgetItemChange::ACTION_ADD => $this->rehome($change, $amendment->parent_plan_id),
-                    BudgetItemChange::ACTION_DELETE => $this->rehome($change, $amendment->id),
-                    default => null,
+                    BudgetItemChangeAction::Modify => $this->writeModify($change),
+                    BudgetItemChangeAction::Add => $this->rehome($change, $amendment->parent_plan_id),
+                    BudgetItemChangeAction::Delete => $this->rehome($change, $amendment->id),
                 };
             }
         });
@@ -78,12 +78,11 @@ class AmendmentApplier
 
             foreach ($changes as $change) {
                 match ($change->action) {
-                    BudgetItemChange::ACTION_MODIFY => $this->writeRevert($change),
+                    BudgetItemChangeAction::Modify => $this->writeRevert($change),
                     // add: re-home back under the amendment (undo the apply-time re-home)
-                    BudgetItemChange::ACTION_ADD => $this->rehome($change, $amendment->id),
+                    BudgetItemChangeAction::Add => $this->rehome($change, $amendment->id),
                     // delete: un-park back under the parent plan
-                    BudgetItemChange::ACTION_DELETE => $this->rehome($change, $amendment->parent_plan_id),
-                    default => null,
+                    BudgetItemChangeAction::Delete => $this->rehome($change, $amendment->parent_plan_id),
                 };
             }
         });
@@ -96,7 +95,7 @@ class AmendmentApplier
     {
         $item = BudgetItem::find($change->budget_item_id);
 
-        if ($change->action === BudgetItemChange::ACTION_MODIFY) {
+        if ($change->action === BudgetItemChangeAction::Modify) {
             if ($item === null) {
                 $conflicts[] = $this->conflict($change->budget_item_id, null, __('budget-plan.amendment.conflict.item-missing', ['id' => $change->budget_item_id]));
 
@@ -119,7 +118,7 @@ class AmendmentApplier
             return;
         }
 
-        if ($change->action === BudgetItemChange::ACTION_DELETE && ($item !== null && $item->hasBookings())) {
+        if ($change->action === BudgetItemChangeAction::Delete && ($item !== null && $item->hasBookings())) {
             $conflicts[] = $this->conflict($item->id, null, __('budget-plan.amendment.conflict.now-booked', ['item' => $item->short_name ?? $item->id]));
         }
         // add: nothing to verify — the item already belongs to the amendment, re-homing can't conflict
@@ -130,7 +129,7 @@ class AmendmentApplier
      */
     private function verifyForRevert(BudgetItemChange $change, array &$conflicts): void
     {
-        if ($change->action !== BudgetItemChange::ACTION_MODIFY) {
+        if ($change->action !== BudgetItemChangeAction::Modify) {
             return; // add/delete revert only re-homes — nothing field-level to verify
         }
 
@@ -160,7 +159,7 @@ class AmendmentApplier
             if ($field === 'short_name') {
                 continue;
             }
-            $updates[$field] = $this->fromStorage($field, $pair['to'] ?? null);
+            $updates[$field] = $this->decodeStoredValue($field, $pair['to'] ?? null);
         }
         $item->update($updates);
     }
@@ -173,7 +172,7 @@ class AmendmentApplier
             if ($field === 'short_name') {
                 continue;
             }
-            $updates[$field] = $this->fromStorage($field, $pair['from'] ?? null);
+            $updates[$field] = $this->decodeStoredValue($field, $pair['from'] ?? null);
         }
         $item->update($updates);
     }
@@ -203,8 +202,8 @@ class AmendmentApplier
         return (string) ($live ?? '') === (string) ($stored ?? '');
     }
 
-    /** Convert a stored JSON scalar back into the value BudgetItem::update() expects for $field. */
-    private function fromStorage(string $field, mixed $stored): mixed
+    /** Decode a stored JSON scalar back into the value BudgetItem::update() expects for $field. */
+    private function decodeStoredValue(string $field, mixed $stored): mixed
     {
         if ($field === 'value') {
             // stored in integer cents (Money::getAmount()'s minor-unit form) — parse directly,

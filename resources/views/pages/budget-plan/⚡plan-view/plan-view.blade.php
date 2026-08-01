@@ -171,12 +171,10 @@
                             @php $changedItem = $change->budgetItem; @endphp
                             <div class="p-4 space-y-2">
                                 <div class="flex items-center gap-2">
-                                    <flux:badge size="sm" :color="match($change->action) {
-                                        'add' => 'green', 'delete' => 'red', default => 'amber',
-                                    }">{{ __('budget-plan.amendment.change.'.$change->action) }}</flux:badge>
+                                    <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
                                     <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
                                 </div>
-                                @if($change->action === 'modify' && filled($change->diff))
+                                @if($change->action === \App\Models\Enums\BudgetItemChangeAction::Modify && filled($change->diff))
                                     <ul class="text-sm text-gray-600 list-disc list-inside">
                                         @foreach($change->diff as $field => $pair)
                                             <li>
@@ -360,7 +358,7 @@
             // changeState()'s matching $isForwardStep gate), and activation_date stays
             // amendment-only throughout.
             $targetState = $this->targetState();
-            $isForwardStep = $targetState && $plan->state->advancesTo($targetState);
+            $isForwardStep = $targetState && $plan->state->isAdvancement($targetState);
         @endphp
         @if($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Resolved)
             <div class="mt-4">

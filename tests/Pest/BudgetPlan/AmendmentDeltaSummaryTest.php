@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Draft;
@@ -12,7 +13,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 /**
  * F5 (OP#581): the aggregated income/expense delta an amendment would apply, plus the resulting
- * saldo shift. Only LEAF items ever contribute — a group's value is always derived (the live sum
+ * balance shift. Only LEAF items ever contribute — a group's value is always derived (the live sum
  * of its children), so counting it too would double-count every leaf underneath it.
  */
 uses(DatabaseTransactions::class);
@@ -46,8 +47,8 @@ it('does not double-count an added group\'s value alongside its added leaf child
         'budget_type' => BudgetType::EXPENSE, 'position' => 0, 'short_name' => 'A9.1',
         'name' => 'Neuer Titel', 'value' => Money::EUR(5000),
     ]);
-    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $group->id, 'action' => BudgetItemChange::ACTION_ADD]);
-    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id, 'action' => BudgetItemChange::ACTION_ADD]);
+    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $group->id, 'action' => BudgetItemChangeAction::Add]);
+    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id, 'action' => BudgetItemChangeAction::Add]);
 
     $summary = new AmendmentDeltaSummary()->compute($amendment);
 
@@ -74,19 +75,19 @@ it('sums a mixed modify/add/delete scenario across both budget types into the co
 
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $incomeLeaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 20000, 'to' => 25000]],
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $expenseLeafToDelete->id,
-        'action' => BudgetItemChange::ACTION_DELETE,
+        'action' => BudgetItemChangeAction::Delete,
     ]);
     // new expense leaf added: +80 expense
     $addedExpenseLeaf = BudgetItem::create([
         'budget_plan_id' => $amendment->id, 'is_group' => false, 'budget_type' => BudgetType::EXPENSE,
         'position' => 1, 'short_name' => 'A2', 'name' => 'Neu', 'value' => Money::EUR(8000),
     ]);
-    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $addedExpenseLeaf->id, 'action' => BudgetItemChange::ACTION_ADD]);
+    BudgetItemChange::create(['budget_plan_id' => $amendment->id, 'budget_item_id' => $addedExpenseLeaf->id, 'action' => BudgetItemChangeAction::Add]);
 
     $summary = new AmendmentDeltaSummary()->compute($amendment);
 
@@ -98,7 +99,7 @@ it('sums a mixed modify/add/delete scenario across both budget types into the co
         ->and((int) $summary['saldo']->getAmount())->toBe(0);
 });
 
-it('renders the delta summary in both the editor\'s Begründungen tab and the amendment plan-view diff', function (): void {
+it('renders the delta summary in both the editor\'s reasons tab and the amendment plan-view diff', function (): void {
     $this->actingAs(budgetManager());
     $parent = deltaSummaryParent();
     $leaf = $parent->budgetItems()->create([

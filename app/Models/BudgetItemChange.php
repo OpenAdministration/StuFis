@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Enums\BudgetItemChangeAction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -9,9 +10,9 @@ use Illuminate\Support\Carbon;
 /**
  * App\Models\BudgetItemChange
  *
- * One delta row of a Nachtragshaushaltsplan (amendment) against a single budget_item, keyed by
- * (budget_plan_id, budget_item_id) — see the Architecture section of OP#581 for the full change-set
- * design. `action` is one of:
+ * One delta row of an amendment against a single budget_item, keyed by (budget_plan_id,
+ * budget_item_id) — see the Architecture section of OP#581 for the full change-set design.
+ * `action` is one of:
  *
  *  - modify: the item already existed on the parent plan; `diff` holds
  *            {field: {"from": ..., "to": ...}} for every touched field.
@@ -30,7 +31,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $budget_plan_id
  * @property int $budget_item_id
- * @property string $action
+ * @property BudgetItemChangeAction $action
  * @property array<string, array{from: mixed, to: mixed}>|null $diff
  * @property string|null $reason
  * @property Carbon $created_at
@@ -40,12 +41,6 @@ use Illuminate\Support\Carbon;
  */
 class BudgetItemChange extends Model
 {
-    public const string ACTION_MODIFY = 'modify';
-
-    public const string ACTION_ADD = 'add';
-
-    public const string ACTION_DELETE = 'delete';
-
     protected $table = 'budget_item_change';
 
     protected $fillable = ['budget_plan_id', 'budget_item_id', 'action', 'diff', 'reason'];
@@ -54,6 +49,7 @@ class BudgetItemChange extends Model
     protected function casts(): array
     {
         return [
+            'action' => BudgetItemChangeAction::class,
             'diff' => 'array',
         ];
     }
@@ -82,6 +78,6 @@ class BudgetItemChange extends Model
     /** Whether this row currently touches any field at all (an empty `diff` should be pruned). */
     public function isEmpty(): bool
     {
-        return $this->action === self::ACTION_MODIFY && blank($this->diff);
+        return $this->action === BudgetItemChangeAction::Modify && blank($this->diff);
     }
 }

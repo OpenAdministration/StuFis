@@ -23,7 +23,7 @@ class Completed extends BudgetPlanState
      * bookkeeping-period toggle, not a data edit: an already-Active plan must never get stuck
      * un-transitionable over legacy item data it cannot fix, so this arc is deliberately left
      * unchecked. Completed -> Active (reactivation) is a separate, backward arc — it's already
-     * exempt via BudgetPlanState::advancesTo() regardless of what this method returns, so this
+     * exempt via BudgetPlanState::isAdvancement() regardless of what this method returns, so this
      * override is not what protects that direction.
      */
     #[\Override]

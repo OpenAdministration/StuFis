@@ -217,6 +217,9 @@ class BudgetPlanConverter
     /**
      * Convert a legacy state value to a new BudgetPlanState class.
      *
+     * Only 'final' was ever written by the old importer, so the remaining arms are defensive
+     * padding — this can be simplified down to a final/draft check.
+     *
      * @return class-string<BudgetPlanState>
      */
     public function convertState(?string $state): string

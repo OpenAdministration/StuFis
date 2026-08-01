@@ -4,7 +4,7 @@
         <x-slot:subHeadline>{{ __('budget-plan.item.subtitle') }}</x-slot:subHeadline>
     </x-intro>
 
-    {{-- one or more Nachträge currently touch this title — parallel amendments are allowed
+    {{-- one or more amendments currently touch this title — parallel amendments are allowed
          (OP#581), so several rows in different states (pending draft, already-applied active, ...)
          can show at once. Reuses the same action badge / label fallback / reason idiom as the
          amendment's own diff view (⚡plan-view) rather than duplicating it under a new name. --}}
@@ -16,9 +16,7 @@
                     @foreach($amendment_changes as $change)
                         @php $amendment = $change->amendmentPlan; @endphp
                         <li>
-                            <flux:badge size="sm" :color="match($change->action) {
-                                'add' => 'green', 'delete' => 'red', default => 'amber',
-                            }">{{ __('budget-plan.amendment.change.'.$change->action) }}</flux:badge>
+                            <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
                             <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
                                 {{ $amendment->label() }}
                             </flux:link>

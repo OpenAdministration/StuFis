@@ -2,6 +2,7 @@
 
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Draft;
@@ -11,7 +12,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 /**
  * OP#587: the title detail view (⚡item-view) surfaces every BudgetItemChange currently pointing
  * at the item, so a budget officer sees at a glance that a title has been (or is about to be)
- * touched by a Nachtragshaushaltsplan — this was previously invisible there. Parallel amendments
+ * touched by an amendment — this was previously invisible there. Parallel amendments
  * are allowed (OP#581: unique key is (budget_plan_id, budget_item_id), not budget_item_id alone),
  * so more than one row can apply to the same title at once, in different states.
  */
@@ -57,7 +58,7 @@ it('shows a hint for a still-pending (Draft) amendment, with its label, state an
 
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 15000]],
         'reason' => 'Preissteigerung beim Lieferanten',
     ]);
@@ -80,7 +81,7 @@ it('shows a hint for an already-applied (Active) amendment', function (): void {
 
     BudgetItemChange::create([
         'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 12000]],
     ]);
 
@@ -100,12 +101,12 @@ it('lists TWO parallel amendments touching the same title at once, each with its
 
     BudgetItemChange::create([
         'budget_plan_id' => $pending->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 11000]],
     ]);
     BudgetItemChange::create([
         'budget_plan_id' => $applied->id, 'budget_item_id' => $leaf->id,
-        'action' => BudgetItemChange::ACTION_MODIFY,
+        'action' => BudgetItemChangeAction::Modify,
         'diff' => ['value' => ['from' => 10000, 'to' => 9000]],
     ]);
 

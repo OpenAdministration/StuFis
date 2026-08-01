@@ -69,6 +69,8 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @method static Builder<static>|BudgetPlan whereResolutionDate($value)
  * @method static Builder<static>|BudgetPlan whereState($value)
  * @method static Builder<static>|BudgetPlan whereUpdatedAt($value)
+ * @method static Builder|BudgetPlan amendment()
+ * @method static Builder|BudgetPlan dueForActivation()
  */
 class BudgetPlan extends Model
 {
@@ -99,22 +101,6 @@ class BudgetPlan extends Model
     }
 
     /**
-     * When an amendment reaches Approved with no activation_date set yet, default it to the
-     * approval_date (still editable afterwards, and may be set earlier too — both are allowed).
-     * A plain model event rather than transition-specific logic, so it fires regardless of which
-     * arc reaches Approved (Resolved -> Approved, or back from Active -> Approved).
-     */
-    #[\Override]
-    protected static function booted(): void
-    {
-        static::saving(function (self $plan): void {
-            if ($plan->isAmendment() && $plan->activation_date === null && $plan->state instanceof Approved) {
-                $plan->activation_date = $plan->approval_date;
-            }
-        });
-    }
-
-    /**
      * @return HasMany<BudgetItem> returns all budget items of this plan flattend
      */
     public function budgetItems(): HasMany
@@ -134,17 +120,15 @@ class BudgetPlan extends Model
             ->where('budget_plan_id', $plan_id)
             ->where('budget_type', $budgetType);
 
-        // treeOf()'s $constraint only seeds the roots; the recursive CTE step that then walks
-        // parent_id has no plan filter of its own. An amendment's own items are parented under a
-        // base-plan group (and a parked deletion is rehomed the other way), so without this the
-        // base plan's tree would pull in the amendment's drafted additions (and vice versa) — a
-        // group's value is the live sum of its children (see BudgetItem::effectiveValue()), so
-        // this isn't just a display glitch, it silently changes the running plan's totals.
-        // withRecursiveQueryConstraint() adds this where to every step of the recursive join, so
-        // an excluded item's descendants never get a matching CTE row to join against either —
-        // no post-filtering, no orphan promotion. Column must be qualified: the recursive step
-        // joins budget_item against the CTE (which also selects budget_item.*), so a bare
-        // "budget_plan_id" is ambiguous between the two.
+        // treeOf()'s $constraint only seeds the roots; the recursive CTE step that walks parent_id
+        // has no plan filter of its own. An amendment's items are parented under a base-plan group
+        // (and vice versa for a parked deletion), so the recursive step needs its own plan filter
+        // too, or a group's value (the live sum of its children, see BudgetItem::effectiveValue())
+        // would silently pull in the other plan's items. withRecursiveQueryConstraint() applies
+        // this filter at every step, so an excluded item's descendants never match either — no
+        // post-filtering needed. Column must be qualified: the recursive step joins budget_item
+        // against the CTE (which also selects budget_item.*), so a bare "budget_plan_id" is
+        // ambiguous between the two.
         return BudgetItem::withRecursiveQueryConstraint(
             static fn ($query) => $query->where($query->getModel()->qualifyColumn('budget_plan_id'), $plan_id),
             static fn () => BudgetItem::treeOf($constraint)->orderBy('position_path')->get(),
@@ -162,7 +146,7 @@ class BudgetPlan extends Model
         return $this->belongsTo(self::class, 'parent_plan_id');
     }
 
-    /** This plan's own Nachtragshaushaltspläne (amendments), if any. */
+    /** This plan's own amendments, if any. */
     public function amendments(): HasMany
     {
         return $this->hasMany(self::class, 'parent_plan_id');
@@ -197,7 +181,7 @@ class BudgetPlan extends Model
         return $this->state instanceof Draft || $this->state instanceof Resolved;
     }
 
-    /** Whether this plan is a Nachtragshaushaltsplan (supplements another plan) rather than an original plan. */
+    /** Whether this plan is an amendment (supplements another plan) rather than an original plan. */
     public function isAmendment(): bool
     {
         return $this->parent_plan_id !== null;
@@ -214,6 +198,28 @@ class BudgetPlan extends Model
         $query->whereNull('parent_plan_id');
     }
 
+    /** Amendments only — the counterpart to original(). */
+    #[Scope]
+    protected function amendment(Builder $query): void
+    {
+        $query->whereNotNull('parent_plan_id');
+    }
+
+    /**
+     * Approved amendments whose activation_date has arrived and whose parent plan is Active —
+     * i.e. due to be picked up by `stufis:apply-due-amendments`. A missing/non-Active parent
+     * excludes the amendment, same as an original plan being deleted or reverted out from under it.
+     */
+    #[Scope]
+    protected function dueForActivation(Builder $query): void
+    {
+        $query->amendment()
+            ->whereState('state', Approved::class)
+            ->whereNotNull('activation_date')
+            ->whereDate('activation_date', '<=', today())
+            ->whereHas('parentPlan', fn (Builder $q) => $q->whereState('state', Active::class));
+    }
+
     /** Whether this plan has amendments that are (or were) live-effective — Active or Completed. */
     public function hasAppliedAmendments(): bool
     {
@@ -223,7 +229,7 @@ class BudgetPlan extends Model
     /** This plan's amendments that are (or were) live-effective, i.e. applied at least once. */
     public function appliedAmendments(): HasMany
     {
-        return $this->amendments()->whereIn('state', [Active::$name, Completed::$name]);
+        return $this->amendments()->whereState('state', [Active::class, Completed::class]);
     }
 
     /**

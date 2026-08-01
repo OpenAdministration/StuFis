@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetItemChangeAction;
 use App\Models\Enums\BudgetType;
 use App\Models\Legacy\BankAccount;
 use App\Models\Legacy\BankTransaction;
@@ -82,7 +83,7 @@ it('records a modify change row when editing a base item value, leaving the live
         ->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect($change->action)->toBe(BudgetItemChange::ACTION_MODIFY)
+    expect($change->action)->toBe(BudgetItemChangeAction::Modify)
         ->and((int) $change->diff['value']['from'])->toBe(10000)
         ->and((int) $change->diff['value']['to'])->toBe(15000);
 
@@ -92,7 +93,7 @@ it('records a modify change row when editing a base item value, leaving the live
 
 it('reflects an edited value back into the titles-table form and the group sum after a real browser round-trip', function (): void {
     // Reproduces the manual-test bug (B1): editing a value showed up correctly in the
-    // Begründungen tab, but the titles-table input snapped back to the old value. That symptom
+    // reasons tab, but the titles-table input snapped back to the old value. That symptom
     // came from a naming collision — the JSON column used to be called `changes`, and
     // BudgetItemChange::fieldChange() read `$this->changes` from INSIDE the model, which
     // resolved to Eloquent's OWN internal dirty-tracking property of that exact name instead of
@@ -239,7 +240,7 @@ it('creates a real budget_item under the amendment plus an add change row when a
 
     $newItem = BudgetItem::where('budget_plan_id', $amendment->id)->where('parent_id', $group->id)->sole();
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $newItem->id)->sole();
-    expect($change->action)->toBe(BudgetItemChange::ACTION_ADD);
+    expect($change->action)->toBe(BudgetItemChangeAction::Add);
 });
 
 it('parks an unbooked base item for deletion without touching it, but refuses deletion for a booked item', function (): void {
@@ -251,7 +252,7 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
     $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect($change->action)->toBe(BudgetItemChange::ACTION_DELETE);
+    expect($change->action)->toBe(BudgetItemChangeAction::Delete);
     // the item itself is untouched — still live under the parent plan
     expect($leaf->fresh()->budget_plan_id)->toBe($parent->id);
 
@@ -300,7 +301,7 @@ it('shows the delete badge/undo affordance on the deleted row, not a sibling row
     $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
-    expect($change->action)->toBe(BudgetItemChange::ACTION_DELETE);
+    expect($change->action)->toBe(BudgetItemChangeAction::Delete);
 
     // the deleted row's own DOM node (identified by its now-stable wire:key) must carry the
     // undo affordance; the untouched sibling must not. Slice from each row's own wire:key up to

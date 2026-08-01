@@ -41,7 +41,7 @@ class CompleteAmendmentsTransition extends DefaultTransition
             $result = parent::handle();
 
             if (! $model->isAmendment()) {
-                foreach ($model->amendments()->where('state', Active::$name)->get() as $amendment) {
+                foreach ($model->amendments()->whereState('state', Active::class)->get() as $amendment) {
                     $amendment->state->transitionTo(Completed::class);
                 }
             }
