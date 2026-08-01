@@ -3,6 +3,8 @@
 namespace App\States\BudgetPlan;
 
 use App\Models\BudgetPlan;
+use App\States\BudgetPlan\Transitions\ApplyAmendmentTransition;
+use App\States\BudgetPlan\Transitions\RevertAmendmentTransition;
 use Livewire\Wireable;
 use Spatie\ModelStates\State;
 use Spatie\ModelStates\StateConfig;
@@ -35,13 +37,20 @@ abstract class BudgetPlanState extends State implements Wireable
     public static function config(): StateConfig
     {
         // Linear workflow: each state may advance to the next or step back to the previous one.
-        // allowTransition only accepts an array for the "from" side, so transitions are grouped by target.
+        // Two arcs carry a custom transition class instead of the package default: Approved -> Active
+        // is where a Nachtragshaushaltsplan (amendment) gets applied onto its parent plan's live
+        // budget_item rows, and Active -> Approved is where an applied amendment gets reverted. Both
+        // transition classes are no-ops for an ordinary (non-amendment) plan — see
+        // App\Support\Budget\AmendmentApplier.
         return parent::config()
             ->default(Draft::class)
             ->allowTransition(Resolved::class, Draft::class)
-            ->allowTransition([Draft::class, Approved::class], Resolved::class)
-            ->allowTransition([Resolved::class, Active::class], Approved::class)
-            ->allowTransition([Approved::class, Completed::class], Active::class)
+            ->allowTransition(Draft::class, Resolved::class)
+            ->allowTransition(Approved::class, Resolved::class)
+            ->allowTransition(Resolved::class, Approved::class)
+            ->allowTransition(Active::class, Approved::class, RevertAmendmentTransition::class)
+            ->allowTransition(Approved::class, Active::class, ApplyAmendmentTransition::class)
+            ->allowTransition(Completed::class, Active::class)
             ->allowTransition(Active::class, Completed::class);
     }
 

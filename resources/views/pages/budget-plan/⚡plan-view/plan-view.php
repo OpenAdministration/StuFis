@@ -4,6 +4,7 @@ use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\User;
 use App\States\BudgetPlan\BudgetPlanState;
+use App\Support\Budget\AmendmentConflictException;
 use App\Support\Budget\BudgetPlanMeasures;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             Flux::toast(__('budget-plan.view.state-changed'), variant: 'success');
             Flux::modal('state-modal')->close();
             $this->reset('newState');
+        } catch (AmendmentConflictException $e) {
+            // the amendment apply/revert engine aborted the whole transition atomically —
+            // the plan's state is unchanged, so surface this as a toast, not a field error
+            Flux::toast($e->getMessage(), variant: 'danger');
         } catch (CouldNotPerformTransition $e) {
             $this->addError('newState', $e->getMessage());
         }

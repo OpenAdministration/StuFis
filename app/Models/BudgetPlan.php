@@ -3,7 +3,10 @@
 namespace App\Models;
 
 use App\Models\Enums\BudgetType;
+use App\States\BudgetPlan\Active;
+use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
+use App\States\BudgetPlan\Completed;
 use Carbon\Carbon;
 use Cknow\Money\Money;
 use Database\Factories\BudgetPlanFactory;
@@ -89,6 +92,22 @@ class BudgetPlan extends Model
             'approval_date' => 'date',
             'effective_date' => 'date',
         ];
+    }
+
+    /**
+     * When an amendment reaches Approved with no effective_date set yet, default it to the
+     * approval_date (still editable afterwards, and may be set earlier too — both are allowed).
+     * A plain model event rather than transition-specific logic, so it fires regardless of which
+     * arc reaches Approved (Resolved -> Approved, or back from Active -> Approved).
+     */
+    #[\Override]
+    protected static function booted(): void
+    {
+        static::saving(function (self $plan): void {
+            if ($plan->isAmendment() && $plan->effective_date === null && $plan->state instanceof Approved) {
+                $plan->effective_date = $plan->approval_date;
+            }
+        });
     }
 
     /**

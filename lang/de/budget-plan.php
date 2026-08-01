@@ -161,5 +161,10 @@ return [
     'fiscal-year.gap-warning.heading' => 'Lücke zwischen Haushaltsjahren',
     'fiscal-year.gap-warning.text' => 'Der gewählte Zeitraum lässt eine Lücke zu benachbarten Haushaltsjahren. Haushaltsjahre sollten lückenlos aneinander anschließen:',
     'amendment.badge' => 'Nachtrag',
+    'amendment.conflict.parent-not-active' => 'Der Nachtrag kann nicht aktiviert werden: der Hauptplan „:plan“ ist derzeit nicht aktiv.',
+    'amendment.conflict.stale-items' => 'Der Nachtrag konnte nicht angewendet werden, da sich betroffene Titel zwischenzeitlich geändert haben: :details',
+    'amendment.conflict.item-missing' => 'Titel #:id existiert nicht mehr.',
+    'amendment.conflict.field-changed' => 'Titel „:item“: Feld „:field“ wurde zwischenzeitlich anderweitig geändert.',
+    'amendment.conflict.now-booked' => 'Titel „:item“ kann nicht gelöscht werden, da inzwischen Buchungen vorliegen.',
     '' => '',
 ];
