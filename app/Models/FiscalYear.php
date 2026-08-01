@@ -35,9 +35,10 @@ class FiscalYear extends Model
         ];
     }
 
+    /** Original plans only — amendments are rendered nested under their parent, not as siblings. */
     public function budgetPlans(): HasMany
     {
-        return $this->hasMany(BudgetPlan::class);
+        return $this->hasMany(BudgetPlan::class)->original();
     }
 
     /**

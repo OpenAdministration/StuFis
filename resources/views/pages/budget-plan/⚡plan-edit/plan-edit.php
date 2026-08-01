@@ -461,9 +461,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $fiscalYearId = $this->fiscal_year_id ?: null;
 
         // candidates: other plans in the SAME fiscal year (null matches null) that wouldn't
-        // create a reference cycle. Computed here (only on open) rather than in with(), which
-        // runs on every edit-page render.
-        $this->mount_candidates = BudgetPlan::where('id', '!=', $this->plan_id)
+        // create a reference cycle. Amendments are not mountable — they are drafts that overlay
+        // another plan, never a stable target to mount. Computed here (only on open) rather than
+        // in with(), which runs on every edit-page render.
+        $this->mount_candidates = BudgetPlan::original()
+            ->where('id', '!=', $this->plan_id)
             ->when(
                 $fiscalYearId === null,
                 fn ($query) => $query->whereNull('fiscal_year_id'),

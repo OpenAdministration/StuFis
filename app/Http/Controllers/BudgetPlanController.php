@@ -14,7 +14,7 @@ class BudgetPlanController extends Controller
 
         $years = FiscalYear::orderByDesc('start_date')->get();
 
-        $orphaned_plans = BudgetPlan::doesntHave('fiscalYear')->get();
+        $orphaned_plans = BudgetPlan::original()->doesntHave('fiscalYear')->get();
 
         return view('budget-plan.index', ['years' => $years, 'orphaned_plans' => $orphaned_plans]);
     }

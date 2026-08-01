@@ -160,5 +160,6 @@ return [
     'fiscal-year.overlap-error' => 'Der Zeitraum überschneidet sich mit einem bestehenden Haushaltsjahr.',
     'fiscal-year.gap-warning.heading' => 'Lücke zwischen Haushaltsjahren',
     'fiscal-year.gap-warning.text' => 'Der gewählte Zeitraum lässt eine Lücke zu benachbarten Haushaltsjahren. Haushaltsjahre sollten lückenlos aneinander anschließen:',
+    'amendment.badge' => 'Nachtrag',
     '' => '',
 ];

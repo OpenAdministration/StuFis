@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Cknow\Money\Money;
 use Database\Factories\BudgetPlanFactory;
 use Eloquent;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,18 +25,25 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @property Carbon $end_date
  * @property Carbon $resolution_date
  * @property Carbon $approval_date
+ * @property Carbon|null $effective_date
+ * @property string|null $justification
  * @property BudgetPlanState $state
- * @property BudgetPlan $parentPlan
+ * @property BudgetPlan|null $parentPlan
  * @property BudgetItem[] $budgetItems
  * @property int|null $parent_plan_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read int|null $budget_items_count
+ * @property-read Collection<int, BudgetPlan> $amendments
+ * @property-read int|null $amendments_count
+ * @property-read Collection<int, BudgetItemChange> $itemChanges
+ * @property-read int|null $item_changes_count
  *
  * @method static BudgetPlanFactory factory($count = null, $state = [])
  * @method static Builder|BudgetPlan newModelQuery()
  * @method static Builder|BudgetPlan newQuery()
  * @method static Builder|BudgetPlan query()
+ * @method static Builder|BudgetPlan original()
  *
  * @mixin Eloquent
  *
@@ -70,7 +78,7 @@ class BudgetPlan extends Model
     /**
      * @var array
      */
-    protected $fillable = ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan'];
+    protected $fillable = ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'effective_date', 'justification'];
 
     #[\Override]
     protected function casts(): array
@@ -79,6 +87,7 @@ class BudgetPlan extends Model
             'state' => BudgetPlanState::class,
             'resolution_date' => 'date',
             'approval_date' => 'date',
+            'effective_date' => 'date',
         ];
     }
 
@@ -109,6 +118,53 @@ class BudgetPlan extends Model
     public function rootBudgetItems(): Builder|HasMany|BudgetPlan
     {
         return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
+    }
+
+    /** The plan this amendment supplements (null for an original plan). */
+    public function parentPlan(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_plan_id');
+    }
+
+    /** This plan's own Nachtragshaushaltspläne (amendments), if any. */
+    public function amendments(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_plan_id');
+    }
+
+    /** The delta rows drafted against this plan (only meaningful when this IS an amendment). */
+    public function itemChanges(): HasMany
+    {
+        return $this->hasMany(BudgetItemChange::class);
+    }
+
+    /** Whether this plan is a Nachtragshaushaltsplan (supplements another plan) rather than an original plan. */
+    public function isAmendment(): bool
+    {
+        return $this->parent_plan_id !== null;
+    }
+
+    /**
+     * Original plans only — excludes amendments. Amendments are drafted/approved as independent
+     * objects but must never surface where a free-standing plan is expected (plan lists, the
+     * mount picker, clone sources, uniqueness checks, ...).
+     */
+    #[Scope]
+    protected function original(Builder $query): void
+    {
+        $query->whereNull('parent_plan_id');
+    }
+
+    /** Whether this plan has amendments that are (or were) live-effective — Active or Completed. */
+    public function hasAppliedAmendments(): bool
+    {
+        return $this->appliedAmendments()->exists();
+    }
+
+    /** This plan's amendments that are (or were) live-effective, i.e. applied at least once. */
+    public function appliedAmendments(): HasMany
+    {
+        return $this->amendments()->whereIn('state', [Active::$name, Completed::$name]);
     }
 
     /**
@@ -201,7 +257,7 @@ class BudgetPlan extends Model
             return false;
         }
 
-        return static::query()
+        return static::query()->original()
             ->where('organization', $organization)
             ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
             ->when(
@@ -240,7 +296,7 @@ class BudgetPlan extends Model
      */
     public static function newest(): ?static
     {
-        return static::orderByDesc('id')->first();
+        return static::query()->original()->orderByDesc('id')->first();
     }
 
     /** Human label for the plan (organization, with a fallback). */
