@@ -3,6 +3,7 @@
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\User;
+use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\Support\Budget\AmendmentConflictException;
 use App\Support\Budget\BudgetPlanMeasures;
@@ -39,6 +40,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 BudgetType::INCOME->slug() => new BudgetPlanMeasures($plan, BudgetType::INCOME)->annotate(),
                 BudgetType::EXPENSE->slug() => new BudgetPlanMeasures($plan, BudgetType::EXPENSE)->annotate(),
             ],
+            // an Approved amendment whose scheduled effective_date has passed without the daily
+            // stufis:apply-due-amendments run having activated it yet (e.g. its parent plan wasn't
+            // Active at the time) — surfaced as a warning callout rather than failing silently
+            'amendment_overdue' => $plan->isAmendment()
+                && $plan->state instanceof Approved
+                && $plan->effective_date !== null
+                && $plan->effective_date->isPast(),
         ];
     }
 

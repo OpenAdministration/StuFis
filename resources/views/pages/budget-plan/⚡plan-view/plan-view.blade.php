@@ -51,6 +51,15 @@
         </x-slot:button>
     </x-intro>
 
+    @if($amendment_overdue)
+        <flux:callout color="amber" icon="exclamation-triangle" inline>
+            <flux:callout.heading>{{ __('budget-plan.amendment.overdue-heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                {{ __('budget-plan.amendment.overdue-text', ['date' => $plan->effective_date->format('d.m.Y')]) }}
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
     @php
         $income = $plan->incomeTotal();
         $expense = $plan->expenseTotal();

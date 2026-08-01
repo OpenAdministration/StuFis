@@ -166,5 +166,7 @@ return [
     'amendment.conflict.item-missing' => 'Titel #:id existiert nicht mehr.',
     'amendment.conflict.field-changed' => 'Titel „:item“: Feld „:field“ wurde zwischenzeitlich anderweitig geändert.',
     'amendment.conflict.now-booked' => 'Titel „:item“ kann nicht gelöscht werden, da inzwischen Buchungen vorliegen.',
+    'amendment.overdue-heading' => 'Wirksamkeit überfällig',
+    'amendment.overdue-text' => 'Die geplante Aktivierung dieses Nachtrags am :date ist nicht erfolgt. Bitte prüfe den Status des Hauptplans oder aktiviere den Nachtrag manuell.',
     '' => '',
 ];
