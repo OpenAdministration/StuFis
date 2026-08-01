@@ -3,11 +3,15 @@
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\User;
+use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
+use App\States\BudgetPlan\Completed;
+use App\States\BudgetPlan\Draft;
 use App\Support\Budget\AmendmentConflictException;
 use App\Support\Budget\BudgetPlanMeasures;
 use Flux\Flux;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
@@ -47,7 +51,35 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 && $plan->state instanceof Approved
                 && $plan->effective_date !== null
                 && $plan->effective_date->isPast(),
+            // amendments not yet (or no longer) live-effective — parallel drafts are allowed, so
+            // there can be more than one. Only shown on an original plan's own view.
+            'open_amendments' => $plan->isAmendment()
+                ? collect()
+                : $plan->amendments()->whereNotIn('state', [Active::$name, Completed::$name])->get(),
+            'can_create_amendment' => ! $plan->isAmendment()
+                && $plan->state instanceof Active
+                && Auth::user()?->can('create', BudgetPlan::class),
         ];
+    }
+
+    /**
+     * Draft a new Nachtragshaushaltsplan against this (Active, original) plan and jump straight
+     * into its editor. Parallel drafts are allowed, so this never blocks on existing amendments.
+     */
+    public function createAmendment(): void
+    {
+        $plan = $this->plan();
+        $this->authorize('create', BudgetPlan::class);
+        abort_unless(! $plan->isAmendment() && $plan->state instanceof Active, 403);
+
+        $amendment = BudgetPlan::create([
+            'state' => Draft::class,
+            'organization' => $plan->organization,
+            'fiscal_year_id' => $plan->fiscal_year_id,
+            'parent_plan_id' => $plan->id,
+        ]);
+
+        $this->redirect(route('budget-plan.amendment.edit', [$plan->id, $amendment->id]), navigate: true);
     }
 
     /**

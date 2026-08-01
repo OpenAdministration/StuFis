@@ -12,21 +12,46 @@
             </span>
         </x-slot:subHeadline>
         <x-slot:button>
+            @if(! $plan->isAmendment())
+                @if($can_create_amendment)
+                    <flux:button icon="document-plus" variant="outline" wire:click="createAmendment">
+                        {{ __('budget-plan.amendment.create') }}
+                    </flux:button>
+                @else
+                    <flux:tooltip :content="__('budget-plan.amendment.create-not-possible')">
+                        <div><flux:button icon="document-plus" variant="outline" disabled>
+                                {{ __('budget-plan.amendment.create') }}
+                            </flux:button></div>
+                    </flux:tooltip>
+                @endif
+            @endif
             <flux:dropdown>
                 <flux:button icon:trailing="chevron-down"
                              variant="primary">{{ __('budget-plan.view.actions') }}</flux:button>
                 <flux:menu>
-                    <flux:menu.item icon="pencil"
-                                    :href="route('budget-plan.edit', $plan->id)">{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                    @if($plan->isAmendment())
+                        {{-- an amendment is only editable through its dedicated editor, and only while Draft --}}
+                        @if($plan->state instanceof \App\States\BudgetPlan\Draft)
+                            <flux:menu.item icon="pencil"
+                                            :href="route('budget-plan.amendment.edit', [$plan->parent_plan_id, $plan->id])" wire:navigate>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                        @else
+                            <flux:menu.item icon="pencil" disabled>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                        @endif
+                    @else
+                        <flux:menu.item icon="pencil"
+                                        :href="route('budget-plan.edit', $plan->id)">{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                    @endif
                     @can('update', $plan)
                         <flux:menu.item icon="arrow-path" x-on:click="$flux.modal('state-modal').show()">
                             {{ __('budget-plan.view.change-state') }}
                         </flux:menu.item>
                     @endcan
-                    @can('create', \App\Models\BudgetPlan::class)
-                        {{-- duplication is "create from an existing plan": deep-link into the create flow with this plan preselected as the clone source --}}
-                        <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
-                    @endcan
+                    @if(! $plan->isAmendment())
+                        @can('create', \App\Models\BudgetPlan::class)
+                            {{-- duplication is "create from an existing plan": deep-link into the create flow with this plan preselected as the clone source --}}
+                            <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
+                        @endcan
+                    @endif
                     {{-- TODO: print not yet implemented — disabled until the print flow exists --}}
                     <flux:menu.item icon="printer" disabled>{{ __('budget-plan.view.print') }}</flux:menu.item>
                     {{-- downloads must be real navigations (file responses), so no wire:navigate here --}}
@@ -56,6 +81,31 @@
             <flux:callout.heading>{{ __('budget-plan.amendment.overdue-heading') }}</flux:callout.heading>
             <flux:callout.text>
                 {{ __('budget-plan.amendment.overdue-text', ['date' => $plan->effective_date->format('d.m.Y')]) }}
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
+    @if($open_amendments->isNotEmpty())
+        <flux:callout color="zinc" icon="document-text" inline>
+            <flux:callout.heading>{{ __('budget-plan.amendment.open-heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($open_amendments as $amendment)
+                        <li>
+                            <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
+                                {{ __('budget-plan.amendment.badge') }} — {{ $amendment->state->label() }}
+                            </flux:link>
+                            @can('update', $amendment)
+                                @if($amendment->state instanceof \App\States\BudgetPlan\Draft)
+                                    ·
+                                    <flux:link :href="route('budget-plan.amendment.edit', [$plan->id, $amendment->id])" wire:navigate>
+                                        {{ __('budget-plan.amendment.continue-editing') }}
+                                    </flux:link>
+                                @endif
+                            @endcan
+                        </li>
+                    @endforeach
+                </ul>
             </flux:callout.text>
         </flux:callout>
     @endif

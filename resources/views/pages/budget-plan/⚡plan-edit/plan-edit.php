@@ -51,6 +51,14 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $plan = BudgetPlan::findOrFail($plan_id);
         $this->authorize('update', $plan);
 
+        // an amendment is never edited here — its edits must go through the change-tracking
+        // amendment editor, which lets the live parent-plan items stay untouched while drafting
+        if ($plan->isAmendment()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;
         $this->resolution_date = $plan->resolution_date;

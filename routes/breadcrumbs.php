@@ -235,6 +235,12 @@ Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $p
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
 });
 
+// Home > Budget-Plans > ID > Nachtrag bearbeiten
+Breadcrumbs::for('budget-plan.amendment.edit', static function (BreadcrumbTrail $trail, $plan_id, $amendment_id): void {
+    $trail->parent('budget-plan.view', $plan_id);
+    $trail->push(__('general.breadcrumb.budget-plan-amendment-edit'), route('budget-plan.amendment.edit', [$plan_id, $amendment_id]));
+});
+
 // Home > Budget-Plans > ID > [Gruppen] > Titel
 Breadcrumbs::for('budget-plan.item.view', static function (BreadcrumbTrail $trail, $plan_id, $item_id): void {
     $trail->parent('budget-plan.view', $plan_id);
