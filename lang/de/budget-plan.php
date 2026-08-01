@@ -215,5 +215,4 @@ return [
     'amendment.delta-expense' => 'Δ Ausgaben',
     'amendment.delta-saldo' => 'Δ Saldo',
     'amendment.reason-label' => 'Begründung',
-    '' => '',
 ];
