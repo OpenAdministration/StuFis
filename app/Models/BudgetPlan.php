@@ -134,8 +134,21 @@ class BudgetPlan extends Model
             ->where('budget_plan_id', $plan_id)
             ->where('budget_type', $budgetType);
 
-        // the full tree flattened out, the position path is a custom-built path
-        return BudgetItem::treeOf($constraint)->orderBy('position_path')->get();
+        // treeOf()'s $constraint only seeds the roots; the recursive CTE step that then walks
+        // parent_id has no plan filter of its own. An amendment's own items are parented under a
+        // base-plan group (and a parked deletion is rehomed the other way), so without this the
+        // base plan's tree would pull in the amendment's drafted additions (and vice versa) — a
+        // group's value is the live sum of its children (see BudgetItem::effectiveValue()), so
+        // this isn't just a display glitch, it silently changes the running plan's totals.
+        // withRecursiveQueryConstraint() adds this where to every step of the recursive join, so
+        // an excluded item's descendants never get a matching CTE row to join against either —
+        // no post-filtering, no orphan promotion. Column must be qualified: the recursive step
+        // joins budget_item against the CTE (which also selects budget_item.*), so a bare
+        // "budget_plan_id" is ambiguous between the two.
+        return BudgetItem::withRecursiveQueryConstraint(
+            static fn ($query) => $query->where($query->getModel()->qualifyColumn('budget_plan_id'), $plan_id),
+            static fn () => BudgetItem::treeOf($constraint)->orderBy('position_path')->get(),
+        );
     }
 
     public function rootBudgetItems(): Builder|HasMany|BudgetPlan
