@@ -47,8 +47,6 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     $fy = FiscalYear::factory()->create();
     $lw->set('organization', 'Test Org')
         ->set('fiscal_year_id', $fy->id)
-        ->set('resolution_date', now()->toDateString())
-        ->set('approval_date', now()->addDay()->toDateString())
         ->call('save')
         ->assertHasNoErrors()
         ->assertRedirect(route('budget-plan.view', $plan->id));

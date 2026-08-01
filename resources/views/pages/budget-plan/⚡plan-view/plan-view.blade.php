@@ -9,6 +9,14 @@
                 @if($plan->fiscalYear)
                     <span>{{ __('budget-plan.fiscal-year') }}: {{ $plan->fiscalYear->label() }}</span>
                 @endif
+                @unless($plan->isAmendment())
+                    {{-- OP#588: read-only now that capture moved into the state-change modal —
+                         resolution_date/approval_date have no editor of their own any more, so
+                         this header is their only display surface (mirrors the fiscal-year span
+                         above rather than inventing a new layout) --}}
+                    <span>{{ __('budget-plan.edit.resolution-date') }}: {{ $plan->resolution_date?->format('d.m.Y') ?? '—' }}</span>
+                    <span>{{ __('budget-plan.edit.approval-date') }}: {{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</span>
+                @endunless
             </span>
         </x-slot:subHeadline>
         <x-slot:button>
@@ -130,30 +138,19 @@
 
     @if($plan->isAmendment())
         <div class="max-w-3xl space-y-6">
-            @if($dates_editable)
-                {{-- Draft..Approved: authorized users may set/adjust both dates directly here —
-                     the amendment has no metadata editor of its own (B3, OP#581) --}}
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <flux:input wire:model.live.blur="approval_date" type="date" badge="Optional"
-                                :label="__('budget-plan.edit.approval-date')"/>
-                    <flux:input wire:model.live.blur="effective_date" type="date" badge="Optional"
-                                :label="__('budget-plan.amendment.effective-date')"
-                                :description="__('budget-plan.amendment.effective-date-hint')"/>
+            {{-- OP#588: read-only now that capture moved into the state-change modal — nothing
+                 here is editable any more, so (unlike the pre-OP#588 version) this is always the
+                 same unconditional display, never a $dates_editable-gated input. --}}
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
+                    <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
                 </div>
-            @else
-                {{-- Active/Completed (or unauthorized): frozen — the applier has already
-                     consumed these dates, or the user simply can't change them --}}
-                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
-                        <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
-                        <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
-                    </div>
-                </dl>
-            @endif
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
+                    <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
+                </div>
+            </dl>
 
             @if(filled($plan->justification))
                 <div>
@@ -342,7 +339,9 @@
             @if(count($transitions) === 0)
                 <flux:text class="mt-4">{{ __('budget-plan.view.state-modal.no-transitions') }}</flux:text>
             @else
-                <flux:select wire:model="newState" variant="listbox" class="mt-4"
+                {{-- .live so $newState is synced server-side as soon as it's picked — the optional
+                     date field(s) below react to it (see targetState()), with no JS involved --}}
+                <flux:select wire:model.live="newState" variant="listbox" class="mt-4"
                              placeholder="{{ __('budget-plan.view.state-modal.placeholder') }}">
                     @foreach($transitions as $state)
                         <flux:select.option :value="$state" :disabled="Auth::user()->cannot('transition-to', [$plan, $state])">
@@ -355,6 +354,36 @@
                 </flux:select>
             @endif
         </div>
+        @php
+            // OP#588: which of the three optional meta dates (if any) belong to the currently
+            // selected target state — never shown together, never on a backward step (see
+            // changeState()'s matching $isForwardStep gate), and effective_date stays
+            // amendment-only throughout.
+            $targetState = $this->targetState();
+            $isForwardStep = $targetState && $plan->state->advancesTo($targetState);
+        @endphp
+        @if($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Resolved)
+            <div class="mt-4">
+                <flux:input wire:model="resolution_date" type="date" badge="Optional"
+                            :label="__('budget-plan.edit.resolution-date')"/>
+            </div>
+        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Approved)
+            <div class="mt-4 grid grid-cols-1 gap-4 @if($plan->isAmendment()) sm:grid-cols-2 @endif">
+                <flux:input wire:model="approval_date" type="date" badge="Optional"
+                            :label="__('budget-plan.edit.approval-date')"/>
+                @if($plan->isAmendment())
+                    <flux:input wire:model="effective_date" type="date" badge="Optional"
+                                :label="__('budget-plan.amendment.effective-date')"
+                                :description="__('budget-plan.amendment.effective-date-hint')"/>
+                @endif
+            </div>
+        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Active && $plan->isAmendment() && $plan->effective_date === null)
+            <div class="mt-4">
+                <flux:input wire:model="effective_date" type="date" badge="Optional"
+                            :label="__('budget-plan.amendment.effective-date')"
+                            :description="__('budget-plan.amendment.effective-date-hint')"/>
+            </div>
+        @endif
         @if ($errors->has('newState'))
             {{-- looped (not a single @error), since a business-rule failure (OP#584) can name
                  more than one offending Titel at once --}}

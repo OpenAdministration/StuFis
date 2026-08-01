@@ -8,6 +8,7 @@ use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\States\BudgetPlan\Completed;
 use App\States\BudgetPlan\Draft;
+use App\States\BudgetPlan\Resolved;
 use App\Support\Budget\AmendmentConflictException;
 use App\Support\Budget\BudgetPlanMeasures;
 use Flux\Flux;
@@ -29,12 +30,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public $newState;
 
     /**
-     * approval_date / effective_date, bound only on an amendment's view (B3 — OP#581): an
-     * amendment has no metadata editor of its own (⚡plan-edit is exclusively for original plans
-     * and redirects amendments away), so this is the only place these two fields can be set.
-     * Editable while the amendment is Draft..Approved, read-only from Active onward — see
-     * datesEditable().
+     * The three meta dates (OP#588), captured ONLY in the state-change modal, at the moment of
+     * the transition that gives each one its meaning — never freely editable in an edit form or
+     * detail view anymore (that was the pre-OP#588 design: a free resolution_date/approval_date
+     * pair on ⚡plan-edit, and an approval_date/effective_date pair editable directly on an
+     * amendment's view). All three stay optional: a blank value must never block the transition.
+     * See targetState() for which of these the modal actually shows, and changeState() for how
+     * a supplied value is persisted in the same write as the state change itself.
      */
+    public $resolution_date;
+
     public $approval_date;
 
     public $effective_date;
@@ -44,41 +49,31 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->plan_id = $plan_id;
         $plan = $this->plan();
         $this->authorize('view', $plan);
-
-        if ($plan->isAmendment()) {
-            $this->approval_date = $plan->approval_date?->format('Y-m-d');
-            $this->effective_date = $plan->effective_date?->format('Y-m-d');
-        }
     }
 
-    /** Authorized users may set the amendment's approval/effective dates up through Approved — once Active the applier has already used them, so they freeze. */
-    public function datesEditable(): bool
+    /**
+     * The state the currently selected $newState resolves to, or null before a selection is made.
+     * Drives which of the three optional date fields the state-modal shows (see its blade) —
+     * newState is bound wire:model.live so this stays in sync server-side as the user picks,
+     * without reaching for JS (CSP forbids inline handlers).
+     */
+    public function targetState(): ?BudgetPlanState
     {
-        $plan = $this->plan();
-
-        return $plan->isAmendment()
-            && (! $plan->state instanceof Active && ! $plan->state instanceof Completed)
-            && (Auth::user()?->can('update', $plan) ?? false);
-    }
-
-    public function updatedApprovalDate(): void
-    {
-        $this->saveAmendmentDate('approval_date', $this->approval_date);
-    }
-
-    public function updatedEffectiveDate(): void
-    {
-        $this->saveAmendmentDate('effective_date', $this->effective_date);
-    }
-
-    private function saveAmendmentDate(string $field, mixed $value): void
-    {
-        if (! $this->datesEditable()) {
-            return;
+        if (blank($this->newState)) {
+            return null;
         }
 
-        $this->plan()->update([$field => $value ?: null]);
-        Flux::toast(__('budget-plan.edit.saved'), variant: 'success');
+        return BudgetPlanState::make($this->newState, $this->plan());
+    }
+
+    /**
+     * The visible date field(s) depend entirely on the currently selected target state — clear
+     * stale input from a previous selection so it can never leak into a different target's branch
+     * in changeState().
+     */
+    public function updatedNewState(): void
+    {
+        $this->reset('resolution_date', 'approval_date', 'effective_date');
     }
 
     public function with(): array
@@ -116,7 +111,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'amendment_changes' => $plan->isAmendment()
                 ? $plan->itemChanges()->with('budgetItem')->get()
                 : collect(),
-            'dates_editable' => $this->datesEditable(),
             'delta_summary' => $plan->isAmendment() ? $plan->amendmentDeltaSummary() : null,
             // F5 (OP#589): the delete-plan-modal's checklist rows — surfaced here rather than
             // computed inline in the blade so deletePlan()'s server-side guard below reads
@@ -153,20 +147,31 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function changeState(): void
     {
         $plan = $this->plan();
-        $filtered = $this->validate(['newState' => ['required', new ValidStateRule(BudgetPlanState::class)]]);
+        $filtered = $this->validate([
+            'newState' => ['required', new ValidStateRule(BudgetPlanState::class)],
+            // OP#588: the meta dates offered alongside the target state — all optional, never
+            // required to complete the transition
+            'resolution_date' => ['nullable', 'date'],
+            'approval_date' => ['nullable', 'date'],
+            'effective_date' => ['nullable', 'date'],
+        ]);
         $newState = BudgetPlanState::make($filtered['newState'], $plan);
+
+        // OP#584/OP#588 share this same forward/backward distinction (BudgetPlanState::order() /
+        // advancesTo()): a backward step only ever demotes data away from "official" and must
+        // never be gated OR asked for anything new — so both the item-rule validation below and
+        // the date capture further down are skipped entirely for a backward move (e.g. reverting
+        // an applied amendment, or reactivating a Completed plan).
+        $isForwardStep = $plan->state->advancesTo($newState);
 
         // Business-rule check (OP#584): the target state's item rules (Titelnummer uniqueness,
         // name, non-negative value) must hold before the transition is even authorized — mirrors
-        // ⚡show-project's changeState(). Only checked on a FORWARD step (advancesTo()): moving
-        // backward only ever demotes data away from "official", never promotes it, so a backward
-        // step (e.g. reverting an applied amendment, or reactivating a Completed plan) must always
-        // stay possible regardless of a pre-existing violation it cannot fix. This deliberately
-        // runs only here, at the Livewire layer: the cascaded Active<->Completed writes for an
-        // amendment's siblings (CompleteAmendmentsTransition / ReactivateAmendmentsTransition,
-        // OP#589) call $child->state->transitionTo() directly on the model and never come through
-        // here, so this check can never block that cascade either way.
-        if ($plan->state->advancesTo($newState)) {
+        // ⚡show-project's changeState(). This deliberately runs only here, at the Livewire layer:
+        // the cascaded Active<->Completed writes for an amendment's siblings
+        // (CompleteAmendmentsTransition / ReactivateAmendmentsTransition, OP#589) call
+        // $child->state->transitionTo() directly on the model and never come through here, so
+        // this check can never block that cascade either way.
+        if ($isForwardStep) {
             try {
                 $newState->getValidator()->validate();
             } catch (ValidationException $e) {
@@ -180,11 +185,35 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         $this->authorize('transition-to', [$plan, $newState]);
 
+        // OP#588: capture whichever optional date(s) give THIS target state its meaning — see
+        // targetState() in the blade for the matching display logic. Setting the attribute
+        // directly on $plan here (rather than a separate ->update() call) means the transition's
+        // own save() — every arc ultimately runs through Spatie's DefaultTransition::handle(),
+        // which calls $this->model->save() — persists the date and the new state in one write,
+        // so a plan can never end up transitioned with its date silently dropped.
+        if ($isForwardStep) {
+            if ($newState instanceof Resolved && filled($this->resolution_date)) {
+                $plan->resolution_date = $this->resolution_date;
+            }
+            if ($newState instanceof Approved) {
+                if (filled($this->approval_date)) {
+                    $plan->approval_date = $this->approval_date;
+                }
+                // effective_date stays amendment-only (unchanged from before OP#588)
+                if ($plan->isAmendment() && filled($this->effective_date)) {
+                    $plan->effective_date = $this->effective_date;
+                }
+            }
+            if ($newState instanceof Active && $plan->isAmendment() && $plan->effective_date === null && filled($this->effective_date)) {
+                $plan->effective_date = $this->effective_date;
+            }
+        }
+
         try {
             $plan->state->transitionTo($newState);
             Flux::toast(__('budget-plan.view.state-changed'), variant: 'success');
             Flux::modal('state-modal')->close();
-            $this->reset('newState');
+            $this->reset('newState', 'resolution_date', 'approval_date', 'effective_date');
         } catch (AmendmentConflictException $e) {
             // the amendment apply/revert engine aborted the whole transition atomically —
             // the plan's state is unchanged, so surface this as a toast, not a field error

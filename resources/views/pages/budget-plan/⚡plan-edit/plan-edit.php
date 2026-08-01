@@ -26,10 +26,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     #[Url(as: 'plan_id')]
     public $plan_id;
 
-    public $resolution_date;
-
-    public $approval_date;
-
     public $refresh = false;
 
     /** Mount picker state: the item being transformed into a mount, and the plan it references. */
@@ -69,8 +65,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;
-        $this->resolution_date = $plan->resolution_date;
-        $this->approval_date = $plan->approval_date;
 
         $this->loadItems();
     }
@@ -255,7 +249,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function updated(string $property): void
     {
-        if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
+        if (in_array($property, ['organization', 'fiscal_year_id'])) {
             // empty optional fields come back as '' (e.g. cleared fiscal-year listbox);
             // store them as null so nullable columns / FKs don't reject the empty string
             $value = $this->$property === '' ? null : $this->$property;
@@ -309,10 +303,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // $this->validate();
 
         $plan = BudgetPlan::findOrFail($this->plan_id);
-        // empty optional fields come back as ''; store them as null so nullable columns don't reject the empty string
+        // empty optional field comes back as ''; store it as null so the nullable column doesn't reject the empty string
         $plan->update([
-            'resolution_date' => $this->resolution_date ?: null,
-            'approval_date' => $this->approval_date ?: null,
             'organization' => $this->organization ?: null,
         ]);
 
