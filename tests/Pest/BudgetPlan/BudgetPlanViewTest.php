@@ -3,6 +3,7 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
+use App\Models\Setting;
 use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\Completed;
@@ -167,6 +168,33 @@ it('renders "Bearbeiten" enabled in Draft/Resolved and disabled-with-tooltip fro
     'approved' => [Approved::class, false],
     'active' => [Active::class, false],
     'completed' => [Completed::class, false],
+]);
+
+it('does not render a print action (not yet implemented)', function (): void {
+    $this->actingAs(user());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    expect($html)->not->toContain('icon="printer"');
+});
+
+it('shows the DATEV export action only when the setting is enabled and the user may download it', function (bool $datevEnabled, string $actingAsUser, bool $expectVisible): void {
+    Setting::set('datev', $datevEnabled);
+    $this->actingAs($actingAsUser());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    if ($expectVisible) {
+        expect($html)->toContain(__('budget-plan.view.export.datev'));
+    } else {
+        expect($html)->not->toContain(__('budget-plan.view.export.datev'));
+    }
+})->with([
+    'enabled + finance user' => [true, 'budgetManager', true],
+    'enabled + regular user' => [true, 'user', false],
+    'disabled + finance user' => [false, 'budgetManager', false],
 ]);
 
 it('refuses direct ⚡plan-edit access once Approved, redirecting to the read-only view (server-side guard matching the button)', function (): void {

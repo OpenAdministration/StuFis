@@ -63,8 +63,6 @@
                             <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
                         @endcan
                     @endif
-                    {{-- TODO: print not yet implemented — disabled until the print flow exists --}}
-                    <flux:menu.item icon="printer" disabled>{{ __('budget-plan.view.print') }}</flux:menu.item>
                     {{-- downloads must be real navigations (file responses), so no wire:navigate here --}}
                     <flux:menu.submenu icon="arrow-down-tray" :heading="__('budget-plan.view.export')">
                         <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'xlsx'])">
@@ -73,6 +71,13 @@
                         <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'ods'])">
                             {{ __('budget-plan.view.export.ods') }}
                         </flux:menu.item>
+                        @if(\App\Models\Setting::get('datev', false))
+                            @can('download', \App\Exports\Datev\DatevExport::class)
+                                <flux:menu.item icon="banknotes" :href="route('datev.export', ['hhpId' => $plan->id])">
+                                    {{ __('budget-plan.view.export.datev') }}
+                                </flux:menu.item>
+                            @endcan
+                        @endif
                     </flux:menu.submenu>
                     @can('admin', \App\Models\User::class)
                         <flux:menu.separator/>
