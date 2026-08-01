@@ -112,16 +112,30 @@
 
     @if($plan->isAmendment())
         <div class="max-w-3xl space-y-6">
-            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                    <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
-                    <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
+            @if($dates_editable)
+                {{-- Draft..Approved: authorized users may set/adjust both dates directly here —
+                     the amendment has no metadata editor of its own (B3, OP#581) --}}
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <flux:input wire:model.live.blur="approval_date" type="date" badge="Optional"
+                                :label="__('budget-plan.edit.approval-date')"/>
+                    <flux:input wire:model.live.blur="effective_date" type="date" badge="Optional"
+                                :label="__('budget-plan.amendment.effective-date')"
+                                :description="__('budget-plan.amendment.effective-date-hint')"/>
                 </div>
-                <div>
-                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
-                    <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
-                </div>
-            </dl>
+            @else
+                {{-- Active/Completed (or unauthorized): frozen — the applier has already
+                     consumed these dates, or the user simply can't change them --}}
+                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
+                        <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.effective-date') }}</dt>
+                        <dd>{{ $plan->effective_date?->format('d.m.Y') ?? '—' }}</dd>
+                    </div>
+                </dl>
+            @endif
 
             @if(filled($plan->justification))
                 <div>

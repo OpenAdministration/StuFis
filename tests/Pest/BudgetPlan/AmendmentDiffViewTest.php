@@ -5,7 +5,9 @@ use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\States\BudgetPlan\Active;
+use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\Draft;
+use App\States\BudgetPlan\Resolved;
 use Cknow\Money\Money;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
@@ -101,4 +103,64 @@ it('shows a placeholder when the amendment has no changes yet', function (): voi
 
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
         ->assertSee(__('budget-plan.amendment.no-changes-yet'));
+});
+
+/**
+ * B3 (OP#581 manual-test finding): approval_date/effective_date had no editing affordance
+ * anywhere — plan-view only ever displayed them, and ⚡plan-edit refuses amendments outright.
+ * plan-view now doubles as the only place a budget officer can set them, while the amendment is
+ * still Draft..Approved; it freezes to a read-only <dd> once Active (the applier has already
+ * consumed them by then) or for a user without update rights.
+ */
+it('lets a budget officer set the amendment approval and effective dates from its plan-view, while Draft', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent] = nhhpDiffParent();
+    $amendment = nhhpDiffAmendment($parent);
+
+    $lw = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id]);
+    $lw->set('approval_date', '2026-05-01')->assertHasNoErrors();
+    $lw->set('effective_date', '2026-06-01')->assertHasNoErrors();
+
+    $amendment->refresh();
+    expect($amendment->approval_date->format('Y-m-d'))->toBe('2026-05-01')
+        ->and($amendment->effective_date->format('Y-m-d'))->toBe('2026-06-01');
+
+    // rendered as live inputs (not a frozen <dd>) while still editable
+    $html = $lw->html();
+    expect($html)->toContain('wire:model.live.blur="approval_date"')
+        ->and($html)->toContain('wire:model.live.blur="effective_date"');
+});
+
+it('also allows setting the dates while Approved, but freezes them once the amendment goes Active', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent] = nhhpDiffParent();
+    $amendment = nhhpDiffAmendment($parent);
+    $amendment->state->transitionTo(Resolved::class);
+    $amendment->state->transitionTo(Approved::class);
+
+    $lw = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id]);
+    $lw->set('approval_date', '2026-05-01')->assertHasNoErrors();
+    expect($amendment->refresh()->approval_date->format('Y-m-d'))->toBe('2026-05-01');
+
+    // $parent (from nhhpDiffParent()) is already Active — the amendment can now apply onto it
+    $amendment->state->transitionTo(Active::class);
+
+    $lw2 = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id]);
+    $lw2->set('approval_date', '2099-01-01'); // an attempted edit must be silently refused server-side
+
+    expect($amendment->refresh()->approval_date->format('Y-m-d'))->toBe('2026-05-01')
+        ->and($lw2->html())->not->toContain('wire:model.live.blur="approval_date"')
+        ->and($lw2->html())->toContain($amendment->approval_date->format('d.m.Y'));
+});
+
+it('shows the dates read-only to a user without budget-officer rights, even while Draft', function (): void {
+    $this->actingAs(user());
+    [$parent] = nhhpDiffParent();
+    $amendment = nhhpDiffAmendment($parent);
+    $amendment->update(['approval_date' => '2026-05-01']);
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])->html();
+
+    expect($html)->not->toContain('wire:model.live.blur="approval_date"')
+        ->and($html)->toContain('01.05.2026'); // d.m.Y display of the seeded 2026-05-01
 });

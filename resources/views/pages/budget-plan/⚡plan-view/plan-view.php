@@ -27,10 +27,57 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public $newState;
 
+    /**
+     * approval_date / effective_date, bound only on an amendment's view (B3 — OP#581): an
+     * amendment has no metadata editor of its own (⚡plan-edit is exclusively for original plans
+     * and redirects amendments away), so this is the only place these two fields can be set.
+     * Editable while the amendment is Draft..Approved, read-only from Active onward — see
+     * datesEditable().
+     */
+    public $approval_date;
+
+    public $effective_date;
+
     public function mount(int $plan_id): void
     {
         $this->plan_id = $plan_id;
-        $this->authorize('view', $this->plan());
+        $plan = $this->plan();
+        $this->authorize('view', $plan);
+
+        if ($plan->isAmendment()) {
+            $this->approval_date = $plan->approval_date?->format('Y-m-d');
+            $this->effective_date = $plan->effective_date?->format('Y-m-d');
+        }
+    }
+
+    /** Authorized users may set the amendment's approval/effective dates up through Approved — once Active the applier has already used them, so they freeze. */
+    public function datesEditable(): bool
+    {
+        $plan = $this->plan();
+
+        return $plan->isAmendment()
+            && (! $plan->state instanceof Active && ! $plan->state instanceof Completed)
+            && (Auth::user()?->can('update', $plan) ?? false);
+    }
+
+    public function updatedApprovalDate(): void
+    {
+        $this->saveAmendmentDate('approval_date', $this->approval_date);
+    }
+
+    public function updatedEffectiveDate(): void
+    {
+        $this->saveAmendmentDate('effective_date', $this->effective_date);
+    }
+
+    private function saveAmendmentDate(string $field, mixed $value): void
+    {
+        if (! $this->datesEditable()) {
+            return;
+        }
+
+        $this->plan()->update([$field => $value ?: null]);
+        Flux::toast(__('budget-plan.edit.saved'), variant: 'success');
     }
 
     public function with(): array
@@ -64,6 +111,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'amendment_changes' => $plan->isAmendment()
                 ? $plan->itemChanges()->with('budgetItem')->get()
                 : collect(),
+            'dates_editable' => $this->datesEditable(),
         ];
     }
 

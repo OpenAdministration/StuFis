@@ -192,6 +192,7 @@ return [
     'amendment.open-heading' => 'Offene Nachträge',
     'amendment.continue-editing' => 'weiter bearbeiten',
     'amendment.effective-date' => 'Wirksam zum',
+    'amendment.effective-date-hint' => 'Ab diesem Datum werden die Änderungen des Nachtrags im Hauptplan wirksam. Ohne Angabe greift das Genehmigungsdatum.',
     'amendment.diff-heading' => 'Änderungen',
     '' => '',
 ];
