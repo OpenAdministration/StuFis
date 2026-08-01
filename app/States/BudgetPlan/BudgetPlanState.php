@@ -40,9 +40,9 @@ abstract class BudgetPlanState extends State implements Wireable
             ->default(Draft::class)
             ->allowTransition(Resolved::class, Draft::class)
             ->allowTransition([Draft::class, Approved::class], Resolved::class)
-            ->allowTransition([Resolved::class, Published::class], Approved::class)
-            ->allowTransition([Approved::class, Completed::class], Published::class)
-            ->allowTransition(Published::class, Completed::class);
+            ->allowTransition([Resolved::class, Active::class], Approved::class)
+            ->allowTransition([Approved::class, Completed::class], Active::class)
+            ->allowTransition(Active::class, Completed::class);
     }
 
     public function toLivewire(): array

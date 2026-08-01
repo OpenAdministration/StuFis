@@ -4,8 +4,8 @@ use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\Draft;
-use App\States\BudgetPlan\Published;
 use Cknow\Money\Money;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 uses(DatabaseTransactions::class);
 
 /** A published plan with a fiscal year covering today, so it appears in the haushaltsplan view. */
-function viewPlan(string $state = Published::class): BudgetPlan
+function viewPlan(string $state = Active::class): BudgetPlan
 {
     $fy = FiscalYear::create(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
 
@@ -89,11 +89,11 @@ it('excludes mount items from both views', function (): void {
         ->and(DB::table('haushaltsgruppen')->where('id', $groupMount->id)->exists())->toBeFalse();
 });
 
-it('flags a published plan as final and a draft plan as draft', function (): void {
-    $published = viewPlan(Published::class);
+it('flags an active plan as final and a draft plan as draft', function (): void {
+    $active = viewPlan(Active::class);
     $draft = viewPlan(Draft::class);
 
-    $row = DB::table('haushaltsplan')->where('id', $published->id)->sole();
+    $row = DB::table('haushaltsplan')->where('id', $active->id)->sole();
     expect($row->state)->toBe('final')
         ->and($row->von)->not->toBeNull()
         ->and($row->bis)->not->toBeNull();
@@ -103,7 +103,7 @@ it('flags a published plan as final and a draft plan as draft', function (): voi
 });
 
 it('hides a plan without a fiscal year from the haushaltsplan view', function (): void {
-    $plan = BudgetPlan::create(['state' => Published::class]); // no fiscal_year_id
+    $plan = BudgetPlan::create(['state' => Active::class]); // no fiscal_year_id
 
     expect(DB::table('haushaltsplan')->where('id', $plan->id)->exists())->toBeFalse();
 });

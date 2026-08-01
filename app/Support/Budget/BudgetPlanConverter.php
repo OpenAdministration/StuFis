@@ -11,7 +11,6 @@ use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\States\BudgetPlan\Draft;
-use App\States\BudgetPlan\Published;
 use Illuminate\Support\Collection;
 
 /**
@@ -222,7 +221,7 @@ class BudgetPlanConverter
     public function convertState(?string $state): string
     {
         return match ($state) {
-            'final', 'approved', '1' => Published::class,
+            'final', 'approved', '1' => Active::class,
             default => Draft::class,
         };
     }
