@@ -198,5 +198,6 @@ return [
     'amendment.name' => 'Bezeichnung',
     'amendment.name-sub' => 'Optionale Bezeichnung des Nachtrags (z. B. für Sitzungsvorlagen). Ohne Angabe wird das Erstellungsdatum angezeigt.',
     'amendment.unnamed-fallback' => 'Nachtrag vom :date',
+    'amendment.back-to-view' => 'Zurück zum Nachtrag',
     '' => '',
 ];

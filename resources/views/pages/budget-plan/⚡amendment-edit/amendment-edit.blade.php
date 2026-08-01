@@ -1,10 +1,16 @@
 <div class="space-y-10">
-    <div>
-        <flux:heading size="lg">
-            {{ __('budget-plan.amendment.edit-headline') }} · {{ $parentPlan->label() }} · {{ $amendment->label() }}
-            <flux:badge color="zinc" size="sm">{{ __('budget-plan.amendment.badge') }}</flux:badge>
-        </flux:heading>
-        <flux:text class="mt-2">{{ __('budget-plan.amendment.edit-sub') }}</flux:text>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <flux:heading size="lg">
+                {{ __('budget-plan.amendment.edit-headline') }} · {{ $parentPlan->label() }} · {{ $amendment->label() }}
+                <flux:badge color="zinc" size="sm">{{ __('budget-plan.amendment.badge') }}</flux:badge>
+            </flux:heading>
+            <flux:text class="mt-2">{{ __('budget-plan.amendment.edit-sub') }}</flux:text>
+        </div>
+        {{-- F4 (OP#581): explicit back affordance to the amendment's own view (mirrors edit-project's
+             back button pattern) — the editor otherwise has no way back except the browser button --}}
+        <flux:button :href="route('budget-plan.view', $amendment->id)" wire:navigate variant="outline"
+                     icon="arrow-left">{{ __('budget-plan.amendment.back-to-view') }}</flux:button>
     </div>
 
     <flux:tab.group class="max-w-7xl">
