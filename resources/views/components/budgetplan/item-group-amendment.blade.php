@@ -48,7 +48,13 @@
             @endif
         </div>
         <div class="col-span-1 my-2">
-            <flux:input wire:model.live.blur="items.{{$item->id}}.short_name" :disabled="$isDeleted"/>
+            @if($isAdded)
+                <flux:input wire:model.live.blur="items.{{$item->id}}.short_name" :disabled="$isDeleted"/>
+            @else
+                {{-- F2 (OP#581): the Titelnummer of a base (parent-plan) item is immutable in an
+                     amendment — the numbering scheme belongs to the parent plan. --}}
+                <flux:input value="{{ $item->short_name }}" readonly variant="filled"/>
+            @endif
         </div>
         <div class="col-span-3 my-2 flex items-center gap-2">
             <flux:input class="flex-1" wire:model.live.blur="items.{{$item->id}}.name" :disabled="$isDeleted"/>

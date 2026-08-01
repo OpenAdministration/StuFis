@@ -104,9 +104,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 if (($pair = $change->fieldChange('name')) !== null) {
                     $form->name = $pair['to'];
                 }
-                if (($pair = $change->fieldChange('short_name')) !== null) {
-                    $form->short_name = $pair['to'];
-                }
+                // no short_name overlay here — F2 (OP#581) made short_name immutable for base
+                // items, so a modify change row can never carry it
             }
 
             $this->items[$item->id] = $form;
@@ -189,13 +188,23 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return $item->getAttribute($field);
     }
 
-    /** Write $field := $value on $itemId — directly for this amendment's own additions, as a modify change row for base (parent-plan) items. */
+    /**
+     * Write $field := $value on $itemId — directly for this amendment's own additions, as a
+     * modify change row for base (parent-plan) items. `short_name` (Titelnummer) is immutable
+     * for base items (F2, OP#581): the numbering scheme is the parent plan's, and letting an
+     * amendment silently renumber it would drift out of sync the moment the amendment applies or
+     * is abandoned. The blade also renders the input readonly for base items — this is defense
+     * in depth for direct component calls that bypass the UI.
+     */
     private function setField(int $itemId, string $field, mixed $value): void
     {
         $item = BudgetItem::findOrFail($itemId);
         if ($item->budget_plan_id === $this->amendment_id) {
             $item->update([$field => $value]);
 
+            return;
+        }
+        if ($field === 'short_name') {
             return;
         }
         $this->recordModify($item, $field, $value);

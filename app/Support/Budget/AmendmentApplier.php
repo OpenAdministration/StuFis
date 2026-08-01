@@ -103,6 +103,12 @@ class AmendmentApplier
                 return;
             }
             foreach ((array) $change->changes as $field => $pair) {
+                // short_name (Titelnummer) is immutable for base items (F2, OP#581) — the editor
+                // refuses to ever record it, but skip it here too in case an older change row
+                // somehow still carries one
+                if ($field === 'short_name') {
+                    continue;
+                }
                 if (! $this->fieldsEqual($field, $item->getAttribute($field), $pair['from'] ?? null)) {
                     $conflicts[] = $this->conflict($item->id, $field, __('budget-plan.amendment.conflict.field-changed', [
                         'item' => $item->short_name ?? $item->id, 'field' => $field,
@@ -135,6 +141,9 @@ class AmendmentApplier
             return;
         }
         foreach ((array) $change->changes as $field => $pair) {
+            if ($field === 'short_name') {
+                continue;
+            }
             if (! $this->fieldsEqual($field, $item->getAttribute($field), $pair['to'] ?? null)) {
                 $conflicts[] = $this->conflict($item->id, $field, __('budget-plan.amendment.conflict.field-changed', [
                     'item' => $item->short_name ?? $item->id, 'field' => $field,
@@ -148,6 +157,9 @@ class AmendmentApplier
         $item = BudgetItem::findOrFail($change->budget_item_id);
         $updates = [];
         foreach ((array) $change->changes as $field => $pair) {
+            if ($field === 'short_name') {
+                continue;
+            }
             $updates[$field] = $this->fromStorage($field, $pair['to'] ?? null);
         }
         $item->update($updates);
@@ -158,6 +170,9 @@ class AmendmentApplier
         $item = BudgetItem::findOrFail($change->budget_item_id);
         $updates = [];
         foreach ((array) $change->changes as $field => $pair) {
+            if ($field === 'short_name') {
+                continue;
+            }
             $updates[$field] = $this->fromStorage($field, $pair['from'] ?? null);
         }
         $item->update($updates);

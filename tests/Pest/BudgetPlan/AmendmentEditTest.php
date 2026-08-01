@@ -183,6 +183,28 @@ it('accumulates multiple field edits on one item into a single change row', func
     expect($rows->first()->changes)->toHaveKeys(['value', 'name']);
 });
 
+it('refuses to record a short_name change for a base item (F2), but still accepts it for the amendment\'s own additions', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent, $group, $leaf] = nhhpParentWithLeaf();
+    $amendment = nhhpDraftAmendment($parent);
+    $lw = nhhpEditComponent($parent, $amendment);
+
+    $lw->set('items.'.$leaf->id.'.short_name', 'A9.9')->assertHasNoErrors();
+
+    expect(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->exists())->toBeFalse()
+        ->and($leaf->fresh()->short_name)->toBe('A1.1');
+
+    // the base item's Titelnummer input is not wired for editing at all (no wire:model)
+    expect($lw->html())->not->toContain('wire:model.live.blur="items.'.$leaf->id.'.short_name"');
+
+    // an item the amendment itself added is a real row under the amendment plan — short_name stays editable
+    $lw->call('addBudget', $group->id);
+    $newItem = BudgetItem::where('budget_plan_id', $amendment->id)->where('parent_id', $group->id)->sole();
+
+    $lw->set('items.'.$newItem->id.'.short_name', 'A1.9')->assertHasNoErrors();
+    expect($newItem->fresh()->short_name)->toBe('A1.9');
+});
+
 it('creates a real budget_item under the amendment plus an add change row when a budget line is added', function (): void {
     $this->actingAs(budgetManager());
     [$parent, $group] = nhhpParentWithLeaf();
