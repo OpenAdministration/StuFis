@@ -93,7 +93,7 @@
                     @foreach($open_amendments as $amendment)
                         <li>
                             <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
-                                {{ __('budget-plan.amendment.badge') }} — {{ $amendment->state->label() }}
+                                {{ $amendment->label() }} — {{ $amendment->state->label() }}
                             </flux:link>
                             @can('update', $amendment)
                                 @if($amendment->state instanceof \App\States\BudgetPlan\Draft)

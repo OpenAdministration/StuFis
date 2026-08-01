@@ -1,7 +1,7 @@
 <div class="space-y-10">
     <div>
         <flux:heading size="lg">
-            {{ __('budget-plan.amendment.edit-headline') }} · {{ $parentPlan->label() }}
+            {{ __('budget-plan.amendment.edit-headline') }} · {{ $parentPlan->label() }} · {{ $amendment->label() }}
             <flux:badge color="zinc" size="sm">{{ __('budget-plan.amendment.badge') }}</flux:badge>
         </flux:heading>
         <flux:text class="mt-2">{{ __('budget-plan.amendment.edit-sub') }}</flux:text>
@@ -53,6 +53,9 @@
 
         <flux:tab.panel name="reasons">
             <div class="max-w-3xl space-y-6 mt-6">
+                <flux:input wire:model.live.blur="name" badge="Optional"
+                            :label="__('budget-plan.amendment.name')"
+                            :description="__('budget-plan.amendment.name-sub')"/>
                 <flux:textarea wire:model.live.blur="justification"
                                :label="__('budget-plan.amendment.justification')"
                                :description="__('budget-plan.amendment.justification-sub')"

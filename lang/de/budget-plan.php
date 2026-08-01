@@ -195,5 +195,8 @@ return [
     'amendment.effective-date' => 'Wirksam zum',
     'amendment.effective-date-hint' => 'Ab diesem Datum werden die Änderungen des Nachtrags im Hauptplan wirksam. Ohne Angabe greift das Genehmigungsdatum.',
     'amendment.diff-heading' => 'Änderungen',
+    'amendment.name' => 'Bezeichnung',
+    'amendment.name-sub' => 'Optionale Bezeichnung des Nachtrags (z. B. für Sitzungsvorlagen). Ohne Angabe wird das Erstellungsdatum angezeigt.',
+    'amendment.unnamed-fallback' => 'Nachtrag vom :date',
     '' => '',
 ];

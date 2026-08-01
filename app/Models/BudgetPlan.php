@@ -30,6 +30,7 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @property Carbon $approval_date
  * @property Carbon|null $effective_date
  * @property string|null $justification
+ * @property string|null $name
  * @property BudgetPlanState $state
  * @property BudgetPlan|null $parentPlan
  * @property BudgetItem[] $budgetItems
@@ -81,7 +82,7 @@ class BudgetPlan extends Model
     /**
      * @var array
      */
-    protected $fillable = ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'effective_date', 'justification'];
+    protected $fillable = ['organization', 'name', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'effective_date', 'justification'];
 
     #[\Override]
     protected function casts(): array
@@ -318,9 +319,18 @@ class BudgetPlan extends Model
         return static::query()->original()->orderByDesc('id')->first();
     }
 
-    /** Human label for the plan (organization, with a fallback). */
+    /**
+     * Human label for the plan. An amendment has no organization of its own (it inherits its
+     * parent's), so it uses its optional `name` (F3, OP#581) instead, falling back to
+     * "Nachtrag vom {created_at}" — the single place this fallback is decided, rather than
+     * scattering it across every view that lists amendments.
+     */
     public function label(): string
     {
+        if ($this->isAmendment()) {
+            return $this->name ?: __('budget-plan.amendment.unnamed-fallback', ['date' => $this->created_at->format('d.m.Y')]);
+        }
+
         return $this->organization ?: __('budget-plan.view.no-organization');
     }
 

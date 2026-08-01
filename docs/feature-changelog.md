@@ -4,7 +4,7 @@
 * Sicherheit: StuFis erzwingt nun eine strikte Content-Security-Policy (CSP). Dies erschwert Cross-Site-Scripting (XSS) Angriffe deutlich.
 * Einheitliche Abmeldung (Single Logout): Ab- und Anmeldung sind nun zwischen StuFis und dem zentralen Login-Dienst (StuMV) gekoppelt. Meldest du dich beim zentralen Dienst ab, wirst du automatisch auch aus StuFis abgemeldet – und meldest du dich in StuFis ab, wirst du auch aus dem zentralen Login-Dienst abgemeldet.
 * DATEV-Export: Die Auswahlliste der Haushaltspläne zeigt nun HHP-Nummer, Organisation und Haushaltsjahr, sodass Pläne derselben Organisation eindeutig unterscheidbar sind.
-* Nachtragshaushaltsplan: Zu einem aktiven Haushaltsplan kann jetzt ein Nachtrag erstellt werden, der Titel ändert, hinzufügt oder streicht, ohne den laufenden Plan direkt zu verändern. Der Nachtrag durchläuft denselben Freigabe-Workflow wie ein Haushaltsplan und wird erst mit seiner Aktivierung (sofort oder zu einem geplanten Wirksamkeitsdatum) im Hauptplan wirksam; bereits gebuchte Titel bleiben dabei unter derselben ID erhalten. Der Status „Veröffentlicht" heißt nun „Aktiv".
+* Nachtragshaushaltsplan: Zu einem aktiven Haushaltsplan kann jetzt ein Nachtrag erstellt werden, der Titel ändert, hinzufügt oder streicht, ohne den laufenden Plan direkt zu verändern. Der Nachtrag durchläuft denselben Freigabe-Workflow wie ein Haushaltsplan und wird erst mit seiner Aktivierung (sofort oder zu einem geplanten Wirksamkeitsdatum) im Hauptplan wirksam; bereits gebuchte Titel bleiben dabei unter derselben ID erhalten. Der Status „Veröffentlicht" heißt nun „Aktiv". Ein Nachtrag kann optional eine eigene Bezeichnung erhalten (z. B. für Sitzungsvorlagen); ohne Angabe wird ersatzweise das Erstellungsdatum angezeigt.
 
 ---
 

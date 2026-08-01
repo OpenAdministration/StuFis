@@ -85,6 +85,33 @@ it('does not offer amendments as mount targets', function (): void {
     expect(array_intersect($candidateIds, $amendmentIds))->toBe([]);
 });
 
+/**
+ * F3 (OP#581): an amendment has no organization of its own (it inherits its parent's) and, before
+ * this, no name either — so label() is the single place the "Nachtrag vom {date}" fallback lives,
+ * instead of scattering it across every view that lists amendments.
+ */
+it('labels an amendment by its optional name, falling back to "Nachtrag vom {created_at}"', function (): void {
+    $parent = originalPlan(['organization' => 'AStA']);
+    $named = draftAmendmentOf($parent);
+    $named->update(['name' => 'Nachtrag Sommerfest']);
+    $unnamed = draftAmendmentOf($parent);
+
+    expect($named->label())->toBe('Nachtrag Sommerfest')
+        ->and($unnamed->label())->toBe(__('budget-plan.amendment.unnamed-fallback', ['date' => $unnamed->created_at->format('d.m.Y')]))
+        // an original plan is unaffected — it still uses organization, never the amendment fallback
+        ->and($parent->label())->toBe('AStA');
+});
+
+it('shows the amendment label (name or fallback) on the parent plan-view\'s open-amendments list', function (): void {
+    $this->actingAs(user());
+    $parent = originalPlan(['organization' => 'AStA']);
+    $named = draftAmendmentOf($parent);
+    $named->update(['name' => 'Nachtrag Sommerfest']);
+
+    Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $parent->id])
+        ->assertSee('Nachtrag Sommerfest');
+});
+
 it('does not list amendments as free-standing plans on the plan index (only nested under their parent)', function (): void {
     $this->actingAs(user());
     $fy = FiscalYear::create(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);

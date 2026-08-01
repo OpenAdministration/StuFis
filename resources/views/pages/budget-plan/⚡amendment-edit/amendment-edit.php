@@ -32,6 +32,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public int $amendment_id;
 
+    public $name;
+
     public $justification;
 
     /** @var array<int, string> budget_item_change.id => reason, bound to the "Begründungen" tab */
@@ -57,6 +59,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
         $this->plan_id = $plan_id;
         $this->amendment_id = $amendment_id;
+        $this->name = $amendment->name;
         $this->justification = $amendment->justification;
         $this->reasonInputs = $amendment->itemChanges()->pluck('reason', 'id')->all();
 
@@ -281,6 +284,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->setField((int) $itemId, $prop, $value);
         Flux::toast(__('budget-plan.edit.saved'), variant: 'success');
         $this->loadItems();
+    }
+
+    public function updatedName(): void
+    {
+        $this->amendment()->update(['name' => $this->name ?: null]);
+        Flux::toast(__('budget-plan.edit.saved'), variant: 'success');
     }
 
     public function updatedJustification(): void

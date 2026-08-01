@@ -372,6 +372,18 @@ it('persists per-change reasons and the plan justification', function (): void {
         ->and($change->fresh()->reason)->toBe('Preissteigerung beim Lieferanten');
 });
 
+it('persists the amendment\'s optional name (F3) and shows it in the editor headline', function (): void {
+    $this->actingAs(budgetManager());
+    [$parent] = nhhpParentWithLeaf();
+    $amendment = nhhpDraftAmendment($parent);
+    $lw = nhhpEditComponent($parent, $amendment);
+
+    $lw->set('name', 'Nachtrag Sommerfest')->assertHasNoErrors();
+
+    expect($amendment->fresh()->name)->toBe('Nachtrag Sommerfest')
+        ->and($lw->html())->toContain('Nachtrag Sommerfest');
+});
+
 it('is only reachable while the amendment is still Draft, redirecting elsewhere', function (): void {
     $this->actingAs(budgetManager());
     [$parent] = nhhpParentWithLeaf();
