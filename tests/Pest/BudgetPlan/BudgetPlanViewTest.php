@@ -85,6 +85,17 @@ it('lets an admin delete the whole plan (with its items)', function (): void {
         ->and(BudgetItem::where('budget_plan_id', $plan->id)->count())->toBe(0);
 });
 
+it('confirms the plan deletion through a flux modal instead of a native window.confirm', function (): void {
+    $this->actingAs(adminUser());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    expect($html)->not->toContain('wire:confirm')
+        ->and($html)->toContain('delete-plan-modal')
+        ->and($html)->toContain(__('budget-plan.view.delete-modal.confirm'));
+});
+
 it('forbids a non-admin from deleting the plan', function (): void {
     $this->actingAs(budgetManager()); // budget-officer, not admin
     $plan = planWithItems();

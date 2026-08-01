@@ -76,9 +76,11 @@
                     </flux:menu.submenu>
                     @can('admin', \App\Models\User::class)
                         <flux:menu.separator/>
+                        {{-- a native window.confirm() would be the only non-Flux dialog left in the
+                             app (and is unstyleable), so this goes through a flux:modal like every
+                             other confirmation — same pattern as ⚡show-project's delete-modal --}}
                         <flux:menu.item icon="trash" variant="danger"
-                                        wire:click="deletePlan"
-                                        wire:confirm="{{ __('budget-plan.view.delete-confirm') }}">
+                                        x-on:click="$flux.modal('delete-plan-modal').show()">
                             {{ __('budget-plan.view.delete') }}
                         </flux:menu.item>
                     @endcan
@@ -363,6 +365,24 @@
             </flux:button>
         </div>
     </flux:modal>
+
+    @can('admin', \App\Models\User::class)
+        <flux:modal name="delete-plan-modal" class="min-w-96">
+            <div>
+                <flux:heading size="lg">{{ __('budget-plan.view.delete-modal.heading') }}</flux:heading>
+                <flux:text class="mt-4">{{ __('budget-plan.view.delete-confirm') }}</flux:text>
+            </div>
+            <div class="mt-6 flex gap-3">
+                <flux:spacer/>
+                <flux:button x-on:click="$flux.modal('delete-plan-modal').close()" variant="ghost">
+                    {{ __('budget-plan.view.delete-modal.cancel') }}
+                </flux:button>
+                <flux:button wire:click="deletePlan" variant="danger">
+                    {{ __('budget-plan.view.delete-modal.confirm') }}
+                </flux:button>
+            </div>
+        </flux:modal>
+    @endcan
 
     {{-- Register the budgetCollapse Alpine component from a nonced inline <script> — the
          mechanism from the Livewire CSP docs' "Working around limitations" section. This
