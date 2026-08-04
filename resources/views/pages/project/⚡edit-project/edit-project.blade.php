@@ -65,6 +65,7 @@
                             <flux:select.option value="{{ $rg->slug }}">{{ $rg->label }}</flux:select.option>
                         @endforeach
                     </flux:select>
+                    <flux:error name="recht" />
                     {{-- Dynamic Additional Fields per Rechtsgrundlage --}}
                     @if($recht)
                         @php $select_legal = $rechtsgrundlagen[$recht]; @endphp
@@ -73,6 +74,7 @@
                                 <flux:input wire:model="recht_additional"
                                         :label="$select_legal->label_additional"
                                         placeholder="{{ $select_legal->placeholder ?? '' }}"/>
+                                <flux:error name="recht_additional" />
                             @endif
                         </div>
                         <div class="sm:col-span-2">
@@ -105,6 +107,7 @@
                 {{-- Project Name --}}
                 <div class="">
                     <flux:input type="text" :label="__('project.view.details.name')" wire:model="name" />
+                    <flux:error name="name" />
                 </div>
 
                 {{-- Responsible Person --}}
@@ -115,6 +118,7 @@
                             <flux:input type="email" wire:model="responsible" />
                             {{-- <flux:input.group.suffix>@domain.com</flux:input.group.suffix> --}}
                         </flux:input.group>
+                        <flux:error name="responsible" />
                     </flux:field>
                 </div>
 
@@ -126,6 +130,7 @@
                             <flux:select.option>{{ $label }}</flux:select.option>
                         @endforeach
                     </flux:select>
+                    <flux:error name="org" />
                 </div>
 
                 {{-- Organization Mail --}}
@@ -145,10 +150,11 @@
                         <flux:date-picker mode="range" wire:model="dateRange"
                                           :label="__('project.view.details.period')" selectable-header
                                           :placeholder="__('project.view.details.period_placeholder')"
-                                          :invalid="$this->getErrorBag()->hasAny(['date_end'])"
+                                          :invalid="$this->getErrorBag()->has('dateRange')"
                         />
+                        {{-- start and end errors are both mapped onto `dateRange` (see ERROR_FIELDS),
+                             because the picker binds one property for the whole range --}}
                         <flux:error name="dateRange" />
-                        <flux:error name="date_end" />
                     </flux:field>
                 </div>
 
@@ -219,12 +225,17 @@
                         </th>
                     </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white">
+                    <tbody class="divide-y divide-gray-200 bg-white" wire:sort="sortPosts">
                     @foreach ($posts as $index => $post)
-                        <tr class="hover:bg-gray-50" wire:key="post-{{ $index }}">
-                            {{-- Row Number --}}
+                        <tr class="hover:bg-gray-50" wire:key="post-{{ $index }}" wire:sort:item="{{ $index }}">
+                            {{-- Row Number: doubles as the drag handle for reordering --}}
                             <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                {{ $loop->iteration }}.
+                                <button type="button" wire:sort:handle
+                                        class="flex cursor-grab items-center gap-2 text-gray-900 active:cursor-grabbing"
+                                        :aria-label="__('project.view.budget_table.reorder')">
+                                    <x-fas-grip-vertical class="h-4 w-4 fill-gray-400"/>
+                                    {{ $loop->iteration }}.
+                                </button>
                             </td>
 
                             {{-- Post Name --}}
@@ -263,14 +274,20 @@
                                 </td>
                             @endif
 
+                            {{-- Income and expenses are mutually exclusive, so each field locks
+                                 once the other one carries an amount — but only while it is
+                                 itself empty. A row that holds both (legacy data) would
+                                 otherwise lock both fields and could never be corrected. --}}
                             {{-- Income --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
-                                <x-money-input wire:model.live.blur="posts.{{ $index }}.einnahmen" :disabled="!$posts[$index]['ausgaben']->isZero()"/>
+                                <x-money-input wire:model.live.blur="posts.{{ $index }}.einnahmen"
+                                               :disabled="$posts[$index]['einnahmen']->isZero() && !$posts[$index]['ausgaben']->isZero()"/>
                             </td>
 
                             {{-- Expenses --}}
                             <td class="px-3 py-4 text-sm text-gray-900">
-                                <x-money-input wire:model.live.blur="posts.{{ $index }}.ausgaben" :disabled="!$posts[$index]['einnahmen']->isZero()"/>
+                                <x-money-input wire:model.live.blur="posts.{{ $index }}.ausgaben"
+                                               :disabled="$posts[$index]['ausgaben']->isZero() && !$posts[$index]['einnahmen']->isZero()"/>
                             </td>
 
                             {{-- Actions --}}
@@ -341,6 +358,7 @@
                     wire:model="beschreibung"
                     :placeholder="__('project.view.description.placeholder')"
                 />
+                <flux:error name="beschreibung" />
             </div>
         </flux:card>
 
@@ -352,6 +370,11 @@
                     with-progress
                 />
             </flux:file-upload>
+            {{-- per-file errors arrive as `uploads.0` and are mapped onto `newAttachments.0` --}}
+            <flux:error name="newAttachments" />
+            @foreach($newAttachments as $uploadIndex => $upload)
+                <flux:error name="newAttachments.{{ $uploadIndex }}" />
+            @endforeach
             <div class="mt-4 flex flex-col gap-2">
                 <div class="mt-2 flex flex-col gap-2">
                     @foreach($newAttachments as $attachment)

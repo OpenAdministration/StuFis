@@ -191,6 +191,49 @@ it('keeps money post fields as Money after string wire:model updates', function 
     expect($component->get('posts.1.einnahmen'))->toBeInstanceOf(Money::class);
 });
 
+/**
+ * Regression guard for the production "Call to a member function getAmount() on string".
+ *
+ * Livewire's JS diff consolidates an update into the parent when every child changed
+ * (touching a field in every post row does that, which is why it only ever showed up on
+ * projects with several posts). The consolidated payload carries no per-leaf synth
+ * metadata, so MoneySynth never runs and the raw input strings land in $posts — the
+ * view then calls ->isZero() on a string and the validator ->getAmount().
+ */
+it('survives a consolidated posts update carrying raw money strings', function (): void {
+    $project = Project::factory()->by(user())->create([
+        'name' => 'Consolidated Update',
+        'responsible' => 'test@open-administration.de',
+    ]);
+    foreach (['First Post', 'Second Post'] as $name) {
+        $project->posts()->create([
+            'name' => $name,
+            'einnahmen' => Money::EUR(0),
+            'ausgaben' => Money::EUR(5000),
+            'bemerkung' => 'This is a description that is long enough for validation.',
+        ]);
+    }
+
+    $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id]);
+
+    // What the browser sends once the diff consolidates: the whole array, money as strings.
+    $component->set('posts', collect($component->get('posts'))->map(fn (array $post): array => [
+        ...$post,
+        'einnahmen' => '0,00 €',
+        'ausgaben' => '1.234,50 €',
+    ])->all())->assertOk();
+
+    expect($component->get('posts.0.ausgaben'))->toBeInstanceOf(Money::class)
+        ->and($component->get('posts.1.einnahmen'))->toBeInstanceOf(Money::class);
+
+    $component->call('saveAs', 'draft')->assertHasNoErrors();
+
+    // The amounts must survive verbatim: parsing the display string elsewhere (the
+    // MoneyCast, under a non-German locale) would read "1.234,50" as 1.23 EUR.
+    expect($project->refresh()->posts->pluck('ausgaben')->map->getAmount()->all())
+        ->toBe(['123450', '123450']);
+});
+
 it('can add and remove posts', function (): void {
     Livewire::test('pages::project.edit-project')
         ->assertCount('posts', 1)
@@ -198,6 +241,85 @@ it('can add and remove posts', function (): void {
         ->assertCount('posts', 2)
         ->call('removePost', 1)
         ->assertCount('posts', 1);
+});
+
+it('reorders posts by drag and persists the order', function (): void {
+    $project = Project::factory()->by(user())->create([
+        'name' => 'Sortable Project',
+        'responsible' => 'test@open-administration.de',
+    ]);
+    foreach (['First', 'Second', 'Third'] as $name) {
+        $project->posts()->create([
+            'name' => $name,
+            'einnahmen' => Money::EUR(0),
+            'ausgaben' => Money::EUR(5000),
+            'bemerkung' => 'This is a description that is long enough for validation.',
+        ]);
+    }
+
+    $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id]);
+
+    // wire:sort hands over the dragged row's key and the index it was dropped at.
+    $component->call('sortPosts', '2', 0)->assertOk();
+
+    expect(collect($component->get('posts'))->pluck('name')->all())
+        ->toBe(['Third', 'First', 'Second']);
+
+    $component->call('saveAs', 'draft')->assertHasNoErrors();
+
+    // Project::posts() orders by `position`, so a reload must keep the dragged order.
+    expect($project->refresh()->posts->pluck('name')->all())
+        ->toBe(['Third', 'First', 'Second']);
+});
+
+it('ignores a sort for a row that is no longer there', function (): void {
+    Livewire::test('pages::project.edit-project')
+        ->assertCount('posts', 1)
+        ->call('sortPosts', '7', 0)
+        ->assertOk()
+        ->assertCount('posts', 1);
+});
+
+/**
+ * Regression guard for validation errors being collapsed into a single banner.
+ *
+ * saveAs() caught ValidationException together with real save failures and reported
+ * `$e->getMessage()`, which is only ever the *first* message — every other field error
+ * was dropped. Errors must land on the field that caused them, under the property name
+ * the view binds (getValues() renames some of them on the way into the validator).
+ */
+it('reports validation errors on the fields that caused them', function (): void {
+    $project = Project::factory()->by(user())->create(['name' => 'Invalid Project']);
+    $project->posts()->create([
+        'name' => 'Existing Post',
+        'einnahmen' => Money::EUR(0),
+        'ausgaben' => Money::EUR(5000),
+        'bemerkung' => 'This is a description that is long enough for validation.',
+    ]);
+
+    Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
+        ->set('name', '')
+        ->set('org', '')
+        // both dates missing: the picker binds `dateRange`, the rules key `date_start`/`date_end`
+        ->set('dateRange', ['start' => null, 'end' => null])
+        ->set('posts.0.name', '')
+        ->call('saveAs', 'wip')
+        // every failing field is marked, not just the first one
+        ->assertHasErrors(['name', 'org', 'dateRange', 'posts.0.name'])
+        // and the banner still points at them
+        ->assertHasErrors('save');
+});
+
+it('reports an upload error on the upload field, not under its validator key', function (): void {
+    Storage::fake('projects');
+    // .txt is not in ProjectAttachment::allowedExtensions(), so the extension gate rejects it.
+    $file = UploadedFile::fake()->createWithContent('notes.txt', 'plain text');
+
+    Livewire::test('pages::project.edit-project')
+        ->set('newAttachments', [$file])
+        ->call('saveAs', 'draft')
+        // the rules key is `uploads.0`; the form binds `newAttachments`
+        ->assertHasErrors('newAttachments.0');
 });
 
 it('prevents saving if version has changed (optimistic locking)', function (): void {
