@@ -44,7 +44,7 @@ it('can create a new project', function (): void {
         ->set('org', 'Test Org')
         ->set('beschreibung', 'This is a description that is long enough for validation.')
         ->set('dateRange', ['start' => now()->format('Y-m-d'), 'end' => now()->addDays(5)->format('Y-m-d')])
-        ->set('hhp_id', $this->budgetPlan->id)
+        ->set('budget_plan_id', $this->budgetPlan->id)
 
         ->set('posts.0.name', 'First Post')
         ->set('posts.0.einnahmen', Money::EUR(0))
@@ -343,7 +343,7 @@ it('rejects saving a project that violates the state rules', function (): void {
     $countBefore = Project::count();
 
     Livewire::test('pages::project.edit-project')
-        ->set('hhp_id', $this->budgetPlan->id)
+        ->set('budget_plan_id', $this->budgetPlan->id)
         ->call('saveAs', 'wip')
         ->assertHasErrors();
 
@@ -428,7 +428,7 @@ it('prefills a fresh draft when copying a project', function (): void {
         ->assertSet('isNew', true)
         ->assertSet('sourceKind', 'copy')
         // The copy stays in the source's own budget plan.
-        ->assertSet('hhp_id', $source->relatedBudgetPlan()->id)
+        ->assertSet('budget_plan_id', $source->relatedBudgetPlan()->id)
         ->assertCount('posts', 2);
 
     expect($component->get('name'))->toBe($sourceName.' (Kopie)');
@@ -478,7 +478,7 @@ it('carries remaining amounts and remaps titel when creating from leftovers', fu
 
     $component = Livewire::test('pages::project.edit-project', ['sourceId' => $source->id, 'sourceKind' => 'leftovers'])
         ->assertSet('isNew', true)
-        ->assertSet('hhp_id', $newPlan->id)
+        ->assertSet('budget_plan_id', $newPlan->id)
         // Backlink to the source is tracked for persistence.
         ->assertSet('sourceId', $source->id)
         ->assertSet('sourceKind', 'leftovers')
@@ -502,7 +502,7 @@ it('empties titel when no match exists in the target plan on leftovers', functio
     ]);
 
     $component = Livewire::test('pages::project.edit-project', ['sourceId' => $source->id, 'sourceKind' => 'leftovers'])
-        ->assertSet('hhp_id', $newPlan->id)
+        ->assertSet('budget_plan_id', $newPlan->id)
         ->assertCount('posts', 1);
 
     expect($component->get('posts')[0]['titel_id'])->toBeNull();
@@ -546,7 +546,7 @@ it('remaps post titel when the budget plan is changed', function (): void {
     ]);
 
     $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
-        ->set('hhp_id', $newPlan->id);
+        ->set('budget_plan_id', $newPlan->id);
 
     $posts = $component->get('posts');
     expect($posts[0]['titel_id'])->toBe($matchedNew->id)
