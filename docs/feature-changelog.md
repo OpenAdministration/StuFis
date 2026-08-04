@@ -1,3 +1,14 @@
+# v4.4.3
+* Projekte mit mehreren Posten ließen sich nicht mehr speichern, wenn vor dem Speichern in jeder Postenzeile etwas geändert wurde – das Speichern brach mit einer Fehlerseite ab. Die Beträge gingen dabei auf dem Weg zum Server verloren; sie werden nun wieder zuverlässig als Geldbeträge erkannt.
+* Fehlermeldungen beim Speichern eines Projekts erscheinen jetzt direkt an dem Feld, das sie ausgelöst hat – und zwar alle. Bisher wurde nur die erste Meldung als einzelne Zeile über dem Formular angezeigt, sodass unklar blieb, welche Zeile oder welches Feld gemeint war.
+* Posten, in denen sowohl eine Einnahme als auch eine Ausgabe stand (aus Altdaten), ließen sich nicht mehr korrigieren: Beide Betragsfelder waren gesperrt, während das Speichern genau diese Kombination bemängelte. Ein Betragsfeld ist jetzt nur noch gesperrt, solange es selbst leer ist.
+* Negative Beträge werden in Posten nicht mehr angenommen. Bisher konnte z. B. eine Ausgabe von "-50 €" gespeichert werden und hat die Projektsummen still verfälscht.
+* Die Meldungen zu den Beträgen eines Postens benennen nun einheitlich die betroffene Postenzeile und erklären die Regel: Ein Posten ist entweder eine Einnahme oder eine Ausgabe.
+* Posten lassen sich in der Projektbearbeitung per Ziehgriff in der Spalte "Nr." umsortieren. Die Reihenfolge wird gespeichert und bleibt in Ansicht und Ausdruck erhalten.
+* Wurde ein Projekt zwischenzeitlich von jemand anderem geändert, erscheint nun ein verständlicher Hinweis statt eines technischen Platzhaltertexts.
+
+---
+
 # v4.4.2
 * Projektbeschreibungen und Nachrichten werden nun mit der vollständigen Formatierung des Editors angezeigt (Aufzählungen, nummerierte Listen, Überschriften, Links, Fett-/Kursivschrift). Zuvor gingen z. B. Listen in der Ansicht verloren, obwohl sie korrekt gespeichert waren.
 * Ältere, noch als reiner Text gespeicherte Projektbeschreibungen behalten beim Anzeigen und erneuten Bearbeiten ihre Zeilenumbrüche und werden automatisch ins neue Format übernommen.

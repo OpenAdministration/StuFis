@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Rules\DescriptionLengthRule;
 use App\Rules\ExactlyOneZeroMoneyRule;
 use App\Rules\FluxEditorRule;
+use App\Rules\NonNegativeMoneyRule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Wireable;
@@ -126,8 +127,8 @@ abstract class ProjectState extends State implements Wireable
             'posts' => 'required|array|min:1',
             'posts.*.id' => 'sometimes|integer',
             'posts.*.name' => 'required|string|max:128|min:1',
-            'posts.*.einnahmen' => 'required|money:EUR',
-            'posts.*.ausgaben' => ['required', 'money:EUR', new ExactlyOneZeroMoneyRule('posts.*.einnahmen')],
+            'posts.*.einnahmen' => ['required', 'money:EUR', new NonNegativeMoneyRule],
+            'posts.*.ausgaben' => ['required', 'money:EUR', new NonNegativeMoneyRule, new ExactlyOneZeroMoneyRule('posts.*.einnahmen')],
             'posts.*.position' => 'sometimes|integer',
             'posts.*.bemerkung' => 'sometimes|string|max:256',
         ];

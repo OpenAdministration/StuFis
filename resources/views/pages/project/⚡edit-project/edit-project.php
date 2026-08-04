@@ -15,6 +15,7 @@ use App\Rules\ContentMatchesExtension;
 use App\Rules\NoEmbeddedMacros;
 use App\States\Project\ProjectState;
 use App\States\Project\Terminated;
+use App\Support\Money\MoneyInput;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\File;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -236,6 +238,42 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
+     * The money leaves of `posts` are Money objects, but they only survive the round trip
+     * while Livewire sends one update per leaf: as soon as its JS diff consolidates the
+     * update into a parent (which it does when every row changed in one commit, or when
+     * the row count drifted), the payload carries no per-leaf synth metadata and the raw
+     * input strings land in `$this->posts`. Re-cast them before anything reads them —
+     * the view calls `->isZero()` on them and the validator compares Money objects.
+     *
+     * This is a Livewire bug, not a rule of the framework: livewire/livewire#10489
+     * ("Recursively hydrate nested synthesizers during property updates") fixes it
+     * server-side and was still open against the 4.x branch when this was written.
+     * Once we run a Livewire release that carries it, this normalization becomes
+     * redundant and can go — the regression tests guard the behaviour, not this method.
+     *
+     * Checked 2026-08-04 against livewire/livewire v4.3.3 (production ran v4.3.1);
+     * the fix is in no 4.x release yet, and the related client-side mitigation
+     * livewire/livewire#10431 sits on main only and cannot see server-only synths
+     * like our MoneySynth anyway.
+     */
+    public function updated(string $name): void
+    {
+        if (str_starts_with($name, 'posts')) {
+            $this->normalizePostMoney();
+        }
+    }
+
+    private function normalizePostMoney(): void
+    {
+        foreach ($this->posts as $index => $post) {
+            foreach (['einnahmen', 'ausgaben'] as $field) {
+                $money = MoneyInput::parse($post[$field] ?? null);
+                $this->posts[$index][$field] = $money ?? Money::EUR(0);
+            }
+        }
+    }
+
+    /**
      * When the budget plan changes, remap every post's titel into the newly
      * selected plan (e.g. a finance officer moving the project to another plan).
      */
@@ -357,6 +395,31 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
+     * Move a post row, driven by the drag handle in the Nr. column.
+     *
+     * Livewire's native wire:sort passes the dragged item's key and its new index, so the
+     * blade binds the bare method name. The rows are re-indexed afterwards: the array keys
+     * are what the view binds its inputs to, so they have to describe the new order, and
+     * the resulting order is what saveAs() writes to the `position` column.
+     */
+    public function sortPosts(string $key, int $position): void
+    {
+        $from = (int) $key;
+
+        if (! isset($this->posts[$from])) {
+            return;
+        }
+
+        $rows = $this->posts;
+        $moved = $rows[$from];
+        unset($rows[$from]);
+        $rows = array_values($rows);
+        array_splice($rows, $position, 0, [$moved]);
+
+        $this->posts = $rows;
+    }
+
+    /**
      * Remove a post by index
      */
     public function removePost(int $index): void
@@ -371,6 +434,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function saveAs($stateName)
     {
+        // Guards the save against money leaves that never went through updated() (see there).
+        $this->normalizePostMoney();
         try { // rollback on failure
             // check if user is allowed to save
             if ($this->isNew) {
@@ -448,7 +513,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 $project->state->transitionTo($state);
             }
 
+            // The row order in the form is the order the user dragged the posts into, and
+            // Project::posts() reads them back ordered by `position`.
+            $position = 0;
             foreach ($filteredPosts as $post) {
+                $post['position'] = $position++;
                 if (isset($post['id'])) {
                     $project->posts()->findOrFail($post['id'])->update($post);
                 } else {
@@ -514,12 +583,67 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             DB::commit();
 
             return to_route('project.show', $project->id);
+        } catch (ValidationException $e) {
+            // Validation runs before the transaction opens, so there is nothing to roll back.
+            $this->reportValidationErrors($e);
         } catch (Exception $e) {
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
             $this->addError('save', 'Fehler beim Speichern: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Validator data key => livewire property whose `flux:error` renders it.
+     *
+     * getValues() renames a few fields on their way into the validator, because the state
+     * rules and the legacy columns speak a different vocabulary than the form does. Errors
+     * come back under the data key, so they need translating back or they land on a name no
+     * input is bound to and stay invisible. Everything absent from this map already matches
+     * on both sides — including every `posts.*` key, which is where most errors occur.
+     */
+    private const array ERROR_FIELDS = [
+        'date_start' => 'dateRange',
+        'date_end' => 'dateRange',
+        'uploads' => 'newAttachments',
+        'deletedAttachments' => 'deletedAttachmentIds',
+    ];
+
+    /**
+     * Put a failed validation onto the individual fields instead of collapsing it into one
+     * line: ValidationException::getMessage() is only ever the *first* message, so catching
+     * it together with real save failures used to drop every other error on the floor.
+     */
+    private function reportValidationErrors(ValidationException $e): void
+    {
+        foreach ($e->errors() as $key => $messages) {
+            foreach ($messages as $message) {
+                $this->addError($this->errorField($key), $message);
+            }
+        }
+
+        // The form is long enough that the offending field is easily off-screen, so the
+        // banner stays — as a pointer to the marked fields rather than a truncated message.
+        $this->addError('save', __('project.error.check-marked-fields'));
+    }
+
+    /**
+     * Translate one validator key (`date_start`, `uploads.0`) into the property that
+     * displays it (`dateRange`, `newAttachments.0`), keeping any index suffix.
+     */
+    private function errorField(string $key): string
+    {
+        foreach (self::ERROR_FIELDS as $dataKey => $property) {
+            if ($key === $dataKey) {
+                return $property;
+            }
+            if (str_starts_with($key, $dataKey.'.')) {
+                return $property.substr($key, strlen($dataKey));
+            }
+        }
+
+        return $key;
     }
 
     /**
