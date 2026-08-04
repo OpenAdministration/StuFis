@@ -625,15 +625,11 @@ class BookingHandler extends Renderer
             $instructedAuslagen = [0];
         }
 
-        // A Beleg belongs to the selected budget plan when its owning project was
-        // created within the plan's date range. createdat is a DATETIME but bis is a
-        // DATE (midnight), so extend the upper bound to the end of that day to keep it
-        // inclusive. An empty bis marks the still-open latest plan (lower bound only).
-        if (! isset($endDate) || empty($endDate)) {
-            $auslagenWhere = ['projekte.createdat' => ['>=', $startDate]];
-        } else {
-            $auslagenWhere = ['projekte.createdat' => ['BETWEEN', [$startDate, $endDate.' 23:59:59']]];
-        }
+        // A Beleg belongs to the selected budget plan when its owning project is linked to that
+        // plan via projekte.budget_plan_id (haushaltsplan id == budget_plan id) — the robust
+        // replacement for the former createdat date-range match, which could not distinguish
+        // multiple plans sharing one fiscal year.
+        $auslagenWhere = ['projekte.budget_plan_id' => $hhp_id];
 
         $auslagen = DBConnector::getInstance()->dbFetchAll(
             'auslagen',

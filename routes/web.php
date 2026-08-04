@@ -11,19 +11,26 @@
 |
 */
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BudgetPlanController;
+use App\Http\Controllers\BudgetPlanExportController;
 use App\Http\Controllers\DatevExportController;
 use App\Http\Controllers\Legacy\TransactionView;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ViewChangelog;
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\BudgetPlan;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->group(function (): void {
 
     Route::get('/', function () {
+        $latestPlan = BudgetPlan::newest();
+
+        // Fresh install with no budget plan yet: send the user to the plan overview.
+        if (! $latestPlan instanceof BudgetPlan) {
+            return to_route('budget-plan.index');
+        }
+
         $sub = Auth::user()->getCommittees()->isEmpty() ? 'allgremium' : 'mygremium';
-        $latestPlan = LegacyBudgetPlan::latest();
 
         return to_route('legacy.dashboard', ['sub' => $sub, 'hhp_id' => $latestPlan->id]);
     })->name('home');
@@ -51,12 +58,17 @@ Route::middleware(['auth'])->group(function (): void {
     Route::permanentRedirect('projekt/create', '/project/create');
     Route::permanentRedirect('projekt/{project_id}', '/project/{project_id}');
     Route::permanentRedirect('projekt/{project_id}/edit', '/project/{project_id}/edit');
-});
 
-// login routes
-Route::get('auth/login', [AuthController::class, 'login'])->name('login');
-Route::get('auth/callback', [AuthController::class, 'callback'])->name('login.callback');
-Route::get('auth/logout', [AuthController::class, 'logout'])->name('logout');
+    // Feature Budget Plans
+    Route::get('plan', [BudgetPlanController::class, 'index'])->name('budget-plan.index');
+    Route::livewire('plan/create', 'pages::budget-plan.plan-create')->name('budget-plan.create');
+    Route::livewire('plan/{plan_id}', 'pages::budget-plan.plan-view')->name('budget-plan.view');
+    Route::livewire('plan/{plan_id}/edit', 'pages::budget-plan.plan-edit')->name('budget-plan.edit');
+    Route::livewire('plan/{plan_id}/item/{item_id}', 'pages::budget-plan.item-view')->name('budget-plan.item.view');
+    Route::get('plan/{plan_id}/export/{filetype}', [BudgetPlanExportController::class, 'download'])->name('budget-plan.export');
+    Route::livewire('year/create', 'pages::fiscal-year.edit-fiscal-year')->name('fiscal-year.create');
+    Route::livewire('year/{year_id}', 'pages::fiscal-year.edit-fiscal-year')->name('fiscal-year.edit');
+});
 
 // guest routes
 Route::get('changelog', ViewChangelog::class)->name('changelog');

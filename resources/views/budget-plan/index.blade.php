@@ -16,61 +16,59 @@
             <flux:table.columns>
                 <flux:table.column>{{ __('budget-plan.budget-plans') }}</flux:table.column>
                 <flux:table.column>{{ __('budget-plan.index.table.state') }}</flux:table.column>
-                <flux:table.column>{{ __('budget-plan.index.table.actions') }}</flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
                 @foreach($years as $year)
                     <flux:table.row-headline>
-                        {{ __('budget-plan.fiscal-year') }} {{ $year->start_date->format('M y')  }} to {{ $year->end_date->format('M y') }}
+                        {{ __('budget-plan.fiscal-year') }}: {{ $year->label() }}
                         <flux:link :href="route('fiscal-year.edit', $year->id)"><x-fas-pencil class="size-3 mx-2"/></flux:link>
                     </flux:table.row-headline>
-                    @foreach($year->budgetPlans as $plan)
+                    @forelse($year->budgetPlans as $plan)
                         <flux:table.row>
-                            <flux:table.cell>
-                                {{ __('budget-plan.fiscal-year') }} {{ $plan->id }}
+                            <flux:table.cell class="ps-8!">
+                                <flux:link :href="route('budget-plan.view', $plan->id)">{{ $plan->label() }}</flux:link>
                             </flux:table.cell>
                             <flux:table.cell>
-                                <flux:badge color="green" size="sm" inset="top bottom">
-                                    {{ $plan->state }}
+                                <flux:badge :color="$plan->state?->color() ?? 'green'" size="sm" inset="top bottom">
+                                    {{ $plan->state?->label() }}
                                 </flux:badge>
                             </flux:table.cell>
-                            <flux:table.cell class="inline-flex space-x-2">
-                                <flux:link :href="route('budget-plan.edit', $plan->id)">
-                                    <x-fas-pencil class="size-3.5"/>
-                                </flux:link>
-                                <flux:link :href="route('budget-plan.view', $plan->id)">
-                                    <x-fas-eye class="size-3.5"/>
-                                </flux:link>
+                        </flux:table.row>
+                    @empty
+                        <flux:table.row>
+                            <flux:table.cell colspan="2" class="ps-8! text-gray-500 italic">
+                                {{ __('budget-plan.index.no-plans') }}
+                            </flux:table.cell>
+                        </flux:table.row>
+                    @endforelse
+                @endforeach
+
+                @if($orphaned_plans->isNotEmpty())
+                    <flux:table.row-headline>
+                        {{ __('budget-plan.index.orphaned-plans') }}
+                    </flux:table.row-headline>
+                    @foreach($orphaned_plans as $plan)
+                        <flux:table.row>
+                            <flux:table.cell class="ps-8!">
+                                <flux:link :href="route('budget-plan.view', $plan->id)">{{ $plan->organization ?: __('budget-plan.view.no-organization') }}</flux:link>
+                            </flux:table.cell>
+                            <flux:table.cell>
+                                <flux:badge :color="$plan->state?->color() ?? 'green'" size="sm" inset="top bottom">
+                                    {{ $plan->state?->label() }}
+                                </flux:badge>
                             </flux:table.cell>
                         </flux:table.row>
                     @endforeach
-                @endforeach
-                @if($orphaned_plans->isNotEmpty())
-                    <flux:table.row-headline>
-                        Pläne ohhneee HHHHJ
-                    </flux:table.row-headline>
                 @endif
-                @foreach($orphaned_plans as $plan)
+
+                @if($years->isEmpty() && $orphaned_plans->isEmpty())
                     <flux:table.row>
-                        <flux:table.cell>
-                            {{ __('budget-plan.plan?') }} {{ $plan->id }}
-                        </flux:table.cell>
-                        <flux:table.cell>
-                            <flux:badge color="green" size="sm" inset="top bottom">
-                                {{ $plan->state }}
-                            </flux:badge>
-                        </flux:table.cell>
-                        <flux:table.cell class="inline-flex space-x-2">
-                            <flux:link :href="route('budget-plan.edit', $plan->id)">
-                                <x-fas-pencil class="size-3.5"/>
-                            </flux:link>
-                            <flux:link :href="route('budget-plan.view', $plan->id)">
-                                <x-fas-eye class="size-3.5"/>
-                            </flux:link>
+                        <flux:table.cell colspan="2" class="text-center text-gray-500">
+                            {{ __('budget-plan.index.no-plans') }}
                         </flux:table.cell>
                     </flux:table.row>
-                @endforeach
+                @endif
             </flux:table.rows>
         </flux:table>
     </div>

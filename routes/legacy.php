@@ -6,9 +6,14 @@ use App\Http\Controllers\Legacy\ExportController;
 use App\Http\Controllers\Legacy\LegacyController;
 use App\Models\Legacy\Expense;
 use App\Models\Legacy\LegacyBudgetItem;
+use App\Support\Csp\LegacyCspPreset;
 use Illuminate\Support\Facades\Route;
+use Spatie\Csp\AddCspHeaders;
 
-Route::middleware(['auth'])->name('legacy.')->group(function (): void {
+// Legacy pages embed the old system via <iframe srcdoc> (inherits this page's CSP),
+// so they run under a permissive policy (LegacyCspPreset) instead of the strict
+// app-wide one. Route-level spatie middleware wins over the global web-group one.
+Route::middleware(['auth', AddCspHeaders::class.':'.LegacyCspPreset::class])->name('legacy.')->group(function (): void {
 
     Route::get('menu/hv', [LegacyController::class, 'render'])->name('todo.hv');
     Route::get('menu/kv', [LegacyController::class, 'render'])->name('todo.kv');

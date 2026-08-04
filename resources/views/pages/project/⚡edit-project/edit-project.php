@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\BudgetItem;
+use App\Models\BudgetPlan;
 use App\Models\Enums\ChatMessageType;
 use App\Models\Legacy\ChatMessage;
 use App\Models\Legacy\ExpenseReceiptPost;
-use App\Models\Legacy\LegacyBudgetItem;
-use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\Legacy\ProjectAttachment;
 use App\Models\Legacy\ProjectPost;
@@ -19,7 +19,6 @@ use App\Support\Money\MoneyInput;
 use Cknow\Money\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -72,7 +71,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public array $dateRange = [];
 
-    public int $hhp_id;
+    public int $budget_plan_id;
 
     public int $version = 1;
 
@@ -149,7 +148,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->populateData(new Project);
         $this->copyMetaFrom($source);
         $this->name = trim($source->name.__('project.view.edit.name_copy_suffix'));
-        $this->hhp_id = LegacyBudgetPlan::findByDate($source->createdat)?->id ?? $this->hhp_id;
+        // Stay in the source's budget plan so the copied posts' titel_ids remain valid.
+        $this->budget_plan_id = $source->budget_plan_id ?? $this->budget_plan_id;
         $this->sourceId = $source->id;
         $this->sourceKind = 'copy';
 
@@ -177,7 +177,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     /**
      * Prefill the form as a fresh draft carrying the unspent remainder of an
      * existing project into the latest budget plan. Titel are remapped across
-     * plans by titel_nr; fully-spent posts are dropped.
+     * plans by short_name (Titelnummer); fully-spent posts are dropped.
      */
     private function populateFromLeftovers(Project $source): void
     {
@@ -187,8 +187,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $this->sourceId = $source->id;
         $this->sourceKind = 'leftovers';
 
-        $targetPlanId = LegacyBudgetPlan::latest()->id;
-        $this->hhp_id = $targetPlanId;
+        $targetPlanId = BudgetPlan::query()->orderByDesc('id')->first()->id;
+        $this->budget_plan_id = $targetPlanId;
 
         $this->posts = $source->posts
             ->map(function (ProjectPost $post) use ($targetPlanId): ?array {
@@ -218,8 +218,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
-     * Map a titel_id from its current plan onto the matching titel in the target
-     * plan via the stable titel_nr. Returns null when there is no match.
+     * Map a titel_id from its current plan onto the matching bookable item in the target
+     * plan via the stable short_name (Titelnummer). Returns null when there is no match.
      */
     public function remapTitelId(?int $oldTitelId, int $targetPlanId): ?int
     {
@@ -227,14 +227,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             return null;
         }
 
-        $titelNr = LegacyBudgetItem::find($oldTitelId)?->titel_nr;
-        if ($titelNr === null) {
+        $shortName = BudgetItem::find($oldTitelId)?->short_name;
+        if ($shortName === null) {
             return null;
         }
 
-        return LegacyBudgetPlan::find($targetPlanId)
-            ?->budgetItems
-            ->firstWhere('titel_nr', $titelNr)?->id;
+        return BudgetPlan::find($targetPlanId)
+            ?->budgetItems()
+            ->bookable()
+            ->where('short_name', $shortName)
+            ->first()?->id;
     }
 
     /**
@@ -277,12 +279,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * When the budget plan changes, remap every post's titel into the newly
      * selected plan (e.g. a finance officer moving the project to another plan).
      */
-    public function updatedHhpId(): void
+    public function updatedBudgetPlanId(): void
     {
         $this->posts = collect($this->posts)->map(function (array $post): array {
             $post['titel_id'] = $this->remapTitelId(
                 $post['titel_id'] !== null ? (int) $post['titel_id'] : null,
-                $this->hhp_id,
+                $this->budget_plan_id,
             );
 
             return $post;
@@ -304,7 +306,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'end' => $project->date_end ?? null,
         ];
         $this->version = $project->version ?? 1;
-        $this->hhp_id = LegacyBudgetPlan::findByDate($project->createdat)?->id;
+        // A saved project has its plan persisted; a new draft (unsaved Project) defaults to the
+        // latest plan, which the user can still change in the form.
+        $this->budget_plan_id = $project->budget_plan_id ?? BudgetPlan::query()->orderByDesc('id')->first()?->id;
         $this->state_name = $project->state->getValue();
 
         $bookedExpenses = $project->expenses()->where('state', 'like', 'booked%')->get();
@@ -343,7 +347,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'date_start' => $this->dateRange['start'] ?? null,
             'date_end' => $this->dateRange['end'] ?? null,
             'version' => $this->version,
-            'createdat' => Date::parse(LegacyBudgetPlan::find($this->hhp_id)->von)->addDays(7),
+            'budget_plan_id' => $this->budget_plan_id,
             'posts' => $this->posts,
         ];
     }
@@ -365,10 +369,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     public function addTaxPosts(): void
     {
-        TaxBudget::where('hhp_id', $this->hhp_id)->get()->each(function (TaxBudget $taxBudget): void {
-            $budgetTitle = $taxBudget->legacyBudgetTitle;
+        TaxBudget::where('plan_id', $this->budget_plan_id)->get()->each(function (TaxBudget $taxBudget): void {
+            $budgetTitle = $taxBudget->budgetTitle;
             $this->posts[] = ([
-                'name' => $budgetTitle->titel_name.' - Einnahmen',
+                'name' => $budgetTitle->name.' - Einnahmen',
                 'bemerkung' => 'Steuer',
                 'einnahmen' => Money::EUR($taxBudget->tax_percent),
                 'ausgaben' => Money::EUR(0),
@@ -376,7 +380,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 'readonly' => false,
             ]);
             $this->posts[] = ([
-                'name' => $budgetTitle->titel_name.' - Ausgaben',
+                'name' => $budgetTitle->name.' - Ausgaben',
                 'bemerkung' => 'Steuer',
                 'einnahmen' => Money::EUR(0),
                 'ausgaben' => Money::EUR($taxBudget->tax_percent),
@@ -602,6 +606,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      * come back under the data key, so they need translating back or they land on a name no
      * input is bound to and stay invisible. Everything absent from this map already matches
      * on both sides — including every `posts.*` key, which is where most errors occur.
+     *
+     * The list only shrinks from here: a property renamed to its data key (as `hhp_id`
+     * was to `budget_plan_id`) drops out, because then there is nothing left to translate.
      */
     private const array ERROR_FIELDS = [
         'date_start' => 'dateRange',
@@ -692,9 +699,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     protected function getBudgetTitleOptions(): Illuminate\Database\Eloquent\Collection
     {
-        $plan = LegacyBudgetPlan::findOrFail($this->hhp_id);
+        $plan = BudgetPlan::findOrFail($this->budget_plan_id);
 
-        return $plan->budgetItems;
+        return $plan->budgetItems()->bookable()->get();
     }
 
     /**
@@ -716,7 +723,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $state = $this->getState();
         $budgetTitles = $this->getBudgetTitleOptions();
-        $budgetPlans = LegacyBudgetPlan::all();
+        $budgetPlans = BudgetPlan::orderByDesc('id')->get();
         // settings
         $protocolLinkSetting = Setting::get('project.protocol_url');
         // permissions
@@ -725,7 +732,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             && collect($this->posts)->filter(fn ($post) => $post['readonly'])->isEmpty();
         $canUpdateApproval = Auth::user()->can('update-approval', $this->getProject());
 
-        $hasTaxTitels = TaxBudget::where('hhp_id', $this->hhp_id)->exists();
+        $hasTaxTitels = TaxBudget::where('plan_id', $this->budget_plan_id)->exists();
         $canAddTaxTitles = collect($this->posts)->filter(fn ($post) => $post['bemerkung'] === 'Steuer')->isEmpty();
 
         // Backlink to the origin project: for a new copy/leftovers draft it comes

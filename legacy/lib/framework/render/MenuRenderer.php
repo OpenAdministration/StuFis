@@ -60,24 +60,19 @@ class MenuRenderer extends Renderer
 
     public function renderProjekte($active): void
     {
-        [$hhps, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE.'menu/', "/$active");
+        [, $hhp_id] = $this->renderHHPSelector($this->pathinfo, URIBASE.'menu/', "/$active");
         echo "<div class='clearfix'></div>";
-        $hhp_von = $hhps[$hhp_id]['von'];
-        $hhp_bis = $hhps[$hhp_id]['bis'];
         $userGremien = AuthHandler::getInstance()->getUserGremien();
 
         rsort($userGremien, SORT_STRING | SORT_FLAG_CASE);
+        // Projects belong to the selected plan via the persisted budget_plan_id link (haushaltsplan
+        // id == budget_plan id), replacing the former created_at date-range match that could no
+        // longer tell apart multiple plans sharing one fiscal year.
         switch ($active) {
             case 'allgremium':
-                if (is_null($hhp_bis)) {
-                    $where = [
-                        ['createdat' => ['>=', $hhp_von]],
-                    ];
-                } else {
-                    $where = [
-                        ['createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
-                    ];
-                }
+                $where = [
+                    ['budget_plan_id' => $hhp_id],
+                ];
                 break;
             case 'mygremium':
                 if (empty($userGremien)) {
@@ -92,30 +87,16 @@ class MenuRenderer extends Renderer
 
                     return;
                 }
-                if (is_null($hhp_bis)) {
-                    $where = [
-                        ['org' => ['in', $userGremien], 'createdat' => ['>=', $hhp_von]],
-                        ['org' => ['is', null], 'createdat' => ['>=', $hhp_von]],
-                        ['org' => '', 'createdat' => ['>=', $hhp_von]],
-                    ];
-                } else {
-                    $where = [
-                        ['org' => ['in', $userGremien], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
-                        ['org' => ['is', null], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
-                        ['org' => '', 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
-                    ];
-                }
+                $where = [
+                    ['org' => ['in', $userGremien], 'budget_plan_id' => $hhp_id],
+                    ['org' => ['is', null], 'budget_plan_id' => $hhp_id],
+                    ['org' => '', 'budget_plan_id' => $hhp_id],
+                ];
                 break;
             case 'open-projects':
-                if (is_null($hhp_bis)) {
-                    $where = [
-                        ['state' => ['not regexp', '(terminated|revoked)'], 'createdat' => ['>=', $hhp_von]],
-                    ];
-                } else {
-                    $where = [
-                        ['state' => ['not regexp', '(terminated|revoked)'], 'createdat' => ['BETWEEN', [$hhp_von, $hhp_bis]]],
-                    ];
-                }
+                $where = [
+                    ['state' => ['not regexp', '(terminated|revoked)'], 'budget_plan_id' => $hhp_id],
+                ];
                 break;
             default:
                 throw new LegacyDieException(400, 'Not known active Tab: '.$active);
@@ -205,7 +186,7 @@ class MenuRenderer extends Renderer
                                 <div class="panel-group" id="accordion<?php echo $i; ?>">
                                     <?php foreach ($inhalt as $projekt) {
                                         $id = $projekt['id'];
-                                        $year = date('y', strtotime($projekt['createdat'])); ?>
+                                        $year = date('y', strtotime($projekt['created_at'])); ?>
                                         <div class="panel panel-default">
                                             <div class="panel-link"><?php echo generateLinkFromID(
                                                 "IP-$year-$id",
@@ -572,12 +553,12 @@ class MenuRenderer extends Renderer
             [DBConnector::FETCH_NUMERIC],
             [
                 'projekte.id',
-                'createdat',
+                'created_at',
                 'projekte.name',
                 'org',
                 'einnahmen' => ['projektposten.einnahmen', DBConnector::GROUP_SUM_ROUND2],
                 'ausgaben' => ['projektposten.ausgaben', DBConnector::GROUP_SUM_ROUND2],
-                'createdat',
+                'created_at',
             ],
             ['state' => $statestring],
             [['type' => 'inner', 'table' => 'projektposten', 'on' => ['projektposten.projekt_id', 'projekte.id']]],
@@ -625,7 +606,7 @@ class MenuRenderer extends Renderer
             [DBConnector::FETCH_NUMERIC],
             [
                 'projekte.id',
-                'createdat',
+                'created_at',
                 'name', // Projekte Link
                 'projekte.id',
                 'auslagen.id',
@@ -697,7 +678,7 @@ class MenuRenderer extends Renderer
                 'auslagen.zahlung_name',
                 'auslagen.zahlung_iban',
                 'projekte.id',
-                'projekte.createdat',
+                'projekte.created_at',
                 'auslagen.id',
                 'auslagen.zahlung_vwzk',
                 'auslagen.name_suffix',

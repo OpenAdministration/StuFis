@@ -32,7 +32,7 @@
                     <div class="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-gray-500">
                         <span>{{ __('project.view.header.title') }} {{ $project->id }}</span>
                         <span aria-hidden="true">&middot;</span>
-                        <span>{{ __('project.view.header.created_at') }} {{ $project->createdat?->format('d.m.Y') }}</span>
+                        <span>{{ __('project.view.header.created_at') }} {{ $project->created_at?->format('d.m.Y') }}</span>
 
                         @if ($project->source_id && $project->source_kind)
                             <span aria-hidden="true">&middot;</span>
@@ -260,12 +260,12 @@
                 </div>
             </flux:card>
 
-            <!-- BudgetPlan Card (whole card links to the legacy budget plan view) -->
+            <!-- BudgetPlan Card (whole card links to the budget plan view) -->
             @php
                 $relatedPlan = $project->relatedBudgetPlan();
-                $planUrl = $relatedPlan ? route('legacy.hhp.view', $relatedPlan->id) : null;
+                $planUrl = $relatedPlan ? route('budget-plan.view', $relatedPlan->id) : null;
             @endphp
-            <a href="{{ $planUrl }}" @class(['group block h-full', 'pointer-events-none' => ! $planUrl])>
+            <a href="{{ $planUrl }}" wire:navigate @class(['group block h-full', 'pointer-events-none' => ! $planUrl])>
                 <flux:card size="sm" class="h-full transition {{ $planUrl ? 'cursor-pointer' : '' }}">
                     <div class="flex items-center justify-between">
                         <div>
@@ -514,8 +514,8 @@
                             <td class="px-6 py-4 text-sm text-gray-500">
                                 @if($post->budgetItem)
                                     @php $budgetItem = $post->budgetItem @endphp
-                                    <flux:link variant="subtle" href="{{ route('legacy.hhp.titel.view', ['hhp_id' => $budgetPlan->id, 'titel_id' => $budgetItem->id]) }}">
-                                        {{ $budgetItem->titel_name }} ({{ $budgetItem->titel_nr  }})
+                                    <flux:link variant="subtle" href="{{ route('budget-plan.item.view', ['plan_id' => $budgetItem->budget_plan_id, 'item_id' => $budgetItem->id]) }}" wire:navigate>
+                                        {{ $budgetItem->name }} ({{ $budgetItem->short_name }})
                                     </flux:link>
                                 @endif
                             </td>

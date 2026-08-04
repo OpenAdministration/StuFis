@@ -1,10 +1,14 @@
 <?php
 
+use Spatie\Csp\Directive;
+use Spatie\Csp\Keyword;
 use Spatie\Csp\Nonce\RandomString;
 use Spatie\Csp\Presets\Basic;
 
-// use Spatie\Csp\Directive;
-// use Spatie\Csp\Keyword;
+// stumv identity-provider origin, so user avatars it serves pass img-src without
+// opening up all of https:. STUMV_HOST already holds the full origin; just drop any
+// trailing slash. Read from env() (not config()) — config-file load order isn't guaranteed.
+$stumvOrigin = ($host = env('STUMV_HOST')) ? rtrim((string) $host, '/') : null;
 
 return [
 
@@ -13,16 +17,28 @@ return [
      * any class that implements `Spatie\Csp\Preset`
      */
     'presets' => [
-        // Intentionally empty: we run CSP in REPORT-ONLY mode for now (see
-        // report_only_presets below). Nothing is enforced yet — the browser
-        // only reports what *would* be blocked. Revisit enforcing in 4.5.0.
+        // ENFORCING policy (4.5.0): the strict `'self'`-everywhere baseline with
+        // nonces on script/style. Violations are now blocked by the browser via
+        // the `Content-Security-Policy` header, not merely reported.
+        Basic::class,
     ],
 
     /**
      * Register additional global CSP directives here.
      */
     'directives' => [
-        // [Directive::SCRIPT, [Keyword::UNSAFE_EVAL, Keyword::UNSAFE_INLINE]],
+        // 'script-src' stays strict ('self' + nonce, no unsafe-*). Only inline
+        // style ATTRIBUTES are relaxed: a handful of data-driven widths/indents
+        // (budget consumption-meter, view-row indent, project progress bar) render
+        // as `style="width:..%"`, which the enforcing style-src would otherwise
+        // block. <style> ELEMENTS still require the nonce via style-src.
+        [Directive::STYLE_ATTR, [Keyword::UNSAFE_INLINE]],
+
+        // Allow user avatars served by the stumv identity provider (external
+        // `picture_url`) plus data: URIs — scoped to the provider origin rather
+        // than all of https:. img-src is a resource-load control, not a script/XSS
+        // vector, so this doesn't weaken the strict script-src.
+        [Directive::IMG, array_values(array_filter([Keyword::SELF, 'data:', $stumvOrigin]))],
     ],
 
     /*
@@ -30,7 +46,7 @@ return [
      * a new policy or changes to existing CSP policy without breaking anything.
      */
     'report_only_presets' => [
-        Basic::class,
+        //
     ],
 
     /**

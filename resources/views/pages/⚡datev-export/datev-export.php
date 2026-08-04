@@ -3,7 +3,7 @@
 use App\Exports\Datev\DatevExport;
 use App\Exports\Datev\DatevExportDateField;
 use App\Exports\Datev\DatevExportPreviewRow;
-use App\Models\Legacy\LegacyBudgetPlan;
+use App\Models\BudgetPlan;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Validation\Rule;
@@ -34,13 +34,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         $this->authorize('download', DatevExport::class);
 
-        $this->hhpId = LegacyBudgetPlan::latest()?->id;
+        $this->hhpId = BudgetPlan::newest()?->id;
     }
 
     #[Computed]
     public function budgetPlans(): Collection
     {
-        return LegacyBudgetPlan::orderBy('id', 'desc')->get();
+        return BudgetPlan::with('fiscalYear')->orderByDesc('id')->get();
     }
 
     /**
@@ -129,7 +129,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     protected function rules(): array
     {
         return [
-            'hhpId' => ['required', 'int', new Exists(LegacyBudgetPlan::class, 'id')],
+            'hhpId' => ['required', 'int', new Exists(BudgetPlan::class, 'id')],
             'dateRange.start' => 'required|date',
             'dateRange.end' => 'required|date|after:dateRange.start',
             'exportPdfs' => 'required|bool',

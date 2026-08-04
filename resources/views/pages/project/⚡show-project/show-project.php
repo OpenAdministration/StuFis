@@ -35,9 +35,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $userCanDelete = Auth::user()->can('delete', $project);
         $deletionAllowed = $project->expenses()->count() === 0;
 
-        $budgetPlan = $project->relatedBudgetPlan();
-
-        return compact('project', 'showApproval', 'showLink', 'protocolLabel', 'userCanDelete', 'deletionAllowed', 'budgetPlan');
+        return compact('project', 'showApproval', 'showLink', 'protocolLabel', 'userCanDelete', 'deletionAllowed');
     }
 
     public function changeState(): void

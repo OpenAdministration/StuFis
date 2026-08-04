@@ -2,22 +2,20 @@
 
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
-use App\Models\Enums\BudgetPlanState;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
+use App\States\BudgetPlan\Draft;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
-beforeEach(function (): void {
-    // enable dev routes where budget plan routes live
-    config()->set('stufis.features', 'dev');
-});
+uses(DatabaseTransactions::class);
 
 function createEmptyPlan(): BudgetPlan
 {
-    return BudgetPlan::create(['state' => BudgetPlanState::DRAFT]);
+    return BudgetPlan::create(['state' => Draft::class]);
 }
 
 it('renders and can add groups and items, save metadata, and prevent deleting non-empty groups', function (): void {
-    $this->actingAs(user());
+    $this->actingAs(budgetManager());
 
     $plan = createEmptyPlan();
 
@@ -42,8 +40,8 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
         ->assertHasNoErrors();
     $child = $incomeRoot->children()->orderByDesc('id')->first();
     expect($child->is_group)->toBeFalse();
-    // MoneyDecimalCast stores cents, so ensure amount matches
-    expect($child->value->getAmount())->toBe(1234);
+    // MoneyDecimalCast stores cents, so ensure amount matches (getAmount() returns a string)
+    expect((int) $child->value->getAmount())->toBe(1234);
 
     // set meta data and save -> redirects to view route
     $fy = FiscalYear::factory()->create();
@@ -59,9 +57,9 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     expect($plan->organization)->toBe('Test Org');
     expect($plan->fiscal_year_id)->toBe($fy->id);
 
-    // try to delete a non-empty group (has children) -> should add error and not delete
+    // try to delete a non-empty group (has children) -> refused (toast, no delete)
     $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
     $lw->call('delete', $incomeRoot->id)
-        ->assertHasErrors();
+        ->assertHasNoErrors();
     expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();
-})->todo('budget-plan is a dev-only feature; enable once it graduates out of dev (preview/stable)');
+});

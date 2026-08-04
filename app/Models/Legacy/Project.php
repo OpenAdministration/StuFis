@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\BudgetPlan;
 use App\Models\LegalBasis;
 use App\Models\Setting;
 use App\Models\User;
@@ -27,8 +28,9 @@ use Spatie\ModelStates\HasStates;
  *
  * @property int $id
  * @property int $creator_id
- * @property Carbon $createdat
- * @property Carbon $lastupdated
+ * @property int|null $budget_plan_id
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property int $version
  * @property ProjectState $state
  * @property int $stateCreator_id
@@ -55,12 +57,12 @@ use Spatie\ModelStates\HasStates;
  * @method static Builder|Project whereState($field, ProjectState|array<ProjectState> $states)
  * @method static Builder|Project whereNotState($field, ProjectState|array<ProjectState> $states)
  * @method static Builder|Project whereBeschreibung($value)
- * @method static Builder|Project whereCreatedat($value)
+ * @method static Builder|Project whereCreatedAt($value)
  * @method static Builder|Project whereCreatorId($value)
  * @method static Builder|Project whereDateEnd($value)
  * @method static Builder|Project whereDateStart($value)
  * @method static Builder|Project whereId($value)
- * @method static Builder|Project whereLastupdated($value)
+ * @method static Builder|Project whereUpdatedAt($value)
  * @method static Builder|Project whereName($value)
  * @method static Builder|Project whereOrg($value)
  * @method static Builder|Project whereOrgMail($value)
@@ -88,10 +90,6 @@ class Project extends Model
      * @var string
      */
     protected $table = 'projekte';
-
-    const string CREATED_AT = 'createdat';
-
-    const string UPDATED_AT = 'lastupdated';
 
     /**
      * The attributes that aren't mass-assignable.
@@ -122,8 +120,9 @@ class Project extends Model
     {
         return [
             'state' => ProjectState::class,
-            'createdat' => 'datetime',
-            'lastupdated' => 'datetime',
+            'budget_plan_id' => 'integer',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
             'date_start' => 'date',
             'date_end' => 'date',
         ];
@@ -160,9 +159,9 @@ class Project extends Model
         return $this->hasMany(Project::class, 'source_id');
     }
 
-    public function relatedBudgetPlan(): LegacyBudgetPlan
+    public function relatedBudgetPlan(): ?BudgetPlan
     {
-        return LegacyBudgetPlan::findByDate($this->createdat);
+        return BudgetPlan::find($this->budget_plan_id);
     }
 
     /**

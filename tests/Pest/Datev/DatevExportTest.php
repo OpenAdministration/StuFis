@@ -1,11 +1,11 @@
 <?php
 
 use App\Exports\Datev\DatevExport;
+use App\Models\BudgetItem;
+use App\Models\Enums\BudgetType;
 use App\Models\Legacy\Booking;
 use App\Models\Legacy\Expense;
 use App\Models\Legacy\ExpenseReceipt;
-use App\Models\Legacy\LegacyBudgetGroup;
-use App\Models\Legacy\LegacyBudgetItem;
 use Illuminate\Support\Facades\Date;
 
 // DatevExport's accounting logic is private and wrapped around a deep legacy graph.
@@ -26,9 +26,9 @@ function datevExport(): DatevExport
 
 function datevBooking(int $groupType, float $value): Booking
 {
-    $group = new LegacyBudgetGroup(['type' => $groupType]);
-    $item = new LegacyBudgetItem;
-    $item->setRelation('budgetGroup', $group);
+    // legacy group type 0 = income, 1 = expense → new BudgetType on the item itself
+    $item = new BudgetItem;
+    $item->budget_type = $groupType === 0 ? BudgetType::INCOME : BudgetType::EXPENSE;
 
     $booking = new Booking;
     $booking->value = $value;

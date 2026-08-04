@@ -234,6 +234,9 @@ class HHPHandler extends Renderer
 
     public function saveNewHHP(): bool
     {
+        // The legacy budget tables are now read-only views over the new budget_plan structure;
+        // creating/importing a Haushaltsplan happens in the new budget plan module instead.
+        throw new LegacyDieException(410, 'Die Haushaltsplan-Erstellung erfolgt jetzt im neuen Haushaltsplan-Modul.');
         [$groups, $titels, $newHHPid] = $this->reverseCSV($_POST['importCSV']);
         $dateStart = date_create($_POST['date_start'])->format('Y-m-d');
         $db = DBConnector::getInstance();
@@ -509,7 +512,7 @@ class HHPHandler extends Renderer
         $this->renderTable(
             ['Projekt', 'Posten', 'Betrag'],
             [$openMoney],
-            ['projekte.id', 'projekte.createdat', 'projekte.name', 'name', 'value'],
+            ['projekte.id', 'projekte.created_at', 'projekte.name', 'name', 'value'],
             [
                 [$this, 'projektLinkEscapeFunction'],
                 null,
@@ -523,7 +526,7 @@ class HHPHandler extends Renderer
             [$closedMoney],
             [
                 'projekte.id',
-                'projekte.createdat',
+                'projekte.created_at',
                 'projekte.name',
                 'projekte.id',
                 'auslagen.id',

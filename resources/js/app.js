@@ -1,7 +1,8 @@
-import {Alpine, Livewire} from '../../vendor/livewire/livewire/dist/livewire.esm';
-import Sort from '@alpinejs/sort'
+// CSP-safe build: uses Alpine's restricted evaluator instead of `new Function()`,
+// so x-data/@click expressions don't need `unsafe-eval` under our enforcing CSP.
+// The livewire.csp_safe config only swaps Livewire's *route-served* asset, which
+// this app doesn't use (it bundles Livewire via Vite), so the swap must happen here.
+import {Livewire} from '../../vendor/livewire/livewire/dist/livewire.csp.esm';
 import '@fontsource-variable/inter';
-
-Alpine.plugin(Sort)
 
 Livewire.start()

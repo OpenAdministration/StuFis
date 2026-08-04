@@ -1,18 +1,36 @@
 <div>
     <x-intro>
-        Test
+        {{ $id ? __('budget-plan.fiscal-year.edit.headline') : __('budget-plan.fiscal-year.create.headline') }}
         <x-slot:subHeadline>
-            Lorem ipsum
+            {{ __('budget-plan.fiscal-year.edit.sub') }}
         </x-slot:subHeadline>
     </x-intro>
-    <div class="max-w-64 space-y-4">
-        <flux:input wire:model="start_date" label="Start" type="date"/>
-        <flux:input wire:model="end_date" label="Ende" type="date" badge="Optional"/>
-    </div>
-    <div class="mt-6">
-        <flux:button variant="primary" wire:click="save">
-            Speichern
-        </flux:button>
-    </div>
 
+    <form wire:submit="save" class="max-w-sm space-y-4">
+        <flux:input wire:model.live="start_date" :label="__('budget-plan.fiscal-year.start')" type="date"/>
+        <flux:input wire:model.live="end_date" :label="__('budget-plan.fiscal-year.end')" type="date"/>
+
+        @if(count($this->gaps) > 0)
+            <flux:callout color="amber" icon="exclamation-triangle" inline>
+                <flux:callout.heading>{{ __('budget-plan.fiscal-year.gap-warning.heading') }}</flux:callout.heading>
+                <flux:callout.text>
+                    {{ __('budget-plan.fiscal-year.gap-warning.text') }}
+                    <ul class="mt-1 list-disc ps-4">
+                        @foreach($this->gaps as $gap)
+                            <li>{{ $gap['start']->format('d.m.Y') }} – {{ $gap['end']->format('d.m.Y') }}</li>
+                        @endforeach
+                    </ul>
+                </flux:callout.text>
+            </flux:callout>
+        @endif
+
+        <div class="mt-6 flex gap-2">
+            <flux:button variant="primary" type="submit">
+                {{ __('budget-plan.fiscal-year.save') }}
+            </flux:button>
+            <flux:button variant="ghost" :href="route('budget-plan.index')" wire:navigate>
+                {{ __('budget-plan.fiscal-year.cancel') }}
+            </flux:button>
+        </div>
+    </form>
 </div>

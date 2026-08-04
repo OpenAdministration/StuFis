@@ -34,8 +34,8 @@ class ProjektHandler
         self::$emptyData = [
             'id' => '',
             'creator_id' => '',
-            'createdat' => '',
-            'lastupdated' => '',
+            'created_at' => '',
+            'updated_at' => '',
             'version' => '1',
             'state' => 'draft',
             'stateCreator_id' => '',

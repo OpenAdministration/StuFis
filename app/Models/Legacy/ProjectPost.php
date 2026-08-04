@@ -3,6 +3,7 @@
 namespace App\Models\Legacy;
 
 use App\Events\UpdatingModel;
+use App\Models\BudgetItem;
 use Cknow\Money\Casts\MoneyDecimalCast;
 use Cknow\Money\Money;
 use Illuminate\Database\Eloquent\Builder;
@@ -78,7 +79,7 @@ class ProjectPost extends Model
 
     public function budgetItem(): BelongsTo
     {
-        return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
+        return $this->belongsTo(BudgetItem::class, 'titel_id');
     }
 
     public function expendedSum(): Money

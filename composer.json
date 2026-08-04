@@ -2,7 +2,7 @@
     "name": "openadministration/stufis",
     "type": "project",
     "description": "Webinterface für das Management und Digitalisierung von Finanzanträgen und deren Buchung für Studierendenschaften nach Deutschem Recht",
-    "version": "4.4.3",
+    "version": "4.5.0-beta",
     "license": "AGPL",
     "require": {
         "php": "^8.4",
@@ -23,7 +23,7 @@
         "guzzlehttp/guzzle": "^7.9",
         "intervention/validation": "^4.5",
         "jumbojett/openid-connect-php": "^1.0",
-        "laravel/framework": "^12.42",
+        "laravel/framework": "^13.0",
         "livewire/flux": "^2.2",
         "livewire/flux-pro": "^2.2",
         "livewire/livewire": "^4.0",
@@ -112,7 +112,7 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
-        "prepare-test": "@php artisan migrate:fresh --seed --env=testing",
+        "prepare-test": "@php artisan migrate:fresh --seed --drop-views --env=testing",
         "rector": "@php vendor/bin/rector process",
         "rector-dry": "@php vendor/bin/rector process --dry-run",
         "lint": "@php vendor/bin/phpstan",

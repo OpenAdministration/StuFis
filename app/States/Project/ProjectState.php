@@ -2,7 +2,8 @@
 
 namespace App\States\Project;
 
-use App\Models\Legacy\LegacyBudgetItem;
+use App\Models\BudgetItem;
+use App\Models\BudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\LegalBasis;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Rules\FluxEditorRule;
 use App\Rules\NonNegativeMoneyRule;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Livewire\Wireable;
 use Spatie\ModelStates\Exceptions\InvalidConfig;
 use Spatie\ModelStates\State;
@@ -121,6 +123,7 @@ abstract class ProjectState extends State implements Wireable
             'responsible' => 'required|string|max:128|email',
             'org' => 'required|string|max:64',
             'protokoll' => 'sometimes|nullable|string|url',
+            'budget_plan_id' => ['required', 'integer', Rule::exists(BudgetPlan::class, 'id')],
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
             'beschreibung' => ['required', 'string', new FluxEditorRule, new DescriptionLengthRule],
@@ -137,8 +140,20 @@ abstract class ProjectState extends State implements Wireable
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => ['sometimes', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
+            'posts.*.titel_id' => ['sometimes', 'integer', $this->budgetItemExistsRule()],
         ];
+    }
+
+    /**
+     * Existence rule for a post's titel_id: it must point at a bookable budget leaf (not a group
+     * or mount). Mirrors BudgetItem::scopeBookable() — the validator query is a base query builder,
+     * so the Eloquent scope can't be applied here and the predicate is repeated inline.
+     */
+    protected function budgetItemExistsRule(): Exists
+    {
+        return Rule::exists(BudgetItem::class, 'id')
+            ->where('is_group', false)
+            ->whereNull('referenced_plan_id');
     }
 
     public function approvalRules(): array

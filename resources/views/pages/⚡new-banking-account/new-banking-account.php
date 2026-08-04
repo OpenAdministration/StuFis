@@ -28,12 +28,19 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
     public function rules(): array
     {
         return [
-            'short' => 'required|max:2|alpha|uppercase|unique:App\Models\Legacy\BankAccount,short',
+            'short' => 'required|max:2|alpha|uppercase|not_in:B,P,A|unique:App\Models\Legacy\BankAccount,short',
             'name' => 'required|string|min:3|max:32',
             'sync_from' => 'required|date',
             'sync_until' => 'nullable|date|after:sync_from',
             'iban' => 'nullable|iban',
             'manually_enterable' => 'required|boolean',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'short.not_in' => __('konto.new.prefix-reserved'),
         ];
     }
 

@@ -169,14 +169,15 @@
                 {{-- Creation Date --}}
                 <div class="">
                     @if($canUpdateBudgetPlan)
-                        <flux:select variant="listbox" :label="__('project.view.edit.project_belongs_to_budget_plan')" wire:model.live="hhp_id">
+                        <flux:select variant="listbox" :label="__('project.view.edit.project_belongs_to_budget_plan')" wire:model.live="budget_plan_id">
                             @foreach ($budgetPlans as $plan)
                                 <flux:select.option value="{{ $plan->id }}">{{ $plan->label() }}</flux:select.option>
                             @endforeach
                         </flux:select>
+                        <flux:error name="budget_plan_id" />
                     @else
                         <flux:label>{{ __('project.view.edit.project_belongs_to_budget_plan') }}</flux:label>
-                        <span class="text-gray-500">{{ $budgetPlans->find($hhp_id)->label() }}</span>
+                        <span class="text-gray-500">{{ $budgetPlans->find($budget_plan_id)->label() }}</span>
                     @endif
                 </div>
             </div>
@@ -259,13 +260,13 @@
                                 <td class="px-3 py-4 text-sm text-gray-900">
                                     @if ($post["readonly"] === true)
                                         @php $title = $budgetTitles->find($post['titel_id']) @endphp
-                                        <span class="text-gray-500">{{ $title->titel_name }} ({{ $title->titel_nr }})</span>
+                                        <span class="text-gray-500">{{ $title->name }} ({{ $title->short_name }})</span>
                                     @else
                                         <flux:select variant="listbox" wire:model="posts.{{ $index }}.titel_id" searchable>
                                         @foreach ($budgetTitles as $title)
                                             <flux:select.option value="{{ $title->id }}">
-                                                {{ $title->titel_name }}
-                                                <span class="text-gray-500 ml-2">{{ $title->titel_nr }}</span>
+                                                {{ $title->name }}
+                                                <span class="text-gray-500 ml-2">{{ $title->short_name }}</span>
                                             </flux:select.option>
                                         @endforeach
                                         </flux:select>

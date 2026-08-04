@@ -1598,7 +1598,7 @@ class AuslagenHandler2 extends Renderer
                 'ID' => $this->projekt_id,
                 'Name' => $this->projekt_data['name'],
                 'Träger' => $this->projekt_data['org'],
-                'Erstellt am' => $this->projekt_data['createdat'],
+                'Erstellt am' => $this->projekt_data['created_at'],
             ],
             'auslagenMeta' => [
                 'ID' => 'A'.$this->auslagen_id,
@@ -1680,7 +1680,7 @@ class AuslagenHandler2 extends Renderer
         $pdf = $tex->renderPdf('zahlungsanweisung', [
             'auslagenMeta' => [
                 'Projekt-ID' => 'P-'.
-                    date_create($this->projekt_data['createdat'])->format('y').'-'.
+                    date_create($this->projekt_data['created_at'])->format('y').'-'.
                     $this->projekt_id,
                 'Projektname' => $this->projekt_data['name'],
                 'Projektträger' => $this->projekt_data['org'],
@@ -2818,8 +2818,8 @@ class AuslagenHandler2 extends Renderer
      'projekt' => [
          'id' => '',
          'creator_id' => '',
-         'createdat' => '',
-         'lastupdated' => '',
+         'created_at' => '',
+         'updated_at' => '',
          'version' => '',
          'state' => '',
          'stateCreator_id' => '',

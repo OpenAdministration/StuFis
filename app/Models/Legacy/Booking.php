@@ -2,6 +2,7 @@
 
 namespace App\Models\Legacy;
 
+use App\Models\BudgetItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,9 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
  * @property string $comment
  * @property float $value
  * @property int $canceled
- * @property LegacyBudgetItem $haushaltstitel
  * @property User $user
- * @property-read LegacyBudgetItem $budgetItem
+ * @property-read BudgetItem $budgetItem
  *
  * @method static Builder|Booking newModelQuery()
  * @method static Builder|Booking newQuery()
@@ -63,7 +63,7 @@ class Booking extends Model
 
     public function budgetItem(): BelongsTo
     {
-        return $this->belongsTo(LegacyBudgetItem::class, 'titel_id');
+        return $this->belongsTo(BudgetItem::class, 'titel_id');
     }
 
     public function user(): BelongsTo

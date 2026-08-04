@@ -37,15 +37,6 @@ class LocalAuthService extends AuthService
     }
 
     #[\Override]
-    public function allCommittees(): Collection
-    {
-        return collect([
-            'Students',
-            'Financial Department']
-        );
-    }
-
-    #[\Override]
     public function userGroupsRaw(): Collection
     {
         return match (\Auth::user()->username) {

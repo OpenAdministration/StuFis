@@ -2,7 +2,7 @@
 
 namespace App\States\Project;
 
-use App\Models\Legacy\LegacyBudgetItem;
+use App\Models\BudgetPlan;
 use App\Models\LegalBasis;
 use App\Rules\FluxEditorRule;
 use Illuminate\Validation\Rule;
@@ -32,6 +32,7 @@ class Draft extends ProjectState
             'responsible' => 'sometimes|string|max:128|email:rfc,dns',
             'org' => 'sometimes|string|max:64',
             'protokoll' => 'sometimes|nullable|string|url',
+            'budget_plan_id' => ['required', 'integer', Rule::exists(BudgetPlan::class, 'id')],
             'date_start' => 'sometimes|nullable|date',
             'date_end' => 'sometimes|nullable|date',
             'beschreibung' => ['sometimes', 'string', new FluxEditorRule],
@@ -49,7 +50,7 @@ class Draft extends ProjectState
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => ['sometimes', 'nullable', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
+            'posts.*.titel_id' => ['sometimes', 'nullable', 'integer', $this->budgetItemExistsRule()],
         ];
     }
 

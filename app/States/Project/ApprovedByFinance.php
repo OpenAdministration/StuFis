@@ -2,9 +2,6 @@
 
 namespace App\States\Project;
 
-use App\Models\Legacy\LegacyBudgetItem;
-use Illuminate\Validation\Rule;
-
 class ApprovedByFinance extends ProjectState
 {
     public static string $name = 'done-hv';
@@ -41,7 +38,7 @@ class ApprovedByFinance extends ProjectState
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => ['required', 'integer', Rule::exists(LegacyBudgetItem::class, 'id')],
+            'posts.*.titel_id' => ['required', 'integer', $this->budgetItemExistsRule()],
         ];
     }
 }

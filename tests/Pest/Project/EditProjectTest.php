@@ -2,23 +2,22 @@
 
 namespace Tests\Pest\Project;
 
+use App\Models\BudgetItem;
+use App\Models\BudgetPlan;
+use App\Models\Enums\BudgetType;
+use App\Models\FiscalYear;
 use App\Models\Legacy\ExpenseReceiptPost;
-use App\Models\Legacy\LegacyBudgetGroup;
-use App\Models\Legacy\LegacyBudgetItem;
-use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
 use App\Models\LegalBasis;
+use App\States\BudgetPlan\Published;
+use Carbon\Carbon;
 use Cknow\Money\Money;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 beforeEach(function (): void {
-    $this->budgetPlan = LegacyBudgetPlan::create([
-        'von' => now()->startOfYear(),
-        'bis' => now()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $this->budgetPlan = coveringPlan(now()->startOfYear(), now()->endOfYear());
     $this->actingAs(user());
 });
 
@@ -45,7 +44,7 @@ it('can create a new project', function (): void {
         ->set('org', 'Test Org')
         ->set('beschreibung', 'This is a description that is long enough for validation.')
         ->set('dateRange', ['start' => now()->format('Y-m-d'), 'end' => now()->addDays(5)->format('Y-m-d')])
-        ->set('hhp_id', $this->budgetPlan->id)
+        ->set('budget_plan_id', $this->budgetPlan->id)
 
         ->set('posts.0.name', 'First Post')
         ->set('posts.0.einnahmen', Money::EUR(0))
@@ -344,7 +343,7 @@ it('rejects saving a project that violates the state rules', function (): void {
     $countBefore = Project::count();
 
     Livewire::test('pages::project.edit-project')
-        ->set('hhp_id', $this->budgetPlan->id)
+        ->set('budget_plan_id', $this->budgetPlan->id)
         ->call('saveAs', 'wip')
         ->assertHasErrors();
 
@@ -352,21 +351,38 @@ it('rejects saving a project that violates the state rules', function (): void {
 });
 
 /**
- * Create a budget Titel (with its enclosing group) under a plan, so that the
- * same titel_nr can be reproduced across plans to exercise cross-plan mapping.
+ * A budget plan (new structure) whose fiscal year covers the given range, projected by the
+ * legacy haushaltsplan view as a "final" plan so relatedBudgetPlan() sees it.
  */
-function budgetItem(LegacyBudgetPlan $plan, string $titelNr, string $name): LegacyBudgetItem
+function coveringPlan(Carbon $start, Carbon $end): BudgetPlan
 {
-    $group = LegacyBudgetGroup::create([
-        'hhp_id' => $plan->id,
-        'gruppen_name' => 'Gruppe '.$titelNr,
-        'type' => 1,
+    $fiscalYear = FiscalYear::create(['start_date' => $start, 'end_date' => $end]);
+
+    return BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Published::class]);
+}
+
+/**
+ * Create a budget Titel (with its enclosing group) under a plan, so that the same titel_nr can
+ * be reproduced across plans to exercise cross-plan mapping. The group makes the leaf reachable
+ * through the legacy haushaltsplan -> gruppen -> titel views.
+ */
+function budgetItem(BudgetPlan $plan, string $titelNr, string $name): BudgetItem
+{
+    $group = BudgetItem::factory()->create([
+        'budget_plan_id' => $plan->id,
+        'is_group' => true,
+        'budget_type' => BudgetType::EXPENSE,
+        'name' => 'Gruppe '.$titelNr,
+        'short_name' => 'G'.$titelNr,
     ]);
 
-    return LegacyBudgetItem::create([
-        'hhpgruppen_id' => $group->id,
-        'titel_name' => $name,
-        'titel_nr' => $titelNr,
+    return BudgetItem::factory()->create([
+        'budget_plan_id' => $plan->id,
+        'is_group' => false,
+        'parent_id' => $group->id,
+        'budget_type' => BudgetType::EXPENSE,
+        'name' => $name,
+        'short_name' => $titelNr,
         'value' => 1000,
     ]);
 }
@@ -412,7 +428,7 @@ it('prefills a fresh draft when copying a project', function (): void {
         ->assertSet('isNew', true)
         ->assertSet('sourceKind', 'copy')
         // The copy stays in the source's own budget plan.
-        ->assertSet('hhp_id', $source->relatedBudgetPlan()->id)
+        ->assertSet('budget_plan_id', $source->relatedBudgetPlan()->id)
         ->assertCount('posts', 2);
 
     expect($component->get('name'))->toBe($sourceName.' (Kopie)');
@@ -449,11 +465,7 @@ it('forbids creating from leftovers unless the project is terminated', function 
 
 it('carries remaining amounts and remaps titel when creating from leftovers', function (): void {
     $oldItem = budgetItem($this->budgetPlan, '6000', 'Reise');
-    $newPlan = LegacyBudgetPlan::create([
-        'von' => now()->addYear()->startOfYear(),
-        'bis' => now()->addYear()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $newPlan = coveringPlan(now()->addYear()->startOfYear(), now()->addYear()->endOfYear());
     $newItem = budgetItem($newPlan, '6000', 'Reise');
 
     $source = Project::factory()->by(user())->withState('terminated')->create(['name' => 'Old Project']);
@@ -466,7 +478,7 @@ it('carries remaining amounts and remaps titel when creating from leftovers', fu
 
     $component = Livewire::test('pages::project.edit-project', ['sourceId' => $source->id, 'sourceKind' => 'leftovers'])
         ->assertSet('isNew', true)
-        ->assertSet('hhp_id', $newPlan->id)
+        ->assertSet('budget_plan_id', $newPlan->id)
         // Backlink to the source is tracked for persistence.
         ->assertSet('sourceId', $source->id)
         ->assertSet('sourceKind', 'leftovers')
@@ -480,11 +492,7 @@ it('carries remaining amounts and remaps titel when creating from leftovers', fu
 
 it('empties titel when no match exists in the target plan on leftovers', function (): void {
     $oldItem = budgetItem($this->budgetPlan, '7000', 'Sonstiges');
-    $newPlan = LegacyBudgetPlan::create([
-        'von' => now()->addYear()->startOfYear(),
-        'bis' => now()->addYear()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $newPlan = coveringPlan(now()->addYear()->startOfYear(), now()->addYear()->endOfYear());
     budgetItem($newPlan, '9999', 'Anderes'); // no matching titel_nr
 
     $source = Project::factory()->by(user())->withState('terminated')->create(['name' => 'Old Project']);
@@ -494,7 +502,7 @@ it('empties titel when no match exists in the target plan on leftovers', functio
     ]);
 
     $component = Livewire::test('pages::project.edit-project', ['sourceId' => $source->id, 'sourceKind' => 'leftovers'])
-        ->assertSet('hhp_id', $newPlan->id)
+        ->assertSet('budget_plan_id', $newPlan->id)
         ->assertCount('posts', 1);
 
     expect($component->get('posts')[0]['titel_id'])->toBeNull();
@@ -502,11 +510,7 @@ it('empties titel when no match exists in the target plan on leftovers', functio
 
 it('skips fully spent posts when creating from leftovers', function (): void {
     $oldItem = budgetItem($this->budgetPlan, '8000', 'Mixed');
-    $newPlan = LegacyBudgetPlan::create([
-        'von' => now()->addYear()->startOfYear(),
-        'bis' => now()->addYear()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $newPlan = coveringPlan(now()->addYear()->startOfYear(), now()->addYear()->endOfYear());
     budgetItem($newPlan, '8000', 'Mixed');
 
     $source = Project::factory()->by(user())->withState('terminated')->create(['name' => 'Old Project']);
@@ -528,11 +532,7 @@ it('skips fully spent posts when creating from leftovers', function (): void {
 it('remaps post titel when the budget plan is changed', function (): void {
     $matchedOld = budgetItem($this->budgetPlan, '5500', 'Matched');
     $unmatchedOld = budgetItem($this->budgetPlan, '5600', 'Unmatched');
-    $newPlan = LegacyBudgetPlan::create([
-        'von' => now()->addYear()->startOfYear(),
-        'bis' => now()->addYear()->endOfYear(),
-        'state' => 'final',
-    ]);
+    $newPlan = coveringPlan(now()->addYear()->startOfYear(), now()->addYear()->endOfYear());
     $matchedNew = budgetItem($newPlan, '5500', 'Matched'); // only this titel_nr exists in the new plan
 
     $project = Project::factory()->by(user())->create(['name' => 'Switch Plan']);
@@ -546,7 +546,7 @@ it('remaps post titel when the budget plan is changed', function (): void {
     ]);
 
     $component = Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
-        ->set('hhp_id', $newPlan->id);
+        ->set('budget_plan_id', $newPlan->id);
 
     $posts = $component->get('posts');
     expect($posts[0]['titel_id'])->toBe($matchedNew->id)
