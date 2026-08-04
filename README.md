@@ -2,13 +2,13 @@
 
 StuFiS ist ein auf verfasste Studierendenschaften zugeschnitten Software zur Verwaltung von Anträgen, Abrechnungen, Zahlungsvorgängen, Buchungen und Haushaltsplänen. Mit dieser Finanzverwaltungssoftware ist es möglich den gesamten Projektlebenslauf vom Antrag bei der Studierendenvertretung bis hin zum Haushaltsabschluss dokumentiert nachvollziehen und durchführen zu können. Ziel ist es eine intuitive Lösung für die kurzen Amtszeiten und schnellen Übergaben zu bieten und neben dem Datenschutz möglichst viel Transparenz gegenüber den Entscheider:innen sowie Studierenden zu schaffen. Diese Web-App ermöglicht ein digitales Arbeiten auch von Zuhause aus, ohne dass ein Informationsverlust entstehen kann. Durch das Mehraugen-Prinzip und eine geschickte Gestaltung der Software werden Fehler und Veruntreuung vermieden.
 
-Mehr Infos zu Software finden sich [hier](https://open-administration.de/index.php/finanzverwaltungssoftware/).
+Mehr Infos zu Software finden sich [hier](https://stufis.de).
 
 ## Demo 
 Alle Infos zur Demo finden sich unter https://www.stufis.de/demo-login
 
 ## Dokumentation
-Unsere Dokumentation und die Hilfeseiten zur Software können [hier](https://doku.open-administration.de/) gefunden werden
+Unsere Dokumentation und die Hilfeseiten zur Software können [hier](https://doku.stufis.de/) gefunden werden
 
 # Sponsoren und Finanzierung
 

@@ -25,6 +25,8 @@ return [
     ],
     'error' => [
         'posten_illegal_deleted' => 'Posten mit denen noch eine Abrechnung existiert dürfen nicht gelöscht werden!',
+        'check-marked-fields' => 'Bitte korrigiere die markierten Felder.',
+        'version-mismatch' => 'Das Projekt wurde zwischenzeitlich von jemand anderem geändert. Bitte lade die Seite neu und übertrage deine Änderungen erneut.',
     ],
     'view' => [
         'source' => [
@@ -103,6 +105,7 @@ return [
             'subheading' => 'Budgetplanung mit Ausgabenverfolgung',
             'info_toggle' => 'Trage hier bitte deine geplanten Einnahmen und Ausgaben ein. Wichtig ist, dass du für jeden Punkt eine eigene Zeile (Projektposten) benutzt. Wie detailliert dieser Finanzplan sein muss, erfährst du von deinen Finanzverantwortlichen. Das ist notwendig, damit später jeder Projektposten in den richtigen Haushaltstitel einsortiert werden kann.',
             'nr' => 'Nr.',
+            'reorder' => 'Posten verschieben',
             'group' => 'Ein/Ausgabengruppe',
             'remark' => 'Bemerkung',
             'title' => 'Titel',

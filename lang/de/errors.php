@@ -22,7 +22,8 @@ return [
     'flux-editor-malicious-html' => 'Fehlerhafte HTML-Tags',
     'description-too-short' => 'Die Beschreibung muss mindestens :min Zeichen lang sein.',
     'description-too-long' => 'Die Beschreibung darf höchstens :max Zeichen lang sein.',
-    'one-money-has-to-be-zero' => 'Es darf nur Ausgabe oder Einnahme 0 sein',
+    'one-money-has-to-be-zero' => 'Posten :position ist entweder eine Einnahme oder eine Ausgabe – genau eines der beiden Felder muss 0 € betragen.',
+    'negative-money' => 'Der Betrag in Posten :position darf nicht negativ sein.',
     'attachment-contains-macros' => 'Anhänge dürfen keine Makros enthalten. Bitte entferne die Makros oder lade das Dokument ohne Makros (bzw. als PDF) hoch.',
     'attachment-content-mismatch' => 'Der Inhalt des Anhangs passt nicht zur angegebenen Dateiendung. Bitte lade eine gültige Datei im passenden Format hoch.',
 ];
