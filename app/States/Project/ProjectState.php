@@ -140,7 +140,10 @@ abstract class ProjectState extends State implements Wireable
     public function budgetRules(): array
     {
         return [
-            'posts.*.titel_id' => ['sometimes', 'integer', $this->budgetItemExistsRule()],
+            // Required, not `sometimes`: an unassigned title arrives as null, which `sometimes`
+            // still hands to `integer` and reports as "muss eine ganze Zahl sein". Only Draft
+            // tolerates a missing title (see Draft::budgetRules()).
+            'posts.*.titel_id' => ['required', 'integer', $this->budgetItemExistsRule()],
         ];
     }
 

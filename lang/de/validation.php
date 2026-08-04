@@ -195,6 +195,7 @@ return [
         ],
         'posts.*.titel_id' => [
             'required' => 'Bitte wähle einen Haushaltstitel für Posten :position aus.',
+            'integer' => 'Der gewählte Haushaltstitel für Posten :position ist ungültig.',
             'exists' => 'Der gewählte Haushaltstitel für Posten :position ist ungültig.',
         ],
         'posts.*.name' => [
