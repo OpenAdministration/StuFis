@@ -26,9 +26,7 @@ class StartCode extends DataElement
 
     public function __construct(array $ctrlBytes, string $data)
     {
-        if ($ctrlBytes !== ['01']) {
-            throw new \InvalidArgumentException('Other versions then 1.4 are not supported');
-        }
+        throw_if($ctrlBytes !== ['01'], new \InvalidArgumentException('Other versions then 1.4 are not supported'));
         parent::__construct($data);
         $this->controlBytes = $ctrlBytes;
         $this->headerHighBit = '1';

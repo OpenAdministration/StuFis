@@ -2,7 +2,7 @@
 
 namespace App\Models\Legacy;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -62,7 +62,7 @@ class LegacyBudgetPlan extends Model
 
     public static function latest(): \Eloquent|static
     {
-        return self::orderBy('id', 'desc')->first();
+        return self::orderByDesc('id')->first();
     }
 
     public static function findByDate(?Carbon $date = null): ?static

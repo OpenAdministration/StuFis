@@ -57,9 +57,7 @@ class ArrayHelper
 
     public static function remove(array &$array, int|string $key): mixed
     {
-        if (! isset($array[$key])) {
-            throw new \InvalidArgumentException('Key not found');
-        }
+        throw_unless(isset($array[$key]), new \InvalidArgumentException('Key not found'));
         $el = $array[$key];
         unset($array[$key]);
 

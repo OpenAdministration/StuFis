@@ -3,7 +3,7 @@
 namespace framework\auth;
 
 use App\Exceptions\LegacyDieException;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use framework\Singleton;
 
 /**
@@ -28,9 +28,7 @@ class AuthHandler extends Singleton
      */
     public function requireGroup(array|string $groups): void
     {
-        if (! $this->hasGroup($groups)) {
-            throw new LegacyDieException(403, 'Fehlende Zugangsberechtigung', $groups);
-        }
+        throw_unless($this->hasGroup($groups), new LegacyDieException(403, 'Fehlende Zugangsberechtigung', $groups));
     }
 
     public function getUserMailinglists(): array

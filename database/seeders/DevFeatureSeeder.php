@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\FiscalYear;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Seeder;
 
 class DevFeatureSeeder extends Seeder

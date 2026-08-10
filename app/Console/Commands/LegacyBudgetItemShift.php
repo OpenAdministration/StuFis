@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Legacy\Booking;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\ProjectPost;
@@ -32,7 +33,7 @@ class LegacyBudgetItemShift extends Command
      */
     public function handle(): int
     {
-        return \DB::transaction(function (): int {
+        return DB::transaction(function (): int {
             $old_id = $this->argument('old_id');
             $new_id = $this->argument('new_id');
 

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Console\Command;
 
 class StuFisHealth extends Command
@@ -27,7 +28,7 @@ class StuFisHealth extends Command
     {
         $output = collect([
             'version' => config('stufis.version', ''),
-            'database-prefix' => \DB::connection()->getConfig('prefix'),
+            'database-prefix' => DB::connection()->getConfig('prefix'),
         ]);
         if ($this->option('json')) {
             $this->output->writeln(json_encode($output, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\Storage;
 use App\Models\Legacy\ExpenseReceipt;
 use App\Models\Legacy\FileInfo;
 use Illuminate\Console\Command;
@@ -39,8 +40,8 @@ class LegacyMigrateFilesToStorage extends Command
                 if (empty($data->diskpath)) {
                     $data->diskpath = $path;
                 }
-                if (! \Storage::has($path)) {
-                    \Storage::put($path, $pdfData);
+                if (! Storage::has($path)) {
+                    Storage::put($path, $pdfData);
                 }
                 if ($this->option('delete') === true) {
                     $data->data = null;

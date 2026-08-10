@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use Illuminate\Support\Facades\Session;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -94,7 +95,7 @@ class OidcAuthService extends AuthService
     #[\Override]
     public function afterLogout(): RedirectResponse
     {
-        \Session::flush();
+        Session::flush();
 
         return redirect()->to(config('services.oidc.logout_url'));
     }

@@ -50,7 +50,7 @@ test('csv import is not accessible as normal user', function (): void {
 test('show last transactions', function (): void {
     $lastTransactions = [];
     BankAccount::all()->each(function ($account) use (&$lastTransactions): void {
-        $tmp = $account->bankTransactions()->orderBy('id', 'desc')->first();
+        $tmp = $account->bankTransactions()->orderByDesc('id')->first();
         if ($tmp) {
             $lastTransactions[$account->id] = $tmp;
         }
@@ -107,7 +107,7 @@ test('parse csv utf8 encoding', function ($header, $data): void {
 })->with('csv imports');
 
 test('parse csv win encoding', function ($header, $data): void {
-    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $acc = BankAccount::orderByDesc('id')->first();
     $csvFile = testFile('csv-import/test-correct-semicolon-win-enc.csv');
 
     Livewire::actingAs(cashOfficer())
@@ -231,7 +231,7 @@ test('wrong mime type is not accepted', function (): void {
 
 test('if csv import is saved', function (): void {
 
-    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $acc = BankAccount::orderByDesc('id')->first();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(0);
 
@@ -269,7 +269,7 @@ test('if csv import is saved', function (): void {
 
 test('if mapping was saved and loaded', function (): void {
 
-    $acc = BankAccount::orderBy('id', 'desc')->first();
+    $acc = BankAccount::orderByDesc('id')->first();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(5);
 
@@ -291,7 +291,7 @@ test('if mapping was saved and loaded', function (): void {
 
 test('csv upload with correct saldo check', function (): void {
     // same csv again has saldo errors
-    $acc = BankAccount::orderBy('id', 'desc')->firstOrFail();
+    $acc = BankAccount::orderByDesc('id')->firstOrFail();
     $transactionAmount = BankTransaction::where('konto_id', '=', $acc->id)->count();
     expect($transactionAmount)->toBe(5);
 
@@ -395,7 +395,7 @@ test('a continuation import with matching saldo succeeds and appends transaction
         ->assertHasNoErrors();
 
     expect(BankTransaction::where('konto_id', $acc->id)->count())->toBe(6)
-        ->and(BankTransaction::where('konto_id', $acc->id)->orderBy('id', 'desc')->first()->saldo)->toBe('18474.22');
+        ->and(BankTransaction::where('konto_id', $acc->id)->orderByDesc('id')->first()->saldo)->toBe('18474.22');
 });
 
 test('comma-separated csv is detected and parsed', function (): void {

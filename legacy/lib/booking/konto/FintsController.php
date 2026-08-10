@@ -2,6 +2,7 @@
 
 namespace booking\konto;
 
+use Illuminate\Support\Facades\Auth;
 use App\Exceptions\LegacyRedirectException;
 use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
@@ -105,7 +106,7 @@ class FintsController extends Renderer
                 'tan_mode_name',
                 'tan_medium_name',
             ],
-            ['owner_id' => \Auth::user()->id],
+            ['owner_id' => Auth::user()->id],
             [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
         );
         echo HtmlButton::make()
@@ -270,9 +271,7 @@ class FintsController extends Renderer
         if (FintsConnectionHandler::hasPassword($credentialId)) {
             // pw set
             $success = $this->fintsHandler->login();  // throws if Tan needed
-            if ($success) {
-                throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
-            }
+            throw_if($success, new LegacyRedirectException(redirect()->route('legacy.konto.credentials')));
         }
         // if no pw or wrong one
         if (! FintsConnectionHandler::hasPassword($credentialId)) {

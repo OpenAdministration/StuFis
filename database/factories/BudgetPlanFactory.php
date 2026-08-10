@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\BudgetItem;
 use App\Models\Enums\BudgetPlanState;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BudgetPlanFactory extends Factory

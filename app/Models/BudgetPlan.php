@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Enums\BudgetPlanState;
 use App\Models\Enums\BudgetType;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Database\Factories\BudgetPlanFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;

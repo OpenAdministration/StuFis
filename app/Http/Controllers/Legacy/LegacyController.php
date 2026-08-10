@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Legacy;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
 use App\Http\Controllers\Controller;
@@ -83,7 +85,7 @@ class LegacyController extends Controller
                 ['Haushaltsverantwortliche*r', 'scale', 'legacy.todo.hv'],
                 ['Kassenverantwortliche*r', 'calculator', 'legacy.todo.kv'],
             ];
-            if (\Auth::user()->can('finance', \Auth::user())) {
+            if (Auth::user()->can('finance', Auth::user())) {
                 $items[] = ['Überweisungen', 'banknotes', 'legacy.todo.kv.bank'];
             }
 
@@ -172,7 +174,7 @@ class LegacyController extends Controller
     {
         // file was generated and requested by the iframe
         if ($file_name !== null) {
-            return \Storage::response(
+            return Storage::response(
                 "auslagen/$auslagen_id/belege-pdf-v$version.pdf",
                 $file_name
             );
@@ -199,7 +201,7 @@ class LegacyController extends Controller
     {
         // file was generated and requested by the iframe call
         if ($file_name !== null) {
-            return \Storage::response(
+            return Storage::response(
                 "/auslagen/$auslagen_id/zahlungsanweisung-v$version.pdf",
                 $file_name
             );
@@ -225,8 +227,8 @@ class LegacyController extends Controller
     public function deliverFile($auslagen_id, $fileHash, $fileName): StreamedResponse
     {
         $path = "/auslagen/$auslagen_id/$fileHash.pdf";
-        if (\Storage::exists($path)) {
-            return \Storage::response($path, $fileName);
+        if (Storage::exists($path)) {
+            return Storage::response($path, $fileName);
         }
         throw new FileNotFoundException("Datei $path konnte nicht gefunden werden");
     }

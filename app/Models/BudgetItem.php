@@ -125,7 +125,7 @@ class BudgetItem extends Model
 
     public function orderedChildren(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id')->orderBy('position', 'asc');
+        return $this->hasMany(self::class, 'parent_id')->orderBy('position');
     }
 
     #[\Override]

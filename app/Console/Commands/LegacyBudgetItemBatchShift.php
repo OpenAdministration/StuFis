@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Console\Command;
 use Spatie\Regex\Regex;
 
@@ -41,8 +43,8 @@ class LegacyBudgetItemBatchShift extends Command
 
         $this->info('Transforming '.count($switch).' Legacy Titles');
 
-        return \DB::transaction(function () use ($switch): int {
-            \Schema::disableForeignKeyConstraints();
+        return DB::transaction(function () use ($switch): int {
+            Schema::disableForeignKeyConstraints();
             foreach ($switch as [$oldId, $newId]) {
                 $res = $this->call('legacy:budget-id-shift', [
                     'old_id' => $oldId,
@@ -54,7 +56,7 @@ class LegacyBudgetItemBatchShift extends Command
                     $this->fail("Failed subprocess $oldId->$newId. Aborting & Roling back...");
                 }
             }
-            \Schema::enableForeignKeyConstraints();
+            Schema::enableForeignKeyConstraints();
 
             return self::SUCCESS;
         });

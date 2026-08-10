@@ -28,18 +28,14 @@ class FlickerGenerator
         // length of whole challenge (without lc) max 255 | encoding: base 10
         $lc = (int) substr($reducedChallenge, 0, 3);
         $reducedChallenge = substr($reducedChallenge, 3);
-        if (strlen($reducedChallenge) !== $lc) {
-            throw new \InvalidArgumentException('Wrong length of TAN Challenge - only Version 1.4 supported');
-        }
+        throw_if(strlen($reducedChallenge) !== $lc, new \InvalidArgumentException('Wrong length of TAN Challenge - only Version 1.4 supported'));
 
         [$reducedChallenge, $this->startCode] = StartCode::parseNextBlock($reducedChallenge);
         [$reducedChallenge, $this->de1] = DataElement::parseNextBlock($reducedChallenge);
         [$reducedChallenge, $this->de2] = DataElement::parseNextBlock($reducedChallenge);
         [$reducedChallenge, $this->de3] = DataElement::parseNextBlock($reducedChallenge);
 
-        if (! empty($reducedChallenge)) {
-            throw new \InvalidArgumentException("Challenge has unexpected ending $reducedChallenge");
-        }
+        throw_unless(empty($reducedChallenge), new \InvalidArgumentException("Challenge has unexpected ending $reducedChallenge"));
     }
 
     private function calcXorChecksum(): string

@@ -456,11 +456,9 @@ class HHPHandler extends Renderer
             ['titel_nr', 'titel_name'],
             ['id' => $titel_id]
         );
-        if (count($titel) === 0) {
-            throw new LegacyDieException(404, "Titel $titel_id kann nicht gefunden werden");
-        } else {
-            $titel = $titel[0];
-        }
+        throw_if(count($titel) === 0, new LegacyDieException(404, "Titel $titel_id kann nicht gefunden werden"));
+
+        $titel = $titel[0];
         $this->renderHeadline(
             'HHP seit '.$this->formatDateToMonthYear(
                 $hhp['von']

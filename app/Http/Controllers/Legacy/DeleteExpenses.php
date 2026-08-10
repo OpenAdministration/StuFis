@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Legacy;
 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Legacy\Expense;
 use App\Models\Legacy\ExpenseReceipt;
@@ -18,17 +20,15 @@ class DeleteExpenses extends Controller
 
         // authorize user
         $userPerm =
-            \Auth::user()->can('budget-officer', User::class)
-            || $project->creator->id === \Auth::user()->id
-            || explode(';', (string) $expense->created)[1] === \Auth::user()->username;
+            Auth::user()->can('budget-officer', User::class)
+            || $project->creator->id === Auth::user()->id
+            || explode(';', (string) $expense->created)[1] === Auth::user()->username;
         // authorize state
         $deletableState = ! in_array(explode(';', (string) $expense->state)[0], ['instructed', 'booked'], true);
 
-        if ($userPerm === false || $deletableState === false) {
-            abort(403);
-        }
+        abort_if($userPerm === false || $deletableState === false, 403);
         // to make sure to delete everything and not only parts
-        \DB::beginTransaction();
+        DB::beginTransaction();
         $reciepts = $expense->receipts;
         $reciepts->each(function (ExpenseReceipt $receipt): void {
             // delete all posts
@@ -49,9 +49,9 @@ class DeleteExpenses extends Controller
 
         // clean up storage if DB is successfully cleaned
         DB::afterCommit(function () use ($expense_id): void {
-            \Storage::deleteDirectory("auslagen/{$expense_id}/");
+            Storage::deleteDirectory("auslagen/{$expense_id}/");
         });
-        \DB::commit();
+        DB::commit();
 
         return to_route('legacy.dashboard', ['sub' => 'mygremium']);
     }

@@ -56,9 +56,7 @@ class BookingHandler extends Renderer
 
     private function renderCSV(): void
     {
-        if (! isset($this->routeInfo['hhp-id'])) {
-            throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
-        }
+        throw_unless(isset($this->routeInfo['hhp-id']), new LegacyDieException(400, 'hhp-id nicht gesetzt'));
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB($this->routeInfo['hhp-id']);
         $csvData = [];
         $header = [
@@ -110,17 +108,13 @@ class BookingHandler extends Renderer
 
     private function renderFullBookingZip(): void
     {
-        if (! isset($this->routeInfo['hhp-id'])) {
-            throw new LegacyDieException(400, 'hhp-id nicht gesetzt');
-        }
+        throw_unless(isset($this->routeInfo['hhp-id']), new LegacyDieException(400, 'hhp-id nicht gesetzt'));
 
         $zip = new ZipArchive;
         $zipFileName = 'HHA.zip';
         $zipFilePath = tempnam(sys_get_temp_dir(), 'HHA');
 
-        if (($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true) {
-            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: '.$ret);
-        }
+        throw_if(($ret = $zip->open($zipFilePath, ZipArchive::OVERWRITE)) !== true, new LegacyDieException(500, 'Zip kann nicht erstellt werden.', 'ErrorCode: '.$ret));
 
         [$kontoTypes, $data] = $this->fetchBookingHistoryDataFromDB(
             $this->routeInfo['hhp-id'],

@@ -2,6 +2,7 @@
 
 namespace forms\projekte;
 
+use Illuminate\Support\Facades\Auth;
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\Project;
 use App\States\Project\ProjectState;
@@ -17,9 +18,7 @@ class ProjektHandler
     public function __construct($pathInfo)
     {
         self::initStaticVars();
-        if (! isset($pathInfo['action'])) {
-            throw new LegacyDieException(400, 'Aktion nicht gesetzt');
-        }
+        throw_unless(isset($pathInfo['action']), new LegacyDieException(400, 'Aktion nicht gesetzt'));
         $this->action = $pathInfo['action'];
         if ($this->action === 'create' || ! isset($pathInfo['pid'])) {
             $this->data = self::$emptyData;
@@ -69,6 +68,6 @@ class ProjektHandler
 
     public function isOwner(): bool
     {
-        return isset($this->data['creator_id']) && \Auth::user()->id === $this->data['creator_id'];
+        return isset($this->data['creator_id']) && Auth::user()->id === $this->data['creator_id'];
     }
 }

@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class DemoDataSeeder extends Seeder
 {
@@ -16,9 +16,7 @@ class DemoDataSeeder extends Seeder
      */
     public function run(): void
     {
-        if (App::isProduction() && config('stufis.realm') !== 'demo') {
-            throw new \InvalidArgumentException('Realm is not demo but we are in production, aborting for your safety');
-        }
+        throw_if(App::isProduction() && config('stufis.realm') !== 'demo', new \InvalidArgumentException('Realm is not demo but we are in production, aborting for your safety'));
 
         $today = Carbon::today();
 

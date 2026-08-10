@@ -19,6 +19,7 @@
 
 namespace forms;
 
+use Illuminate\Support\Facades\App;
 use App\Exceptions\LegacyDieException;
 use App\Models\Legacy\BankTransaction;
 use App\Models\Legacy\LegacyBudgetPlan;
@@ -44,10 +45,8 @@ class RestHandler extends EscFunc
 
     public function handlePost(?array $routeInfo = null): void
     {
-        if (! \App::runningUnitTests()) {
-            if (! isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce'])) {
-                throw new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu');
-            }
+        if (! App::runningUnitTests()) {
+            throw_if(! isset($_POST['nonce']) || $_POST['nonce'] !== csrf_token() || isset($_POST['nononce']), new LegacyDieException(400, 'Das Formular ist nicht gültig, bitte lade die Seite neu'));
         }
         unset($_POST['nonce']);
 
@@ -187,7 +186,7 @@ class RestHandler extends EscFunc
             DBConnector::getInstance()->dbInsert('konto', $fields);
         } else {
             $last = BankTransaction::where('konto_id', '=', $fields['konto_id'])
-                ->orderBy('id', 'desc')
+                ->orderByDesc('id')
                 ->first()?->toArray();
 
             if (abs($last['saldo'] + $fields['value'] - $fields['saldo']) < 0.01) {
@@ -769,11 +768,9 @@ class RestHandler extends EscFunc
         $auth->requireGroup('ref-finanzen-kv');
 
         $ret = true;
-        if (! DBConnector::getInstance()->dbBegin()) {
-            throw new LegacyDieException(500,
+        throw_unless(DBConnector::getInstance()->dbBegin(), new LegacyDieException(500,
                 'Kann keine Verbindung zur SQL-Datenbank aufbauen. Bitte versuche es später erneut!'
-            );
-        }
+            ));
         [$success, $msg_xmlrpc, $allZahlungen] = HibiscusXMLRPCConnector::getInstance()->fetchAllUmsatz();
 
         if ($success === false) {

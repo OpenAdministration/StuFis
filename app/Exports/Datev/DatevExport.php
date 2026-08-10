@@ -8,7 +8,7 @@ use App\Models\Legacy\BankTransaction;
 use App\Models\Legacy\Booking;
 use App\Models\Legacy\Expense;
 use App\Models\Legacy\FileInfo;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
