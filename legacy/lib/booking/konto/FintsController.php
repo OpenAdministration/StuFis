@@ -44,6 +44,7 @@ class FintsController extends Renderer
 
     public function render(): void
     {
+        $this->requireValidNonce();
         $post = $this->request->request;
         if ($post->has('tan')) {
             // Banks print TANs in groups ("123 456"), so drop whitespace - but nothing
@@ -57,6 +58,41 @@ class FintsController extends Renderer
             $this->requireFintsHandler()->logger->info('Tan needed', ['exception' => $e]);
             $this->renderTanInput($e->getMessage(), $e->getTanRequest());
         }
+    }
+
+    /**
+     * The legacy route group runs without Laravel's CSRF middleware (see bootstrap/app.php),
+     * and although every form here ships a `nonce` field holding csrf_token(), only
+     * RestHandler ever checked it - the actions in this controller did not. That left the
+     * bank access open to cross-site requests: forced login attempts (three failures lock
+     * the online banking access at the bank), creating credentials, and registering an
+     * arbitrary account for synchronisation.
+     *
+     * Verifying it here keeps the fix to the FinTS pages instead of switching the middleware
+     * for the whole legacy group, which is not a patch-release-sized change.
+     */
+    private function requireValidNonce(): void
+    {
+        if ($this->request->getMethod() !== 'POST') {
+            return;
+        }
+
+        $nonce = (string) $this->request->request->get('nonce', '');
+        if ($nonce !== '' && hash_equals((string) csrf_token(), $nonce)) {
+            return;
+        }
+
+        // LegacyDieException would surface as a bare 500 page (LegacyController rethrows it
+        // and it carries no HTTP status of its own), so the request is refused with an
+        // explanation instead. Either way the action does not run.
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_DANGER,
+            'Die Anfrage wurde abgelehnt',
+            'Das Formular war nicht mehr gültig - vermutlich ist die Sitzung abgelaufen. '.
+            'Bitte lade die Seite neu und versuche es erneut.'
+        );
+
+        throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
     }
 
     /**
