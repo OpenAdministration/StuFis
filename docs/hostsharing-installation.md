@@ -75,6 +75,34 @@ Import your Budgetplan and everything should work :)
 
 Optional: add a bank for the bank-import feature.
 
+## Logging
+
+There is no root access on hostsharing, so no system logrotate. StuFiS rotates
+its own log instead: the `daily` channel writes `storage/logs/laravel-<date>.log`
+and deletes files older than `LOG_DAILY_DAYS` (default 30, i.e. a month) as it
+writes. For
+production set in `.env`:
+
+```dotenv
+LOG_CHANNEL=daily
+LOG_LEVEL=warning
+```
+
+`LOG_STACK` only applies when `LOG_CHANNEL=stack`; it defaults to `daily` too,
+so either setting rotates. What does not rotate is `single` — instances set up
+before v4.4.4 have `LOG_STACK=single` pinned in their `.env` and must be
+switched by hand, since an explicit value beats the new default. After
+changing `.env` run `stufis-rebuild` so the config cache picks it up, and delete
+the leftover unrotated file once:
+
+```bash
+rm storage/logs/laravel.log
+```
+
+Rotation caps the log directory, it does not make the entries smaller. If the
+files are still large, the cause is `LOG_LEVEL=debug` or a recurring exception —
+check the newest file before raising `LOG_DAILY_DAYS`.
+
 ## Updating later
 
 From the project directory (`bin/` is on your `PATH` after step 3):

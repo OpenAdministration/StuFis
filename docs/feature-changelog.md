@@ -14,6 +14,9 @@ Verschiedene Fehler beim FinTS Bankimport behoben. u.a.:
 * War die Sitzung abgelaufen, endete jeder Klick auf den Seiten des Bankzugangs in einer Fehlerseite. Stattdessen erscheint nun ein Hinweis und die erneute Anmeldung beim Bankzugang wird angeboten.
 * Der Kontostand der Bank wird nun gegen den zuletzt gespeicherten Stand geprüft.
 
+Betrieb der Instanz:
+* Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. Bisher lief alles in eine einzige Datei, die nie gekürzt wurde – auf den Servern gibt es keine automatische Rotation. Außerdem werden die Logs nicht mehr in jede Sicherung mitkopiert. Für bestehende Instanzen: in der `.env` `LOG_CHANNEL=daily` setzen (ein dort noch eingetragenes `LOG_STACK=single` sticht die neue Voreinstellung) und die alte große Datei `storage/logs/laravel.log` einmalig löschen.
+
 ---
 
 # v4.4.3

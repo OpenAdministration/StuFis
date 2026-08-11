@@ -41,6 +41,9 @@ return [
                 'exclude' => [
                     base_path('vendor'),
                     base_path('node_modules'),
+                    // Logs are rotated and pruned by the daily channel; copying
+                    // them into every pre-update backup only multiplies them.
+                    storage_path('logs'),
                 ],
 
                 /*
