@@ -439,6 +439,11 @@ class FintsController extends Renderer
         $tryRewind = false;
         $rewindDiff = 0;
         $skipped = false;
+        // Was the resume point in the already-stored data established? Without stored rows
+        // there is nothing to resume from, so everything the bank sent is new.
+        $anchorFound = true;
+        $lastStoredSaldoCent = null;
+        $stoppedAtSyncUntil = false;
 
         $kontoRow = $db->dbFetchAll(tables: 'konto_type', where: ['id' => $kontoId])[0];
         $syncUntil = DateHelper::fromDb($kontoRow['sync_until']);
@@ -448,7 +453,11 @@ class FintsController extends Renderer
             $lastKontoId = $lastKontoRow['id'];
             $lastKontoSaldo = $lastKontoRow['saldo'];
             $oldSaldoCent = $this->convertToCent($lastKontoSaldo);
+            // Kept separately: $oldSaldoCent is reused below as the running statement-to-
+            // statement saldo, so it no longer holds the stored value once the loop starts.
+            $lastStoredSaldoCent = $oldSaldoCent;
             $tryRewind = true;
+            $anchorFound = false;
             $logger->debug('Found last entry', $lastKontoRow);
         }
 
@@ -460,11 +469,16 @@ class FintsController extends Renderer
             $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
             $logger->debug('Statement', ['date' => $dateString, 'saldo' => $saldoCent]);
+            // Continuity between two consecutive statements: the closing saldo of the
+            // previous one has to be the opening balance of this one.
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
                 $db->dbRollBack();
-                $logger->debug("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString", [var_export($statements, true)]);
+                $logger->error("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString");
+                $msg = 'Die Kontoauszüge der Bank sind nicht lückenlos: Der Auszug vom '.$dateString.
+                    ' beginnt mit '.$this->convertCentForDB($saldoCent).' €, der vorherige endete mit '.
+                    $this->convertCentForDB($oldSaldoCent).' €. Es wurde nichts importiert.';
 
-                return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
+                return [false, $msg];
             }
             // echo "Statement $dateString Saldo: $saldoCent";
             foreach ($statement->getTransactions() as $transaction) {
@@ -476,7 +490,11 @@ class FintsController extends Renderer
                     'date' => $transaction->getBookingDate()?->format('Y-m-d'),
                 ]);
                 if ($tryRewind === true) {
-                    // do rewind if necessary
+                    // Do rewind if necessary. customer_ref is deliberately NOT part of the
+                    // criteria: it holds the SEPA end-to-end id, which MT940 usually leaves
+                    // empty or reports as NOTPROVIDED, so matching on it made the anchor
+                    // unfindable - and an unfound anchor used to mean a silent re-import of
+                    // the whole range. The running saldo is a far stronger key anyway.
                     $rewindRow = $db->dbFetchAll(
                         tables: 'konto',
                         showColumns: ['id'],
@@ -486,7 +504,6 @@ class FintsController extends Renderer
                             'saldo' => $this->convertCentForDB($saldoCent),
                             'date' => $transaction->getBookingDate()?->format('Y-m-d'),
                             'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
-                            'customer_ref' => $transaction->getEndToEndID(),
                         ],
                         sort: ['id' => false],
                         limit: 1
@@ -503,11 +520,32 @@ class FintsController extends Renderer
                     $skipped = $skipped === false ? 1 : $skipped + 1;
                     $logger->debug('SKIP TRANSACTION - found in DB');
 
+                    if ($rewindDiff === 0) {
+                        // Last already-stored transaction consumed: this is the one place
+                        // where the freshly computed saldo can be held against the stored
+                        // one. Previously this comparison never ran - it was guarded by
+                        // $tryRewind === false, and by the time that was true the stored
+                        // value had already been overwritten by the running saldo.
+                        if ($saldoCent !== $lastStoredSaldoCent) {
+                            $db->dbRollBack();
+                            $msg = 'Der Kontostand der Bank passt nicht zum gespeicherten Stand ('.
+                                $this->convertCentForDB($saldoCent).' € statt '.
+                                $this->convertCentForDB($lastStoredSaldoCent).' € nach dem letzten bekannten Umsatz vom '.
+                                $dateString.'). Es wurde nichts importiert.';
+                            $logger->error($msg, ['konto_id' => $kontoId]);
+
+                            return [false, $msg];
+                        }
+                        $anchorFound = true;
+                    }
+
                     continue; // skip this entry, it was in the db before
                 }
 
                 // are we exceeding sync_until?
                 if ($syncUntil && $transaction->getValutaDate()?->diff($syncUntil)->invert === 1) {
+                    $stoppedAtSyncUntil = true;
+
                     break 2;
                 }
 
@@ -531,6 +569,20 @@ class FintsController extends Renderer
                 AuslagenHandler2::hookZahlung($transaction->getMainDescription());
             }
             $oldSaldoCent = $saldoCent;
+        }
+
+        // The bank sends a range that overlaps what is already stored, so the already-known
+        // transactions have to be identified and skipped. If that resume point was never
+        // reached, every transaction of the range looks new - which is how a re-import used
+        // to duplicate months of bookings while reporting success. Refuse instead.
+        if ($anchorFound === false && $stoppedAtSyncUntil === false) {
+            $db->dbRollBack();
+            $msg = 'Der letzte bereits importierte Umsatz wurde in den Daten der Bank nicht wiedergefunden. '.
+                'Es wurde nichts importiert, um doppelte Buchungen zu vermeiden. '.
+                'Bitte prüfe, ob Umsätze nachträglich verändert wurden, und wende dich an die Administration.';
+            $logger->error($msg, ['konto_id' => $kontoId, 'last_stored_saldo_cent' => $lastStoredSaldoCent]);
+
+            return [false, $msg];
         }
 
         if (count($transactionData) > 0) {
