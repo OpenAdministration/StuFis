@@ -16,7 +16,7 @@ function convertToCent(string|float $amount, ?string $creditDebit = null): int
 
     if ($method === null) {
         $method = new ReflectionMethod(FintsController::class, 'convertToCent');
-        $controller = (new ReflectionClass(FintsController::class))->newInstanceWithoutConstructor();
+        $controller = new ReflectionClass(FintsController::class)->newInstanceWithoutConstructor();
     }
 
     return $method->invokeArgs($controller, [$amount, $creditDebit]);
