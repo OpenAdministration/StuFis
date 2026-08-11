@@ -167,7 +167,6 @@ class FintsController extends Renderer
         $post = $this->request->request;
         if (ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])) {
             DBConnector::getInstance()->dbInsert('konto_credentials', [
-                // getAlpha() would drop digits and spaces, turning "Konto 2024" into "Konto".
                 // konto_credentials.name is varchar(63), so cut rather than let the insert fail.
                 'name' => mb_substr(trim(strip_tags((string) $post->get('name'))), 0, 63),
                 'bank_id' => $post->getInt('bank-id'),
@@ -267,8 +266,8 @@ class FintsController extends Renderer
         )[0];
         $post = $this->request->request;
         if ($post->has('bank-password')) {
-            // a PW was sent. Take it verbatim: getAlnum() would strip every special
-            // character and umlaut, and banks do allow those in a PIN (see the docs on
+            // a PW was sent. Take it verbatim: do not strip every special
+            // character and umlaut, banks do allow those in a PIN (see the docs on
             // Fhp\Options\Credentials::create). A mangled PIN is indistinguishable from
             // a wrong one, and three wrong ones lock the online-banking access.
             $pw = (string) $post->get('bank-password');
@@ -568,18 +567,20 @@ class FintsController extends Renderer
      * @param  string|null  $creditDebit  either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
      *                                    assumed by sign of $amount
      */
-    private function convertToCent(string|float $amount, ?string $creditDebit = null): float|int
+    private function convertToCent(string|float $amount, ?string $creditDebit = null): int
     {
-        $float = (float) $amount;
-        $cents = (int) round($float * 100);
+        $cents = (int) round(((float) $amount) * 100);
 
         if (is_null($creditDebit)) {
-            $sign = ($float > 0) - ($float < 0);
-
-            return $sign * $cents;
+            // $cents already carries the sign of $amount. Multiplying by sign($amount)
+            // on top of that flipped every negative value to positive.
+            return $cents;
         }
 
-        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * $cents;
+        // Bank statements carry an unsigned magnitude plus a separate credit/debit mark
+        // (MT940 fields 60F/61), so abs() is a no-op on real bank data. It only guards
+        // against a caller handing in an already-signed amount together with a mark.
+        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * abs($cents);
     }
 
     private function convertCentForDB(int $amount): string
