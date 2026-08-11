@@ -45,7 +45,10 @@ class FintsController extends Renderer
     {
         $post = $this->request->request;
         if ($post->has('tan')) {
-            $this->fintsHandler->submitTan($post->getAlnum('tan'));
+            // Banks print TANs in groups ("123 456"), so drop whitespace - but nothing
+            // else: some TAN schemes are alphanumeric, and silently dropping characters
+            // would burn one of the three attempts the bank grants.
+            $this->fintsHandler->submitTan(preg_replace('/\s+/', '', $post->get('tan', '')));
         }
         try {
             parent::render();
@@ -164,7 +167,9 @@ class FintsController extends Renderer
         $post = $this->request->request;
         if (ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])) {
             DBConnector::getInstance()->dbInsert('konto_credentials', [
-                'name' => $post->getAlpha('name'),
+                // getAlpha() would drop digits and spaces, turning "Konto 2024" into "Konto".
+                // konto_credentials.name is varchar(63), so cut rather than let the insert fail.
+                'name' => mb_substr(trim(strip_tags((string) $post->get('name'))), 0, 63),
                 'bank_id' => $post->getInt('bank-id'),
                 'bank_username' => trim(strip_tags($post->get('bank-username'))),
                 'owner_id' => DBConnector::getInstance()->getUser()['id'],
@@ -262,8 +267,11 @@ class FintsController extends Renderer
         )[0];
         $post = $this->request->request;
         if ($post->has('bank-password')) {
-            // a PW was sent
-            $pw = $post->getAlnum('bank-password');
+            // a PW was sent. Take it verbatim: getAlnum() would strip every special
+            // character and umlaut, and banks do allow those in a PIN (see the docs on
+            // Fhp\Options\Credentials::create). A mangled PIN is indistinguishable from
+            // a wrong one, and three wrong ones lock the online-banking access.
+            $pw = (string) $post->get('bank-password');
             FintsConnectionHandler::setLoginPassword($credentialId, $pw);
             $this->fintsHandler = FintsConnectionHandler::load($credentialId);
         }
@@ -369,7 +377,8 @@ class FintsController extends Renderer
             $syncFrom = date_create($post->get('sync-from'))->format('Y-m-d');
             $kontoIban = $post->getAlnum('iban');
             [, $iban] = (new NewValidator)->validate($kontoIban, 'iban');
-            $kontoName = substr(htmlspecialchars(strip_tags(trim($post->getAlpha('konto-name')))), 0, 32);
+            // getAlpha() would drop digits and spaces from the label ("Girokonto 2" -> "Girokonto")
+            $kontoName = mb_substr(htmlspecialchars(strip_tags(trim((string) $post->get('konto-name')))), 0, 32);
             $kontoShort = strtoupper(substr($post->getAlpha('konto-short'), 0, 2));
             $ret = DBConnector::getInstance()->dbInsert('konto_type', [
                 'name' => $kontoName,

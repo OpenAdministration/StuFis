@@ -1,5 +1,7 @@
 # v4.4.4
 * Bankimport (FinTS): Das Absenden der Formulare auf den Seiten des Bankzugangs führte zu einer Fehlerseite – betroffen waren das Anlegen eines Zugangs, die Auswahl des TAN-Verfahrens und jede TAN-Eingabe. Die Seiten nehmen ihre eigenen Formulare nun wieder an.
+* Bankimport (FinTS): Die eingegebene Online-Banking-PIN wurde vor dem Login verändert – alle Sonderzeichen und Umlaute wurden stillschweigend entfernt. Wer eine PIN mit Sonderzeichen nutzt, konnte sich dadurch nicht anmelden und riskierte nach drei Versuchen die Sperrung des Bankzugangs. Die PIN wird nun unverändert übernommen. Bei der TAN werden weiterhin nur Leerzeichen entfernt, damit sie sich wie aufgedruckt („123 456“) eingeben lässt.
+* Bankimport (FinTS): In der Bezeichnung eines Bankzugangs und eines Kontos gingen Ziffern und Leerzeichen verloren („Konto 2024“ wurde zu „Konto“). Beide Bezeichnungen werden nun so gespeichert, wie sie eingegeben wurden.
 
 ---
 
