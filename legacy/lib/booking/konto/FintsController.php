@@ -28,7 +28,7 @@ use InvalidArgumentException;
 
 class FintsController extends Renderer
 {
-    private ?FintsConnectionHandler $fintsHandler;
+    private ?FintsConnectionHandler $fintsHandler = null;
 
     private ?int $credentialId;
 
@@ -48,14 +48,36 @@ class FintsController extends Renderer
             // Banks print TANs in groups ("123 456"), so drop whitespace - but nothing
             // else: some TAN schemes are alphanumeric, and silently dropping characters
             // would burn one of the three attempts the bank grants.
-            $this->fintsHandler->submitTan(preg_replace('/\s+/', '', $post->get('tan', '')));
+            $this->requireFintsHandler()->submitTan(preg_replace('/\s+/', '', $post->get('tan', '')));
         }
         try {
             parent::render();
         } catch (NeedsTanException $e) {
-            $this->fintsHandler->logger->info('Tan needed', ['exception' => $e]);
+            $this->requireFintsHandler()->logger->info('Tan needed', ['exception' => $e]);
             $this->renderTanInput($e->getMessage(), $e->getTanRequest());
         }
+    }
+
+    /**
+     * The bank password is only ever held in the session, so it is gone as soon as the
+     * session expires - and every action below needs it. Dereferencing the handler
+     * regardless used to raise "Typed property must not be accessed before
+     * initialization", i.e. an error page. Send the user back to the login instead.
+     */
+    private function requireFintsHandler(): FintsConnectionHandler
+    {
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
+            return $this->fintsHandler;
+        }
+
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_INFO,
+            'Die Verbindung zur Bank ist nicht mehr aktiv - vermutlich ist die Sitzung abgelaufen. Bitte melde dich erneut an.'
+        );
+
+        throw new LegacyRedirectException($this->credentialId === null
+            ? redirect()->route('legacy.konto.credentials')
+            : redirect()->route('legacy.konto.credentials.login', $this->credentialId));
     }
 
     private function renderTanInput(string $msg, TanRequest $tanRequest): void
@@ -202,7 +224,7 @@ class FintsController extends Renderer
         if (isset($_POST['tan-mode-id'])) {
             $tanModeId = (int) $_POST['tan-mode-id'];
             try {
-                $success = $this->fintsHandler->setTanMode($tanModeId);
+                $success = $this->requireFintsHandler()->setTanMode($tanModeId);
                 if ($success) {
                     HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Modus gespeichert');
                     HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
@@ -214,7 +236,7 @@ class FintsController extends Renderer
                 HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/tan-mode/$tanModeId/medium");
             }
         }
-        $tanModes = $this->fintsHandler->getUserTanModes();
+        $tanModes = $this->requireFintsHandler()->getUserTanModes();
         $form = HtmlForm::make('POST', false)->urlTarget(URIBASE."konto/credentials/$this->credentialId/tan-mode");
         echo $form->begin();
         $this->renderHeadline('Bitte TAN-Modus auswählen');
@@ -231,7 +253,7 @@ class FintsController extends Renderer
         $post = $this->request->request;
         $tanModeInt = (int) $this->routeInfo['tan-mode-id'];
         if ($post->has('tan-medium-name')) {
-            $success = $this->fintsHandler->setTanMode($tanModeInt, $post->get('tan-medium-name'));
+            $success = $this->requireFintsHandler()->setTanMode($tanModeInt, $post->get('tan-medium-name'));
             if ($success) {
                 HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Medium gespeichert');
                 HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
@@ -240,7 +262,7 @@ class FintsController extends Renderer
             }
         }
 
-        $tanMedien = $this->fintsHandler->getTanMedias($tanModeInt);
+        $tanMedien = $this->requireFintsHandler()->getTanMedias($tanModeInt);
 
         echo "<form method='post' action=''>";
         $this->renderHeadline('Bitte TAN-Medium auswählen');
@@ -276,7 +298,7 @@ class FintsController extends Renderer
         }
         if (FintsConnectionHandler::hasPassword($credentialId)) {
             // pw set
-            $success = $this->fintsHandler->login();  // throws if Tan needed
+            $success = $this->requireFintsHandler()->login();  // throws if Tan needed
             if ($success) {
                 throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
             }
@@ -308,8 +330,8 @@ class FintsController extends Renderer
 
     protected function actionViewSepa()
     {
-        $accounts = $this->fintsHandler->getSepaAccounts();
-        $ibans = $this->fintsHandler->getIbans();
+        $accounts = $this->requireFintsHandler()->getSepaAccounts();
+        $ibans = $this->requireFintsHandler()->getIbans();
 
         $dbAccounts = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
@@ -391,7 +413,7 @@ class FintsController extends Renderer
         }
 
         $shortIban = $this->routeInfo['short-iban'];
-        $iban = $this->fintsHandler->lengthenIban($shortIban);
+        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
         $this->renderHeadline('Neues Konto Importieren');
         echo HtmlForm::make('POST', false)
@@ -406,7 +428,7 @@ class FintsController extends Renderer
     protected function actionImportNewSepaStatements()
     {
         $shortIban = $this->routeInfo['short-iban'];
-        $iban = $this->fintsHandler->lengthenIban($shortIban);
+        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
         $dbKonto = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
@@ -416,7 +438,7 @@ class FintsController extends Renderer
 
         [$startDate, $syncUntil] = DateHelper::fromUntilLast($dbKonto['sync_from'], $dbKonto['sync_until'], $dbKonto['last_sync']);
 
-        $statements = $this->fintsHandler->getStatements($iban, $startDate, $syncUntil);
+        $statements = $this->requireFintsHandler()->getStatements($iban, $startDate, $syncUntil);
 
         [$success, $msg] = $this->saveStatements($statements, $dbKonto['id']);
 
@@ -427,7 +449,7 @@ class FintsController extends Renderer
     protected function saveStatements(StatementOfAccount $statements, int $kontoId): array
     {
         $db = DBConnector::getInstance();
-        $logger = $this->fintsHandler->getLogger();
+        $logger = $this->requireFintsHandler()->getLogger();
         $lastKontoRow = $db->dbFetchAll(
             tables: 'konto',
             where: ['konto_id' => $kontoId],
@@ -607,7 +629,10 @@ class FintsController extends Renderer
 
     protected function actionLogout(): void
     {
-        if (isset($this->fintsHandler)) {
+        // Logging out of a connection that is already gone is not an error worth a
+        // redirect to the login, so this keeps its own handling instead of using
+        // requireFintsHandler().
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
             $this->fintsHandler->logout();
         } else {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
