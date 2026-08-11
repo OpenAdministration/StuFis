@@ -28,7 +28,7 @@
             <flux:input wire:model.live.blur="iban" :label="__('konto.new.iban')"
                         :badge="$bankSynced ? __('konto.new.from-bank-access') : 'optional'"
                         :readonly="$bankSynced"
-                        :description="$bankSynced ? __('konto.new.iban-locked-sub') : null"
+                        :description="$bankSynced ? __('konto.new.iban-locked-sub') : __('konto.new.iban-sub')"
                         class="max-w-sm"/>
 
             <div class="my-6">
