@@ -346,11 +346,24 @@ class FintsConnectionHandler
 
         $credentials = Credentials::create($username, self::getPassword($credentialId));
 
+        if (trim((string) FINTS_REGNR) === '') {
+            // FinTsOptions::validate() would raise "Product name required!" as an
+            // uncaught InvalidArgumentException, i.e. an error page with no clue.
+            throw new LegacyDieException(
+                500,
+                'Für den Bankzugang fehlt die FinTS-Registrierungsnummer (FINTS_REG_NR in der Konfiguration). '.
+                'Bitte wende dich an die Administration.'
+            );
+        }
+
         $options = new FinTsOptions;
         $options->url = $res['bank.url'];
         $options->bankCode = $res['bank.blz'];
         $options->productName = FINTS_REGNR;
-        $options->productVersion = InstalledVersions::getRootPackage()['version'].DEV ? '-dev' : '';
+        // The concatenation binds tighter than ?:, so this used to evaluate as
+        // (('4.4.3'.DEV) ? '-dev' : '') - an always-truthy string, which reported the
+        // version to the bank as literally "-dev" regardless of what is installed.
+        $options->productVersion = InstalledVersions::getRootPackage()['version'].(DEV ? '-dev' : '');
 
         $tanModeInt = null;
         if ($res['tan_mode'] !== 'null' && ! is_null($res['tan_mode'])) {
