@@ -3,7 +3,6 @@
 namespace booking\konto;
 
 use App\Exceptions\LegacyDieException;
-use Composer\InstalledVersions;
 use DateTime;
 use Fhp\Action\GetSEPAAccounts;
 use Fhp\Action\GetStatementOfAccount;
@@ -363,7 +362,9 @@ class FintsConnectionHandler
         // The concatenation binds tighter than ?:, so this used to evaluate as
         // (('4.4.3'.DEV) ? '-dev' : '') - an always-truthy string, which reported the
         // version to the bank as literally "-dev" regardless of what is installed.
-        $options->productVersion = InstalledVersions::getRootPackage()['version'].(DEV ? '-dev' : '');
+        // config('stufis.version') is the pretty version; getRootPackage()['version']
+        // would be the normalised one ("4.4.4.0" rather than "4.4.4").
+        $options->productVersion = config('stufis.version').(DEV ? '-dev' : '');
 
         $tanModeInt = null;
         if ($res['tan_mode'] !== 'null' && ! is_null($res['tan_mode'])) {
@@ -498,7 +499,11 @@ class FintsConnectionHandler
         ) === 1;
     }
 
-    public function getStatements(string $iban, DateTime $start, DateTime $end): StatementOfAccount
+    /**
+     * @param  DateTime|null  $start  null asks the bank for its own default range, which is
+     *                                what an account without a configured sync_from gets
+     */
+    public function getStatements(string $iban, ?DateTime $start, DateTime $end): StatementOfAccount
     {
         // What a pending statement request was created for. While it waits for a TAN the
         // action sits in the session, and it used to be resumed on nothing but its type:
@@ -519,6 +524,14 @@ class FintsConnectionHandler
                 'credId' => $this->credentialId,
                 'requested' => $scope,
             ]);
+            // Say it out loud as well: the log lands in legacy/runtime/logs/fints.log, which
+            // is not somewhere anyone looks, and from the user's side the TAN they were about
+            // to enter simply stops applying.
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_INFO,
+                'Der noch offene Umsatzabruf gehörte zu einem anderen Konto oder Zeitraum und wurde verworfen',
+                'Der Abruf für dieses Konto wird neu gestartet - dafür ist eine neue TAN nötig.'
+            );
             $this->saveAction(); // drops the stale action and its scope
         }
         $this->logger->info('Start Get SEPA Statements', ['credId' => $this->credentialId, $iban]);
@@ -534,9 +547,9 @@ class FintsConnectionHandler
         return $action->getStatement();
     }
 
-    private function statementScope(string $iban, DateTime $start, DateTime $end): string
+    private function statementScope(string $iban, ?DateTime $start, DateTime $end): string
     {
-        return $iban.'|'.$start->format('Y-m-d').'|'.$end->format('Y-m-d');
+        return $iban.'|'.($start?->format('Y-m-d') ?? 'bank-default').'|'.$end->format('Y-m-d');
     }
 
     public function getLogger(): LoggerInterface

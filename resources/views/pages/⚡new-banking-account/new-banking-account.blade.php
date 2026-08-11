@@ -23,10 +23,20 @@
                             :description="__('konto.new.date-end-headline-sub')"/>
             </div>
 
-            <flux:input wire:model.live.blur="iban" :label="__('konto.new.iban')" badge="optional" class="max-w-sm"/>
+            {{-- Handed over by a bank access: the IBAN is the bank's own, and a synced account
+                 must not be switched to manual entry. Both stay visible but locked. --}}
+            <flux:input wire:model.live.blur="iban" :label="__('konto.new.iban')"
+                        :badge="$bankSynced ? __('konto.new.from-bank-access') : 'optional'"
+                        :readonly="$bankSynced"
+                        :description="$bankSynced ? __('konto.new.iban-locked-sub') : null"
+                        class="max-w-sm"/>
 
             <div class="my-6">
-                <flux:switch wire:model.live.blur="manually_enterable" :label="__('konto.new.manual-headline')" :description="__('konto.new.manual-headline-sub')" align="left"/>
+                <flux:switch wire:model.live.blur="manually_enterable"
+                             :label="__('konto.new.manual-headline')"
+                             :disabled="$bankSynced"
+                             :description="$bankSynced ? __('konto.new.manual-locked-sub') : __('konto.new.manual-headline-sub')"
+                             align="left"/>
             </div>
 
             <flux:button type="submit" variant="primary" wire:click="store">Speichern</flux:button>

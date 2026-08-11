@@ -4,7 +4,6 @@ namespace booking\konto;
 
 use App\Exceptions\LegacyRedirectException;
 use booking\konto\tan\FlickerGenerator;
-use DateTimeImmutable;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
 use Fhp\Model\TanRequest;
@@ -13,7 +12,6 @@ use forms\projekte\auslagen\AuslagenHandler2;
 use framework\ArrayHelper;
 use framework\DateHelper;
 use framework\DBConnector;
-use framework\NewValidator;
 use framework\render\html\BT;
 use framework\render\html\FA;
 use framework\render\html\Html;
@@ -428,93 +426,50 @@ class FintsController extends Renderer
             ->asLink(URIBASE.'konto/credentials');
     }
 
+    /**
+     * Registering an account is the Livewire page's job (pages::new-banking-account), which
+     * validates with Laravel rules, knows about sync_until and manually_enterable, and is
+     * the same form used everywhere else. This hands the account over to it with the IBAN
+     * prefilled instead of keeping a second, hand-written create form here.
+     */
     protected function actionNewSepaKonto(): void
     {
         $shortIban = $this->routeInfo['short-iban'];
-        $post = $this->request->request;
+        // Resolved from the account list of this bank access, not from user input, so the
+        // prefilled value is one of the accounts the credential actually holds.
+        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
-        // Only treat this as a submit when the form's own fields are there. Reacting to any
-        // non-empty POST meant the TAN prompt - which posts back to the current URL - was
-        // taken for a submit and died in date_create(null).
-        if (ArrayHelper::allIn($post->keys(), ['iban', 'konto-name', 'konto-short', 'sync-from'])) {
-            $errors = [];
-
-            [$ibanValid, $iban] = (new NewValidator)->validate((string) $post->get('iban'), 'iban');
-            if ($ibanValid !== true) {
-                // The validity flag used to be discarded, so an invalid IBAN was stored as
-                // an empty string and the account could never be synced.
-                $errors[] = 'Die IBAN ist ungültig.';
-            } elseif (! in_array($iban, $this->requireFintsHandler()->getIbans(), true)) {
-                // The IBAN arrives from the form, so it has to be held against the accounts
-                // this bank access actually holds - otherwise any account at all can be
-                // registered for synchronisation.
-                $errors[] = 'Die IBAN gehört zu keinem Konto dieses Bankzugangs.';
-            }
-
-            $kontoName = mb_substr(htmlspecialchars(strip_tags(trim((string) $post->get('konto-name')))), 0, 32);
-            if ($kontoName === '') {
-                $errors[] = 'Bitte gib eine Bezeichnung für das Konto an.';
-            }
-
-            $kontoShort = strtoupper(trim((string) $post->get('konto-short')));
-            if (preg_match('/^[A-Z]{2}$/', $kontoShort) !== 1) {
-                $errors[] = 'Das Kürzel muss aus genau zwei Buchstaben bestehen.';
-            }
-
-            // date_create('') yields "now" instead of false, so the format is checked instead.
-            $syncFrom = DateTimeImmutable::createFromFormat('!Y-m-d', (string) $post->get('sync-from'));
-            if ($syncFrom === false) {
-                $errors[] = 'Das Startdatum der Synchronisation ist kein gültiges Datum.';
-            }
-
-            $db = DBConnector::getInstance();
-            if ($errors === []) {
-                // short is documented as unique and is the prefix of every payment id, and a
-                // second row for the same IBAN would make the import pick an arbitrary one
-                // of them (the lookup is keyed by IBAN).
-                foreach ($db->dbFetchAll('konto_type', [DBConnector::FETCH_ASSOC], ['iban', 'short']) as $row) {
-                    if ($row['iban'] === $iban) {
-                        $errors[] = 'Für diese IBAN ist bereits ein Konto angelegt.';
-                    }
-                    if (strtoupper((string) $row['short']) === $kontoShort) {
-                        $errors[] = "Das Kürzel $kontoShort ist bereits vergeben.";
-                    }
-                }
-            }
-
-            if ($errors !== []) {
-                foreach ($errors as $error) {
-                    HTMLPageRenderer::addFlash(BT::TYPE_DANGER, $error);
-                }
-                HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/$shortIban/import");
-            }
-
-            $db->dbInsert('konto_type', [
-                'name' => $kontoName,
-                'short' => $kontoShort,
-                'sync_from' => $syncFrom->format('Y-m-d'),
-                'iban' => $iban,
-            ]);
-            HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich gespeichert');
+        if ($iban === null) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Zu diesem Kürzel gehört kein Konto dieses Bankzugangs.'
+            );
             HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
         }
 
-        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
-
-        $this->renderHeadline('Neues Konto Importieren');
-        echo HtmlForm::make('POST', false)
-            ->urlTarget(URIBASE."konto/credentials/$this->credentialId/$shortIban/import")
-            ->addHtmlEntity(HtmlInput::make()->name('iban')->label('IBAN')->value($iban)->readOnly())
-            ->addHtmlEntity(HtmlInput::make()->name('konto-name')->label('Bezeichnung Konto'))
-            ->addHtmlEntity(HtmlInput::make()->name('konto-short')->label('Eindeutiges Buchstabenkürzel für das Konto (intern)'))
-            ->addHtmlEntity(HtmlInput::make('date')->name('sync-from')->label('Startdatum der Synchronisation'))
-            ->addSubmitButton('Speichern');
+        throw new LegacyRedirectException(redirect()->route('bank-account.new', [
+            'iban' => $iban,
+            // Marks this as a synced account: the page locks the IBAN and the manual-entry
+            // switch for it.
+            'bankSynced' => 1,
+            // Built as a relative path from a named route, so what the page gets handed can
+            // only ever point back into this application.
+            'returnTo' => route('legacy.konto.credentials.sepa', ['credential_id' => $this->credentialId], false),
+        ]));
     }
 
     protected function actionImportNewSepaStatements()
     {
         $shortIban = $this->routeInfo['short-iban'];
         $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
+
+        if ($iban === null) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Zu diesem Kürzel gehört kein Konto dieses Bankzugangs.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
+        }
 
         $dbKontos = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
@@ -535,7 +490,20 @@ class FintsController extends Renderer
 
         [$startDate, $syncUntil] = DateHelper::fromUntilLast($dbKonto['sync_from'], $dbKonto['sync_until'], $dbKonto['last_sync']);
 
-        $statements = $this->requireFintsHandler()->getStatements($iban, $startDate, $syncUntil);
+        try {
+            $statements = $this->requireFintsHandler()->getStatements($iban, $startDate, $syncUntil);
+        } catch (InvalidArgumentException $e) {
+            // getSepaAccount() throws when the bank access does not hold this IBAN, which is
+            // reachable because an account may also be registered by hand (or for a cash box)
+            // on the Livewire page. That is a wrong-page situation, not a server error.
+            $this->requireFintsHandler()->logger->warning('Statement request for an IBAN this credential does not hold', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Dieses Konto gehört nicht zu diesem Bankzugang',
+                'Bitte rufe die Umsätze über den Bankzugang ab, dem das Konto gehört.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
+        }
 
         [$success, $msg] = $this->saveStatements($statements, $dbKonto['id']);
 
