@@ -464,13 +464,6 @@ $pathConfig = [
                     'action' => 'chat',
                 ],
                 [
-                    'path' => 'hibiscus',
-                    'type' => 'path',
-                    'controller' => 'rest',
-                    'groups' => 'ref-finanzen-kv',
-                    'action' => 'update-konto',
-                ],
-                [
                     'path' => 'booking',
                     'type' => 'path',
                     'controller' => 'error',
