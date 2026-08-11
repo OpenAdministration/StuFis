@@ -135,9 +135,12 @@ class FintsConnectionHandler
             $this->finTs->close(); // logout @ server
             $this->forgetCachedCredentials($this->credentialId);
             HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich ausgeloggt');
-        } catch (ServerException $e) {
+        } catch (CurlException|ServerException|UnexpectedResponseException $e) {
+            // A logout that cannot reach the bank is not worth an error page - the local
+            // session data is dropped either way below.
             $this->logger->error('Logout failed', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Logout fehlgeschlagen', $e->getMessage());
+            $this->forgetCachedCredentials($this->credentialId);
 
             return false;
         }
@@ -156,7 +159,7 @@ class FintsConnectionHandler
         try {
             $this->logger->info('Fetch TAN Modes', ['credId' => $this->credentialId]);
             $tanModes = $this->finTs->getTanModes();
-        } catch (CurlException|ServerException $e) {
+        } catch (CurlException|ServerException|UnexpectedResponseException $e) {
             $this->logger->info('Fetch TAN Modes failed', ['exception' => $e]);
             ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbringung zur Bank gestört');
         }
@@ -185,7 +188,7 @@ class FintsConnectionHandler
             }
 
             return $tanMediumNames;
-        } catch (CurlException|ServerException $e) {
+        } catch (CurlException|ServerException|UnexpectedResponseException $e) {
             $this->logger->error('Tan kann nicht empfangen werden - Verbindung zur Bank gestört', ['exception' => $e]);
             ErrorHandler::handleException($e, 'TAN Modi können nicht empfangen werden - Verbindung zur Bank gestört');
         }
@@ -374,7 +377,7 @@ class FintsConnectionHandler
                 // TODO decoupled tan stuff here
                 throw new NeedsTanException($action);
             }
-        } catch (CurlException|ServerException $e) {
+        } catch (CurlException|ServerException|UnexpectedResponseException $e) {
             $this->logger->error('Aktion nicht ausgeführt', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt');
         }
@@ -423,9 +426,26 @@ class FintsConnectionHandler
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
 
             return false;
-        } catch (ServerException $e) {
+        } catch (ServerException|UnexpectedResponseException $e) {
+            // A rejected TAN arrives as UnexpectedResponseException("Bank has not accepted
+            // TAN: ...") from FinTs::submitTan(). That extends RuntimeException, while
+            // ServerException extends Exception - two unrelated hierarchies, so catching
+            // only the latter turned a mistyped TAN into an error page.
             $this->logger->error('Wrong Tan', ['exception' => $e]);
             HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'TAN nicht akzeptiert', $e->getMessage());
+
+            return false;
+        } catch (InvalidArgumentException $e) {
+            // The library refuses to take a TAN for a decoupled TAN mode (confirmation
+            // happens in the banking app instead). Supporting that properly is its own
+            // work package; until then, say so rather than showing an error page.
+            $this->logger->error('TAN submission rejected by the library', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Dieses TAN-Verfahren kann StuFiS derzeit nicht abschließen',
+                'Bei Freigabe-Verfahren ohne TAN-Eingabe (z. B. pushTAN-Freigabe in der Banking-App) '.
+                'fehlt die Unterstützung noch. Bitte wähle ein TAN-Verfahren mit TAN-Eingabe.'
+            );
 
             return false;
         }
@@ -447,7 +467,7 @@ class FintsConnectionHandler
             }
             $this->saveAction();
             $this->logger->info('Set TAN Mode', ['credId' => $this->credentialId, 'tanMode' => $tanModeId, 'tanMedium' => $tanMediumName]);
-        } catch (CurlException|ServerException  $e) {
+        } catch (CurlException|ServerException|UnexpectedResponseException $e) {
             $this->logger->error('BPB fetch failed', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Kann keine Verbindung zum Bank Server aufbauen', 'BPB fetch failed');
         }
