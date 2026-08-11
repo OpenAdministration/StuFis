@@ -114,10 +114,16 @@ Breadcrumbs::for('legacy.konto.credentials.sepa', static function (BreadcrumbTra
     $trail->push(__('general.breadcrumb.konto.sepa'), route('legacy.konto.credentials.sepa', $credential_id));
 });
 
-// Home > Konto > Credentials > Sepa
+// Home > Konto > Credentials > Sepa > Neu
 Breadcrumbs::for('legacy.konto.credentials.import-konto', static function (BreadcrumbTrail $trail, $credential_id, $shortIban): void {
     $trail->parent('legacy.konto.credentials.sepa', $credential_id);
     $trail->push(__('general.breadcrumb.konto.import-konto'));
+});
+
+// Home > Konto > Credentials > Sepa > Aktualisieren
+Breadcrumbs::for('legacy.konto.credentials.import-transactions', static function (BreadcrumbTrail $trail, $credential_id, $shortIban): void {
+    $trail->parent('legacy.konto.credentials.sepa', $credential_id);
+    $trail->push(__('general.breadcrumb.konto.import-transactions'));
 });
 
 // Home > Sitzung

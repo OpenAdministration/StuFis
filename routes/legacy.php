@@ -19,13 +19,19 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     // legacy hhp-picker needs that url schema as a easy forward - route names are here not usable :(
     Route::redirect('konto/{hhp_id}/new', '/bank-account/new');
     Route::get('konto/{hhp_id?}/{konto_id?}', [LegacyController::class, 'render'])->name('konto');
-    Route::get('konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
-    Route::get('konto/credentials/new', [LegacyController::class, 'render'])->name('konto.credentials.new');
+    // Every FinTS page posts back to its own URL: the new-credentials form targets
+    // itself, and any action can interrupt with the TAN prompt, which posts to
+    // request()->url() (FintsController::renderTanInput). The legacy router already
+    // allows POST here ('method' => ['GET', 'POST'] on the credentials node, inherited
+    // by its children), so these must accept POST too - otherwise the submit falls
+    // through to the catch-all below and loses its route name.
+    Route::match(['GET', 'POST'], 'konto/credentials', [LegacyController::class, 'render'])->name('konto.credentials');
+    Route::match(['GET', 'POST'], 'konto/credentials/new', [LegacyController::class, 'render'])->name('konto.credentials.new');
     Route::any('konto/credentials/{credential_id}/login', [LegacyController::class, 'render'])->name('konto.credentials.login');
-    Route::get('konto/credentials/{credential_id}/tan-mode', [LegacyController::class, 'render'])->name('konto.credentials.tan-mode');
-    Route::get('konto/credentials/{credential_id}/sepa', [LegacyController::class, 'render'])->name('konto.credentials.sepa');
-    Route::get('konto/credentials/{credential_id}/{short_iban}', [LegacyController::class, 'render'])->name('konto.credentials.import-transactions');
-    Route::get('konto/credentials/{credential_id}/{short_iban}/import', [LegacyController::class, 'render'])->name('konto.credentials.import-konto');
+    Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/tan-mode', [LegacyController::class, 'render'])->name('konto.credentials.tan-mode');
+    Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/sepa', [LegacyController::class, 'render'])->name('konto.credentials.sepa');
+    Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/{short_iban}', [LegacyController::class, 'render'])->name('konto.credentials.import-transactions');
+    Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/{short_iban}/import', [LegacyController::class, 'render'])->name('konto.credentials.import-konto');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');
     Route::get('booking/{hhp_id}/instruct', [LegacyController::class, 'render'])->name('booking.instruct');
     Route::get('booking/{hhp_id}/text', [LegacyController::class, 'render'])->name('booking.text');

@@ -1,3 +1,8 @@
+# v4.4.4
+* Bankimport (FinTS): Das Absenden der Formulare auf den Seiten des Bankzugangs führte zu einer Fehlerseite – betroffen waren das Anlegen eines Zugangs, die Auswahl des TAN-Verfahrens und jede TAN-Eingabe. Die Seiten nehmen ihre eigenen Formulare nun wieder an.
+
+---
+
 # v4.4.3
 * Projekte mit mehreren Posten ließen sich nicht mehr speichern, wenn vor dem Speichern in jeder Postenzeile etwas geändert wurde – das Speichern brach mit einer Fehlerseite ab. Die Beträge gingen dabei auf dem Weg zum Server verloren; sie werden nun wieder zuverlässig als Geldbeträge erkannt.
 * Fehlermeldungen beim Speichern eines Projekts erscheinen jetzt direkt an dem Feld, das sie ausgelöst hat – und zwar alle. Bisher wurde nur die erste Meldung als einzelne Zeile über dem Formular angezeigt, sodass unklar blieb, welche Zeile oder welches Feld gemeint war.

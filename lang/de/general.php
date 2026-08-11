@@ -21,6 +21,7 @@ return [
             'tan-mode' => 'Tan-Modus',
             'sepa' => 'Konten',
             'import-konto' => 'Neu',
+            'import-transactions' => 'Aktualisieren',
         ],
         'sitzung' => 'Sitzung',
         'budget-plan' => 'Haushaltsplan',
