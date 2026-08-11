@@ -4,6 +4,7 @@ namespace booking\konto;
 
 use App\Exceptions\LegacyRedirectException;
 use booking\konto\tan\FlickerGenerator;
+use DateTimeImmutable;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
 use Fhp\Model\TanRequest;
@@ -393,26 +394,75 @@ class FintsController extends Renderer
 
     protected function actionNewSepaKonto(): void
     {
-        if ($this->request->request->count() > 0) {
-            $post = $this->request->request;
-            $syncFrom = date_create($post->get('sync-from'))->format('Y-m-d');
-            $kontoIban = $post->getAlnum('iban');
-            [, $iban] = (new NewValidator)->validate($kontoIban, 'iban');
-            // getAlpha() would drop digits and spaces from the label ("Girokonto 2" -> "Girokonto")
+        $shortIban = $this->routeInfo['short-iban'];
+        $post = $this->request->request;
+
+        // Only treat this as a submit when the form's own fields are there. Reacting to any
+        // non-empty POST meant the TAN prompt - which posts back to the current URL - was
+        // taken for a submit and died in date_create(null).
+        if (ArrayHelper::allIn($post->keys(), ['iban', 'konto-name', 'konto-short', 'sync-from'])) {
+            $errors = [];
+
+            [$ibanValid, $iban] = (new NewValidator)->validate((string) $post->get('iban'), 'iban');
+            if ($ibanValid !== true) {
+                // The validity flag used to be discarded, so an invalid IBAN was stored as
+                // an empty string and the account could never be synced.
+                $errors[] = 'Die IBAN ist ungültig.';
+            } elseif (! in_array($iban, $this->requireFintsHandler()->getIbans(), true)) {
+                // The IBAN arrives from the form, so it has to be held against the accounts
+                // this bank access actually holds - otherwise any account at all can be
+                // registered for synchronisation.
+                $errors[] = 'Die IBAN gehört zu keinem Konto dieses Bankzugangs.';
+            }
+
             $kontoName = mb_substr(htmlspecialchars(strip_tags(trim((string) $post->get('konto-name')))), 0, 32);
-            $kontoShort = strtoupper(substr($post->getAlpha('konto-short'), 0, 2));
-            $ret = DBConnector::getInstance()->dbInsert('konto_type', [
+            if ($kontoName === '') {
+                $errors[] = 'Bitte gib eine Bezeichnung für das Konto an.';
+            }
+
+            $kontoShort = strtoupper(trim((string) $post->get('konto-short')));
+            if (preg_match('/^[A-Z]{2}$/', $kontoShort) !== 1) {
+                $errors[] = 'Das Kürzel muss aus genau zwei Buchstaben bestehen.';
+            }
+
+            // date_create('') yields "now" instead of false, so the format is checked instead.
+            $syncFrom = DateTimeImmutable::createFromFormat('!Y-m-d', (string) $post->get('sync-from'));
+            if ($syncFrom === false) {
+                $errors[] = 'Das Startdatum der Synchronisation ist kein gültiges Datum.';
+            }
+
+            $db = DBConnector::getInstance();
+            if ($errors === []) {
+                // short is documented as unique and is the prefix of every payment id, and a
+                // second row for the same IBAN would make the import pick an arbitrary one
+                // of them (the lookup is keyed by IBAN).
+                foreach ($db->dbFetchAll('konto_type', [DBConnector::FETCH_ASSOC], ['iban', 'short']) as $row) {
+                    if ($row['iban'] === $iban) {
+                        $errors[] = 'Für diese IBAN ist bereits ein Konto angelegt.';
+                    }
+                    if (strtoupper((string) $row['short']) === $kontoShort) {
+                        $errors[] = "Das Kürzel $kontoShort ist bereits vergeben.";
+                    }
+                }
+            }
+
+            if ($errors !== []) {
+                foreach ($errors as $error) {
+                    HTMLPageRenderer::addFlash(BT::TYPE_DANGER, $error);
+                }
+                HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/$shortIban/import");
+            }
+
+            $db->dbInsert('konto_type', [
                 'name' => $kontoName,
                 'short' => $kontoShort,
-                'sync_from' => $syncFrom,
+                'sync_from' => $syncFrom->format('Y-m-d'),
                 'iban' => $iban,
             ]);
-            // TODO: use $ret
             HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich gespeichert');
             HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
         }
 
-        $shortIban = $this->routeInfo['short-iban'];
         $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
         $this->renderHeadline('Neues Konto Importieren');
@@ -430,11 +480,22 @@ class FintsController extends Renderer
         $shortIban = $this->routeInfo['short-iban'];
         $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
-        $dbKonto = DBConnector::getInstance()->dbFetchAll(
+        $dbKontos = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
             ['iban', '*']
-        )[$iban];
+        );
+
+        // Reaching this URL for an account that was never registered used to be an
+        // undefined-array-key error page.
+        if (! isset($dbKontos[$iban])) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_WARNING,
+                'Dieses Konto ist noch nicht für den Import eingerichtet. Bitte lege es zuerst an.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/$shortIban/import");
+        }
+        $dbKonto = $dbKontos[$iban];
 
         [$startDate, $syncUntil] = DateHelper::fromUntilLast($dbKonto['sync_from'], $dbKonto['sync_until'], $dbKonto['last_sync']);
 

@@ -11,9 +11,15 @@ class DateHelper
      */
     public static function fromUntilLast(?string $from, ?string $until, ?string $last): array
     {
-        $syncFrom = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $from);
-        $lastSync = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $last);
-        $syncUntil = DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $until);
+        $syncFrom = $from === null ? false : DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $from);
+        $lastSync = $last === null ? false : DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $last);
+        $syncUntil = $until === null ? false : DateTime::createFromFormat(DBConnector::SQL_DATE_FORMAT, $until);
+
+        // konto_type.sync_from is nullable, and "clone false" is a fatal error - so fall
+        // back to the epoch and let the bank decide how far back it will go.
+        if ($syncFrom === false) {
+            $syncFrom = date_create('1970-01-01');
+        }
 
         // set default for lastsync if unset
         if ($lastSync === false) {
