@@ -287,6 +287,7 @@ class FintsConnectionHandler
         } else {
             // delete it from cache otherwise
             $this->setCache('action', null);
+            $this->setCache('action-scope', null);
         }
         // save persist in cache
         $this->setCache('persist', $this->finTs->persist());
@@ -486,23 +487,43 @@ class FintsConnectionHandler
 
     public function getStatements(string $iban, DateTime $start, DateTime $end): StatementOfAccount
     {
+        // What a pending statement request was created for. While it waits for a TAN the
+        // action sits in the session, and it used to be resumed on nothing but its type:
+        // asking for account A, then opening account B's import URL and entering the TAN
+        // there returned A's statements, which the caller then stored under B's konto_id.
+        $scope = $this->statementScope($iban, $start, $end);
         $action = $this->resumableAction();
         if ($action instanceof GetStatementOfAccount) {
-            if ($action->isDone()) {
-                $this->saveAction();
+            if ($this->getCache('action-scope') === $scope) {
+                if ($action->isDone()) {
+                    $this->saveAction();
 
-                return $action->getStatement();
+                    return $action->getStatement();
+                }
+                throw new NeedsTanException($action);
             }
-            throw new NeedsTanException($action);
+            $this->logger->warning('Discarding a pending statement request made for something else', [
+                'credId' => $this->credentialId,
+                'requested' => $scope,
+            ]);
+            $this->saveAction(); // drops the stale action and its scope
         }
         $this->logger->info('Start Get SEPA Statements', ['credId' => $this->credentialId, $iban]);
         $account = $this->getSepaAccount($iban);
         $account = clone $account; // weird fix, without the clone the session var is changed to DateTime object
         // might be a bug in fints TODO: see if minimal example with the same bug can be found
         $action = GetStatementOfAccount::create($account, $start, $end);
+        // Has to be recorded before execute(), which caches the action and then throws
+        // NeedsTanException, ending this request.
+        $this->setCache('action-scope', $scope);
         $this->execute($action);
 
         return $action->getStatement();
+    }
+
+    private function statementScope(string $iban, DateTime $start, DateTime $end): string
+    {
+        return $iban.'|'.$start->format('Y-m-d').'|'.$end->format('Y-m-d');
     }
 
     public function getLogger(): LoggerInterface
