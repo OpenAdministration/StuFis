@@ -157,8 +157,11 @@ return [
     */
 
     'custom' => [
+        // Careful: these apply to every form with a field of that name, not just to projects.
+        // "name" in particular is shared with the account form, so the message must not name
+        // one of them - the field's own label supplies the context.
         'name' => [
-            'required' => 'Bitte gib einen Namen für das Projekt an.',
+            'required' => 'Bitte gib einen Namen an.',
             'max' => 'Der Name darf maximal :max Zeichen lang sein.',
         ],
         'responsible' => [
