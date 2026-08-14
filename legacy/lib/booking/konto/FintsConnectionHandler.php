@@ -287,7 +287,16 @@ class FintsConnectionHandler
         } else {
             // delete it from cache otherwise
             $this->setCache('action', null);
-            $this->setCache('action-scope', null);
+            if ($action === null) {
+                // Only dropping the action outright - a fresh start, or the "belongs to
+                // something else" branch in getStatements() - drops the scope with it. A
+                // *finished* action that is still handed in here (submitTan() or
+                // checkDecoupledSubmission() just completed it) must keep its scope: that is
+                // what lets getStatements() recognise it as its own action on the next call and
+                // return its result, instead of discarding it as belonging to another request
+                // and starting a fresh one that needs another TAN.
+                $this->setCache('action-scope', null);
+            }
         }
         // save persist in cache
         $this->setCache('persist', $this->finTs->persist());
