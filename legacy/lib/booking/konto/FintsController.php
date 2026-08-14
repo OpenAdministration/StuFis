@@ -242,6 +242,13 @@ class FintsController extends Renderer
     {
         $post = $this->request->request;
         if (ArrayHelper::allIn($post->keys(), ['name', 'blz', 'bank-username'])) {
+            // The dropdown starts on its placeholder, so an untouched form posts an empty BLZ.
+            // Saying so beats normalising it into "00000000" and reporting that as unknown.
+            if (trim((string) $post->get('blz')) === '') {
+                HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Bitte wähle die Bank aus, bei der der Zugang besteht.');
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials/new');
+            }
+
             $blz = FintsInstitute::normaliseBlz((string) $post->get('blz'));
 
             // The foreign key guarantees the BLZ exists; it cannot guarantee the institute
@@ -288,6 +295,10 @@ class FintsController extends Renderer
                 ->label('Bank')
                 ->liveSearch(true)
                 ->name('blz')
+                // Without this the browser preselects the first bank of the list, and a form
+                // submitted without touching the dropdown would quietly pick that one. The
+                // selectpicker turns a title into a placeholder option with an empty value.
+                ->title('Bank auswählen')
                 ->setItems($banks->mapWithKeys(static fn (FintsInstitute $bank): array => [
                     $bank->blz => [$bank->name, "BLZ: $bank->blz".($bank->location ? ", $bank->location" : '')],
                 ])->all())
