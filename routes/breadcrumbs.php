@@ -4,6 +4,7 @@
 
 // Note: Laravel will automatically resolve `Breadcrumbs::` without
 // this import. This is nice for IDE syntax and refactoring.
+use App\Models\Legacy\BankAccount;
 use Diglactic\Breadcrumbs\Breadcrumbs;
 // This import is also not required, and you could replace `BreadcrumbTrail $trail`
 //  with `$trail`. This is nice for IDE type checking and completion.
@@ -126,9 +127,14 @@ Breadcrumbs::for('legacy.konto.credentials.import-konto', static function (Bread
     $trail->push(__('general.breadcrumb.konto.import-konto'));
 });
 
-// Home > Konto > Credentials > Sepa > Aktualisieren
+// Home > Konto > Credentials > Sepa > Konto > Aktualisieren
 Breadcrumbs::for('legacy.konto.credentials.import-transactions', static function (BreadcrumbTrail $trail, $credential_id, $shortIban): void {
     $trail->parent('legacy.konto.credentials.sepa', $credential_id);
+    // The TAN prompt runs under this route too, and its page says nothing about the account it
+    // belongs to - so without this the person entering a TAN cannot see which account they are
+    // importing. Falls back to the shortened IBAN from the URL for an account this installation
+    // has not registered.
+    $trail->push(BankAccount::findByShortIban($shortIban)?->name ?? $shortIban);
     $trail->push(__('general.breadcrumb.konto.import-transactions'));
 });
 

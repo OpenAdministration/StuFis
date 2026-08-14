@@ -90,4 +90,27 @@ class BankAccount extends Model
     {
         return $this->hasMany(BankTransaction::class, 'konto_id');
     }
+
+    /**
+     * The account behind the shortened IBAN the FinTS URLs carry (first four characters plus
+     * last four, see FintsConnectionHandler::shortenIban()). Null when no account is registered
+     * for it - which is a normal state there, the bank lists accounts this installation does not
+     * know yet.
+     *
+     * Several accounts can in principle share the four-and-four pattern; the lowest id wins, so
+     * a label built from this at least stays the same between two page loads.
+     */
+    public static function findByShortIban(string $shortIban): ?static
+    {
+        // Guards the LIKE below against a route parameter carrying % or _ as much as it rejects
+        // anything that is not shaped like a shortened IBAN in the first place.
+        if (in_array(preg_match('/^[A-Z]{2}[A-Z0-9]{6}$/', $shortIban), [0, false], true)) {
+            return null;
+        }
+
+        return static::query()
+            ->where('iban', 'like', substr($shortIban, 0, 4).'%'.substr($shortIban, -4))
+            ->orderBy('id')
+            ->first();
+    }
 }
