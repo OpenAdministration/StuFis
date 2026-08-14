@@ -14,6 +14,16 @@ return [
 
     'fints' => [
         'registration_number' => env('FINTS_REG_NR'),
+
+        /*
+         * Source for `stufis:fints-institutes-update`. Die Deutsche Kreditwirtschaft hands
+         * its own FinTS-Bankenliste to registered vendors only and forbids shipping it as
+         * part of a software product, so we pull hbci4java's public equivalent instead.
+         */
+        'institute_list_url' => env(
+            'FINTS_INSTITUTE_LIST_URL',
+            'https://raw.githubusercontent.com/hbci4j/hbci4java/master/src/main/resources/blz.properties',
+        ),
     ],
 
     'version' => InstalledVersions::getPrettyVersion('openadministration/stufis'),

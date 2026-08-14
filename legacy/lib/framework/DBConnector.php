@@ -406,20 +406,31 @@ class DBConnector extends Singleton
             ],
         ];
 
-        $scheme['konto_bank'] = [
-            'id' => 'INT NOT NULL',
-            'url' => 'VARCHAR(256) NOT NULL',
-            'blz' => 'INT NOT NULL',
-            'name' => 'VARCHAR(256) NOT NULL',
+        // The bank itself is no longer stored here: name and FinTS endpoint come from
+        // fints_institutes, which stufis:fints-institutes-update syncs from the public
+        // bank list. konto_bank held a hand-maintained copy of the same four columns.
+        $scheme['fints_institutes'] = [
+            'blz' => 'CHAR(8) NOT NULL',
+            'name' => 'VARCHAR(255) NOT NULL',
+            'location' => 'VARCHAR(255) NULL',
+            'bic' => 'VARCHAR(11) NULL',
+            'checksum_method' => 'VARCHAR(2) NULL',
+            'rdh_address' => 'VARCHAR(255) NULL',
+            'pin_tan_address' => 'VARCHAR(255) NULL',
+            'rdh_version' => 'VARCHAR(16) NULL',
+            'pin_tan_version' => 'VARCHAR(16) NULL',
+            'synced_at' => 'TIMESTAMP NOT NULL',
+            'created_at' => 'TIMESTAMP NULL',
+            'updated_at' => 'TIMESTAMP NULL',
         ];
-        $keys['konto_bank'] = [
-            'primary' => ['id'],
+        $keys['fints_institutes'] = [
+            'primary' => ['blz'],
         ];
 
         $scheme['konto_credentials'] = [
             'id' => 'INT NOT NULL',
             'name' => 'VARCHAR(63) NOT NULL',
-            'bank_id' => 'INT NOT NULL',
+            'blz' => 'CHAR(8) NOT NULL',
             'owner_id' => 'INT NOT NULL',
             'bank_username' => 'VARCHAR(32) NOT NULL',
             'tan_mode' => 'INT NULL',
@@ -430,7 +441,7 @@ class DBConnector extends Singleton
             'primary' => ['id'],
             'foreign' => [
                 'owner_id' => ['user', 'id'],
-                'bank_id' => ['konto_bank', 'id'],
+                'blz' => ['fints_institutes', 'blz'],
             ],
         ];
 

@@ -62,12 +62,12 @@ class FintsConnectionHandler
         $this->logger->info('FINTS request for credential', ['credentialId' => $this->credentialId]);
     }
 
-    public static function saveCredentials(mixed $bankId, mixed $bankuser, mixed $name): int
+    public static function saveCredentials(mixed $blz, mixed $bankuser, mixed $name): int
     {
         $db = DBConnector::getInstance();
 
         return (int) $db->dbInsert('konto_credentials', [
-            'bank_id' => $bankId,
+            'blz' => $blz,
             'owner_id' => $db->getUser()['id'],
             'bank_username' => $bankuser,
             'name' => $name,
@@ -324,12 +324,16 @@ class FintsConnectionHandler
         $db = DBConnector::getInstance();
         $res = $db->dbFetchAll('konto_credentials',
             [DBConnector::FETCH_ASSOC],
-            ['konto_credentials.*', 'bank' => 'konto_bank.*'],
+            ['konto_credentials.*', 'bank' => 'fints_institutes.*'],
             [
                 'konto_credentials.owner_id' => $db->getUser()['id'],
                 'konto_credentials.id' => $credentialId,
             ],
-            [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_credentials.bank_id', 'konto_bank.id']]]
+            [[
+                'type' => 'inner',
+                'table' => 'fints_institutes',
+                'on' => ['konto_credentials.blz', 'fints_institutes.blz'],
+            ]]
         );
 
         if (count($res) === 1) {
@@ -355,9 +359,17 @@ class FintsConnectionHandler
             );
         }
 
+        if (empty($res['bank.pin_tan_address'])) {
+            throw new LegacyDieException(
+                500,
+                "Für die BLZ {$res['blz']} führt die Bankenliste keinen FinTS-Zugang (PIN/TAN). ".
+                'Dieses Institut unterstützt den Abruf nicht oder die Bankenliste ist veraltet.'
+            );
+        }
+
         $options = new FinTsOptions;
-        $options->url = $res['bank.url'];
-        $options->bankCode = $res['bank.blz'];
+        $options->url = $res['bank.pin_tan_address'];
+        $options->bankCode = $res['blz'];
         $options->productName = FINTS_REGNR;
         // The concatenation binds tighter than ?:, so this used to evaluate as
         // (('4.4.3'.DEV) ? '-dev' : '') - an always-truthy string, which reported the

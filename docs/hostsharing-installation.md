@@ -114,8 +114,16 @@ stufis-update main       # or switch to a branch and follow its tip
 ```
 
 Each run goes into maintenance mode, backs up, fetches, self-updates the
-toolchain, migrates and rebuilds. Deploying a **tag** pins the instance to that
-exact release (detached HEAD); pass the next release tag to move it forward.
+toolchain, migrates, refreshes the FinTS bank list and rebuilds. Deploying a
+**tag** pins the instance to that exact release (detached HEAD); pass the next
+release tag to move it forward.
+
+The bank list step is allowed to fail: it fetches from an external source, so a
+network problem only prints a warning and keeps the previously synced list
+instead of aborting the deployment. If you see that warning, re-run
+`php artisan stufis:fints-institutes-update` once the cause is fixed. Banks move
+their FinTS endpoints every few weeks, so on an instance that is deployed rarely
+it is worth running that command from cron monthly as well.
 
 Use `stufis-rebuild` to re-warm the production caches and rebuild assets without
 pulling or reinstalling dependencies (e.g. after a local config change).

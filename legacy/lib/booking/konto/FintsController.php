@@ -3,6 +3,7 @@
 namespace booking\konto;
 
 use App\Exceptions\LegacyRedirectException;
+use App\Models\FintsInstitute;
 use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
@@ -160,13 +161,17 @@ class FintsController extends Renderer
             [
                 'konto_credentials.id',
                 'konto_credentials.name',
-                'bank_name' => 'konto_bank.name',
+                'bank_name' => 'fints_institutes.name',
                 'tan_mode',
                 'tan_mode_name',
                 'tan_medium_name',
             ],
             ['owner_id' => \Auth::user()->id],
-            [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
+            [[
+                'type' => 'inner',
+                'table' => 'fints_institutes',
+                'on' => ['fints_institutes.blz', 'konto_credentials.blz'],
+            ]]
         );
         echo HtmlButton::make()
             ->asLink(URIBASE.'konto/credentials/new')
@@ -222,33 +227,56 @@ class FintsController extends Renderer
     protected function actionNewCredentials()
     {
         $post = $this->request->request;
-        if (ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])) {
+        if (ArrayHelper::allIn($post->keys(), ['name', 'blz', 'bank-username'])) {
+            $blz = FintsInstitute::normaliseBlz((string) $post->get('blz'));
+
+            // The foreign key guarantees the BLZ exists; it cannot guarantee the institute
+            // actually offers PIN/TAN, which is the only thing we can talk to.
+            if (FintsInstitute::query()->pinTanCapable()->whereKey($blz)->doesntExist()) {
+                HTMLPageRenderer::addFlash(BT::TYPE_DANGER, "Für die BLZ $blz ist kein FinTS-Zugang bekannt.");
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials/new');
+            }
+
             DBConnector::getInstance()->dbInsert('konto_credentials', [
                 // konto_credentials.name is varchar(63), so cut rather than let the insert fail.
                 'name' => mb_substr(trim(strip_tags((string) $post->get('name'))), 0, 63),
-                'bank_id' => $post->getInt('bank-id'),
+                'blz' => $blz,
                 'bank_username' => trim(strip_tags($post->get('bank-username'))),
                 'owner_id' => DBConnector::getInstance()->getUser()['id'],
             ]
             );
             HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
         }
-        $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
+
+        // Straight from the synced bank list, so there is no bank to maintain by hand.
+        $banks = FintsInstitute::query()->pinTanCapable()->orderBy('name')->get(['blz', 'name', 'location']);
+
         $this->renderHeadline('Lege neue Zugangsdaten an');
+
+        if ($banks->isEmpty()) {
+            $this->renderAlert(
+                'Keine Bankenliste vorhanden',
+                'Die Liste der FinTS-fähigen Banken ist leer. Die Administration muss sie einmalig einlesen '.
+                '(<code>php artisan stufis:fints-institutes-update</code>), danach kann hier eine Bank gewählt werden.',
+                'danger'
+            );
+
+            return;
+        }
+
         $this->renderAlert('Hinweis',
             'Die hier geforderten Daten werden (bis zur manuellen Löschung) gespeichert. Das Online-Banking Passwort wird immer nur zur Laufzeit verwendet und nicht permanent gespeichert', 'info');
-        $liveSearch = count($banks) > 5;
 
         echo HtmlForm::make('POST', false)
             ->urlTarget(URIBASE.'konto/credentials/new')
             ->addHtmlEntity(HtmlInput::make('text')->label('Name des Zugangs')->name('name'))
             ->addHtmlEntity(HtmlDropdown::make()
                 ->label('Bank')
-                ->liveSearch($liveSearch)
-                ->name('bank-id')
-                ->setItems(array_combine(array_column($banks, 'id'), array_map(static function ($el) {
-                    return [$el['name'], "BLZ: {$el['blz']}"];
-                }, $banks)))
+                ->liveSearch(true)
+                ->name('blz')
+                ->setItems($banks->mapWithKeys(static fn (FintsInstitute $bank): array => [
+                    $bank->blz => [$bank->name, "BLZ: $bank->blz".($bank->location ? ", $bank->location" : '')],
+                ])->all())
             )
             ->addHtmlEntity(HtmlInput::make('text')->label('Bank Username')->name('bank-username'))
             ->addSubmitButton();
