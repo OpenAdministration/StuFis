@@ -44,6 +44,16 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
     #[Url]
     public ?string $returnTo = null;
 
+    /**
+     * Picks the wording for a label or description. An account handed over by a bank access is
+     * tied to a real bank account and can never be a Kasse, so those keys have a "-bank"
+     * variant that leaves the Kasse out. Both keys must exist - see lang/de/konto.php.
+     */
+    public function label(string $key): string
+    {
+        return __('konto.new.'.$key.($this->bankSynced ? '-bank' : ''));
+    }
+
     public function rules(): array
     {
         return [

@@ -19,6 +19,23 @@ it('prefills the iban handed over by a FinTS bank access', function (): void {
         ->assertSet('iban', TEST_IBAN);
 });
 
+it('drops the Kasse wording when a bank access hands the account over', function (): void {
+    Livewire::withQueryParams(['iban' => TEST_IBAN, 'bankSynced' => 1])
+        ->test('pages::new-banking-account')
+        ->assertSee('Neues Konto anlegen')
+        ->assertDontSee('Kasse')
+        // The save button says where it leads, because it hands the user back to the
+        // bank access to set the retrieval up.
+        ->assertSee('Speichern und weiter');
+});
+
+it('keeps the Kasse wording when no bank access is involved', function (): void {
+    Livewire::test('pages::new-banking-account')
+        ->assertSee('Neues Konto bzw. neue Kasse anlegen')
+        ->assertSee('Speichern')
+        ->assertDontSee('weiter zum automatischen Abruf');
+});
+
 it('stores an account that a bank access handed over', function (): void {
     Livewire::withQueryParams(['iban' => TEST_IBAN])
         ->test('pages::new-banking-account')

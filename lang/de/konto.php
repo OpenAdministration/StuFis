@@ -77,6 +77,20 @@ return [
     'new.date-start-headline-sub' => 'Wann wurde das Konto / die Kasse eröffnet bzw. ab wann soll das Konto/ die Kasse in StuFiS geführt werden? Frühere Verwendung nicht möglich.',
     'new.date-end-headline' => 'Verwenden bis',
     'new.date-end-headline-sub' => 'Wann wurde das Konto / die Kasse geschlossen bzw. nicht mehr in StuFiS geführt? Spätere Verwendung/Eintragungen sind nicht mehr möglich.',
+    'new.submit' => 'Speichern',
+
+    /*
+     * Shown instead of the keys above when a bank access hands the account over. Such an
+     * account is synchronised with a real bank account, so it can never be a Kasse - every
+     * mention of one would only be noise at that point. Each of these mirrors the plain key
+     * with "-bank" appended; see the component's label() helper.
+     */
+    'new.headline-bank' => 'Neues Konto anlegen',
+    'new.prefix-headline-sub-bank' => 'Gib hier ein eineindeutiges Kürzel (max. 2 Zeichen) an. Dieses wird später zur schnelleren Identifizierung von Zahlungs-IDs verwendet. Standardmäßig wird Z für das Konto verwendet.',
+    'new.name-headline-bank' => 'Name des Kontos',
+    'new.date-start-headline-sub-bank' => 'Wann wurde das Konto eröffnet bzw. ab wann soll es in StuFiS geführt werden? Frühere Verwendung nicht möglich. Umsätze werden erst ab diesem Datum abgerufen.',
+    'new.date-end-headline-sub-bank' => 'Wann wurde das Konto geschlossen bzw. nicht mehr in StuFiS geführt? Spätere Verwendung/Eintragungen sind nicht mehr möglich.',
+    'new.submit-bank' => 'Speichern und weiter zum automatischen Abruf',
     'new.iban' => 'Konto-IBAN',
     'new.from-bank-access' => 'aus Bankzugang',
     'new.iban-sub' => 'Wird für die automatische Zuordnung beim Kontoimport per Bankzugang (FinTS) verwendet: Die abgerufenen Umsätze werden anhand der IBAN diesem Konto zugeordnet. Ohne IBAN ist kein automatischer Import möglich – für Bar-Kassen kann das Feld leer bleiben. Auch beim Datei-Import (CSV/CAMT) wird die IBAN zum Abgleich genutzt.',
