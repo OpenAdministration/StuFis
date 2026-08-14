@@ -60,6 +60,12 @@ class UpdateFintsInstitutesCommand extends Command
         if ($parser->skipped > 0) {
             $this->comment(sprintf('%d unbrauchbare Zeilen übersprungen.', $parser->skipped));
         }
+        if ($parser->insecureEndpoints > 0) {
+            $this->warn(sprintf(
+                '%d PIN/TAN-Adressen verworfen, weil sie nicht mit https:// beginnen.',
+                $parser->insecureEndpoints,
+            ));
+        }
 
         // A truncated download or an HTML error page would otherwise wipe the table.
         $minEntries = (int) $this->option('min-entries');

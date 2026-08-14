@@ -115,6 +115,20 @@ class FintsInstitute extends Model
     }
 
     /**
+     * Whether a PIN/TAN endpoint is safe to open a dialog against.
+     *
+     * The PIN and every TAN travel over this URL, so plain `http://` would hand them to
+     * anyone on the path. phpFinTS points this out in `FinTsOptions` but does not check
+     * it, and the addresses reach us from two unverified places: the upstream bank list,
+     * and - for instances upgrading - the URL somebody once typed into `konto_bank` by
+     * hand, which the retiring migration carries over as-is.
+     */
+    public static function hasSecurePinTanAddress(?string $address): bool
+    {
+        return $address !== null && str_starts_with(strtolower(trim($address)), 'https://');
+    }
+
+    /**
      * Free-text lookup for a bank picker: name, BLZ or BIC.
      */
     #[Scope]

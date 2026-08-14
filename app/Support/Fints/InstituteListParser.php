@@ -2,6 +2,8 @@
 
 namespace App\Support\Fints;
 
+use App\Models\FintsInstitute;
+
 /**
  * Parses the `blz.properties` bank list shipped by hbci4java.
  *
@@ -39,11 +41,18 @@ class InstituteListParser
     public int $skipped = 0;
 
     /**
+     * How many institutes named a PIN/TAN endpoint we refused to store because it was
+     * not HTTPS. The institute itself is kept, just without an endpoint.
+     */
+    public int $insecureEndpoints = 0;
+
+    /**
      * @return array<string, array<string, string|null>> keyed by BLZ
      */
     public function parse(string $contents): array
     {
         $this->skipped = 0;
+        $this->insecureEndpoints = 0;
         $institutes = [];
 
         foreach (preg_split('/\R/', $contents) ?: [] as $line) {
@@ -75,6 +84,15 @@ class InstituteListParser
                 $this->skipped++;
 
                 continue;
+            }
+
+            // Drop an endpoint we would not be allowed to send a PIN to rather than storing
+            // it and refusing later: without an address the institute is simply not offered
+            // as PIN/TAN capable, which is the truth of the matter.
+            if ($institute['pin_tan_address'] !== null
+                && ! FintsInstitute::hasSecurePinTanAddress($institute['pin_tan_address'])) {
+                $institute['pin_tan_address'] = null;
+                $this->insecureEndpoints++;
             }
 
             // Later entries win, as they would when Java loads the properties file.

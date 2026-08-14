@@ -98,6 +98,49 @@ it('tolerates lines that stop early instead of padding every column', function (
     ]);
 });
 
+it('drops a PIN/TAN endpoint that is not https, keeping the institute itself', function (): void {
+    $parser = new InstituteListParser;
+    $institutes = $parser->parse(propertiesFixture([
+        '50031000=Plain HTTP Bank|Ort|TRODDEF1XXX|88|fints.example.de|http://fints.example.de/servlet|300|300|',
+        '29000000=Scheme Missing Bank|Ort|MARKDEF1290|09||fints.example.de/servlet|300|300|',
+        '44351380=Proper Bank|Unna|WELADED1KAM|00|w019.s-hbci.de|HTTPS://hbci.example.de/PinTanServlet|220|300|',
+    ]));
+
+    expect($institutes['50031000']['pin_tan_address'])->toBeNull()
+        ->and($institutes['50031000']['name'])->toBe('Plain HTTP Bank')
+        ->and($institutes['29000000']['pin_tan_address'])->toBeNull()
+        // Only the scheme has to be https; its casing is the bank's business.
+        ->and($institutes['44351380']['pin_tan_address'])->toBe('HTTPS://hbci.example.de/PinTanServlet')
+        ->and($parser->insecureEndpoints)->toBe(2);
+});
+
+it('reports discarded insecure endpoints and never offers them as PIN/TAN capable', function (): void {
+    Http::fake([LIST_URL => Http::response(propertiesFixture([
+        '50031000=Plain HTTP Bank|Ort|TRODDEF1XXX|88|fints.example.de|http://fints.example.de/servlet|300|300|',
+        '29000000=Bundesbank|Bremen|MARKDEF1290|09|||||',
+    ]))]);
+    clearInstitutes();
+
+    $this->artisan('stufis:fints-institutes-update', ['--min-entries' => 1])
+        ->expectsOutputToContain('1 PIN/TAN-Adressen verworfen')
+        ->assertSuccessful();
+
+    expect(FintsInstitute::count())->toBe(2)
+        ->and(FintsInstitute::findByBlz('50031000')->pin_tan_address)->toBeNull()
+        ->and(FintsInstitute::query()->pinTanCapable()->count())->toBe(0);
+});
+
+it('accepts only an https PIN/TAN address as safe to send a PIN to', function (): void {
+    expect(FintsInstitute::hasSecurePinTanAddress('https://fints.example.de/servlet'))->toBeTrue()
+        ->and(FintsInstitute::hasSecurePinTanAddress('  https://fints.example.de/servlet'))->toBeTrue()
+        ->and(FintsInstitute::hasSecurePinTanAddress('HttpS://fints.example.de/servlet'))->toBeTrue()
+        ->and(FintsInstitute::hasSecurePinTanAddress('http://fints.example.de/servlet'))->toBeFalse()
+        // No scheme at all: phpFinTS would default to something, and we will not guess.
+        ->and(FintsInstitute::hasSecurePinTanAddress('fints.example.de/servlet'))->toBeFalse()
+        ->and(FintsInstitute::hasSecurePinTanAddress(''))->toBeFalse()
+        ->and(FintsInstitute::hasSecurePinTanAddress(null))->toBeFalse();
+});
+
 it('lets a later duplicate BLZ win, as loading a properties file would', function (): void {
     $institutes = (new InstituteListParser)->parse(propertiesFixture([
         '29000000=Alter Name|Bremen|MARKDEF1290|09|||||',
