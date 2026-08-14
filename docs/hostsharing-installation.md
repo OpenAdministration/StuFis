@@ -73,7 +73,27 @@ In hs-admin set the default PHP to `/usr/lib/cgi-bin/php8.4`, options
 
 Import your Budgetplan and everything should work :)
 
-Optional: add a bank for the bank-import feature.
+The banks available for the FinTS bank import come from the synced bank list, which
+`stufis-update` fills on every deployment — nothing to add by hand (see *Updating
+later* below).
+
+## Sessions
+
+Set in `.env`:
+
+```dotenv
+SESSION_ENCRYPT=true
+```
+
+With the default `SESSION_DRIVER=file` a session is a PHP-serialized file under
+`storage/framework/sessions/`. During a FinTS dialog it holds the online-banking
+PIN and the bank's session state — deliberately, so the password never reaches
+the database — and without this setting they sit there in cleartext.
+
+Instances set up before v4.4.4 have `SESSION_ENCRYPT=false` pinned in their `.env`
+and must be switched by hand. Turning it on invalidates every open session, so
+everyone has to log in again once and any bank dialog in flight is lost; pick a
+quiet moment. Run `stufis-rebuild` afterwards so the config cache picks it up.
 
 ## Logging
 
