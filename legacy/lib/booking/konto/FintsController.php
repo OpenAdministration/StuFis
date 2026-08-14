@@ -4,6 +4,7 @@ namespace booking\konto;
 
 use App\Exceptions\LegacyRedirectException;
 use App\Models\FintsInstitute;
+use App\Models\Legacy\BankAccount;
 use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
@@ -137,12 +138,39 @@ class FintsController extends Renderer
             : redirect()->route('legacy.konto.credentials.login', $this->credentialId));
     }
 
+    /**
+     * Names the account a TAN is being asked for. Both TAN pages are drawn from the exception
+     * handler in render(), i.e. under whatever URL the interrupted action was started from, and
+     * neither says anything about the account by itself - so a TAN prompt for a statement import
+     * looked exactly like one for any other account.
+     *
+     * Only the import routes carry an account; a TAN asked for during login or while picking a
+     * TAN mode belongs to the whole bank access, and then there is nothing to name.
+     */
+    private function renderRequestedAccount(): void
+    {
+        $shortIban = $this->routeInfo['short-iban'] ?? null;
+        if (! is_string($shortIban) || $shortIban === '') {
+            return;
+        }
+
+        $account = BankAccount::findByShortIban($shortIban);
+
+        // The full IBAN is deliberately taken from the account we know rather than resolved
+        // through the bank access: reaching for it there would fetch the SEPA account list,
+        // i.e. talk to the bank in the middle of drawing a TAN prompt.
+        echo Html::p()->body($account instanceof BankAccount
+            ? "Umsatzabruf für das Konto $account->name ($account->iban)"
+            : "Umsatzabruf für das Konto mit der IBAN $shortIban");
+    }
+
     private function renderTanInput(string $msg, TanRequest $tanRequest): void
     {
         $mediumName = $tanRequest->getTanMediumName() ?? '';
         $challengeText = $tanRequest->getChallenge();
 
         echo Html::headline(1)->body($msg);
+        $this->renderRequestedAccount();
 
         echo Html::headline(3)->body($mediumName);
         echo Html::p()->body($challengeText, false);
@@ -183,6 +211,8 @@ class FintsController extends Renderer
         $challengeText = $tanRequest->getChallenge();
 
         echo Html::headline(1)->body($msg);
+        $this->renderRequestedAccount();
+
         echo Html::headline(3)->body($mediumName);
         echo Html::p()->body($challengeText, false);
         echo Html::p()->body(
