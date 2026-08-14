@@ -88,6 +88,10 @@ it('resumes a statement request that just got its TAN, instead of starting a new
 
     $finTs = Mockery::mock(FinTs::class);
     $finTs->shouldReceive('persist')->andReturn('persisted-state');
+    // saveAction() consults the selected TAN mode while an action is still pending, to seed
+    // the decoupled-confirmation pacing state - irrelevant here, but the mock has to answer
+    // something rather than the "no matching expectation" that an untouched mock would throw.
+    $finTs->shouldReceive('getSelectedTanMode')->andReturn(null);
     // The whole point of the fix: no new request may be sent for an action that is already
     // resolved and merely waiting to be picked back up. andReturnUsing() (rather than plain
     // shouldNotReceive()) makes the violation the visible failure instead of whatever

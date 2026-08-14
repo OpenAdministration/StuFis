@@ -60,11 +60,23 @@ class FintsController extends Renderer
             // would burn one of the three attempts the bank grants.
             $this->requireFintsHandler()->submitTan(preg_replace('/\s+/', '', $post->get('tan', '')));
         }
+        if ($post->has('decoupled-confirm')) {
+            // Same placement and the same reasoning as the 'tan' branch above: whether or not
+            // the bank confirms is deliberately ignored here. If it does, the action underneath
+            // is now done and parent::render() below resumes and finishes it like any other
+            // completed action; if not, the action handler throws NeedsTanException again and
+            // the confirmation screen is simply redrawn.
+            $this->requireFintsHandler()->confirmDecoupledTan();
+        }
         try {
             parent::render();
         } catch (NeedsTanException $e) {
             $this->requireFintsHandler()->logger->info('Tan needed', ['exception' => $e]);
-            $this->renderTanInput($e->getMessage(), $e->getTanRequest());
+            if ($this->requireFintsHandler()->isDecoupledTanMode()) {
+                $this->renderDecoupledConfirmation($e->getMessage(), $e->getTanRequest());
+            } else {
+                $this->renderTanInput($e->getMessage(), $e->getTanRequest());
+            }
         }
     }
 
@@ -157,6 +169,40 @@ class FintsController extends Renderer
             ->urlTarget(request()?->url())
             ->addHtmlEntity(HtmlInput::make('text')->label('TAN')->name('tan'))
             ->addSubmitButton();
+    }
+
+    /**
+     * Counterpart to renderTanInput() for a decoupled TAN mode: the approval happens on the
+     * user's banking app, so there is no TAN field to render - just a button that makes StuFiS
+     * ask the bank once whether the approval has arrived yet. Deliberately no JavaScript, no
+     * timer, no automated polling: the user confirms manually, in the banking app and then here.
+     */
+    private function renderDecoupledConfirmation(string $msg, TanRequest $tanRequest): void
+    {
+        $mediumName = $tanRequest->getTanMediumName() ?? '';
+        $challengeText = $tanRequest->getChallenge();
+
+        echo Html::headline(1)->body($msg);
+        echo Html::headline(3)->body($mediumName);
+        echo Html::p()->body($challengeText, false);
+        echo Html::p()->body(
+            'Die Freigabe erfolgt in der Banking-App auf deinem Gerät. Wenn du sie dort erteilt hast, '.
+            'fragt der folgende Knopf einmalig bei der Bank nach, ob die Freigabe angekommen ist.'
+        );
+
+        $remaining = $this->requireFintsHandler()->decoupledChecksRemaining();
+        if ($remaining !== null) {
+            echo Html::p()->body("Noch $remaining von der Bank erlaubte Versuche.");
+        }
+
+        echo HtmlForm::make('POST', false)
+            ->urlTarget(request()?->url())
+            ->addHtmlEntity(
+                HtmlButton::make('submit')
+                    ->style('primary')
+                    ->attr('name', 'decoupled-confirm')
+                    ->body('Ich habe die Freigabe erteilt')
+            );
     }
 
     /**

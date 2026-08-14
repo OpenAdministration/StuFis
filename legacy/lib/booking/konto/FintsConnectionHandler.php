@@ -284,9 +284,21 @@ class FintsConnectionHandler
             // chache it if tan is missing
             $this->logger->info('Save Action - TAN needed', ['credId' => $this->credentialId, 'action' => $action::class]);
             $this->setCache('action', $action);
+            if ($this->isDecoupledTanMode() && $this->getCache('decoupled-next-check') === null) {
+                // Seeded once per pending action, not on every call through here: a decoupled
+                // TanRequest gets refreshed on every failed checkDecoupledSubmission() (see
+                // confirmDecoupledTan()), which re-enters this same branch, and re-seeding on
+                // each of those would keep pushing the earliest allowed check into the future
+                // instead of counting down towards it.
+                $tanMode = $this->finTs->getSelectedTanMode();
+                $this->setCache('decoupled-checks', 0);
+                $this->setCache('decoupled-next-check', time() + $tanMode->getFirstDecoupledCheckDelaySeconds());
+            }
         } else {
             // delete it from cache otherwise
             $this->setCache('action', null);
+            $this->setCache('decoupled-checks', null);
+            $this->setCache('decoupled-next-check', null);
             if ($action === null) {
                 // Only dropping the action outright - a fresh start, or the "belongs to
                 // something else" branch in getStatements() - drops the scope with it. A
@@ -300,6 +312,22 @@ class FintsConnectionHandler
         }
         // save persist in cache
         $this->setCache('persist', $this->finTs->persist());
+    }
+
+    /**
+     * Whether the bank access's selected TAN mode is a decoupled one, i.e. the user confirms
+     * on their banking app instead of typing a TAN. getSelectedTanMode() can throw
+     * InvalidArgumentException if the persisted mode id no longer matches anything in a
+     * refreshed BPD; that is not this method's problem to raise, so it is treated the same as
+     * "no mode selected yet".
+     */
+    public function isDecoupledTanMode(): bool
+    {
+        try {
+            return $this->finTs->getSelectedTanMode()?->isDecoupled() ?? false;
+        } catch (InvalidArgumentException) {
+            return false;
+        }
     }
 
     private function isCached(string|int $key): bool
@@ -496,21 +524,116 @@ class FintsConnectionHandler
 
             return false;
         } catch (InvalidArgumentException $e) {
-            // The library refuses to take a TAN for a decoupled TAN mode (confirmation
-            // happens in the banking app instead). Supporting that properly is its own
-            // work package; until then, say so rather than showing an error page.
+            // The library refuses to take a TAN for a decoupled TAN mode. Reaching here in
+            // practice would mean a stale page (e.g. still open in another tab) posted a 'tan'
+            // field even though the current TAN mode is decoupled - the confirmation page
+            // renders no such field. This is a safety net for that edge case, not the expected
+            // path.
             $this->logger->error('TAN submission rejected by the library', ['exception' => $e]);
             HTMLPageRenderer::addFlash(
                 BT::TYPE_DANGER,
-                'Dieses TAN-Verfahren kann StuFiS derzeit nicht abschließen',
-                'Bei Freigabe-Verfahren ohne TAN-Eingabe (z. B. pushTAN-Freigabe in der Banking-App) '.
-                'fehlt die Unterstützung noch. Bitte wähle ein TAN-Verfahren mit TAN-Eingabe.'
+                'Für dieses TAN-Verfahren wird keine TAN eingegeben',
+                'Bitte lade die Seite neu und bestätige die Anfrage stattdessen in der Banking-App.'
             );
 
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * For a decoupled TAN mode, asks the bank whether the user has confirmed the pending
+     * action on their banking app yet - the counterpart to submitTan() for modes that carry no
+     * TAN at all. Modelled closely on submitTan(): same logging, same three catch arms.
+     *
+     * @return bool true once the bank confirms the action is done
+     */
+    public function confirmDecoupledTan(): bool
+    {
+        $this->logger->info('Confirm decoupled TAN', ['credId' => $this->credentialId]);
+        $action = $this->getCache('action');
+        if ($action === null) {
+            HTMLPageRenderer::addFlash(BT::TYPE_INFO, 'Es liegt keine offene Anfrage vor, die bestätigt werden könnte');
+
+            return false;
+        }
+        try {
+            $tanMode = $this->finTs->getSelectedTanMode();
+            $maxChecks = $tanMode->getMaxDecoupledChecks();
+            $usedChecks = $this->getCache('decoupled-checks') ?? 0;
+            if ($maxChecks > 0 && $usedChecks >= $maxChecks) {
+                HTMLPageRenderer::addFlash(
+                    BT::TYPE_DANGER,
+                    'Die Freigabe wurde nicht rechtzeitig bestätigt',
+                    'Die Bank hat innerhalb der erlaubten Versuche keine Freigabe gemeldet. Die Anfrage muss erneut gestartet werden.'
+                );
+                $this->saveAction(); // drops the pending action, it cannot be resumed anymore
+
+                return false;
+            }
+
+            $nextCheck = $this->getCache('decoupled-next-check');
+            if ($nextCheck !== null && time() < $nextCheck) {
+                // No sleep() here: this runs inside a request that holds the session lock, and
+                // sleeping while holding it would block every other tab/request of the same
+                // user for the same duration.
+                HTMLPageRenderer::addFlash(
+                    BT::TYPE_INFO,
+                    'Bitte noch '.($nextCheck - time()).' Sekunden warten, bevor erneut bei der Bank nachgefragt werden kann'
+                );
+
+                return false;
+            }
+
+            $done = $this->finTs->checkDecoupledSubmission($action);
+            $this->setCache('decoupled-checks', $usedChecks + 1);
+            $this->setCache('decoupled-next-check', time() + $tanMode->getPeriodicDecoupledCheckDelaySeconds());
+            // The library requires the FinTs instance to be persist()-ed again after every
+            // checkDecoupledSubmission() call, whether or not it returned true - its internal
+            // dialog state moves on regardless. saveAction() is what does that persist() call.
+            $this->saveAction($action);
+
+            if (! $done) {
+                HTMLPageRenderer::addFlash(BT::TYPE_INFO, 'Die Bank hat die Freigabe noch nicht gesehen - bitte in der Banking-App bestätigen und erneut versuchen');
+            }
+
+            return $done;
+        } catch (CurlException $e) {
+            $this->logger->error('Confirm decoupled TAN: no Connection', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Konnte keine Verbindung zum Server aufbauen', $e->getMessage());
+
+            return false;
+        } catch (ServerException|UnexpectedResponseException $e) {
+            $this->logger->error('Confirm decoupled TAN failed', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Anfrage bei der Bank fehlgeschlagen', $e->getMessage());
+
+            return false;
+        } catch (InvalidArgumentException $e) {
+            // The library refuses checkDecoupledSubmission() for anything other than a
+            // decoupled mode with a pending TanRequest. Reaching here would mean the TAN mode
+            // changed underneath an open confirmation page - a safety net, not the expected
+            // path.
+            $this->logger->error('Confirm decoupled TAN rejected by the library', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Diese Anfrage kann nicht bestätigt werden', $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * How many of the bank's allowed confirmDecoupledTan() attempts are left, for display on
+     * the confirmation page. Null when the mode does not cap them at all (getMaxDecoupledChecks()
+     * returning 0 means unlimited).
+     */
+    public function decoupledChecksRemaining(): ?int
+    {
+        $maxChecks = $this->finTs->getSelectedTanMode()?->getMaxDecoupledChecks() ?? 0;
+        if ($maxChecks <= 0) {
+            return null;
+        }
+
+        return max(0, $maxChecks - ($this->getCache('decoupled-checks') ?? 0));
     }
 
     public function resumableAction(): ?BaseAction
