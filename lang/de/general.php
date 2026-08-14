@@ -17,6 +17,7 @@ return [
             'import-csv' => 'CSV-Import',
             'credentials' => 'Bankimport',
             'credentials-new' => 'Neuen Zugang anlegen',
+            'credentials-delete' => 'Zugang löschen',
             'login' => 'Login',
             'tan-mode' => 'Tan-Modus',
             'sepa' => 'Konten',

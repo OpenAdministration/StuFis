@@ -32,10 +32,19 @@ class FintsController extends Renderer
 
     private ?int $credentialId;
 
+    /**
+     * Actions that must stay reachable even when no connection can be built. load() refuses
+     * a bank whose FinTS address is missing or not HTTPS, and that is precisely the access
+     * somebody needs to delete - so deleting must not depend on it succeeding.
+     */
+    private const array ACTIONS_WITHOUT_CONNECTION = ['delete-credentials'];
+
     public function __construct(array $routeInfo = [])
     {
         $this->credentialId = $routeInfo['credential-id'] ?? null;
-        if ($this->credentialId !== null && FintsConnectionHandler::hasPassword($this->credentialId)) {
+        if ($this->credentialId !== null
+            && FintsConnectionHandler::hasPassword($this->credentialId)
+            && ! in_array($routeInfo['action'] ?? null, self::ACTIONS_WITHOUT_CONNECTION, true)) {
             $this->fintsHandler = FintsConnectionHandler::load($this->credentialId);
         }
         parent::__construct($routeInfo);
@@ -200,14 +209,19 @@ class FintsController extends Renderer
                         return $tanString;
                     },
                     static function ($id) { // action
+                        // Deleting stays offered either way: the usual reason to remove a bank
+                        // access is that logging in with it does not work, and hiding the
+                        // action behind an active session made exactly that case a dead end.
+                        $delete = "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>";
+
                         if (FintsConnectionHandler::hasActiveSession($id)) {
                             return
                                 "<a href='".URIBASE."konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> ".
-                                "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>".
+                                $delete.
                                 "<a href='".URIBASE."konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
                         }
 
-                        return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a>";
+                        return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a> ".$delete;
                     },
                 ]
             );
@@ -718,6 +732,119 @@ class FintsController extends Renderer
         $logger->debug($msg, ['success' => $ret]);
 
         return [$ret, $msg];
+    }
+
+    /**
+     * Two steps on purpose: GET renders the confirmation, POST carries it out. That keeps the
+     * icon in the overview a plain link - a GET that only renders a page - while the
+     * irreversible half is a nonce-checked POST, and whoever clicks it gets told beforehand
+     * what does and does not disappear.
+     */
+    protected function actionDeleteCredentials(): void
+    {
+        $credentialId = (int) $this->credentialId;
+        $credential = $this->ownCredential($credentialId);
+
+        if ($this->request->getMethod() !== 'POST') {
+            $this->renderDeleteConfirmation($credentialId, $credential);
+
+            return;
+        }
+
+        // Best effort, and only when a live dialog exists: the bank drops an abandoned
+        // session by itself, so a logout that cannot be reached must not stop the deletion.
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
+            $this->fintsHandler->logout();
+        }
+
+        // Before the row goes, so a stale password cannot linger under an id the next access
+        // might be handed.
+        FintsConnectionHandler::forgetSession($credentialId);
+
+        DBConnector::getInstance()->dbDelete('konto_credentials', [
+            'id' => $credentialId,
+            'owner_id' => \Auth::user()->id,
+        ]);
+
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_SUCCESS,
+            'Zugangsdaten gelöscht',
+            "Der Bankzugang „{$credential['name']}“ wurde entfernt. Die Konten und ihre Buchungen sind unverändert."
+        );
+
+        throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
+    }
+
+    /**
+     * The bank access with this id belonging to the logged-in user. The id comes out of the
+     * URL, so the ownership filter is what keeps one user off another's bank access.
+     */
+    private function ownCredential(int $credentialId): array
+    {
+        $rows = DBConnector::getInstance()->dbFetchAll(
+            'konto_credentials',
+            [DBConnector::FETCH_ASSOC],
+            [
+                'konto_credentials.id',
+                'konto_credentials.name',
+                'konto_credentials.bank_username',
+                'bank_name' => 'fints_institutes.name',
+            ],
+            [
+                'konto_credentials.owner_id' => \Auth::user()->id,
+                'konto_credentials.id' => $credentialId,
+            ],
+            [[
+                'type' => 'inner',
+                'table' => 'fints_institutes',
+                'on' => ['fints_institutes.blz', 'konto_credentials.blz'],
+            ]]
+        );
+
+        if (count($rows) !== 1) {
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Diesen Bankzugang gibt es nicht.');
+
+            throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
+        }
+
+        return $rows[0];
+    }
+
+    private function renderDeleteConfirmation(int $credentialId, array $credential): void
+    {
+        $this->renderHeadline('Zugangsdaten löschen');
+
+        $this->renderAlert(
+            'Wirklich löschen?',
+            'Der Bankzugang wird samt hinterlegtem TAN-Verfahren entfernt und kann nicht '.
+            'wiederhergestellt werden. Die Konten und ihre bereits importierten Buchungen '.
+            'bleiben erhalten - für sie werden ab dann aber keine Umsätze mehr abgerufen, '.
+            'bis ein neuer Bankzugang eingerichtet ist.',
+            BT::TYPE_WARNING
+        );
+
+        echo HtmlCard::make()
+            ->cardHeadline($this->defaultEscapeFunction($credential['name']))
+            ->appendBody(
+                HtmlInput::make('text')->label('Bank')->value($credential['bank_name'])->disable(),
+                false
+            )
+            ->appendBody(
+                HtmlInput::make('text')->label('Bank Username')->value($credential['bank_username'])->disable(),
+                false
+            )
+            ->appendBody(
+                HtmlForm::make('POST', false)
+                    ->urlTarget(URIBASE."konto/credentials/$credentialId/delete")
+                    ->addSubmitButton('Endgültig löschen'),
+                false
+            );
+
+        echo HtmlButton::make()
+            ->style('primary')
+            ->body('Abbrechen')
+            ->icon('chevron-left')
+            ->asLink(URIBASE.'konto/credentials');
     }
 
     protected function actionLogout(): void

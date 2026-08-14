@@ -108,6 +108,12 @@ Breadcrumbs::for('legacy.konto.credentials.tan-mode', static function (Breadcrum
     $trail->push(__('general.breadcrumb.konto.tan-mode'));
 });
 
+// Home > Konto > Credentials > Löschen
+Breadcrumbs::for('legacy.konto.credentials.delete', static function (BreadcrumbTrail $trail): void {
+    $trail->parent('legacy.konto.credentials');
+    $trail->push(__('general.breadcrumb.konto.credentials-delete'));
+});
+
 // Home > Konto > Credentials > Sepa
 Breadcrumbs::for('legacy.konto.credentials.sepa', static function (BreadcrumbTrail $trail, $credential_id): void {
     $trail->parent('legacy.konto.credentials');

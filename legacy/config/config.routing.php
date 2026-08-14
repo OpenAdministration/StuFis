@@ -111,6 +111,8 @@ $pathConfig = [
                                     'path' => 'delete',
                                     'type' => 'path',
                                     'action' => 'delete-credentials',
+                                    // GET renders the confirmation, POST performs the deletion.
+                                    'method' => ['GET', 'POST'],
                                 ],
                                 [
                                     'path' => 'change-password',

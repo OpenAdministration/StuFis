@@ -30,6 +30,9 @@ Route::middleware(['auth'])->name('legacy.')->group(function (): void {
     Route::any('konto/credentials/{credential_id}/login', [LegacyController::class, 'render'])->name('konto.credentials.login');
     Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/tan-mode', [LegacyController::class, 'render'])->name('konto.credentials.tan-mode');
     Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/sepa', [LegacyController::class, 'render'])->name('konto.credentials.sepa');
+    // Ahead of the catch-all below, which would otherwise swallow "delete" as a short IBAN
+    // and hand the request a route name meant for the statement import.
+    Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/delete', [LegacyController::class, 'render'])->name('konto.credentials.delete');
     Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/{short_iban}', [LegacyController::class, 'render'])->name('konto.credentials.import-transactions');
     Route::match(['GET', 'POST'], 'konto/credentials/{credential_id}/{short_iban}/import', [LegacyController::class, 'render'])->name('konto.credentials.import-konto');
     Route::get('booking', [LegacyController::class, 'render'])->name('booking');

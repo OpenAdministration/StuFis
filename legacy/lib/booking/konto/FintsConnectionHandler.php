@@ -3,6 +3,7 @@
 namespace booking\konto;
 
 use App\Exceptions\LegacyDieException;
+use App\Models\FintsInstitute;
 use DateTime;
 use Fhp\Action\GetSEPAAccounts;
 use Fhp\Action\GetStatementOfAccount;
@@ -309,7 +310,17 @@ class FintsConnectionHandler
 
     private function forgetCachedCredentials(int $credential_id): void
     {
-        request()?->session()->forget("fints.$this->credentialId");
+        self::forgetSession($credential_id);
+    }
+
+    /**
+     * Drops everything the session holds for a bank access: password, the persisted dialog
+     * state and the logged-in marker. Static because deleting a bank access has to clear it
+     * whether or not there is a live connection to hang the call off.
+     */
+    public static function forgetSession(int $credentialId): void
+    {
+        request()?->session()->forget("fints.$credentialId");
     }
 
     /**
@@ -364,6 +375,19 @@ class FintsConnectionHandler
                 500,
                 "Für die BLZ {$res['blz']} führt die Bankenliste keinen FinTS-Zugang (PIN/TAN). ".
                 'Dieses Institut unterstützt den Abruf nicht oder die Bankenliste ist veraltet.'
+            );
+        }
+
+        // Refuse before the PIN is on the wire. The synced list only ever yields HTTPS, so
+        // in practice this catches an address carried over from the retired konto_bank
+        // table, which nobody ever validated - until the first sync overwrites it.
+        if (! FintsInstitute::hasSecurePinTanAddress($res['bank.pin_tan_address'])) {
+            throw new LegacyDieException(
+                500,
+                "Die hinterlegte FinTS-Adresse für die BLZ {$res['blz']} ist nicht mit https:// ".
+                'gesichert; PIN und TAN würden unverschlüsselt übertragen. Der Abruf wurde '.
+                'abgebrochen. Bitte aktualisiere die Bankenliste (php artisan '.
+                'stufis:fints-institutes-update) oder wende dich an die Administration.'
             );
         }
 
