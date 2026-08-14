@@ -22,6 +22,13 @@ class LegacyController extends Controller
 
     public function render(Request $request)
     {
+        // Remembered so the catch blocks can unwind to exactly here. A legacy page renders
+        // inside two nested buffers (this one and the one HTMLPageRenderer opens per
+        // Renderer), and a single ob_get_clean() left the inner one open: PHP then flushed
+        // it at shutdown, appending legacy HTML to the response, and it swallowed the output
+        // of anything running afterwards in the same process.
+        $bufferLevel = ob_get_level();
+
         try {
             ob_start();
             $this->bootstrap();
@@ -39,15 +46,29 @@ class LegacyController extends Controller
                 // 'sectionTabs' => $this->resolveSectionTabs($request),
             ]);
         } catch (LegacyRedirectException $e) {
+            // Whatever the page printed before deciding to redirect is of no use.
+            $this->discardBufferedOutput($bufferLevel);
+
             return $e->redirect;
         } catch (LegacyJsonException $e) {
-            ob_get_clean(); // throw away all output
+            $this->discardBufferedOutput($bufferLevel);
 
             return response()->json($e->content);
         } catch (\Exception $exception) {
             // get rid of the already printed html
-            ob_get_clean();
+            $this->discardBufferedOutput($bufferLevel);
             throw $exception;
+        }
+    }
+
+    /**
+     * Drops every output buffer opened since $downToLevel, leaving that level intact - it
+     * belongs to whoever called us (PHPUnit opens one per test, for instance).
+     */
+    private function discardBufferedOutput(int $downToLevel): void
+    {
+        while (ob_get_level() > $downToLevel) {
+            ob_end_clean();
         }
     }
 
