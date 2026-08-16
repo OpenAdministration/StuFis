@@ -202,6 +202,12 @@ class BookingHandler extends Renderer
             [
                 'booking.id',
                 'titel_nr',
+                // the two halves of the modern Titel route: booking.titel_id IS budget_item.id
+                // (the legacy haushaltstitel/haushaltsgruppen tables are views over budget_item
+                // now), and the group carries the plan id. Only the history table renders them —
+                // both CSV exports below drive off an explicit $header map and ignore extra columns.
+                'titel_id' => 'booking.titel_id',
+                'hhp_id' => 'haushaltsgruppen.hhp_id',
                 'zahlung_id',
                 'zahlung_type',
                 'zahlung_date' => 'konto.date',
@@ -290,7 +296,11 @@ class BookingHandler extends Renderer
 							<?php echo DBConnector::getInstance()->convertDBValueToUserValue($row['value'], 'money'); ?>
                         </td>
                         <td class="<?php echo TextStyle::PRIMARY.' '.TextStyle::BOLD; ?> no-wrap">
-							<?php echo trim(htmlspecialchars($row['titel_nr'])); ?>
+							<?php echo generateLinkFromRoute(
+							    trim(htmlspecialchars($row['titel_nr'])),
+							    route('budget-plan.item.view', ['plan_id' => $row['hhp_id'], 'item_id' => $row['titel_id']]),
+							    TextStyle::PRIMARY
+							); ?>
                         </td>
 						<?php
                         switch ($row['beleg_type']) {
