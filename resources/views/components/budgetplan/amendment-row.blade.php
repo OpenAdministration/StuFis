@@ -23,10 +23,21 @@
     // unlike x-budgetplan.view-row, group rows keep <td> figures (only the identity cell is a
     // <th>) — the tint carries the change, so bolding the numbers as well is one signal too many
     $cellClass = 'px-3 sm:pl-3 text-right'.($item->is_group ? ' py-4 font-semibold' : '');
+
+    // same searchable haystack as x-budgetplan.view-row, plus the pre-rename name: a search for
+    // what a Titel used to be called still has to find the row that renamed it
+    $searchText = trim(implode(' ', array_filter([
+        $item->short_name,
+        $item->name_after,
+        $item->name_before,
+        $item->referencedPlan?->label(),
+    ])));
 @endphp
 
 <tr
   x-show="!isHidden($el)"
+  data-item-id="{{ $item->id }}"
+  data-search="{{ $searchText }}"
   data-ancestor-ids="@json($item->ancestor_ids)"
   x-transition.opacity.duration.200ms
   x-cloak

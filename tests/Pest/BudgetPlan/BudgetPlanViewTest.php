@@ -64,6 +64,32 @@ it('renders the collapse wiring: toggle on group rows and x-show on every row', 
         ->and($html)->toContain('expandAll()');
 });
 
+/**
+ * The tree search filters the already-rendered rows client-side (budgetCollapse in ⚡plan-view),
+ * so what the server has to get right is the wiring: a search box bound into the tree's Alpine
+ * scope, and every row carrying the id plus haystack the filter indexes at init.
+ */
+it('renders the tree search wiring: a bound input, a per-row haystack and a no-results row', function (): void {
+    $this->actingAs(user());
+    $plan = planWithItems();
+
+    $leaf = $plan->budgetItems()->whereIsGroup(false)->firstOrFail();
+
+    $html = $this->get(route('budget-plan.view', $plan->id))
+        ->assertOk()
+        ->assertSee(__('budget-plan.view.search-placeholder'))
+        ->assertDontSee('budget-plan.view.search') // key resolved, not leaked
+        ->content();
+
+    // the input writes into the same Alpine scope the rows read from
+    expect($html)->toContain('x-model="search"')
+        ->and($html)->toContain('noMatches()');
+
+    // every row is indexable: its own id, its ancestors, and the text to match against
+    expect($html)->toContain('data-item-id="'.$leaf->id.'"')
+        ->and($html)->toContain('data-search="E1.1 Beiträge"');
+});
+
 it('derives ancestor group ids from the adjacency-list path', function (): void {
     $plan = planWithItems();
     $leaf = $plan->budgetItemsTree(BudgetType::INCOME)->firstWhere('is_group', false);

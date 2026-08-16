@@ -12,6 +12,7 @@
 * Haushaltsplan: Ein Plan kann nur noch gelöscht werden, solange er bearbeitbar ist (Entwurf oder Beschlossen); ab „Genehmigt“ ist er ein verbindliches Dokument. Der Löschen-Dialog zeigt die nötigen Bedingungen nun als Prüfliste und gibt den Knopf erst frei, wenn alle erfüllt sind.
 * Nachtragshaushaltsplan: Wird ein Haushaltsplan abgeschlossen, werden seine wirksamen Nachträge automatisch mit abgeschlossen; wird er wieder aktiviert, kommen sie ebenfalls zurück. Ein Nachtrag lässt sich zwischen „Aktiv“ und „Abgeschlossen“ nicht mehr einzeln verschieben, sodass er nicht mehr aus dem Takt seines Ursprungsplans geraten kann.
 * DATEV-Export: Der Export ist nun direkt aus der Ansicht eines Haushaltsplans heraus erreichbar.
+* Haushaltsplan: Über der Titelübersicht steht nun eine Suche nach Titelnummer und Titelname. Sie filtert die Anzeige unmittelbar beim Tippen, zeigt zu jedem Treffer die übergeordneten Titelgruppen mit an und findet auch Titel, die gerade eingeklappt sind. Die Suche steht in beiden Reitern („Einnahmen“ und „Ausgaben“) sowie in der Gesamtplan-Ansicht eines Nachtrags zur Verfügung; dort wird ein umbenannter Titel zusätzlich unter seinem bisherigen Namen gefunden.
 
 ---
 

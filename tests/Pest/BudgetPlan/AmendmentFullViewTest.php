@@ -238,3 +238,28 @@ it('reads the same before and after once the amendment has been applied', functi
         ->and($rows->get($group->id)->before_value->getAmount())->toBe('12000')
         ->and($rows->get($group->id)->after_value->getAmount())->toBe('15500');
 });
+
+/**
+ * The full view reuses ⚡plan-view's client-side tree search, so its rows have to carry the same
+ * index data — including name_before, so searching for what a Titel used to be called still finds
+ * the row that renamed it.
+ */
+it('carries the tree-search index on the full view rows, pre-rename name included', function (): void {
+    $this->actingAs(user());
+    [$parent, , $leaf] = nhhpFullParent();
+    $amendment = nhhpFullAmendment($parent);
+
+    BudgetItemChange::create([
+        'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
+        'action' => BudgetItemChangeAction::Modify,
+        'diff' => ['name' => ['from' => 'Material', 'to' => 'Verbrauchsmaterial']],
+    ]);
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $amendment->id])
+        ->set('amendmentView', 'full')
+        ->html();
+
+    expect($html)->toContain('x-model="search"')
+        ->and($html)->toContain('data-item-id="'.$leaf->id.'"')
+        ->and($html)->toContain('data-search="A1 Verbrauchsmaterial Material"');
+});

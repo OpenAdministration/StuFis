@@ -210,22 +210,29 @@
                                 x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
                                 data-group-ids="@json($rows->where('is_group', true)->pluck('id')->values())"
                             >
-                                {{-- same collapse-all/expand-all pair as an original plan's tree,
-                                     absent when this side has no groups to fold --}}
-                                @if($rows->where('is_group', true)->isNotEmpty())
-                                    <div class="flex justify-end gap-2">
-                                        <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
-                                                     x-on:click="collapseAll()"
-                                                     x-bind:disabled="collapsed.length === allGroupIds.length">
-                                            {{ __('budget-plan.view.collapse-all') }}
-                                        </flux:button>
-                                        <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
-                                                     x-on:click="expandAll()"
-                                                     x-bind:disabled="collapsed.length === 0">
-                                            {{ __('budget-plan.view.expand-all') }}
-                                        </flux:button>
-                                    </div>
-                                @endif
+                                {{-- same toolbar as an original plan's tree: the search always shows,
+                                     the collapse-all/expand-all pair only when this side has groups
+                                     to fold --}}
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <flux:input size="sm" class="max-w-xs" icon="magnifying-glass" clearable
+                                                x-model="search"
+                                                :placeholder="__('budget-plan.view.search-placeholder')"
+                                                :aria-label="__('budget-plan.view.search')"/>
+                                    @if($rows->where('is_group', true)->isNotEmpty())
+                                        <div class="flex gap-2">
+                                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                                         x-on:click="collapseAll()"
+                                                         x-bind:disabled="collapsed.length === allGroupIds.length">
+                                                {{ __('budget-plan.view.collapse-all') }}
+                                            </flux:button>
+                                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                                         x-on:click="expandAll()"
+                                                         x-bind:disabled="collapsed.length === 0">
+                                                {{ __('budget-plan.view.expand-all') }}
+                                            </flux:button>
+                                        </div>
+                                    @endif
+                                </div>
                                 <div class="mt-8 flow-root">
                                     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -263,6 +270,14 @@
                                                                 </td>
                                                             </tr>
                                                         @endforelse
+                                                        {{-- every row above is x-show'd away when the
+                                                             search matches nothing, which would
+                                                             otherwise leave a bare table --}}
+                                                        <tr x-show="noMatches()" x-cloak>
+                                                            <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                                {{ __('budget-plan.view.search-no-results') }}
+                                                            </td>
+                                                        </tr>
                                                     </tbody>
                                                     @if($rows->isNotEmpty())
                                                         <tfoot class="bg-gray-50 text-sm font-semibold text-gray-900">
@@ -365,22 +380,31 @@
                     x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
                     data-group-ids="@json($items[$budgetType->slug()]->where('is_group', true)->pluck('id')->values())"
                 >
-                    {{-- collapse/expand every group at once; disabled (not hidden) when already in that state,
-                         and absent entirely when the plan side has no groups to fold --}}
-                    @if($items[$budgetType->slug()]->where('is_group', true)->isNotEmpty())
-                        <div class="flex justify-end gap-2">
-                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
-                                         x-on:click="collapseAll()"
-                                         x-bind:disabled="collapsed.length === allGroupIds.length">
-                                {{ __('budget-plan.view.collapse-all') }}
-                            </flux:button>
-                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
-                                         x-on:click="expandAll()"
-                                         x-bind:disabled="collapsed.length === 0">
-                                {{ __('budget-plan.view.expand-all') }}
-                            </flux:button>
-                        </div>
-                    @endif
+                    {{-- Tree toolbar. The search filters the already-rendered rows client-side
+                         (see budgetCollapse) — no round trip, and it keeps working inside a
+                         collapsed subtree. Collapse/expand every group at once sits next to it;
+                         disabled (not hidden) when already in that state, and absent entirely when
+                         the plan side has no groups to fold. --}}
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <flux:input size="sm" class="max-w-xs" icon="magnifying-glass" clearable
+                                    x-model="search"
+                                    :placeholder="__('budget-plan.view.search-placeholder')"
+                                    :aria-label="__('budget-plan.view.search')"/>
+                        @if($items[$budgetType->slug()]->where('is_group', true)->isNotEmpty())
+                            <div class="flex gap-2">
+                                <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                             x-on:click="collapseAll()"
+                                             x-bind:disabled="collapsed.length === allGroupIds.length">
+                                    {{ __('budget-plan.view.collapse-all') }}
+                                </flux:button>
+                                <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                             x-on:click="expandAll()"
+                                             x-bind:disabled="collapsed.length === 0">
+                                    {{ __('budget-plan.view.expand-all') }}
+                                </flux:button>
+                            </div>
+                        @endif
+                    </div>
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -436,6 +460,14 @@
                                             @foreach($items[$budgetType->slug()] as $item)
                                                 <x-budgetplan.view-row :item="$item"/>
                                             @endforeach
+                                            {{-- every row above is x-show'd away when the search
+                                                 matches nothing, which would otherwise leave a
+                                                 bare table --}}
+                                            <tr x-show="noMatches()" x-cloak>
+                                                <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                    {{ __('budget-plan.view.search-no-results') }}
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -588,9 +620,47 @@
                 collapsed: window.Alpine.$persist([]).as(persistKey),
                 allGroupIds: [],
 
+                // Search state. Deliberately NOT persisted and not in the URL: unlike the collapse
+                // state, a filter is a momentary way of reading the tree, not a setting.
+                search: '',
+                /** ids of the rows a running search keeps on screen — matches plus their ancestors */
+                matchedIds: [],
+                /** {id, ancestorIds, haystack} per row, indexed once so a keystroke is a data walk */
+                rows: [],
+
                 init() {
                     this.allGroupIds = JSON.parse(this.$el.dataset.groupIds || '[]');
+                    this.rows = [...this.$el.querySelectorAll('tr[data-item-id]')].map(row => ({
+                        id: Number(row.dataset.itemId),
+                        ancestorIds: JSON.parse(row.dataset.ancestorIds || '[]'),
+                        haystack: (row.dataset.search || '').toLowerCase(),
+                    }));
+                    this.$watch('search', () => this.applySearch());
                 },
+
+                /**
+                 * Recompute the visible set. A hit pulls its whole ancestor chain along, so a
+                 * matching Titel is always shown inside the groups it belongs to rather than
+                 * ripped out of the tree.
+                 */
+                applySearch() {
+                    const term = this.search.trim().toLowerCase();
+                    if (term === '') {
+                        this.matchedIds = [];
+                        return;
+                    }
+
+                    const keep = new Set();
+                    this.rows.forEach(row => {
+                        if (!row.haystack.includes(term)) return;
+                        keep.add(row.id);
+                        row.ancestorIds.forEach(id => keep.add(id));
+                    });
+                    this.matchedIds = [...keep];
+                },
+
+                isSearching() { return this.search.trim() !== ''; },
+                noMatches()   { return this.isSearching() ? this.matchedIds.length === 0 : false; },
 
                 toggle(id) {
                     this.collapsed = this.collapsed.includes(id)
@@ -598,7 +668,16 @@
                         : [...this.collapsed, id];
                 },
 
+                /**
+                 * A running search overrides the collapse state entirely — a hit buried in a folded
+                 * group has to be reachable without the user unfolding anything first. Clearing the
+                 * search restores whatever was collapsed, because that state was never touched.
+                 */
                 isHidden(row) {
+                    if (this.isSearching()) {
+                        return !this.matchedIds.includes(Number(row.dataset.itemId));
+                    }
+
                     const ancestors = JSON.parse(row.dataset.ancestorIds || '[]');
                     return ancestors.some(id => this.collapsed.includes(id));
                 },
