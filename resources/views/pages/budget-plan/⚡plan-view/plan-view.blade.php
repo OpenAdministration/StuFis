@@ -163,8 +163,138 @@
             @endif
 
             <x-budgetplan.amendment-delta-summary :summary="$delta_summary"/>
+        </div>
 
-            <div>
+        {{-- The two ways to read an amendment, switchable in place: the diff (what changed) and
+             the full plan with those changes marked (where it changed). Same data, so this is a
+             plain view toggle rather than two pages — .live because the merged tree is only built
+             server-side once actually selected (see with()). --}}
+        {{-- the wrapping flex keeps the segmented group at its content width instead of stretching
+             it across the page --}}
+        <div class="flex">
+            <flux:radio.group wire:model.live="amendmentView" variant="segmented" size="sm"
+                              :label="__('budget-plan.amendment.view-toggle.label')">
+                <flux:radio value="diff" icon="arrows-right-left" :label="__('budget-plan.amendment.view-toggle.diff')"/>
+                <flux:radio value="full" icon="list-bullet" :label="__('budget-plan.amendment.view-toggle.full')"/>
+            </flux:radio.group>
+        </div>
+
+        @if($amendment_tree !== null)
+            <div class="max-w-7xl space-y-2">
+                <flux:heading size="sm">{{ __('budget-plan.amendment.full-heading') }}</flux:heading>
+                <flux:text class="text-sm">{{ __('budget-plan.amendment.full-sub') }}</flux:text>
+
+                <flux:tab.group>
+                    <flux:tabs class="sticky top-0 z-10 bg-gray-50 dark:bg-zinc-900">
+                        {{-- the badge counts this side's changed titles, so a side that is untouched
+                             is recognisable without opening it --}}
+                        <flux:tab name="in">
+                            {{ __('budget-plan.edit.tab-headline.in') }}
+                            <x-budgetplan.amendment-change-count :counts="$amendment_change_counts['in']"/>
+                        </flux:tab>
+                        <flux:tab name="out">
+                            {{ __('budget-plan.edit.tab-headline.out') }}
+                            <x-budgetplan.amendment-change-count :counts="$amendment_change_counts['out']"/>
+                        </flux:tab>
+                    </flux:tabs>
+
+                    @foreach(BudgetType::cases() as $budgetType)
+                        @php
+                            $rows = $amendment_tree[$budgetType->slug()];
+                            $totals = $amendment_totals[$budgetType->slug()];
+                            $totalDelta = $totals['after']->subtract($totals['before']);
+                        @endphp
+                        <flux:tab.panel :name="$budgetType->slug()" class="pt-4">
+                            <div
+                                class="sm:px-6"
+                                x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
+                                data-group-ids="@json($rows->where('is_group', true)->pluck('id')->values())"
+                            >
+                                {{-- same collapse-all/expand-all pair as an original plan's tree,
+                                     absent when this side has no groups to fold --}}
+                                @if($rows->where('is_group', true)->isNotEmpty())
+                                    <div class="flex justify-end gap-2">
+                                        <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                                     x-on:click="collapseAll()"
+                                                     x-bind:disabled="collapsed.length === allGroupIds.length">
+                                            {{ __('budget-plan.view.collapse-all') }}
+                                        </flux:button>
+                                        <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                                     x-on:click="expandAll()"
+                                                     x-bind:disabled="collapsed.length === 0">
+                                            {{ __('budget-plan.view.expand-all') }}
+                                        </flux:button>
+                                    </div>
+                                @endif
+                                <div class="mt-8 flow-root">
+                                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                            <div class="overflow-hidden shadow-sm outline-1 outline-black/5 sm:rounded-lg">
+                                                <table class="relative min-w-full divide-y divide-gray-300 overflow-y-auto">
+                                                    <thead class="bg-white">
+                                                    <tr class="even:bg-gray-50 text-sm font-medium text-gray-900">
+                                                        <th scope="col" class="py-3.5 pr-3 pl-4 text-left sm:pl-6">
+                                                            {{ __('budget-plan.budget-shortname') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left">
+                                                            {{ __('budget-plan.budget-longname') }}
+                                                        </th>
+                                                        <th scope="col" class="py-3.5">
+                                                            {{-- kind icon column --}}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right">
+                                                            {{ __('budget-plan.amendment.col.before') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right">
+                                                            {{ __('budget-plan.amendment.col.after') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right sm:pr-6">
+                                                            {{ __('budget-plan.amendment.col.delta') }}
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-200 bg-white">
+                                                        @forelse($rows as $item)
+                                                            <x-budgetplan.amendment-row :item="$item"/>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                                    {{ __('budget-plan.amendment.full-empty') }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                    @if($rows->isNotEmpty())
+                                                        <tfoot class="bg-gray-50 text-sm font-semibold text-gray-900">
+                                                        <tr>
+                                                            <th scope="row" colspan="3" class="px-3 py-3.5 pl-4 text-left sm:pl-6">
+                                                                {{ __('budget-plan.amendment.col.total') }}
+                                                            </th>
+                                                            <td class="px-3 py-3.5 text-right">{{ $totals['before']->format() }}</td>
+                                                            <td class="px-3 py-3.5 text-right">{{ $totals['after']->format() }}</td>
+                                                            <td class="px-3 py-3.5 text-right sm:pr-6">
+                                                                @unless($totalDelta->isZero())
+                                                                    <span @class([
+                                                                        'text-green-700 dark:text-green-400' => $totalDelta->isPositive(),
+                                                                        'text-red-700 dark:text-red-400' => $totalDelta->isNegative(),
+                                                                    ])>{{ $totalDelta->isPositive() ? '+' : '' }}{{ $totalDelta->format() }}</span>
+                                                                @endunless
+                                                            </td>
+                                                        </tr>
+                                                        </tfoot>
+                                                    @endif
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </flux:tab.panel>
+                    @endforeach
+                </flux:tab.group>
+            </div>
+        @else
+            <div class="max-w-3xl">
                 <flux:heading size="sm">{{ __('budget-plan.amendment.diff-heading') }}</flux:heading>
                 @if($amendment_changes->isEmpty())
                     <flux:text class="mt-2 italic text-gray-500">{{ __('budget-plan.amendment.no-changes-yet') }}</flux:text>
@@ -177,21 +307,7 @@
                                     <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
                                     <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
                                 </div>
-                                @if($change->action === \App\Models\Enums\BudgetItemChangeAction::Modify && filled($change->diff))
-                                    <ul class="text-sm text-gray-600 list-disc list-inside">
-                                        @foreach($change->diff as $field => $pair)
-                                            <li>
-                                                {{ __('budget-plan.amendment.field.'.$field) }}:
-                                                @if($field === 'value')
-                                                    {{ \Cknow\Money\Money::EUR((int) $pair['from'])->format() }}
-                                                    → {{ \Cknow\Money\Money::EUR((int) $pair['to'])->format() }}
-                                                @else
-                                                    „{{ $pair['from'] }}“ → „{{ $pair['to'] }}“
-                                                @endif
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @endif
+                                <x-budgetplan.amendment-change-detail :change="$change" :item="$changedItem"/>
                                 @if(filled($change->reason))
                                     <flux:text class="text-sm">
                                         <span class="font-medium">{{ __('budget-plan.amendment.reason-label') }}:</span>
@@ -203,7 +319,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        @endif
     @else
     @php
         $income = $plan->incomeTotal();

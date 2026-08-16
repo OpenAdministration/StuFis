@@ -119,3 +119,48 @@ it('lists TWO parallel amendments touching the same title at once, each with its
         ->and($html)->toContain(route('budget-plan.view', $pending->id))
         ->and($html)->toContain(route('budget-plan.view', $applied->id));
 });
+
+it('spells out WHAT each amendment changes on this title, field by field', function (): void {
+    $this->actingAs(user());
+    [$plan, $leaf] = hintParentAndLeaf();
+    $amendment = hintAmendment($plan, Draft::class, 'Nachtrag Sommerfest');
+    $amendment->update(['activation_date' => '2026-09-01']);
+
+    BudgetItemChange::create([
+        'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
+        'action' => BudgetItemChangeAction::Modify,
+        'diff' => [
+            'value' => ['from' => 10000, 'to' => 15000],
+            'name' => ['from' => 'Material', 'to' => 'Material und Werkzeug'],
+        ],
+    ]);
+
+    $html = Livewire::test('pages::budget-plan.item-view', ['plan_id' => $plan->id, 'item_id' => $leaf->id])->html();
+
+    // the touched fields, each with its own from -> to — not just "this title is affected"
+    expect($html)->toContain(__('budget-plan.amendment.field.value'))
+        ->and($html)->toContain('100,00')
+        ->and($html)->toContain('150,00')
+        ->and($html)->toContain(__('budget-plan.amendment.field.name'))
+        ->and($html)->toContain('Material und Werkzeug')
+        // and when it lands in the plan
+        ->and($html)->toContain(__('budget-plan.item.amendment-hint.effective', ['date' => '01.09.2026']));
+});
+
+it('names the amount at stake for a title an amendment deletes', function (): void {
+    $this->actingAs(user());
+    [$plan, $leaf] = hintParentAndLeaf();
+    $amendment = hintAmendment($plan, Draft::class, 'Nachtrag Streichung');
+
+    BudgetItemChange::create([
+        'budget_plan_id' => $amendment->id, 'budget_item_id' => $leaf->id,
+        'action' => BudgetItemChangeAction::Delete,
+    ]);
+
+    $html = Livewire::test('pages::budget-plan.item-view', ['plan_id' => $plan->id, 'item_id' => $leaf->id])->html();
+
+    expect($html)->toContain(__('budget-plan.amendment.change.delete'))
+        ->and($html)->toContain(__('budget-plan.amendment.change-detail.removed'))
+        // the amount that disappears from the plan, struck through
+        ->and($html)->toContain('100,00');
+});

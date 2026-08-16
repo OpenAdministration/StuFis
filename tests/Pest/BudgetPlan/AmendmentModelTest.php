@@ -124,12 +124,12 @@ it('does not list amendments as free-standing plans on the plan index (only nest
     // never surface the amendment as one of its own top-level rows
     expect($fy->fresh()->budgetPlans->pluck('id')->all())->toBe([$parent->id]);
 
-    // it IS reachable from the page (nested under its parent, badge-marked), just not doubly
-    // listed as a free-standing plan
+    // it IS reachable from the page (nested under its parent, under its own label), just not
+    // doubly listed as a free-standing plan
     $this->get(route('budget-plan.index'))
         ->assertOk()
         ->assertSee('Parent Org')
-        ->assertSeeInOrder(['Parent Org', __('budget-plan.amendment.badge')]);
+        ->assertSeeInOrder(['Parent Org', $amendment->label()]);
 
     expect($amendment->parent_plan_id)->toBe($parent->id);
 });

@@ -10,6 +10,7 @@ use App\States\BudgetPlan\Completed;
 use App\States\BudgetPlan\Draft;
 use App\States\BudgetPlan\Resolved;
 use App\Support\Budget\AmendmentConflictException;
+use App\Support\Budget\AmendmentTree;
 use App\Support\Budget\BudgetPlanMeasures;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Spatie\ModelStates\Exceptions\CouldNotPerformTransition;
 use Spatie\ModelStates\Validation\ValidStateRule;
@@ -43,6 +45,20 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public $approval_date;
 
     public $activation_date;
+
+    /** The changed-items-only view of an amendment — the default, and what the page shows first. */
+    public const string VIEW_DIFF = 'diff';
+
+    /** The parent plan's whole tree with this amendment's changes marked inside it. */
+    public const string VIEW_FULL = 'full';
+
+    /**
+     * Which of the two amendment views is showing (ignored entirely on an original plan, whose
+     * view is always the full tree). Kept in the URL so a specific view is linkable and survives
+     * a reload; any other value falls back to the diff, since this is user-supplied input.
+     */
+    #[Url(as: 'view', except: self::VIEW_DIFF)]
+    public string $amendmentView = self::VIEW_DIFF;
 
     public function mount(int $plan_id): void
     {
@@ -80,6 +96,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     {
         $plan = $this->plan();
 
+        // the merged tree is only built when it is actually on screen — it reads both plans' items
+        // and walks them twice (before/after), which the diff view has no use for
+        $tree = $plan->isAmendment() && $this->amendmentView === self::VIEW_FULL
+            ? new AmendmentTree($plan)
+            : null;
+
         return [
             'plan' => $plan,
             'items' => [
@@ -106,11 +128,24 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'can_create_amendment' => ! $plan->isAmendment()
                 && ($plan->state instanceof Active || $plan->state instanceof Approved)
                 && Auth::user()?->can('create', BudgetPlan::class),
-            // an amendment's own view shows the diff (changed items only, from -> to, with
-            // reasons) instead of the plain tree — the full merged tree stays the editor's job
-            'amendment_changes' => $plan->isAmendment()
+            // an amendment's own view has two modes (toggled by $amendmentView): the diff — changed
+            // items only, from -> to, with reasons — and the full merged tree with those same
+            // changes marked in place. Only the selected one is built.
+            'amendment_changes' => $plan->isAmendment() && ! $tree instanceof AmendmentTree
                 ? $plan->itemChanges()->with('budgetItem')->get()
                 : collect(),
+            'amendment_tree' => $tree instanceof AmendmentTree ? [
+                BudgetType::INCOME->slug() => $tree->annotate(BudgetType::INCOME),
+                BudgetType::EXPENSE->slug() => $tree->annotate(BudgetType::EXPENSE),
+            ] : null,
+            'amendment_totals' => $tree instanceof AmendmentTree ? [
+                BudgetType::INCOME->slug() => $tree->totals(BudgetType::INCOME),
+                BudgetType::EXPENSE->slug() => $tree->totals(BudgetType::EXPENSE),
+            ] : null,
+            'amendment_change_counts' => $tree instanceof AmendmentTree ? [
+                BudgetType::INCOME->slug() => $tree->changeCounts(BudgetType::INCOME),
+                BudgetType::EXPENSE->slug() => $tree->changeCounts(BudgetType::EXPENSE),
+            ] : null,
             'delta_summary' => $plan->isAmendment() ? $plan->amendmentDeltaSummary() : null,
             // F5 (OP#589): the delete-plan-modal's checklist rows — surfaced here rather than
             // computed inline in the blade so deletePlan()'s server-side guard below reads
