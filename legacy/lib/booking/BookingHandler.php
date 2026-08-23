@@ -3,6 +3,7 @@
 namespace booking;
 
 use App\Exceptions\LegacyDieException;
+use App\Exceptions\LegacyDownloadException;
 use framework\auth\AuthHandler;
 use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
@@ -179,15 +180,22 @@ class BookingHandler extends Renderer
             $zip->addFromString($titel_nr.'.csv', $csvString);
         }
 
-        if ($zip->close() === true && ($content = file_get_contents($zipFilePath)) !== false) {
-            header('Content-Type: application/zip');
-            header('Content-disposition: attachment; filename='.$zipFileName);
-            header('Content-Length: '.filesize($zipFileName));
-            echo $content;
-            unlink($zipFilePath);
-        } else {
-            echo 'Error :(';
+        if ($zip->close() !== true || ($content = file_get_contents($zipFilePath)) === false) {
+            @unlink($zipFilePath);
+            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.');
         }
+
+        unlink($zipFilePath);
+
+        // Handed back as a response instead of echoed: the surrounding output buffer ends up
+        // inside the app layout, which would wrap the archive in HTML rather than download it.
+        throw new LegacyDownloadException(
+            response($content, 200, [
+                'Content-Type' => 'application/zip',
+                'Content-Disposition' => 'attachment; filename="'.$zipFileName.'"',
+                'Content-Length' => strlen($content),
+            ])
+        );
     }
 
     private function fetchBookingHistoryDataFromDB($hhp_id, $sortBy = ['timestamp' => true, 'id' => true]): array

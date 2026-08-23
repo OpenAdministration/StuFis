@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Legacy;
 
+use App\Exceptions\LegacyDownloadException;
 use App\Exceptions\LegacyJsonException;
 use App\Exceptions\LegacyRedirectException;
 use App\Http\Controllers\Controller;
@@ -54,6 +55,12 @@ class LegacyController extends Controller
             $this->discardBufferedOutput($bufferLevel);
 
             return response()->json($e->content);
+        } catch (LegacyDownloadException $e) {
+            // A download must not be wrapped in the app layout - drop whatever the page
+            // buffered and hand the file response straight back.
+            $this->discardBufferedOutput($bufferLevel);
+
+            return $e->response;
         } catch (\Exception $exception) {
             // get rid of the already printed html
             $this->discardBufferedOutput($bufferLevel);
