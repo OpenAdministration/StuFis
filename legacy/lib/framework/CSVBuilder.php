@@ -2,6 +2,8 @@
 
 namespace framework;
 
+use App\Exceptions\LegacyDownloadException;
+
 class CSVBuilder
 {
     public const LANG_DE = 1;
@@ -52,14 +54,23 @@ class CSVBuilder
         return implode(self::ROW_SEPARATOR, $ret);
     }
 
-    public function echoCSV($fileName = '', $withRowHeader = true, $encoding = 'WINDOWS-1252'): void
+    /**
+     * Hands the CSV over as a download and unwinds out of the legacy renderer - it never returns.
+     *
+     * LegacyController wraps whatever a page buffered in the app layout, so the file has to leave
+     * as a response instead of being echoed into that buffer.
+     */
+    public function echoCSV($fileName = '', $withRowHeader = true, $encoding = 'WINDOWS-1252'): never
     {
+        // The body is converted to $encoding below - say so, or Laravel labels it utf-8
+        $headers = ['Content-Type' => 'text/csv; charset='.strtolower($encoding)];
         if (! empty($fileName)) {
-            header('Content-type: text/csv');
-            header("Content-disposition: attachment;filename=$fileName.csv");
+            $headers['Content-Disposition'] = 'attachment; filename="'.$fileName.'.csv"';
         }
-        echo $this->getCSV($withRowHeader, $encoding);
-        exit();
+
+        throw new LegacyDownloadException(
+            response($this->getCSV($withRowHeader, $encoding), 200, $headers)
+        );
     }
 
     public function getCSV($withRowHeader = true, $encoding = 'WINDOWS-1252'): string

@@ -3,14 +3,16 @@
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 /**
- * The "als .zip" download on the booking history page (export/booking/{hhp-id}/zip). It hands
- * one CSV per Haushaltstitel back inside an archive, and it has to leave the legacy renderer
- * as a response - echoing it would land the binary inside the app layout.
+ * The two download buttons under the booking history: export/booking/{id}/csv and
+ * export/booking/{id}/zip. Both build their file inside a legacy Renderer, which cannot echo it -
+ * LegacyController hands whatever a page buffered to the app layout, so the file has to leave as
+ * a response (LegacyDownloadException).
+ *
+ * The plan id comes from the demo seeder, whose first plan carries bookings across several Titel.
  */
 uses(DatabaseTransactions::class);
 
 it('downloads the bookings of a budget plan as a zip archive', function (): void {
-    // the seeded demo plan carries bookings across several Titel
     $response = $this->actingAs(budgetManager())->get('export/booking/1/zip');
 
     $response->assertOk()
@@ -19,9 +21,8 @@ it('downloads the bookings of a budget plan as a zip archive', function (): void
 
     $content = $response->getContent();
 
-    expect($content)->not->toBeEmpty()
-        // no HTML wrapper snuck in around the archive
-        ->and(substr((string) $content, 0, 2))->toBe('PK');
+    // "PK" are the magic bytes of a zip - no HTML wrapper snuck in around the archive
+    expect(substr((string) $content, 0, 2))->toBe('PK');
 
     $path = tempnam(sys_get_temp_dir(), 'hha-test');
     file_put_contents($path, $content);
@@ -38,4 +39,21 @@ it('downloads the bookings of a budget plan as a zip archive', function (): void
 
     expect($names)->not->toBeEmpty()
         ->and($names)->each->toEndWith('.csv');
+});
+
+it('downloads the booking list of a budget plan as a csv', function (): void {
+    $response = $this->actingAs(budgetManager())->get('export/booking/1/csv');
+
+    $response->assertOk()->assertHeader('Content-Type', 'text/csv; charset=windows-1252');
+
+    expect($response->headers->get('Content-Disposition'))
+        ->toStartWith('attachment; filename="')
+        ->toEndWith('-Buchungsliste-2025-04-bis-2026-03.csv"');
+
+    $content = mb_convert_encoding((string) $response->getContent(), 'UTF-8', 'WINDOWS-1252');
+
+    expect($content)->toStartWith('Buchungsnummer;Betrag in Euro;')
+        // a data row followed, and no layout markup came with it
+        ->and(substr_count($content, PHP_EOL))->toBeGreaterThan(0)
+        ->and($content)->not->toContain('<html');
 });
