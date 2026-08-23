@@ -29,5 +29,4 @@ return [
     'edit.table.headline.name-hint' => 'Der Titelname soll kurz aber beschreibend sein. Er sollte die Verwendung der Mittel widerspiegeln und beim Bearbeiten nicht zu weit abgewandelt werden, um eine Nachvollziehbarkeit über mehrere Haushaltsjahre hinweg gewährleisten zu können.',
     'edit.table.headline.value-hint' => 'Der Wert eines Haushaltstitels sollte angemessen festgelegt werden. Beachte, ob du dich im "Einnahmen"- oder "Ausgaben"-Tab befindest. In der Regel sollen die Werte nach den Landeshaushaltsordnungen auf volle 10 EUR gerundet sein. Titelgruppen summieren sich immer automatisch aus den darunterliegenden Titeln und Titelgruppen. In Titelgruppen kann nicht direkt gebucht werden.',
     'edit.save' => 'Speichern und zum nächsten Schritt',
-    '' => '',
 ];
