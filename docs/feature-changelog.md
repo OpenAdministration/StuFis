@@ -25,6 +25,7 @@ Verschiedene Fehler beim FinTS Bankimport behoben. u.a.:
 
 Buchungen:
 * Der Knopf „als .zip“ in der Buchungshistorie führte zu einer Fehlerseite, statt das Archiv herunterzuladen. Der Download funktioniert nun wieder und enthält für jeden Haushaltstitel eine CSV-Datei mit den Buchungen des Haushaltsjahres.
+* Unter der Buchungshistorie steht jetzt auch der DATEV-Export zur Verfügung – derselbe Knopf, der schon in der Ansicht eines Haushaltsplans sitzt. Er erscheint nur, wenn der DATEV-Export in den Einstellungen aktiviert ist.
 
 Betrieb der Instanz:
 * Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. Bisher lief alles in eine einzige Datei, die nie gekürzt wurde – auf den Servern gibt es keine automatische Rotation. Außerdem werden die Logs nicht mehr in jede Sicherung mitkopiert. Für bestehende Instanzen: in der `.env` `LOG_CHANNEL=daily` setzen (ein dort noch eingetragenes `LOG_STACK=single` sticht die neue Voreinstellung) und die alte große Datei `storage/logs/laravel.log` einmalig löschen.

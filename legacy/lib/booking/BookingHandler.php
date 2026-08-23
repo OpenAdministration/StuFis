@@ -4,6 +4,7 @@ namespace booking;
 
 use App\Exceptions\LegacyDieException;
 use App\Exceptions\LegacyDownloadException;
+use App\Models\Setting;
 use framework\auth\AuthHandler;
 use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
@@ -369,6 +370,17 @@ class BookingHandler extends Renderer
                title="CSV ist WINDOWS-1252 encoded (für Excel optimiert)">
                 <i class="fa fa-fw fa-download"></i> als .zip
             </a>
+            <?php // The same button sits on the budget plan page, but disabled for anyone outside
+                  // ref-finanzen - that page has no group restriction. This one does (see the
+                  // booking node in config.routing.php), and the DATEV download is gated on the
+                  // same group, so every reader of this page may use it.
+                  if (Setting::get('datev', false)) { ?>
+                <a class="btn btn-primary"
+                   href="<?php echo route('datev.export', ['hhpId' => $hhp_id]); ?>"
+                   title="Buchungen dieses Haushaltsjahres als DATEV-Export">
+                    <i class="fa fa-fw fa-download"></i> DATEV Export
+                </a>
+            <?php } ?>
 			<?php
         } else {
             $this->renderClearFix();
