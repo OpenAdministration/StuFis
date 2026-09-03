@@ -356,6 +356,7 @@
             <div>
                 <flux:editor
                     wire:model="beschreibung"
+                    toolbar="heading | bold italic underline strike highlight subscript superscript | bullet ordered blockquote hr | link | align ~ undo redo"
                     :placeholder="__('project.view.description.placeholder')"
                 />
                 <flux:error name="beschreibung" />

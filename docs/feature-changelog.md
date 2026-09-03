@@ -23,6 +23,8 @@
 
 **Editor (Projektbeschreibungen und Nachrichten):**
 * Formatierungen, die der Editor anbietet, wurden beim Speichern teilweise als "Fehlerhafte HTML-Tags" abgewiesen. Betroffen waren die Trennlinie (entsteht beim Tippen von `---`), Zitate, Code, Unterstreichen, Hervorheben, Hoch- und Tiefstellen sowie die Überschriften 4 bis 6. Sie lassen sich nun alle speichern.
+* Die Werkzeugleiste zeigt nun auch die Schaltflächen für Unterstreichen, Hervorheben, Hoch- und Tiefstellen, Trennlinie sowie Rückgängig und Wiederherstellen. Diese Formatierungen gab es bereits, waren aber nur über Tastenkürzel erreichbar – die Trennlinie sogar nur über das Tippen von `---`.
+* Die Werkzeugleiste ist nun auf Deutsch beschriftet. Bisher waren alle Tooltips englisch ("Bold", "Italic", "Blockquote" …).
 * Code-Blöcke (mehrzeiliger Code, entsteht beim Tippen von drei Backticks) werden bewusst nicht gespeichert. Einzelne Code-Wörter im Fließtext sind weiterhin möglich.
 
 **Betrieb der Instanz:**
