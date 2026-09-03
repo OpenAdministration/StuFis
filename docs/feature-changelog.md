@@ -21,6 +21,10 @@
 * Der Knopf „als .zip“ funktioniert nun wieder.
 * Unter der Buchungshistorie steht jetzt auch der DATEV-Export zur Verfügung. Er erscheint nur, wenn der DATEV-Export in den Einstellungen aktiviert ist.
 
+**Editor (Projektbeschreibungen und Nachrichten):**
+* Formatierungen, die der Editor anbietet, wurden beim Speichern teilweise als "Fehlerhafte HTML-Tags" abgewiesen. Betroffen waren die Trennlinie (entsteht beim Tippen von `---`), Zitate, Code, Unterstreichen, Hervorheben, Hoch- und Tiefstellen sowie die Überschriften 4 bis 6. Sie lassen sich nun alle speichern.
+* Code-Blöcke (mehrzeiliger Code, entsteht beim Tippen von drei Backticks) werden bewusst nicht gespeichert. Einzelne Code-Wörter im Fließtext sind weiterhin möglich.
+
 **Betrieb der Instanz:**
 * Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. 
 * Neu: die Liste der FinTS-fähigen Banken (rund 4000 Institute) in der Tabelle `fints_institutes`. `bin/stufis-update` liest sie ab jetzt bei jedem Deployment selbst ein.
