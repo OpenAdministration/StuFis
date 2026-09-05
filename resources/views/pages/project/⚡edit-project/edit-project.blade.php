@@ -390,13 +390,26 @@
                             </x-slot>
                         </x-file-card>
                     @endforeach
+                    {{-- Stored attachments: clicking previews, plus download and remove.
+                         New uploads above stay preview-less -- they only exist as Livewire
+                         temp files until the save goes through, so there is nothing to link to. --}}
                     @foreach($existingAttachments as $attachment)
                         <x-file-card
+                            :href="route('project.attachment', [$attachment['id'], $attachment['name']])"
+                            :preview="route('project.attachment', [$attachment['id'], $attachment['name']])"
                             :heading="$attachment['name']"
                             :size="$attachment['size']"
                             :filetype="$attachment['mime_type']"
                         >
                             <x-slot name="actions">
+                                <flux:button
+                                    :href="route('project.attachment.download', [$attachment['id'], $attachment['name']])"
+                                    icon="arrow-down-tray"
+                                    variant="ghost"
+                                    size="sm"
+                                    square
+                                    :tooltip="__('project.view.attachments.download')"
+                                />
                                 <flux:file-item.remove wire:click="removeExistingAttachment({{ $attachment['id'] }})"/>
                             </x-slot>
                         </x-file-card>
@@ -424,4 +437,7 @@
             @enderror
         </div>
     </div>
+
+    {{-- Shared preview modal driven by the attachment cards above. --}}
+    <x-file-preview-modal/>
 </div>

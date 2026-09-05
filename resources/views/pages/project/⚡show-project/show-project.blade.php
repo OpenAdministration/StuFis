@@ -595,6 +595,7 @@
                 @foreach($project->attachments as $attachment)
                     <x-file-card
                         :href="route('project.attachment', [$attachment->id, $attachment->name])"
+                        :preview="route('project.attachment', [$attachment->id, $attachment->name])"
                         :heading="$attachment->name"
                         :size="$attachment->size"
                         :filetype="$attachment->mime_type"
@@ -606,7 +607,7 @@
                                 variant="ghost"
                                 size="sm"
                                 square
-                                :tooltip="__('Download')"
+                                :tooltip="__('project.view.attachments.download')"
                             />
                         </x-slot:actions>
                     </x-file-card>
@@ -663,6 +664,9 @@
 
         <livewire:chat-panel target-type="projekt" :target-id="$project->id" :wire:key="$project->state::class"/>
     </div>
+
+    {{-- Shared preview modal driven by the attachment cards above. --}}
+    <x-file-preview-modal/>
 
     <!-- Status Change Modal -->
     <flux:modal name="state-modal" class="min-w-96">

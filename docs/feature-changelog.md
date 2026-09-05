@@ -29,6 +29,9 @@
 
 **Projekte:**
 * Das Feld neben der Rechtsgrundlage („Datum und TOP“) speicherte nur die ersten 128 Zeichen. Längere Eingaben wurden beim Speichern ohne Hinweis abgeschnitten. Das Feld fasst nun 512 Zeichen, und wird diese Länge überschritten, erscheint eine Meldung am Feld, statt den Text stillschweigend zu kürzen.
+* Ein Anhang ließ sich nicht entfernen: Das Speichern brach mit einer Fehlerseite ab, und weil das Entfernen zusammen mit dem restlichen Speichern erfolgt, gingen dabei auch alle anderen Änderungen am Projekt verloren. Beides ist behoben.
+* Ein Klick auf einen Anhang öffnet PDFs und Bilder nun in einer Vorschau direkt auf der Seite, statt in einem neuen Browser-Tab. Dateien, die der Browser nicht anzeigen kann (Word, Excel, PowerPoint, OpenDocument), werden wie bisher heruntergeladen.
+* Zu jedem gespeicherten Anhang gibt es nun auch beim Bearbeiten einen Knopf zum Herunterladen. Bisher war das nur in der Projektansicht möglich.
 
 **Betrieb der Instanz:**
 * Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. 

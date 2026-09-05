@@ -11,6 +11,7 @@
     'text' => null,
     'size' => null,
     'href' => null,
+    'preview' => null,
 ])
 
 @php
@@ -76,9 +77,25 @@
     };
 
     $iconVariant = $text ? 'solid' : 'micro';
+
+    // Clicking the card opens <x-file-preview-modal> instead of navigating, but only
+    // for the kinds a browser can actually render in a frame. Office formats would
+    // just trigger a download or show a blank frame, so they keep the plain $href.
+    // The $href stays on the anchor either way, so ctrl/middle-click still opens the
+    // file in a new tab and the card degrades to a normal link without JS.
+    $canPreview = $preview !== null && in_array($iconKind, ['pdf', 'image'], true);
 @endphp
 <div {{ $attributes->class($classes) }}>
-    <a href="{{ $href }}" target="_blank" class="cursor-pointer flex-1 min-w-0 flex items-start">
+    <a href="{{ $href }}" target="_blank" class="cursor-pointer flex-1 min-w-0 flex items-start"
+        @if($canPreview)
+            x-data
+            x-on:click.prevent="$dispatch('file-preview', {
+                src: @js($preview),
+                name: @js($heading),
+                kind: @js($iconKind),
+            })"
+        @endif
+    >
         <div class="{{ $figureWrapperClasses }}">
             @if($iconKind === 'pdf')
                 <x-fas-file-pdf class="size-8 text-red-400 [&:has(+[data-slot=image])]:hidden"/>

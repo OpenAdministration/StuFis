@@ -594,6 +594,10 @@ it('deletes an attachment and keeps the rest of the save', function (): void {
 
     Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
         ->assertCount('existingAttachments', 2)
+        // Stored attachments carry all three affordances: preview on click,
+        // download, and the remove button whose save path is the subject below.
+        ->assertSeeHtml("kind: 'pdf'")
+        ->assertSeeHtml(route('project.attachment.download', [$doomed->id, $doomed->name]))
         ->call('removeExistingAttachment', $doomed->id)
         // staged only -- nothing is touched until the save goes through
         ->assertCount('existingAttachments', 1)
