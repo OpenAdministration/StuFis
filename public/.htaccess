@@ -18,6 +18,13 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Never serve a file whose name starts with a dash. Nothing in the application
+    # is named that way; such a file is a stray, usually PHP's error log landing
+    # in the document root because the active php.ini carries a numeric
+    # `error_log` (a `-1` meant for `error_reporting`). Serving it would hand out
+    # SQL, file paths and internal error messages.
+    RewriteRule (^|/)- - [F,L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f

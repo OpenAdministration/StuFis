@@ -82,11 +82,14 @@ return new class extends Migration
         }
 
         // The legacy migration hardcoded the name "dev__konto_credentials_ibfk_2" whatever the
-        // table prefix, but a database restored from an older dump may carry a different one.
-        $foreignKey = $this->foreignKeyOn('konto_credentials', 'bank_id');
+        // table prefix, but a database restored from an older dump may carry a different one -
+        // or several: a schema that has been dumped and restored across changes can accumulate
+        // more than one foreign key on the same column. They share an index, so dropping only
+        // one leaves that index alive and the column cannot be dropped (errno 1553).
+        $foreignKeys = $this->foreignKeysOn('konto_credentials', 'bank_id');
 
-        Schema::table('konto_credentials', function (Blueprint $table) use ($collation, $foreignKey) {
-            if ($foreignKey !== null) {
+        Schema::table('konto_credentials', function (Blueprint $table) use ($collation, $foreignKeys) {
+            foreach ($foreignKeys as $foreignKey) {
                 $table->dropForeign($foreignKey);
             }
             if (Schema::hasColumn('konto_credentials', 'bank_id')) {
@@ -116,19 +119,21 @@ return new class extends Migration
     }
 
     /**
-     * Name of the foreign key on the given column, or null when there is none.
+     * Names of every foreign key on the given column.
+     *
+     * @return list<string>
      */
-    private function foreignKeyOn(string $table, string $column): ?string
+    private function foreignKeysOn(string $table, string $column): array
     {
         // Raw, because the query builder would prefix "information_schema.…" as a table name.
-        $row = DB::selectOne(
+        $rows = DB::select(
             'SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
                AND REFERENCED_TABLE_NAME IS NOT NULL',
             [DB::connection()->getTablePrefix().$table, $column],
         );
 
-        return $row->CONSTRAINT_NAME ?? null;
+        return array_map(static fn (object $row): string => $row->CONSTRAINT_NAME, $rows);
     }
 
     /**
