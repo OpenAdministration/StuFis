@@ -4,6 +4,33 @@
         <x-slot:subHeadline>{{ __('budget-plan.item.subtitle') }}</x-slot:subHeadline>
     </x-intro>
 
+    {{-- one or more amendments currently touch this title — parallel amendments are allowed
+         (OP#581), so several rows in different states (pending draft, already-applied active, ...)
+         can show at once. Reuses the same action badge / label fallback / reason idiom as the
+         amendment's own diff view (⚡plan-view) rather than duplicating it under a new name. --}}
+    @if($amendment_changes->isNotEmpty())
+        <flux:callout color="zinc" icon="document-text" inline class="mt-6">
+            <flux:callout.heading>{{ __('budget-plan.item.amendment-hint.heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($amendment_changes as $change)
+                        @php $amendment = $change->amendmentPlan; @endphp
+                        <li>
+                            <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
+                            <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
+                                {{ $amendment->label() }}
+                            </flux:link>
+                            <flux:badge size="sm" :color="$amendment->state->color()">{{ $amendment->state->label() }}</flux:badge>
+                            @if(filled($change->reason))
+                                <flux:text class="text-sm italic">— {{ $change->reason }}</flux:text>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
     {{-- meter, dropped well below the page header --}}
     <div class="mt-10">
         {{-- how the Plan budget is consumed (Gebucht ⊆ Beschlossen ⊆ Plan) --}}

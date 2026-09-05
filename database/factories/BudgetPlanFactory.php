@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\BudgetItem;
 use App\Models\FiscalYear;
-use App\States\BudgetPlan\Published;
+use App\States\BudgetPlan\Active;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class BudgetPlanFactory extends Factory
@@ -16,7 +16,7 @@ class BudgetPlanFactory extends Factory
             'fiscal_year_id' => FiscalYear::factory(),
             'resolution_date' => now()->subDays(60),
             'approval_date' => now()->subDays(30),
-            'state' => Published::class,
+            'state' => Active::class,
         ];
     }
 

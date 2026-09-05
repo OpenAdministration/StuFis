@@ -22,8 +22,6 @@
                 {{-- pinned create action at the bottom of the dropdown --}}
                 <flux:select.option.create wire:click="createFiscalYear">{{ __('budget-plan.edit.add-fiscal-year') }}</flux:select.option.create>
             </flux:select>
-            <flux:input wire:model.live.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
-            <flux:input wire:model.live.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
         </div>
     </flux:fieldset>
     <flux:tab.group class="max-w-7xl">

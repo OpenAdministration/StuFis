@@ -35,6 +35,19 @@
                                 </flux:badge>
                             </flux:table.cell>
                         </flux:table.row>
+                        @foreach($plan->amendments as $amendment)
+                            <flux:table.row>
+                                <flux:table.cell class="ps-14!">
+                                    <flux:badge color="zinc" size="sm">{{ __('budget-plan.amendment.badge') }}</flux:badge>
+                                    <flux:link :href="route('budget-plan.view', $amendment->id)">{{ $amendment->label() }}</flux:link>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge :color="$amendment->state?->color() ?? 'green'" size="sm" inset="top bottom">
+                                        {{ $amendment->state?->label() }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
                     @empty
                         <flux:table.row>
                             <flux:table.cell colspan="2" class="ps-8! text-gray-500 italic">
@@ -59,6 +72,19 @@
                                 </flux:badge>
                             </flux:table.cell>
                         </flux:table.row>
+                        @foreach($plan->amendments as $amendment)
+                            <flux:table.row>
+                                <flux:table.cell class="ps-14!">
+                                    <flux:badge color="zinc" size="sm">{{ __('budget-plan.amendment.badge') }}</flux:badge>
+                                    <flux:link :href="route('budget-plan.view', $amendment->id)">{{ $amendment->label() }}</flux:link>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <flux:badge :color="$amendment->state?->color() ?? 'green'" size="sm" inset="top bottom">
+                                        {{ $amendment->state?->label() }}
+                                    </flux:badge>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
                     @endforeach
                 @endif
 

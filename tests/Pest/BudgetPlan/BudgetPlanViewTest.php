@@ -3,6 +3,10 @@
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
+use App\Models\Setting;
+use App\States\BudgetPlan\Active;
+use App\States\BudgetPlan\Approved;
+use App\States\BudgetPlan\Completed;
 use App\States\BudgetPlan\Draft;
 use App\States\BudgetPlan\Resolved;
 use Cknow\Money\Money;
@@ -82,8 +86,19 @@ it('lets an admin delete the whole plan (with its items)', function (): void {
         ->and(BudgetItem::where('budget_plan_id', $plan->id)->count())->toBe(0);
 });
 
-it('forbids a non-admin from deleting the plan', function (): void {
-    $this->actingAs(budgetManager()); // budget-officer, not admin
+it('confirms the plan deletion through a flux modal instead of a native window.confirm', function (): void {
+    $this->actingAs(adminUser());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    expect($html)->not->toContain('wire:confirm')
+        ->and($html)->toContain('delete-plan-modal')
+        ->and($html)->toContain(__('budget-plan.view.delete-modal.confirm'));
+});
+
+it('forbids a user without the budget-officer role from deleting the plan', function (): void {
+    $this->actingAs(user()); // neither budget-officer nor admin
     $plan = planWithItems();
 
     Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])
@@ -128,3 +143,72 @@ it('forbids an illegal transition (draft straight to completed)', function (): v
 
     expect(BudgetPlan::find($plan->id)->state)->toBeInstanceOf(Draft::class);
 });
+
+/**
+ * F8 (OP#581): a normal plan's "Bearbeiten" must grey out from Approved onward — Approved is the
+ * point past which the plan is meant to be a stable, agreed-upon document (Active/Completed only
+ * ever come after Approved). Draft/Resolved stay editable. Server-side guard mirrors the button.
+ */
+it('renders "Bearbeiten" enabled in Draft/Resolved and disabled-with-tooltip from Approved onward', function (string $stateClass, bool $expectEditable): void {
+    $this->actingAs(budgetManager());
+    $plan = BudgetPlan::create(['state' => $stateClass]);
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    $editHref = 'href="'.route('budget-plan.edit', $plan->id).'"';
+    if ($expectEditable) {
+        expect($html)->toContain($editHref);
+    } else {
+        expect($html)->not->toContain($editHref)
+            ->and($html)->toContain(__('budget-plan.view.edit-not-possible', ['state' => $plan->state->label()]));
+    }
+})->with([
+    'draft' => [Draft::class, true],
+    'resolved' => [Resolved::class, true],
+    'approved' => [Approved::class, false],
+    'active' => [Active::class, false],
+    'completed' => [Completed::class, false],
+]);
+
+it('does not render a print action (not yet implemented)', function (): void {
+    $this->actingAs(user());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    expect($html)->not->toContain('icon="printer"');
+});
+
+it('shows the DATEV export action only when the setting is enabled and the user may download it', function (bool $datevEnabled, string $actingAsUser, bool $expectVisible): void {
+    Setting::set('datev', $datevEnabled);
+    $this->actingAs($actingAsUser());
+    $plan = planWithItems();
+
+    $html = Livewire::test('pages::budget-plan.plan-view', ['plan_id' => $plan->id])->html();
+
+    if ($expectVisible) {
+        expect($html)->toContain(__('budget-plan.view.export.datev'));
+    } else {
+        expect($html)->not->toContain(__('budget-plan.view.export.datev'));
+    }
+})->with([
+    'enabled + finance user' => [true, 'budgetManager', true],
+    'enabled + regular user' => [true, 'user', false],
+    'disabled + finance user' => [false, 'budgetManager', false],
+]);
+
+it('refuses direct ⚡plan-edit access once Approved, redirecting to the read-only view (server-side guard matching the button)', function (): void {
+    $this->actingAs(budgetManager());
+    $plan = BudgetPlan::create(['state' => Approved::class]);
+
+    Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id])
+        ->assertRedirect(route('budget-plan.view', $plan->id));
+});
+
+it('still allows ⚡plan-edit access while Draft or Resolved', function (string $stateClass): void {
+    $this->actingAs(budgetManager());
+    $plan = BudgetPlan::create(['state' => $stateClass]);
+
+    Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id])
+        ->assertOk();
+})->with([Draft::class, Resolved::class]);

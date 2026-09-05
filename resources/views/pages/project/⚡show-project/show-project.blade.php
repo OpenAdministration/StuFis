@@ -741,7 +741,7 @@
                 <flux:button x-on:click="$flux.modal('delete-modal').close()" variant="ghost">
                     {{ __('project.view.delete_modal.cancel') }}
                 </flux:button>
-                <flux:button wire:click="delete()" variant="danger" :disabled="!($userCanDelete && $deletionAllowed)">
+                <flux:button wire:click="deleteProject()" variant="danger" :disabled="!($userCanDelete && $deletionAllowed)">
                     {{ __('project.view.delete_modal.confirm') }}
                 </flux:button>
             </div>

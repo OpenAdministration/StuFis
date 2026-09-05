@@ -17,4 +17,10 @@ class Resolved extends BudgetPlanState
     {
         return 'sky';
     }
+
+    #[\Override]
+    public function isEditable(): bool
+    {
+        return true;
+    }
 }

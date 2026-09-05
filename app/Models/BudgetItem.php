@@ -136,6 +136,16 @@ class BudgetItem extends Model
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
     }
 
+    /**
+     * The change rows amendments have drafted against this item — several amendments may touch
+     * the same item at once. An `add` row only surfaces here once its amendment was applied and
+     * the new item got rehomed onto this plan.
+     */
+    public function amendmentChanges(): HasMany
+    {
+        return $this->hasMany(BudgetItemChange::class, 'budget_item_id');
+    }
+
     /** The plan this item "mounts" (only set for mount items). */
     public function referencedPlan(): BelongsTo
     {

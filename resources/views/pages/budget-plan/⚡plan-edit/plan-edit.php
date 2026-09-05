@@ -26,10 +26,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     #[Url(as: 'plan_id')]
     public $plan_id;
 
-    public $resolution_date;
-
-    public $approval_date;
-
     public $refresh = false;
 
     /** Mount picker state: the item being transformed into a mount, and the plan it references. */
@@ -49,12 +45,30 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function mount(int $plan_id): void
     {
         $plan = BudgetPlan::findOrFail($plan_id);
+
+        // an amendment is never edited here — its edits must go through the change-tracking
+        // amendment editor, which lets the live parent-plan items stay untouched while drafting
+        if ($plan->isAmendment()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
+        // F8 (OP#581): once Approved (or beyond), the plan is a stable, agreed-upon document —
+        // direct route access is refused the same way an out-of-state amendment redirects away.
+        // Checked before authorize() so a stale/bookmarked link degrades to this friendly redirect
+        // rather than a 403 — BudgetPlanPolicy::update() also enforces this same state rule, but
+        // only ever to refuse a non-officer, since by this point the plan is already editable.
+        if (! $plan->isEditable()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
         $this->authorize('update', $plan);
 
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;
-        $this->resolution_date = $plan->resolution_date;
-        $this->approval_date = $plan->approval_date;
 
         $this->loadItems();
     }
@@ -239,7 +253,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function updated(string $property): void
     {
-        if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
+        if (in_array($property, ['organization', 'fiscal_year_id'])) {
             // empty optional fields come back as '' (e.g. cleared fiscal-year listbox);
             // store them as null so nullable columns / FKs don't reject the empty string
             $value = $this->$property === '' ? null : $this->$property;
@@ -293,10 +307,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // $this->validate();
 
         $plan = BudgetPlan::findOrFail($this->plan_id);
-        // empty optional fields come back as ''; store them as null so nullable columns don't reject the empty string
+        // empty optional field comes back as ''; store it as null so the nullable column doesn't reject the empty string
         $plan->update([
-            'resolution_date' => $this->resolution_date ?: null,
-            'approval_date' => $this->approval_date ?: null,
             'organization' => $this->organization ?: null,
         ]);
 
@@ -461,9 +473,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $fiscalYearId = $this->fiscal_year_id ?: null;
 
         // candidates: other plans in the SAME fiscal year (null matches null) that wouldn't
-        // create a reference cycle. Computed here (only on open) rather than in with(), which
-        // runs on every edit-page render.
-        $this->mount_candidates = BudgetPlan::where('id', '!=', $this->plan_id)
+        // create a reference cycle. Amendments are not mountable — they are drafts that overlay
+        // another plan, never a stable target to mount. Computed here (only on open) rather than
+        // in with(), which runs on every edit-page render.
+        $this->mount_candidates = BudgetPlan::original()
+            ->where('id', '!=', $this->plan_id)
             ->when(
                 $fiscalYearId === null,
                 fn ($query) => $query->whereNull('fiscal_year_id'),
@@ -565,7 +579,13 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return (int) $query->max('position') + 1;
     }
 
-    public function delete(int $item_id): void
+    /**
+     * NOTE: must NOT be called `delete()`. Livewire's CSP-safe evaluator rewrites a
+     * `wire:click="foo(1)"` expression to `$wire.foo(1)` and parses it with a hand-written
+     * tokenizer that treats `delete` as a reserved KEYWORD, so `$wire.delete(1)` fails to parse
+     * and the click is swallowed with only a console warning — no request at all.
+     */
+    public function deleteItem(int $item_id): void
     {
         $item = BudgetItem::findOrFail($item_id);
 

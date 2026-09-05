@@ -114,11 +114,11 @@ it('blocks deleting a group with children but allows deleting a leaf', function 
     $leaf = $root->orderedChildren()->first();
 
     // group still has a child -> delete refused
-    $lw->call('delete', $root->id)->assertHasNoErrors();
+    $lw->call('deleteItem', $root->id)->assertHasNoErrors();
     expect(BudgetItem::find($root->id))->not->toBeNull();
 
     // leaf -> deleted
-    $lw->call('delete', $leaf->id)->assertHasNoErrors();
+    $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
     expect(BudgetItem::find($leaf->id))->toBeNull();
 });
 
@@ -196,7 +196,7 @@ it('deletes a tax title along with its tax_budget row (no FK violation)', functi
     expect(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeTrue();
 
     // deleting the tax title used to fail on the tax_budget.budget_id FK
-    $lw->call('delete', $taxItem->id)->assertHasNoErrors();
+    $lw->call('deleteItem', $taxItem->id)->assertHasNoErrors();
 
     expect(BudgetItem::find($taxItem->id))->toBeNull()
         ->and(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeFalse();

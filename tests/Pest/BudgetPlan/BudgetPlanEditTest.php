@@ -47,8 +47,6 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     $fy = FiscalYear::factory()->create();
     $lw->set('organization', 'Test Org')
         ->set('fiscal_year_id', $fy->id)
-        ->set('resolution_date', now()->toDateString())
-        ->set('approval_date', now()->addDay()->toDateString())
         ->call('save')
         ->assertHasNoErrors()
         ->assertRedirect(route('budget-plan.view', $plan->id));
@@ -59,7 +57,7 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
 
     // try to delete a non-empty group (has children) -> refused (toast, no delete)
     $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
-    $lw->call('delete', $incomeRoot->id)
+    $lw->call('deleteItem', $incomeRoot->id)
         ->assertHasNoErrors();
     expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();
 });

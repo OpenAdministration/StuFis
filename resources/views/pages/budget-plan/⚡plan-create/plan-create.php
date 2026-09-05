@@ -47,7 +47,8 @@ new #[Layout('layout.app', ['size' => 'md'])] class extends Component
 
         return [
             'fiscal_years' => FiscalYear::orderByDesc('start_date')->get(),
-            'source_plans' => BudgetPlan::with('fiscalYear')->orderByDesc('id')->get(),
+            // amendments are not free-standing plans and cannot be used as a clone source
+            'source_plans' => BudgetPlan::original()->with('fiscalYear')->orderByDesc('id')->get(),
             'mounted_plans' => $source ? $source->reachableMountedPlans() : collect(),
         ];
     }

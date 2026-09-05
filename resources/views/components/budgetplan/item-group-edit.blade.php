@@ -124,7 +124,7 @@
                                     icon="clipboard">
                         {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})"
+                    <flux:menu.item wire:click="deleteItem({{ $item->id }})"
                                     :disabled="$item->orderedChildren->isNotEmpty()" variant="danger"
                                     icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                 </flux:menu>
