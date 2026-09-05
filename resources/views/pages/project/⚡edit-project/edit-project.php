@@ -721,7 +721,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $rechtsgrundlagen = $this->getRechtsgrundlagenOptions();
         $state = $this->getState();
         $budgetTitles = $this->getBudgetTitleOptions();
-        $budgetPlans = LegacyBudgetPlan::all();
+        // Newest plan first: the plan a user is picking is almost always the current
+        // or an upcoming one, so it belongs at the top of the listbox rather than
+        // behind years of finished plans.
+        $budgetPlans = LegacyBudgetPlan::orderByDesc('von')->get();
         // settings
         $protocolLinkSetting = Setting::get('project.protocol_url');
         // permissions
