@@ -22,16 +22,15 @@
 * Unter der Buchungshistorie steht jetzt auch der DATEV-Export zur Verfügung. Er erscheint nur, wenn der DATEV-Export in den Einstellungen aktiviert ist.
 
 **Editor (Projektbeschreibungen und Nachrichten):**
-* Formatierungen, die der Editor anbietet, wurden beim Speichern teilweise als "Fehlerhafte HTML-Tags" abgewiesen. Betroffen waren die Trennlinie (entsteht beim Tippen von `---`), Zitate, Code, Unterstreichen, Hervorheben, Hoch- und Tiefstellen sowie die Überschriften 4 bis 6. Sie lassen sich nun alle speichern.
-* Die Werkzeugleiste zeigt nun auch die Schaltflächen für Unterstreichen, Hervorheben, Hoch- und Tiefstellen, Trennlinie sowie Rückgängig und Wiederherstellen. Diese Formatierungen gab es bereits, waren aber nur über Tastenkürzel erreichbar – die Trennlinie sogar nur über das Tippen von `---`.
+* Formatierungen, die der Editor anbietet, wurden beim Speichern bisher teilweise als "Fehlerhafte HTML-Tags" abgewiesen.
+* Die Werkzeugleiste zeigt nun auch die Schaltflächen für Unterstreichen, Hervorheben, Hoch- und Tiefstellen, Trennlinie sowie Rückgängig und Wiederherstellen.
 * Die Werkzeugleiste ist nun auf Deutsch beschriftet. Bisher waren alle Tooltips englisch ("Bold", "Italic", "Blockquote" …).
 * Code-Blöcke (mehrzeiliger Code, entsteht beim Tippen von drei Backticks) werden bewusst nicht gespeichert. Einzelne Code-Wörter im Fließtext sind weiterhin möglich.
 
 **Projekte:**
-* Das Feld neben der Rechtsgrundlage („Datum und TOP“) speicherte nur die ersten 128 Zeichen. Längere Eingaben wurden beim Speichern ohne Hinweis abgeschnitten. Das Feld fasst nun 512 Zeichen, und wird diese Länge überschritten, erscheint eine Meldung am Feld, statt den Text stillschweigend zu kürzen.
+* Das freie Textfeld neben der Rechtsgrundlage speicherte nur die ersten 128 Zeichen. Längere Eingaben wurden beim Speichern ohne Hinweis abgeschnitten. Das Feld fasst nun 512 Zeichen, und wird diese Länge überschritten, erscheint eine Meldung am Feld, statt den Text stillschweigend zu kürzen.
 * Ein Anhang ließ sich nicht entfernen: Das Speichern brach mit einer Fehlerseite ab, und weil das Entfernen zusammen mit dem restlichen Speichern erfolgt, gingen dabei auch alle anderen Änderungen am Projekt verloren. Beides ist behoben.
-* Ein Klick auf einen Anhang öffnet PDFs und Bilder nun in einer Vorschau direkt auf der Seite, statt in einem neuen Browser-Tab. Dateien, die der Browser nicht anzeigen kann (Word, Excel, PowerPoint, OpenDocument), werden wie bisher heruntergeladen.
-* Zu jedem gespeicherten Anhang gibt es nun auch beim Bearbeiten einen Knopf zum Herunterladen. Bisher war das nur in der Projektansicht möglich.
+* Zu jedem gespeicherten Anhang gibt es nun auch beim Bearbeiten einen Knopf zum Herunterladen. 
 
 **Betrieb der Instanz:**
 * Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. 
