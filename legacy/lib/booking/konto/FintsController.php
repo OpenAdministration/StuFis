@@ -17,6 +17,7 @@ use framework\DBConnector;
 use framework\render\html\BT;
 use framework\render\html\FA;
 use framework\render\html\Html;
+use framework\render\html\HtmlAlert;
 use framework\render\html\HtmlButton;
 use framework\render\html\HtmlCard;
 use framework\render\html\HtmlDropdown;
@@ -291,10 +292,20 @@ class FintsController extends Renderer
                         $delete = "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>";
 
                         if (FintsConnectionHandler::hasActiveSession($id)) {
+                            $logout = HtmlForm::make('POST', false)
+                                ->urlTarget(URIBASE."konto/credentials/$id/logout")
+                                ->addHtmlEntity(
+                                    HtmlButton::make('submit')
+                                        ->style('link')
+                                        ->icon(FA::make('fa-sign-out')->addClasses(['fa-fw']))
+                                        ->title('Ausloggen')
+                                )
+                                ->addClasses(['inline-action']);
+
                             return
                                 "<a href='".URIBASE."konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> ".
-                                $delete.
-                                "<a href='".URIBASE."konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
+                                $delete.' '.
+                                $logout;
                         }
 
                         return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a> ".$delete;
@@ -478,9 +489,24 @@ class FintsController extends Renderer
                 )
                 ->hiddenInput('credential-id', $credentialId)
                 ->addSubmitButton();
+
+            $pinDisclaimer = HtmlAlert::make(BT::TYPE_INFO)
+                ->strongMsg('Was mit deiner Onlinebanking-PIN passiert')
+                ->body(
+                    'Deine PIN wird für den Dialog mit der Bank benötigt und für die Dauer '.
+                    'deiner Anmeldung in der Sitzung auf dem Server gehalten. '.
+                    (config('session.encrypt') ? 'Die Zugangsdaten liegen dabei verschlüsselt auf dem Server. ' : '').
+                    'Sie wird dafür niemals in der Datenbank gespeichert. Die PIN wird mit '.
+                    'dem Abmelden aus dem Bankzugang, spätestens aber nach '.
+                    (int) config('session.lifetime').' Minuten ohne Aktivität verworfen. '.
+                    'Sofort löschen kannst du sie jederzeit über "Setze FINTS zurück" '.
+                    'in der Übersicht der Zugangsdaten.'
+                );
+
             // PW unknown
             echo HtmlCard::make()
                 ->cardHeadline('Login Zugang - '.$credentials['name'])
+                ->appendBody($pinDisclaimer, false)
                 ->appendBody(
                     HtmlInput::make('text')
                         ->label('Username')
@@ -540,7 +566,18 @@ class FintsController extends Renderer
                     $shortIban = FintsConnectionHandler::shortenIban($iban);
 
                     return match ($actionName) {
-                        'update' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>",
+                        // Fetching statements talks to the bank and writes bookings, so it goes out
+                        // as a POST carrying the nonce HtmlForm adds. 'import' stays a plain link:
+                        // it only hands the IBAN over to the Livewire page and changes nothing.
+                        'update' => (string) HtmlForm::make('POST', false)
+                            ->urlTarget(URIBASE."konto/credentials/$credId/$shortIban")
+                            ->addHtmlEntity(
+                                HtmlButton::make('submit')
+                                    ->style('link')
+                                    ->icon(FA::make('fa-refresh')->addClasses(['fa-fw']))
+                                    ->title('Kontostand aktualisieren')
+                            )
+                            ->addClasses(['inline-action']),
                         'import' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>",
                         default => 'error',
                     };

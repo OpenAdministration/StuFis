@@ -939,3 +939,21 @@ input.form-check-input {
     margin-right: 7px;
     margin-left: 5px;
 }
+
+/* An action that changes state has to be a POST form, but in a table's action column it still
+   has to look like the plain icon links beside it - Bootstrap's button padding and border would
+   otherwise push the row apart. */
+form.inline-action {
+    display: inline;
+}
+
+form.inline-action > button.btn-link {
+    padding: 0;
+    border: 0;
+    vertical-align: baseline;
+}
+
+form.inline-action > button.btn-link:hover,
+form.inline-action > button.btn-link:focus {
+    text-decoration: none;
+}

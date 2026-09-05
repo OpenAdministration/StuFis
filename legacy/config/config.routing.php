@@ -92,12 +92,14 @@ $pathConfig = [
                                     'path' => 'logout',
                                     'type' => 'path',
                                     'action' => 'logout',
+                                    'method' => ['POST'],
                                 ],
                                 [
                                     'path' => '([A-Z]{2}[0-9]{6})',
                                     'type' => 'pattern',
                                     'param' => 'short-iban',
                                     'action' => 'import-new-sepa-statements',
+                                    'method' => ['POST'],
                                     'children' => [
                                         [
                                             'path' => 'import',
