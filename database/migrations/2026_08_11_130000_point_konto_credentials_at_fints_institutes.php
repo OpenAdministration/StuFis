@@ -19,20 +19,31 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Instances upgraded from v3 carry the legacy tables in whatever collation their
+        // server defaulted to back then (utf8mb4_general_ci), while Laravel creates new ones
+        // in the collation from config/database.php (utf8mb4_unicode_ci). InnoDB refuses a
+        // foreign key whose two columns disagree on collation, so this one is pinned to
+        // whatever the column it points at actually uses instead of inheriting the table's.
+        $collation = $this->columnCollation('fints_institutes', 'blz');
+
         // Guarded because MariaDB cannot roll back DDL: if a later step here fails, the
         // migration is not recorded and has to survive being run again.
         if (! Schema::hasColumn('konto_credentials', 'blz')) {
-            Schema::table('konto_credentials', function (Blueprint $table) {
-                $table->char('blz', 8)->nullable()->after('id');
+            Schema::table('konto_credentials', function (Blueprint $table) use ($collation) {
+                $table->char('blz', 8)->collation($collation)->nullable()->after('id');
             });
         }
 
         // Carry the existing accesses over before konto_bank goes away. konto_bank.blz is an
-        // INT, so 8-digit-pad it into the char column the institute list uses.
-        foreach (DB::table('konto_bank')->pluck('blz', 'id') as $bankId => $blz) {
-            DB::table('konto_credentials')
-                ->where('bank_id', $bankId)
-                ->update(['blz' => str_pad((string) $blz, 8, '0', STR_PAD_LEFT)]);
+        // INT, so 8-digit-pad it into the char column the institute list uses. Skipped when
+        // a previous run already got past the point where bank_id is dropped - the values
+        // are in blz by then, and the column this reads is gone.
+        if (Schema::hasColumn('konto_credentials', 'bank_id')) {
+            foreach (DB::table('konto_bank')->pluck('blz', 'id') as $bankId => $blz) {
+                DB::table('konto_credentials')
+                    ->where('bank_id', $bankId)
+                    ->update(['blz' => str_pad((string) $blz, 8, '0', STR_PAD_LEFT)]);
+            }
         }
 
         $orphaned = DB::table('konto_credentials')->whereNull('blz')->count();
@@ -49,7 +60,8 @@ return new class extends Migration
         // replaces these rows with authoritative data.
         $seededAt = DB::table('konto_credentials')->exists() ? Date::now() : null;
 
-        foreach (DB::table('konto_bank')->get() as $bank) {
+        // konto_bank is dropped in the very last statement, so it is still here on a re-run.
+        foreach (Schema::hasTable('konto_bank') ? DB::table('konto_bank')->get() : [] as $bank) {
             $blz = str_pad((string) $bank->blz, 8, '0', STR_PAD_LEFT);
 
             $stillInUse = DB::table('konto_credentials')->where('blz', $blz)->exists();
@@ -73,18 +85,34 @@ return new class extends Migration
         // table prefix, but a database restored from an older dump may carry a different one.
         $foreignKey = $this->foreignKeyOn('konto_credentials', 'bank_id');
 
-        Schema::table('konto_credentials', function (Blueprint $table) use ($foreignKey) {
+        Schema::table('konto_credentials', function (Blueprint $table) use ($collation, $foreignKey) {
             if ($foreignKey !== null) {
                 $table->dropForeign($foreignKey);
             }
             if (Schema::hasColumn('konto_credentials', 'bank_id')) {
                 $table->dropColumn('bank_id');
             }
-            $table->char('blz', 8)->nullable(false)->change();
+            // Also re-stated on an instance where the column already existed: a run that got
+            // as far as the foreign key before failing left it in the legacy collation.
+            $table->char('blz', 8)->collation($collation)->nullable(false)->change();
             $table->foreign('blz')->references('blz')->on('fints_institutes');
         });
 
         Schema::dropIfExists('konto_bank');
+    }
+
+    /**
+     * Collation of the given column, or null when it is not a string column.
+     */
+    private function columnCollation(string $table, string $column): ?string
+    {
+        $row = DB::selectOne(
+            'SELECT COLLATION_NAME FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?',
+            [DB::connection()->getTablePrefix().$table, $column],
+        );
+
+        return $row->COLLATION_NAME ?? null;
     }
 
     /**

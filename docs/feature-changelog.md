@@ -1,3 +1,9 @@
+# v4.4.5
+**Betrieb der Instanz:**
+* Das Update auf 4.4.4 brach auf Instanzen, die von Version 3 hochgezogen wurden, mit einem Datenbankfehler ab. Das Update läuft nun auch dort durch und setzt bei einem abgebrochenen Versuch an der Stelle auf, an der es stehengeblieben ist - eine Reparatur der Datenbank von Hand ist nicht nötig.
+
+---
+
 # v4.4.4
 **FinTS Bankimport:**
 * Das Absenden der Formulare auf den Seiten des Bankzugangs führte zu einer Fehlerseite. Betroffen waren das Anlegen eines Zugangs, die Auswahl des TAN-Verfahrens und jede TAN-Eingabe. 
