@@ -10,7 +10,7 @@
 #   stufis-fleet exec   <target> -- <cmd>
 #   stufis-fleet update <target> <ref>
 #
-# <target> is a comma-separated list of groups (prod, stage, demo, all) and/or
+# <target> is a comma-separated list of groups (stage, demo, beta, prod, all) and/or
 # realm names. Every verb except `status` requires it explicitly - there is no
 # default, so no invocation can touch the fleet by accident.
 #
@@ -24,11 +24,14 @@
 set -euo pipefail
 
 CONF="${STUFIS_FLEET_CONF:-$HOME/.stufis-fleet.conf}"
+# The checkout this script lives in. stufis-fleet ships inside the StuFiS repo,
+# so on the pac account this is the tools clone - no configuration needed.
+SELF_REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="${STUFIS_FLEET_LOG_DIR:-$HOME/stufis-deploy-logs}"
 STAMP="$(date +%Y%m%dT%H%M%S)"
 
 # Group names are reserved words, so a realm can never be called one of them.
-RESERVED="prod stage demo all"
+RESERVED="prod stage demo beta all"
 
 # ---------------------------------------------------------------- diagnostics
 
@@ -89,7 +92,7 @@ load_config() {
         [ -n "$realm" ] || die "$CONF:$lineno: expected '<group> <realm> [url]'"
         case " $RESERVED " in
             *" $group "*) ;;
-            *) die "$CONF:$lineno: unknown group '$group' (use prod, stage or demo)" ;;
+            *) die "$CONF:$lineno: unknown group '$group' (use stage, demo, beta or prod)" ;;
         esac
         # A target that is a reserved word always means the group. A realm may share
         # its own group's name - the demo instance's realm really is called "demo",
@@ -142,7 +145,11 @@ require_pac() {
 run_on() {
     local realm="$1" script="$2" user
     user="$(instance_user "$realm")"
-    printf '%s\n' "$script" | sudo -u "$user" -i -- bash -l -s
+    # Nothing the fleet runs can answer an interactive prompt, and git would
+    # block on one forever rather than failing. Make both credential paths fail
+    # fast instead: HTTPS asks on the terminal, SSH would ask for a passphrase.
+    printf 'export GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="ssh -o BatchMode=yes"\n%s\n' \
+        "$script" | sudo -u "$user" -i -- bash -l -s
 }
 
 # ---------------------------------------------------------------- targets
@@ -161,7 +168,7 @@ resolve_target() {
         case "$part" in
             all)
                 for realm in "${REALMS[@]}"; do want["$realm"]=1; done ;;
-            prod|stage|demo)
+            prod|stage|demo|beta)
                 local found=0
                 for realm in "${REALMS[@]}"; do
                     if [ "${GROUP_OF[$realm]}" = "$part" ]; then want["$realm"]=1; found=1; fi
@@ -179,7 +186,7 @@ resolve_target() {
     done
 
     local -a out=()
-    for g in stage demo prod; do
+    for g in stage demo beta prod; do
         for realm in "${REALMS[@]}"; do
             [ "${GROUP_OF[$realm]}" = "$g" ] || continue
             [ -n "${want[$realm]:-}" ] || continue
@@ -337,23 +344,57 @@ ${cmdline}"; then
 
 # ---------------------------------------------------------------- update
 
-# Does the ref exist upstream, and is it a tag or a branch? Asked once, on the
-# first reachable instance, so a typo is caught before anything is touched.
+# Emits tag | branch | none | error <message> for a ref, given a repository
+# directory. Used verbatim both locally and on an instance, so the two answers
+# are produced by identical logic.
+#
+# `git ls-remote --exit-code` separates the two failures that matter: status 2 is
+# "connected fine, no such ref", anything else (128) is the lookup itself failing
+# - no SSH key for github.com, no network, bad remote. Reporting the latter as a
+# missing ref would make a broken deploy key look like a typo.
+ref_kind_script() {
+    cat <<EOF
+cd "$1" 2>/dev/null || { echo 'error no checkout at $1'; exit 0; }
+o=\$(git ls-remote --exit-code origin "refs/tags/$2" 2>&1); rc=\$?
+[ \$rc -eq 0 ] && { echo tag; exit 0; }
+[ \$rc -ne 2 ] && { echo "error \$o"; exit 0; }
+o=\$(git ls-remote --exit-code origin "refs/heads/$2" 2>&1); rc=\$?
+[ \$rc -eq 0 ] && { echo branch; exit 0; }
+[ \$rc -ne 2 ] && { echo "error \$o"; exit 0; }
+echo none
+EOF
+}
+
+# Is the ref a tag or a branch on origin? Answered from the local clone: this is
+# a question about origin, not about any instance, and the pac account has its
+# own checkout. Falls back to asking an instance only if there is no local clone.
 REF_KIND=""
 classify_ref() {
-    local ref="$1" realm out
+    local ref="$1" realm out last_error=""
     shift
-    for realm in "$@"; do
-        out="$(run_on "$realm" "cd \"\$HOME/${REPO_DIR}\" || exit 1
-if git ls-remote --exit-code --tags origin \"refs/tags/${ref}\" >/dev/null 2>&1; then echo tag
-elif git ls-remote --exit-code --heads origin \"refs/heads/${ref}\" >/dev/null 2>&1; then echo branch
-else echo none; fi" 2>/dev/null)" || continue
+
+    if git -C "$SELF_REPO" rev-parse --git-dir >/dev/null 2>&1; then
+        out="$(ref_kind_script "$SELF_REPO" "$ref" | bash)"
         case "$out" in
             tag|branch) REF_KIND="$out"; return 0 ;;
-            none)       die "ref '$ref' is neither a tag nor a branch on origin" ;;
+            none)       die "ref '$ref' does not exist on origin (looked for refs/tags/$ref and refs/heads/$ref). Is it pushed?" ;;
+            error*)     last_error="${SELF_REPO}: $(printf '%s' "${out#error }" | head -1)"
+                        warn "$last_error; falling back to an instance" ;;
+        esac
+    fi
+
+    for realm in "$@"; do
+        # $HOME stays unexpanded here: it must resolve on the instance.
+        # shellcheck disable=SC2016
+        out="$(run_on "$realm" "$(ref_kind_script '$HOME'"/${REPO_DIR}" "$ref")" 2>/dev/null)" \
+            || { last_error="$realm: could not run git"; continue; }
+        case "$out" in
+            tag|branch) REF_KIND="$out"; return 0 ;;
+            none)       die "ref '$ref' does not exist on origin (looked for refs/tags/$ref and refs/heads/$ref). Is it pushed?" ;;
+            error*)     last_error="$realm: $(printf '%s' "${out#error }" | head -1)"; warn "$last_error"; continue ;;
         esac
     done
-    die "could not reach any instance to verify ref '$ref'"
+    die "could not verify ref '$ref' anywhere. Last error - ${last_error:-none reported}"
 }
 
 # Run a script on an instance, appending everything to that instance's log. In
@@ -462,6 +503,21 @@ cmd_update() {
         [ -n "$why" ] || [ "$P_tree" != dirty ] || why="working tree is dirty"
         [ -n "$why" ] || [ "$P_mode" != down ] || why="already in maintenance mode (earlier deploy failed?)"
 
+        # Each account has its own deploy key, so one instance reaching origin
+        # says nothing about the next. stufis-update enables maintenance mode
+        # before it fetches, so an account that cannot authenticate goes dark and
+        # stays dark - worth one read-only round trip each to rule out.
+        if [ -z "$why" ]; then
+            local seen
+            # shellcheck disable=SC2016
+            seen="$(run_on "$realm" "$(ref_kind_script '$HOME'"/${REPO_DIR}" "$ref")" 2>/dev/null || echo 'error cannot run git')"
+            case "$seen" in
+                tag|branch) ;;
+                none)       why="cannot see $ref on origin (stale remote?)" ;;
+                *)          why="cannot reach origin: $(printf '%s' "${seen#error }" | head -1)" ;;
+            esac
+        fi
+
         if [ -n "$why" ] && [ "$FORCE" != 1 ]; then
             warn "$realm: $why"; blocked=$((blocked + 1)); continue
         fi
@@ -541,7 +597,8 @@ Usage:
   stufis-fleet exec   <target> -- <cmd>   run a command in every selected checkout
   stufis-fleet update <target> <ref>      deploy a tag or branch via bin/stufis-update
 
-  <target>  comma-separated list of groups (prod, stage, demo, all) and/or realms.
+  <target>  comma-separated list of groups (stage, demo, beta, prod, all) and/or
+            realms. Fleet-wide order is stage, demo, beta, prod.
             Required for exec and update - there is no default.
 
 Options:
@@ -555,6 +612,7 @@ Examples:
   stufis-fleet status
   stufis-fleet update stage release/4.5.0
   stufis-fleet update demo v4.5.0
+  stufis-fleet update beta v4.5.0
   stufis-fleet update prod v4.5.0 --except stura-abc
   stufis-fleet exec all -- artisan stufis:fints-institutes-update
 EOF

@@ -37,8 +37,9 @@ pac = xyz00
 #
 #   <group>  <realm>  [url]
 #
-# group is prod, stage or demo. Realms may not be named prod, stage, demo or all
-# - those are reserved as targets.
+# group is stage, demo, beta or prod. A fleet-wide run walks them in that order,
+# least consequential first. Realms may not be named after a group other than
+# their own, nor "all" - those words are reserved as targets.
 #
 # The url column is optional and rarely needed: <realm>.stufis.de exists for
 # every instance and forwards to its real domain, and the smoke test follows
@@ -49,6 +50,9 @@ pac = xyz00
 
 stage   dev
 demo    demo
+
+# beta: realms that volunteered to take a release before the rest of production.
+# beta    early-adopter
 
 prod    asta-example
 prod    stura-example

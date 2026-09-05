@@ -42,9 +42,16 @@ pac = xyz00
 
 stage   teststufis
 demo    demo
+beta    early-adopter
 prod    asta-example
 prod    stura-example
 ```
+
+The four groups are `stage`, `demo`, `beta` and `prod`. They carry no policy
+about which ref an instance runs — they decide only *ordering*: a fleet-wide run
+walks them least-consequential first, so `stage` and `demo` have already answered
+for a release before `beta` takes it, and `beta` before the rest of production.
+`beta` is optional; leave it empty if no realm wants to go first.
 
 Two details about how a realm name maps outwards:
 
@@ -57,7 +64,7 @@ Two details about how a realm name maps outwards:
   smoke test follows redirects, you rarely need the optional third column at all.
   Give a URL only when a realm has no `<realm>.stufis.de` entry.
 
-`prod`, `stage`, `demo` and `all` are reserved as targets. A realm may share the
+`stage`, `demo`, `beta`, `prod` and `all` are reserved as targets. A realm may share the
 name of *its own* group — the demo instance's realm really is called `demo`, and
 the target resolves to the same single instance either way — but not the name of
 a different group.
@@ -70,7 +77,8 @@ stufis-fleet exec   <target> -- <cmd>   run a command in every selected checkout
 stufis-fleet update <target> <ref>      deploy a tag or branch
 ```
 
-`<target>` is a comma-separated list of groups and/or realm names. `status`
+`<target>` is a comma-separated list of groups (`stage`, `demo`, `beta`, `prod`,
+`all`) and/or realm names. `status`
 defaults to `all` because it changes nothing; **`exec` and `update` require it**,
 so no invocation can touch the fleet by accident.
 
@@ -160,10 +168,13 @@ the one instance whose data is disposable. Let it sit through a night before
 going further, and click through it.
 
 ```bash
-# 3. the production realms, sequential, under tmux
+# 3. any beta realms that asked to go first
+stufis-fleet update beta v4.5.0
+
+# 4. the remaining production realms, sequential, under tmux
 stufis-fleet update prod v4.5.0
 
-# 4. confirm
+# 5. confirm
 stufis-fleet status
 ```
 
@@ -177,6 +188,29 @@ does anything else, so an instance that fails partway through stays down on
 purpose — it must not serve half-migrated code. That is right for one instance
 and dangerous across ten, which is why the failure summary says so explicitly and
 why `status` has a `MODE` column.
+
+## A note on git credentials
+
+Instances must be able to fetch from origin **without a human present**. Agent
+forwarding cannot provide that: `sudo -u <instance> -i` resets the environment so
+`SSH_AUTH_SOCK` is dropped, and the agent socket is mode 0600 owned by the pac
+account, so another uid could not open it even if the variable survived. This is
+structural — it is not a misconfiguration you can fix.
+
+Since StuFiS is a public repository, the answer is not a deploy key but an HTTPS
+remote, which needs no credentials at all:
+
+```bash
+stufis-fleet exec all -- git remote set-url origin https://github.com/OpenAdministration/StuFis.git
+stufis-fleet status
+```
+
+Preflight verifies this per instance before touching anything, because each
+account is independent and `stufis-update` enables maintenance mode *before* it
+fetches — an account that cannot reach origin would otherwise go dark and stay
+dark. Every command the fleet runs also has `GIT_TERMINAL_PROMPT=0` and SSH
+`BatchMode=yes` set, so a credential prompt fails immediately instead of hanging
+a fleet run forever.
 
 ## Rollback
 
