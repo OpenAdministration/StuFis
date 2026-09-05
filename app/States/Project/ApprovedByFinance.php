@@ -33,7 +33,7 @@ class ApprovedByFinance extends ProjectState
     {
         return [
             'recht' => 'required|string',
-            'recht_additional' => 'sometimes|nullable|string',
+            'recht_additional' => 'sometimes|nullable|string|max:512',
         ];
     }
 

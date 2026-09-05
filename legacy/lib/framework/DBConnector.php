@@ -230,7 +230,7 @@ class DBConnector extends Singleton
             'org_mail' => 'VARCHAR(128) NULL',
             'protokoll' => 'VARCHAR(256) NULL',
             'recht' => 'VARCHAR(64) NULL',
-            'recht_additional' => 'VARCHAR(128) NULL',
+            'recht_additional' => 'VARCHAR(512) NULL',
             'date_start' => 'DATE NULL',
             'date_end' => 'DATE NULL',
             'beschreibung' => 'TEXT NULL',

@@ -145,7 +145,7 @@ abstract class ProjectState extends State implements Wireable
     {
         return [
             'recht' => ['sometimes', 'nullable', 'string', Rule::exists(LegalBasis::class, 'slug')],
-            'recht_additional' => 'sometimes|nullable|string',
+            'recht_additional' => 'sometimes|nullable|string|max:512',
         ];
     }
 

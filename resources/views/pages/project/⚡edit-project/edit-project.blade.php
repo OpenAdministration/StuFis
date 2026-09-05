@@ -73,6 +73,7 @@
                             @if($select_legal->hasAdditionalField())
                                 <flux:input wire:model="recht_additional"
                                         :label="$select_legal->label_additional"
+                                        maxlength="512"
                                         placeholder="{{ $select_legal->placeholder ?? '' }}"/>
                                 <flux:error name="recht_additional" />
                             @endif

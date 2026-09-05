@@ -27,6 +27,9 @@
 * Die Werkzeugleiste ist nun auf Deutsch beschriftet. Bisher waren alle Tooltips englisch ("Bold", "Italic", "Blockquote" …).
 * Code-Blöcke (mehrzeiliger Code, entsteht beim Tippen von drei Backticks) werden bewusst nicht gespeichert. Einzelne Code-Wörter im Fließtext sind weiterhin möglich.
 
+**Projekte:**
+* Das Feld neben der Rechtsgrundlage („Datum und TOP“) speicherte nur die ersten 128 Zeichen. Längere Eingaben wurden beim Speichern ohne Hinweis abgeschnitten. Das Feld fasst nun 512 Zeichen, und wird diese Länge überschritten, erscheint eine Meldung am Feld, statt den Text stillschweigend zu kürzen.
+
 **Betrieb der Instanz:**
 * Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. 
 * Neu: die Liste der FinTS-fähigen Banken (rund 4000 Institute) in der Tabelle `fints_institutes`. `bin/stufis-update` liest sie ab jetzt bei jedem Deployment selbst ein.
