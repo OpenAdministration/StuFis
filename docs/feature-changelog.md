@@ -1,3 +1,46 @@
+# v4.4.4
+**FinTS Bankimport:**
+* Das Absenden der Formulare auf den Seiten des Bankzugangs führte zu einer Fehlerseite. Betroffen waren das Anlegen eines Zugangs, die Auswahl des TAN-Verfahrens und jede TAN-Eingabe. 
+* In der Bezeichnung eines Bankzugangs und eines Kontos sind nun auch Leerzeichen und Ziffern nutzbar.
+* Der Import erkennt die bekannten Umsätze nun zuverlässig und bricht mit einer klaren Meldung ab, wenn er den Anknüpfungspunkt nicht findet, anstatt Buchungen zu verdoppeln.
+* Die Formulare der Bankzugang-Seiten sind nun gegen Anfragen von fremden Seiten abgesichert (CSRF-Schutz).
+* Ein Konto aus dem Bankzugang wird nun über die normale Seite „Konto anlegen“ eingerichtet.
+* Bei einem Konto, das aus einem Bankzugang übernommen wird, sind die IBAN und der Schalter „Manuelles Eintragen möglich“ nun gesperrt. Manuelles Eintragen würde die automatische Synchronisation ausschließen, die für dieses Konto ja gerade eingerichtet wird.
+* Der Aufruf des Umsatzimports für ein noch nicht eingerichtetes Konto führte zu einer Fehlerseite; nun wird auf das Anlegen des Kontos hingewiesen. Gehört ein Konto nicht zum gewählten Bankzugang, wird das ebenfalls verständlich gemeldet.
+* Bei Konten ohne hinterlegtes Startdatum wird der Zeitraum nun der Bank überlassen, statt ein Datum zu erfinden. Zuvor führte ein fehlendes Startdatum zum Abbruch.
+* Ein unterbrochener Abruf wird nun nur noch für genau das Konto und den Zeitraum fortgesetzt, für den er begonnen wurde.
+* Eine von der Bank abgelehnte TAN führte zu einer Fehlerseite, sodass der Vorgang abgebrochen war. Nun erscheint der Hinweis „TAN nicht akzeptiert“ und die Eingabe kann wiederholt werden. Ebenso führen gestörte Antworten der Bank beim Abrufen der TAN-Verfahren, der TAN-Medien und beim Abmelden nicht mehr zu einer Fehlerseite.
+* Freigabe-Verfahren ohne TAN-Eingabe (z. B. pushTAN-Freigabe in der Banking-App) werden nun unterstützt.
+* Der Kontostand der Bank wird nun gegen den zuletzt gespeicherten Stand geprüft.
+* Beim Anlegen eines Bankzugangs lässt sich nun jede FinTS-fähige deutsche Bank auswählen (mit Suche nach Name, BLZ oder BIC).
+* Ein Bankzugang lässt sich nun wieder löschen.
+* Ist für eine Bank eine FinTS-Adresse hinterlegt, die nicht mit `https://` beginnt, wird der Abruf nun abgebrochen, statt PIN und TAN unverschlüsselt zu übertragen.
+* Zusätzlich wurden verschiedene kleinere Anpassungen u.a. an Texten und Fehlermeldungen vorgenommen.
+
+**Buchungen:**
+* Der Knopf „als .zip“ funktioniert nun wieder.
+* Unter der Buchungshistorie steht jetzt auch der DATEV-Export zur Verfügung. Er erscheint nur, wenn der DATEV-Export in den Einstellungen aktiviert ist.
+
+**Editor (Projektbeschreibungen und Nachrichten):**
+* Formatierungen, die der Editor anbietet, wurden beim Speichern bisher teilweise als "Fehlerhafte HTML-Tags" abgewiesen.
+* Die Werkzeugleiste zeigt nun auch die Schaltflächen für Unterstreichen, Hervorheben, Hoch- und Tiefstellen, Trennlinie sowie Rückgängig und Wiederherstellen.
+* Die Werkzeugleiste ist nun auf Deutsch beschriftet. Bisher waren alle Tooltips englisch ("Bold", "Italic", "Blockquote" …).
+* Code-Blöcke (mehrzeiliger Code, entsteht beim Tippen von drei Backticks) werden bewusst nicht gespeichert. Einzelne Code-Wörter im Fließtext sind weiterhin möglich.
+
+**Projekte:**
+* Das freie Textfeld neben der Rechtsgrundlage speicherte nur die ersten 128 Zeichen. Längere Eingaben wurden beim Speichern ohne Hinweis abgeschnitten. Das Feld fasst nun 512 Zeichen, und wird diese Länge überschritten, erscheint eine Meldung am Feld, statt den Text stillschweigend zu kürzen.
+* Ein Anhang ließ sich nicht entfernen: Das Speichern brach mit einer Fehlerseite ab, und weil das Entfernen zusammen mit dem restlichen Speichern erfolgt, gingen dabei auch alle anderen Änderungen am Projekt verloren. Beides ist behoben.
+* Zu jedem gespeicherten Anhang gibt es nun auch beim Bearbeiten einen Knopf zum Herunterladen. 
+
+**Betrieb der Instanz:**
+* Die Protokolldateien (Logs) wachsen nicht mehr unbegrenzt. StuFiS schreibt nun für jeden Tag eine eigene Datei und löscht alles, was älter als 30 Tage ist. 
+* Neu: die Liste der FinTS-fähigen Banken (rund 4000 Institute) in der Tabelle `fints_institutes`. `bin/stufis-update` liest sie ab jetzt bei jedem Deployment selbst ein.
+* Die Tabelle `konto_bank` wurde entfernt. Sie enthielt eine von Hand gepflegte Kopie derselben Daten (Name, BLZ, FinTS-Adresse), die nun aus der Bankenliste kommen.
+* Hinweis zur Herkunft der Liste: Die offizielle FinTS-Bankenliste der Deutschen Kreditwirtschaft wird nur an registrierte FinTS-Hersteller herausgegeben und darf nicht als Teil einer Software weitergegeben werden. StuFiS verwendet daher die öffentlich gepflegte, gleichwertige Liste des Projekts hbci4java. Die Quelle ist über `FINTS_INSTITUTE_LIST_URL` in der `.env` austauschbar.
+* **Empfohlen für bestehende Instanzen: in der `.env` `SESSION_ENCRYPT=true` setzen.** Während eines Bankdialogs liegen das Online-Banking-Passwort und der Sitzungszustand der Bank in der Sitzung. Absichtlich, damit das Passwort nie in der Datenbank landet. Bei `SESSION_DRIVER=file` ist diese Sitzung aber eine Datei unter `storage/framework/sessions/`, und ohne diese Einstellung stehen die Daten dort im Klartext. Beim Umstellen werden alle offenen Sitzungen ungültig, d. h. alle Anmeldungen müssen einmalig erneuert werden; ein laufender Bankdialog bricht dabei ab. Neue Installationen bekommen die Einstellung aus der `.env.example` mit.
+
+---
+
 # v4.4.3
 * Projekte mit mehreren Posten ließen sich nicht mehr speichern, wenn vor dem Speichern in jeder Postenzeile etwas geändert wurde – das Speichern brach mit einer Fehlerseite ab. Die Beträge gingen dabei auf dem Weg zum Server verloren; sie werden nun wieder zuverlässig als Geldbeträge erkannt.
 * Fehlermeldungen beim Speichern eines Projekts erscheinen jetzt direkt an dem Feld, das sie ausgelöst hat – und zwar alle. Bisher wurde nur die erste Meldung als einzelne Zeile über dem Formular angezeigt, sodass unklar blieb, welche Zeile oder welches Feld gemeint war.

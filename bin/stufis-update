@@ -50,6 +50,18 @@ npm ci
 step "Running database migrations"
 php artisan migrate --force
 
+# Refresh the FinTS bank list (bank names, BLZ, PIN/TAN endpoints). Runs after the
+# migrations because they create the table it fills. Deliberately non-fatal despite
+# `set -e`: the list is reference data fetched from an external source, and a network
+# hiccup must not abort a deployment that is otherwise fine and leave the instance
+# sitting in maintenance mode. Whatever was synced before stays in place, existing
+# bank accesses keep working, and the next run picks the update up.
+step "Updating the FinTS bank list"
+php artisan stufis:fints-institutes-update || {
+    echo "Warning: could not update the FinTS bank list - continuing with the previous one." >&2
+    echo "         Re-run 'php artisan stufis:fints-institutes-update' once the cause is fixed." >&2
+}
+
 # clear stale caches and warm the production caches
 step "Rebuilding caches"
 rebuild_caches

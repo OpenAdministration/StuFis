@@ -185,7 +185,7 @@
                 </div>
             </flux:card>
             <!-- Total out Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_total') }}</p>
@@ -199,7 +199,7 @@
                 </div>
             </flux:card>
             <!-- Remaining Expense Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __($project->state->equals(\App\States\Project\Terminated::class) ? 'project.view.summary_cards.out_unused' : 'project.view.summary_cards.out_available') }}</p>
@@ -229,7 +229,7 @@
                 </div>
             </flux:card>
             <!-- Ratio Out Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.out_ratio') }}</p>
@@ -281,7 +281,7 @@
                 </flux:card>
             </a>
             <!-- Total in Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_total') }}</p>
@@ -295,7 +295,7 @@
                 </div>
             </flux:card>
             <!-- Used In Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __($project->state->equals(\App\States\Project\Terminated::class) ? 'project.view.summary_cards.in_unrealized' : 'project.view.summary_cards.in_available') }}</p>
@@ -322,7 +322,7 @@
                 </div>
             </flux:card>
             <!-- Ratio In Card -->
-            <flux:card size="sm">
+            <flux:card size="sm" class="hidden md:block">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs font-medium text-gray-500 uppercase">{{ __('project.view.summary_cards.in_ratio') }}</p>
@@ -595,6 +595,7 @@
                 @foreach($project->attachments as $attachment)
                     <x-file-card
                         :href="route('project.attachment', [$attachment->id, $attachment->name])"
+                        :preview="route('project.attachment', [$attachment->id, $attachment->name])"
                         :heading="$attachment->name"
                         :size="$attachment->size"
                         :filetype="$attachment->mime_type"
@@ -606,7 +607,7 @@
                                 variant="ghost"
                                 size="sm"
                                 square
-                                :tooltip="__('Download')"
+                                :tooltip="__('project.view.attachments.download')"
                             />
                         </x-slot:actions>
                     </x-file-card>
@@ -621,31 +622,34 @@
                 <div class="space-y-3">
                     @foreach($project->expenses as $expense)
                         <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 hover:bg-gray-100 transition-colors">
-                            <a class="flex items-center justify-between gap-5" href="{{ route('legacy.expense', $expense->id) }}">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3">
-                                        <h3 class="text-lg font-semibold text-gray-900">
+                            <a class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-5"
+                               href="{{ route('legacy.expense', $expense->id) }}">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                        <h3 class="min-w-0 text-lg font-semibold text-gray-900 wrap-break-word">
                                             A{{ $expense->id }} - {{ $expense->name_suffix }}
                                         </h3>
                                         <flux:badge :color="$expense->displayState()->color()" size="sm" inset="top bottom">
                                             {{ $expense->displayState()->label() }}
                                         </flux:badge>
                                     </div>
-                                    <p class="text-sm text-gray-500 mt-1">
+                                    <p class="text-sm text-gray-500 mt-1 wrap-break-word">
                                         {{ $expense->zahlung_name }}
                                     </p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_in') }}</p>
-                                    <p class="text-lg font-bold text-gray-900">
-                                        {{ $expense->totalIn() }}
-                                    </p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_out') }}</p>
-                                    <p class="text-lg font-bold text-gray-900">
-                                        {{ $expense->totalOut() }}
-                                    </p>
+                                <div class="flex shrink-0 gap-6 sm:gap-8">
+                                    <div class="sm:text-right">
+                                        <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_in') }}</p>
+                                        <p class="text-lg font-bold text-gray-900 whitespace-nowrap">
+                                            {{ $expense->totalIn() }}
+                                        </p>
+                                    </div>
+                                    <div class="sm:text-right">
+                                        <p class="text-sm text-gray-500">{{ __('project.view.expenses.total_out') }}</p>
+                                        <p class="text-lg font-bold text-gray-900 whitespace-nowrap">
+                                            {{ $expense->totalOut() }}
+                                        </p>
+                                    </div>
                                 </div>
                             </a>
                         </div>
@@ -660,6 +664,9 @@
 
         <livewire:chat-panel target-type="projekt" :target-id="$project->id" :wire:key="$project->state::class"/>
     </div>
+
+    {{-- Shared preview modal driven by the attachment cards above. --}}
+    <x-file-preview-modal/>
 
     <!-- Status Change Modal -->
     <flux:modal name="state-modal" class="min-w-96">

@@ -58,7 +58,7 @@ class Draft extends ProjectState
     {
         return [
             'recht' => ['sometimes', 'nullable', 'string', Rule::exists(LegalBasis::class, 'slug')],
-            'recht_additional' => 'sometimes|nullable|string',
+            'recht_additional' => 'sometimes|nullable|string|max:512',
         ];
     }
 }

@@ -9,7 +9,6 @@ return [
     'camt-recommendation-heading' => 'Tipp: CAMT ist stabiler als CSV',
     'camt-recommendation-text' => 'Wenn deine Bank das CAMT-Format anbietet (camt.052 oder camt.053 als XML), lade dieses statt einer CSV-Datei hoch. CAMT ist ein standardisiertes Format: Die fehleranfällige Spaltenzuordnung entfällt, IBAN, Name und Verwendungszweck werden zuverlässig erkannt und der Saldo wird automatisch gegen den Kontostand der Datei geprüft.',
     'csv-draganddrop-fat-text' => 'Füge hier die Datei hinzu!',
-    'csv-draganddrop-light-text' => '',
     'csv-draganddrop-sub-text' => 'Ziehe die Datei hier in das Feld oder wähle sie über den Knopf aus. Es kann einen Moment dauern, bis die Informationen geladen werden.',
     'manual-button-reverse-csv-order' => 'Reihenfolge der Einträge umkehren',
     'manual-button-reverse-csv-order-sub' => 'Einige Banken exportieren Transaktionsdaten chronologisch aufsteigend, andere absteigend. StuFiS hätte gern den ältesten Eintrag zuerst. Falls die Tabelle falsch herum sortiert ist oder z. B. die Saldo-Validierung fehlschlägt, kannst du hier über den Knopf die Reihenfolge ändern.',
@@ -58,7 +57,7 @@ return [
     'label.transaction.zweck' => 'Verwendungszweck',
     'hint.transaction.zweck' => 'z. B. Gute Lehre Abo',
     'label.transaction.comment' => 'Kommentar',
-    'hint.transaction.comment' => ' ',
+    'hint.transaction.comment' => 'z. B. eigene Notiz zur Buchung',
     'label.transaction.customer_ref' => 'Kundenreferenz',
     'hint.transaction.customer_ref' => 'ggfs. weitere Angaben zum Auftrag',
     'csv-verify-iban-error' => 'Validierungsfehler: Enthält ungültige IBANs',
@@ -77,7 +76,25 @@ return [
     'new.date-start-headline-sub' => 'Wann wurde das Konto / die Kasse eröffnet bzw. ab wann soll das Konto/ die Kasse in StuFiS geführt werden? Frühere Verwendung nicht möglich.',
     'new.date-end-headline' => 'Verwenden bis',
     'new.date-end-headline-sub' => 'Wann wurde das Konto / die Kasse geschlossen bzw. nicht mehr in StuFiS geführt? Spätere Verwendung/Eintragungen sind nicht mehr möglich.',
+    'new.submit' => 'Speichern',
+
+    /*
+     * Shown instead of the keys above when a bank access hands the account over. Such an
+     * account is synchronised with a real bank account, so it can never be a Kasse - every
+     * mention of one would only be noise at that point. Each of these mirrors the plain key
+     * with "-bank" appended; see the component's label() helper.
+     */
+    'new.headline-bank' => 'Neues Konto anlegen',
+    'new.prefix-headline-sub-bank' => 'Gib hier ein eineindeutiges Kürzel (max. 2 Zeichen) an. Dieses wird später zur schnelleren Identifizierung von Zahlungs-IDs verwendet. Standardmäßig wird Z für das Konto verwendet.',
+    'new.name-headline-bank' => 'Name des Kontos',
+    'new.date-start-headline-sub-bank' => 'Wann wurde das Konto eröffnet bzw. ab wann soll es in StuFiS geführt werden? Frühere Verwendung nicht möglich. Umsätze werden erst ab diesem Datum abgerufen.',
+    'new.date-end-headline-sub-bank' => 'Wann wurde das Konto geschlossen bzw. nicht mehr in StuFiS geführt? Spätere Verwendung/Eintragungen sind nicht mehr möglich.',
+    'new.submit-bank' => 'Speichern und weiter zum automatischen Abruf',
     'new.iban' => 'Konto-IBAN',
+    'new.from-bank-access' => 'aus Bankzugang',
+    'new.iban-sub' => 'Wird für die automatische Zuordnung beim Kontoimport per Bankzugang (FinTS) verwendet: Die abgerufenen Umsätze werden anhand der IBAN diesem Konto zugeordnet. Ohne IBAN ist kein automatischer Import möglich – für Bar-Kassen kann das Feld leer bleiben. Auch beim Datei-Import (CSV/CAMT) wird die IBAN zum Abgleich genutzt.',
+    'new.iban-locked-sub' => 'Die IBAN stammt aus dem gewählten Bankzugang und kann hier nicht geändert werden. Anhand dieser IBAN werden die abgerufenen Umsätze automatisch diesem Konto zugeordnet.',
+    'new.manual-locked-sub' => 'Nicht möglich: Dieses Konto wird über den Bankzugang automatisch synchronisiert. Manuelles Eintragen würde die Synchronisation ausschließen.',
     'new.manual-headline' => 'Manuelles Eintragen möglich',
     'new.manual-headline-sub' => 'Empfohlen für Bar-Kassen. Bei Aktivierung ist es nicht mehr möglich eine automatische Kontosynchronisation einzurichten, stattdessen können Eintragungen direkt vorgenommen werden. Der Datei-Import (CSV/CAMT) ist in beiden Fällen möglich.',
     'transaction.headline' => 'Umsatzdetails',

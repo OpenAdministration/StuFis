@@ -92,12 +92,14 @@ $pathConfig = [
                                     'path' => 'logout',
                                     'type' => 'path',
                                     'action' => 'logout',
+                                    'method' => ['POST'],
                                 ],
                                 [
                                     'path' => '([A-Z]{2}[0-9]{6})',
                                     'type' => 'pattern',
                                     'param' => 'short-iban',
                                     'action' => 'import-new-sepa-statements',
+                                    'method' => ['POST'],
                                     'children' => [
                                         [
                                             'path' => 'import',
@@ -111,6 +113,8 @@ $pathConfig = [
                                     'path' => 'delete',
                                     'type' => 'path',
                                     'action' => 'delete-credentials',
+                                    // GET renders the confirmation, POST performs the deletion.
+                                    'method' => ['GET', 'POST'],
                                 ],
                                 [
                                     'path' => 'change-password',
@@ -462,13 +466,6 @@ $pathConfig = [
                     'type' => 'path',
                     'controller' => 'rest',
                     'action' => 'chat',
-                ],
-                [
-                    'path' => 'hibiscus',
-                    'type' => 'path',
-                    'controller' => 'rest',
-                    'groups' => 'ref-finanzen-kv',
-                    'action' => 'update-konto',
                 ],
                 [
                     'path' => 'booking',

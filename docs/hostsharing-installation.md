@@ -73,7 +73,55 @@ In hs-admin set the default PHP to `/usr/lib/cgi-bin/php8.4`, options
 
 Import your Budgetplan and everything should work :)
 
-Optional: add a bank for the bank-import feature.
+The banks available for the FinTS bank import come from the synced bank list, which
+`stufis-update` fills on every deployment — nothing to add by hand (see *Updating
+later* below).
+
+## Sessions
+
+Set in `.env`:
+
+```dotenv
+SESSION_ENCRYPT=true
+```
+
+With the default `SESSION_DRIVER=file` a session is a PHP-serialized file under
+`storage/framework/sessions/`. During a FinTS dialog it holds the online-banking
+PIN and the bank's session state — deliberately, so the password never reaches
+the database — and without this setting they sit there in cleartext.
+
+Instances set up before v4.4.4 have `SESSION_ENCRYPT=false` pinned in their `.env`
+and must be switched by hand. Turning it on invalidates every open session, so
+everyone has to log in again once and any bank dialog in flight is lost; pick a
+quiet moment. Run `stufis-rebuild` afterwards so the config cache picks it up.
+
+## Logging
+
+There is no root access on hostsharing, so no system logrotate. StuFiS rotates
+its own log instead: the `daily` channel writes `storage/logs/laravel-<date>.log`
+and deletes files older than `LOG_DAILY_DAYS` (default 30, i.e. a month) as it
+writes. For
+production set in `.env`:
+
+```dotenv
+LOG_CHANNEL=daily
+LOG_LEVEL=warning
+```
+
+`LOG_STACK` only applies when `LOG_CHANNEL=stack`; it defaults to `daily` too,
+so either setting rotates. What does not rotate is `single` — instances set up
+before v4.4.4 have `LOG_STACK=single` pinned in their `.env` and must be
+switched by hand, since an explicit value beats the new default. After
+changing `.env` run `stufis-rebuild` so the config cache picks it up, and delete
+the leftover unrotated file once:
+
+```bash
+rm storage/logs/laravel.log
+```
+
+Rotation caps the log directory, it does not make the entries smaller. If the
+files are still large, the cause is `LOG_LEVEL=debug` or a recurring exception —
+check the newest file before raising `LOG_DAILY_DAYS`.
 
 ## Updating later
 
@@ -86,8 +134,16 @@ stufis-update main       # or switch to a branch and follow its tip
 ```
 
 Each run goes into maintenance mode, backs up, fetches, self-updates the
-toolchain, migrates and rebuilds. Deploying a **tag** pins the instance to that
-exact release (detached HEAD); pass the next release tag to move it forward.
+toolchain, migrates, refreshes the FinTS bank list and rebuilds. Deploying a
+**tag** pins the instance to that exact release (detached HEAD); pass the next
+release tag to move it forward.
+
+The bank list step is allowed to fail: it fetches from an external source, so a
+network problem only prints a warning and keeps the previously synced list
+instead of aborting the deployment. If you see that warning, re-run
+`php artisan stufis:fints-institutes-update` once the cause is fixed. Banks move
+their FinTS endpoints every few weeks, so on an instance that is deployed rarely
+it is worth running that command from cron monthly as well.
 
 Use `stufis-rebuild` to re-warm the production caches and rebuild assets without
 pulling or reinstalling dependencies (e.g. after a local config change).

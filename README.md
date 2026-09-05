@@ -65,7 +65,7 @@ above with the right PHP/Composer/Node toolchain (versioned `php8.4`, local
 `composer.phar`, nvm) and put the app into maintenance mode during updates:
 
 - `stufis-setup` — first-time setup *and* idempotent toolchain refresh
-- `stufis-update [tag|branch]` — deploy a release tag (or branch tip): self-update toolchain, migrate and rebuild a running instance
+- `stufis-update [tag|branch]` — deploy a release tag (or branch tip): self-update toolchain, migrate, refresh the FinTS bank list and rebuild a running instance
 - `stufis-rebuild` — re-warm production caches and rebuild assets (no pull, no dependency install)
 - `stufis-down` / `stufis-up` — toggle maintenance mode (`stufis-down` prints a secret bypass URL)
 

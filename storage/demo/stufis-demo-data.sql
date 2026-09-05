@@ -1039,22 +1039,6 @@ INSERT INTO `demo__konto` (`id`,`konto_id`,`date`,`valuta`,`type`,`empf_iban`,`e
  (75,1,'2024-11-15','2024-11-15','GUTSCHR. UEBERWEISUNG','DE02500105170137075030','INGDDEFF','Hostsharing',0,-80.00,109175.00,'IP-25-26-A78 - November - Hosting','Umsatz gebucht','none');
 
 --
--- Daten für Tabelle `demo__konto_bank`
---
-
-INSERT INTO `demo__konto_bank` (`id`,`url`,`blz`,`name`) VALUES
- (1,'https://hbci11.fiducia.de/cgi-bin/hbciservlet',50031000,'Triodos Bank Deutschland'),
- (2,'https://hbci11.fiducia.de/cgi-bin/hbciservlet',79330111,'Bankhaus Max Flessa KG (Flessabank)');
-
---
--- Daten für Tabelle `demo__konto_credentials`
---
-
-INSERT INTO `demo__konto_credentials` (`id`,`name`,`bank_id`,`owner_id`,`bank_username`,`tan_mode`,`tan_mode_name`,`tan_medium_name`) VALUES
-(1,'Test',1,4,'dgdf',NULL,NULL,NULL),
-(2,'Test',2,4,'test',NULL,NULL,NULL);
-
---
 -- Daten für Tabelle `demo__konto_type`
 --
 

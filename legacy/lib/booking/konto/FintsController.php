@@ -3,6 +3,8 @@
 namespace booking\konto;
 
 use App\Exceptions\LegacyRedirectException;
+use App\Models\FintsInstitute;
+use App\Models\Legacy\BankAccount;
 use booking\konto\tan\FlickerGenerator;
 use Fhp\Model\StatementOfAccount\Statement;
 use Fhp\Model\StatementOfAccount\StatementOfAccount;
@@ -12,10 +14,10 @@ use forms\projekte\auslagen\AuslagenHandler2;
 use framework\ArrayHelper;
 use framework\DateHelper;
 use framework\DBConnector;
-use framework\NewValidator;
 use framework\render\html\BT;
 use framework\render\html\FA;
 use framework\render\html\Html;
+use framework\render\html\HtmlAlert;
 use framework\render\html\HtmlButton;
 use framework\render\html\HtmlCard;
 use framework\render\html\HtmlDropdown;
@@ -28,14 +30,23 @@ use InvalidArgumentException;
 
 class FintsController extends Renderer
 {
-    private ?FintsConnectionHandler $fintsHandler;
+    private ?FintsConnectionHandler $fintsHandler = null;
 
     private ?int $credentialId;
+
+    /**
+     * Actions that must stay reachable even when no connection can be built. load() refuses
+     * a bank whose FinTS address is missing or not HTTPS, and that is precisely the access
+     * somebody needs to delete - so deleting must not depend on it succeeding.
+     */
+    private const array ACTIONS_WITHOUT_CONNECTION = ['delete-credentials'];
 
     public function __construct(array $routeInfo = [])
     {
         $this->credentialId = $routeInfo['credential-id'] ?? null;
-        if ($this->credentialId !== null && FintsConnectionHandler::hasPassword($this->credentialId)) {
+        if ($this->credentialId !== null
+            && FintsConnectionHandler::hasPassword($this->credentialId)
+            && ! in_array($routeInfo['action'] ?? null, self::ACTIONS_WITHOUT_CONNECTION, true)) {
             $this->fintsHandler = FintsConnectionHandler::load($this->credentialId);
         }
         parent::__construct($routeInfo);
@@ -43,16 +54,115 @@ class FintsController extends Renderer
 
     public function render(): void
     {
+        $this->requireValidNonce();
         $post = $this->request->request;
         if ($post->has('tan')) {
-            $this->fintsHandler->submitTan($post->getAlnum('tan'));
+            // Banks print TANs in groups ("123 456"), so drop whitespace - but nothing
+            // else: some TAN schemes are alphanumeric, and silently dropping characters
+            // would burn one of the three attempts the bank grants.
+            $this->requireFintsHandler()->submitTan(preg_replace('/\s+/', '', $post->get('tan', '')));
+        }
+        if ($post->has('decoupled-confirm')) {
+            // Same placement and the same reasoning as the 'tan' branch above: whether or not
+            // the bank confirms is deliberately ignored here. If it does, the action underneath
+            // is now done and parent::render() below resumes and finishes it like any other
+            // completed action; if not, the action handler throws NeedsTanException again and
+            // the confirmation screen is simply redrawn.
+            $this->requireFintsHandler()->confirmDecoupledTan();
         }
         try {
             parent::render();
         } catch (NeedsTanException $e) {
-            $this->fintsHandler->logger->info('Tan needed', ['exception' => $e]);
-            $this->renderTanInput($e->getMessage(), $e->getTanRequest());
+            $this->requireFintsHandler()->logger->info('Tan needed', ['exception' => $e]);
+            if ($this->requireFintsHandler()->isDecoupledTanMode()) {
+                $this->renderDecoupledConfirmation($e->getMessage(), $e->getTanRequest());
+            } else {
+                $this->renderTanInput($e->getMessage(), $e->getTanRequest());
+            }
         }
+    }
+
+    /**
+     * The legacy route group runs without Laravel's CSRF middleware (see bootstrap/app.php),
+     * and although every form here ships a `nonce` field holding csrf_token(), only
+     * RestHandler ever checked it - the actions in this controller did not. That left the
+     * bank access open to cross-site requests: forced login attempts (three failures lock
+     * the online banking access at the bank), creating credentials, and registering an
+     * arbitrary account for synchronisation.
+     *
+     * Verifying it here keeps the fix to the FinTS pages instead of switching the middleware
+     * for the whole legacy group, which is not a patch-release-sized change.
+     */
+    private function requireValidNonce(): void
+    {
+        if ($this->request->getMethod() !== 'POST') {
+            return;
+        }
+
+        $nonce = (string) $this->request->request->get('nonce', '');
+        if ($nonce !== '' && hash_equals((string) csrf_token(), $nonce)) {
+            return;
+        }
+
+        // LegacyDieException would surface as a bare 500 page (LegacyController rethrows it
+        // and it carries no HTTP status of its own), so the request is refused with an
+        // explanation instead. Either way the action does not run.
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_DANGER,
+            'Die Anfrage wurde abgelehnt',
+            'Das Formular war nicht mehr gültig - vermutlich ist die Sitzung abgelaufen. '.
+            'Bitte lade die Seite neu und versuche es erneut.'
+        );
+
+        throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
+    }
+
+    /**
+     * The bank password is only ever held in the session, so it is gone as soon as the
+     * session expires - and every action below needs it. Dereferencing the handler
+     * regardless used to raise "Typed property must not be accessed before
+     * initialization", i.e. an error page. Send the user back to the login instead.
+     */
+    private function requireFintsHandler(): FintsConnectionHandler
+    {
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
+            return $this->fintsHandler;
+        }
+
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_INFO,
+            'Die Verbindung zur Bank ist nicht mehr aktiv - vermutlich ist die Sitzung abgelaufen. Bitte melde dich erneut an.'
+        );
+
+        throw new LegacyRedirectException($this->credentialId === null
+            ? redirect()->route('legacy.konto.credentials')
+            : redirect()->route('legacy.konto.credentials.login', $this->credentialId));
+    }
+
+    /**
+     * Names the account a TAN is being asked for. Both TAN pages are drawn from the exception
+     * handler in render(), i.e. under whatever URL the interrupted action was started from, and
+     * neither says anything about the account by itself - so a TAN prompt for a statement import
+     * looked exactly like one for any other account.
+     *
+     * Only the import routes carry an account; a TAN asked for during login or while picking a
+     * TAN mode belongs to the whole bank access, and then there is nothing to name.
+     */
+    private function renderRequestedAccount(): void
+    {
+        $shortIban = $this->routeInfo['short-iban'] ?? null;
+        if (! is_string($shortIban) || $shortIban === '') {
+            return;
+        }
+
+        $account = BankAccount::findByShortIban($shortIban);
+
+        // The full IBAN is deliberately taken from the account we know rather than resolved
+        // through the bank access: reaching for it there would fetch the SEPA account list,
+        // i.e. talk to the bank in the middle of drawing a TAN prompt.
+        echo Html::p()->body($account instanceof BankAccount
+            ? "Umsatzabruf für das Konto $account->name ($account->iban)"
+            : "Umsatzabruf für das Konto mit der IBAN $shortIban");
     }
 
     private function renderTanInput(string $msg, TanRequest $tanRequest): void
@@ -61,6 +171,7 @@ class FintsController extends Renderer
         $challengeText = $tanRequest->getChallenge();
 
         echo Html::headline(1)->body($msg);
+        $this->renderRequestedAccount();
 
         echo Html::headline(3)->body($mediumName);
         echo Html::p()->body($challengeText, false);
@@ -90,6 +201,42 @@ class FintsController extends Renderer
     }
 
     /**
+     * Counterpart to renderTanInput() for a decoupled TAN mode: the approval happens on the
+     * user's banking app, so there is no TAN field to render - just a button that makes StuFiS
+     * ask the bank once whether the approval has arrived yet. Deliberately no JavaScript, no
+     * timer, no automated polling: the user confirms manually, in the banking app and then here.
+     */
+    private function renderDecoupledConfirmation(string $msg, TanRequest $tanRequest): void
+    {
+        $mediumName = $tanRequest->getTanMediumName() ?? '';
+        $challengeText = $tanRequest->getChallenge();
+
+        echo Html::headline(1)->body($msg);
+        $this->renderRequestedAccount();
+
+        echo Html::headline(3)->body($mediumName);
+        echo Html::p()->body($challengeText, false);
+        echo Html::p()->body(
+            'Die Freigabe erfolgt in der Banking-App auf deinem Gerät. Wenn du sie dort erteilt hast, '.
+            'fragt der folgende Knopf einmalig bei der Bank nach, ob die Freigabe angekommen ist.'
+        );
+
+        $remaining = $this->requireFintsHandler()->decoupledChecksRemaining();
+        if ($remaining !== null) {
+            echo Html::p()->body("Noch $remaining von der Bank erlaubte Versuche.");
+        }
+
+        echo HtmlForm::make('POST', false)
+            ->urlTarget(request()?->url())
+            ->addHtmlEntity(
+                HtmlButton::make('submit')
+                    ->style('primary')
+                    ->attr('name', 'decoupled-confirm')
+                    ->body('Ich habe die Freigabe erteilt')
+            );
+    }
+
+    /**
      * Action to render fints home screen
      */
     protected function actionViewCredentials(): void
@@ -100,13 +247,17 @@ class FintsController extends Renderer
             [
                 'konto_credentials.id',
                 'konto_credentials.name',
-                'bank_name' => 'konto_bank.name',
+                'bank_name' => 'fints_institutes.name',
                 'tan_mode',
                 'tan_mode_name',
                 'tan_medium_name',
             ],
             ['owner_id' => \Auth::user()->id],
-            [['type' => 'inner', 'table' => 'konto_bank', 'on' => ['konto_bank.id', 'konto_credentials.bank_id']]]
+            [[
+                'type' => 'inner',
+                'table' => 'fints_institutes',
+                'on' => ['fints_institutes.blz', 'konto_credentials.blz'],
+            ]]
         );
         echo HtmlButton::make()
             ->asLink(URIBASE.'konto/credentials/new')
@@ -135,14 +286,29 @@ class FintsController extends Renderer
                         return $tanString;
                     },
                     static function ($id) { // action
+                        // Deleting stays offered either way: the usual reason to remove a bank
+                        // access is that logging in with it does not work, and hiding the
+                        // action behind an active session made exactly that case a dead end.
+                        $delete = "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>";
+
                         if (FintsConnectionHandler::hasActiveSession($id)) {
+                            $logout = HtmlForm::make('POST', false)
+                                ->urlTarget(URIBASE."konto/credentials/$id/logout")
+                                ->addHtmlEntity(
+                                    HtmlButton::make('submit')
+                                        ->style('link')
+                                        ->icon(FA::make('fa-sign-out')->addClasses(['fa-fw']))
+                                        ->title('Ausloggen')
+                                )
+                                ->addClasses(['inline-action']);
+
                             return
                                 "<a href='".URIBASE."konto/credentials/$id/sepa'><span class='fa fa-fw fa-bank' title='Kontenübersicht'></span></a> ".
-                                "<a href='".URIBASE."konto/credentials/$id/delete'><span class='fa fa-fw fa-trash' title='Zugangsdaten löschen'></span></a>".
-                                "<a href='".URIBASE."konto/credentials/$id/logout'><span class='fa fa-fw fa-sign-out' title='Ausloggen'></span></a>";
+                                $delete.' '.
+                                $logout;
                         }
 
-                        return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a>";
+                        return "<a href='".URIBASE."konto/credentials/$id/login'><span class='fa fa-fw fa-unlock-alt' title='Einloggen'></span></a> ".$delete;
                     },
                 ]
             );
@@ -162,32 +328,67 @@ class FintsController extends Renderer
     protected function actionNewCredentials()
     {
         $post = $this->request->request;
-        if (ArrayHelper::allIn($post->keys(), ['name', 'bank-id', 'bank-username'])) {
+        if (ArrayHelper::allIn($post->keys(), ['name', 'blz', 'bank-username'])) {
+            // The dropdown starts on its placeholder, so an untouched form posts an empty BLZ.
+            // Saying so beats normalising it into "00000000" and reporting that as unknown.
+            if (trim((string) $post->get('blz')) === '') {
+                HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Bitte wähle die Bank aus, bei der der Zugang besteht.');
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials/new');
+            }
+
+            $blz = FintsInstitute::normaliseBlz((string) $post->get('blz'));
+
+            // The foreign key guarantees the BLZ exists; it cannot guarantee the institute
+            // actually offers PIN/TAN, which is the only thing we can talk to.
+            if (FintsInstitute::query()->pinTanCapable()->whereKey($blz)->doesntExist()) {
+                HTMLPageRenderer::addFlash(BT::TYPE_DANGER, "Für die BLZ $blz ist kein FinTS-Zugang bekannt.");
+                HTMLPageRenderer::redirect(URIBASE.'konto/credentials/new');
+            }
+
             DBConnector::getInstance()->dbInsert('konto_credentials', [
-                'name' => $post->getAlpha('name'),
-                'bank_id' => $post->getInt('bank-id'),
+                // konto_credentials.name is varchar(63), so cut rather than let the insert fail.
+                'name' => mb_substr(trim(strip_tags((string) $post->get('name'))), 0, 63),
+                'blz' => $blz,
                 'bank_username' => trim(strip_tags($post->get('bank-username'))),
                 'owner_id' => DBConnector::getInstance()->getUser()['id'],
             ]
             );
             HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
         }
-        $banks = DBConnector::getInstance()->dbFetchAll('konto_bank');
+
+        // Straight from the synced bank list, so there is no bank to maintain by hand.
+        $banks = FintsInstitute::query()->pinTanCapable()->orderBy('name')->get(['blz', 'name', 'location']);
+
         $this->renderHeadline('Lege neue Zugangsdaten an');
+
+        if ($banks->isEmpty()) {
+            $this->renderAlert(
+                'Keine Bankenliste vorhanden',
+                'Die Liste der FinTS-fähigen Banken ist leer. Die Administration muss sie einmalig einlesen '.
+                '(<code>php artisan stufis:fints-institutes-update</code>), danach kann hier eine Bank gewählt werden.',
+                'danger'
+            );
+
+            return;
+        }
+
         $this->renderAlert('Hinweis',
             'Die hier geforderten Daten werden (bis zur manuellen Löschung) gespeichert. Das Online-Banking Passwort wird immer nur zur Laufzeit verwendet und nicht permanent gespeichert', 'info');
-        $liveSearch = count($banks) > 5;
 
         echo HtmlForm::make('POST', false)
             ->urlTarget(URIBASE.'konto/credentials/new')
             ->addHtmlEntity(HtmlInput::make('text')->label('Name des Zugangs')->name('name'))
             ->addHtmlEntity(HtmlDropdown::make()
                 ->label('Bank')
-                ->liveSearch($liveSearch)
-                ->name('bank-id')
-                ->setItems(array_combine(array_column($banks, 'id'), array_map(static function ($el) {
-                    return [$el['name'], "BLZ: {$el['blz']}"];
-                }, $banks)))
+                ->liveSearch(true)
+                ->name('blz')
+                // Without this the browser preselects the first bank of the list, and a form
+                // submitted without touching the dropdown would quietly pick that one. The
+                // selectpicker turns a title into a placeholder option with an empty value.
+                ->title('Bank auswählen')
+                ->setItems($banks->mapWithKeys(static fn (FintsInstitute $bank): array => [
+                    $bank->blz => [$bank->name, "BLZ: $bank->blz".($bank->location ? ", $bank->location" : '')],
+                ])->all())
             )
             ->addHtmlEntity(HtmlInput::make('text')->label('Bank Username')->name('bank-username'))
             ->addSubmitButton();
@@ -198,7 +399,7 @@ class FintsController extends Renderer
         if (isset($_POST['tan-mode-id'])) {
             $tanModeId = (int) $_POST['tan-mode-id'];
             try {
-                $success = $this->fintsHandler->setTanMode($tanModeId);
+                $success = $this->requireFintsHandler()->setTanMode($tanModeId);
                 if ($success) {
                     HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Modus gespeichert');
                     HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
@@ -210,7 +411,7 @@ class FintsController extends Renderer
                 HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/tan-mode/$tanModeId/medium");
             }
         }
-        $tanModes = $this->fintsHandler->getUserTanModes();
+        $tanModes = $this->requireFintsHandler()->getUserTanModes();
         $form = HtmlForm::make('POST', false)->urlTarget(URIBASE."konto/credentials/$this->credentialId/tan-mode");
         echo $form->begin();
         $this->renderHeadline('Bitte TAN-Modus auswählen');
@@ -227,7 +428,7 @@ class FintsController extends Renderer
         $post = $this->request->request;
         $tanModeInt = (int) $this->routeInfo['tan-mode-id'];
         if ($post->has('tan-medium-name')) {
-            $success = $this->fintsHandler->setTanMode($tanModeInt, $post->get('tan-medium-name'));
+            $success = $this->requireFintsHandler()->setTanMode($tanModeInt, $post->get('tan-medium-name'));
             if ($success) {
                 HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'TAN Medium gespeichert');
                 HTMLPageRenderer::redirect(URIBASE.'konto/credentials');
@@ -236,7 +437,7 @@ class FintsController extends Renderer
             }
         }
 
-        $tanMedien = $this->fintsHandler->getTanMedias($tanModeInt);
+        $tanMedien = $this->requireFintsHandler()->getTanMedias($tanModeInt);
 
         echo "<form method='post' action=''>";
         $this->renderHeadline('Bitte TAN-Medium auswählen');
@@ -262,14 +463,17 @@ class FintsController extends Renderer
         )[0];
         $post = $this->request->request;
         if ($post->has('bank-password')) {
-            // a PW was sent
-            $pw = $post->getAlnum('bank-password');
+            // a PW was sent. Take it verbatim: do not strip every special
+            // character and umlaut, banks do allow those in a PIN (see the docs on
+            // Fhp\Options\Credentials::create). A mangled PIN is indistinguishable from
+            // a wrong one, and three wrong ones lock the online-banking access.
+            $pw = (string) $post->get('bank-password');
             FintsConnectionHandler::setLoginPassword($credentialId, $pw);
             $this->fintsHandler = FintsConnectionHandler::load($credentialId);
         }
         if (FintsConnectionHandler::hasPassword($credentialId)) {
             // pw set
-            $success = $this->fintsHandler->login();  // throws if Tan needed
+            $success = $this->requireFintsHandler()->login();  // throws if Tan needed
             if ($success) {
                 throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
             }
@@ -285,9 +489,24 @@ class FintsController extends Renderer
                 )
                 ->hiddenInput('credential-id', $credentialId)
                 ->addSubmitButton();
+
+            $pinDisclaimer = HtmlAlert::make(BT::TYPE_INFO)
+                ->strongMsg('Was mit deiner Onlinebanking-PIN passiert')
+                ->body(
+                    'Deine PIN wird für den Dialog mit der Bank benötigt und für die Dauer '.
+                    'deiner Anmeldung in der Sitzung auf dem Server gehalten. '.
+                    (config('session.encrypt') ? 'Die Zugangsdaten liegen dabei verschlüsselt auf dem Server. ' : '').
+                    'Sie wird dafür niemals in der Datenbank gespeichert. Die PIN wird mit '.
+                    'dem Abmelden aus dem Bankzugang, spätestens aber nach '.
+                    (int) config('session.lifetime').' Minuten ohne Aktivität verworfen. '.
+                    'Sofort löschen kannst du sie jederzeit über "Setze FINTS zurück" '.
+                    'in der Übersicht der Zugangsdaten.'
+                );
+
             // PW unknown
             echo HtmlCard::make()
                 ->cardHeadline('Login Zugang - '.$credentials['name'])
+                ->appendBody($pinDisclaimer, false)
                 ->appendBody(
                     HtmlInput::make('text')
                         ->label('Username')
@@ -301,8 +520,8 @@ class FintsController extends Renderer
 
     protected function actionViewSepa()
     {
-        $accounts = $this->fintsHandler->getSepaAccounts();
-        $ibans = $this->fintsHandler->getIbans();
+        $accounts = $this->requireFintsHandler()->getSepaAccounts();
+        $ibans = $this->requireFintsHandler()->getIbans();
 
         $dbAccounts = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
@@ -347,7 +566,18 @@ class FintsController extends Renderer
                     $shortIban = FintsConnectionHandler::shortenIban($iban);
 
                     return match ($actionName) {
-                        'update' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban'><span class='fa fa-fw fa-refresh' title='Kontostand aktualisieren'></span></a>",
+                        // Fetching statements talks to the bank and writes bookings, so it goes out
+                        // as a POST carrying the nonce HtmlForm adds. 'import' stays a plain link:
+                        // it only hands the IBAN over to the Livewire page and changes nothing.
+                        'update' => (string) HtmlForm::make('POST', false)
+                            ->urlTarget(URIBASE."konto/credentials/$credId/$shortIban")
+                            ->addHtmlEntity(
+                                HtmlButton::make('submit')
+                                    ->style('link')
+                                    ->icon(FA::make('fa-refresh')->addClasses(['fa-fw']))
+                                    ->title('Kontostand aktualisieren')
+                            )
+                            ->addClasses(['inline-action']),
                         'import' => "<a href='".URIBASE."konto/credentials/$credId/$shortIban/import'><span class='fa fa-fw fa-upload' title='Konto neu importieren'></span></a>",
                         default => 'error',
                     };
@@ -362,53 +592,84 @@ class FintsController extends Renderer
             ->asLink(URIBASE.'konto/credentials');
     }
 
+    /**
+     * Registering an account is the Livewire page's job (pages::new-banking-account), which
+     * validates with Laravel rules, knows about sync_until and manually_enterable, and is
+     * the same form used everywhere else. This hands the account over to it with the IBAN
+     * prefilled instead of keeping a second, hand-written create form here.
+     */
     protected function actionNewSepaKonto(): void
     {
-        if ($this->request->request->count() > 0) {
-            $post = $this->request->request;
-            $syncFrom = date_create($post->get('sync-from'))->format('Y-m-d');
-            $kontoIban = $post->getAlnum('iban');
-            [, $iban] = (new NewValidator)->validate($kontoIban, 'iban');
-            $kontoName = substr(htmlspecialchars(strip_tags(trim($post->getAlpha('konto-name')))), 0, 32);
-            $kontoShort = strtoupper(substr($post->getAlpha('konto-short'), 0, 2));
-            $ret = DBConnector::getInstance()->dbInsert('konto_type', [
-                'name' => $kontoName,
-                'short' => $kontoShort,
-                'sync_from' => $syncFrom,
-                'iban' => $iban,
-            ]);
-            // TODO: use $ret
-            HTMLPageRenderer::addFlash(BT::TYPE_SUCCESS, 'Erfolgreich gespeichert');
+        $shortIban = $this->routeInfo['short-iban'];
+        // Resolved from the account list of this bank access, not from user input, so the
+        // prefilled value is one of the accounts the credential actually holds.
+        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
+
+        if ($iban === null) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Zu diesem Kürzel gehört kein Konto dieses Bankzugangs.'
+            );
             HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
         }
 
-        $shortIban = $this->routeInfo['short-iban'];
-        $iban = $this->fintsHandler->lengthenIban($shortIban);
-
-        $this->renderHeadline('Neues Konto Importieren');
-        echo HtmlForm::make('POST', false)
-            ->urlTarget(URIBASE."konto/credentials/$this->credentialId/$shortIban/import")
-            ->addHtmlEntity(HtmlInput::make()->name('iban')->label('IBAN')->value($iban)->readOnly())
-            ->addHtmlEntity(HtmlInput::make()->name('konto-name')->label('Bezeichnung Konto'))
-            ->addHtmlEntity(HtmlInput::make()->name('konto-short')->label('Eindeutiges Buchstabenkürzel für das Konto (intern)'))
-            ->addHtmlEntity(HtmlInput::make('date')->name('sync-from')->label('Startdatum der Synchronisation'))
-            ->addSubmitButton('Speichern');
+        throw new LegacyRedirectException(redirect()->route('bank-account.new', [
+            'iban' => $iban,
+            // Marks this as a synced account: the page locks the IBAN and the manual-entry
+            // switch for it.
+            'bankSynced' => 1,
+            // Built as a relative path from a named route, so what the page gets handed can
+            // only ever point back into this application.
+            'returnTo' => route('legacy.konto.credentials.sepa', ['credential_id' => $this->credentialId], false),
+        ]));
     }
 
     protected function actionImportNewSepaStatements()
     {
         $shortIban = $this->routeInfo['short-iban'];
-        $iban = $this->fintsHandler->lengthenIban($shortIban);
+        $iban = $this->requireFintsHandler()->lengthenIban($shortIban);
 
-        $dbKonto = DBConnector::getInstance()->dbFetchAll(
+        if ($iban === null) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Zu diesem Kürzel gehört kein Konto dieses Bankzugangs.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
+        }
+
+        $dbKontos = DBConnector::getInstance()->dbFetchAll(
             'konto_type',
             [DBConnector::FETCH_UNIQUE_FIRST_COL_AS_KEY],
             ['iban', '*']
-        )[$iban];
+        );
+
+        // Reaching this URL for an account that was never registered used to be an
+        // undefined-array-key error page.
+        if (! isset($dbKontos[$iban])) {
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_WARNING,
+                'Dieses Konto ist noch nicht für den Import eingerichtet. Bitte lege es zuerst an.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/$shortIban/import");
+        }
+        $dbKonto = $dbKontos[$iban];
 
         [$startDate, $syncUntil] = DateHelper::fromUntilLast($dbKonto['sync_from'], $dbKonto['sync_until'], $dbKonto['last_sync']);
 
-        $statements = $this->fintsHandler->getStatements($iban, $startDate, $syncUntil);
+        try {
+            $statements = $this->requireFintsHandler()->getStatements($iban, $startDate, $syncUntil);
+        } catch (InvalidArgumentException $e) {
+            // getSepaAccount() throws when the bank access does not hold this IBAN, which is
+            // reachable because an account may also be registered by hand (or for a cash box)
+            // on the Livewire page. That is a wrong-page situation, not a server error.
+            $this->requireFintsHandler()->logger->warning('Statement request for an IBAN this credential does not hold', ['exception' => $e]);
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_DANGER,
+                'Dieses Konto gehört nicht zu diesem Bankzugang',
+                'Bitte rufe die Umsätze über den Bankzugang ab, dem das Konto gehört.'
+            );
+            HTMLPageRenderer::redirect(URIBASE."konto/credentials/$this->credentialId/sepa");
+        }
 
         [$success, $msg] = $this->saveStatements($statements, $dbKonto['id']);
 
@@ -419,7 +680,7 @@ class FintsController extends Renderer
     protected function saveStatements(StatementOfAccount $statements, int $kontoId): array
     {
         $db = DBConnector::getInstance();
-        $logger = $this->fintsHandler->getLogger();
+        $logger = $this->requireFintsHandler()->getLogger();
         $lastKontoRow = $db->dbFetchAll(
             tables: 'konto',
             where: ['konto_id' => $kontoId],
@@ -431,6 +692,11 @@ class FintsController extends Renderer
         $tryRewind = false;
         $rewindDiff = 0;
         $skipped = false;
+        // Was the resume point in the already-stored data established? Without stored rows
+        // there is nothing to resume from, so everything the bank sent is new.
+        $anchorFound = true;
+        $lastStoredSaldoCent = null;
+        $stoppedAtSyncUntil = false;
 
         $kontoRow = $db->dbFetchAll(tables: 'konto_type', where: ['id' => $kontoId])[0];
         $syncUntil = DateHelper::fromDb($kontoRow['sync_until']);
@@ -440,7 +706,11 @@ class FintsController extends Renderer
             $lastKontoId = $lastKontoRow['id'];
             $lastKontoSaldo = $lastKontoRow['saldo'];
             $oldSaldoCent = $this->convertToCent($lastKontoSaldo);
+            // Kept separately: $oldSaldoCent is reused below as the running statement-to-
+            // statement saldo, so it no longer holds the stored value once the loop starts.
+            $lastStoredSaldoCent = $oldSaldoCent;
             $tryRewind = true;
+            $anchorFound = false;
             $logger->debug('Found last entry', $lastKontoRow);
         }
 
@@ -452,11 +722,16 @@ class FintsController extends Renderer
             $dateString = $statement->getDate()->format(DBConnector::SQL_DATE_FORMAT);
             $saldoCent = $this->convertToCent($statement->getStartBalance(), $statement->getCreditDebit());
             $logger->debug('Statement', ['date' => $dateString, 'saldo' => $saldoCent]);
+            // Continuity between two consecutive statements: the closing saldo of the
+            // previous one has to be the opening balance of this one.
             if ($tryRewind === false && $oldSaldoCent !== null && $oldSaldoCent !== $saldoCent) {
                 $db->dbRollBack();
-                $logger->debug("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString", [var_export($statements, true)]);
+                $logger->error("Wrong saldo $oldSaldoCent !== $saldoCent at statement from $dateString");
+                $msg = 'Die Kontoauszüge der Bank sind nicht lückenlos: Der Auszug vom '.$dateString.
+                    ' beginnt mit '.$this->convertCentForDB($saldoCent).' €, der vorherige endete mit '.
+                    $this->convertCentForDB($oldSaldoCent).' €. Es wurde nichts importiert.';
 
-                return [false, "$oldSaldoCent !== $saldoCent at statement from $dateString"];
+                return [false, $msg];
             }
             // echo "Statement $dateString Saldo: $saldoCent";
             foreach ($statement->getTransactions() as $transaction) {
@@ -468,7 +743,11 @@ class FintsController extends Renderer
                     'date' => $transaction->getBookingDate()?->format('Y-m-d'),
                 ]);
                 if ($tryRewind === true) {
-                    // do rewind if necessary
+                    // Do rewind if necessary. customer_ref is deliberately NOT part of the
+                    // criteria: it holds the SEPA end-to-end id, which MT940 usually leaves
+                    // empty or reports as NOTPROVIDED, so matching on it made the anchor
+                    // unfindable - and an unfound anchor used to mean a silent re-import of
+                    // the whole range. The running saldo is a far stronger key anyway.
                     $rewindRow = $db->dbFetchAll(
                         tables: 'konto',
                         showColumns: ['id'],
@@ -478,7 +757,6 @@ class FintsController extends Renderer
                             'saldo' => $this->convertCentForDB($saldoCent),
                             'date' => $transaction->getBookingDate()?->format('Y-m-d'),
                             'valuta' => $transaction->getValutaDate()?->format('Y-m-d'),
-                            'customer_ref' => $transaction->getEndToEndID(),
                         ],
                         sort: ['id' => false],
                         limit: 1
@@ -495,11 +773,32 @@ class FintsController extends Renderer
                     $skipped = $skipped === false ? 1 : $skipped + 1;
                     $logger->debug('SKIP TRANSACTION - found in DB');
 
+                    if ($rewindDiff === 0) {
+                        // Last already-stored transaction consumed: this is the one place
+                        // where the freshly computed saldo can be held against the stored
+                        // one. Previously this comparison never ran - it was guarded by
+                        // $tryRewind === false, and by the time that was true the stored
+                        // value had already been overwritten by the running saldo.
+                        if ($saldoCent !== $lastStoredSaldoCent) {
+                            $db->dbRollBack();
+                            $msg = 'Der Kontostand der Bank passt nicht zum gespeicherten Stand ('.
+                                $this->convertCentForDB($saldoCent).' € statt '.
+                                $this->convertCentForDB($lastStoredSaldoCent).' € nach dem letzten bekannten Umsatz vom '.
+                                $dateString.'). Es wurde nichts importiert.';
+                            $logger->error($msg, ['konto_id' => $kontoId]);
+
+                            return [false, $msg];
+                        }
+                        $anchorFound = true;
+                    }
+
                     continue; // skip this entry, it was in the db before
                 }
 
                 // are we exceeding sync_until?
                 if ($syncUntil && $transaction->getValutaDate()?->diff($syncUntil)->invert === 1) {
+                    $stoppedAtSyncUntil = true;
+
                     break 2;
                 }
 
@@ -525,6 +824,20 @@ class FintsController extends Renderer
             $oldSaldoCent = $saldoCent;
         }
 
+        // The bank sends a range that overlaps what is already stored, so the already-known
+        // transactions have to be identified and skipped. If that resume point was never
+        // reached, every transaction of the range looks new - which is how a re-import used
+        // to duplicate months of bookings while reporting success. Refuse instead.
+        if ($anchorFound === false && $stoppedAtSyncUntil === false) {
+            $db->dbRollBack();
+            $msg = 'Der letzte bereits importierte Umsatz wurde in den Daten der Bank nicht wiedergefunden. '.
+                'Es wurde nichts importiert, um doppelte Buchungen zu vermeiden. '.
+                'Bitte prüfe, ob Umsätze nachträglich verändert wurden, und wende dich an die Administration.';
+            $logger->error($msg, ['konto_id' => $kontoId, 'last_stored_saldo_cent' => $lastStoredSaldoCent]);
+
+            return [false, $msg];
+        }
+
         if (count($transactionData) > 0) {
             $db->dbInsertMultiple('konto', array_keys($transactionData[0]), ...$transactionData);
             $db->dbUpdate('konto_type', ['id' => $kontoId], ['last_sync' => $dateString]);
@@ -545,9 +858,125 @@ class FintsController extends Renderer
         return [$ret, $msg];
     }
 
+    /**
+     * Two steps on purpose: GET renders the confirmation, POST carries it out. That keeps the
+     * icon in the overview a plain link - a GET that only renders a page - while the
+     * irreversible half is a nonce-checked POST, and whoever clicks it gets told beforehand
+     * what does and does not disappear.
+     */
+    protected function actionDeleteCredentials(): void
+    {
+        $credentialId = (int) $this->credentialId;
+        $credential = $this->ownCredential($credentialId);
+
+        if ($this->request->getMethod() !== 'POST') {
+            $this->renderDeleteConfirmation($credentialId, $credential);
+
+            return;
+        }
+
+        // Best effort, and only when a live dialog exists: the bank drops an abandoned
+        // session by itself, so a logout that cannot be reached must not stop the deletion.
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
+            $this->fintsHandler->logout();
+        }
+
+        // Before the row goes, so a stale password cannot linger under an id the next access
+        // might be handed.
+        FintsConnectionHandler::forgetSession($credentialId);
+
+        DBConnector::getInstance()->dbDelete('konto_credentials', [
+            'id' => $credentialId,
+            'owner_id' => \Auth::user()->id,
+        ]);
+
+        HTMLPageRenderer::addFlash(
+            BT::TYPE_SUCCESS,
+            'Zugangsdaten gelöscht',
+            "Der Bankzugang „{$credential['name']}“ wurde entfernt. Die Konten und ihre Buchungen sind unverändert."
+        );
+
+        throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
+    }
+
+    /**
+     * The bank access with this id belonging to the logged-in user. The id comes out of the
+     * URL, so the ownership filter is what keeps one user off another's bank access.
+     */
+    private function ownCredential(int $credentialId): array
+    {
+        $rows = DBConnector::getInstance()->dbFetchAll(
+            'konto_credentials',
+            [DBConnector::FETCH_ASSOC],
+            [
+                'konto_credentials.id',
+                'konto_credentials.name',
+                'konto_credentials.bank_username',
+                'bank_name' => 'fints_institutes.name',
+            ],
+            [
+                'konto_credentials.owner_id' => \Auth::user()->id,
+                'konto_credentials.id' => $credentialId,
+            ],
+            [[
+                'type' => 'inner',
+                'table' => 'fints_institutes',
+                'on' => ['fints_institutes.blz', 'konto_credentials.blz'],
+            ]]
+        );
+
+        if (count($rows) !== 1) {
+            HTMLPageRenderer::addFlash(BT::TYPE_DANGER, 'Diesen Bankzugang gibt es nicht.');
+
+            throw new LegacyRedirectException(redirect()->route('legacy.konto.credentials'));
+        }
+
+        return $rows[0];
+    }
+
+    private function renderDeleteConfirmation(int $credentialId, array $credential): void
+    {
+        $this->renderHeadline('Zugangsdaten löschen');
+
+        $this->renderAlert(
+            'Wirklich löschen?',
+            'Der Bankzugang wird samt hinterlegtem TAN-Verfahren entfernt und kann nicht '.
+            'wiederhergestellt werden. Die Konten und ihre bereits importierten Buchungen '.
+            'bleiben erhalten - für sie werden ab dann aber keine Umsätze mehr abgerufen, '.
+            'bis ein neuer Bankzugang eingerichtet ist.',
+            BT::TYPE_WARNING
+        );
+
+        echo HtmlCard::make()
+            ->cardHeadline($this->defaultEscapeFunction($credential['name']))
+            ->appendBody(
+                HtmlInput::make('text')->label('Bank')->value($credential['bank_name'])->disable(),
+                false
+            )
+            ->appendBody(
+                HtmlInput::make('text')->label('Bank Username')->value($credential['bank_username'])->disable(),
+                false
+            )
+            ->appendBody(
+                HtmlForm::make('POST', false)
+                    ->urlTarget(URIBASE."konto/credentials/$credentialId/delete")
+                    ->addSubmitButton('Endgültig löschen'),
+                false
+            );
+
+        echo HtmlButton::make()
+            ->style('primary')
+            ->body('Abbrechen')
+            ->icon('chevron-left')
+            ->asLink(URIBASE.'konto/credentials');
+    }
+
     protected function actionLogout(): void
     {
-        if (isset($this->fintsHandler)) {
+        // Logging out of a connection that is already gone is not an error worth a
+        // redirect to the login, so this keeps its own handling instead of using
+        // requireFintsHandler().
+        if ($this->fintsHandler instanceof FintsConnectionHandler) {
             $this->fintsHandler->logout();
         } else {
             HTMLPageRenderer::addFlash(BT::TYPE_WARNING, 'FINTS war nicht verbunden.');
@@ -559,18 +988,20 @@ class FintsController extends Renderer
      * @param  string|null  $creditDebit  either @see Statement::CD_DEBIT or @see Statement::CD_CREDIT, if null its
      *                                    assumed by sign of $amount
      */
-    private function convertToCent(string|float $amount, ?string $creditDebit = null): float|int
+    private function convertToCent(string|float $amount, ?string $creditDebit = null): int
     {
-        $float = (float) $amount;
-        $cents = (int) round($float * 100);
+        $cents = (int) round(((float) $amount) * 100);
 
         if (is_null($creditDebit)) {
-            $sign = ($float > 0) - ($float < 0);
-
-            return $sign * $cents;
+            // $cents already carries the sign of $amount. Multiplying by sign($amount)
+            // on top of that flipped every negative value to positive.
+            return $cents;
         }
 
-        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * $cents;
+        // Bank statements carry an unsigned magnitude plus a separate credit/debit mark
+        // (MT940 fields 60F/61), so abs() is a no-op on real bank data. It only guards
+        // against a caller handing in an already-signed amount together with a mark.
+        return ($creditDebit === Statement::CD_DEBIT ? -1 : 1) * abs($cents);
     }
 
     private function convertCentForDB(int $amount): string

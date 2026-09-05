@@ -52,7 +52,11 @@
         </div>
         <div class="relative flex-auto min-w-0">
             <div class="min-w-0 max-w-full overflow-hidden">
-                <flux:editor wire:model="content" class="w-full max-w-full wrap-break-word"/>
+                <flux:editor
+                    wire:model="content"
+                    toolbar="heading | bold italic underline strike highlight subscript superscript | bullet ordered blockquote hr | link | align ~ undo redo"
+                    class="w-full max-w-full wrap-break-word"
+                />
             </div>
             <div class="py-2 pr-2 pl-3 bottom-0 absolute right-0">
                 <flux:button wire:click="save" variant="primary" color="indigo" icon="paper-airplane"></flux:button>

@@ -3,6 +3,8 @@
 namespace booking;
 
 use App\Exceptions\LegacyDieException;
+use App\Exceptions\LegacyDownloadException;
+use App\Models\Setting;
 use framework\auth\AuthHandler;
 use framework\baseclass\TextStyle;
 use framework\CSVBuilder;
@@ -179,15 +181,22 @@ class BookingHandler extends Renderer
             $zip->addFromString($titel_nr.'.csv', $csvString);
         }
 
-        if ($zip->close() === true && ($content = file_get_contents($zipFilePath)) !== false) {
-            header('Content-Type: application/zip');
-            header('Content-disposition: attachment; filename='.$zipFileName);
-            header('Content-Length: '.filesize($zipFileName));
-            echo $content;
-            unlink($zipFilePath);
-        } else {
-            echo 'Error :(';
+        if ($zip->close() !== true || ($content = file_get_contents($zipFilePath)) === false) {
+            @unlink($zipFilePath);
+            throw new LegacyDieException(500, 'Zip kann nicht erstellt werden.');
         }
+
+        unlink($zipFilePath);
+
+        // Handed back as a response instead of echoed: the surrounding output buffer ends up
+        // inside the app layout, which would wrap the archive in HTML rather than download it.
+        throw new LegacyDownloadException(
+            response($content, 200, [
+                'Content-Type' => 'application/zip',
+                'Content-Disposition' => 'attachment; filename="'.$zipFileName.'"',
+                'Content-Length' => strlen($content),
+            ])
+        );
     }
 
     private function fetchBookingHistoryDataFromDB($hhp_id, $sortBy = ['timestamp' => true, 'id' => true]): array
@@ -361,6 +370,17 @@ class BookingHandler extends Renderer
                title="CSV ist WINDOWS-1252 encoded (für Excel optimiert)">
                 <i class="fa fa-fw fa-download"></i> als .zip
             </a>
+            <?php // The same button sits on the budget plan page, but disabled for anyone outside
+                  // ref-finanzen - that page has no group restriction. This one does (see the
+                  // booking node in config.routing.php), and the DATEV download is gated on the
+                  // same group, so every reader of this page may use it.
+                  if (Setting::get('datev', false)) { ?>
+                <a class="btn btn-primary"
+                   href="<?php echo route('datev.export', ['hhpId' => $hhp_id]); ?>"
+                   title="Buchungen dieses Haushaltsjahres als DATEV-Export">
+                    <i class="fa fa-fw fa-download"></i> DATEV Export
+                </a>
+            <?php } ?>
 			<?php
         } else {
             $this->renderClearFix();
