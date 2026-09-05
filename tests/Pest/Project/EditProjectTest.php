@@ -7,6 +7,7 @@ use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
 use App\Models\Legacy\Project;
+use App\Models\Legacy\ProjectAttachment;
 use App\Models\LegalBasis;
 use Cknow\Money\Money;
 use Illuminate\Http\UploadedFile;
@@ -551,4 +552,105 @@ it('remaps post titel when the budget plan is changed', function (): void {
     $posts = $component->get('posts');
     expect($posts[0]['titel_id'])->toBe($matchedNew->id)
         ->and($posts[1]['titel_id'])->toBeNull();
+});
+
+/**
+ * Regression guard for the "attachment cannot be deleted" bug (live in v4.4.0-v4.4.3).
+ *
+ * The delete loop in saveAs() called `ProjectAttachment::where(...)->findOrFail()`
+ * with no argument, but findOrFail()'s id parameter is required -- so every removal
+ * threw an ArgumentCountError. Because that extends Error rather than Exception, the
+ * catch in saveAs() never caught it: the request 500'd and, since the loop runs inside
+ * the open transaction, the *entire* save rolled back and the user lost their edits.
+ *
+ * So this asserts three things at once: the row goes, the file goes, and the unrelated
+ * edits made in the same save survive.
+ */
+it('deletes an attachment and keeps the rest of the save', function (): void {
+    Storage::fake('local');
+
+    $project = Project::factory()->by(user())->create([
+        'name' => 'Attachment Project',
+        // Must resolve under the `email:rfc,dns` rule on save.
+        'responsible' => 'test@open-administration.de',
+    ]);
+    $project->posts()->create([
+        'name' => 'Existing Post',
+        'einnahmen' => Money::EUR(0),
+        'ausgaben' => Money::EUR(5000),
+        'bemerkung' => 'This is a description that is long enough for validation.',
+    ]);
+
+    $doomedPath = 'projects/'.$project->id.'/doomed.pdf';
+    $keptPath = 'projects/'.$project->id.'/kept.pdf';
+    Storage::put($doomedPath, '%PDF-doomed');
+    Storage::put($keptPath, '%PDF-kept');
+    $doomed = $project->attachments()->create([
+        'path' => $doomedPath, 'name' => 'doomed.pdf', 'mime_type' => 'application/pdf', 'size' => 11,
+    ]);
+    $kept = $project->attachments()->create([
+        'path' => $keptPath, 'name' => 'kept.pdf', 'mime_type' => 'application/pdf', 'size' => 9,
+    ]);
+
+    Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
+        ->assertCount('existingAttachments', 2)
+        ->call('removeExistingAttachment', $doomed->id)
+        // staged only -- nothing is touched until the save goes through
+        ->assertCount('existingAttachments', 1)
+        ->tap(fn () => expect(ProjectAttachment::find($doomed->id))->not->toBeNull())
+        ->set('name', 'Attachment Project Renamed')
+        ->call('saveAs', 'draft')
+        ->assertHasNoErrors();
+
+    expect(ProjectAttachment::find($doomed->id))->toBeNull()
+        ->and(ProjectAttachment::find($kept->id))->not->toBeNull();
+    Storage::assertMissing($doomedPath);
+    Storage::assertExists($keptPath);
+
+    // The transaction committed: the edits made alongside the removal are persisted.
+    expect($project->refresh()->name)->toBe('Attachment Project Renamed')
+        ->and($project->attachments)->toHaveCount(1);
+});
+
+/**
+ * The delete is scoped by `projekt_id` as well as `id`, so a tampered
+ * `deletedAttachmentIds` payload cannot reach another project's attachment.
+ * firstOrFail() must still fail the save rather than silently skipping it.
+ */
+it('refuses to delete an attachment belonging to another project', function (): void {
+    Storage::fake('local');
+
+    $project = Project::factory()->by(user())->create([
+        'name' => 'Owner Project',
+        'responsible' => 'test@open-administration.de',
+    ]);
+    // A valid post, so the save passes validation and actually reaches the
+    // delete loop -- otherwise this test would pass on a validation error
+    // without ever exercising the scoping.
+    $project->posts()->create([
+        'name' => 'Existing Post',
+        'einnahmen' => Money::EUR(0),
+        'ausgaben' => Money::EUR(5000),
+        'bemerkung' => 'This is a description that is long enough for validation.',
+    ]);
+    $other = Project::factory()->by(user())->create([
+        'name' => 'Other Project',
+        'responsible' => 'test@open-administration.de',
+    ]);
+    $foreignPath = 'projects/'.$other->id.'/foreign.pdf';
+    Storage::put($foreignPath, '%PDF-foreign');
+    $foreign = $other->attachments()->create([
+        'path' => $foreignPath, 'name' => 'foreign.pdf', 'mime_type' => 'application/pdf', 'size' => 12,
+    ]);
+
+    Livewire::test('pages::project.edit-project', ['project_id' => $project->id])
+        ->set('deletedAttachmentIds', [$foreign->id])
+        ->call('saveAs', 'draft')
+        // ModelNotFoundException from firstOrFail(), surfaced as a save error
+        // rather than a 500, and the whole save rolled back with it.
+        ->assertHasErrors('save');
+
+    expect(ProjectAttachment::find($foreign->id))->not->toBeNull()
+        ->and($project->refresh()->name)->toBe('Owner Project');
+    Storage::assertExists($foreignPath);
 });

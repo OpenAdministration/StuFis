@@ -575,7 +575,12 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             }
 
             foreach ($deletedAttachmentIds as $id) {
-                $pa = ProjectAttachment::where('id', $id)->where('projekt_id', $this->project_id)->findOrFail();
+                // firstOrFail(), not findOrFail(): the id is already in the where
+                // clause. findOrFail() takes a *required* id argument, so calling it
+                // bare threw an ArgumentCountError -- which extends Error, not
+                // Exception, so the catch below never saw it and the whole save
+                // (not just the deletion) blew up with a 500. See the regression test.
+                $pa = ProjectAttachment::where('id', $id)->where('projekt_id', $this->project_id)->firstOrFail();
                 Storage::delete($pa->path);
                 $pa->delete();
             }
