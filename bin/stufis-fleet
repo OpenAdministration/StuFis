@@ -1,0 +1,605 @@
+#!/bin/bash
+### Orchestrate StuFiS deployments across the Hostsharing instance fleet.
+#
+# Runs on the pac admin account, which sudos into each instance user. It owns no
+# deployment logic of its own: every instance is driven through its own
+# bin/stufis-update,
+# so a fleet deploy and a hand-run deploy do exactly the same thing.
+#
+#   stufis-fleet status [<target>]         (target defaults to "all")
+#   stufis-fleet exec   <target> -- <cmd>
+#   stufis-fleet update <target> <ref>
+#
+# <target> is a comma-separated list of groups (prod, stage, demo, all) and/or
+# realm names. Every verb except `status` requires it explicitly - there is no
+# default, so no invocation can touch the fleet by accident.
+#
+# The tool has no opinion about which ref an instance *should* run. It reports
+# what is deployed and flags what looks unusual; the ref is always yours to pass.
+#
+# See docs/fleet-deployment.md for the config file and the release workflow.
+
+# Re-exec under bash if started via `sh stufis-fleet`.
+[ -n "${BASH_VERSION:-}" ] || exec bash "$0" "$@"
+set -euo pipefail
+
+CONF="${STUFIS_FLEET_CONF:-$HOME/.stufis-fleet.conf}"
+LOG_DIR="${STUFIS_FLEET_LOG_DIR:-$HOME/stufis-deploy-logs}"
+STAMP="$(date +%Y%m%dT%H%M%S)"
+
+# Group names are reserved words, so a realm can never be called one of them.
+RESERVED="prod stage demo all"
+
+# ---------------------------------------------------------------- diagnostics
+
+die()  { printf 'stufis-fleet: %s\n' "$*" >&2; exit 1; }
+warn() { printf 'stufis-fleet: %s\n' "$*" >&2; }
+
+# Announce a phase, matching the house style of the other bin/stufis-* scripts.
+step() {
+    if [ -t 2 ]; then
+        printf '\n\033[1;34m==> %s\033[0m\n' "$*" >&2
+    else
+        printf '\n==> %s\n' "$*" >&2
+    fi
+}
+
+# ---------------------------------------------------------------- config var init
+
+PAC=""                       # pac account, e.g. opa00
+USER_SUFFIX="_finanzen"      # instance user is <pac>-<realm><user_suffix>
+REPO_DIR="StuFis"            # checkout directory inside the instance home
+DOMAIN_TEMPLATE="https://%s.stufis.de"   # %s is the realm; overridable per realm
+HEALTH_PATH="/up"            # Laravel health route (bootstrap/app.php: withRouting health:)
+DEMO_RESET_CMD=""            # artisan command that rebuilds the demo dataset
+
+declare -a REALMS=()
+declare -A GROUP_OF=()
+declare -A URL_OF=()
+
+load_config() {
+    [ -r "$CONF" ] || die "no config at $CONF (see docs/fleet-deployment.md)"
+
+    local lineno=0 line key value group realm url
+    while IFS= read -r line || [ -n "$line" ]; do
+        lineno=$((lineno + 1))
+        line="${line%%#*}"                       # strip comments
+        line="${line#"${line%%[![:space:]]*}"}"  # ltrim
+        line="${line%"${line##*[![:space:]]}"}"  # rtrim
+        [ -n "$line" ] || continue
+
+        if [[ "$line" == *=* && "$line" =~ ^[a-z_]+[[:space:]]*= ]]; then
+            key="${line%%=*}"; value="${line#*=}"
+            key="${key%"${key##*[![:space:]]}"}"
+            value="${value#"${value%%[![:space:]]*}"}"
+            case "$key" in
+                pac)             PAC="$value" ;;
+                user_suffix)     USER_SUFFIX="$value" ;;
+                repo_dir)        REPO_DIR="$value" ;;
+                domain_template) DOMAIN_TEMPLATE="$value" ;;
+                health_path)     HEALTH_PATH="$value" ;;
+                demo_reset_cmd)  DEMO_RESET_CMD="$value" ;;
+                *) die "$CONF:$lineno: unknown setting '$key'" ;;
+            esac
+            continue
+        fi
+
+        # otherwise: "<group> <realm> [url]"
+        read -r group realm url <<<"$line"
+        [ -n "$realm" ] || die "$CONF:$lineno: expected '<group> <realm> [url]'"
+        case " $RESERVED " in
+            *" $group "*) ;;
+            *) die "$CONF:$lineno: unknown group '$group' (use prod, stage or demo)" ;;
+        esac
+        # A target that is a reserved word always means the group. A realm may share
+        # its own group's name - the demo instance's realm really is called "demo",
+        # and "demo" resolves to the same single instance either way. Naming a realm
+        # after a different group, or "all", would be genuinely ambiguous.
+        [ "$realm" != all ] || die "$CONF:$lineno: a realm may not be called 'all'"
+        case " $RESERVED " in
+            *" $realm "*)
+                [ "$realm" = "$group" ] || \
+                    die "$CONF:$lineno: realm '$realm' collides with group '$realm'; rename it" ;;
+        esac
+        [ -z "${GROUP_OF[$realm]:-}" ] || die "$CONF:$lineno: realm '$realm' listed twice"
+
+        REALMS+=("$realm")
+        GROUP_OF["$realm"]="$group"
+        URL_OF["$realm"]="$url"   # may be empty; defaulted below
+    done < "$CONF"
+
+    [ ${#REALMS[@]} -gt 0 ] || die "$CONF lists no instances"
+    [ -n "$PAC" ] || die "$CONF: 'pac' is not set"
+
+    # Applied after the whole file is read, so settings and instance lines can
+    # appear in any order. Doing it inline would make a domain_template written
+    # below the instances silently apply to none of them.
+    for realm in "${REALMS[@]}"; do
+        if [ -z "${URL_OF[$realm]}" ]; then
+            # shellcheck disable=SC2059
+            URL_OF["$realm"]="$(printf "$DOMAIN_TEMPLATE" "$realm")"
+        fi
+        URL_OF["$realm"]="${URL_OF[$realm]%/}"   # health path is appended to this
+    done
+}
+
+# A Hostsharing account name cannot contain "-" beyond the pac separator, so a
+# realm's dashes become underscores in the user name. The domain keeps them:
+# realm "asta-hhu" is user "<pac>-asta_hhu_finanzen" at asta-hhu.stufis.de.
+instance_user() { printf '%s-%s%s' "$PAC" "${1//-/_}" "$USER_SUFFIX"; }
+
+# ---------------------------------------------------------------- transport
+
+require_pac() {
+    [ "$(id -un)" = "$PAC" ] || \
+        die "must run as the hostsharing pac account '$PAC', which sudos into the instance users"
+}
+
+# Run a script on an instance. The script arrives on the target shell's stdin,
+# which sidesteps every layer of quoting between here and there. It is a *login*
+# shell, so the managed ~/.bash_profile block is in effect: nvm, PHP_VERSION and
+# bin/ on PATH, exactly as an interactive deploy would have them.
+run_on() {
+    local realm="$1" script="$2" user
+    user="$(instance_user "$realm")"
+    printf '%s\n' "$script" | sudo -u "$user" -i -- bash -l -s
+}
+
+# ---------------------------------------------------------------- targets
+
+# Expand a comma-separated list of groups and realms into a realm list, ordered
+# stage -> demo -> prod so a fleet-wide run always walks from least to most
+# consequential. Within a group, config order is preserved.
+resolve_target() {
+    local spec="$1" part g realm
+    local -a parts=()
+    declare -A want=()
+
+    IFS=',' read -ra parts <<<"$spec"
+    for part in "${parts[@]}"; do
+        [ -n "$part" ] || continue
+        case "$part" in
+            all)
+                for realm in "${REALMS[@]}"; do want["$realm"]=1; done ;;
+            prod|stage|demo)
+                local found=0
+                for realm in "${REALMS[@]}"; do
+                    if [ "${GROUP_OF[$realm]}" = "$part" ]; then want["$realm"]=1; found=1; fi
+                done
+                [ "$found" = 1 ] || die "no instances in group '$part'" ;;
+            *)
+                [ -n "${GROUP_OF[$part]:-}" ] || die "unknown target '$part' (not a group or a known realm)"
+                want["$part"]=1 ;;
+        esac
+    done
+
+    for part in ${EXCEPT//,/ }; do
+        [ -n "${GROUP_OF[$part]:-}" ] || die "--except: unknown realm '$part'"
+        unset 'want[$part]'
+    done
+
+    local -a out=()
+    for g in stage demo prod; do
+        for realm in "${REALMS[@]}"; do
+            [ "${GROUP_OF[$realm]}" = "$g" ] || continue
+            [ -n "${want[$realm]:-}" ] || continue
+            out+=("$realm")
+        done
+    done
+    [ ${#out[@]} -gt 0 ] || die "target '$spec' selects no instances"
+    printf '%s\n' "${out[@]}"
+}
+
+# ---------------------------------------------------------------- probing
+
+# Emitted on the instance; prints one line of key=value facts. Deliberately does
+# not boot the application: a broken app must still be able to report its state.
+probe_script() {
+    cat <<EOF
+repo="\$HOME/${REPO_DIR}"
+cd "\$repo" 2>/dev/null || { echo "state=missing"; exit 0; }
+# Not a -d test on .git: that path is a file in a worktree, not a directory.
+git rev-parse --git-dir >/dev/null 2>&1 || { echo "state=missing"; exit 0; }
+php="php\${PHP_VERSION:-8.4}"
+
+# Same discrimination bin/stufis-update makes: being *attached to a branch* is
+# what decides, not whether a tag happens to point at HEAD. A branch tip can sit
+# on a tagged commit (main right after a release does), and calling that "tag"
+# would both hide the anomaly and let update wrongly skip the instance.
+if ref=\$(git symbolic-ref --short -q HEAD 2>/dev/null); then
+    kind=branch
+elif ref=\$(git describe --tags --exact-match 2>/dev/null); then
+    kind=tag
+else
+    ref=\$(git rev-parse --short HEAD 2>/dev/null || echo '?')
+    kind=detached
+fi
+
+tree=clean
+[ -z "\$(git status --porcelain 2>/dev/null)" ] || tree=dirty
+
+mode=up
+[ ! -f storage/framework/down ] || mode=down
+
+installed=\$("\$php" -r '\$d=@include "vendor/composer/installed.php"; echo is_array(\$d) ? (\$d["root"]["pretty_version"] ?? "?") : "none";' 2>/dev/null || echo '?')
+composer=\$("\$php" -r '\$j=@json_decode(@file_get_contents("composer.json"), true); echo \$j["version"] ?? "?";' 2>/dev/null || echo '?')
+
+echo "state=ok ref=\$ref kind=\$kind tree=\$tree mode=\$mode installed=\$installed composer=\$composer"
+EOF
+}
+
+# Probe one instance into the P_* globals. Never fails the caller: an unreachable
+# instance is a fact to report, not an error to abort on.
+P_state=""; P_ref=""; P_kind=""; P_tree=""; P_mode=""; P_installed=""; P_composer=""
+probe() {
+    local realm="$1" out
+    P_state=unreachable; P_ref="-"; P_kind="-"; P_tree="-"; P_mode="-"; P_installed="-"; P_composer="-"
+
+    if ! out="$(run_on "$realm" "$(probe_script)" 2>/dev/null)"; then return 0; fi
+    out="$(printf '%s' "$out" | grep -m1 '^state=' || true)"
+    [ -n "$out" ] || return 0
+
+    local kv key value
+    for kv in $out; do
+        key="${kv%%=*}"; value="${kv#*=}"
+        case "$key" in
+            state) P_state="$value" ;;  ref) P_ref="$value" ;;
+            kind)  P_kind="$value"  ;;  tree) P_tree="$value" ;;
+            mode)  P_mode="$value"  ;;  installed) P_installed="$value" ;;
+            composer) P_composer="$value" ;;
+        esac
+    done
+}
+
+# Emits "<http_code> <effective_url>".
+#
+# Redirects are followed: <realm>.stufis.de exists for every instance and
+# forwards to that instance's real domain when it has one, so following the
+# forward is what lets domain_template cover the whole fleet without naming a URL
+# per realm. Only the health route is ever fetched, and it is not behind auth, so
+# this cannot wander off to the OIDC provider. The effective URL is reported so a
+# misdirected alias shows up in the deploy log instead of silently passing.
+http_probe() {
+    local url="$1" out
+    # curl writes the -w line even when the transfer fails, reporting code 000,
+    # so a fallback on non-zero exit would append a second line to the first.
+    # Only a total absence of output needs substituting.
+    out="$(curl -sSL --max-redirs 5 -o /dev/null -w '%{http_code} %{url_effective}' \
+        --max-time 20 "$url" 2>/dev/null)" || true
+    printf '%s' "${out:-000 $url}"
+}
+
+# ---------------------------------------------------------------- status
+
+cmd_status() {
+    local -a realms; mapfile -t realms < <(resolve_target "${1:-all}")
+    [ ${#realms[@]} -gt 0 ] || exit 1
+
+    local w=5 realm
+    for realm in "${realms[@]}"; do [ ${#realm} -le "$w" ] || w=${#realm}; done
+
+    printf "%-${w}s  %-5s  %-9s  %-22s  %-8s  %-5s  %-4s  %s\n" \
+        REALM GROUP VERSION REF KIND TREE MODE "${HEALTH_PATH}"
+    local -a notes=()
+    for realm in "${realms[@]}"; do
+        probe "$realm"
+        local http="---"
+        if [ "$P_state" != unreachable ]; then
+            http="$(http_probe "${URL_OF[$realm]}${HEALTH_PATH}")"
+            http="${http%% *}"
+        fi
+        printf "%-${w}s  %-5s  %-9s  %-22s  %-8s  %-5s  %-4s  %s\n" \
+            "$realm" "${GROUP_OF[$realm]}" "$P_installed" "$P_ref" "$P_kind" "$P_tree" "$P_mode" "$http"
+
+        case "$P_state" in
+            unreachable) notes+=("$realm: cannot sudo into $(instance_user "$realm")") ;;
+            missing)     notes+=("$realm: no checkout at ~/$REPO_DIR") ;;
+        esac
+        [ "$P_kind" != branch ] || [ "${GROUP_OF[$realm]}" = stage ] || \
+            notes+=("$realm: on branch '$P_ref' - ${GROUP_OF[$realm]} instances normally run a tag")
+        [ "$P_kind" != detached ] || \
+            notes+=("$realm: detached at $P_ref with no tag - pinned to an untagged commit")
+        [ "$P_tree" != dirty ] || \
+            notes+=("$realm: working tree is dirty - stufis-update will refuse to fast-forward")
+        [ "$P_mode" != down ] || \
+            notes+=("$realm: in maintenance mode - a previous deploy may have failed midway")
+        [ "$P_installed" = "$P_composer" ] || [ "$P_state" != ok ] || \
+            notes+=("$realm: installed $P_installed but composer.json says $P_composer - composer install did not finish")
+    done
+
+    if [ ${#notes[@]} -gt 0 ]; then
+        printf '\n'
+        printf '  ! %s\n' "${notes[@]}"
+    fi
+}
+
+# ---------------------------------------------------------------- exec
+
+cmd_exec() {
+    local target="$1"; shift
+    local -a realms; mapfile -t realms < <(resolve_target "$target")
+    [ ${#realms[@]} -gt 0 ] || exit 1
+    local cmdline="$*"
+    [ -n "$cmdline" ] || die "exec: no command given (use: exec <target> -- <command>)"
+
+    local realm rc=0 failed=0
+    for realm in "${realms[@]}"; do
+        step "$realm"
+        # bin/ is on PATH via the managed profile block, so `artisan ...` works.
+        if ! run_on "$realm" "cd \"\$HOME/${REPO_DIR}\" || exit 1
+${cmdline}"; then
+            rc=$?; failed=$((failed + 1))
+            warn "$realm: command exited $rc"
+        fi
+    done
+    [ "$failed" = 0 ] || die "$failed of ${#realms[@]} instances failed"
+}
+
+# ---------------------------------------------------------------- update
+
+# Does the ref exist upstream, and is it a tag or a branch? Asked once, on the
+# first reachable instance, so a typo is caught before anything is touched.
+REF_KIND=""
+classify_ref() {
+    local ref="$1" realm out
+    shift
+    for realm in "$@"; do
+        out="$(run_on "$realm" "cd \"\$HOME/${REPO_DIR}\" || exit 1
+if git ls-remote --exit-code --tags origin \"refs/tags/${ref}\" >/dev/null 2>&1; then echo tag
+elif git ls-remote --exit-code --heads origin \"refs/heads/${ref}\" >/dev/null 2>&1; then echo branch
+else echo none; fi" 2>/dev/null)" || continue
+        case "$out" in
+            tag|branch) REF_KIND="$out"; return 0 ;;
+            none)       die "ref '$ref' is neither a tag nor a branch on origin" ;;
+        esac
+    done
+    die "could not reach any instance to verify ref '$ref'"
+}
+
+# Run a script on an instance, appending everything to that instance's log. In
+# sequential mode it is also mirrored to stderr: you are sat watching a run that
+# takes minutes per instance, so a silent terminal is the wrong default. Parallel
+# runs stay quiet, because interleaved build output is unreadable anyway.
+run_logged() {
+    local realm="$1" log="$2" script="$3" rc=0
+    if [ "$PARALLEL" -le 1 ]; then
+        run_on "$realm" "$script" 2>&1 | tee -a "$log" >&2
+        rc="${PIPESTATUS[0]}"
+    else
+        run_on "$realm" "$script" >>"$log" 2>&1 || rc=$?
+    fi
+    return "$rc"
+}
+
+# Take the per-instance lock, so a fleet run can never collide with the demo's
+# nightly reset cron or with a second operator. Exit 75 = try again later.
+locked() {
+    # $HOME is intentionally left unexpanded: it must resolve on the instance.
+    # shellcheck disable=SC2016
+    printf 'exec 9>"$HOME/.stufis-fleet.lock"
+if ! flock -n 9; then echo "another deploy or reset holds the lock" >&2; exit 75; fi
+%s\n' "$1"
+}
+
+# Deploy one instance. Always writes its own status file, so sequential and
+# parallel runs are summarised the same way, and never fails its caller: a failed
+# instance is a line in the summary, not an abort of the remaining fleet.
+deploy_one() {
+    local realm="$1" ref="$2" log="$3" status_file="$4"
+    local rc=0
+
+    echo "=== $realm -> $ref  ($(date -Is)) ===" >>"$log"
+    run_logged "$realm" "$log" \
+        "$(locked "bash \"\$HOME/${REPO_DIR}/bin/stufis-update\" \"${ref}\"")" || rc=$?
+    if [ "$rc" != 0 ]; then
+        printf 'failed rc=%s\n' "$rc" >"$status_file"; return 0
+    fi
+
+    # The demo carries no data worth keeping, so reseed it now rather than waiting
+    # for the nightly cron: a from-scratch migrate is the cheapest proof the
+    # release's migrations run clean, and it leaves a browsable instance behind.
+    # Off unless demo_reset_cmd is configured.
+    if [ "${GROUP_OF[$realm]}" = demo ] && [ -n "$DEMO_RESET_CMD" ]; then
+        echo "=== $realm: demo reset ===" >>"$log"
+        run_logged "$realm" "$log" \
+            "$(locked "cd \"\$HOME/${REPO_DIR}\" || exit 1
+${DEMO_RESET_CMD}")" || rc=$?
+        if [ "$rc" != 0 ]; then
+            printf 'reset-failed rc=%s\n' "$rc" >"$status_file"; return 0
+        fi
+    fi
+
+    # Smoke test: the script exiting 0 only means it ran, not that the site serves.
+    # The health route boots the framework and returns 500 if that throws, which
+    # is the question HTTP can answer here. It cannot answer "did the instance
+    # come back up" - Laravel excludes it from maintenance mode by design - and
+    # the root URL cannot either, since anonymous visitors are redirected to the
+    # OIDC provider and never see a 200.
+    local probed health effective
+    probed="$(http_probe "${URL_OF[$realm]}${HEALTH_PATH}")"
+    health="${probed%% *}"; effective="${probed#* }"
+    echo "=== $realm: ${URL_OF[$realm]}${HEALTH_PATH} -> $health (final: $effective) ===" >>"$log"
+    if [ "$health" != 200 ]; then
+        printf 'unhealthy %s=%s\n' "$HEALTH_PATH" "$health" >"$status_file"; return 0
+    fi
+
+    # Maintenance mode and the installed version both come from the probe, which
+    # reads storage/framework/down and vendor/composer/installed.php directly.
+    # Authoritative, and cheaper than inferring either from a status code.
+    # A tag names the version it should have installed, so verify rather than
+    # assume; a branch makes no such promise, so there is nothing to check.
+    probe "$realm"
+    if [ "$P_mode" != up ]; then
+        printf 'still-in-maintenance\n' >"$status_file"; return 0
+    fi
+    if [ "$REF_KIND" = tag ] && [ "$P_installed" != "${ref#v}" ]; then
+        printf 'version-mismatch installed=%s\n' "$P_installed" >"$status_file"; return 0
+    fi
+
+    printf 'ok version=%s\n' "$P_installed" >"$status_file"
+}
+
+cmd_update() {
+    local target="$1" ref="$2"
+    local -a realms; mapfile -t realms < <(resolve_target "$target")
+    [ ${#realms[@]} -gt 0 ] || exit 1
+
+    mkdir -p "$LOG_DIR"
+
+    step "Preflight"
+    classify_ref "$ref" "${realms[@]}"
+    printf '  ref %s resolves to a %s on origin\n' "$ref" "$REF_KIND" >&2
+
+    local -a plan=() skip=()
+    local realm blocked=0
+    for realm in "${realms[@]}"; do
+        probe "$realm"
+        local why=""
+        case "$P_state" in
+            unreachable) why="cannot sudo into $(instance_user "$realm")" ;;
+            missing)     why="no checkout at ~/$REPO_DIR" ;;
+        esac
+        [ -n "$why" ] || [ "$P_tree" != dirty ] || why="working tree is dirty"
+        [ -n "$why" ] || [ "$P_mode" != down ] || why="already in maintenance mode (earlier deploy failed?)"
+
+        if [ -n "$why" ] && [ "$FORCE" != 1 ]; then
+            warn "$realm: $why"; blocked=$((blocked + 1)); continue
+        fi
+
+        # Only a tag pins a commit. A branch tip can have moved since the last
+        # deploy, so branch instances are always redeployed.
+        if [ "$FORCE" != 1 ] && [ "$REF_KIND" = tag ] && [ "$P_kind" = tag ] && [ "$P_ref" = "$ref" ]; then
+            skip+=("$realm"); continue
+        fi
+        plan+=("$realm")
+    done
+
+    [ "$blocked" = 0 ] || die "$blocked instance(s) failed preflight; fix them or re-run with --force"
+
+    if [ ${#skip[@]} -gt 0 ]; then
+        printf '  already on %s: %s\n' "$ref" "${skip[*]}" >&2
+    fi
+    if [ ${#plan[@]} -eq 0 ]; then
+        step "Nothing to do"; return 0
+    fi
+    printf '  will deploy %s to: %s\n' "$ref" "${plan[*]}" >&2
+
+    if [ "$DRY_RUN" = 1 ]; then
+        step "Dry run - stopping here"; return 0
+    fi
+
+    if [ "$ASSUME_YES" != 1 ]; then
+        [ -t 0 ] || die "not running interactively; pass --yes to confirm up front"
+        local reply
+        read -r -p "Deploy $ref to ${#plan[@]} instance(s)? [y/N] " reply </dev/tty
+        [[ "$reply" =~ ^[Yy]$ ]] || die "aborted"
+    fi
+
+    step "Deploying $ref"
+    local running=0
+    for realm in "${plan[@]}"; do
+        local log="$LOG_DIR/${realm}-${STAMP}.log"
+        local status_file="$LOG_DIR/.status-${realm}-${STAMP}"
+        if [ "$PARALLEL" -gt 1 ]; then
+            deploy_one "$realm" "$ref" "$log" "$status_file" &
+            running=$((running + 1))
+            if [ "$running" -ge "$PARALLEL" ]; then wait -n; running=$((running - 1)); fi
+        else
+            step "$realm -> $ref"
+            deploy_one "$realm" "$ref" "$log" "$status_file"
+            printf '  %s: %s\n' "$realm" "$(cat "$status_file")" >&2
+        fi
+    done
+    [ "$PARALLEL" -le 1 ] || wait
+
+    step "Summary"
+    local failed=0 result
+    for realm in "${plan[@]}"; do
+        result="$(cat "$LOG_DIR/.status-${realm}-${STAMP}" 2>/dev/null || echo 'unknown')"
+        printf '  %-20s %s\n' "$realm" "$result"
+        case "$result" in ok*) ;; *) failed=$((failed + 1));
+            printf '  %-20s   log: %s\n' "" "$LOG_DIR/${realm}-${STAMP}.log" ;;
+        esac
+        rm -f "$LOG_DIR/.status-${realm}-${STAMP}"
+    done
+    for realm in "${skip[@]}"; do printf '  %-20s skipped (already on %s)\n' "$realm" "$ref"; done
+
+    if [ "$failed" != 0 ]; then
+        printf '\n' >&2
+        warn "$failed of ${#plan[@]} deploy(s) failed. Instances that failed after"
+        warn "'artisan down' are STILL IN MAINTENANCE MODE - check them before you stop."
+        exit 1
+    fi
+}
+
+# ---------------------------------------------------------------- main
+
+usage() {
+    cat <<'EOF'
+Usage:
+  stufis-fleet status [<target>]          show what each instance is running (default: all)
+  stufis-fleet exec   <target> -- <cmd>   run a command in every selected checkout
+  stufis-fleet update <target> <ref>      deploy a tag or branch via bin/stufis-update
+
+  <target>  comma-separated list of groups (prod, stage, demo, all) and/or realms.
+            Required for exec and update - there is no default.
+
+Options:
+  --except realm,...   drop these realms from the target
+  --parallel N         deploy N instances at once (default 1; output goes to logs)
+  --dry-run            run preflight and print the plan, change nothing
+  --yes                skip the confirmation prompt
+  --force              deploy despite failed preflight, and ignore already-at-ref
+
+Examples:
+  stufis-fleet status
+  stufis-fleet update stage release/4.5.0
+  stufis-fleet update demo v4.5.0
+  stufis-fleet update prod v4.5.0 --except stura-abc
+  stufis-fleet exec all -- artisan stufis:fints-institutes-update
+EOF
+}
+
+EXCEPT=""; PARALLEL=1; DRY_RUN=0; ASSUME_YES=0; FORCE=0
+declare -a ARGS=()
+
+[ $# -gt 0 ] || { usage; exit 1; }
+
+# Everything after `--` is a verbatim command for `exec`, never a flag for us.
+declare -a REST=()
+seen_dashdash=0
+while [ $# -gt 0 ]; do
+    if [ "$seen_dashdash" = 1 ]; then REST+=("$1"); shift; continue; fi
+    case "$1" in
+        --) seen_dashdash=1; shift ;;
+        --except)   EXCEPT="${2:-}"; shift 2 ;;
+        --parallel) PARALLEL="${2:-1}"; shift 2 ;;
+        --dry-run)  DRY_RUN=1; shift ;;
+        --yes|-y)   ASSUME_YES=1; shift ;;
+        --force)    FORCE=1; shift ;;
+        -h|--help)  usage; exit 0 ;;
+        -*)         die "unknown option '$1'" ;;
+        *)          ARGS+=("$1"); shift ;;
+    esac
+done
+
+[ ${#ARGS[@]} -gt 0 ] || { usage; exit 1; }
+[[ "$PARALLEL" =~ ^[1-9][0-9]*$ ]] || die "--parallel expects a positive number"
+
+load_config
+require_pac
+
+case "${ARGS[0]}" in
+    status)
+        [ ${#ARGS[@]} -le 2 ] || die "status takes at most one target"
+        cmd_status "${ARGS[1]:-all}" ;;
+    exec)
+        [ ${#ARGS[@]} -eq 2 ] || die "exec needs exactly one target (use: exec <target> -- <command>)"
+        [ ${#REST[@]} -gt 0 ] || die "exec needs a command after '--'"
+        cmd_exec "${ARGS[1]}" "${REST[@]}" ;;
+    update)
+        [ ${#ARGS[@]} -eq 3 ] || die "update needs a target and a ref (e.g. update prod v4.5.0)"
+        cmd_update "${ARGS[1]}" "${ARGS[2]}" ;;
+    *)
+        die "unknown command '${ARGS[0]}' (expected status, exec or update)" ;;
+esac

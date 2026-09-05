@@ -1,0 +1,54 @@
+# stufis-fleet configuration. Lives on the pac admin account as
+# ~/.stufis-fleet.conf (override with $STUFIS_FLEET_CONF).
+#
+# This file holds every hosting-specific fact, so bin/stufis-fleet itself stays
+# generic and shippable. Keep it out of the repo - it is your fleet, not StuFiS's.
+
+# --- settings ---------------------------------------------------------------
+
+# Pac admin account. stufis-fleet must run as this user and sudos into the instances.
+pac = xyz00
+
+# The settings below already default to these values in bin/stufis-fleet.
+# Uncomment one only to override it - otherwise the default is the single source
+# of truth and this file stays a list of your instances.
+
+# Instance unix user is <pac>-<realm><user_suffix>, with every "-" in the realm
+# replaced by "_" (account names allow only the pac separator). Realm "asta-hhu"
+# is user "xyz00-asta_hhu_finanzen". The domain keeps the dash.
+# user_suffix = _finanzen
+
+# Checkout directory inside each instance's home.
+# repo_dir = StuFis
+
+# Default URL for the smoke test; %s is the realm, dashes intact.
+# domain_template = https://%s.stufis.de
+
+# Laravel's health route, appended to each instance URL for the smoke test.
+# Must match `health:` in bootstrap/app.php.
+# health_path = /up
+
+# Optional: artisan command run on the demo instance right after a successful
+# deploy, so you get a verified-clean instance without waiting for the nightly
+# cron. Left empty, the step is skipped entirely.
+# demo_reset_cmd = artisan migrate:fresh --seed --force
+
+# --- instances --------------------------------------------------------------
+#
+#   <group>  <realm>  [url]
+#
+# group is prod, stage or demo. Realms may not be named prod, stage, demo or all
+# - those are reserved as targets.
+#
+# The url column is optional and rarely needed: <realm>.stufis.de exists for
+# every instance and forwards to its real domain, and the smoke test follows
+# redirects. Set it only for a realm that has no such forward.
+#
+# stufis-fleet has no opinion about which ref a group should run; `status` just
+# flags a non-stage instance sitting on a branch, since that is the exception.
+
+stage   dev
+demo    demo
+
+prod    asta-example
+prod    stura-example
