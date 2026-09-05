@@ -1,4 +1,5 @@
 /node_modules
+/legacy/runtime
 /public/hot
 /public/build
 /public/storage
