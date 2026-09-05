@@ -83,9 +83,9 @@ class LegacyBudgetPlan extends Model
         $format = 'M y';
         if ($this->bis === null) {
             return "HPP$this->id ab {$this->von->format($format)}";
-        } else {
-            return "HHP$this->id {$this->von->format($format)} - {$this->bis->format($format)}";
         }
+
+        return "HHP$this->id {$this->von->format($format)} - {$this->bis->format($format)}";
     }
 
     #[\Override]

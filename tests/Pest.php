@@ -159,9 +159,7 @@ function resetLegacySingletons(): void
  */
 function testFile(string $storage_path, ?string $fileName = null): File
 {
-    if ($fileName === null) {
-        $fileName = str($storage_path)->explode('/')->last();
-    }
+    $fileName ??= str($storage_path)->explode('/')->last();
     $content = Storage::disk('tests')->get($storage_path);
 
     return File::createWithContent($fileName, $content);
