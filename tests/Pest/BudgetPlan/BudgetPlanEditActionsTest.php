@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\BudgetPlan\DeleteSubtreeModal;
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
@@ -19,6 +20,19 @@ function draftPlan(): BudgetPlan
 function editComponent(BudgetPlan $plan)
 {
     return Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
+}
+
+/**
+ * Drive a subtree deletion the way the UI does: the row menu dispatches confirm-delete-item at
+ * the modal component (OP#638), which owns the write; the editor only reloads afterwards.
+ */
+function deleteSubtree(BudgetPlan $plan, BudgetItem $item): void
+{
+    Livewire::test(DeleteSubtreeModal::class, ['planId' => $plan->id])
+        ->call('confirmDelete', $item->id)
+        ->call('deleteItem')
+        ->assertHasNoErrors()
+        ->assertDispatched('budget-subtree-deleted');
 }
 
 it('only lets budget officers open the edit page', function (): void {
@@ -114,7 +128,7 @@ it('deletes a group together with its whole subtree (OP#638)', function (): void
     $leaf = $root->orderedChildren()->first();
 
     // the group still has a child — deleting it used to be refused, now it takes the branch
-    $lw->call('confirmDelete', $root->id)->call('deleteItem')->assertHasNoErrors();
+    deleteSubtree($plan, $root);
 
     expect(BudgetItem::find($root->id))->toBeNull()
         ->and(BudgetItem::find($leaf->id))->toBeNull();
@@ -194,7 +208,7 @@ it('deletes a tax title along with its tax_budget row (no FK violation)', functi
     expect(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeTrue();
 
     // deleting the tax title used to fail on the tax_budget.budget_id FK
-    $lw->call('confirmDelete', $taxItem->id)->call('deleteItem')->assertHasNoErrors();
+    deleteSubtree($plan, $taxItem);
 
     expect(BudgetItem::find($taxItem->id))->toBeNull()
         ->and(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeFalse();

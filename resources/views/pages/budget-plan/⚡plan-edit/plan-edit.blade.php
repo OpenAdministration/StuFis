@@ -95,8 +95,9 @@
     </div>
 
     {{-- OP#638: deleting a group takes its whole subtree with it, so the confirmation names
-         every doomed title instead of just counting them --}}
-    <x-budgetplan.delete-subtree-modal :rows="$delete_subtree"/>
+         every doomed title instead of just counting them. Its own component, so opening it does
+         not re-render the editor behind it — the row menus arm it by dispatching an event. --}}
+    <livewire:budget-plan.delete-subtree-modal :plan-id="$plan_id"/>
 
     {{-- mount picker: turn the chosen item into a reference to another plan's in/out --}}
     <flux:modal name="mount-plan" class="md:w-96">

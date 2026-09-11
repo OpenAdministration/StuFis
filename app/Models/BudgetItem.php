@@ -327,6 +327,35 @@ class BudgetItem extends Model
     }
 
     /**
+     * Rewrite every ancestor's stored `value` as the sum of its children, bottom-up — a group's
+     * value is derived, so removing or changing anything below it invalidates the whole chain.
+     *
+     * Walks the IN-MEMORY parent chain, which is why it still works immediately after this item's
+     * row was deleted: the row is gone, but parent_id is still on the model. The flip side is
+     * that it must run in the same request as the delete — afterwards there is nothing left to
+     * walk, and the plan would keep group sums that still count the deleted titles.
+     *
+     * The `true` on Money::EUR() is cknow/money's $convert flag: `value` uses MoneyDecimalCast,
+     * so the column (and therefore sum()) is a decimal that has to be turned into minor units.
+     *
+     * Returns the ancestors it touched so a caller that also holds view state can mirror the new
+     * sums without walking the chain a second time — see ⚡plan-edit's reSumItemValues().
+     *
+     * @return list<BudgetItem> the ancestors whose value was rewritten, deepest first
+     */
+    public function reSumAncestorValues(): array
+    {
+        $touched = [];
+        for ($ancestor = $this->parent; $ancestor !== null; $ancestor = $ancestor->parent) {
+            $ancestor->value = Money::EUR($ancestor->children()->sum('value'), true);
+            $ancestor->save();
+            $touched[] = $ancestor;
+        }
+
+        return $touched;
+    }
+
+    /**
      * Re-pack this item's siblings to positions 0..n-1, so a deleted item leaves no gap behind —
      * a gap makes the editor's "one position up/down" action skip a row. Call it after the delete:
      * the parent_id and budget_type the sequence is keyed by still live on the in-memory model.

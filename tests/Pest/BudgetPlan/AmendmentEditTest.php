@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\BudgetPlan\DeleteSubtreeModal;
 use App\Models\BudgetItem;
 use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
@@ -54,6 +55,18 @@ function nhhpEditComponent(BudgetPlan $parent, BudgetPlan $amendment)
 }
 
 /** Books against a leaf, wiring the (zahlung_id, zahlung_type) FK via a throwaway konto transaction. */
+/**
+ * Drive a subtree deletion in the amendment editor: the modal component owns the write and gets
+ * the amendment id, which is what switches it from deleting to drafting `delete` change rows.
+ */
+function nhhpDeleteSubtree(BudgetPlan $parent, BudgetPlan $amendment, BudgetItem $item)
+{
+    return Livewire::test(DeleteSubtreeModal::class, [
+        'planId' => $parent->id,
+        'amendmentId' => $amendment->id,
+    ])->call('confirmDelete', $item->id)->call('deleteItem');
+}
+
 function nhhpEditBookLeaf(BudgetItem $leaf): Booking
 {
     $account = BankAccount::factory()->create();
@@ -249,7 +262,7 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
     $amendment = nhhpDraftAmendment($parent);
     $lw = nhhpEditComponent($parent, $amendment);
 
-    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
+    nhhpDeleteSubtree($parent, $amendment, $leaf)->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
     expect($change->action)->toBe(BudgetItemChangeAction::Delete);
@@ -262,7 +275,7 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
 
     // now book against the leaf and try again: deletion must be refused
     nhhpEditBookLeaf($leaf);
-    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
+    nhhpDeleteSubtree($parent, $amendment, $leaf)->assertHasNoErrors();
     expect(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->exists())->toBeFalse();
 });
 
@@ -298,7 +311,14 @@ it('shows the delete badge/undo affordance on the deleted row, not a sibling row
     $amendment = nhhpDraftAmendment($parent);
     $lw = nhhpEditComponent($parent, $amendment);
 
-    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
+    nhhpDeleteSubtree($parent, $amendment, $leaf)
+        ->assertHasNoErrors()
+        ->assertDispatched('budget-subtree-deleted');
+
+    // the modal component owns the write, so the editor only learns about it through the event it
+    // dispatches — in the browser Livewire routes that to the #[On] listener; here the two
+    // components under test are separate instances, so the listener is called directly
+    $lw->call('subtreeDeleted')->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
     expect($change->action)->toBe(BudgetItemChangeAction::Delete);
@@ -330,7 +350,7 @@ it('deletes an amendment-added item outright (item + change row), no delete-row 
     $lw->call('addBudget', $group->id);
     $newItem = BudgetItem::where('budget_plan_id', $amendment->id)->where('parent_id', $group->id)->sole();
 
-    $lw->call('confirmDelete', $newItem->id)->call('deleteItem')->assertHasNoErrors();
+    nhhpDeleteSubtree($parent, $amendment, $newItem)->assertHasNoErrors();
 
     expect(BudgetItem::find($newItem->id))->toBeNull()
         ->and(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $newItem->id)->exists())->toBeFalse();

@@ -67,7 +67,7 @@ return [
     'edit.delete-modal.intro' => '{1} Dieser Titel wird gelöscht:|[2,*] Diese :count Titel werden gelöscht:',
     'edit.delete-modal.total' => 'Summe der Planwerte',
     'edit.delete-modal.warning' => 'Das Löschen lässt sich nicht rückgängig machen.',
-    'edit.delete-modal.amendment-note' => 'Es wird je Titel eine Änderungszeile „Löschen“ angelegt. Die Titel des Ursprungsplans verschwinden erst, wenn der Nachtrag angewendet wird – bis dahin lässt sich jede einzelne Löschung wieder zurücknehmen.',
+    'edit.delete-modal.amendment-note' => 'Es wird je Titel eine Änderungszeile „Löschen“ angelegt. Die Titel des Ursprungsplans verschwinden erst, wenn der Nachtrag angewendet wird.',
     'edit.delete-modal.blocked-intro' => 'Löschen nicht möglich. Auf diese Titel wurde bereits gebucht oder geplant:',
     'edit.delete-modal.blocked-bookings' => '{1} eine Buchung|[2,*] :count Buchungen',
     'edit.delete-modal.blocked-posts' => '{1} ein Projektposten|[2,*] :count Projektposten',

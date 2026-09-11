@@ -1,25 +1,13 @@
-@props([
-    /* the flux:modal name the row menus open */
-    'name' => 'delete-item-modal',
-    /* @var \Illuminate\Support\Collection<int, \App\Models\BudgetItem>|null the doomed items in
-       display order, each carrying `depth` and the withCount blocker counts; null until armed */
-    'rows' => null,
-    /* the component action that performs the deletion */
-    'action' => 'deleteItem',
-    /* extra sentence explaining what deleting means in this editor (the amendment note) */
-    'note' => null,
-])
-
+<div>
 {{-- OP#638: the same checklist-style grammar as ⚡plan-view's delete-plan-modal (red warning
      circle, heading, consequences, ghost cancel + danger confirm), but the consequence here is a
      LIST: deleting a group takes its whole subtree with it, so every doomed title is named rather
-     than counted. Shared by the plan and the amendment editor, which differ only in what
-     "delete" writes — see the $action / $note props. --}}
-{{-- @close maps to wire:close: closing the dialog (Abbrechen, Escape, backdrop) disarms the
-     server state too. Without it $delete_item_id survives a cancel, and every later render of the
-     editor re-runs the subtree query and re-renders this whole list for a modal nobody is looking
-     at. Costs one small request on close; saves one recursive query per render after that. --}}
-<flux:modal :name="$name" class="md:w-[36rem]" @close="cancelDelete">
+     than counted. See App\Livewire\BudgetPlan\DeleteSubtreeModal for why this is a component.
+
+     @close maps to wire:close, so Abbrechen, Escape and the backdrop disarm $itemId as well.
+     Without it the dialog stays armed and every later render re-runs the subtree query and
+     rebuilds this whole list for a modal nobody is looking at. --}}
+<flux:modal name="delete-item-modal" class="md:w-[36rem]" @close="cancelDelete">
     <div class="space-y-6">
         <div class="flex items-center gap-3">
             <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
@@ -30,16 +18,9 @@
             </h3>
         </div>
 
-        {{-- the menu opens the modal client-side (instant), so the subtree is still loading here --}}
-        <div wire:loading.flex wire:target="confirmDelete" class="flex-col gap-3">
-            <div class="h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
-            <div class="h-24 w-full animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-700"></div>
-            <div class="h-9 w-32 self-end animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-700"></div>
-        </div>
-
         @if($rows !== null)
             @php($blockers = $rows->filter(fn (\App\Models\BudgetItem $item): bool => $item->blocksDeletion()))
-            <div wire:loading.remove wire:target="confirmDelete" class="space-y-4">
+            <div class="space-y-4">
                 @if($blockers->isNotEmpty())
                     {{-- refused: name the titles that hold the reference, per AC 3 --}}
                     <p class="text-sm text-gray-500">{{ __('budget-plan.edit.delete-modal.blocked-intro') }}</p>
@@ -87,8 +68,10 @@
                                 <span class="shrink-0 tabular-nums text-gray-500">
                                     {{-- a group's figure is a sum of the rows below it, marked the
                                          same way the editor marks it, so the column doesn't read
-                                         as if the group carried a value of its own --}}
-                                    @if($item->is_group)Σ @endif{{ $item->effectiveValue()->format() }}
+                                         as if the group carried a value of its own. Precomputed in
+                                         the component: calling effectiveValue() here lazy-loaded a
+                                         group's children once per rendered row. --}}
+                                    @if($item->is_group)Σ @endif{{ $values[$item->id]->format() }}
                                 </span>
                             </li>
                         @endforeach
@@ -96,17 +79,16 @@
 
                     <div class="flex items-baseline justify-between text-sm">
                         <span class="text-gray-500">{{ __('budget-plan.edit.delete-modal.total') }}</span>
-                        <span class="font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                            {{-- summed over the leaves only, so a group is not counted on top of
-                                 the children it merely rolls up --}}
-                            {{ $rows->reject->is_group->reduce(
-                                   fn (?\Cknow\Money\Money $carry, \App\Models\BudgetItem $item) => $carry->add($item->effectiveValue()),
-                                   \Cknow\Money\Money::EUR(0),
-                               )->format() }}
-                        </span>
+                        <span class="font-semibold tabular-nums text-gray-700 dark:text-gray-300">{{ $total->format() }}</span>
                     </div>
 
-                    <p class="text-sm text-gray-500">{{ $note ?? __('budget-plan.edit.delete-modal.warning') }}</p>
+                    {{-- in an amendment nothing is removed yet, so the warning is replaced by
+                         what drafting the deletion actually means --}}
+                    <p class="text-sm text-gray-500">
+                        {{ $amendmentId === null
+                            ? __('budget-plan.edit.delete-modal.warning')
+                            : __('budget-plan.edit.delete-modal.amendment-note') }}
+                    </p>
                 @endif
 
                 <div class="flex gap-3">
@@ -114,7 +96,7 @@
                     <flux:modal.close>
                         <flux:button variant="ghost">{{ __('budget-plan.edit.delete-modal.cancel') }}</flux:button>
                     </flux:modal.close>
-                    <flux:button :wire:click="$action" variant="danger" :disabled="$blockers->isNotEmpty()">
+                    <flux:button wire:click="deleteItem" variant="danger" :disabled="$blockers->isNotEmpty()">
                         {{ __('budget-plan.edit.delete-modal.confirm') }}
                     </flux:button>
                 </div>
@@ -122,3 +104,4 @@
         @endif
     </div>
 </flux:modal>
+</div>

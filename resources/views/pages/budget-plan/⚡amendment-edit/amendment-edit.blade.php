@@ -108,6 +108,7 @@
         </flux:tab.panel>
     </flux:tab.group>
 
-    <x-budgetplan.delete-subtree-modal :rows="$delete_subtree"
-                                       :note="__('budget-plan.edit.delete-modal.amendment-note')"/>
+    {{-- OP#638: same confirmation as the plan editor; passing the amendment id switches it to
+         drafting one `delete` change row per title instead of removing anything --}}
+    <livewire:budget-plan.delete-subtree-modal :plan-id="$plan_id" :amendment-id="$amendment_id"/>
 </div>
