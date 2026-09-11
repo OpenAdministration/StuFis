@@ -94,6 +94,10 @@
         @endif
     </div>
 
+    {{-- OP#638: deleting a group takes its whole subtree with it, so the confirmation names
+         every doomed title instead of just counting them --}}
+    <x-budgetplan.delete-subtree-modal :rows="$delete_subtree"/>
+
     {{-- mount picker: turn the chosen item into a reference to another plan's in/out --}}
     <flux:modal name="mount-plan" class="md:w-96">
         {{-- entangle so the select + confirm button react client-side (instant), no round-trip --}}

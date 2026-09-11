@@ -107,4 +107,7 @@
             </div>
         </flux:tab.panel>
     </flux:tab.group>
+
+    <x-budgetplan.delete-subtree-modal :rows="$delete_subtree"
+                                       :note="__('budget-plan.edit.delete-modal.amendment-note')"/>
 </div>

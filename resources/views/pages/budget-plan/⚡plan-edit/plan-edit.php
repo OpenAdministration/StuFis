@@ -2,6 +2,7 @@
 
 use App\Livewire\BudgetPlan\ItemForm;
 use App\Models\BudgetItem;
+use App\Models\BudgetItemChange;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
 use App\Models\FiscalYear;
@@ -35,6 +36,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     /** @var list<array{id:int, label:string}> candidate plans, loaded only when the picker opens */
     public $mount_candidates = [];
+
+    /** The item whose deletion is currently being confirmed in the delete modal. */
+    public ?int $delete_item_id = null;
 
     /**
      * @var array an array which holds Livewire ItemForm objects.
@@ -145,6 +149,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             ],
             'in_total' => $this->sumRoots($rootsFor(BudgetType::INCOME), $values),
             'out_total' => $this->sumRoots($rootsFor(BudgetType::EXPENSE), $values),
+            'delete_subtree' => $this->deleteSubtree(),
         ];
     }
 
@@ -580,32 +585,107 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     }
 
     /**
+     * Arm the delete confirmation for $item_id. The row menu shows the modal client-side, so this
+     * only has to resolve the subtree behind it — same split as openMountPicker(), which lets the
+     * modal's skeleton stand in while the round-trip is on the way.
+     */
+    public function confirmDelete(int $item_id): void
+    {
+        $this->delete_item_id = $item_id;
+    }
+
+    /** Disarm the delete confirmation — wired to the modal's close event, see the modal blade. */
+    public function cancelDelete(): void
+    {
+        $this->delete_item_id = null;
+    }
+
+    /**
+     * The armed item together with everything below it, in display order and annotated with the
+     * accounting references that block a deletion — null while nothing is armed.
+     *
+     * One recursive query does all of it: `descendantsAndSelf` walks parent_id (so an amendment's
+     * own additions come along with their base parent), `depth` arrives 0-based relative to the
+     * armed item, and withCount folds both blocker counts into the same statement instead of an
+     * EXISTS per row. Resolved in with() rather than kept as component state, so the list never
+     * travels in the Livewire snapshot.
+     *
+     * The in-PHP sort is deliberate: `position_path` is positions joined with '.', so ordering by
+     * it in SQL is a string sort that puts position 10 between 1 and 2. Comparing the segments as
+     * an int array fixes that and still yields pre-order, because PHP orders a shorter array
+     * before a longer one that starts with it — i.e. a parent before its children.
+     *
+     * @return Collection<int, BudgetItem>|null
+     */
+    private function deleteSubtree(): ?Collection
+    {
+        if ($this->delete_item_id === null) {
+            return null;
+        }
+
+        $item = BudgetItem::find($this->delete_item_id);
+        if ($item === null) {
+            return null;
+        }
+
+        return $item->descendantsAndSelf()
+            ->withCount(['bookings', 'projectPosts'])
+            ->get()
+            ->sortBy(fn (BudgetItem $row): array => array_map(intval(...), explode('.', (string) $row->position_path)))
+            ->values();
+    }
+
+    /**
+     * Delete the armed item and everything below it (OP#638). Deleting used to be strictly
+     * leaf-wise, which made clearing a group of 20 titles 20 separate deletions from the bottom
+     * up; the guard against losing work by accident is now the modal's explicit list, not the
+     * one-row-at-a-time restriction.
+     *
      * NOTE: must NOT be called `delete()`. Livewire's CSP-safe evaluator rewrites a
      * `wire:click="foo(1)"` expression to `$wire.foo(1)` and parses it with a hand-written
      * tokenizer that treats `delete` as a reserved KEYWORD, so `$wire.delete(1)` fails to parse
      * and the click is swallowed with only a console warning — no request at all.
      */
-    public function deleteItem(int $item_id): void
+    public function deleteItem(): void
     {
-        $item = BudgetItem::findOrFail($item_id);
-
-        if ($item->children()->count() > 0) {
-            Flux::toast(__('budget-plan.edit.delete-has-children'), variant: 'danger');
-
-            return;
-        }
-        if ($item->hasBookings()) {
-            Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
+        $subtree = $this->deleteSubtree();
+        if (! $subtree instanceof Collection) {
+            $this->delete_item_id = null;
 
             return;
         }
-        DB::transaction(function () use ($item): void {
-            // a tax title is referenced by a tax_budget row (budget_id FK, RESTRICT);
-            // drop it first so the item delete doesn't hit the constraint
-            TaxBudget::where('budget_id', $item->id)->delete();
-            $item->delete();
+
+        // the whole subtree has to be clear, not just the item that was clicked: only leaves are
+        // bookable, so a group's bookings always sit below it, where hasBookings() never looked
+        if ($subtree->contains(fn (BudgetItem $row): bool => $row->blocksDeletion())) {
+            Flux::toast(__('budget-plan.edit.delete-blocked'), variant: 'danger');
+
+            return;
+        }
+
+        $item = $subtree->firstOrFail();
+        $ids = $subtree->pluck('id')->all();
+
+        DB::transaction(static function () use ($subtree, $ids): void {
+            // both are RESTRICT references onto the doomed items and have to go first: the
+            // tax_budget row of a VAT title, and any change row an amendment drafted against it
+            TaxBudget::whereIn('budget_id', $ids)->delete();
+            BudgetItemChange::whereIn('budget_item_id', $ids)->delete();
+
+            // deepest first — budget_item.parent_id is RESTRICT too, so a parent may only go
+            // once its children are gone
+            $subtree->sortByDesc('depth')->each(static fn (BudgetItem $row) => $row->delete());
         });
+
+        // both read the parent chain off the in-memory model, which outlives the deleted row
+        $item->normalizeSiblingPositions();
         $this->reSumItemValues($item);
+
+        $this->delete_item_id = null;
+        $this->loadItems();
+        Flux::modal('delete-item-modal')->close();
+        Flux::toast(__('budget-plan.edit.deleted', ['count' => $subtree->count()]), variant: 'success');
+        $this->refresh();
     }
 
     public function refresh(): void

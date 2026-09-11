@@ -124,8 +124,11 @@
                                     icon="clipboard">
                         {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="deleteItem({{ $item->id }})"
-                                    :disabled="$item->orderedChildren->isNotEmpty()" variant="danger"
+                    {{-- OP#638: a group with children is no longer disabled here — the modal
+                         names the whole subtree and refuses only when something is booked.
+                         Shown client-side so its skeleton stands in while the subtree loads. --}}
+                    <flux:menu.item x-on:click="$dispatch('modal-show', { name: 'delete-item-modal' })"
+                                    wire:click="confirmDelete({{ $item->id }})" variant="danger"
                                     icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>

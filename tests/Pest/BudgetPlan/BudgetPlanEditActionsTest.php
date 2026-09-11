@@ -103,7 +103,7 @@ it('duplicates an item (and its subtree) via copy', function (): void {
         ->where('budget_type', BudgetType::EXPENSE)->count())->toBe($rootsBefore + 1);
 });
 
-it('blocks deleting a group with children but allows deleting a leaf', function (): void {
+it('deletes a group together with its whole subtree (OP#638)', function (): void {
     $this->actingAs(budgetManager());
     $plan = draftPlan();
     $lw = editComponent($plan);
@@ -113,13 +113,11 @@ it('blocks deleting a group with children but allows deleting a leaf', function 
         ->where('budget_type', BudgetType::EXPENSE)->first();
     $leaf = $root->orderedChildren()->first();
 
-    // group still has a child -> delete refused
-    $lw->call('deleteItem', $root->id)->assertHasNoErrors();
-    expect(BudgetItem::find($root->id))->not->toBeNull();
+    // the group still has a child — deleting it used to be refused, now it takes the branch
+    $lw->call('confirmDelete', $root->id)->call('deleteItem')->assertHasNoErrors();
 
-    // leaf -> deleted
-    $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
-    expect(BudgetItem::find($leaf->id))->toBeNull();
+    expect(BudgetItem::find($root->id))->toBeNull()
+        ->and(BudgetItem::find($leaf->id))->toBeNull();
 });
 
 it('enforces the max nesting depth server-side (add sub-group and convert-to-group)', function (): void {
@@ -196,7 +194,7 @@ it('deletes a tax title along with its tax_budget row (no FK violation)', functi
     expect(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeTrue();
 
     // deleting the tax title used to fail on the tax_budget.budget_id FK
-    $lw->call('deleteItem', $taxItem->id)->assertHasNoErrors();
+    $lw->call('confirmDelete', $taxItem->id)->call('deleteItem')->assertHasNoErrors();
 
     expect(BudgetItem::find($taxItem->id))->toBeNull()
         ->and(TaxBudget::where('budget_id', $taxItem->id)->exists())->toBeFalse();

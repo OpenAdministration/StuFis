@@ -249,7 +249,7 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
     $amendment = nhhpDraftAmendment($parent);
     $lw = nhhpEditComponent($parent, $amendment);
 
-    $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
+    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
     expect($change->action)->toBe(BudgetItemChangeAction::Delete);
@@ -262,7 +262,7 @@ it('parks an unbooked base item for deletion without touching it, but refuses de
 
     // now book against the leaf and try again: deletion must be refused
     nhhpEditBookLeaf($leaf);
-    $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
+    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
     expect(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->exists())->toBeFalse();
 });
 
@@ -298,7 +298,7 @@ it('shows the delete badge/undo affordance on the deleted row, not a sibling row
     $amendment = nhhpDraftAmendment($parent);
     $lw = nhhpEditComponent($parent, $amendment);
 
-    $lw->call('deleteItem', $leaf->id)->assertHasNoErrors();
+    $lw->call('confirmDelete', $leaf->id)->call('deleteItem')->assertHasNoErrors();
 
     $change = BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $leaf->id)->sole();
     expect($change->action)->toBe(BudgetItemChangeAction::Delete);
@@ -330,7 +330,7 @@ it('deletes an amendment-added item outright (item + change row), no delete-row 
     $lw->call('addBudget', $group->id);
     $newItem = BudgetItem::where('budget_plan_id', $amendment->id)->where('parent_id', $group->id)->sole();
 
-    $lw->call('deleteItem', $newItem->id)->assertHasNoErrors();
+    $lw->call('confirmDelete', $newItem->id)->call('deleteItem')->assertHasNoErrors();
 
     expect(BudgetItem::find($newItem->id))->toBeNull()
         ->and(BudgetItemChange::where('budget_plan_id', $amendment->id)->where('budget_item_id', $newItem->id)->exists())->toBeFalse();

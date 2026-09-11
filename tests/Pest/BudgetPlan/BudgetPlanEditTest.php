@@ -55,9 +55,9 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     expect($plan->organization)->toBe('Test Org');
     expect($plan->fiscal_year_id)->toBe($fy->id);
 
-    // try to delete a non-empty group (has children) -> refused (toast, no delete)
+    // deleting a non-empty group now takes its subtree with it (OP#638)
     $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
-    $lw->call('deleteItem', $incomeRoot->id)
+    $lw->call('confirmDelete', $incomeRoot->id)->call('deleteItem')
         ->assertHasNoErrors();
-    expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();
+    expect(BudgetItem::find($incomeRoot->id))->toBeNull();
 });
