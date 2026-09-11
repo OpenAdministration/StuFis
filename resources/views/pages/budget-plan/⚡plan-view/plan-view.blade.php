@@ -9,6 +9,14 @@
                 @if($plan->fiscalYear)
                     <span>{{ __('budget-plan.fiscal-year') }}: {{ $plan->fiscalYear->label() }}</span>
                 @endif
+                @unless($plan->isAmendment())
+                    {{-- OP#588: read-only now that capture moved into the state-change modal —
+                         resolution_date/approval_date have no editor of their own any more, so
+                         this header is their only display surface (mirrors the fiscal-year span
+                         above rather than inventing a new layout) --}}
+                    <span>{{ __('budget-plan.edit.resolution-date') }}: {{ $plan->resolution_date?->format('d.m.Y') ?? '—' }}</span>
+                    <span>{{ __('budget-plan.edit.approval-date') }}: {{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</span>
+                @endunless
             </span>
         </x-slot:subHeadline>
         <x-slot:button>
@@ -16,19 +24,56 @@
                 <flux:button icon:trailing="chevron-down"
                              variant="primary">{{ __('budget-plan.view.actions') }}</flux:button>
                 <flux:menu>
-                    <flux:menu.item icon="pencil"
-                                    :href="route('budget-plan.edit', $plan->id)">{{ __('budget-plan.view.edit') }}</flux:menu.item>
-                    @can('update', $plan)
+                    @if(! $plan->isAmendment())
+                        {{-- F7 (OP#581): moved here from a standalone header button so it lives
+                             alongside the plan's other actions --}}
+                        @if($can_create_amendment)
+                            <flux:menu.item icon="document-plus" wire:click="createAmendment">
+                                {{ __('budget-plan.amendment.create') }}
+                            </flux:menu.item>
+                        @else
+                            <flux:tooltip :content="__('budget-plan.amendment.create-not-possible')">
+                                <div>
+                                    <flux:menu.item icon="document-plus" disabled>{{ __('budget-plan.amendment.create') }}</flux:menu.item>
+                                </div>
+                            </flux:tooltip>
+                        @endif
+                        <flux:menu.separator/>
+                    @endif
+                    @if($plan->isAmendment())
+                        {{-- an amendment is only editable through its dedicated editor, and only while Draft (see BudgetPlan::isEditable()) --}}
+                        @if($plan->isEditable())
+                            <flux:menu.item icon="pencil"
+                                            :href="route('budget-plan.amendment.edit', [$plan->parent_plan_id, $plan->id])" wire:navigate>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                        @else
+                            <flux:menu.item icon="pencil" disabled>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                        @endif
+                    @elseif($plan->isEditable())
+                        <flux:menu.item icon="pencil"
+                                        :href="route('budget-plan.edit', $plan->id)">{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                    @else
+                        {{-- F8 (OP#581): frozen from Approved onward — the plan is meant to be a
+                             stable, agreed-upon document past that point --}}
+                        <flux:tooltip :content="__('budget-plan.view.edit-not-possible', ['state' => $plan->state->label()])">
+                            <div>
+                                <flux:menu.item icon="pencil" disabled>{{ __('budget-plan.view.edit') }}</flux:menu.item>
+                            </div>
+                        </flux:tooltip>
+                    @endif
+                    {{-- the officer role directly, not the 'update' ability: 'update' now also
+                         requires the plan to still be editable (Draft/Resolved), but a workflow
+                         transition (e.g. Approved -> Active) must stay reachable past that point too --}}
+                    @can('budget-officer', \App\Models\User::class)
                         <flux:menu.item icon="arrow-path" x-on:click="$flux.modal('state-modal').show()">
                             {{ __('budget-plan.view.change-state') }}
                         </flux:menu.item>
                     @endcan
-                    @can('create', \App\Models\BudgetPlan::class)
-                        {{-- duplication is "create from an existing plan": deep-link into the create flow with this plan preselected as the clone source --}}
-                        <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
-                    @endcan
-                    {{-- TODO: print not yet implemented — disabled until the print flow exists --}}
-                    <flux:menu.item icon="printer" disabled>{{ __('budget-plan.view.print') }}</flux:menu.item>
+                    @if(! $plan->isAmendment())
+                        @can('create', \App\Models\BudgetPlan::class)
+                            {{-- duplication is "create from an existing plan": deep-link into the create flow with this plan preselected as the clone source --}}
+                            <flux:menu.item icon="document-duplicate" :href="route('budget-plan.create', ['source' => $plan->id])" wire:navigate>{{ __('budget-plan.view.duplicate') }}</flux:menu.item>
+                        @endcan
+                    @endif
                     {{-- downloads must be real navigations (file responses), so no wire:navigate here --}}
                     <flux:menu.submenu icon="arrow-down-tray" :heading="__('budget-plan.view.export')">
                         <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'xlsx'])">
@@ -37,12 +82,21 @@
                         <flux:menu.item icon="table-cells" :href="route('budget-plan.export', [$plan->id, 'ods'])">
                             {{ __('budget-plan.view.export.ods') }}
                         </flux:menu.item>
+                        @if(\App\Models\Setting::get('datev', false))
+                            @can('download', \App\Exports\Datev\DatevExport::class)
+                                <flux:menu.item icon="banknotes" :href="route('datev.export', ['hhpId' => $plan->id])">
+                                    {{ __('budget-plan.view.export.datev') }}
+                                </flux:menu.item>
+                            @endcan
+                        @endif
                     </flux:menu.submenu>
-                    @can('admin', \App\Models\User::class)
+                    @can('budget-officer', \App\Models\User::class)
                         <flux:menu.separator/>
+                        {{-- a native window.confirm() would be the only non-Flux dialog left in the
+                             app (and is unstyleable), so this goes through a flux:modal like every
+                             other confirmation — same pattern as ⚡show-project's delete-modal --}}
                         <flux:menu.item icon="trash" variant="danger"
-                                        wire:click="deletePlan"
-                                        wire:confirm="{{ __('budget-plan.view.delete-confirm') }}">
+                                        x-on:click="$flux.modal('delete-plan-modal').show()">
                             {{ __('budget-plan.view.delete') }}
                         </flux:menu.item>
                     @endcan
@@ -51,6 +105,237 @@
         </x-slot:button>
     </x-intro>
 
+    @if($amendment_overdue)
+        <flux:callout color="amber" icon="exclamation-triangle" inline>
+            <flux:callout.heading>{{ __('budget-plan.amendment.overdue-heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                {{ __('budget-plan.amendment.overdue-text', ['date' => $plan->activation_date->format('d.m.Y')]) }}
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
+    @if($open_amendments->isNotEmpty())
+        <flux:callout color="zinc" icon="document-text" inline>
+            <flux:callout.heading>{{ __('budget-plan.amendment.open-heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach($open_amendments as $amendment)
+                        <li>
+                            <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
+                                {{ $amendment->label() }} — {{ $amendment->state->label() }}
+                            </flux:link>
+                            @can('update', $amendment)
+                                @if($amendment->isEditable())
+                                    ·
+                                    <flux:link :href="route('budget-plan.amendment.edit', [$plan->id, $amendment->id])" wire:navigate>
+                                        {{ __('budget-plan.amendment.continue-editing') }}
+                                    </flux:link>
+                                @endif
+                            @endcan
+                        </li>
+                    @endforeach
+                </ul>
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
+    @if($plan->isAmendment())
+        <div class="max-w-3xl space-y-6">
+            {{-- OP#588: read-only now that capture moved into the state-change modal — nothing
+                 here is editable any more, so (unlike the pre-OP#588 version) this is always the
+                 same unconditional display, never a $dates_editable-gated input. --}}
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.edit.approval-date') }}</dt>
+                    <dd>{{ $plan->approval_date?->format('d.m.Y') ?? '—' }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500">{{ __('budget-plan.amendment.activation-date') }}</dt>
+                    <dd>{{ $plan->activation_date?->format('d.m.Y') ?? '—' }}</dd>
+                </div>
+            </dl>
+
+            @if(filled($plan->justification))
+                <div>
+                    <flux:heading size="sm">{{ __('budget-plan.amendment.justification') }}</flux:heading>
+                    <flux:text class="mt-1 whitespace-pre-line">{{ $plan->justification }}</flux:text>
+                </div>
+            @endif
+
+            <x-budgetplan.amendment-delta-summary :summary="$delta_summary"/>
+        </div>
+
+        {{-- The two ways to read an amendment, switchable in place: the diff (what changed) and
+             the full plan with those changes marked (where it changed). Same data, so this is a
+             plain view toggle rather than two pages — .live because the merged tree is only built
+             server-side once actually selected (see with()). --}}
+        {{-- the wrapping flex keeps the segmented group at its content width instead of stretching
+             it across the page --}}
+        <div class="flex">
+            <flux:radio.group wire:model.live="amendmentView" variant="segmented" size="sm"
+                              :label="__('budget-plan.amendment.view-toggle.label')">
+                <flux:radio value="diff" icon="arrows-right-left" :label="__('budget-plan.amendment.view-toggle.diff')"/>
+                <flux:radio value="full" icon="list-bullet" :label="__('budget-plan.amendment.view-toggle.full')"/>
+            </flux:radio.group>
+        </div>
+
+        @if($amendment_tree !== null)
+            <div class="max-w-7xl space-y-2">
+                <flux:heading size="sm">{{ __('budget-plan.amendment.full-heading') }}</flux:heading>
+                <flux:text class="text-sm">{{ __('budget-plan.amendment.full-sub') }}</flux:text>
+
+                <flux:tab.group>
+                    <flux:tabs class="sticky top-0 z-10 bg-gray-50 dark:bg-zinc-900">
+                        {{-- the badge counts this side's changed titles, so a side that is untouched
+                             is recognisable without opening it --}}
+                        <flux:tab name="in">
+                            {{ __('budget-plan.edit.tab-headline.in') }}
+                            <x-budgetplan.amendment-change-count :counts="$amendment_change_counts['in']"/>
+                        </flux:tab>
+                        <flux:tab name="out">
+                            {{ __('budget-plan.edit.tab-headline.out') }}
+                            <x-budgetplan.amendment-change-count :counts="$amendment_change_counts['out']"/>
+                        </flux:tab>
+                    </flux:tabs>
+
+                    @foreach(BudgetType::cases() as $budgetType)
+                        @php
+                            $rows = $amendment_tree[$budgetType->slug()];
+                            $totals = $amendment_totals[$budgetType->slug()];
+                            $totalDelta = $totals['after']->subtract($totals['before']);
+                        @endphp
+                        <flux:tab.panel :name="$budgetType->slug()" class="pt-4">
+                            <div
+                                class="sm:px-6"
+                                x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
+                                data-group-ids="@json($rows->where('is_group', true)->pluck('id')->values())"
+                            >
+                                {{-- same toolbar as an original plan's tree: the search always shows,
+                                     the collapse-all/expand-all pair only when this side has groups
+                                     to fold --}}
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <flux:input size="sm" class="max-w-xs" icon="magnifying-glass" clearable
+                                                x-model="search"
+                                                :placeholder="__('budget-plan.view.search-placeholder')"
+                                                :aria-label="__('budget-plan.view.search')"/>
+                                    @if($rows->where('is_group', true)->isNotEmpty())
+                                        <div class="flex gap-2">
+                                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                                         x-on:click="collapseAll()"
+                                                         x-bind:disabled="collapsed.length === allGroupIds.length">
+                                                {{ __('budget-plan.view.collapse-all') }}
+                                            </flux:button>
+                                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                                         x-on:click="expandAll()"
+                                                         x-bind:disabled="collapsed.length === 0">
+                                                {{ __('budget-plan.view.expand-all') }}
+                                            </flux:button>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="mt-8 flow-root">
+                                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                            <div class="overflow-hidden shadow-sm outline-1 outline-black/5 sm:rounded-lg">
+                                                <table class="relative min-w-full divide-y divide-gray-300 overflow-y-auto">
+                                                    <thead class="bg-white">
+                                                    <tr class="even:bg-gray-50 text-sm font-medium text-gray-900">
+                                                        <th scope="col" class="py-3.5 pr-3 pl-4 text-left sm:pl-6">
+                                                            {{ __('budget-plan.budget-shortname') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-left">
+                                                            {{ __('budget-plan.budget-longname') }}
+                                                        </th>
+                                                        <th scope="col" class="py-3.5">
+                                                            {{-- kind icon column --}}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right">
+                                                            {{ __('budget-plan.amendment.col.before') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right">
+                                                            {{ __('budget-plan.amendment.col.after') }}
+                                                        </th>
+                                                        <th scope="col" class="px-3 py-3.5 text-right sm:pr-6">
+                                                            {{ __('budget-plan.amendment.col.delta') }}
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-200 bg-white">
+                                                        @forelse($rows as $item)
+                                                            <x-budgetplan.amendment-row :item="$item"/>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                                    {{ __('budget-plan.amendment.full-empty') }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforelse
+                                                        {{-- every row above is x-show'd away when the
+                                                             search matches nothing, which would
+                                                             otherwise leave a bare table --}}
+                                                        <tr x-show="noMatches()" x-cloak>
+                                                            <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                                {{ __('budget-plan.view.search-no-results') }}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                    @if($rows->isNotEmpty())
+                                                        <tfoot class="bg-gray-50 text-sm font-semibold text-gray-900">
+                                                        <tr>
+                                                            <th scope="row" colspan="3" class="px-3 py-3.5 pl-4 text-left sm:pl-6">
+                                                                {{ __('budget-plan.amendment.col.total') }}
+                                                            </th>
+                                                            <td class="px-3 py-3.5 text-right">{{ $totals['before']->format() }}</td>
+                                                            <td class="px-3 py-3.5 text-right">{{ $totals['after']->format() }}</td>
+                                                            <td class="px-3 py-3.5 text-right sm:pr-6">
+                                                                @unless($totalDelta->isZero())
+                                                                    <span @class([
+                                                                        'text-green-700 dark:text-green-400' => $totalDelta->isPositive(),
+                                                                        'text-red-700 dark:text-red-400' => $totalDelta->isNegative(),
+                                                                    ])>{{ $totalDelta->isPositive() ? '+' : '' }}{{ $totalDelta->format() }}</span>
+                                                                @endunless
+                                                            </td>
+                                                        </tr>
+                                                        </tfoot>
+                                                    @endif
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </flux:tab.panel>
+                    @endforeach
+                </flux:tab.group>
+            </div>
+        @else
+            <div class="max-w-3xl">
+                <flux:heading size="sm">{{ __('budget-plan.amendment.diff-heading') }}</flux:heading>
+                @if($amendment_changes->isEmpty())
+                    <flux:text class="mt-2 italic text-gray-500">{{ __('budget-plan.amendment.no-changes-yet') }}</flux:text>
+                @else
+                    <div class="mt-2 divide-y divide-gray-200 rounded-lg outline-1 outline-black/5">
+                        @foreach($amendment_changes as $change)
+                            @php $changedItem = $change->budgetItem; @endphp
+                            <div class="p-4 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
+                                    <span class="font-medium">{{ $changedItem?->short_name }} — {{ $changedItem?->name }}</span>
+                                </div>
+                                <x-budgetplan.amendment-change-detail :change="$change" :item="$changedItem"/>
+                                @if(filled($change->reason))
+                                    <flux:text class="text-sm">
+                                        <span class="font-medium">{{ __('budget-plan.amendment.reason-label') }}:</span>
+                                        <span class="italic">{{ $change->reason }}</span>
+                                    </flux:text>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        @endif
+    @else
     @php
         $income = $plan->incomeTotal();
         $expense = $plan->expenseTotal();
@@ -95,22 +380,31 @@
                     x-data="budgetCollapse('budget-collapse-{{ $plan->id }}-{{ $budgetType->slug() }}')"
                     data-group-ids="@json($items[$budgetType->slug()]->where('is_group', true)->pluck('id')->values())"
                 >
-                    {{-- collapse/expand every group at once; disabled (not hidden) when already in that state,
-                         and absent entirely when the plan side has no groups to fold --}}
-                    @if($items[$budgetType->slug()]->where('is_group', true)->isNotEmpty())
-                        <div class="flex justify-end gap-2">
-                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
-                                         x-on:click="collapseAll()"
-                                         x-bind:disabled="collapsed.length === allGroupIds.length">
-                                {{ __('budget-plan.view.collapse-all') }}
-                            </flux:button>
-                            <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
-                                         x-on:click="expandAll()"
-                                         x-bind:disabled="collapsed.length === 0">
-                                {{ __('budget-plan.view.expand-all') }}
-                            </flux:button>
-                        </div>
-                    @endif
+                    {{-- Tree toolbar. The search filters the already-rendered rows client-side
+                         (see budgetCollapse) — no round trip, and it keeps working inside a
+                         collapsed subtree. Collapse/expand every group at once sits next to it;
+                         disabled (not hidden) when already in that state, and absent entirely when
+                         the plan side has no groups to fold. --}}
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <flux:input size="sm" class="max-w-xs" icon="magnifying-glass" clearable
+                                    x-model="search"
+                                    :placeholder="__('budget-plan.view.search-placeholder')"
+                                    :aria-label="__('budget-plan.view.search')"/>
+                        @if($items[$budgetType->slug()]->where('is_group', true)->isNotEmpty())
+                            <div class="flex gap-2">
+                                <flux:button size="xs" variant="subtle" icon="arrows-pointing-in"
+                                             x-on:click="collapseAll()"
+                                             x-bind:disabled="collapsed.length === allGroupIds.length">
+                                    {{ __('budget-plan.view.collapse-all') }}
+                                </flux:button>
+                                <flux:button size="xs" variant="subtle" icon="arrows-pointing-out"
+                                             x-on:click="expandAll()"
+                                             x-bind:disabled="collapsed.length === 0">
+                                    {{ __('budget-plan.view.expand-all') }}
+                                </flux:button>
+                            </div>
+                        @endif
+                    </div>
                     <div class="mt-8 flow-root">
                         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -166,6 +460,14 @@
                                             @foreach($items[$budgetType->slug()] as $item)
                                                 <x-budgetplan.view-row :item="$item"/>
                                             @endforeach
+                                            {{-- every row above is x-show'd away when the search
+                                                 matches nothing, which would otherwise leave a
+                                                 bare table --}}
+                                            <tr x-show="noMatches()" x-cloak>
+                                                <td colspan="6" class="px-3 py-4 text-sm italic text-gray-500">
+                                                    {{ __('budget-plan.view.search-no-results') }}
+                                                </td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -176,6 +478,7 @@
             </flux:tab.panel>
         @endforeach
     </flux:tab.group>
+    @endif
 
     {{-- state-change modal: lists only the transitions allowed from the current state --}}
     <flux:modal name="state-modal" class="min-w-96">
@@ -185,7 +488,9 @@
             @if(count($transitions) === 0)
                 <flux:text class="mt-4">{{ __('budget-plan.view.state-modal.no-transitions') }}</flux:text>
             @else
-                <flux:select wire:model="newState" variant="listbox" class="mt-4"
+                {{-- .live so $newState is synced server-side as soon as it's picked — the optional
+                     date field(s) below react to it (see targetState()), with no JS involved --}}
+                <flux:select wire:model.live="newState" variant="listbox" class="mt-4"
                              placeholder="{{ __('budget-plan.view.state-modal.placeholder') }}">
                     @foreach($transitions as $state)
                         <flux:select.option :value="$state" :disabled="Auth::user()->cannot('transition-to', [$plan, $state])">
@@ -198,11 +503,47 @@
                 </flux:select>
             @endif
         </div>
-        @error('newState')
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
-                <p class="text-red-600 text-sm">{{ $message }}</p>
+        @php
+            // OP#588: which of the three optional meta dates (if any) belong to the currently
+            // selected target state — never shown together, never on a backward step (see
+            // changeState()'s matching $isForwardStep gate), and activation_date stays
+            // amendment-only throughout.
+            $targetState = $this->targetState();
+            $isForwardStep = $targetState && $plan->state->isAdvancement($targetState);
+        @endphp
+        @if($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Resolved)
+            <div class="mt-4">
+                <flux:input wire:model="resolution_date" type="date" badge="Optional"
+                            :label="__('budget-plan.edit.resolution-date')"/>
             </div>
-        @enderror
+        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Approved)
+            <div class="mt-4 grid grid-cols-1 gap-4 @if($plan->isAmendment()) sm:grid-cols-2 @endif">
+                <flux:input wire:model="approval_date" type="date" badge="Optional"
+                            :label="__('budget-plan.edit.approval-date')"/>
+                @if($plan->isAmendment())
+                    <flux:input wire:model="activation_date" type="date" badge="Optional"
+                                :label="__('budget-plan.amendment.activation-date')"
+                                :description="__('budget-plan.amendment.activation-date-hint')"/>
+                @endif
+            </div>
+        @elseif($isForwardStep && $targetState instanceof \App\States\BudgetPlan\Active && $plan->isAmendment() && $plan->activation_date === null)
+            <div class="mt-4">
+                <flux:input wire:model="activation_date" type="date" badge="Optional"
+                            :label="__('budget-plan.amendment.activation-date')"
+                            :description="__('budget-plan.amendment.activation-date-hint')"/>
+            </div>
+        @endif
+        @if ($errors->has('newState'))
+            {{-- looped (not a single @error), since a business-rule failure (OP#584) can name
+                 more than one offending Titel at once --}}
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+                <ul class="list-disc list-inside text-red-600 text-sm space-y-1">
+                    @foreach ($errors->get('newState') as $message)
+                        <li>{{ $message }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="mt-6 flex gap-3">
             <flux:spacer/>
             <flux:button x-on:click="$flux.modal('state-modal').close()" variant="ghost">
@@ -213,6 +554,55 @@
             </flux:button>
         </div>
     </flux:modal>
+
+    @can('budget-officer', \App\Models\User::class)
+        {{-- F5 (OP#589): same checklist pattern as ⚡show-project's delete-modal — a condition row
+             per requirement, Confirm disabled until every one holds, rather than a bare
+             heading + Cancel/Confirm. --}}
+        <flux:modal name="delete-plan-modal" class="md:w-[32rem]">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                        <x-fas-triangle-exclamation class="h-6 w-6 text-red-600"/>
+                    </div>
+                    <h3 class="text-lg leading-6 font-bold text-gray-900">{{ __('budget-plan.view.delete-modal.heading') }}</h3>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-sm text-gray-500">{{ __('budget-plan.view.delete-modal.intro') }}</p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li class="flex items-start gap-2">
+                            @if($user_can_delete_plan)
+                                <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                            @else
+                                <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                            @endif
+                            <span>{{ __('budget-plan.view.delete-modal.conditions.role') }}</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            @if($plan_deletable)
+                                <x-fas-circle-check class="w-4 h-4 mt-0.5 shrink-0 fill-green-600"/>
+                            @else
+                                <x-fas-circle-xmark class="w-4 h-4 mt-0.5 shrink-0 fill-red-600"/>
+                            @endif
+                            <span>{{ __('budget-plan.view.delete-modal.conditions.editable-state', ['state' => $plan->state->label()]) }}</span>
+                        </li>
+                    </ul>
+                    <p class="text-sm text-gray-500">{{ __('budget-plan.view.delete-confirm') }}</p>
+                </div>
+
+                <div class="flex gap-3">
+                    <flux:spacer/>
+                    <flux:button x-on:click="$flux.modal('delete-plan-modal').close()" variant="ghost">
+                        {{ __('budget-plan.view.delete-modal.cancel') }}
+                    </flux:button>
+                    <flux:button wire:click="deletePlan" variant="danger" :disabled="! ($user_can_delete_plan && $plan_deletable)">
+                        {{ __('budget-plan.view.delete-modal.confirm') }}
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    @endcan
 
     {{-- Register the budgetCollapse Alpine component from a nonced inline <script> — the
          mechanism from the Livewire CSP docs' "Working around limitations" section. This
@@ -230,9 +620,47 @@
                 collapsed: window.Alpine.$persist([]).as(persistKey),
                 allGroupIds: [],
 
+                // Search state. Deliberately NOT persisted and not in the URL: unlike the collapse
+                // state, a filter is a momentary way of reading the tree, not a setting.
+                search: '',
+                /** ids of the rows a running search keeps on screen — matches plus their ancestors */
+                matchedIds: [],
+                /** {id, ancestorIds, haystack} per row, indexed once so a keystroke is a data walk */
+                rows: [],
+
                 init() {
                     this.allGroupIds = JSON.parse(this.$el.dataset.groupIds || '[]');
+                    this.rows = [...this.$el.querySelectorAll('tr[data-item-id]')].map(row => ({
+                        id: Number(row.dataset.itemId),
+                        ancestorIds: JSON.parse(row.dataset.ancestorIds || '[]'),
+                        haystack: (row.dataset.search || '').toLowerCase(),
+                    }));
+                    this.$watch('search', () => this.applySearch());
                 },
+
+                /**
+                 * Recompute the visible set. A hit pulls its whole ancestor chain along, so a
+                 * matching Titel is always shown inside the groups it belongs to rather than
+                 * ripped out of the tree.
+                 */
+                applySearch() {
+                    const term = this.search.trim().toLowerCase();
+                    if (term === '') {
+                        this.matchedIds = [];
+                        return;
+                    }
+
+                    const keep = new Set();
+                    this.rows.forEach(row => {
+                        if (!row.haystack.includes(term)) return;
+                        keep.add(row.id);
+                        row.ancestorIds.forEach(id => keep.add(id));
+                    });
+                    this.matchedIds = [...keep];
+                },
+
+                isSearching() { return this.search.trim() !== ''; },
+                noMatches()   { return this.isSearching() ? this.matchedIds.length === 0 : false; },
 
                 toggle(id) {
                     this.collapsed = this.collapsed.includes(id)
@@ -240,7 +668,16 @@
                         : [...this.collapsed, id];
                 },
 
+                /**
+                 * A running search overrides the collapse state entirely — a hit buried in a folded
+                 * group has to be reachable without the user unfolding anything first. Clearing the
+                 * search restores whatever was collapsed, because that state was never touched.
+                 */
                 isHidden(row) {
+                    if (this.isSearching()) {
+                        return !this.matchedIds.includes(Number(row.dataset.itemId));
+                    }
+
                     const ancestors = JSON.parse(row.dataset.ancestorIds || '[]');
                     return ancestors.some(id => this.collapsed.includes(id));
                 },

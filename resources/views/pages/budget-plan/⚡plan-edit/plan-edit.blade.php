@@ -22,8 +22,6 @@
                 {{-- pinned create action at the bottom of the dropdown --}}
                 <flux:select.option.create wire:click="createFiscalYear">{{ __('budget-plan.edit.add-fiscal-year') }}</flux:select.option.create>
             </flux:select>
-            <flux:input wire:model.live.blur="resolution_date" badge="Optional" :label="__('budget-plan.edit.resolution-date')" type="date"/>
-            <flux:input wire:model.live.blur="approval_date" badge="Optional" :label="__('budget-plan.edit.approval-date')" type="date"/>
         </div>
     </flux:fieldset>
     <flux:tab.group class="max-w-7xl">
@@ -95,6 +93,11 @@
             <flux:button wire:click="addTaxTitles" icon="receipt-percent" variant="subtle">{{ __('budget-plan.edit.add-tax-titles') }}</flux:button>
         @endif
     </div>
+
+    {{-- OP#638: deleting a group takes its whole subtree with it, so the confirmation names
+         every doomed title instead of just counting them. Its own component, so opening it does
+         not re-render the editor behind it — the row menus arm it by dispatching an event. --}}
+    <livewire:budget-plan.delete-subtree-modal :plan-id="$plan_id"/>
 
     {{-- mount picker: turn the chosen item into a reference to another plan's in/out --}}
     <flux:modal name="mount-plan" class="md:w-96">

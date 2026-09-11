@@ -580,8 +580,8 @@ INSERT INTO `demo__budget_item` (`id`, `budget_plan_id`, `short_name`, `name`, `
 /*!40000 ALTER TABLE `demo__budget_item` ENABLE KEYS */;
 
 /*!40000 ALTER TABLE `demo__budget_plan` DISABLE KEYS */;
-INSERT INTO `demo__budget_plan` (`id`, `organization`, `fiscal_year_id`, `resolution_date`, `approval_date`, `state`, `parent_plan_id`, `created_at`, `updated_at`) VALUES (1,'StuRa',1,NULL,NULL,'published',NULL,'2024-07-08 14:57:58','2024-07-08 14:57:58'),
-(2,'StuRa',2,NULL,NULL,'published',NULL,'2024-07-08 14:57:59','2024-07-08 14:57:59');
+INSERT INTO `demo__budget_plan` (`id`, `organization`, `fiscal_year_id`, `resolution_date`, `approval_date`, `state`, `parent_plan_id`, `created_at`, `updated_at`) VALUES (1,'StuRa',1,NULL,NULL,'active',NULL,'2024-07-08 14:57:58','2024-07-08 14:57:58'),
+(2,'StuRa',2,NULL,NULL,'active',NULL,'2024-07-08 14:57:59','2024-07-08 14:57:59');
 /*!40000 ALTER TABLE `demo__budget_plan` ENABLE KEYS */;
 
 /*!40000 ALTER TABLE `demo__changelog` DISABLE KEYS */;

@@ -9,9 +9,9 @@ use App\Models\FiscalYear;
 use App\Models\Legacy\LegacyBudgetGroup;
 use App\Models\Legacy\LegacyBudgetItem;
 use App\Models\Legacy\LegacyBudgetPlan;
+use App\States\BudgetPlan\Active;
 use App\States\BudgetPlan\BudgetPlanState;
 use App\States\BudgetPlan\Draft;
-use App\States\BudgetPlan\Published;
 use Illuminate\Support\Collection;
 
 /**
@@ -217,12 +217,15 @@ class BudgetPlanConverter
     /**
      * Convert a legacy state value to a new BudgetPlanState class.
      *
+     * Only 'final' was ever written by the old importer, so the remaining arms are defensive
+     * padding — this can be simplified down to a final/draft check.
+     *
      * @return class-string<BudgetPlanState>
      */
     public function convertState(?string $state): string
     {
         return match ($state) {
-            'final', 'approved', '1' => Published::class,
+            'final', 'approved', '1' => Active::class,
             default => Draft::class,
         };
     }

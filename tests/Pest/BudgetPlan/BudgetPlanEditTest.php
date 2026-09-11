@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\BudgetPlan\DeleteSubtreeModal;
 use App\Models\BudgetItem;
 use App\Models\BudgetPlan;
 use App\Models\Enums\BudgetType;
@@ -47,8 +48,6 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     $fy = FiscalYear::factory()->create();
     $lw->set('organization', 'Test Org')
         ->set('fiscal_year_id', $fy->id)
-        ->set('resolution_date', now()->toDateString())
-        ->set('approval_date', now()->addDay()->toDateString())
         ->call('save')
         ->assertHasNoErrors()
         ->assertRedirect(route('budget-plan.view', $plan->id));
@@ -57,9 +56,11 @@ it('renders and can add groups and items, save metadata, and prevent deleting no
     expect($plan->organization)->toBe('Test Org');
     expect($plan->fiscal_year_id)->toBe($fy->id);
 
-    // try to delete a non-empty group (has children) -> refused (toast, no delete)
-    $lw = Livewire::test('pages::budget-plan.plan-edit', ['plan_id' => $plan->id]);
-    $lw->call('delete', $incomeRoot->id)
+    // deleting a non-empty group now takes its subtree with it (OP#638), through the modal
+    // component that owns the write
+    Livewire::test(DeleteSubtreeModal::class, ['planId' => $plan->id])
+        ->call('confirmDelete', $incomeRoot->id)
+        ->call('deleteItem')
         ->assertHasNoErrors();
-    expect(BudgetItem::find($incomeRoot->id))->not->toBeNull();
+    expect(BudgetItem::find($incomeRoot->id))->toBeNull();
 });

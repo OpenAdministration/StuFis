@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -25,10 +26,6 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
 
     #[Url(as: 'plan_id')]
     public $plan_id;
-
-    public $resolution_date;
-
-    public $approval_date;
 
     public $refresh = false;
 
@@ -49,12 +46,30 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
     public function mount(int $plan_id): void
     {
         $plan = BudgetPlan::findOrFail($plan_id);
+
+        // an amendment is never edited here — its edits must go through the change-tracking
+        // amendment editor, which lets the live parent-plan items stay untouched while drafting
+        if ($plan->isAmendment()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
+        // F8 (OP#581): once Approved (or beyond), the plan is a stable, agreed-upon document —
+        // direct route access is refused the same way an out-of-state amendment redirects away.
+        // Checked before authorize() so a stale/bookmarked link degrades to this friendly redirect
+        // rather than a 403 — BudgetPlanPolicy::update() also enforces this same state rule, but
+        // only ever to refuse a non-officer, since by this point the plan is already editable.
+        if (! $plan->isEditable()) {
+            $this->redirect(route('budget-plan.view', $plan->id), navigate: true);
+
+            return;
+        }
+
         $this->authorize('update', $plan);
 
         $this->organization = $plan->organization;
         $this->fiscal_year_id = $plan->fiscal_year_id;
-        $this->resolution_date = $plan->resolution_date;
-        $this->approval_date = $plan->approval_date;
 
         $this->loadItems();
     }
@@ -216,16 +231,10 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function reSumItemValues(BudgetItem $leafItem): void
     {
-        $item = $leafItem;
-        // iterate upwards until there is no parent left
-        while (($item = $item->parent) !== null) {
-            $amount = $item->children()->sum('value');
-            $money = Money::EUR($amount, true);
-            // update db model
-            $item->value = $money;
-            $item->save();
-            // update frontend
-            $this->items[$item->id]->value = $money;
+        foreach ($leafItem->reSumAncestorValues() as $ancestor) {
+            // mirror the new sums into the ItemForms the readonly group fields are bound to, so
+            // the displayed sums follow a typed-in leaf value without reloading the whole tree
+            $this->items[$ancestor->id]->value = $ancestor->value;
         }
     }
 
@@ -239,7 +248,7 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
      */
     public function updated(string $property): void
     {
-        if (in_array($property, ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date'])) {
+        if (in_array($property, ['organization', 'fiscal_year_id'])) {
             // empty optional fields come back as '' (e.g. cleared fiscal-year listbox);
             // store them as null so nullable columns / FKs don't reject the empty string
             $value = $this->$property === '' ? null : $this->$property;
@@ -293,10 +302,8 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         // $this->validate();
 
         $plan = BudgetPlan::findOrFail($this->plan_id);
-        // empty optional fields come back as ''; store them as null so nullable columns don't reject the empty string
+        // empty optional field comes back as ''; store it as null so the nullable column doesn't reject the empty string
         $plan->update([
-            'resolution_date' => $this->resolution_date ?: null,
-            'approval_date' => $this->approval_date ?: null,
             'organization' => $this->organization ?: null,
         ]);
 
@@ -461,9 +468,11 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         $fiscalYearId = $this->fiscal_year_id ?: null;
 
         // candidates: other plans in the SAME fiscal year (null matches null) that wouldn't
-        // create a reference cycle. Computed here (only on open) rather than in with(), which
-        // runs on every edit-page render.
-        $this->mount_candidates = BudgetPlan::where('id', '!=', $this->plan_id)
+        // create a reference cycle. Amendments are not mountable — they are drafts that overlay
+        // another plan, never a stable target to mount. Computed here (only on open) rather than
+        // in with(), which runs on every edit-page render.
+        $this->mount_candidates = BudgetPlan::original()
+            ->where('id', '!=', $this->plan_id)
             ->when(
                 $fiscalYearId === null,
                 fn ($query) => $query->whereNull('fiscal_year_id'),
@@ -565,27 +574,16 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
         return (int) $query->max('position') + 1;
     }
 
-    public function delete(int $item_id): void
+    /**
+     * The delete modal (App\Livewire\BudgetPlan\DeleteSubtreeModal) owns the deletion, but this
+     * component owns the tree and the ItemForm array bound to it — so rebuild both. loadItems()
+     * also picks up the ancestor sums the modal rewrote.
+     */
+    #[On('budget-subtree-deleted')]
+    public function subtreeDeleted(): void
     {
-        $item = BudgetItem::findOrFail($item_id);
-
-        if ($item->children()->count() > 0) {
-            Flux::toast(__('budget-plan.edit.delete-has-children'), variant: 'danger');
-
-            return;
-        }
-        if ($item->hasBookings()) {
-            Flux::toast(__('budget-plan.edit.has-bookings'), variant: 'danger');
-
-            return;
-        }
-        DB::transaction(function () use ($item): void {
-            // a tax title is referenced by a tax_budget row (budget_id FK, RESTRICT);
-            // drop it first so the item delete doesn't hit the constraint
-            TaxBudget::where('budget_id', $item->id)->delete();
-            $item->delete();
-        });
-        $this->reSumItemValues($item);
+        $this->loadItems();
+        $this->refresh();
     }
 
     public function refresh(): void

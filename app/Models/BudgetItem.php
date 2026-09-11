@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Enums\BudgetItemKind;
 use App\Models\Enums\BudgetType;
 use App\Models\Legacy\Booking;
+use App\Models\Legacy\ProjectPost;
 use Cknow\Money\Casts\MoneyDecimalCast;
 use Cknow\Money\Money;
 use Database\Factories\BudgetItemFactory;
@@ -131,9 +132,45 @@ class BudgetItem extends Model
         return $this->bookings()->exists();
     }
 
+    /**
+     * Project posts planned against this item — the inverse of ProjectPost::budgetItem(). Like
+     * bookings, `projektposten.titel_id` is a RESTRICT foreign key onto budget_item, so a merely
+     * planned post keeps a title from being deleted just as a booking does.
+     */
+    public function projectPosts(): HasMany
+    {
+        return $this->hasMany(ProjectPost::class, 'titel_id');
+    }
+
+    /**
+     * Whether an accounting row holds a RESTRICT foreign key on this item, which is what makes it
+     * undeletable (OP#638). Reads the counts a `withCount(['bookings', 'projectPosts'])` put on
+     * the model and falls back to querying when they are absent, so the answer is never a
+     * silently-permissive "no" just because the caller forgot to eager-load.
+     *
+     * Canceled bookings count: `booking.canceled` is a state flag, not a delete marker, so those
+     * rows still hold the key. That is the opposite of what BudgetPlanMeasures does when it sums
+     * money — same-looking query, contrary requirement.
+     */
+    public function blocksDeletion(): bool
+    {
+        return ($this->bookings_count ?? $this->bookings()->count()) > 0
+            || ($this->project_posts_count ?? $this->projectPosts()->count()) > 0;
+    }
+
     public function budgetPlan(): BelongsTo
     {
         return $this->belongsTo(BudgetPlan::class, 'budget_plan_id');
+    }
+
+    /**
+     * The change rows amendments have drafted against this item — several amendments may touch
+     * the same item at once. An `add` row only surfaces here once its amendment was applied and
+     * the new item got rehomed onto this plan.
+     */
+    public function amendmentChanges(): HasMany
+    {
+        return $this->hasMany(BudgetItemChange::class, 'budget_item_id');
     }
 
     /** The plan this item "mounts" (only set for mount items). */
@@ -286,6 +323,64 @@ class BudgetItem extends Model
         $this->orderedChildren()
             ->each(function ($child) use (&$idx): void {
                 $child->update(['position' => $idx++]);
+            });
+    }
+
+    /**
+     * Rewrite every ancestor's stored `value` as the sum of its children, bottom-up — a group's
+     * value is derived, so removing or changing anything below it invalidates the whole chain.
+     *
+     * Walks the IN-MEMORY parent chain, which is why it still works immediately after this item's
+     * row was deleted: the row is gone, but parent_id is still on the model. The flip side is
+     * that it must run in the same request as the delete — afterwards there is nothing left to
+     * walk, and the plan would keep group sums that still count the deleted titles.
+     *
+     * The `true` on Money::EUR() is cknow/money's $convert flag: `value` uses MoneyDecimalCast,
+     * so the column (and therefore sum()) is a decimal that has to be turned into minor units.
+     *
+     * Returns the ancestors it touched so a caller that also holds view state can mirror the new
+     * sums without walking the chain a second time — see ⚡plan-edit's reSumItemValues().
+     *
+     * @return list<BudgetItem> the ancestors whose value was rewritten, deepest first
+     */
+    public function reSumAncestorValues(): array
+    {
+        $touched = [];
+        for ($ancestor = $this->parent; $ancestor !== null; $ancestor = $ancestor->parent) {
+            $ancestor->value = Money::EUR($ancestor->children()->sum('value'), true);
+            $ancestor->save();
+            $touched[] = $ancestor;
+        }
+
+        return $touched;
+    }
+
+    /**
+     * Re-pack this item's siblings to positions 0..n-1, so a deleted item leaves no gap behind —
+     * a gap makes the editor's "one position up/down" action skip a row. Call it after the delete:
+     * the parent_id and budget_type the sequence is keyed by still live on the in-memory model.
+     *
+     * Root items are one sequence per plan AND budget type (income and expense roots are numbered
+     * independently, see the plan editor's addGroup()). $planIds widens that scope for the
+     * amendment editor, where a root the amendment added shares the base plan's sequence.
+     *
+     * @param  list<int>|null  $planIds  plans whose roots share the sequence (defaults to this item's)
+     */
+    public function normalizeSiblingPositions(?array $planIds = null): void
+    {
+        if ($this->parent_id !== null) {
+            $this->parent?->normalizeChildPositionValues();
+
+            return;
+        }
+
+        $position = 0;
+        self::whereIn('budget_plan_id', $planIds ?? [$this->budget_plan_id])
+            ->whereNull('parent_id')
+            ->where('budget_type', $this->budget_type)
+            ->orderBy('position')
+            ->each(function (self $sibling) use (&$position): void {
+                $sibling->update(['position' => $position++]);
             });
     }
 }

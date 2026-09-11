@@ -9,7 +9,7 @@ use App\Models\FiscalYear;
 use App\Models\Legacy\ExpenseReceiptPost;
 use App\Models\Legacy\Project;
 use App\Models\LegalBasis;
-use App\States\BudgetPlan\Published;
+use App\States\BudgetPlan\Active;
 use Carbon\Carbon;
 use Cknow\Money\Money;
 use Illuminate\Http\UploadedFile;
@@ -358,7 +358,7 @@ function coveringPlan(Carbon $start, Carbon $end): BudgetPlan
 {
     $fiscalYear = FiscalYear::create(['start_date' => $start, 'end_date' => $end]);
 
-    return BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Published::class]);
+    return BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Active::class]);
 }
 
 /**

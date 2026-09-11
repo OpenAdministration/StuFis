@@ -40,3 +40,28 @@ it('lists fiscal years without plans using a placeholder row', function (): void
         ->assertSee($empty->label())
         ->assertSee(__('budget-plan.index.no-plans'));
 });
+
+it('lists an amendment under its plan by its own label, without a second type marker', function (): void {
+    $this->actingAs(user());
+
+    $year = FiscalYear::factory()->create();
+    $parent = BudgetPlan::create([
+        'state' => Draft::class, 'fiscal_year_id' => $year->id, 'organization' => 'AStA',
+    ]);
+    $unnamed = BudgetPlan::create([
+        'state' => Draft::class, 'fiscal_year_id' => $year->id, 'parent_plan_id' => $parent->id,
+    ]);
+    $named = BudgetPlan::create([
+        'state' => Draft::class, 'fiscal_year_id' => $year->id, 'parent_plan_id' => $parent->id,
+        'name' => 'Nachtrag Sommerfest',
+    ]);
+
+    $response = $this->get(route('budget-plan.index'));
+
+    $response->assertOk()
+        ->assertSee(route('budget-plan.view', $unnamed->id), false)
+        // an unnamed amendment says what it is through its label alone — no badge repeating it
+        ->assertSee($unnamed->label())
+        ->assertSee($named->label())
+        ->assertSeeInOrder(['AStA', $unnamed->label()]);
+});

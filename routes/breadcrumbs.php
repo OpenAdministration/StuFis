@@ -217,11 +217,18 @@ Breadcrumbs::for('budget-plan.index', static function (BreadcrumbTrail $trail): 
     $trail->push(__('general.breadcrumb.budget-plan'), route('budget-plan.index'));
 });
 
-// Home > Budget-Plans > ID
+// Home > Budget-Plans > ID  (an amendment's view instead nests under its PARENT plan's view —
+// Home > Budget-Plans > Parent-Plan-ID > Nachtrag-ID — so the "Nachtrag ..." crumb is reachable
+// as a step of its own rather than skipping straight from the plan index, OP#581 F4)
 Breadcrumbs::for('budget-plan.view', static function (BreadcrumbTrail $trail, $plan_id): void {
-    $trail->parent('budget-plan.index');
-
     $plan = BudgetPlan::find($plan_id);
+
+    if ($plan?->isAmendment()) {
+        $trail->parent('budget-plan.view', $plan->parent_plan_id);
+    } else {
+        $trail->parent('budget-plan.index');
+    }
+
     $label = $plan
         ? collect([$plan->label(), $plan->fiscalYear?->label()])->filter()->implode(' · ')
         : $plan_id;
@@ -233,6 +240,14 @@ Breadcrumbs::for('budget-plan.view', static function (BreadcrumbTrail $trail, $p
 Breadcrumbs::for('budget-plan.edit', static function (BreadcrumbTrail $trail, $plan_id): void {
     $trail->parent('budget-plan.view', $plan_id);
     $trail->push(__('general.breadcrumb.budget-plan-edit'), route('budget-plan.edit', $plan_id));
+});
+
+// Home > Budget-Plans > Parent-Plan-ID > Nachtrag-ID > Bearbeiten — nests under the amendment's
+// OWN view crumb (not the parent plan's), so "back one step" from the editor lands on the
+// amendment's view, matching the in-page back button (OP#581 F4)
+Breadcrumbs::for('budget-plan.amendment.edit', static function (BreadcrumbTrail $trail, $plan_id, $amendment_id): void {
+    $trail->parent('budget-plan.view', $amendment_id);
+    $trail->push(__('general.breadcrumb.budget-plan-amendment-edit'), route('budget-plan.amendment.edit', [$plan_id, $amendment_id]));
 });
 
 // Home > Budget-Plans > ID > [Gruppen] > Titel

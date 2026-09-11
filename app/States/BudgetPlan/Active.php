@@ -2,9 +2,9 @@
 
 namespace App\States\BudgetPlan;
 
-class Published extends BudgetPlanState
+class Active extends BudgetPlanState
 {
-    public static string $name = 'published';
+    public static string $name = 'active';
 
     #[\Override]
     public function iconName(): string

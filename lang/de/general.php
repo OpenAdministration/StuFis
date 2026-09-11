@@ -25,6 +25,7 @@ return [
         'sitzung' => 'Sitzung',
         'budget-plan' => 'Haushaltsplan',
         'budget-plan-edit' => 'Bearbeiten',
+        'budget-plan-amendment-edit' => 'Nachtrag bearbeiten',
         'budget-plan-import' => 'Importieren',
         'hhp-title-details' => 'Haushaltstitel Details',
         'project' => 'Projekt',

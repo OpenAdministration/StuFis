@@ -5,7 +5,7 @@ namespace Tests\Pest\Project;
 use App\Models\BudgetPlan;
 use App\Models\FiscalYear;
 use App\Models\Legacy\Project;
-use App\States\BudgetPlan\Published;
+use App\States\BudgetPlan\Active;
 use Livewire\Livewire;
 
 beforeEach(function (): void {
@@ -13,7 +13,7 @@ beforeEach(function (): void {
     // haushaltsplan is now a view over budget_plan, so seed the new structure (published =>
     // "final" in the view) with a fiscal year covering today.
     $fiscalYear = FiscalYear::create(['start_date' => now()->startOfYear(), 'end_date' => now()->endOfYear()]);
-    BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Published::class]);
+    BudgetPlan::create(['fiscal_year_id' => $fiscalYear->id, 'state' => Active::class]);
     $this->actingAs(user());
 });
 

@@ -3,11 +3,17 @@
 namespace App\Models;
 
 use App\Models\Enums\BudgetType;
+use App\States\BudgetPlan\Active;
+use App\States\BudgetPlan\Approved;
 use App\States\BudgetPlan\BudgetPlanState;
+use App\States\BudgetPlan\Completed;
+use App\States\BudgetPlan\Draft;
+use App\Support\Budget\AmendmentDeltaSummary;
 use Carbon\Carbon;
 use Cknow\Money\Money;
 use Database\Factories\BudgetPlanFactory;
 use Eloquent;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,18 +30,26 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @property Carbon $end_date
  * @property Carbon $resolution_date
  * @property Carbon $approval_date
+ * @property Carbon|null $activation_date
+ * @property string|null $justification
+ * @property string|null $name
  * @property BudgetPlanState $state
- * @property BudgetPlan $parentPlan
+ * @property BudgetPlan|null $parentPlan
  * @property BudgetItem[] $budgetItems
  * @property int|null $parent_plan_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read int|null $budget_items_count
+ * @property-read Collection<int, BudgetPlan> $amendments
+ * @property-read int|null $amendments_count
+ * @property-read Collection<int, BudgetItemChange> $itemChanges
+ * @property-read int|null $item_changes_count
  *
  * @method static BudgetPlanFactory factory($count = null, $state = [])
  * @method static Builder|BudgetPlan newModelQuery()
  * @method static Builder|BudgetPlan newQuery()
  * @method static Builder|BudgetPlan query()
+ * @method static Builder|BudgetPlan original()
  *
  * @mixin Eloquent
  *
@@ -54,6 +68,8 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Collection;
  * @method static Builder<static>|BudgetPlan whereResolutionDate($value)
  * @method static Builder<static>|BudgetPlan whereState($value)
  * @method static Builder<static>|BudgetPlan whereUpdatedAt($value)
+ * @method static Builder|BudgetPlan amendment()
+ * @method static Builder|BudgetPlan dueForActivation()
  */
 class BudgetPlan extends Model
 {
@@ -70,7 +86,7 @@ class BudgetPlan extends Model
     /**
      * @var array
      */
-    protected $fillable = ['organization', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan'];
+    protected $fillable = ['organization', 'name', 'fiscal_year_id', 'resolution_date', 'approval_date', 'state', 'parent_plan_id', 'activation_date', 'justification'];
 
     #[\Override]
     protected function casts(): array
@@ -79,6 +95,7 @@ class BudgetPlan extends Model
             'state' => BudgetPlanState::class,
             'resolution_date' => 'date',
             'approval_date' => 'date',
+            'activation_date' => 'date',
         ];
     }
 
@@ -102,13 +119,114 @@ class BudgetPlan extends Model
             ->where('budget_plan_id', $plan_id)
             ->where('budget_type', $budgetType);
 
-        // the full tree flattened out, the position path is a custom-built path
-        return BudgetItem::treeOf($constraint)->orderBy('position_path')->get();
+        // treeOf()'s $constraint only seeds the roots; the recursive CTE step that walks parent_id
+        // has no plan filter of its own. An amendment's items are parented under a base-plan group
+        // (and vice versa for a parked deletion), so the recursive step needs its own plan filter
+        // too, or a group's value (the live sum of its children, see BudgetItem::effectiveValue())
+        // would silently pull in the other plan's items. withRecursiveQueryConstraint() applies
+        // this filter at every step, so an excluded item's descendants never match either — no
+        // post-filtering needed. Column must be qualified: the recursive step joins budget_item
+        // against the CTE (which also selects budget_item.*), so a bare "budget_plan_id" is
+        // ambiguous between the two.
+        return BudgetItem::withRecursiveQueryConstraint(
+            static fn ($query) => $query->where($query->getModel()->qualifyColumn('budget_plan_id'), $plan_id),
+            static fn () => BudgetItem::treeOf($constraint)->orderBy('position_path')->get(),
+        );
     }
 
     public function rootBudgetItems(): Builder|HasMany|BudgetPlan
     {
         return $this->hasMany(BudgetItem::class)->whereNull('parent_id');
+    }
+
+    /** The plan this amendment supplements (null for an original plan). */
+    public function parentPlan(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_plan_id');
+    }
+
+    /** This plan's own amendments, if any. */
+    public function amendments(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_plan_id');
+    }
+
+    /** The delta rows drafted against this plan (only meaningful when this IS an amendment). */
+    public function itemChanges(): HasMany
+    {
+        return $this->hasMany(BudgetItemChange::class);
+    }
+
+    /**
+     * This amendment's net income/expense delta, aggregated once here (F5, OP#581) and shown in
+     * both the editor's Begründungen tab and the amendment's plan-view diff section.
+     *
+     * @return array{income: Money, expense: Money, saldo: Money}
+     */
+    public function amendmentDeltaSummary(): array
+    {
+        return resolve(AmendmentDeltaSummary::class)->compute($this);
+    }
+
+    /**
+     * Whether this plan may still go through ⚡plan-edit / ⚡amendment-edit (F8, OP#581). Delegates
+     * to the state (see BudgetPlanState::isEditable() for the Draft/Resolved rule and its
+     * rationale), plus an amendment's own stricter constraint: Draft only.
+     */
+    public function isEditable(): bool
+    {
+        return $this->state->isEditable() && (! $this->isAmendment() || $this->state instanceof Draft);
+    }
+
+    /** Whether this plan is an amendment (supplements another plan) rather than an original plan. */
+    public function isAmendment(): bool
+    {
+        return $this->parent_plan_id !== null;
+    }
+
+    /**
+     * Original plans only — excludes amendments. Amendments are drafted/approved as independent
+     * objects but must never surface where a free-standing plan is expected (plan lists, the
+     * mount picker, clone sources, uniqueness checks, ...).
+     */
+    #[Scope]
+    protected function original(Builder $query): void
+    {
+        $query->whereNull('parent_plan_id');
+    }
+
+    /** Amendments only — the counterpart to original(). */
+    #[Scope]
+    protected function amendment(Builder $query): void
+    {
+        $query->whereNotNull('parent_plan_id');
+    }
+
+    /**
+     * Approved amendments whose activation_date has arrived and whose parent plan is Active —
+     * i.e. due to be picked up by `stufis:apply-due-amendments`. A missing/non-Active parent
+     * excludes the amendment, same as an original plan being deleted or reverted out from under it.
+     */
+    #[Scope]
+    protected function dueForActivation(Builder $query): void
+    {
+        $query->amendment()
+            ->whereState('state', Approved::class)
+            ->whereNotNull('activation_date')
+            ->whereDate('activation_date', '<=', today())
+            ->whereHas('parentPlan', fn (Builder $q) => $q->whereState('state', Active::class));
+    }
+
+    /** Whether this plan has amendments that are (or were) live-effective — Active or Completed. */
+    public function hasAppliedAmendments(): bool
+    {
+        return $this->appliedAmendments()->exists();
+    }
+
+    /** This plan's amendments that are (or were) live-effective, i.e. applied at least once. */
+    public function appliedAmendments(): HasMany
+    {
+        return $this->amendments()->whereState('state', [Active::class, Completed::class]);
     }
 
     /**
@@ -201,7 +319,7 @@ class BudgetPlan extends Model
             return false;
         }
 
-        return static::query()
+        return static::query()->original()
             ->where('organization', $organization)
             ->when($ignoreId !== null, fn ($query) => $query->whereKeyNot($ignoreId))
             ->when(
@@ -240,12 +358,21 @@ class BudgetPlan extends Model
      */
     public static function newest(): ?static
     {
-        return static::orderByDesc('id')->first();
+        return static::query()->original()->orderByDesc('id')->first();
     }
 
-    /** Human label for the plan (organization, with a fallback). */
+    /**
+     * Human label for the plan. An amendment has no organization of its own (it inherits its
+     * parent's), so it uses its optional `name` (F3, OP#581) instead, falling back to
+     * "Nachtrag vom {created_at}" — the single place this fallback is decided, rather than
+     * scattering it across every view that lists amendments.
+     */
     public function label(): string
     {
+        if ($this->isAmendment()) {
+            return $this->name ?: __('budget-plan.amendment.unnamed-fallback', ['date' => $this->created_at->format('d.m.Y')]);
+        }
+
         return $this->organization ?: __('budget-plan.view.no-organization');
     }
 

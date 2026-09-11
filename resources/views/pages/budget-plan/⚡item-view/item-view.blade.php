@@ -4,6 +4,49 @@
         <x-slot:subHeadline>{{ __('budget-plan.item.subtitle') }}</x-slot:subHeadline>
     </x-intro>
 
+    {{-- one or more amendments currently touch this title — parallel amendments are allowed
+         (OP#581), so several rows in different states (pending draft, already-applied active, ...)
+         can show at once. Reuses the same action badge / label fallback / reason idiom as the
+         amendment's own diff view (⚡plan-view) rather than duplicating it under a new name. --}}
+    @if($amendment_changes->isNotEmpty())
+        <flux:callout color="zinc" icon="document-text" inline class="mt-6">
+            <flux:callout.heading>{{ __('budget-plan.item.amendment-hint.heading') }}</flux:callout.heading>
+            <flux:callout.text>
+                {{-- no list markers: every row leads with its action badge and carries a block of
+                     detail underneath, which a marker would only sit awkwardly beside. Parallel
+                     amendments are separated by a rule instead, so two rows can't read as one. --}}
+                <ul class="divide-y divide-zinc-200 dark:divide-zinc-700">
+                    @foreach($amendment_changes as $change)
+                        @php $amendment = $change->amendmentPlan; @endphp
+                        <li class="space-y-1.5 py-3 first:pt-0 last:pb-0">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <flux:badge size="sm" :color="$change->action->color()">{{ $change->action->label() }}</flux:badge>
+                                <flux:link :href="route('budget-plan.view', $amendment->id)" wire:navigate>
+                                    {{ $amendment->label() }}
+                                </flux:link>
+                                <flux:badge size="sm" :color="$amendment->state->color()">{{ $amendment->state->label() }}</flux:badge>
+                                @if($amendment->activation_date !== null)
+                                    {{-- when it becomes (or became) effective in the plan — the state
+                                         badge alone doesn't say WHEN a scheduled amendment lands --}}
+                                    <span class="text-sm text-gray-500">·</span>
+                                    <span class="text-sm text-gray-500">{{ __('budget-plan.item.amendment-hint.effective', ['date' => $amendment->activation_date->format('d.m.Y')]) }}</span>
+                                @endif
+                            </div>
+                            {{-- what this amendment does to THIS title, field by field --}}
+                            <x-budgetplan.amendment-change-detail :change="$change" :item="$item"/>
+                            @if(filled($change->reason))
+                                <p class="text-sm text-gray-500">
+                                    <span class="font-medium">{{ __('budget-plan.amendment.reason-label') }}:</span>
+                                    <span class="italic">{{ $change->reason }}</span>
+                                </p>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
     {{-- meter, dropped well below the page header --}}
     <div class="mt-10">
         {{-- how the Plan budget is consumed (Gebucht ⊆ Beschlossen ⊆ Plan) --}}

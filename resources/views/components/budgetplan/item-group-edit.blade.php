@@ -124,9 +124,19 @@
                                     icon="clipboard">
                         {{ __('budget-plan.edit.copy-inverse') }}
                     </flux:menu.item>
-                    <flux:menu.item wire:click="delete({{ $item->id }})"
-                                    :disabled="$item->orderedChildren->isNotEmpty()" variant="danger"
-                                    icon="trash">{{ __('budget-plan.edit.delete') }}</flux:menu.item>
+                    {{-- OP#638: neither a group with children nor a booked title is disabled here any
+                         more — the modal lists the whole subtree and refuses, naming the titles that hold
+                         a booking or a project post. The bookings of a group sit on its leaves, so this
+                         row could never see them anyway.
+
+                         A plain browser event, not wire:click: the modal is its own Livewire component
+                         (OP#638), so arming it must not re-render this editor. It shows itself once it
+                         has the subtree — one $dispatch rather than also firing modal-show here, because
+                         the CSP Alpine build's parser has no sequence node for two statements. --}}
+                    <flux:menu.item variant="danger" icon="trash"
+                                    x-on:click="$dispatch('confirm-delete-item', { itemId: {{ $item->id }} })">
+                        {{ __('budget-plan.edit.delete') }}
+                    </flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
             @if($item->is_group)

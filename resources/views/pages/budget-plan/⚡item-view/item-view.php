@@ -63,6 +63,9 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
             'planned' => $measure['planned'],
             'booked' => $measure['booked'],
             'committed' => $measure['committed'],
+            // parallel amendments are allowed (OP#581), so this can hold more than one row —
+            // ordered by id so the list renders in a stable, creation order
+            'amendment_changes' => $item->amendmentChanges()->with('amendmentPlan')->orderBy('id')->get(),
             'rows' => $this->sort($this->rows($item), $this->bookingSort, $this->bookingDir, [
                 'id' => static fn (array $r): int => $r['id'],
                 'date' => static fn (array $r): int => $r['date']?->getTimestamp() ?? 0,

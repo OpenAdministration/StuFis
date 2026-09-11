@@ -46,6 +46,8 @@
         "driftingly/rector-laravel": "^2.1",
         "fakerphp/faker": "^1.23",
         "larastan/larastan": "^3.1",
+        "laravel/boost": "^2.5",
+        "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.20",
         "laravel/sail": "^1.41",
         "laravel/tinker": "^3.0",
@@ -57,8 +59,7 @@
         "pestphp/pest-plugin-laravel": "^4.0",
         "pestphp/pest-plugin-livewire": "^v4.0",
         "rector/rector": "^2.2",
-        "roave/security-advisories": "dev-latest",
-        "laravel/pail": "^1.2.2"
+        "roave/security-advisories": "dev-latest"
     },
     "autoload": {
         "psr-4": {
@@ -84,7 +85,8 @@
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan ide-helper:generate",
-            "@php artisan ide-helper:meta"
+            "@php artisan ide-helper:meta",
+            "@php artisan boost:update --ansi"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

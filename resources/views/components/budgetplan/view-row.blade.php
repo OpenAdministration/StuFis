@@ -13,10 +13,21 @@
 
     // group rows render their figures in <th> (browser-default bold sets groups apart) with extra
     // vertical padding; everything else is a plain <td>. Used by the shared figure columns below.
+
+    // everything the tree search matches against, flattened into one haystack on the row itself —
+    // the filter runs client-side over the already-rendered tree (see budgetCollapse), so the row
+    // has to carry its own searchable text rather than the JS re-reading the cells
+    $searchText = trim(implode(' ', array_filter([
+        $item->short_name,
+        $item->name,
+        $item->referencedPlan?->label(),
+    ])));
 @endphp
 
 <tr
   x-show="!isHidden($el)"
+  data-item-id="{{ $item->id }}"
+  data-search="{{ $searchText }}"
   data-ancestor-ids="@json($item->ancestorIds())"
   x-transition.opacity.duration.200ms
   x-cloak

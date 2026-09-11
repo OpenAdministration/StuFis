@@ -35,6 +35,9 @@
                                 </flux:badge>
                             </flux:table.cell>
                         </flux:table.row>
+                        @foreach($plan->amendments as $amendment)
+                            <x-budgetplan.amendment-index-row :amendment="$amendment"/>
+                        @endforeach
                     @empty
                         <flux:table.row>
                             <flux:table.cell colspan="2" class="ps-8! text-gray-500 italic">
@@ -59,6 +62,9 @@
                                 </flux:badge>
                             </flux:table.cell>
                         </flux:table.row>
+                        @foreach($plan->amendments as $amendment)
+                            <x-budgetplan.amendment-index-row :amendment="$amendment"/>
+                        @endforeach
                     @endforeach
                 @endif
 

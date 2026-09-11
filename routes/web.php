@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::livewire('plan/create', 'pages::budget-plan.plan-create')->name('budget-plan.create');
     Route::livewire('plan/{plan_id}', 'pages::budget-plan.plan-view')->name('budget-plan.view');
     Route::livewire('plan/{plan_id}/edit', 'pages::budget-plan.plan-edit')->name('budget-plan.edit');
+    Route::livewire('plan/{plan_id}/amendment/{amendment_id}/edit', 'pages::budget-plan.amendment-edit')->name('budget-plan.amendment.edit');
     Route::livewire('plan/{plan_id}/item/{item_id}', 'pages::budget-plan.item-view')->name('budget-plan.item.view');
     Route::get('plan/{plan_id}/export/{filetype}', [BudgetPlanExportController::class, 'download'])->name('budget-plan.export');
     Route::livewire('year/create', 'pages::fiscal-year.edit-fiscal-year')->name('fiscal-year.create');
