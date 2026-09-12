@@ -1,3 +1,9 @@
+# v4.4.7
+**Betrieb der Instanz:**
+* Die PHP-Einstellungen einer Instanz lassen sich nun mit `artisan stufis:php-ini` einrichten.
+
+---
+
 
 
 # v4.4.5 & 4.4.6

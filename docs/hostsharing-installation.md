@@ -11,8 +11,20 @@ are manual.
 3. log in via ssh
 
 ```bash
-git clone git@github.com:OpenAdministration/StuFis.git
+git clone https://github.com/OpenAdministration/StuFis.git
 cd StuFis
+```
+
+Clone over **HTTPS**, not SSH. StuFiS is a public repository, so fetching needs no
+credentials at all — which is what lets an unattended deployment work. An SSH
+remote would require either agent forwarding (impossible for an automated deploy,
+see below) or a deploy key per instance to manage. Instances only ever fetch;
+nothing deploys *from* them.
+
+Existing instances still on an SSH remote can be switched in place:
+
+```bash
+git remote set-url origin https://github.com/OpenAdministration/StuFis.git
 ```
 
 ## 2. Flux Pro credentials
@@ -20,6 +32,24 @@ cd StuFis
 StuFiS depends on the paid Flux UI components, so Composer needs your license.
 Add your `auth.json` (from https://fluxui.dev) to the project root **before**
 running setup — otherwise `composer install` fails.
+
+Add a GitHub token to the same file while you are there:
+
+```json
+{
+  "http-basic":   { "composer.fluxui.dev": { "username": "...", "password": "..." } },
+  "github-oauth": { "github.com": "<token>" }
+}
+```
+
+Composer fetches over a hundred GitHub-hosted packages, and unauthenticated
+requests are capped at 60/hour **per IP** — an IP you share with other Hostsharing
+customers. Without a token, `composer install` fails intermittently for reasons
+that have nothing to do with your instance. A classic PAT with **no scopes**
+selected is enough: the repository is public, so the token only needs to raise
+the rate limit, not grant access. `auth.json` is gitignored; never commit it, and
+do not pass the token through `stufis-fleet exec`, which would record it in the
+deploy logs.
 
 ## 3. Run the setup script
 
@@ -69,7 +99,33 @@ ln -s ~/StuFis/public/ htdocs-ssl
 In hs-admin set the default PHP to `/usr/lib/cgi-bin/php8.4`, options
 `fastcgi, letsencrypt`, no valid subdomains.
 
-## 6. Finish
+## 6. PHP configuration
+
+Hostsharing's system defaults are too tight for StuFiS — uploads cap out at 2 MB
+and there is no opcache. The per-domain override is the only php.ini an instance
+can write, and `bin/templates/php.ini` is the version StuFiS expects:
+
+```bash
+artisan stufis:php-ini --restart
+```
+
+This copies the template into `fastcgi/` and `fastcgi-ssl/` of every domain whose
+document root points at this checkout, backing up anything that was there before.
+Run it again after any update that changed the template — `--dry-run` shows what
+would change, `--domain=<domain>` targets one domain on a multi-domain webspace,
+and `--all` covers every domain regardless of what it serves.
+
+`--restart` is what makes the settings live: a FastCGI process keeps the
+configuration it started with for its whole lifetime, so without it nothing
+changes until the running processes are replaced (`pkill -u "$USER" '^php'`).
+In-flight requests are dropped, so do it at a quiet moment. The same is worth
+doing after a deployment, since long-lived processes also carry an opcache and a
+realpath cache filled from the previous release.
+
+Read `bin/templates/php.ini` before editing it — every value is commented with
+why it is set the way it is.
+
+## 7. Finish
 
 Import your Budgetplan and everything should work :)
 
