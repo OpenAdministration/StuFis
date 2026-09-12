@@ -439,12 +439,22 @@ class FintsController extends Renderer
 
         $tanMedien = $this->requireFintsHandler()->getTanMedias($tanModeInt);
 
-        echo "<form method='post' action=''>";
+        // The action has to be the page's own absolute URL, not an empty one. Legacy pages are
+        // served inside an iframe's srcdoc (resources/views/legacy/main.blade.php), and such a
+        // document has no URL of its own - a relative or empty action resolves against
+        // "about:srcdoc", so the submit never reaches the application.
+        $form = HtmlForm::make('POST', false)
+            ->urlTarget(URIBASE."konto/credentials/$this->credentialId/tan-mode/$tanModeInt/medium");
+        echo $form->begin();
         $this->renderHeadline('Bitte TAN-Medium auswählen');
-        $this->renderNonce();
         $this->renderRadioButtons($tanMedien, 'tan-medium-name');
-        echo "<button class='btn btn-primary' type='submit'>Speichern</button>";
-        echo '</form>';
+        // begin() emits the opening tag only, so HtmlForm's own hidden nonce input - part of
+        // the body - is not written here and has to be rendered explicitly.
+        $this->renderNonce();
+        echo HtmlButton::make('submit')
+            ->body('Speichern')
+            ->style('primary');
+        echo $form->end();
     }
 
     /**
