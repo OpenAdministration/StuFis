@@ -1,4 +1,7 @@
 # v4.4.7
+**FinTS Bankimport:**
+* Die Auswahl des TAN-Mediums ließ sich nicht speichern: Das Absenden landete auf einer leeren Seite, statt die Auswahl zu übernehmen.
+
 **Betrieb der Instanz:**
 * Die PHP-Einstellungen einer Instanz lassen sich nun mit `artisan stufis:php-ini` einrichten.
 
