@@ -309,6 +309,21 @@ new #[Layout('layout.app', ['size' => 'lg'])] class extends Component
                 }
                 $transaction->save();
             }
+            // Keep last_sync in step with what the account now holds. The FinTS sync derives
+            // its start date from it (DateHelper::fromUntilLast(), max(last_sync, sync_from)),
+            // so leaving it untouched made the next bank fetch start from a stale date - or,
+            // with no sync_from either, from the bank's own default range, which can begin
+            // after the rows just imported. The rewind in FintsController::saveStatements()
+            // then fails to find its anchor and refuses the whole import.
+            // Only ever forwards: the account may already have been synced past the rows in
+            // this file (an older statement imported after the fact), and winding the date
+            // back would make the next fetch re-request a range that is already stored.
+            // Both values are 'Y-m-d', where string order is date order.
+            $newestBooking = BankTransaction::where('konto_id', $this->account_id)->max('date');
+            if ($newestBooking !== null && ($account->last_sync === null || $newestBooking > $account->last_sync)) {
+                $account->last_sync = $newestBooking;
+                $account->save();
+            }
             DB::commit();
         } catch (Throwable $e) {
             DB::rollBack();

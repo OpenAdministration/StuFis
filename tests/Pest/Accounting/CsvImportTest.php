@@ -803,3 +803,63 @@ test('switching account reverses data when the saved order differs', function ()
     $wire->set('account_id', $accReversed->id);
     expect($wire->get('data')->first()[10])->toBe('Entry 1');       // flipped to match saved order
 });
+
+// 14) last_sync has to move with a manual import: FinTS derives its start date from it
+//     (DateHelper::fromUntilLast(), max(last_sync, sync_from)). Left untouched, the next
+//     bank fetch starts from a stale date — or, with no sync_from either, from the bank's
+//     own default range, which can begin after the rows just imported. The rewind in
+//     FintsController::saveStatements() then finds no anchor and refuses the whole import.
+
+test('manual import sets last_sync to the newest booking date', function (): void {
+    $acc = BankAccount::factory()->create();
+    expect($acc->last_sync)->toBeNull();
+
+    mapSemicolonFixture(
+        Livewire::actingAs(cashOfficer())
+            ->test('pages::bank.manual-import')
+            ->set('account_id', $acc->id)
+            ->set('upload', testFile('csv-import/test-correct-semicolon.csv'))
+    )
+        ->call('reverseCsvOrder')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $newest = BankTransaction::where('konto_id', $acc->id)->max('date');
+
+    expect($acc->fresh()->last_sync)->toBe($newest);
+});
+
+test('manual import never moves last_sync backwards', function (): void {
+    // Re-importing older rows must not walk the sync start date back into a range that has
+    // already been imported, hence the maximum over the account rather than over the file.
+    $acc = BankAccount::factory()->create();
+    $acc->last_sync = '2099-12-31';
+    $acc->save();
+
+    mapSemicolonFixture(
+        Livewire::actingAs(cashOfficer())
+            ->test('pages::bank.manual-import')
+            ->set('account_id', $acc->id)
+            ->set('upload', testFile('csv-import/test-correct-semicolon.csv'))
+    )
+        ->call('reverseCsvOrder')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    expect($acc->fresh()->last_sync)->toBe('2099-12-31');
+});
+
+test('a failed manual import leaves last_sync alone', function (): void {
+    // The update rides inside the same transaction as the inserts, so a rollback takes it
+    // with it: reporting a sync point for rows that were never stored is worse than none.
+    $acc = BankAccount::factory()->create();
+
+    Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.manual-import')
+        ->set('account_id', $acc->id)
+        ->set('upload', testFile('csv-import/test-correct-semicolon.csv'))
+        ->call('save')
+        ->assertHasErrors();
+
+    expect($acc->fresh()->last_sync)->toBeNull();
+});
