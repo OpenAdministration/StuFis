@@ -12,6 +12,7 @@ use Genkgo\Camt\DTO\Debtor;
 use Genkgo\Camt\DTO\Entry;
 use Genkgo\Camt\DTO\EntryTransactionDetail;
 use Genkgo\Camt\DTO\IbanAccount;
+use Genkgo\Camt\DTO\Message;
 use Genkgo\Camt\DTO\RecordWithBalances;
 use Genkgo\Camt\DTO\RelatedAgent;
 use Genkgo\Camt\DTO\RelatedPartyTypeInterface;
@@ -44,8 +45,25 @@ class CamtImportParser
      */
     public function parse(string $path): array
     {
-        $message = new Reader(Config::getDefault())->readFile($path);
+        return $this->fromMessage(new Reader(Config::getDefault())->readFile($path));
+    }
 
+    /**
+     * Same as parse(), for a document that is already in memory: the FinTS HKCAZ response
+     * carries the camt XML as a string, not as an uploaded file.
+     *
+     * @return array{rows: Collection<int, array<string, string>>, accountIban: string|null, openingBalance: string|null, closingBalance: string|null}
+     */
+    public function parseString(string $xml): array
+    {
+        return $this->fromMessage(new Reader(Config::getDefault())->readString($xml));
+    }
+
+    /**
+     * @return array{rows: Collection<int, array<string, string>>, accountIban: string|null, openingBalance: string|null, closingBalance: string|null}
+     */
+    private function fromMessage(Message $message): array
+    {
         $rows = collect();
         $accountIban = null;
         $openingBalance = null;

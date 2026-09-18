@@ -4,9 +4,12 @@ namespace booking\konto;
 
 use App\Exceptions\LegacyDieException;
 use App\Models\FintsInstitute;
+use App\Support\Fints\CamtStatementConverter;
+use App\Support\Fints\CamtStatementException;
 use DateTime;
 use Fhp\Action\GetSEPAAccounts;
 use Fhp\Action\GetStatementOfAccount;
+use Fhp\Action\GetStatementOfAccountXML;
 use Fhp\BaseAction;
 use Fhp\CurlException;
 use Fhp\FinTs;
@@ -18,6 +21,7 @@ use Fhp\Options\FinTsOptions;
 use Fhp\Protocol\DialogInitialization;
 use Fhp\Protocol\ServerException;
 use Fhp\Protocol\UnexpectedResponseException;
+use Fhp\UnsupportedException;
 use framework\DBConnector;
 use framework\render\ErrorHandler;
 use framework\render\html\BT;
@@ -459,15 +463,26 @@ class FintsConnectionHandler
     private function execute(BaseAction $action): void
     {
         try {
-            $this->finTs->execute($action);
-            $this->saveAction($action);
-            if ($action->needsTan()) {
-                // TODO decoupled tan stuff here
-                throw new NeedsTanException($action);
-            }
+            $this->executeWithoutErrorPage($action);
         } catch (CurlException|ServerException|UnexpectedResponseException $e) {
             $this->logger->error('Aktion nicht ausgeführt', ['exception' => $e]);
             ErrorHandler::handleException($e, 'Verbindung zur Bank gestört - Aktion nicht ausgeführt');
+        }
+    }
+
+    /**
+     * Like execute(), but leaves protocol-level failures to the caller instead of ending the
+     * request on an error page. getStatements() needs that: "this bank cannot serve camt"
+     * arrives as an exception and has to stay recoverable, so the MT940 attempt can still run.
+     *
+     * @throws NeedsTanException
+     */
+    private function executeWithoutErrorPage(BaseAction $action): void
+    {
+        $this->finTs->execute($action);
+        $this->saveAction($action);
+        if ($action->needsTan()) {
+            throw new NeedsTanException($action);
         }
     }
 
@@ -506,6 +521,22 @@ class FintsConnectionHandler
     {
         $this->logger->info('Submit TAN', ['credId' => $this->credentialId]);
         $action = $this->getCache('action');
+        if ($action === null) {
+            // saveAction() drops the cached action the moment it completes, so a TAN form
+            // that is submitted twice - a reload of the POST, a second tab, a double click -
+            // arrives here with nothing left to hand to the bank. Same for a session that
+            // expired while the TAN page sat open. Without this the null reached
+            // FinTs::submitTan() and became a TypeError page, losing the flash and the
+            // session state with it. confirmDecoupledTan() has guarded this from the start.
+            $this->logger->info('TAN submitted without a pending action', ['credId' => $this->credentialId]);
+            HTMLPageRenderer::addFlash(
+                BT::TYPE_INFO,
+                'Es liegt keine offene Anfrage vor, für die eine TAN eingegeben werden könnte',
+                'Vermutlich wurde die Eingabe doppelt abgeschickt oder die Sitzung ist abgelaufen. Bitte starte den Abruf neu.'
+            );
+
+            return false;
+        }
         try {
             $this->finTs->submitTan($action, $tan);
             $this->saveAction($action);
@@ -678,34 +709,61 @@ class FintsConnectionHandler
         // asking for account A, then opening account B's import URL and entering the TAN
         // there returned A's statements, which the caller then stored under B's konto_id.
         $scope = $this->statementScope($iban, $start, $end);
+        // A camt request that just came back unusable must not be retried as camt in the same
+        // call - it would fail identically and burn the user's TAN twice over.
+        $skipCamt = false;
         $action = $this->resumableAction();
-        if ($action instanceof GetStatementOfAccount) {
+        if ($action instanceof GetStatementOfAccount || $action instanceof GetStatementOfAccountXML) {
             if ($this->getCache('action-scope') === $scope) {
-                if ($action->isDone()) {
-                    $this->saveAction();
-
+                if (! $action->isDone()) {
+                    throw new NeedsTanException($action);
+                }
+                $this->saveAction();
+                if ($action instanceof GetStatementOfAccount) {
                     return $action->getStatement();
                 }
-                throw new NeedsTanException($action);
+                try {
+                    return new CamtStatementConverter()->convert($action->getBookedXML());
+                } catch (CamtStatementException $e) {
+                    // The fetch itself worked, only its documents are unusable. Repeating the
+                    // request in MT940 costs another TAN, which still beats failing the sync.
+                    $this->logger->warning('camt documents of a resumed request are unusable, retrying as MT940', [
+                        'credId' => $this->credentialId,
+                        'exception' => $e,
+                    ]);
+                    HTMLPageRenderer::addFlash(
+                        BT::TYPE_INFO,
+                        'Die Umsätze der Bank kamen in einem unlesbaren Format an',
+                        'Der Abruf wird im älteren Format wiederholt - dafür ist eine neue TAN nötig.'
+                    );
+                    $skipCamt = true;
+                }
+            } else {
+                $this->logger->warning('Discarding a pending statement request made for something else', [
+                    'credId' => $this->credentialId,
+                    'requested' => $scope,
+                ]);
+                // Say it out loud as well: the log lands in legacy/runtime/logs/fints.log,
+                // which is not somewhere anyone looks, and from the user's side the TAN they
+                // were about to enter simply stops applying.
+                HTMLPageRenderer::addFlash(
+                    BT::TYPE_INFO,
+                    'Der noch offene Umsatzabruf gehörte zu einem anderen Konto oder Zeitraum und wurde verworfen',
+                    'Der Abruf für dieses Konto wird neu gestartet - dafür ist eine neue TAN nötig.'
+                );
+                $this->saveAction(); // drops the stale action and its scope
             }
-            $this->logger->warning('Discarding a pending statement request made for something else', [
-                'credId' => $this->credentialId,
-                'requested' => $scope,
-            ]);
-            // Say it out loud as well: the log lands in legacy/runtime/logs/fints.log, which
-            // is not somewhere anyone looks, and from the user's side the TAN they were about
-            // to enter simply stops applying.
-            HTMLPageRenderer::addFlash(
-                BT::TYPE_INFO,
-                'Der noch offene Umsatzabruf gehörte zu einem anderen Konto oder Zeitraum und wurde verworfen',
-                'Der Abruf für dieses Konto wird neu gestartet - dafür ist eine neue TAN nötig.'
-            );
-            $this->saveAction(); // drops the stale action and its scope
         }
         $this->logger->info('Start Get SEPA Statements', ['credId' => $this->credentialId, $iban]);
         $account = $this->getSepaAccount($iban);
         $account = clone $account; // weird fix, without the clone the session var is changed to DateTime object
         // might be a bug in fints TODO: see if minimal example with the same bug can be found
+
+        // camt.052 (HKCAZ) is asked for first; MT940 below is the fallback.
+        if ($skipCamt === false && ($statements = $this->tryCamtStatements($account, $start, $end, $scope)) !== null) {
+            return $statements;
+        }
+
         $action = GetStatementOfAccount::create($account, $start, $end);
         // Has to be recorded before execute(), which caches the action and then throws
         // NeedsTanException, ending this request.
@@ -713,6 +771,46 @@ class FintsConnectionHandler
         $this->execute($action);
 
         return $action->getStatement();
+    }
+
+    /**
+     * Asks the bank for the range as camt.052: it carries the full SEPA fields, where MT940
+     * truncates the Verwendungszweck and routinely drops the end-to-end reference.
+     *
+     * @return StatementOfAccount|null null when this bank, this account or this response
+     *                                 cannot serve camt, which the caller answers by asking
+     *                                 again in the older MT940 format
+     *
+     * @throws NeedsTanException when the bank wants a TAN first - not a failure of the camt
+     *                           attempt, the user comes back into the resume branch of
+     *                           getStatements() afterwards
+     */
+    private function tryCamtStatements(SEPAAccount $account, ?DateTime $start, DateTime $end, string $scope): ?StatementOfAccount
+    {
+        try {
+            // Whether the bank can serve camt at all is only decided inside createRequest(),
+            // which runs before anything goes out on the wire - so a bank that cannot lands
+            // in the catch below with no request sent and no TAN spent.
+            $action = GetStatementOfAccountXML::create($account, $start, $end);
+            // Recorded before execute(), which can end this request with NeedsTanException.
+            $this->setCache('action-scope', $scope);
+            $this->executeWithoutErrorPage($action);
+
+            return new CamtStatementConverter()->convert($action->getBookedXML());
+        } catch (NeedsTanException $e) {
+            throw $e;
+        } catch (CurlException|ServerException|UnexpectedResponseException|UnsupportedException|InvalidArgumentException|CamtStatementException $e) {
+            // "This bank/account cannot do HKCAZ" arrives as an exception, as does a document
+            // we cannot read. Both are answered the same way: ask again in the older format.
+            // A connection-level failure falls through as well and then surfaces properly
+            // from the MT940 attempt's own error handling.
+            $this->logger->info('Statement request as camt not usable, falling back to MT940', [
+                'credId' => $this->credentialId,
+                'exception' => $e,
+            ]);
+
+            return null;
+        }
     }
 
     private function statementScope(string $iban, ?DateTime $start, DateTime $end): string

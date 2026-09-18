@@ -1,3 +1,14 @@
+# v4.4.8
+**FinTS Bankimport:**
+* Umsätze werden nun bevorzugt im moderneren Format camt.052 abgerufen. Dadurch kommen der vollständige Verwendungszweck und die SEPA-Referenzen an, die das ältere Format MT940 abschneidet oder gar nicht mitliefert. Kann eine Bank das Format nicht, wird wie bisher MT940 verwendet.
+* Bei Banken, die nur camt.052 anbieten, brach der Import mit der Meldung „Die Kontoauszüge der Bank sind nicht lückenlos“ ab, sobald der Abruf mehr als einen Buchungstag umfasste - es wurde also praktisch nie etwas importiert. Die Kontostände der einzelnen Buchungstage werden nun korrekt fortgeschrieben.
+* Wurde die TAN-Eingabe ein zweites Mal abgeschickt - etwa durch Neuladen der Seite, einen Doppelklick oder einen zweiten Tab - oder war die Sitzung zwischenzeitlich abgelaufen, endete der Vorgang auf einer Fehlerseite. Nun erscheint ein Hinweis, dass keine offene Anfrage vorliegt, und der Abruf kann neu gestartet werden.
+
+**Manueller Kontoimport:**
+* Nach einem CSV- oder CAMT-Import wird der Stand „zuletzt synchronisiert“ des Kontos mitgeführt. Zuvor blieb er leer, sodass ein anschließender FinTS-Abruf einen falschen Zeitraum anforderte und im Zweifel mit der Meldung abbrach, der letzte bekannte Umsatz sei nicht auffindbar.
+
+---
+
 # v4.4.7
 **FinTS Bankimport:**
 * Die Auswahl des TAN-Mediums ließ sich nicht speichern: Das Absenden landete auf einer leeren Seite, statt die Auswahl zu übernehmen.
