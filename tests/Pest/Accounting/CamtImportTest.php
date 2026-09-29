@@ -296,3 +296,198 @@ test('switching account after a camt upload keeps the parsed rows', function ():
     expect($wire->get('data'))->toHaveCount(3)
         ->and($wire->get('format'))->toBe('camt');
 });
+
+/**
+ * A camt statement carrying a cash withdrawal: the counterparty account is identified by
+ * Othr/GenericAccountIdentification (a terminal number), which is what ISO 20022 prescribes
+ * when there is no IBAN, and what German banks send for ATM withdrawals, card payments and
+ * fees. The second entry has no NtryDtls at all — also legitimate, e.g. for account fees.
+ */
+function camtWithCashWithdrawal(): string
+{
+    return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <GrpHdr><MsgId>M1</MsgId><CreDtTm>2024-06-06T03:00:00</CreDtTm></GrpHdr>
+    <Stmt>
+      <Id>S1</Id><CreDtTm>2024-06-06T03:00:00</CreDtTm>
+      <Acct><Id><IBAN>DE12429644757213399722</IBAN></Id></Acct>
+      <Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">500.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2024-06-05</Dt></Dt></Bal>
+      <Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">395.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2024-06-05</Dt></Dt></Bal>
+      <Ntry>
+        <Amt Ccy="EUR">100.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts>BOOK</Sts>
+        <BookgDt><Dt>2024-06-05</Dt></BookgDt><ValDt><Dt>2024-06-05</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NMSC+109</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+        <NtryDtls><TxDtls>
+          <RltdPties>
+            <Cdtr><Nm>SPARKASSE GAA</Nm></Cdtr>
+            <CdtrAcct><Id><Othr><Id>00001234</Id></Othr></Id></CdtrAcct>
+          </RltdPties>
+          <RmtInf><Ustrd>GA NR00001234 BLZ12345678 5 05.06/14.22UHR</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">5.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts>BOOK</Sts>
+        <BookgDt><Dt>2024-06-05</Dt></BookgDt><ValDt><Dt>2024-06-05</Dt></ValDt>
+        <BkTxCd><Prtry><Cd>NMSC+808</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>
+XML;
+}
+
+test('a counterparty account that is not an IBAN is not stored as one', function (): void {
+    // Regression: getIdentification() was read off whatever account the entry carried, so a
+    // terminal number landed in empf_iban and IbanColumnRule then rejected the whole upload
+    // with "Enthält ungültige IBANs" — one cash withdrawal blocked an entire statement.
+    $rows = (new CamtImportParser)->parseString(camtWithCashWithdrawal())['rows'];
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows[0]['empf_iban'])->toBe('')
+        // The name is still there, and the terminal reference survives in the Verwendungszweck.
+        ->and($rows[0]['empf_name'])->toBe('SPARKASSE GAA')
+        ->and($rows[0]['zweck'])->toContain('GA NR00001234')
+        ->and($rows[1]['empf_iban'])->toBe('')
+        ->and($rows[1]['empf_name'])->toBe('');
+});
+
+test('a statement containing a cash withdrawal imports instead of being rejected', function (): void {
+    $account = BankAccount::factory()->create(['iban' => 'DE12429644757213399722']);
+
+    Livewire::actingAs(cashOfficer())
+        ->test('pages::bank.manual-import')
+        ->set('account_id', $account->id)
+        ->set('upload', File::createWithContent('withdrawal.xml', camtWithCashWithdrawal()))
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $stored = BankTransaction::where('konto_id', $account->id)->orderBy('id')->get();
+
+    expect($stored)->toHaveCount(2)
+        ->and($stored[0]->value)->toBe('-100.00')
+        ->and($stored[0]->empf_iban)->toBe('')
+        // The running saldo still lands on the statement's closing balance.
+        ->and($stored[1]->saldo)->toBe('395.00');
+});
+
+test('a real counterparty IBAN is still picked up', function (): void {
+    // The guard must not throw the good case away with the bad.
+    $rows = (new CamtImportParser)->parseString(camtWithSingleEntry('AUSLAGE-7'))['rows'];
+
+    expect($rows[0]['empf_iban'])->toBe('DE02500105170137075030')
+        ->and($rows[0]['empf_name'])->toBe('ACME GmbH');
+});
+
+/**
+ * Wraps entries in a camt.053 statement whose balances match the given turnover.
+ */
+function camtStatement(string $entries, string $opening = '500.00', string $closing = '500.00'): string
+{
+    return <<<XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+      <BkToCstmrStmt>
+        <GrpHdr><MsgId>M1</MsgId><CreDtTm>2024-06-06T03:00:00</CreDtTm></GrpHdr>
+        <Stmt>
+          <Id>S1</Id><CreDtTm>2024-06-06T03:00:00</CreDtTm>
+          <Acct><Id><IBAN>DE12429644757213399722</IBAN></Id></Acct>
+          <Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">{$opening}</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2024-06-05</Dt></Dt></Bal>
+          <Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">{$closing}</Amt><CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2024-06-05</Dt></Dt></Bal>
+          {$entries}
+        </Stmt>
+      </BkToCstmrStmt>
+    </Document>
+    XML;
+}
+
+/** A batched booking: one Ntry of 150.00 carrying two payments of 100.00 and 50.00. */
+function camtBatchedEntry(bool $withAmounts = true): string
+{
+    $a = $withAmounts ? '<AmtDtls><TxAmt><Amt Ccy="EUR">100.00</Amt></TxAmt></AmtDtls>' : '';
+    $b = $withAmounts ? '<AmtDtls><TxAmt><Amt Ccy="EUR">50.00</Amt></TxAmt></AmtDtls>' : '';
+
+    return <<<XML
+    <Ntry>
+      <Amt Ccy="EUR">150.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts>BOOK</Sts>
+      <BookgDt><Dt>2024-06-05</Dt></BookgDt><ValDt><Dt>2024-06-05</Dt></ValDt>
+      <BkTxCd><Prtry><Cd>NTRF+191</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+      <NtryDtls>
+        <TxDtls>{$a}
+          <RltdPties><Cdtr><Nm>Mitglied A</Nm></Cdtr></RltdPties>
+          <RmtInf><Ustrd>AUSLAGE-12 Erstattung A</Ustrd></RmtInf>
+        </TxDtls>
+        <TxDtls>{$b}
+          <RltdPties><Cdtr><Nm>Mitglied B</Nm></Cdtr></RltdPties>
+          <RmtInf><Ustrd>AUSLAGE-13 Erstattung B</Ustrd></RmtInf>
+        </TxDtls>
+      </NtryDtls>
+    </Ntry>
+    XML;
+}
+
+test('an entry naming only the account holder gets no counterparty at all', function (): void {
+    // A bank fee: the bank fills Dbtr (us) and no Cdtr. Falling back to any related party used
+    // to store our own organisation as the recipient of its own fee.
+    $entry = <<<'XML'
+    <Ntry>
+      <Amt Ccy="EUR">20.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts>BOOK</Sts>
+      <BookgDt><Dt>2024-06-05</Dt></BookgDt><ValDt><Dt>2024-06-05</Dt></ValDt>
+      <BkTxCd><Prtry><Cd>NMSC+808</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+      <NtryDtls><TxDtls>
+        <RltdPties>
+          <Dbtr><Nm>Studierendenschaft Musterstadt</Nm></Dbtr>
+          <DbtrAcct><Id><IBAN>DE12429644757213399722</IBAN></Id></DbtrAcct>
+        </RltdPties>
+        <RmtInf><Ustrd>Kontofuehrungsentgelt</Ustrd></RmtInf>
+      </TxDtls></NtryDtls>
+    </Ntry>
+    XML;
+
+    $rows = (new CamtImportParser)->parseString(camtStatement($entry, '500.00', '480.00'))['rows'];
+
+    expect($rows[0]['empf_name'])->toBe('')
+        ->and($rows[0]['empf_iban'])->toBe('')
+        ->and($rows[0]['zweck'])->toBe('Kontofuehrungsentgelt');
+});
+
+test('an incoming payment takes the payer bank BIC, not our own', function (): void {
+    // genkgo's decoder always stores the creditor agent first, whatever the document order, and
+    // on an incoming payment the creditor is us - so the first agent was our own bank.
+    $entry = <<<'XML'
+    <Ntry>
+      <Amt Ccy="EUR">90.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Sts>BOOK</Sts>
+      <BookgDt><Dt>2024-06-05</Dt></BookgDt><ValDt><Dt>2024-06-05</Dt></ValDt>
+      <BkTxCd><Prtry><Cd>NTRF+166</Cd><Issr>DK</Issr></Prtry></BkTxCd>
+      <NtryDtls><TxDtls>
+        <RltdPties><Dbtr><Nm>Spendende Person</Nm></Dbtr></RltdPties>
+        <RltdAgts>
+          <DbtrAgt><FinInstnId><BIC>COBADEFFXXX</BIC></FinInstnId></DbtrAgt>
+          <CdtrAgt><FinInstnId><BIC>GENODEF1S01</BIC></FinInstnId></CdtrAgt>
+        </RltdAgts>
+        <RmtInf><Ustrd>Spende</Ustrd></RmtInf>
+      </TxDtls></NtryDtls>
+    </Ntry>
+    XML;
+
+    $rows = (new CamtImportParser)->parseString(camtStatement($entry, '500.00', '590.00'))['rows'];
+
+    expect($rows[0]['empf_bic'])->toBe('COBADEFFXXX')
+        ->and($rows[0]['empf_name'])->toBe('Spendende Person');
+});
+
+test('a batched booking is currently imported as a single row', function (): void {
+    // Pins today's behaviour rather than endorsing it. One Ntry of 150.00 carrying two payments
+    // is stored as one row of -150.00 attributed to the first payee, so AUSLAGE-13 is never
+    // seen by hookZahlung() and stays open although the money has left the account.
+    // Splitting it per payment was implemented and reverted - it changes what a statement line
+    // means and breaks the FinTS resume point for accounts already holding a batch as one row.
+    // OP#655 carries the decision; this test should fail, loudly, once it is made.
+    $rows = (new CamtImportParser)->parseString(camtStatement(camtBatchedEntry(), '500.00', '350.00'))['rows'];
+
+    expect($rows)->toHaveCount(1)
+        ->and($rows[0]['value'])->toBe('-150.00')
+        ->and($rows[0]['empf_name'])->toBe('Mitglied A')
+        ->and($rows[0]['zweck'])->toBe('AUSLAGE-12 Erstattung A');
+});

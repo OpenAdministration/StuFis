@@ -8,7 +8,9 @@ use Genkgo\Camt\Config;
 use Genkgo\Camt\DTO\Balance;
 use Genkgo\Camt\DTO\BankTransactionCode;
 use Genkgo\Camt\DTO\Creditor;
+use Genkgo\Camt\DTO\CreditorAgent;
 use Genkgo\Camt\DTO\Debtor;
+use Genkgo\Camt\DTO\DebtorAgent;
 use Genkgo\Camt\DTO\Entry;
 use Genkgo\Camt\DTO\EntryTransactionDetail;
 use Genkgo\Camt\DTO\IbanAccount;
@@ -132,6 +134,13 @@ class CamtImportParser
     }
 
     /**
+     * A batched booking - one Ntry carrying several TxDtls, e.g. a bulk transfer of
+     * reimbursements - is deliberately still mapped to a single row from its first detail, so
+     * the entry's full amount sits on the first payee and the other references are not
+     * imported. Splitting it into a row per payment was tried and reverted: it changes what a
+     * statement line means, and it breaks the FinTS resume point for accounts that already hold
+     * a batch as one row. See OP#655 for the open question.
+     *
      * @return array<string, string>
      */
     private function mapEntry(Entry $entry): array
@@ -142,7 +151,7 @@ class CamtImportParser
         $isCredit = $entry->getCreditDebitIndicator() !== 'DBIT';
         $party = $this->counterparty($detail, $isCredit);
 
-        $row = [
+        return [
             'date' => $bookingDate?->format('Y-m-d') ?? '',
             'valuta' => $valueDate?->format('Y-m-d') ?? '',
             'type' => $this->bookingCode($entry),
@@ -150,7 +159,7 @@ class CamtImportParser
             'value' => $this->moneyFormatter->format($entry->getAmount()),
             'empf_name' => $party?->getName() ?? '',
             'empf_iban' => $party instanceof RelatedPartyTypeInterface ? $this->ibanOf($detail, $isCredit) : '',
-            'empf_bic' => $this->bicOf($detail),
+            'empf_bic' => $this->bicOf($detail, $isCredit),
             // primanota is a numeric column in the DB; the CAMT account-servicer reference is
             // alphanumeric, so it has no home here and is intentionally left empty.
             'primanota' => '',
@@ -159,8 +168,6 @@ class CamtImportParser
             'saldo' => '', // left empty: computed row-by-row in the component's save()
             'comment' => '',
         ];
-
-        return $row;
     }
 
     private function counterparty(?EntryTransactionDetail $detail, bool $isCredit): ?RelatedPartyTypeInterface
@@ -177,9 +184,12 @@ class CamtImportParser
         $types = collect($detail->getRelatedParties())
             ->map(fn ($related) => $related->getRelatedPartyType());
 
+        // Same side only. Falling back to any related party meant that an entry naming only
+        // the account holder - a bank fee, where there is no counterparty at all - was stored
+        // with our own organisation as the recipient of its own fee. No name is honest; the
+        // Verwendungszweck still says what the booking was.
         return $types->first(fn ($type) => $type instanceof $primary)
-            ?? $types->first(fn ($type) => $type instanceof $ultimate)
-            ?? $types->first();
+            ?? $types->first(fn ($type) => $type instanceof $ultimate);
     }
 
     private function ibanOf(?EntryTransactionDetail $detail, bool $isCredit): string
@@ -189,18 +199,38 @@ class CamtImportParser
         }
 
         $primary = $isCredit ? Debtor::class : Creditor::class;
+        $ultimate = $isCredit ? UltimateDebtor::class : UltimateCreditor::class;
 
-        $account = collect($detail->getRelatedParties())
-            ->first(fn ($related) => $related->getRelatedPartyType() instanceof $primary)
-            ?->getAccount()
-            ?? collect($detail->getRelatedParties())->first()?->getAccount();
+        $parties = collect($detail->getRelatedParties());
+        // Same side only. The previous fallback took the account of *any* related party, which
+        // on a transfer whose counterparty carries no account meant storing our own IBAN as the
+        // recipient's.
+        $account = $parties->first(fn ($related) => $related->getRelatedPartyType() instanceof $primary)?->getAccount()
+            ?? $parties->first(fn ($related) => $related->getRelatedPartyType() instanceof $ultimate)?->getAccount();
 
-        return $account?->getIdentification() ?? '';
+        // Only an actual IBAN belongs in empf_iban. ISO 20022 identifies a cash account by a
+        // choice of IBAN *or* Othr/GenericAccountIdentification, and German banks use the latter
+        // (a card or terminal number) for cash withdrawals, card payments and fees, where there
+        // is no counterparty IBAN at all. Those identifiers used to be stored as if they were
+        // IBANs, and IbanColumnRule then rejected the entire upload with "Enthält ungültige
+        // IBANs" - one ATM withdrawal was enough to block a whole statement.
+        return $account instanceof IbanAccount ? $account->getIdentification() : '';
     }
 
-    private function bicOf(?EntryTransactionDetail $detail): string
+    private function bicOf(?EntryTransactionDetail $detail, bool $isCredit): string
     {
-        $agent = $detail?->getRelatedAgent();
+        if (! $detail instanceof EntryTransactionDetail) {
+            return '';
+        }
+
+        // getRelatedAgent() returns whichever agent genkgo stored first, and its decoder always
+        // appends the creditor agent before the debtor one, whatever the document order. That is
+        // the counterparty only for outgoing money; on an incoming payment it is our own bank,
+        // which is what used to be stored as the payer's BIC.
+        $wanted = $isCredit ? DebtorAgent::class : CreditorAgent::class;
+
+        $agent = collect($detail->getRelatedAgents())
+            ->first(fn (RelatedAgent $related): bool => $related->getRelatedAgentType() instanceof $wanted);
 
         return $agent instanceof RelatedAgent ? $agent->getRelatedAgentType()->getBIC() : '';
     }

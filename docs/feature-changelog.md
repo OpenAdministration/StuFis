@@ -5,6 +5,9 @@
 * Wurde die TAN-Eingabe ein zweites Mal abgeschickt - etwa durch Neuladen der Seite, einen Doppelklick oder einen zweiten Tab - oder war die Sitzung zwischenzeitlich abgelaufen, endete der Vorgang auf einer Fehlerseite. Nun erscheint ein Hinweis, dass keine offene Anfrage vorliegt, und der Abruf kann neu gestartet werden.
 
 **Manueller Kontoimport:**
+* Enthielt eine CAMT-Datei eine Barabhebung, wurde der gesamte Upload mit „Enthält ungültige IBANs“ abgelehnt. Bei Buchungen ohne Gegenkonto - Barabhebung, Kartenzahlung, Kontoführungsentgelt - gibt die Bank statt einer IBAN eine interne Kennung an (oder gar nichts); diese wurde fälschlich als IBAN übernommen. Solche Buchungen werden nun ohne IBAN importiert.
+* Bei einer Buchung ohne Gegenpartei - etwa einem Kontoführungsentgelt - wurde die eigene Studierendenschaft als Empfängerin eingetragen. Das Feld bleibt nun leer.
+* Bei Geldeingängen wurde die BIC der eigenen Bank als BIC der zahlenden Person gespeichert. Nun wird die BIC der Gegenseite übernommen.
 * Nach einem CSV- oder CAMT-Import wird der Stand „zuletzt synchronisiert“ des Kontos mitgeführt. Zuvor blieb er leer, sodass ein anschließender FinTS-Abruf einen falschen Zeitraum anforderte und im Zweifel mit der Meldung abbrach, der letzte bekannte Umsatz sei nicht auffindbar.
 
 ---
