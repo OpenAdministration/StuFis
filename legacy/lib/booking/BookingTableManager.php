@@ -379,7 +379,9 @@ class BookingTableManager extends Renderer
                             "zVal" => $zVal,
                             "bVal" => $bVal,
                         ]); */
-                        if ($zVal - $zValDone < $bVal - $bValDone) {
+                        // remaining Zahlung covers more than the remaining Beleg -> use up the Beleg
+                        // compare magnitudes: a signed comparison only works for expenses (negative values)
+                        if (abs(round($zVal - $zValDone, 2)) > abs(round($bVal - $bValDone, 2))) {
                             $zValDone = round($zValDone + $bVal - $bValDone, 2);
                             $this->processLine($z, $b, $bVal - $bValDone);
                             unset($bAll[$b_key]); // remove used belege - single use only

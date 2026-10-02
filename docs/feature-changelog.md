@@ -10,6 +10,9 @@
 * Bei Geldeingängen wurde die BIC der eigenen Bank als BIC der zahlenden Person gespeichert. Nun wird die BIC der Gegenseite übernommen.
 * Nach einem CSV- oder CAMT-Import wird der Stand „zuletzt synchronisiert“ des Kontos mitgeführt. Zuvor blieb er leer, sodass ein anschließender FinTS-Abruf einen falschen Zeitraum anforderte und im Zweifel mit der Meldung abbrach, der letzte bekannte Umsatz sei nicht auffindbar.
 
+**Buchungen:**
+* Bei angewiesenen Vorgängen mit mehreren Zahlungen und mehreren Belegposten wurden Einnahmen falsch aufgeteilt: Der ersten Zahlung wurden die vollen Beträge aller Belegposten zugeordnet, die übrigen Zahlungen fehlten in der Buchungsansicht und wurden nicht mitgebucht. Einnahmen werden nun wie Ausgaben korrekt auf die Zahlungen verteilt.
+
 ---
 
 # v4.4.7
