@@ -11,7 +11,7 @@
         "axios": "^1.11.0",
         "laravel-vite-plugin": "^3.1.0",
         "tailwindcss": "^4.1.4",
-        "vite": "^8.0.16"
+        "vite": "^8.3.4"
     },
     "dependencies": {
         "@alpinejs/sort": "^3.14.9",
